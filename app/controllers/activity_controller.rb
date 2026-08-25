@@ -613,7 +613,7 @@ class ActivityController < ApplicationController
 
   def add_course
     @current_user = current_user
-    @url_base = ApplicationUrl.main_root_url || ENV["DOMAIN"] || "http://localhost:5000"
+    @url_base = ApplicationUrl.main_root_url || ENV["DOMAIN"] || "http://localhost:7212"
   end
 
   def activity_time_intervals

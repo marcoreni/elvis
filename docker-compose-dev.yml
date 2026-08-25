@@ -10,6 +10,8 @@ services:
         - GITHUB_TOKEN=${GITHUB_TOKEN:?GITHUB_TOKEN is required}
         - PLUGINS_LIST_DOWNLOAD_URL=${PLUGINS_LIST_DOWNLOAD_URL}
     container_name: elvis_dev_run
+    environment:
+      - PORT=5000
     volumes:
       - .:/Elvis
     ports:

@@ -55,7 +55,7 @@ module RailsStarter
     if Rails.env.kubernetes?
       config.action_mailer.asset_host = "https://#{ENV['DOMAIN']}/"
     else
-      config.action_mailer.asset_host = "http://localhost:5000/"
+      config.action_mailer.asset_host = "http://localhost:7212/"
     end
 
 

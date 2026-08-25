@@ -1,5 +1,5 @@
 # to see mailers previews :
-# `http://localhost:5000/rails/mailers`
+# `http://localhost:7212/rails/mailers`
 class DeviseMailerPreview < ActionMailer::Preview
   def confirmation_instructions
     user = User.last
