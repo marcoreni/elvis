@@ -14,6 +14,7 @@ require "sprockets/railtie"
 require 'active_support/core_ext'
 require 'sidekiq/component'
 require_relative "../lib/elvis/version"
+require_relative "../lib/elvis/supported_locales"
 # require "rails/test_unit/railtie"
 
 # Require the gems listed in Gemfile, including any gems
@@ -49,6 +50,7 @@ module RailsStarter
     config.time_zone = "Paris"
 
     config.i18n.default_locale = :fr
+    config.i18n.available_locales = Elvis::SUPPORTED_LOCALES
 
     # TODO env var
 
@@ -61,6 +63,3 @@ module RailsStarter
 
   end
 end
-
-I18n.enforce_available_locales = false
-I18n.config.available_locales = :fr

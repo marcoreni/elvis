@@ -35,6 +35,7 @@ gem "azure-storage-blob"
 gem "cancancan"
 gem "devise"
 gem "devise-token_authenticatable"
+gem "devise-i18n"
 
 gem "annotate"
 
@@ -87,6 +88,7 @@ group :development, :test do
   gem 'rails-controller-testing'
   gem "rspec"
   gem "wkhtmltopdf-binary"
+  gem "i18n-tasks"
 end
 
 group :development do

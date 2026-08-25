@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="<%= I18n.locale %>">
     <head>
         <title>Elvis</title>
         <%= csrf_meta_tags %>
@@ -15,6 +15,10 @@
 
     <body class="gray-bg">
         <%= react_component("Toaster") %>
+
+        <div class="text-right p-sm">
+          <%= render "partials/language_switcher" %>
+        </div>
 
         <%= yield %>
 

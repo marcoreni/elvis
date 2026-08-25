@@ -18,6 +18,7 @@ Rails.application.routes.draw do
 
   get "/health", to: "healthcheck#index"
   get "/ping", to: "ping#index"
+  patch "/locale", to: "locale#update", as: :locale
   get "debug", to: "debug#index"
   post "send_mail", to: "debug#send_mail"
   namespace :parameters do

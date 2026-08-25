@@ -1,6 +1,7 @@
 class ApplicationController < ActionController::Base
   protect_from_forgery with: :exception
 
+  prepend_around_action :switch_locale
   before_action :save_request
   before_action :url_registration
   before_action :configure_permitted_parameters, if: :devise_controller?
@@ -69,6 +70,31 @@ class ApplicationController < ActionController::Base
   end
 
   private
+
+  # Locale resolution cascade, see docs/I18n.md:
+  #   1. the signed-in user's saved preference
+  #   2. the "locale" cookie (guests, or a signed-out browser's last known language)
+  #   3. the installation's configured default (Parameter "app.localization.default_language")
+  #   4. I18n.default_locale as the final fallback
+  # Runs as a prepended around_action so it wraps every other before_action (including
+  # Devise's own, since Devise::*Controller inherits from ApplicationController by default).
+  def switch_locale(&action)
+    locale = resolve_locale
+
+    cookies[:locale] = { value: locale.to_s, expires: 1.year, same_site: :lax } if cookies[:locale] != locale.to_s
+
+    I18n.with_locale(locale, &action)
+  end
+
+  def resolve_locale
+    candidate = current_user&.locale.presence ||
+                cookies[:locale].presence ||
+                Parameter.get_value("app.localization.default_language", default: I18n.default_locale.to_s)
+
+    locale = candidate.to_s.to_sym
+
+    Elvis::SUPPORTED_LOCALES.map(&:to_sym).include?(locale) ? locale : I18n.default_locale
+  end
 
   def verify_season
     if !current_user.nil? && current_user.is_admin && Season.none?
