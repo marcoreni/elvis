@@ -188,17 +188,27 @@ et à mesure de son intégration :
   - [x] Config `i18n-tasks` (`.i18n-tasks.yml`)
   - [x] Nettoyage du contenu `en.yml` (résidu de scaffold Rails, jamais utilisé)
   - [x] `docs/I18n.md` (première version, backend uniquement)
-- [ ] **`feature/i18n-02-foundation-frontend`** *(indépendante, fusionnable tôt, inerte)*
-  - [ ] `yarn add i18next react-i18next i18next-browser-languagedetector`
-  - [ ] `yarn add -D i18next-parser`
-  - [ ] `frontend/i18n/index.js` (init i18next, détection via `document.documentElement.lang`,
-        namespaces, lazy loading) câblé dans `frontend/packs/app.js` avant
-        `ReactRailsUJS.useContext`
-  - [ ] Config extraction (`.i18next-parser.config.js`)
-  - [ ] `frontend/locales/{fr,en}/common.json` (stub)
-  - [ ] Centraliser le changement de locale `moment` (actuellement `require("moment/locale/fr")`
-        dispersé dans ~10+ fichiers) sur l'événement `languageChanged` d'i18next
-  - [ ] Compléter `docs/I18n.md` avec la partie frontend
+- [x] **`feature/i18n-02-foundation-frontend`** *(indépendante, fusionnable tôt, inerte)*
+  - [x] `yarn add i18next react-i18next i18next-browser-languagedetector`
+        (`i18next@26.4.0`, `react-i18next@17.0.12`, `i18next-browser-languagedetector@8.2.1`)
+  - [x] `yarn add -D i18next-parser` (`i18next-parser@9.4.0` — le binaire CLI qu'il installe
+        s'appelle `i18next`, pas `i18next-parser`, script `yarn i18n:extract` ajusté en
+        conséquence)
+  - [x] `frontend/i18n/index.js` (init i18next, détection via `document.documentElement.lang`)
+        câblé dans `frontend/packs/app.js` avant `ReactRailsUJS.useContext`. **Pas de lazy
+        loading par namespace posé dans cette branche** : un seul namespace stub (`common`)
+        existe pour l'instant, ça aurait été de la complexité spéculative ; à construire quand les
+        branches d'extraction ajouteront de vrais namespaces par fonctionnalité.
+  - [x] Config extraction (`i18next-parser.config.js` — sans le point en tête, c'est le nom par
+        défaut cherché par le CLI `i18next`)
+  - [x] `frontend/locales/{fr,en}/common.json` (stub, vérifié non écrasé par
+        `yarn i18n:extract` sur les 317 fichiers actuels, qui ne contiennent encore aucun appel
+        `t()`/`<Trans>`)
+  - [x] Centraliser le changement de locale `moment` sur l'événement `languageChanged` d'i18next
+        (`frontend/i18n/index.js`). **Les `require("moment/locale/fr")` dispersés dans ~10+
+        fichiers ne sont pas encore retirés** — effet de bord documenté dans `docs/I18n.md`, à
+        nettoyer au fil des branches d'extraction qui touchent ces fichiers.
+  - [x] Compléter `docs/I18n.md` avec la partie frontend
 - [ ] **`feature/i18n-03-localization-settings`** *(dépend de 01+02)*
   - [ ] `Parameters::LocalizationParametersController` (clone de `PlanningParametersController`)
   - [ ] Route sous `namespace :parameters`
