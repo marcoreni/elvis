@@ -51,6 +51,10 @@ u.save!
 Note: this repo has **two parallel test frameworks** — RSpec (`spec/`, newer/preferred) and Minitest
 (`test/`, older). Check which convention a given area already uses before adding tests.
 
+Before running `/code-review` on a specific PR in this repo, read `docs/CodeReviewAgentNotes.md`
+first — this repo has two remotes (upstream + a personal fork) and a stacked-branch workflow that
+have already caused the review agent to silently review the wrong diff more than once.
+
 ## Commit conventions
 
 Use [Conventional Commits](https://www.conventionalcommits.org/) for every commit message:
