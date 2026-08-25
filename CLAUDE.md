@@ -51,6 +51,14 @@ u.save!
 Note: this repo has **two parallel test frameworks** — RSpec (`spec/`, newer/preferred) and Minitest
 (`test/`, older). Check which convention a given area already uses before adding tests.
 
+## Commit conventions
+
+Use [Conventional Commits](https://www.conventionalcommits.org/) for every commit message:
+`<type>[optional scope]: <description>`, e.g. `feat(i18n): add locale switcher`,
+`fix: resolve merge conflicts in formules_controller`. Common types: `feat`, `fix`, `docs`,
+`refactor`, `test`, `chore`, `build`, `ci`, `perf`. Use `!` after the type/scope (or a
+`BREAKING CHANGE:` footer) for breaking changes.
+
 ## Architecture
 
 ### Plugin system
