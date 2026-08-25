@@ -368,6 +368,12 @@ class ParametersController < ApplicationController
                                     link: url_for(action: :school_parameters_edit, only_path: true)
                                   })
 
+    @parameters[:général] << {
+      title: "Langues",
+      text: "Choisissez la langue par défaut de l'installation et les langues proposées aux utilisateurs.",
+      link: url_for(controller: "parameters/localization_parameters", action: :index, only_path: true)
+    }
+
     @parameters[:personnalisation] << {
       title: "Emails",
       text: "Paramétrez votre serveur d'envoi de mails, l'adresse de l'expéditeur et vos destinataires.",
