@@ -20,9 +20,11 @@ C'est un chantier de plusieurs semaines, réparti sur de nombreux commits. Le tr
 découpé en branches **empilées** (chaque branche part de la précédente), afin que chaque revue
 reste petite et que le travail soit reprenable à tout moment.
 
-**Note sur le branching** : le dépôt n'a pas de branche `develop` — sa convention réelle (voir
-`git log`) est des branches de fonctionnalité nommées par ticket, parties de `main`, fusionnées
-via PR. Ce chantier suit cette convention réelle plutôt que d'inventer une branche `develop`.
+**Note sur le branching** : ce chantier a démarré avant l'introduction d'une branche `develop` —
+sa convention historique (voir `git log`) était des branches de fonctionnalité nommées par ticket,
+parties de `main`, fusionnées via PR. Une branche `develop` a depuis été créée pour servir de
+branche d'intégration (voir `CLAUDE.md`) ; cette PR cible désormais `develop`, et les branches de
+ce chantier restent empilées les unes sur les autres comme prévu.
 
 ## Décisions d'architecture
 
@@ -91,7 +93,7 @@ délibérée, pas comme bug.
 1. Utilisateur connecté : `current_user.locale` (nouvelle colonne nullable ; `nil` = utiliser la
    valeur par défaut de l'installation)
 2. Invité : cookie `locale` (posé par le sélecteur de langue, expiration 1 an)
-3. `Parameter.get_value("localization.default_language")` — la langue par défaut de l'installation
+3. `Parameter.get_value("app.localization.default_language")` — la langue par défaut de l'installation
 4. `I18n.default_locale` (`:fr`) — filet de sécurité final, ne jamais le retirer
 
 **Nouvelles pièces à construire :**
@@ -105,9 +107,12 @@ délibérée, pas comme bug.
   s'exécutent déjà sur la page de connexion Devise). Pas besoin de câblage spécifique par
   contrôleur.
 - `config/application.rb` : remplacer le verrou actuel — `config.i18n.available_locales =
-  Elvis::SUPPORTED_LOCALES` (nouvelle constante, ex. `config/initializers/i18n.rb` définissant
-  `%w[fr en].freeze`), garder `default_locale = :fr`, et réellement activer
-  `enforce_available_locales` (actuellement désactivé de force).
+  Elvis::SUPPORTED_LOCALES` (nouvelle constante `%w[fr en].freeze`, posée dans
+  `lib/elvis/supported_locales.rb` et pas dans un initializer : elle doit être chargée avant le
+  corps de classe de `config/application.rb`, qui s'exécute avant que les initializers ne tournent
+  — même pattern d'`require_relative` explicite que `lib/elvis/version.rb`), garder
+  `default_locale = :fr`, et réellement activer `enforce_available_locales` (actuellement
+  désactivé de force).
 - **Synchronisation du premier rendu, sans nouvel objet bootstrap** : ajouter
   `<html lang="<%= I18n.locale %>">` aux trois layouts (`application.html.erb`, `devise.html.erb`,
   `simple.html.erb`). Configurer l'init i18next de `frontend/i18n/index.js` pour lire la langue
@@ -125,15 +130,18 @@ délibérée, pas comme bug.
   `Parameters::LocalizationParametersController` sous le bloc `namespace :parameters do end`
   existant (`config/routes.rb`), en clonant exactement le pattern GET/POST-JSON de
   `app/controllers/parameters/planning_parameters_controller.rb` (`Parameter.get_value` /
-  `find_or_create_by`). Stocker `localization.default_language` (`value_type: "string"`) et
-  `localization.available_languages` (`value_type: "json"`, un tableau — restreint au
+  `find_or_create_by`). Stocker `app.localization.default_language` (`value_type: "string"`) et
+  `app.localization.available_languages` (`value_type: "json"`, un tableau — restreint au
   sous-ensemble de `Elvis::SUPPORTED_LOCALES` qui a réellement des fichiers de traduction, pour
   qu'un admin ne puisse pas activer une langue sans traductions). Nouvel écran React sous
-  `frontend/components/parameters/`, plus une nouvelle entrée `Elvis::MenuManager`
-  (`lib/elvis/menu_manager.rb`) à côté des liens `school_parameters`/`community_parameters`
-  existants. (Pas `CommunityParametersController` — déjà réaffecté à un outil de fusion
-  d'utilisateurs malgré son nom — ni `parameters_controller.rb`'s `school_parameters`, qui
-  concerne l'identité légale/contact de l'école, un sujet différent.)
+  `frontend/components/parameters/`. Pas de nouvelle entrée `Elvis::MenuManager`
+  (`lib/elvis/menu_manager.rb`) : ce mécanisme sert la navigation globale de l'app, pas la page
+  `/parameters` — les écrans de réglages individuels (École, Emails, Formules...) sont en réalité
+  de simples cartes ajoutées dans `ParametersController#set_base_parameters`, qui alimentent la
+  page `/parameters` déjà existante ; c'est ce mécanisme qu'il faut utiliser ici (nouvelle carte
+  "Langues" sous `@parameters[:général]`). (Pas non plus `CommunityParametersController` — déjà
+  réaffecté à un outil de fusion d'utilisateurs malgré son nom — ni `parameters_controller.rb`'s
+  `school_parameters`, qui concerne l'identité légale/contact de l'école, un sujet différent.)
 - `config/settings.yml` est confirmé mort, résidu Redmine inutilisé — **ne pas s'en servir** ; la
   vraie convention de réglages est les lignes `Parameter` en base comme ci-dessus.
 
