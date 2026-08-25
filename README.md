@@ -103,6 +103,28 @@ All parameters in [] are optional, if you don't specify them, default values wil
 
 ## Install manually
 
+### Using asdf (recommended)
+If you use [asdf](https://asdf-vm.com/), the repository ships a [.tool-versions](./.tool-versions)
+file pinning the recommended ruby and node versions, so you don't need rvm/nvm at all:
+
+```shell
+asdf plugin add ruby
+asdf plugin add nodejs
+asdf install
+```
+
+This installs the exact versions listed in `.tool-versions` and asdf will pick them up
+automatically whenever you're in this directory. On macOS, `mimemagic`'s native extension also
+needs the `shared-mime-info` package, which isn't installed by default:
+
+```shell
+brew install shared-mime-info
+```
+
+Then skip ahead to [Set up optional dependencies](#set-up-optional-dependencies) below — you
+still need Postgres/Redis/Elasticsearch, just not ruby/node themselves.
+
+### Using rvm / nvm
 - install rvm
   - Install dependencies and rvm 
     ```shell
@@ -156,9 +178,27 @@ All parameters in [] are optional, if you don't specify them, default values wil
  - [postgresql v14 specific](https://techviewleo.com/how-to-install-postgresql-database-on-ubuntu/)
 
 #### Set up optional dependencies
+If you're running ruby/node natively (e.g. via asdf above) rather than through the full
+`docker-compose.yml` stack, you still need Postgres, Redis, and Elasticsearch. The simplest way is
+[docker-compose-dev.yml](./docker-compose-dev.yml), which starts all three with credentials/ports
+already matching [config/database.yml](./config/database.yml)'s `development` block and
+[config/chewy.yml](./config/chewy.yml)'s `development` host, so no extra configuration is needed:
+
+```shell
+docker-compose -f docker-compose-dev.yml up -d database redis elasticsearch
+```
+
+This uses named volumes, so data persists across restarts (`docker-compose -f
+docker-compose-dev.yml down` to stop, add `-v` to also wipe the volumes). These are separate,
+distinctly-named containers/volumes from the main `docker-compose.yml` stack, so both can run at
+the same time without clashing.
+
+Alternatively, run each service by hand:
+- Local postgresql server
+  - `docker run -p 127.0.0.1:5432:5432 -e POSTGRES_USER=elvis -e POSTGRES_PASSWORD=elvis -e POSTGRES_DB=elvis postgres:14.0`
 - Local redis server
   -  `docker pull redis:6.2.6`
-  -  `docker run -p 127.0.0.1:6379:6379 redis`
+  -  `docker run -p 127.0.0.1:6379:6379 redis:6.2.6`
 - Local elastic-search server
   - `docker pull elasticsearch:7.16.3`
   - `docker run -p 127.0.0.1:9200:9200 -p 127.0.0.1:9300:9300 -e "discovery.type=single-node" elasticsearch:7.16.3`
