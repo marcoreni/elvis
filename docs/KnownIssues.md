@@ -91,17 +91,56 @@ before React itself would just be churn): `react-select`, `react-table`, `react-
 either past their current major without bumping Node first (same wall we hit picking versions for
 the Vitest/jsdom setup and `postcss-import` itself).
 
-**Not really "outdated," just unpinned** — these resolve to a git ref, not a registry version, so
-`yarn outdated` reports them as `exotic` rather than giving a real comparison: `jQuery-QueryBuilder`,
-`jQuery-QueryBuilder-Elasticsearch`, `react-stepzilla`, `react-yearly-calendar`, `tui-calendar`.
-Nothing pins these to a specific commit, so they can change underneath the app without any
-`package.json`/lockfile change showing it — worth pinning to a commit SHA at some point regardless
-of the version-bump work above.
-
 **`node-sass` is deprecated but still load-bearing** — `sass-loader` needs either `node-sass` or
 `sass` (dart-sass) installed to actually compile the `.scss` files in this repo, and only `node-sass`
 is currently present. Migrating to `sass` is a real (if probably mechanical) task, not a version
 bump — dart-sass's syntax is close to but not 100% compatible with node-sass's on some edge cases.
+
+## Exotic (git-pinned) dependencies need a per-package decision, not a version bump
+
+5 dependencies resolve to a git ref rather than a registry version (`yarn outdated` calls these
+`exotic` and can't give a real "how far behind" comparison): `jQuery-QueryBuilder`,
+`jQuery-QueryBuilder-Elasticsearch`, `react-stepzilla`, `react-yearly-calendar`, `tui-calendar`.
+None are pinned to a commit SHA (branch/tag refs instead), so each can change underneath the app
+with zero `package.json`/lockfile signal.
+
+For each one the real question isn't "bump the version" but: why was it forked, is the fork's patch
+still needed, is upstream (or the fork itself) still maintained, and does it make more sense to
+un-fork (go back to a pinned upstream release), patch-and-pin (keep the fork but pin it to an exact
+commit), or replace the library entirely. Researched 2026-08-27 via `gh api` (fork metadata +
+`compare` between fork and upstream default branches) — one at a time, starting wherever the
+maintenance risk is highest:
+
+- **`tui-calendar`** (`SIXMON/tui.calendar` fork of `nhn/tui.calendar`) — **highest effort to
+  reconcile**. Upstream is healthy and active (12.7k stars, pushed 2024-06, 208 open issues) but the
+  fork is **1426 commits behind** it and has **14 commits of real, app-specific behavior** on top
+  ("Changes to conform to ziggy data model" x2, plus scheduling-precision tweaks: 15-minute steps,
+  minimum schedule duration, "nearest thresholds", drag constants). This isn't a trivial patch that
+  could just be dropped — the app's actual calendar behavior depends on it. Un-forking means
+  re-implementing all 14 commits' behavior against a version 1426 commits newer; worth scoping
+  carefully before starting.
+- **`react-yearly-calendar`** (`SIXMON/react-yearly-calendar` fork of `BelkaLab/react-yearly-calendar`)
+  — **highest maintenance risk**. Upstream is **archived** (dead since ~2020). Fork carries 4 commits
+  ahead including a real behavioral change ("Change from civil year to range period") and is 17
+  commits behind an upstream that will never move again. Since upstream is dead either way, "un-fork"
+  isn't really an option — this is a keep-and-pin-to-a-commit-SHA vs. replace-the-library decision.
+- **`react-stepzilla`** (`SIXMON/react-stepzilla` fork of `newbreedofgeek/react-stepzilla`) — upstream
+  is alive but slow (615 stars, last pushed 2022-12). Fork has 3 real commits ahead (nav-state bug
+  fixes for dynamic step counts) and is only 2 commits behind — the smallest gap of the four forks,
+  and the patches look like legitimate upstreamable bug fixes rather than app-specific behavior.
+  Reasonable candidate to try upstreaming the fix and dropping the fork.
+- **`jQuery-QueryBuilder`** (`SIXMON/jQuery-QueryBuilder` fork of `mistic100/jQuery-QueryBuilder`) —
+  upstream is actively maintained (1.7k stars, pushed 2024-11). Fork is trivial: 1 commit ahead ("Add
+  span to input labels"), 48 commits behind. Lowest-risk candidate to just drop the fork and go back
+  to a pinned upstream release, possibly re-adding the one small patch if still wanted.
+- **`jQuery-QueryBuilder-Elasticsearch`** (`piotch/jQuery-QueryBuilder-Elasticsearch`) — not a fork of
+  anything (independent project, no parent repo). Abandoned since 2016 (5 open issues, no activity
+  since). No drop-in replacement found via a quick search — this one may need to be vendored/inlined
+  or reimplemented in-house rather than either "un-forked" or swapped for an alternative package.
+
+Whatever the per-package decision, pin to an exact commit SHA (or a real npm release) rather than a
+branch ref in the meantime — that alone removes the "can silently change under us" risk even before
+the fork-vs-replace decision is made.
 
 ## Rubocop backlog
 
