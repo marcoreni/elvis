@@ -3,3 +3,12 @@
 # docs/I18n-Roadmap.md, branches feature/i18n-04 onward). Structure mirrors fr.yml, the base
 # locale.
 en:
+    time:
+        formats:
+            date_month_concise: '%B %d, %Y'
+            long_date: '%B %e, %Y'
+            day: '%A'
+            short_time: '%H:%M'
+    date:
+        formats:
+            date_month_concise: '%B %d, %Y'

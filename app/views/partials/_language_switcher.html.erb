@@ -16,6 +16,7 @@
         <%= button_to locale_code.upcase,
                        locale_path(locale: locale_code),
                        method: :patch,
+                       params: { return_to: request.fullpath },
                        class: "btn btn-link btn-block text-left#{" font-weight-bold" if I18n.locale.to_s == locale_code}" %>
       </li>
     <% end %>
