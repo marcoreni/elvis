@@ -49,7 +49,9 @@ u.save!
 - JS formatting: `.prettierrc` sets 4-space tabs; no lint script is wired up in `package.json`
 
 Note: this repo has **two parallel test frameworks** — RSpec (`spec/`, newer/preferred) and Minitest
-(`test/`, older). Check which convention a given area already uses before adding tests.
+(`test/`, older). Check which convention a given area already uses before adding tests. The Minitest
+suite is currently substantially broken (feature tests, `users_test.rb`, `due_payment_test.rb`) —
+see `docs/KnownIssues.md` before assuming a Minitest failure is caused by whatever you're changing.
 
 Before running `/code-review` on a specific PR in this repo, read `docs/CodeReviewAgentNotes.md`
 first — this repo has two remotes (upstream + a personal fork) and a stacked-branch workflow that
