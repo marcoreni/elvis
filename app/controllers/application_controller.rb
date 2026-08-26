@@ -1,12 +1,13 @@
 class ApplicationController < ActionController::Base
   protect_from_forgery with: :exception
 
+  prepend_before_action :require_logo
+  prepend_around_action :switch_locale
   before_action :save_request
   before_action :url_registration
   before_action :configure_permitted_parameters, if: :devise_controller?
   before_action :store_user_location!, if: :storable_location?
   before_action :authenticate_user!
-  prepend_before_action :require_logo
   append_before_action :verify_season, only: [:index]
 
   attr_accessor :call_render
@@ -69,6 +70,44 @@ class ApplicationController < ActionController::Base
   end
 
   private
+
+  # Locale resolution cascade, see docs/I18n.md:
+  #   1. the signed-in user's saved preference
+  #   2. the "locale" cookie (guests, or a signed-out browser's last known language)
+  #   3. the installation's configured default (Parameter "app.localization.default_language")
+  #   4. I18n.default_locale as the final fallback
+  # Runs as a prepended around_action so it wraps every other before_action (including
+  # Devise's own, since Devise::*Controller inherits from ApplicationController by default).
+  def switch_locale(&action)
+    locale = resolve_locale
+
+    cookies[:locale] = locale_cookie(locale) if cookies[:locale] != locale.to_s
+
+    I18n.with_locale(locale, &action)
+  end
+
+  # Shared by switch_locale and LocaleController#update so the cookie options can't drift
+  # out of sync between the two call sites.
+  def locale_cookie(locale)
+    { value: locale.to_s, expires: 1.year, same_site: :lax }
+  end
+
+  # Validates each cascade source in turn against SUPPORTED_LOCALES_SYMBOLS and falls through
+  # to the next source on an invalid/blank value, instead of jumping straight to
+  # I18n.default_locale the moment the first source doesn't validate.
+  def resolve_locale
+    installation_default = begin
+      Parameter.get_value("app.localization.default_language", default: I18n.default_locale.to_s)
+    rescue StandardError => e
+      Rails.logger.error("[i18n] Parameter.get_value(\"app.localization.default_language\") failed: #{e.message}")
+      nil
+    end
+
+    [current_user&.locale, cookies[:locale], installation_default]
+      .map { |candidate| candidate.to_s.presence&.to_sym }
+      .find { |locale| locale && Elvis::SUPPORTED_LOCALES_SYMBOLS.include?(locale) } ||
+      I18n.default_locale
+  end
 
   def verify_season
     if !current_user.nil? && current_user.is_admin && Season.none?

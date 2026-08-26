@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="<%= I18n.locale %>">
     <head>
         <title>Elvis</title>
         <%= csrf_meta_tags %>
@@ -11,6 +11,11 @@
     <body class="gray-bg">
         <div id="wrapper">
           <div id="page-wrapper" style="margin: 0!important;">
+            <div class="row">
+              <div class="col-sm-12 text-right" style="z-index: 1;">
+                <%= render "partials/language_switcher" %>
+              </div>
+            </div>
             <div class="row">
               <div class="col-sm-12" style="z-index: 1;">
                 <%= yield %>

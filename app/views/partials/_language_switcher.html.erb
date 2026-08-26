@@ -1,0 +1,24 @@
+<%#
+  Sélecteur de langue. Rendu dans les trois layouts (application, devise, simple) afin de
+  fonctionner aussi bien pour un utilisateur connecté que pour un invité. Poste vers
+  LocaleController#update (route "locale"), qui pose le cookie "locale" et, si l'utilisateur est
+  connecté, met aussi à jour sa préférence enregistrée. Voir docs/I18n.md.
+%>
+<div class="language-switcher dropdown d-inline-block">
+  <a id="a-language-switcher" data-toggle="dropdown" class="dropdown-toggle" href="#">
+    <span class="text-uppercase"><%= I18n.locale %></span>
+    <span class="fas fa-angle-down m-l-xs text-secondary" style="font-size: 12px;"></span>
+  </a>
+
+  <ul class="dropdown-menu m-t-sm p-sm" style="border-radius: 10px; right: 0; left: initial!important;">
+    <% Elvis::SUPPORTED_LOCALES.each do |locale_code| %>
+      <li>
+        <%= button_to locale_code.upcase,
+                       locale_path(locale: locale_code),
+                       method: :patch,
+                       params: { return_to: request.fullpath },
+                       class: "btn btn-link btn-block text-left#{" font-weight-bold" if I18n.locale.to_s == locale_code}" %>
+      </li>
+    <% end %>
+  </ul>
+</div>

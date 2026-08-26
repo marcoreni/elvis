@@ -1,0 +1,32 @@
+# i18n-tasks finds missing and unused translation keys.
+# https://github.com/glebm/i18n-tasks — run `bundle exec i18n-tasks health` for a full report.
+# See docs/I18n.md for the key-naming convention this repo follows.
+
+base_locale: fr
+locales: [fr, en]
+
+data:
+  read:
+    - config/locales/%{locale}.yml
+    - config/locales/devise.%{locale}.yml
+  write:
+    - config/locales/%{locale}.yml
+
+search:
+  paths:
+    - app/
+    - lib/elvis/
+  relative_roots:
+    - app/views
+    - app/controllers
+    - app/models
+    - app/mailers
+    - app/helpers
+
+# translate_enum (app/models/activity_ref.rb) and Parameter-backed / NotificationTemplate content
+# are outside this static UI-string sweep — see docs/I18n.md "hors périmètre".
+ignore_missing:
+  - "activerecord.attributes.activity_ref.activity_type_list.*"
+
+ignore_unused:
+  - "devise.*"

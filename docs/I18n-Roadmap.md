@@ -163,19 +163,31 @@ et à mesure de son intégration :
 
 - [x] **`feature/i18n-00-plan`** *(cette session)* — ce document. Aucun changement de code
       applicatif.
-- [ ] **`feature/i18n-01-foundation-backend`** *(indépendante, fusionnable en premier, inerte)*
-  - [ ] Gemfile : `devise-i18n`, `i18n-tasks` (groupe dev/test)
-  - [ ] `config/initializers/i18n.rb` : constante `Elvis::SUPPORTED_LOCALES = %w[fr en].freeze`
-  - [ ] `config/application.rb` : lever le verrou de langue, activer `enforce_available_locales`
-  - [ ] Migration `add_column :users, :locale, :string, limit: 10`
-  - [ ] `ApplicationController` : `around_action` de résolution de locale (cascade cookie → user →
-        Parameter → défaut)
-  - [ ] `LocaleController` + route `PATCH /locale` + `app/views/partials/_language_switcher.html.erb`
-  - [ ] `<html lang="...">` dans les 3 layouts (`application.html.erb`, `devise.html.erb`,
-        `simple.html.erb`)
-  - [ ] Config `i18n-tasks` (`.i18n-tasks.yml`)
-  - [ ] Nettoyage du contenu `en.yml` (résidu de scaffold Rails, jamais utilisé)
-  - [ ] `docs/I18n.md` (première version, backend uniquement)
+- [x] **`feature/i18n-01-foundation-backend`** *(indépendante, fusionnable en premier, inerte)*
+  - [x] Gemfile : `devise-i18n`, `i18n-tasks` (groupe dev/test)
+  - [x] Constante `Elvis::SUPPORTED_LOCALES = %w[fr en].freeze` — posée dans
+        `lib/elvis/supported_locales.rb` (pas `config/initializers/i18n.rb` comme envisagé
+        initialement : elle doit être chargée avant le corps de classe de
+        `config/application.rb`, qui s'exécute avant que les initializers ne tournent ; même
+        pattern d'`require_relative` explicite que `lib/elvis/version.rb`)
+  - [x] `config/application.rb` : lever le verrou de langue, activer `enforce_available_locales`
+        (suppression des deux lignes `I18n.enforce_available_locales = false` /
+        `I18n.config.available_locales = :fr` en bas de fichier, remplacées par
+        `config.i18n.available_locales = Elvis::SUPPORTED_LOCALES` dans le corps de la classe)
+  - [x] Migration `add_column :users, :locale, :string, limit: 10`
+        (`db/migrate/20260825203427_add_locale_to_users.rb` — **`db/schema.rb` non régénéré à la
+        main** faute d'environnement Ruby 3.3/Postgres local dans cette session ; il était déjà
+        en retard de 2 migrations avant ce chantier. Lancer `rails db:migrate` dans un
+        environnement correctement provisionné pour le régénérer.)
+  - [x] `ApplicationController` : `around_action` de résolution de locale (cascade cookie → user →
+        Parameter → défaut) — `switch_locale`/`resolve_locale`, posé en `prepend_around_action`
+  - [x] `LocaleController` + route `PATCH /locale` (nommée `locale`) +
+        `app/views/partials/_language_switcher.html.erb`
+  - [x] `<html lang="...">` dans les 3 layouts (`application.html.erb`, `devise.html.erb`,
+        `simple.html.erb`) + sélecteur de langue inclus dans chacun
+  - [x] Config `i18n-tasks` (`.i18n-tasks.yml`)
+  - [x] Nettoyage du contenu `en.yml` (résidu de scaffold Rails, jamais utilisé)
+  - [x] `docs/I18n.md` (première version, backend uniquement)
 - [ ] **`feature/i18n-02-foundation-frontend`** *(indépendante, fusionnable tôt, inerte)*
   - [ ] `yarn add i18next react-i18next i18next-browser-languagedetector`
   - [ ] `yarn add -D i18next-parser`

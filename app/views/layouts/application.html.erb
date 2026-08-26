@@ -6,7 +6,7 @@
 <% end %>
 
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="<%= I18n.locale %>">
 <head>
   <title>Elvis</title>
   <%= csrf_meta_tags %>
@@ -158,6 +158,8 @@
                 <% end %>
               </div>
             <% end %>
+
+            <%= render "partials/language_switcher" %>
           </div>
 
           <% if @current_user.is_admin %>

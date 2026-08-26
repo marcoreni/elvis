@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2025_11_18_094500) do
+ActiveRecord::Schema.define(version: 2026_08_25_203427) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -1278,6 +1278,7 @@ ActiveRecord::Schema.define(version: 2025_11_18_094500) do
     t.boolean "is_creator", default: false
     t.string "identification_number"
     t.bigint "attached_to_id"
+    t.string "locale", limit: 10
     t.index ["address_id"], name: "index_users_on_address_id"
     t.index ["attached_to_id"], name: "index_users_on_attached_to_id"
     t.index ["authentication_token"], name: "index_users_on_authentication_token", unique: true
