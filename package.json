@@ -5,7 +5,7 @@
     "start": "react-scripts --max_old_space_size=2048 start",
     "build": "react-scripts --max_old_space_size=2048 build",
     "i18n:extract": "i18next",
-    "test": "jest"
+    "test": "vitest run"
   },
   "engines": {
     "node": "^20.9.0",
@@ -62,7 +62,6 @@
     "jQuery-QueryBuilder-Elasticsearch": "https://github.com/piotch/jQuery-QueryBuilder-Elasticsearch",
     "jquery": "^3.3.1",
     "jquery-ujs": "^1.2.2",
-    "jsdom": "^11.7.0",
     "json-stringify-safe": "^5.0.1",
     "less": "2.7.1",
     "less-loader": "^4.1.0",
@@ -118,12 +117,11 @@
     "webpack-merge": "5"
   },
   "devDependencies": {
-    "babel-jest": "^30.4.1",
     "i18next-parser": "^9.4.0",
-    "jest": "^30.4.2",
-    "jest-environment-jsdom": "^30.4.1",
+    "jsdom": "^26",
     "node-sass": "^9.0.0",
     "prettier": "^1.14.2",
+    "vitest": "^3.2.4",
     "webpack-dev-server": "4"
   },
   "version": "0.1.0",
