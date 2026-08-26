@@ -1,6 +1,5 @@
 import React, {Fragment, useState} from "react";
 import moment from "moment";
-import 'moment/locale/fr';
 import swal from "sweetalert2";
 import * as api from "../../../tools/api";
 moment.locale('fr');

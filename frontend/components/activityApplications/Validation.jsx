@@ -8,7 +8,6 @@ import WysiwygViewer from "../utils/WysiwygViewer";
 
 
 const moment = require("moment");
-require("moment/locale/fr");
 
 const Validation = ({
                         application,

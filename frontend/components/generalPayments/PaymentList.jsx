@@ -15,7 +15,6 @@ import * as api from "../../tools/api";
 import * as PaymentStatus from "../utils/PaymentStatuses";
 
 const moment = require("moment");
-require("moment/locale/fr");
 
 const FILTER_STORAGE_KEY = "general_payments_list_filters";
 

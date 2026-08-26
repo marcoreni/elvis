@@ -19,7 +19,6 @@ import { PLANNING_MODE } from "../TimePreferencesStep";
 import * as api from "../../../tools/api";
 
 const moment = require("moment");
-require("moment/locale/fr");
 
 class Summary extends React.Component
 {

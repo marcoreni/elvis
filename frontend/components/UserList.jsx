@@ -2,7 +2,6 @@ import React from "react";
 import _ from "lodash";
 
 const moment = require("moment");
-require("moment/locale/fr");
 
 import {csrfToken} from "./utils";
 import {makeDebounce} from "../tools/inputs";

@@ -9,7 +9,6 @@ import {csrfToken} from "../../utils";
 import * as api from "../../../tools/api";
 
 const moment = require("moment-timezone");
-require("moment/locale/fr");
 
 let eventGuid = 0;
 let todayStr = new Date().toISOString().replace(/T.*$/, "");

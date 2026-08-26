@@ -3,7 +3,6 @@ import { ISO_DATE_FORMAT } from "../utils";
 import { getActivityColor } from "../../tools/utils";
 import { capitalFirstLetters } from "../../tools/format";
 const moment = require("moment-timezone");
-require("moment/locale/fr");
 
 //returns hsl color for planning intervals 
 const MAX_HUE = 360;

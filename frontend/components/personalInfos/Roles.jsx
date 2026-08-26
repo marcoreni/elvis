@@ -5,7 +5,6 @@ import * as api from "../../tools/api";
 import swal from "sweetalert2";
 import { csrfToken } from "../utils";
 import moment from "moment";
-import "moment/locale/fr";
 
 moment.locale("fr");
 

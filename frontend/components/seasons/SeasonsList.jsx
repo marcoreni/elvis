@@ -1,7 +1,6 @@
 import React from "react";
 import swal from "sweetalert2";
 
-require("moment/locale/fr");
 
 import ReactTable from "react-table";
 import { csrfToken } from "../utils";

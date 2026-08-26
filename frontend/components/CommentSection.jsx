@@ -1,7 +1,6 @@
 import React, { Fragment } from "react";
 
 const moment = require("moment");
-require("moment/locale/fr");
 
 import _ from "lodash";
 

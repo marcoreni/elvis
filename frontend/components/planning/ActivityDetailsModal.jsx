@@ -12,7 +12,6 @@ import {withSave} from '../planning/activity_management/index'
 import swal from "sweetalert2";
 
 const moment = require("moment");
-require("moment/locale/fr");
 
 const getRoom = (rooms, id) => _.find(rooms, r => r.id == id);
 

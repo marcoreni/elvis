@@ -3,7 +3,6 @@ import _ from "lodash";
 import { optionMapper, findAndGet } from "./utils";
 import UserWithInfos from "./common/UserWithInfos";
 import moment from "moment";
-import "moment/locale/fr";
 import { patch, set } from "../tools/api";
 import { toast } from "react-toastify";
 import Select from "react-select";

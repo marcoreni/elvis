@@ -6,7 +6,6 @@ import RenewActivityItem from "./activityItems/RenewActivityItem";
 import UserAvatar from "./UserAvatar";
 
 const moment = require("moment");
-require("moment/locale/fr");
 
 class PreApplication extends React.Component {
     constructor(props) {

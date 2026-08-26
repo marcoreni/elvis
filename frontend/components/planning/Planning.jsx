@@ -7,7 +7,6 @@ import {toast} from "react-toastify";
 import * as api from "../../tools/api";
 
 const moment = require("moment-timezone");
-require("moment/locale/fr");
 
 import ActivityDetailsModal from "./ActivityDetailsModal";
 import SelectActivity from "./SelectActivity";

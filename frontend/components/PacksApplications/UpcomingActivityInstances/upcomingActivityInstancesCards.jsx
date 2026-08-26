@@ -1,6 +1,5 @@
 import React, {Fragment, useState} from "react";
 import moment from "moment";
-import 'moment/locale/fr';
 
 moment.locale('fr');
 

@@ -4,7 +4,7 @@ module.exports = {
     locales: ["fr", "en"],
     defaultNamespace: "common",
     defaultValue: "",
-    input: ["frontend/components/**/*.{js,jsx}"],
+    input: ["frontend/{components,tools,packs}/**/*.{js,jsx}"],
     output: "frontend/locales/$LOCALE/$NAMESPACE.json",
     keySeparator: ".",
     namespaceSeparator: ":",

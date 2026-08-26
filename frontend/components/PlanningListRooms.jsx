@@ -1,7 +1,6 @@
 import React from "react";
 import PropTypes from "prop-types";
 const moment = require("moment");
-require("moment/locale/fr");
 
 import ReactTable from "react-table";
 
