@@ -2,7 +2,6 @@ import React, {Fragment} from "react";
 import _ from "lodash";
 import moment from "moment";
 
-require("moment/locale/fr");
 
 import StepZilla from "react-stepzilla";
 

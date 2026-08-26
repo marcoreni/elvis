@@ -2,7 +2,6 @@ import React from "react";
 import { fullname } from "../../tools/format";
 
 const moment = require("moment");
-require("moment/locale/fr");
 
 const testId = id => id || id === 0;
 

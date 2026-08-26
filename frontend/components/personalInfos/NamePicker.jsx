@@ -2,7 +2,6 @@ import React from "react";
 import { toLocaleDate, toDate } from "../../tools/format";
 
 const moment = require("moment");
-require("moment/locale/fr");
 
 class NamePicker extends React.Component {
     constructor(props) {

@@ -3,7 +3,6 @@ import PropTypes from "prop-types";
 import _ from "lodash";
 
 const moment = require("moment");
-require("moment/locale/fr");
 
 import { getSeasonFromDate } from "./TimeIntervalHelpers";
 import { RECURRENCE_TYPES, WEEKDAYS } from "../../tools/constants";

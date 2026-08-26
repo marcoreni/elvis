@@ -7,7 +7,6 @@ import DetachAccount from "./DetachAccount";
 import Modal from "react-modal";
 
 const moment = require("moment");
-require("moment/locale/fr");
 
 const requestData = (pageSize, page, sorted, filtered, format) => {
 

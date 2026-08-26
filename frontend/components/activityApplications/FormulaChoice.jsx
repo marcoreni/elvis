@@ -5,7 +5,6 @@ import { toast } from "react-toastify";
 import FormulaActivitiesModal from "./FormulaActivitiesModal";
 
 const moment = require("moment-timezone");
-require("moment/locale/fr");
 
 const FormulaChoice = ({
                            infoText,

@@ -3,7 +3,6 @@ import ReactTable from "react-table";
 import Select from "react-select";
 import { toast } from "react-toastify";
 import moment from "moment";
-import "moment/locale/fr";
 import Modal from "react-modal";
 import MessageModal from "../generalPayments/MessageModal";
 import ListPreferences from "../common/ListPreferences";

@@ -2,7 +2,6 @@ import React from "react";
 import _ from "lodash";
 
 const moment = require("moment");
-require("moment/locale/fr");
 
 import ReactModal from "react-modal";
 import ReactTable from "react-table";

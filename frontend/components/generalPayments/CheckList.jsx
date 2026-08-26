@@ -11,7 +11,6 @@ import {
     reactOptionMapper,
 } from "../utils";
 
-require("moment/locale/fr");
 
 const FILTER_STORAGE_KEY = "general_checks_list_filters";
 

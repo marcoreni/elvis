@@ -11,6 +11,8 @@ import '../inspinia/js/bootstrap.js';
 import '../inspinia/js/inspinia.js';
 import '../inspinia/font-awesome/js/all';
 
+import '../i18n';
+
 FontAwesome.config.autoReplaceSvg = "nest";
 
 // Support component names relative to this directory:

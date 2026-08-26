@@ -20,7 +20,6 @@ import {UNPAID_ID} from "../utils/DuePaymentStatuses";
 
 
 const moment = require("moment");
-require("moment/locale/fr");
 
 const FILTER_STORAGE_KEY = "general_due_payments_list_filters";
 

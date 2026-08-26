@@ -2,7 +2,6 @@ import React, { Fragment } from "react";
 import { fullname } from "../../../tools/format";
 
 const moment = require("moment-timezone");
-require("moment/locale/fr");
 
 export default class PracticeHandleSessions extends React.Component {
     constructor(props){

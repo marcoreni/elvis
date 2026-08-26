@@ -3,7 +3,6 @@ import React, { Fragment } from "react";
 import NamePicker from "./NamePicker";
 
 const moment = require("moment");
-require("moment/locale/fr");
 
 class GeneralInfos extends React.Component {
     constructor(props) {

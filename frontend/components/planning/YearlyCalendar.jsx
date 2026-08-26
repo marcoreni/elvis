@@ -4,7 +4,6 @@ import _, {isArray} from "lodash";
 import { ISO_DATE_FORMAT } from "../utils";
 
 const moment = require("moment");
-require("moment/locale/fr");
 
 export default class YearlyCalendar extends React.Component
 {

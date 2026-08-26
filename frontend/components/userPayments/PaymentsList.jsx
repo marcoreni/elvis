@@ -3,7 +3,6 @@ import _ from "lodash";
 import swal from "sweetalert2";
 
 const moment = require("moment");
-require("moment/locale/fr");
 
 import ReactTable from "react-table";
 

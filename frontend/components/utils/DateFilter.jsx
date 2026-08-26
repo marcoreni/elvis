@@ -1,7 +1,6 @@
 import React from "react";
 
 const moment = require("moment");
-require("moment/locale/fr");
 
 class DateFilter extends React.Component {
     constructor(props) {

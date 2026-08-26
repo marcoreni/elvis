@@ -4,6 +4,7 @@ import React from "react";
 import {findAndGet, ISO_DATE_FORMAT} from "../components/utils";
 import { WEEKDAYS } from "./constants";
 import _ from "lodash";
+import i18n from "../i18n";
 
 export const twoDigits = n => (n < 10 ? `0${n}` : `${n}`);
 
@@ -27,7 +28,7 @@ export const prettifyPhoneNumber = value =>
 export const toBirthday = value => (value ? value.split("T")[0] : "");
 
 export const toLocaleDate = date =>
-    date.toLocaleString("fr-FR", {
+    date.toLocaleString(i18n.language, {
         year: "numeric",
         month: "numeric",
         day: "numeric",
@@ -37,7 +38,7 @@ export const toMonthName = month => {
     const date = new Date();
     date.setDate(1);
     date.setMonth(parseInt(month, 10) - 1);
-    return date.toLocaleString("fr-FR", { month: "long" });
+    return date.toLocaleString(i18n.language, { month: "long" });
 };
 
 export const toTimeRange = obj => {
@@ -50,9 +51,9 @@ export const toTimeRange = obj => {
     };
 
     return `Le ${toLocaleDate(from)} de ${from.toLocaleString(
-        "fr-FR",
+        i18n.language,
         options
-    )} à ${to.toLocaleString("fr-FR", options)}`;
+    )} à ${to.toLocaleString(i18n.language, options)}`;
 };
 
 export const toDateStr = date =>
@@ -111,7 +112,7 @@ export function formatActivityForDisplay(activity) {
     const ref = activity.activity_ref.label;
     const startTime = moment(activity.time_interval.start).format("HH:mm");
     const endTime = moment(activity.time_interval.end).format("HH:mm");
-    const wday = new Intl.DateTimeFormat("fr", { weekday: "long" }).format(
+    const wday = new Intl.DateTimeFormat(i18n.language, { weekday: "long" }).format(
         new Date(activity.time_interval.start)
     );
 

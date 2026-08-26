@@ -26,7 +26,6 @@ import {
 import Swal from "sweetalert2";
 
 const moment = require("moment");
-require("moment/locale/fr");
 
 const FILTER_STORAGE_KEY = "activities_application_list_filters";
 const PREFERENCES_STORAGE_KEY = "activities_applications_list_preferences";

@@ -4,7 +4,6 @@ import _ from "lodash";
 import { subnetMatch } from "ipaddr.js";
 
 const moment = require("moment");
-require("moment/locale/fr");
 
 const getRoom = (rooms, id) => _.find(rooms, r => r.id == id);
 const getTeacher = (activity, activities) => {
