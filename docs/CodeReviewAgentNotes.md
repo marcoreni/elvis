@@ -43,3 +43,36 @@ ci-dessous pour ne pas les reproduire.
 7. Ne rapporter (via `ReportFindings`) que les findings confirmés ou plausibles après cette
    vérification, avec la sévérité correcte et, si besoin, une correction du libellé/mécanisme
    erroné plutôt qu'un simple copier-coller du finding brut.
+
+## Additional notes
+
+(Written in English — new content in this repo's docs is authored in English going forward, see
+`CLAUDE.md`. The sections above predate that decision and are left as originally written.)
+
+### Verify a proposed fix, not just the finding
+
+When implementing (or reviewing) a suggested fix, confirm it actually changes runtime behavior
+instead of trusting its description. Example from PR #2's findings doc
+(`docs/I18n-PR2-Review-Findings.md`, finding #5): a fix proposal for `LocaleController#update`'s
+guest-redirect bug was to set `fallback_location: request.referer.presence || root_path`. That
+reads as reasonable, but it's a no-op — `redirect_back` already tries `request.referer` internally
+before ever falling back to `fallback_location`, so the fallback branch only runs when `referer` is
+already blank, meaning `request.referer.presence` inside it is always `nil`. The actual fix had to
+drop the dependency on `Referer` entirely (an explicit `return_to` param instead). Trace the real
+method being changed before accepting a fix description at face value — the same discipline finding
+claims already get in step 6 above should apply to proposed fixes too.
+
+### Test suite environment gaps (found while fixing PR #2's findings)
+
+- `bundle exec rspec` used to fail immediately with `ActiveRecord::AdapterNotSpecified` because
+  `config/database.yml` had no `test:` block — fixed on `feature/i18n-01-foundation-backend`. If specs
+  won't even load with that error, check for a missing `test:` block before assuming the app or spec
+  code itself is broken.
+- `bundle exec rubocop` isn't runnable in a plain `bundle install` of this repo — `rubocop` isn't
+  currently a Gemfile dependency, despite the `bundle exec rubocop` command documented in `CLAUDE.md`.
+  Confirm with `grep rubocop Gemfile Gemfile.lock` before assuming lint tooling is just missing
+  locally.
+- `spec/services/activities_application_controller_spec.rb` fails to even load
+  (`NameError: uninitialized constant ActivityApplications::TesImporter`) independent of any specific
+  branch — it's a pre-existing break, not a regression from the change under review. Exclude it
+  (`--exclude-pattern`) rather than treating it as a signal about the current diff.

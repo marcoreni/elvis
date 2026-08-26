@@ -55,6 +55,10 @@ Before running `/code-review` on a specific PR in this repo, read `docs/CodeRevi
 first — this repo has two remotes (upstream + a personal fork) and a stacked-branch workflow that
 have already caused the review agent to silently review the wrong diff more than once.
 
+This repo also defines project-specific subagents under `.claude/agents/`
+(`backend-specialist`, `frontend-specialist`, `orchestrator`) — see `docs/Agents.md` for what each
+one covers and when to reach for the orchestrator instead of a single specialist.
+
 ## Commit conventions
 
 Use [Conventional Commits](https://www.conventionalcommits.org/) for every commit message:
@@ -133,3 +137,7 @@ Rails config for things that need to be admin-editable at runtime.
 Default and only enforced locale is French (`config/application.rb`: `config.i18n.default_locale = :fr`,
 `I18n.enforce_available_locales = false`). Much of the in-repo documentation (`docs/*.md`) is written in
 French — read it as-is rather than expecting English docs.
+
+**New documentation should be written in English.** This applies to new files under `docs/`, new
+sections added to this file, and similar going forward — existing French documents are not being
+translated retroactively, but anything newly authored should be in English.
