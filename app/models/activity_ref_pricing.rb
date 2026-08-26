@@ -37,38 +37,17 @@ class ActivityRefPricing < ApplicationRecord
     pricing_from_season = Season.find(pricing.from_season_id)
     pricing_to_season = Season.find(pricing.to_season_id) unless pricing.to_season_id.nil?
 
-    # self_from_season_start [ ] self_to_season_end
-    self_season_start = self_from_season.start # date de début de la saison à comparer
-    self_season_end = self_to_season.end if self_to_season # date de fin de la saison à comparer
+    self_season_start = self_from_season.start
+    self_season_end = self_to_season&.end # nil means "still open-ended"
 
-    # pricing_from_season_start ( ) pricing_to_season_end
-    pricing_season_start = pricing_from_season.start # date de début de la saison à créer
-    pricing_season_end = pricing_to_season.end if pricing_to_season # date de fin de la saison à créer
+    pricing_season_start = pricing_from_season.start
+    pricing_season_end = pricing_to_season&.end # nil means "still open-ended"
 
-    # [ (
-    return true if self_season_end.nil? && pricing_season_end.nil?
-
-    # ( [ )
-    if self_season_end.nil? && pricing_season_end
-      return true if self_season_start < pricing_season_end
-    end
-
-    # [ ( ]
-    if self_season_end && pricing_season_end.nil?
-      return true if pricing_season_start < self_season_end
-    end
-
-    # [ ] ( )
-
-    if self_season_end && pricing_season_end
-      # [ ( ]
-      return true if self_season_start < pricing_season_start && pricing_season_start < self_season_end
-      # [ ) ]
-      return true if pricing_season_start < self_season_end && self_season_end < pricing_season_end
-      # ( [ ] )
-      return true if pricing_season_start < self_season_start && pricing_season_end < self_season_end
-    end
-
-    false
+    # Two closed intervals [self_start, self_end] and [pricing_start, pricing_end] overlap iff
+    # neither one starts strictly after the other ends — inclusive, so sharing so much as one
+    # season (a shared start/end boundary) already counts as overlapping. A nil end means the
+    # interval isn't closed yet, i.e. it extends indefinitely into the future.
+    (self_season_end.nil? || self_season_end >= pricing_season_start) &&
+      (pricing_season_end.nil? || pricing_season_end >= self_season_start)
   end
 end
