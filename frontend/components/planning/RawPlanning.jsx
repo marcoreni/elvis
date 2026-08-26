@@ -8,7 +8,7 @@ import {
     fullname,
     toDate,
     toHourMin,
-} from "../../tools/format.js";
+} from "../../tools/format";
 import {WEEKDAYS} from "../../tools/constants";
 
 const levelDisplay = (users, activityRefId, timeInterval, seasons) => {

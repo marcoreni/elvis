@@ -62,27 +62,15 @@ drop the dependency on `Referer` entirely (an explicit `return_to` param instead
 method being changed before accepting a fix description at face value — the same discipline finding
 claims already get in step 6 above should apply to proposed fixes too.
 
-### Test suite environment gaps (found while fixing PR #2's findings)
+### Rails.cache persists across specs, unlike the DB
 
-- `bundle exec rspec` used to fail immediately with `ActiveRecord::AdapterNotSpecified` because
-  `config/database.yml` had no `test:` block — fixed on `feature/i18n-01-foundation-backend`. If specs
-  won't even load with that error, check for a missing `test:` block before assuming the app or spec
-  code itself is broken.
-- `bundle exec rubocop` isn't runnable in a plain `bundle install` of this repo — `rubocop` isn't
-  currently a Gemfile dependency, despite the `bundle exec rubocop` command documented in `CLAUDE.md`.
-  Confirm with `grep rubocop Gemfile Gemfile.lock` before assuming lint tooling is just missing
-  locally.
-- `spec/services/activities_application_controller_spec.rb` fails to even load
-  (`NameError: uninitialized constant ActivityApplications::TesImporter`) independent of any specific
-  branch — it's a pre-existing break, not a regression from the change under review. Exclude it
-  (`--exclude-pattern`) rather than treating it as a signal about the current diff.
-- `Rails.cache` is a real `ActiveSupport::Cache::FileStore` in the test env (`config/environments/test.rb`
-  sets no `cache_store`, so it falls through to this default) — found while fixing PR #5's findings.
-  Unlike the DB, `DatabaseCleaner`'s transaction rollback does **not** clear it: a spec that creates a
-  `Parameter` (or anything else that populates `Rails.cache`) and doesn't explicitly delete the cache key
-  afterward leaks that value into every later spec — in the same run, and across separate `bundle exec
-  rspec` invocations, since it's written to disk (`tmp/cache/test`). Symptom looks like unrelated tests
-  failing/flaking only when run together or re-run, not in isolation. If a spec touches `Parameter` (or
-  any `Rails.cache.fetch`-backed value), clear its specific cache key(s) before (and ideally after) the
-  example — see `spec/models/parameter_spec.rb` and the `around` block in
-  `spec/controllers/application_controller_spec.rb` for the pattern.
+`Rails.cache` is a real `ActiveSupport::Cache::FileStore` in the test env (`config/environments/test.rb`
+sets no `cache_store`, so it falls through to this default) — found while fixing PR #5's findings.
+Unlike the DB, `DatabaseCleaner`'s transaction rollback does **not** clear it: a spec that creates a
+`Parameter` (or anything else that populates `Rails.cache`) and doesn't explicitly delete the cache key
+afterward leaks that value into every later spec — in the same run, and across separate `bundle exec
+rspec` invocations, since it's written to disk (`tmp/cache/test`). Symptom looks like unrelated tests
+failing/flaking only when run together or re-run, not in isolation. If a spec touches `Parameter` (or
+any `Rails.cache.fetch`-backed value), clear its specific cache key(s) before (and ideally after) the
+example — see `spec/models/parameter_spec.rb` and the `around` block in
+`spec/controllers/application_controller_spec.rb` for the pattern.

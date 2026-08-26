@@ -50,23 +50,6 @@ piecemeal now. Examples spotted so far: `prettier` pinned at `^1.14.2` (current 
 `@babel/preset-react`, which is also already a dependency — likely vestigial). Worth a proper audit
 rather than trusting this list is exhaustive.
 
-## Vitest is pinned to 3.x / Vite 7, not the latest 4.x / Vite 8
-
-`vitest`/`vite` were deliberately pinned below their latest majors when the frontend test runner was
-set up (2026-08-26): Vite 8 changed its default transform pipeline to "oxc" (a Rust-based
-transformer replacing esbuild), and its Vite-config surface for oxc explicitly omits the `lang`/
-loader override we rely on (see `vitest.config.js`'s `jsxInJsFiles` plugin) to make Vite parse JSX
-inside plain `.js` files — this app's actual webpack/Babel build treats every `.js` file as
-potentially containing JSX, unlike Vite's default `.jsx`/`.tsx`-only rule. Forcing `oxc: false` to
-fall back to esbuild under Vite 8 didn't restore the old loader-override behavior either (whether
-that's an oxc-migration gap or an unrelated Vite 8 change wasn't root-caused — Vite 8 is very new).
-
-Two independent ways to unblock the upgrade later, either one on its own would do it:
-- Rename the frontend `.js` files that actually contain JSX to `.jsx` (the real fix — removes the
-  need for the custom transform plugin entirely, works the same on any Vite version). Repo-wide,
-  not attempted here since it's a much larger blast radius than a test-tooling change should carry.
-- Or find/wait for an oxc-based equivalent of the `.js`-as-jsx override once Vite 8 matures.
-
 ## Rubocop backlog
 
 `rubocop` was only added as a Gemfile dependency 2026-08-26 (see git history around that date) — it

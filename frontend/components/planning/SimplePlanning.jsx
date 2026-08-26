@@ -10,7 +10,7 @@ import {
     toDate,
     toHourMin,
     toLocaleDate,
-} from "../../tools/format.js";
+} from "../../tools/format";
 import * as api from "../../tools/api";
 import { WEEKDAYS, INTERVAL_KINDS } from "../../tools/constants";
 import { makeDebounce } from "../../tools/inputs";

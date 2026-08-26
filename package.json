@@ -124,7 +124,7 @@
     "jsdom": "^26",
     "node-sass": "^9.0.0",
     "prettier": "^1.14.2",
-    "vitest": "^3.2.4",
+    "vitest": "^4.1.11",
     "webpack-dev-server": "4"
   },
   "version": "0.1.0",
