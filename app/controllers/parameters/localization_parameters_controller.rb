@@ -25,13 +25,15 @@ class Parameters::LocalizationParametersController < ApplicationController
       }, status: :unprocessable_entity
     end
 
-    default_language_param = Parameter.find_or_create_by(label: "app.localization.default_language", value_type: "string")
-    default_language_param.value = default_language
-    default_language_param.save!
+    ActiveRecord::Base.transaction do
+      default_language_param = Parameter.find_or_create_by(label: "app.localization.default_language", value_type: "string")
+      default_language_param.value = default_language
+      default_language_param.save!
 
-    available_languages_param = Parameter.find_or_create_by(label: "app.localization.available_languages", value_type: "json")
-    available_languages_param.value = available_languages.to_json
-    available_languages_param.save!
+      available_languages_param = Parameter.find_or_create_by(label: "app.localization.available_languages", value_type: "json")
+      available_languages_param.value = available_languages.to_json
+      available_languages_param.save!
+    end
 
     respond_to do |format|
       format.json { render json: { success: true } }

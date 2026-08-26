@@ -12,6 +12,8 @@
 #  value_type :string           default("string")
 #
 class Parameter < ApplicationRecord
+  after_commit :expire_cache
+
   def parse
     case value_type
     when "json"
@@ -39,5 +41,14 @@ class Parameter < ApplicationRecord
 
       p.nil? ? nil : p.parse
     end || default
+  end
+
+  private
+
+  # Without this, any save/destroy leaves Parameter.get_value's cache (keyed by label, 1h TTL)
+  # serving the pre-write value until it naturally expires — several Parameters::*Controller
+  # actions write through this model expecting the change to take effect immediately.
+  def expire_cache
+    Rails.cache.delete("parameter_#{label}")
   end
 end

@@ -95,7 +95,11 @@ class ApplicationController < ActionController::Base
 
   # Validates each cascade source in turn against the installation's available_locales and falls
   # through to the next source on an invalid/blank value, instead of jumping straight to
-  # I18n.default_locale the moment the first source doesn't validate.
+  # I18n.default_locale the moment the first source doesn't validate. I18n.default_locale itself
+  # is included as a candidate (not an unconditional final fallback) since an installation can
+  # disable it via available_locales; if truly nothing validates, prefer any enabled locale over
+  # one the admin explicitly disabled, and only fall back to the raw default as an absolute last
+  # resort (e.g. available_locales itself came back empty).
   def resolve_locale
     installation_default = begin
       Parameter.get_value("app.localization.default_language", default: I18n.default_locale.to_s)
@@ -106,9 +110,10 @@ class ApplicationController < ActionController::Base
 
     available = available_locales.map(&:to_sym)
 
-    [current_user&.locale, cookies[:locale], installation_default]
+    [current_user&.locale, cookies[:locale], installation_default, I18n.default_locale]
       .map { |candidate| candidate.to_s.presence&.to_sym }
       .find { |locale| locale && available.include?(locale) } ||
+      available.first ||
       I18n.default_locale
   end
 

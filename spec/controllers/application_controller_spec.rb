@@ -12,6 +12,19 @@ RSpec.describe ApplicationController, type: :controller do
   before { routes.draw { get "index" => "anonymous#index" } }
 
   describe "locale resolution cascade (#resolve_locale)" do
+    # Parameter.get_value's cache is a real FileStore in the test env, persisting independently of
+    # DatabaseCleaner's transaction rollback — clear these keys before/after each example so one
+    # test's Parameter doesn't leak its cached value into another (here or in other spec files).
+    around do |example|
+      %w[app.localization.available_languages app.localization.default_language].each do |label|
+        Rails.cache.delete("parameter_#{label}")
+      end
+      example.run
+      %w[app.localization.available_languages app.localization.default_language].each do |label|
+        Rails.cache.delete("parameter_#{label}")
+      end
+    end
+
     it "prefers the signed-in user's locale over the cookie" do
       user = FactoryBot.create(:user, locale: "en")
       sign_in user
@@ -44,6 +57,19 @@ RSpec.describe ApplicationController, type: :controller do
       get :index
 
       expect(response.body).to eq(I18n.default_locale.to_s)
+    end
+
+    it "falls back to an actually-available locale, not the raw I18n.default_locale, when the admin disabled it (regression: PR #5 finding #3)" do
+      Parameter.create!(label: "app.localization.available_languages", value_type: "json", value: ["en"].to_json)
+      allow(Parameter).to receive(:get_value).and_call_original
+      allow(Parameter).to receive(:get_value)
+        .with("app.localization.default_language", default: anything)
+        .and_raise(StandardError, "boom")
+
+      get :index
+
+      expect(I18n.default_locale.to_s).to eq("fr") # sanity: this scenario requires fr to be the raw default
+      expect(response.body).to eq("en")
     end
   end
 

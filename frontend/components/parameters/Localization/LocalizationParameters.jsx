@@ -22,6 +22,7 @@ export default function LocalizationParameters() {
                 setIsLoading(false);
             })
             .error(() => {
+                setIsLoading(false);
                 swal({
                     title: "Erreur lors du chargement des paramètres",
                     type: "error",
@@ -31,11 +32,19 @@ export default function LocalizationParameters() {
     }, []);
 
     const toggleAvailableLanguage = (locale) => {
-        setAvailableLanguages((current) =>
-            current.includes(locale)
+        setAvailableLanguages((current) => {
+            const next = current.includes(locale)
                 ? current.filter((l) => l !== locale)
-                : [...current, locale]
-        );
+                : [...current, locale];
+
+            // Keep the default-language select pointed at something still available, rather
+            // than letting it silently end up on a locale the admin just unchecked.
+            if (!next.includes(defaultLanguage)) {
+                setDefaultLanguage(next[0] || "");
+            }
+
+            return next;
+        });
     };
 
     const onSubmit = () => {
@@ -101,7 +110,7 @@ export default function LocalizationParameters() {
                             value={defaultLanguage}
                             onChange={(event) => setDefaultLanguage(event.target.value)}
                         >
-                            {supportedLocales.map((locale) => (
+                            {availableLanguages.map((locale) => (
                                 <option key={locale} value={locale}>
                                     {LOCALE_LABELS[locale] || locale.toUpperCase()}
                                 </option>
