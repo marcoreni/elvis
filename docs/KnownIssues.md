@@ -40,15 +40,68 @@ Running `bin/rails test`:
 No CI currently runs either test suite (see `.github/workflows/`, which only has an auto-release
 workflow) — that's part of why this drifted this far without being noticed.
 
-## Frontend dependencies are generally outdated
+## Frontend dependencies: major-version bumps still pending
 
-Noticed 2026-08-26 while setting up the frontend test runner. Not part of that work — deliberately
-deferred to a later general dependency-bump pass across `package.json`, rather than bumped
-piecemeal now. Examples spotted so far: `prettier` pinned at `^1.14.2` (current major is 3.x),
-`node-sass` (long deprecated in favor of `dart-sass`, dropped from `sass-loader`'s docs), `react`/
-`react-dom` at `^16.14.0` (three majors behind), `babel-preset-react` at `^6.24.1` (superseded by
-`@babel/preset-react`, which is also already a dependency — likely vestigial). Worth a proper audit
-rather than trusting this list is exhaustive.
+Surveyed 2026-08-27 (`yarn outdated`, each entry checked individually — see git history around that
+date for the accompanying unused-dependency cleanup and in-range bumps, both already done). What's
+left all requires an explicit major-version jump and, in several cases, code changes — tackle one
+at a time rather than in bulk, starting with React since most of the rest is either downstream of it
+or independent of it.
+
+**React 16 → 19 (do this one first)** — `react`/`react-dom` `^16.14.0` → 19.x. Three majors behind,
+crossing several real breaking boundaries, not just a version bump:
+- Legacy string refs (`ref="foo"`) and the legacy context API (`contextTypes`/`getChildContext`) are
+  both removed in 19 — need to grep the ~118 class components (see `docs/I18n-Roadmap.md`'s context
+  count) for both before attempting this.
+- `ReactDOM.render` is gone from 18+ in favor of `createRoot`. `react_ujs` (currently 2.7.1, latest
+  3.3.1) needs bumping in lockstep — it already tries to resolve `react-dom/client` internally
+  (`node_modules/react_ujs/react_ujs/src/reactDomClient.js`), which is why a production
+  `bin/shakapacker` build currently prints a harmless
+  `Module not found: Error: Can't resolve 'react-dom/client'` warning; that's dormant code in the
+  installed react_ujs version waiting for React 18+.
+- React 18 also changed effect/StrictMode timing enough to surface latent class-component lifecycle
+  bugs that never showed up under 16's behavior.
+- Consider staging this (16 → 18 first, prove it out, then 18 → 19) rather than one big-bang jump.
+- `@testing-library/react` is deliberately pinned at `^12.1.5` *because* it's the last major
+  supporting React 16 (see the Vitest setup commit) — once React moves, this should move with it
+  (latest is 16.3.2, needs React 18+).
+
+**Downstream of the React bump** (all currently pinned well below latest, but bumping most of these
+before React itself would just be churn): `react-select`, `react-table`, `react-toastify`,
+`react-datepicker`, `react-loader-spinner`, `react-dropzone`, `react-autosuggest`, `react-switch`,
+`react-final-form` + `react-final-form-arrays`, `@wojtekmaj/react-daterange-picker`.
+
+**Independent of React, each a real API-surface jump**:
+- `sweetalert2` 7.33.1 → 11.26.25 — dropped the old callback-based `swal({...})` API for promises
+  somewhere in the 9.x line; every call site (dozens, via `frontend/tools/api.js` and components
+  directly) would need reviewing.
+- `bootstrap` 4.6.2 → 5.3.8 — drops the jQuery dependency, markup/class changes.
+- `isomorphic-dompurify` 0.20.0 → 3.23.0.
+- `prettier` 1.19.1 → 3.9.6 — different default formatting rules; bumping would reformat large parts
+  of the codebase in one commit.
+
+**Build tooling, moderate risk**: `shakapacker` 8→10, `webpack-cli` 4→7, `webpack-dev-server` 4→6,
+`babel-loader` 8→10, `compression-webpack-plugin` 9→12, the whole `@babel/*` toolchain 7→8.
+
+**Smaller/isolated, lower priority**: `jquery` 3→4, `tui-code-snippet`, `webpack-assets-manifest`,
+`webpack-merge`, `css-minimizer-webpack-plugin` 7→8, `sass-loader` 16→17, `postcss-preset-env` 10→11.
+
+**Blocked on this repo's Node version, not just "not yet bumped"**: `postcss-import` 16→17 and
+`jsdom` 26→30 both require Node ≥22 — this repo's `engines.node` is pinned to `^20.9.0`. Don't bump
+either past their current major without bumping Node first (same wall we hit picking versions for
+the Vitest/jsdom setup and `postcss-import` itself).
+
+**Not really "outdated," just unpinned** — these resolve to a git ref, not a registry version, so
+`yarn outdated` reports them as `exotic` rather than giving a real comparison: `jQuery-QueryBuilder`,
+`jQuery-QueryBuilder-Elasticsearch`, `react-stepzilla`, `react-yearly-calendar`, `tui-calendar`.
+Nothing pins these to a specific commit, so they can change underneath the app without any
+`package.json`/lockfile change showing it — worth pinning to a commit SHA at some point regardless
+of the version-bump work above.
+
+**`node-sass` is deprecated but still load-bearing** — `sass-loader` needs either `node-sass` or
+`sass` (dart-sass) installed to actually compile the `.scss` files in this repo, and only `node-sass`
+is currently present. Migrating to `sass` is a real (if probably mechanical) task, not a version
+bump — dart-sass's syntax is close to but not 100% compatible with node-sass's on some edge cases.
 
 ## Rubocop backlog
 
