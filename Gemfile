@@ -105,6 +105,9 @@ group :development do
   gem "seed_dump"
   gem "letter_opener"
   gem "foreman"
+
+  # Ruby lint (see CLAUDE.md "Common commands" and .rubocop.yml)
+  gem "rubocop", require: false
 end
 
 gem "rack-cors"

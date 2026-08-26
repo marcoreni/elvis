@@ -57,6 +57,14 @@ development:
   # Defaults to warning.
   #min_messages: notice
 
+test:
+  <<: *default
+  database: elvis_test
+  username: elvis
+  password: elvis
+  host: 127.0.0.1
+  port: 5432
+
 kubernetes:
   <<: *default
   database: <%= ENV['ELVIS_DB'] %>

@@ -1,9 +1,9 @@
 require 'rails_helper'
 
-RSpec.describe ActivityApplications::TesImporter, type: :service do
-  describe '#guess_activity_ref' do
+RSpec.describe ActivityApplications::TesImportHandler, type: :service do
+  describe '#guess_activity_ref_and_level' do
     before do
-      @service = ActivityApplications::TesImporter.new nil
+      @service = ActivityApplications::TesImportHandler.new
 
       FactoryBot.create(:activity_ref_kind, name: "Guitare")
       FactoryBot.create(:activity_ref, label: "Guitare - cours individuel - 30 minutes", activity_ref_kind: ActivityRefKind.find_by(name: "Guitare"))
@@ -15,6 +15,8 @@ RSpec.describe ActivityApplications::TesImporter, type: :service do
       FactoryBot.create(:activity_ref, label: "Piano / Clavier - cours duo", activity_ref_kind: ActivityRefKind.find_by(name: "Piano / Clavier"))
       FactoryBot.create(:activity_ref, label: "Piano / Clavier - cours collectif", activity_ref_kind: ActivityRefKind.find_by(name: "Piano / Clavier"))
 
+      FactoryBot.create(:activity_ref_kind, name: "Atelier")
+      FactoryBot.create(:activity_ref, label: "Atelier", activity_ref_kind: ActivityRefKind.find_by(name: "Atelier"))
     end
 
     context 'when instrument does not contain level' do
@@ -24,10 +26,9 @@ RSpec.describe ActivityApplications::TesImporter, type: :service do
         let(:activite) { 'Cours Individuel 30 mn' }
 
         it 'returns the correct activity reference' do
-
           result = @service.send(:guess_activity_ref_and_level, activite, instrument)
           ar = ActivityRef.find_by(label: "Guitare - cours individuel - 30 minutes")
-          expect(result).to eq({activity_ref_id: ar.id, level: nil})
+          expect(result).to eq([{ activity_ref_id: ar.id, level: nil }])
         end
       end
 
@@ -35,13 +36,11 @@ RSpec.describe ActivityApplications::TesImporter, type: :service do
         let(:activite) { 'Cours Duo' }
 
         it 'returns the correct activity reference' do
-
           result = @service.send(:guess_activity_ref_and_level, activite, instrument)
           ar = ActivityRef.find_by(label: "Guitare - cours duo")
-          expect(result).to eq({activity_ref_id: ar.id, level: nil})
+          expect(result).to eq([{ activity_ref_id: ar.id, level: nil }])
         end
       end
-
     end
 
     context 'when instrument contains level' do
@@ -51,10 +50,9 @@ RSpec.describe ActivityApplications::TesImporter, type: :service do
         let(:activite) { 'Cours Individuel 30 mn' }
 
         it 'returns the correct activity reference' do
-
           result = @service.send(:guess_activity_ref_and_level, activite, instrument)
           ar = ActivityRef.find_by(label: "Guitare - cours individuel - 30 minutes")
-          expect(result).to eq({activity_ref_id: ar.id, level: '2 ans'})
+          expect(result).to eq([{ activity_ref_id: ar.id, level: '2 ans' }])
         end
       end
 
@@ -62,10 +60,9 @@ RSpec.describe ActivityApplications::TesImporter, type: :service do
         let(:activite) { 'Cours Duo' }
 
         it 'returns the correct activity reference' do
-
           result = @service.send(:guess_activity_ref_and_level, activite, instrument)
           ar = ActivityRef.find_by(label: "Guitare - cours duo")
-          expect(result).to eq({activity_ref_id: ar.id, level: '2 ans'})
+          expect(result).to eq([{ activity_ref_id: ar.id, level: '2 ans' }])
         end
       end
 
@@ -73,13 +70,11 @@ RSpec.describe ActivityApplications::TesImporter, type: :service do
         let(:activite) { 'Atelier' }
 
         it 'returns the correct activity reference' do
-
           result = @service.send(:guess_activity_ref_and_level, activite, instrument)
           ar = ActivityRef.find_by(label: "Atelier")
-          expect(result).to eq({activity_ref_id: ar.id, instrument: 'Guitare', is_workshop: true, level: '2 ans'})
+          expect(result).to eq([{ activity_ref_id: ar.id, instrument_names: 'Guitare', is_workshop: true, level: '2 ans' }])
         end
       end
-
     end
 
     context 'when instrument contains level 1 an' do
@@ -89,10 +84,9 @@ RSpec.describe ActivityApplications::TesImporter, type: :service do
         let(:activite) { 'Cours Individuel 30 mn' }
 
         it 'returns the correct activity reference' do
-
           result = @service.send(:guess_activity_ref_and_level, activite, instrument)
           ar = ActivityRef.find_by(label: "Guitare - cours individuel - 30 minutes")
-          expect(result).to eq({activity_ref_id: ar.id, level: '1 an'})
+          expect(result).to eq([{ activity_ref_id: ar.id, level: '1 an' }])
         end
       end
 
@@ -100,13 +94,11 @@ RSpec.describe ActivityApplications::TesImporter, type: :service do
         let(:activite) { 'Cours Duo' }
 
         it 'returns the correct activity reference' do
-
           result = @service.send(:guess_activity_ref_and_level, activite, instrument)
           ar = ActivityRef.find_by(label: "Guitare - cours duo")
-          expect(result).to eq({activity_ref_id: ar.id, level: '1 an'})
+          expect(result).to eq([{ activity_ref_id: ar.id, level: '1 an' }])
         end
       end
-
     end
 
     context 'when instrument is not present' do
@@ -114,10 +106,9 @@ RSpec.describe ActivityApplications::TesImporter, type: :service do
       let(:activite) { 'Cours collectif guitare' }
 
       it 'returns the correct activity reference' do
-
         result = @service.send(:guess_activity_ref_and_level, activite, instrument)
         ar = ActivityRef.find_by(label: "Guitare - cours collectif")
-        expect(result).to eq({activity_ref_id: ar.id, level: nil})
+        expect(result).to eq([{ activity_ref_id: ar.id, level: nil }])
       end
     end
   end
