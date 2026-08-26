@@ -4,7 +4,8 @@
   "scripts": {
     "start": "react-scripts --max_old_space_size=2048 start",
     "build": "react-scripts --max_old_space_size=2048 build",
-    "i18n:extract": "i18next"
+    "i18n:extract": "i18next",
+    "test": "jest"
   },
   "engines": {
     "node": "^20.9.0",
@@ -117,7 +118,10 @@
     "webpack-merge": "5"
   },
   "devDependencies": {
+    "babel-jest": "^30.4.1",
     "i18next-parser": "^9.4.0",
+    "jest": "^30.4.2",
+    "jest-environment-jsdom": "^30.4.1",
     "node-sass": "^9.0.0",
     "prettier": "^1.14.2",
     "webpack-dev-server": "4"

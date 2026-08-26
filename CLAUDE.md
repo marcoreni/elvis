@@ -46,6 +46,9 @@ u.save!
 - Frontend build: `yarn build` (production webpack bundle); `yarn start` runs `react-scripts` dev server
   (in practice frontend assets are usually served through `shakapacker`/webpacker during `foreman start`,
   not `yarn start`)
+- Frontend tests: `yarn test` (Jest, added alongside the i18n frontend work — `jest.config.js`,
+  colocated `*.test.js` files under `frontend/`). No component-rendering tests yet
+  (no `@testing-library/react` installed) — so far only plain-function/module-logic tests.
 - JS formatting: `.prettierrc` sets 4-space tabs; no lint script is wired up in `package.json`
 
 Note: this repo has **two parallel test frameworks** — RSpec (`spec/`, newer/preferred) and Minitest
