@@ -4,7 +4,7 @@ class LocaleController < ApplicationController
   def update
     locale = params[:locale].to_s.presence&.to_sym
 
-    if locale && Elvis::SUPPORTED_LOCALES_SYMBOLS.include?(locale)
+    if locale && available_locales.map(&:to_sym).include?(locale)
       cookies[:locale] = locale_cookie(locale)
       current_user&.update(locale: locale.to_s)
     end

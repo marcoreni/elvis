@@ -62,6 +62,10 @@ Rails.application.routes.draw do
     post "hours_before_cancelling_activity", to: "planning_parameters#save_hours_before_cancelling_activity"
 
     get "activities_parameters", to: "activities_parameters#index"
+
+    get "localization_parameters", to: "localization_parameters#index"
+    get "localization_parameters/show", to: "localization_parameters#show"
+    post "localization_parameters/update", to: "localization_parameters#update"
   end
   devise_for :users,
              controllers: { sessions: "sessions", registrations: "registrations", confirmations: "confirmations", passwords: "passwords" }, path: "u"

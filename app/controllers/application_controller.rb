@@ -3,6 +3,7 @@ class ApplicationController < ActionController::Base
 
   prepend_before_action :require_logo
   prepend_around_action :switch_locale
+  helper_method :available_locales
   before_action :save_request
   before_action :url_registration
   before_action :configure_permitted_parameters, if: :devise_controller?
@@ -92,9 +93,13 @@ class ApplicationController < ActionController::Base
     { value: locale.to_s, expires: 1.year, same_site: :lax }
   end
 
-  # Validates each cascade source in turn against SUPPORTED_LOCALES_SYMBOLS and falls through
-  # to the next source on an invalid/blank value, instead of jumping straight to
-  # I18n.default_locale the moment the first source doesn't validate.
+  # Validates each cascade source in turn against the installation's available_locales and falls
+  # through to the next source on an invalid/blank value, instead of jumping straight to
+  # I18n.default_locale the moment the first source doesn't validate. I18n.default_locale itself
+  # is included as a candidate (not an unconditional final fallback) since an installation can
+  # disable it via available_locales; if truly nothing validates, prefer any enabled locale over
+  # one the admin explicitly disabled, and only fall back to the raw default as an absolute last
+  # resort (e.g. available_locales itself came back empty).
   def resolve_locale
     installation_default = begin
       Parameter.get_value("app.localization.default_language", default: I18n.default_locale.to_s)
@@ -103,10 +108,30 @@ class ApplicationController < ActionController::Base
       nil
     end
 
-    [current_user&.locale, cookies[:locale], installation_default]
+    available = available_locales.map(&:to_sym)
+
+    [current_user&.locale, cookies[:locale], installation_default, I18n.default_locale]
       .map { |candidate| candidate.to_s.presence&.to_sym }
-      .find { |locale| locale && Elvis::SUPPORTED_LOCALES_SYMBOLS.include?(locale) } ||
+      .find { |locale| locale && available.include?(locale) } ||
+      available.first ||
       I18n.default_locale
+  end
+
+  # Locales this installation actually exposes to its users — the subset of the code-shipped
+  # Elvis::SUPPORTED_LOCALES the admin enabled via the "Langues" settings screen (Parameter
+  # "app.localization.available_languages", see Parameters::LocalizationParametersController).
+  # Falls back to all supported locales if the admin hasn't configured this yet (or if the
+  # Parameter lookup fails — see the rescue above, same hot-path concern applies here). Used both
+  # to clamp locale resolution above and to drive the language switcher UI.
+  def available_locales
+    @available_locales ||= begin
+      Elvis::SUPPORTED_LOCALES & Parameter.get_value(
+        "app.localization.available_languages", default: Elvis::SUPPORTED_LOCALES
+      )
+    rescue StandardError => e
+      Rails.logger.error("[i18n] Parameter.get_value(\"app.localization.available_languages\") failed: #{e.message}")
+      Elvis::SUPPORTED_LOCALES
+    end
   end
 
   def verify_season

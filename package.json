@@ -117,6 +117,9 @@
     "webpack-merge": "5"
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "6.9.1",
+    "@testing-library/react": "^12.1.5",
+    "@testing-library/user-event": "^13",
     "i18next-parser": "^9.4.0",
     "jsdom": "^26",
     "node-sass": "^9.0.0",

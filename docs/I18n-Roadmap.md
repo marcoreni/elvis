@@ -209,11 +209,25 @@ et à mesure de son intégration :
         fichiers ne sont pas encore retirés** — effet de bord documenté dans `docs/I18n.md`, à
         nettoyer au fil des branches d'extraction qui touchent ces fichiers.
   - [x] Compléter `docs/I18n.md` avec la partie frontend
-- [ ] **`feature/i18n-03-localization-settings`** *(dépend de 01+02)*
-  - [ ] `Parameters::LocalizationParametersController` (clone de `PlanningParametersController`)
-  - [ ] Route sous `namespace :parameters`
-  - [ ] Écran React `LocalizationParameters` (choix langue par défaut + langues disponibles)
-  - [ ] Entrée de menu `Elvis::MenuManager`
+- [x] **`feature/i18n-03-localization-settings`** *(dépend de 01+02)*
+  - [x] `Parameters::LocalizationParametersController` (clone du pattern JSON
+        `school_planning_params`/`update_school_planning_params` de `PlanningParametersController`)
+  - [x] Route sous `namespace :parameters`
+  - [x] Écran React `parameters/Localization/LocalizationParameters` (choix langue par défaut +
+        langues disponibles, cases à cocher + select, pattern calqué sur
+        `ApplicationParameters.jsx`)
+  - [x] **Pas d'entrée `Elvis::MenuManager`** — en lisant `lib/elvis/menu_manager.rb`, ce
+        mécanisme sert la navigation globale de l'app, pas la page `/parameters`. Les écrans de
+        réglages individuels (École, Emails, Formules...) sont en réalité de simples cartes
+        ajoutées dans `ParametersController#set_base_parameters`, qui alimentent la page
+        `/parameters` déjà existante — c'est ce mécanisme qui a été utilisé (carte "Langues" sous
+        `@parameters[:général]`), pas `Elvis::MenuManager` comme envisagé initialement dans ce
+        plan.
+  - [x] `ApplicationController#available_locales` (`helper_method`) : calcule
+        `Elvis::SUPPORTED_LOCALES ∩ app.localization.available_languages` et remplace désormais
+        `Elvis::SUPPORTED_LOCALES` dans `resolve_locale`, le sélecteur de langue
+        (`_language_switcher.html.erb`) et `LocaleController#update` — sans ça, le réglage admin
+        n'aurait aucun effet réel nulle part.
 - [ ] **`feature/i18n-04-devise-and-public-pages`** *(dépend de 01)*
   - [ ] `app/views/devise/**` (connexion, inscription, mot de passe, confirmation...)
   - [ ] `app/views/users/new_application.html.erb` (pré-inscription publique)
