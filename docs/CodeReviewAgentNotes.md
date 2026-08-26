@@ -76,3 +76,13 @@ claims already get in step 6 above should apply to proposed fixes too.
   (`NameError: uninitialized constant ActivityApplications::TesImporter`) independent of any specific
   branch — it's a pre-existing break, not a regression from the change under review. Exclude it
   (`--exclude-pattern`) rather than treating it as a signal about the current diff.
+- `Rails.cache` is a real `ActiveSupport::Cache::FileStore` in the test env (`config/environments/test.rb`
+  sets no `cache_store`, so it falls through to this default) — found while fixing PR #5's findings.
+  Unlike the DB, `DatabaseCleaner`'s transaction rollback does **not** clear it: a spec that creates a
+  `Parameter` (or anything else that populates `Rails.cache`) and doesn't explicitly delete the cache key
+  afterward leaks that value into every later spec — in the same run, and across separate `bundle exec
+  rspec` invocations, since it's written to disk (`tmp/cache/test`). Symptom looks like unrelated tests
+  failing/flaking only when run together or re-run, not in isolation. If a spec touches `Parameter` (or
+  any `Rails.cache.fetch`-backed value), clear its specific cache key(s) before (and ideally after) the
+  example — see `spec/models/parameter_spec.rb` and the `around` block in
+  `spec/controllers/application_controller_spec.rb` for the pattern.

@@ -66,3 +66,24 @@ Two independent ways to unblock the upgrade later, either one on its own would d
   need for the custom transform plugin entirely, works the same on any Vite version). Repo-wide,
   not attempted here since it's a much larger blast radius than a test-tooling change should carry.
 - Or find/wait for an oxc-based equivalent of the `.js`-as-jsx override once Vite 8 matures.
+
+## Rubocop backlog
+
+`rubocop` was only added as a Gemfile dependency 2026-08-26 (see git history around that date) — it
+had never actually been run against this codebase before, despite `CLAUDE.md` documenting
+`bundle exec rubocop` as the lint command. Running it now surfaces a real backlog, not yet triaged
+or cleaned up. Spotted so far (not exhaustive — nobody's run a full-codebase pass):
+
+- `app/controllers/application_controller.rb`: `Style/RedundantSelf` (`self.call_render`),
+  `Style/GuardClause`, `Style/NumericPredicate` (`nb == 0` instead of `nb.zero?`),
+  `Layout/EmptyLinesAroundClassBody`, a couple of `Layout/LineLength` overflows — all pre-existing,
+  predate any of the i18n branches.
+- New spec files added during the i18n review passes (e.g.
+  `spec/controllers/parameters/localization_parameters_controller_spec.rb`) already carry minor
+  offenses of their own: missing `# frozen_string_literal: true`, `Style/WordArray`,
+  `Style/BlockDelimiters` on multi-line `expect { ... }` blocks, a few `Layout/LineLength` overflows
+  from long example descriptions.
+
+Worth a dedicated `bundle exec rubocop -a` (or manual) cleanup pass across the whole codebase rather
+than fixing these piecemeal as they're noticed — deferred here for the same reason as the frontend
+dependency bumps above.
