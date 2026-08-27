@@ -12,19 +12,6 @@ RSpec.describe ApplicationController, type: :controller do
   before { routes.draw { get "index" => "anonymous#index" } }
 
   describe "locale resolution cascade (#resolve_locale)" do
-    # Parameter.get_value's cache is a real FileStore in the test env, persisting independently of
-    # DatabaseCleaner's transaction rollback — clear these keys before/after each example so one
-    # test's Parameter doesn't leak its cached value into another (here or in other spec files).
-    around do |example|
-      %w[app.localization.available_languages app.localization.default_language].each do |label|
-        Rails.cache.delete("parameter_#{label}")
-      end
-      example.run
-      %w[app.localization.available_languages app.localization.default_language].each do |label|
-        Rails.cache.delete("parameter_#{label}")
-      end
-    end
-
     it "prefers the signed-in user's locale over the cookie" do
       user = FactoryBot.create(:user, locale: "en")
       sign_in user

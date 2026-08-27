@@ -67,10 +67,18 @@ claims already get in step 6 above should apply to proposed fixes too.
 `Rails.cache` is a real `ActiveSupport::Cache::FileStore` in the test env (`config/environments/test.rb`
 sets no `cache_store`, so it falls through to this default) — found while fixing PR #5's findings.
 Unlike the DB, `DatabaseCleaner`'s transaction rollback does **not** clear it: a spec that creates a
-`Parameter` (or anything else that populates `Rails.cache`) and doesn't explicitly delete the cache key
-afterward leaks that value into every later spec — in the same run, and across separate `bundle exec
-rspec` invocations, since it's written to disk (`tmp/cache/test`). Symptom looks like unrelated tests
-failing/flaking only when run together or re-run, not in isolation. If a spec touches `Parameter` (or
-any `Rails.cache.fetch`-backed value), clear its specific cache key(s) before (and ideally after) the
-example — see `spec/models/parameter_spec.rb` and the `around` block in
-`spec/controllers/application_controller_spec.rb` for the pattern.
+`Parameter` (or anything else that populates `Rails.cache`) leaks that value into every later spec —
+in the same run, and across separate `bundle exec rspec` invocations, since it's written to disk
+(`tmp/cache/test`). Symptom looks like unrelated tests failing/flaking only when run together or
+re-run, not in isolation, and reproduces most reliably by running the suite twice in a row rather than
+once.
+
+Originally worked around per-spec (several specs manually deleting their own specific cache keys in a
+`before`/`around` hook) until 2026-08-27, when that turned out to be exactly the kind of cleanup gap
+this note warns about: `spec/controllers/locale_controller_spec.rb` didn't have its own workaround and
+started failing under specific run orders once another spec's cached `Parameter` leaked into it.
+Replaced with a single `config.before(:each) { Rails.cache.clear }` in `spec/rails_helper.rb` — no
+spec needs to manage this itself anymore. Don't reintroduce a per-spec `Rails.cache.delete`/`.clear`
+workaround; if the global hook ever isn't enough (e.g. a spec needs cache state to *survive* across
+its own examples), scope the exception narrowly and explain why in that spec, not by adding another
+one-off cleanup block for the same underlying problem.
