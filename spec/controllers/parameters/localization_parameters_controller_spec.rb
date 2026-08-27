@@ -5,8 +5,6 @@ RSpec.describe Parameters::LocalizationParametersController, type: :controller d
 
   before do
     sign_in admin
-    Rails.cache.delete("parameter_app.localization.default_language")
-    Rails.cache.delete("parameter_app.localization.available_languages")
   end
 
   describe "#update" do

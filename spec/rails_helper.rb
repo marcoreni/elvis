@@ -42,6 +42,16 @@ RSpec.configure do |config|
   # instead of true.
   config.use_transactional_fixtures = false
 
+  # DatabaseCleaner (configured in spec_helper.rb) only rolls back the DB — Rails.cache is a real
+  # ActiveSupport::Cache::FileStore in the test env (config/environments/test.rb sets no
+  # cache_store, so it falls through to this default), persisting on disk across examples *and*
+  # across separate `bundle exec rspec` process invocations. Parameter.get_value caches every
+  # label it reads for 1h, so a spec that changes a Parameter (locale settings, in particular)
+  # could leak that cached value into any later spec, in this run or the next, unless something
+  # clears it first. Clearing before each example (not after) means a run is self-healing even if
+  # a previous run crashed mid-example without its own cleanup running.
+  config.before(:each) { Rails.cache.clear }
+
   # You can uncomment this line to turn off ActiveRecord support entirely.
   # config.use_active_record = false
 

@@ -4,43 +4,30 @@ Tracked bugs/gaps that are known but deliberately not fixed yet, with enough det
 later. When one gets fixed, remove its entry (the fix's commit message/PR is the record, not this
 file).
 
-## Minitest suite (`test/`) is substantially broken
+## Minitest feature specs (`test/features/`) can't load — Capybara spec DSL, not a browser/asset gap
 
-Found 2026-08-26 while getting the RSpec suite fully green (see the "fix: correct
-ActivityRefPricing#overlaps?" commit history around that date). Unrelated to that work — pre-existing,
-not caused by anything changed then. Deliberately left alone; picking these apart is a separate,
-larger task.
+Found 2026-08-26 while getting the RSpec suite fully green, root-caused 2026-08-27 while fixing the
+rest of `test/models`/`test/controllers` (see below — all of those are now green, this is the one
+remaining Minitest gap). All three `test/features/*_test.rb` files use Capybara's spec DSL at the
+top level (`feature "..." do ... scenario "..." do ... end end`), but the installed `minitest-rails`
+gem only aliases `scenario`/`background`/`given` onto `ActionDispatch::SystemTestCase` (see
+`.../gems/minitest-rails-6.1.1/lib/minitest/rails/capybara.rb`), not onto a plain `describe` block
+(which is what `feature` aliases to). Every `scenario` call raises `NoMethodError` at load time —
+`bin/rails test` (no args) loads all three, so this one crash blocks every other Minitest file from
+running unless `test/features` is excluded from the run.
 
-Running `bin/rails test`:
-
-- **All three `test/features/*_test.rb` files fail to even load.** They use Capybara's spec DSL at
-  the top level (`feature "..." do ... scenario "..." do ... end end`), but the installed
-  `minitest-rails` gem only aliases `scenario`/`background`/`given` onto
-  `ActionDispatch::SystemTestCase` (see
-  `.../gems/minitest-rails-6.1.1/lib/minitest/rails/capybara.rb`), not onto a plain `describe` block
-  (which is what `feature` aliases to). Every `scenario` call raises `NoMethodError` at load time.
-  Fixing this needs either rewriting these as system tests properly inheriting
-  `ActionDispatch::SystemTestCase` (with a working headless-browser driver configured), or dropping
-  the Capybara spec-DSL styling for plain Minitest assertions.
-- **`test/models/users_test.rb`: 8/10 tests still fail (was 10/10).** The `NoMethodError: undefined
-  method 'strip!' for nil` from `User#strip_names` (`last_name.strip!`/`first_name.strip!` not
-  nil-guarded, unlike the `email&.strip!` line right next to them) was a real app bug — fixed
-  2026-08-27 by nil-guarding those two lines the same way. That was masking the suite's real,
-  separate problem: every test hardcodes the literal email `"@"` (or `"a@b"`) for `User.create`, and
-  this Minitest suite has no transactional-fixture/`DatabaseCleaner` rollback between runs (unlike
-  the RSpec suite) — so a second run against a non-empty test DB hits real
-  `ActiveRecord::RecordInvalid: Un compte existe déjà avec cet email` uniqueness violations, and
-  assertions that expect freshly-created records to be present come back empty. Needs either unique
-  per-test emails (e.g. `SecureRandom` in each fixture) or a transaction/cleaner wrapper for this
-  suite — a bigger, separate fix from the `strip_names` bug.
-- **`test/models/time_interval_test.rb`: 2/3 tests error** (`NoMethodError: undefined method 'start'
-  for nil`, `app/models/time_interval.rb:367` and `:389`). Root cause, found 2026-08-27: both tests
-  call `Season.from_interval(ti).first` for a `TimeInterval` dated `2022-05-23`/`2023-06-01`, and
-  the test DB has no `Season` record covering either date, so `season` is `nil` before
-  `convert_to_first_week_of_season`/`check_and_adjust_range` ever touch `season.start`. Not an app
-  bug — `Season` fixture data covering those dates. Needs a `Season` factory/fixture, not yet
-  triaged past that.
-- **`test/controllers/home_controller_test.rb`: passes.**
+Confirmed this is *not* about a missing browser driver: only the bare `capybara` gem is in the
+Gemfile (no `selenium-webdriver`/`cuprite`/etc.), so `Capybara.default_driver` is the headless,
+JS-free `:rack_test` — plenty for what these 3 files actually do (`visit`, `fill_in`, `click_on`,
+text assertions; no JS interaction). The fix is exactly the DSL swap already scoped here: drop
+`feature`/`scenario`/`must_have_content` for plain `test "..." do` + `Capybara::Minitest::Assertions`
+(`assert_text`/`assert_no_text`), and make sure whatever base class is used actually exposes route
+helpers and a configured `Capybara.app` — right now nothing in `test/test_helper.rb` sets that up
+(only `require "minitest/rails/capybara"`), so this still needs someone to wire up the Rails/Capybara
+integration properly, not just rename a few methods. Left alone here rather than risk a fix that
+"passes" without actually driving requests through the app. Two of the three files
+(`can_create_user_test.rb`, most of `can_sign_in_test.rb`) have all their `scenario` bodies already
+commented out, so the real payoff of fixing this is small until someone also writes the tests back in.
 
 No CI currently runs either test suite (see `.github/workflows/`, which only has an auto-release
 workflow) — that's part of why this drifted this far without being noticed.
