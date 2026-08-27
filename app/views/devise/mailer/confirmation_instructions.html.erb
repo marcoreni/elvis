@@ -118,7 +118,7 @@
                     <p style="font-size: 14px; line-height: 180%; text-align: center;">
                         <span style="font-family: Montserrat, sans-serif; font-size: 16px; line-height: 28.8px;">
                             <%@school_informations = School.includes(:address).first%>
-                          <%= t("views.devise.mailer.confirmation_instructions.account_created_html", app_name: content_tag(:strong, Parameter.get_value("app.name") || @school_informations&.name || "Elvis")) %><br />
+                          <%= t("views.devise.mailer.confirmation_instructions.account_created_html", app_name: Parameter.get_value("app.name") || @school_informations&.name || "Elvis") %><br />
                         </span>
                       <br/>
                     </p>
