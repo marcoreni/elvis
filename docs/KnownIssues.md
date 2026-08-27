@@ -22,19 +22,24 @@ Running `bin/rails test`:
   Fixing this needs either rewriting these as system tests properly inheriting
   `ActionDispatch::SystemTestCase` (with a working headless-browser driver configured), or dropping
   the Capybara spec-DSL styling for plain Minitest assertions.
-- **`test/models/users_test.rb`: 10/10 tests error.** `User.create(first_name:, birthday:, email:)`
-  without `last_name` raises `NoMethodError: undefined method 'strip!' for nil` from
-  `User#strip_names` (`app/models/user.rb`) — `last_name.strip!`/`first_name.strip!` aren't nil-guarded,
-  unlike the `email&.strip!` line right next to them. This looks like a real app bug, not just an
-  incomplete test fixture: any code path that creates a `User` without a `last_name` (e.g. a
-  placeholder "attached" family member, similar to the pattern in
-  `app/services/activity_applications/tes_import_handler.rb`) would crash outright instead of hitting
-  a normal presence-validation error, if `strip_names` runs before `last_name` is set.
-- **`test/models/due_payment_test.rb`: 6/6 tests error.** Calls `DuePayment._test_mark_unpaid(...)`,
-  a method that doesn't exist on `DuePayment` at all — likely a stale reference to a renamed/removed
-  method.
-- **`test/models/time_interval_test.rb`: partial errors** (some assertions fail with raw object dumps
-  printed via `pp`, not yet triaged further).
+- **`test/models/users_test.rb`: 8/10 tests still fail (was 10/10).** The `NoMethodError: undefined
+  method 'strip!' for nil` from `User#strip_names` (`last_name.strip!`/`first_name.strip!` not
+  nil-guarded, unlike the `email&.strip!` line right next to them) was a real app bug — fixed
+  2026-08-27 by nil-guarding those two lines the same way. That was masking the suite's real,
+  separate problem: every test hardcodes the literal email `"@"` (or `"a@b"`) for `User.create`, and
+  this Minitest suite has no transactional-fixture/`DatabaseCleaner` rollback between runs (unlike
+  the RSpec suite) — so a second run against a non-empty test DB hits real
+  `ActiveRecord::RecordInvalid: Un compte existe déjà avec cet email` uniqueness violations, and
+  assertions that expect freshly-created records to be present come back empty. Needs either unique
+  per-test emails (e.g. `SecureRandom` in each fixture) or a transaction/cleaner wrapper for this
+  suite — a bigger, separate fix from the `strip_names` bug.
+- **`test/models/time_interval_test.rb`: 2/3 tests error** (`NoMethodError: undefined method 'start'
+  for nil`, `app/models/time_interval.rb:367` and `:389`). Root cause, found 2026-08-27: both tests
+  call `Season.from_interval(ti).first` for a `TimeInterval` dated `2022-05-23`/`2023-06-01`, and
+  the test DB has no `Season` record covering either date, so `season` is `nil` before
+  `convert_to_first_week_of_season`/`check_and_adjust_range` ever touch `season.start`. Not an app
+  bug — `Season` fixture data covering those dates. Needs a `Season` factory/fixture, not yet
+  triaged past that.
 - **`test/controllers/home_controller_test.rb`: passes.**
 
 No CI currently runs either test suite (see `.github/workflows/`, which only has an auto-release
@@ -154,52 +159,10 @@ renders `app/views/devise/passwords/edit.html.erb`. No `edit_user_password_path`
 anywhere in `app/` (grepped `app --include="*.rb" --include="*.erb"`). It's possible some
 DB-stored `NotificationTemplate` (Liquid/WYSIWYG content, outside static grep's reach — see
 `docs/I18n.md`'s "hors périmètre") links to it, so this isn't confirmed dead the way the deleted
-`.mjml` templates were, but it's worth checking directly (e.g. audit `NotificationTemplate` bodies
-for `edit_user_password`) before investing further in this specific view/route pair.
-
-## Devise mailer actions with no live code path (unlock, email-changed, password-changed)
-
-Found 2026-08-27, same investigation, verified via `bin/rails routes` and
-`config/initializers/devise.rb`. Three more Devise mailer actions — beyond the two dead `.mjml`
-templates already removed — appear to be entirely unreachable, independent of `feature/i18n-04`'s
-changes (that branch translated their `.html.erb` views anyway, since determining reachability
-wasn't in scope at the time):
-- **`unlock_instructions`** (`app/views/devise/mailer/unlock_instructions.html.erb`,
-  `app/views/devise/unlocks/new.html.erb`): `User` (`app/models/user.rb`) doesn't include Devise's
-  `:lockable` module, so `devise_for :users` never generates `new_user_unlock`/`user_unlock`
-  routes (confirmed: no `unlocks#` route exists in `bin/rails routes` output) and nothing calls
-  `send_unlock_instructions` — grepping `unlock_instructions`/`send_unlock_instructions`/
-  `:lockable` across `app/` turns up nothing but the commented-out module hint in `user.rb`.
-- **`email_changed`**: `config/initializers/devise.rb` has
-  `# config.send_email_changed_notification = false` — commented out, meaning Devise's own
-  default (`false`) applies — and `User` doesn't include `:confirmable` either, so this
-  notification is never sent.
-- **`password_change`**: same file explicitly sets `config.send_password_change_notification =
-  false` (not commented, deliberately disabled).
-
-Also unreachable via routing (separate from the mailers): `app/views/devise/confirmations/new.html.erb`
-— `config/routes.rb`'s `devise_for :users` only wires a custom top-level `/confirm` route
-(`confirmations#confirm`, the app's own hand-rolled token-based confirmation flow, still very much
-alive — see `app/controllers/confirmations_controller.rb` and the many real
-`DeviseMailer.confirmation_instructions` call sites in `app/`) — never the standard Devise
-`confirmations#new`/`#create` actions that would render this view.
-
-Candidates for outright deletion (view + locale keys), same treatment as the two `.mjml` templates
-removed earlier in this branch — confirm each with a repo-wide grep first, since app-specific
-routing/callback wiring in this codebase doesn't always match Devise's stock conventions.
-
-## Stale French mailer subjects under the English Devise locale
-
-Found 2026-08-27 while removing the dead `.mjml` mailer templates and cleaning up
-`config/locales/devise.en.yml` for `feature/i18n-04-devise-and-public-pages`.
-`devise.en.yml`'s `devise.mailer.confirmation_instructions.subject` and
-`reset_password_instructions.subject` are French text (`"Elvis - Instructions de Confirmation de
-compte"`, `"Elvis - Instructions de Changement de Mot de Passe"`) sitting under the `en:` locale
-key — pre-existing, not introduced by this branch. Note `DeviseMailer` (`app/mailers/
-devise_mailer.rb`) actually overrides `mail.subject` unconditionally with its own hardcoded
-French string for both actions (ignoring whatever `super` set from these YAML keys entirely), so
-in practice these two specific keys are dead regardless of locale — but the mismatch itself (English
-locale file containing French copy) is worth fixing or removing next time this file is touched.
+`.mjml` templates were. Checked the local dev/test DB directly (`NotificationTemplate.where("body
+ILIKE ?", "%edit_password%")` and similar for `password/edit`/`edit_user_password`) — zero matches,
+but that DB only has 1 seed row, so this doesn't rule out a production `NotificationTemplate`
+referencing it. Still worth a production-data check before deleting this view.
 
 ## Rubocop backlog
 

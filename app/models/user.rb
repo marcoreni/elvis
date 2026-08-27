@@ -1032,8 +1032,8 @@ class User < ApplicationRecord
   end
 
   def strip_names
-    last_name.strip!
-    first_name.strip!
+    last_name&.strip!
+    first_name&.strip!
     email&.strip!
   end
 
