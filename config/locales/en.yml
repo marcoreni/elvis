@@ -12,3 +12,85 @@ en:
     date:
         formats:
             date_month_concise: '%B %d, %Y'
+
+    activerecord:
+        attributes:
+            user:
+                last_name: Last name
+                first_name: First name
+                birthday: Date of birth
+        errors:
+            models:
+                user:
+                    attributes:
+                        password_confirmation:
+                            confirmation: "Password confirmation doesn't match."
+
+    views:
+        devise:
+            sessions:
+                new:
+                    title: Access your account
+                    login_label: Email or Member number
+                    remember_me: Stay signed in
+                    no_account_title: Don't have an account?
+                    no_account_body: You can create your account by clicking the button below
+            registrations:
+                new:
+                    heading: Registrations
+                    pre_application_notice_html: "The online re-registration period is open. If you are already a member, you can go to your %{link}."
+                    personal_space_link: personal space
+                    new_applications_notice_html: "For new registrations, come back to this page on %{date}."
+                    closed_body: "Online registrations for the new season are currently closed. You can contact us by phone so we can process your request."
+                registration:
+                    last_name_label: Your last name
+                    first_name_label: Your first name
+                    birthday_label: Your date of birth
+                    password_confirmation_label: Confirm password
+                edit:
+                    title: Edit my profile
+                    password_length_hint:
+                        one: "Your password must contain at least %{count} character"
+                        other: "Your password must contain at least %{count} characters"
+                    password_confirmation_label: Confirm new password
+                    submit: Update
+            passwords:
+                new:
+                    subtitle: Reset by Email
+                    login_label: Email
+                    submit: Send a recovery email
+                edit:
+                    title: Change your password
+                    password_confirmation_label: Confirmation
+            confirmations:
+                new:
+                    title: Resend confirmation instructions
+                    submit: Resend confirmation instructions
+            shared:
+                links:
+                    sign_in_link: Link to the sign-in page
+                    confirmation_link: Didn't receive the confirmation email?
+                    unlock_link: Didn't receive the unlock email?
+            mailer:
+                confirmation_instructions:
+                    greeting_html: "Hello <strong>%{name}</strong>,"
+                    account_created_html: "Your account has been created on the <strong>%{app_name}</strong> platform."
+                    instruction: "Confirm your email and create a password using the link below:"
+                    confirm_button: Confirm my account
+                email_changed:
+                    greeting_html: "Hello <strong>%{email}</strong>,"
+                password_change:
+                    greeting_html: "Hello <strong>%{email}</strong>,"
+                    message: "We confirm by this email that your password has been successfully changed."
+                reset_password_instructions:
+                    greeting_html: "Hello <strong>%{name}</strong>,"
+                    instruction: "You requested to reset your password. To change it, click the button below:"
+                    instruction_2: "If you did not make this request, you can ignore this email. Your password will remain unchanged until you click the link."
+                unlock_instructions:
+                    greeting_html: "Hello <strong>%{email}</strong>,"
+                    message: "Your account has been locked due to a high number of failed login attempts."
+                    instruction: "Click the link below to unlock your account:"
+        sessions:
+            pick_user:
+                title_html: "Choose the account for %{email}"
+                submit: Sign in

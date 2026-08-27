@@ -1,0 +1,76 @@
+# i18n-tasks finds missing and unused translation keys.
+# https://github.com/glebm/i18n-tasks — run `bundle exec i18n-tasks health` for a full report.
+# See docs/I18n.md for the key-naming convention this repo follows.
+
+base_locale: fr
+locales: [fr, en]
+
+data:
+  read:
+    - config/locales/%{locale}.yml
+    - config/locales/devise.%{locale}.yml
+  write:
+    - config/locales/%{locale}.yml
+
+search:
+  paths:
+    - app/
+    - lib/elvis/
+  relative_roots:
+    - app/views
+    - app/controllers
+    - app/models
+    - app/mailers
+    - app/helpers
+
+# translate_enum (app/models/activity_ref.rb) and Parameter-backed / NotificationTemplate content
+# are outside this static UI-string sweep — see docs/I18n.md "hors périmètre".
+#
+# devise.*, errors.messages.* and date.month_names keys are supplied at runtime by the
+# devise-i18n / rails-i18n gems (fr/en shipped inside the gems themselves), not by a
+# project-level config/locales/devise.<locale>.yml — only devise.en.yml exists as a project
+# override, for the handful of scaffold-era strings that were actually customized. i18n-tasks
+# only reads the data files declared above, so it has no visibility into the gems' own
+# translations and would otherwise flag every `t("devise....")` call (see app/views/devise/**)
+# or `I18n.t("date.month_names")` (see app/helpers/date_helper.rb) as missing even though they
+# resolve fine at runtime. Likewise activerecord.attributes.user.password is a devise-i18n stock
+# attribute name (unmodified copy, deliberately not duplicated into fr.yml/en.yml per
+# docs/I18n.md's "prefer gem stock keys" guidance) referenced directly via t() in a few devise
+# views.
+ignore_missing:
+  - "activerecord.attributes.activity_ref.activity_type_list.*"
+  - "activerecord.attributes.user.password"
+  - "date.month_names"
+  - "devise.**"
+  - "errors.messages.*"
+
+ignore_unused:
+  # translate_enum (app/models/activity_ref.rb:123) builds these keys dynamically per enum
+  # value at runtime — i18n-tasks' static scan can't see that, so it always reports them unused.
+  - "activerecord.attributes.activity_ref.activity_type_list.*"
+  # Rails' `validates :password, confirmation: true` (app/models/user.rb) implicitly looks up
+  # this key via ActiveModel's confirmation-validator naming convention (no literal `t(...)` call
+  # for i18n-tasks to find), so it's genuinely used despite the static scan saying otherwise.
+  - "activerecord.errors.models.user.attributes.password_confirmation.confirmation"
+  # `I18n.l`/`I18n.localize`/`l` calls with `format:` (app/models/season.rb,
+  # app/views/students/index.html.erb, app/views/seasons/show.html.erb,
+  # app/views/devise/registrations/new.html.erb) resolve under `time.formats.*` or
+  # `date.formats.*` depending on the runtime type (Time vs. Date) of the localized value, which
+  # i18n-tasks' static scan can't disambiguate from the call site alone — it only ever credits
+  # one of the two namespaces as "used" per format key, leaving the other flagged unused even
+  # when it's the one actually hit at runtime.
+  - "time.formats.*"
+  - "date.formats.*"
+  # activerecord.attributes.user.{last_name,first_name,birthday}: added per the i18n-04 branch
+  # plan to cover custom User fields not shipped by devise-i18n (see docs/I18n-Roadmap.md), for
+  # reuse by any future form that lets Rails auto-translate these attribute names
+  # (`f.label :last_name`). The current registration form keeps its own more specific "Votre
+  # Nom"/"Votre Prénom"/"Votre date de naissance" wording
+  # (views.devise.registrations.registration.*_label) rather than switching to the bare
+  # attribute name, to avoid a visible copy change while extracting strings — so these stay
+  # statically unused for now, until a form actually relies on the auto-translated attribute
+  # name.
+  - "activerecord.attributes.user.last_name"
+  - "activerecord.attributes.user.first_name"
+  - "activerecord.attributes.user.birthday"
+  - "devise.**"

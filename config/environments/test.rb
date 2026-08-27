@@ -34,6 +34,11 @@ Rails.application.configure do
   # ActionMailer::Base.deliveries array.
   config.action_mailer.delivery_method = :test
 
+  # Mailer views that build links with url_for/*_url helpers (e.g. app/views/devise/mailer/*)
+  # need a host — unlike development/production this was never set for test, so any mailer spec
+  # touching those views raised "Missing host to link to!".
+  config.action_mailer.default_url_options = { host: "localhost", port: 7212 }
+
   # Print deprecation notices to the stderr.
   config.active_support.deprecation = :stderr
 

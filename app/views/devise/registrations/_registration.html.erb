@@ -12,28 +12,28 @@
   <% end %>
   <%= form_for(resource, as: resource_name, url: registration_path(resource_name)) do |f| %>
     <div class="form-group text-left">
-      <%= f.label "Votre Nom" %><br/>
+      <%= f.label t("views.devise.registrations.registration.last_name_label") %><br/>
       <%= f.text_field :last_name, required: true, autofocus: true, autocomplete: "last name", id: "last_name", class: "form-control" %>
     </div>
 
     <div class="form-group text-left">
-      <%= f.label "Votre Prénom" %><br/>
+      <%= f.label t("views.devise.registrations.registration.first_name_label") %><br/>
       <%= f.text_field :first_name, required: true, autofocus: true, autocomplete: "first name", id: "first_name", class: "form-control" %>
     </div>
 
     <div class="form-group w-100 text-left">
-      <%= f.label "Votre date de naissance" %><br/>
+      <%= f.label t("views.devise.registrations.registration.birthday_label") %><br/>
       <%= f.date_field :birthday, required: true, autofocus: true, autocomplete: "birthday", id: "birthday", class: "form-control w-100" %>
     </div>
 
     <div class="form-group text-left">
-      <%= f.label "Email" %><br/>
+      <%= f.label :email %><br/>
       <%= f.email_field :email, required: true, autofocus: true, autocomplete: "email", class: "form-control" %>
     </div>
 
-    <%= react_component('PasswordInput', { id: 'password', name: 'user[password]', label: 'Mot de passe', additional_attr: {minLength: @minimum_password_length} }) %>
+    <%= react_component('PasswordInput', { id: 'password', name: 'user[password]', label: t("activerecord.attributes.user.password"), additional_attr: {minLength: @minimum_password_length} }) %>
 
-    <%= react_component('PasswordInput', { id: 'password_confirmation', name: 'user[password_confirmation]', label: 'Confirmer mot de passe', error: resource.errors[:password_confirmation].join(', ') }) %>
+    <%= react_component('PasswordInput', { id: 'password_confirmation', name: 'user[password_confirmation]', label: t("views.devise.registrations.registration.password_confirmation_label"), error: resource.errors[:password_confirmation].join(', ') }) %>
 
     <% unless Recaptcha.configuration.site_key.nil? %>
       <div class="form-group">
@@ -45,7 +45,7 @@
         <li class="alert alert-danger"><%= msg %></li>
     <% end %>
 
-    <%= f.submit "Inscription", class: "btn btn-primary block full-width m-b" %>
+    <%= f.submit t("devise.registrations.new.sign_up"), class: "btn btn-primary block full-width m-b" %>
 
     <%= render "devise/shared/links" %>
   <% end %>
