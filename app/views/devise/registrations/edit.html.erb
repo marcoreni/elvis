@@ -3,7 +3,7 @@
 
 <div class="row wrapper border-bottom white-bg page-heading m-b-md">
     <h2>
-        Modifier mon profil
+        <%= t("views.devise.registrations.edit.title") %>
     </h2>
 </div>
 
@@ -17,27 +17,27 @@
         </div>
 
         <% if devise_mapping.confirmable? && resource.pending_reconfirmation? %>
-            <div>Currently waiting confirmation for: <%= resource.unconfirmed_email %></div>
+            <div><%= t("devise.registrations.edit.currently_waiting_confirmation_for_email", email: resource.unconfirmed_email) %></div>
         <% end %>
 
         <div class="form-group">
-          <%= f.label "Mot de passe actuel" %><br />
+          <%= f.label :current_password %><br />
           <%= f.password_field :current_password, autocomplete: "off", class: "form-control", placeholder: "********" %>
         </div>
 
         <div class="form-group">
-            <%= f.label "Nouveau mot de passe" %><br />
+            <%= f.label t("devise.passwords.edit.new_password") %><br />
           <% if User.password_length.min %>
-            <em>Votre mot de pass doit contenir au moins <%= User.password_length.min %> caractères minimum</em>
+            <em><%= t("views.devise.registrations.edit.password_length_hint", count: User.password_length.min) %></em>
           <% end %>
             <%= f.password_field :password, autocomplete: "off", class: "form-control", placeholder: "********" %>
         </div>
 
         <div class="form-group">
-            <%= f.label "Confirmation du nouveau mot de passe" %><br />
+            <%= f.label t("views.devise.registrations.edit.password_confirmation_label") %><br />
             <%= f.password_field :password_confirmation, autocomplete: "off", class: "form-control", placeholder: "********" %>
         </div>
 
-        <%= f.submit "Mettre à jour", class: "btn btn-primary block full-width m-b" %>
+        <%= f.submit t("views.devise.registrations.edit.submit"), class: "btn btn-primary block full-width m-b" %>
     <% end %>
 </div>

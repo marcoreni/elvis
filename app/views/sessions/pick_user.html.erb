@@ -30,7 +30,7 @@
             <div class="col">
                 <div class="ibox">
                     <div class="ibox-title">
-                        <h5>Choisissez le compte pour <b><%= @user.email %></b></h5>
+                        <h5><%= t("views.sessions.pick_user.title_html", email: content_tag(:b, @user.email)) %></h5>
                     </div>
                     <div class="ibox-content">
                         <%= form_for :user, method: "post", url: {:action => "user_picked"} do |f| %>
@@ -48,9 +48,9 @@
                                     </div>
                                 <% end %>
                                 <div class="form-group">
-                                  <%= react_component('PasswordInput', { id: 'password', name: 'user[password]', label: 'Mot de passe' }) %>
+                                  <%= react_component('PasswordInput', { id: 'password', name: 'user[password]', label: t("activerecord.attributes.user.password") }) %>
                                 </div>
-                            <%= f.submit "Se connecter", class: "form-control" %>
+                            <%= f.submit t("views.sessions.pick_user.submit"), class: "form-control" %>
                         <% end %>
                     </div>
                 </div>

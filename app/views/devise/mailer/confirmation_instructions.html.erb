@@ -70,7 +70,7 @@
               <tr>
                 <td class="v-container-padding-padding" style="overflow-wrap:break-word;word-break:break-word;padding:25px 145px 10px;font-family:'Montserrat',sans-serif;" align="left">
                   <h2 class="v-font-size" style="margin: 0px; color: #000000; line-height: 130%; text-align: center; word-wrap: break-word; font-weight: normal; font-family: 'Montserrat',sans-serif; font-size: 20px;">
-                    Bonjour <strong><%= @resource.first_name.capitalize %> <%= @resource.last_name.capitalize %>,</strong>
+                    <%= t("views.devise.mailer.confirmation_instructions.greeting_html", name: "#{@resource.first_name.capitalize} #{@resource.last_name.capitalize}") %>
                   </h2>
                 </td>
               </tr>
@@ -118,7 +118,7 @@
                     <p style="font-size: 14px; line-height: 180%; text-align: center;">
                         <span style="font-family: Montserrat, sans-serif; font-size: 16px; line-height: 28.8px;">
                             <%@school_informations = School.includes(:address).first%>
-                          Votre compte a bien été créé sur la plateforme de <strong><%= Parameter.get_value("app.name") || @school_informations&.name || "Elvis" %>.</strong><br />
+                          <%= t("views.devise.mailer.confirmation_instructions.account_created_html", app_name: content_tag(:strong, Parameter.get_value("app.name") || @school_informations&.name || "Elvis")) %><br />
                         </span>
                       <br/>
                     </p>
@@ -127,10 +127,10 @@
                   <div style="color: #000000; line-height: 180%; text-align: left; word-wrap: break-word;">
                     <p style="font-size: 14px; line-height: 180%; text-align: center;">
                         <span style="font-family: Montserrat, sans-serif; font-size: 16px; line-height: 28.8px;">
-                            Confirmer votre email et créer un mot de passe via le lien ci-dessous: <br />
+                            <%= t("views.devise.mailer.confirmation_instructions.instruction") %> <br />
                         </span>
                       <br/>
-                      <a href="<%= Rails.env.kubernetes? ? "#{ApplicationMailer.application_url}/confirm.#{@resource.id}?confirmation_token=#{@token}": confirm_url(@resource, confirmation_token: @token)%>" style="display: inline-block; padding: 10px 25px; border-radius: 3px; background: #86d69e; color: #000000; font-family: Arial; font-size: 13px; font-weight: normal; line-height: 120%; Margin: 0; text-decoration: none; text-transform: none;" target="_blank">Confirmer mon compte</a>
+                      <a href="<%= Rails.env.kubernetes? ? "#{ApplicationMailer.application_url}/confirm.#{@resource.id}?confirmation_token=#{@token}": confirm_url(@resource, confirmation_token: @token)%>" style="display: inline-block; padding: 10px 25px; border-radius: 3px; background: #86d69e; color: #000000; font-family: Arial; font-size: 13px; font-weight: normal; line-height: 120%; Margin: 0; text-decoration: none; text-transform: none;"><%= t("views.devise.mailer.confirmation_instructions.confirm_button") %></a>
                       <br/><br/><br/>
                       <%= render partial: "/partials/mailer/users_info_partial", locals: { user: @resource } %>
                     </p>

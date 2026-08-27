@@ -70,7 +70,7 @@
               <tr>
                 <td class="v-container-padding-padding" style="overflow-wrap:break-word;word-break:break-word;padding:25px 145px 10px;font-family:'Montserrat',sans-serif;" align="left">
                   <h2 class="v-font-size" style="margin: 0px; color: #000000; line-height: 130%; text-align: center; word-wrap: break-word; font-weight: normal; font-family: 'Montserrat',sans-serif; font-size: 20px;">
-                    Bonjour <strong><%= @resource.email %>,</strong>
+                    <%= t("views.devise.mailer.email_changed.greeting_html", email: @resource.email) %>
                   </h2>
                 </td>
               </tr>

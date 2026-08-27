@@ -142,6 +142,79 @@ Whatever the per-package decision, pin to an exact commit SHA (or a real npm rel
 branch ref in the meantime — that alone removes the "can silently change under us" risk even before
 the fork-vs-replace decision is made.
 
+## Devise `.mjml` mailer templates are dead code
+
+Found 2026-08-27 while extracting i18n keys for `feature/i18n-04-devise-and-public-pages`.
+`app/views/devise/mailer/confirmation_instructions.mjml` and
+`reset_password_instructions.mjml` sit next to the `.html.erb` versions of the same mailer
+actions, but no `mjml`/`mjml-rails` gem is in the `Gemfile` or `Gemfile.lock` — nothing in the
+app can compile MJML markup into HTML at render time, and the mailers themselves
+(`app/mailers/*.rb`) only ever reference `reset_password_instructions`/`confirmation_instructions`
+without an explicit `.mjml` format, so Action Mailer would just pick the `.html.erb` template.
+Translated their strings anyway (see `views.devise.mailer.*_mjml` keys in
+`config/locales/{fr,en}.yml`) since removing them wasn't in scope for that branch, but they're a
+strong candidate for outright deletion — confirm nothing renders them, then delete both `.mjml`
+files and their now-unused locale keys.
+
+## Stale "Ziggy" product name in a translated string
+
+Found 2026-08-27, same i18n-04 branch. `reset_password_instructions_mjml.mj_title` (in both
+`config/locales/fr.yml` and `en.yml`) still reads `"Ziggy - ..."` — carried over verbatim from
+the pre-existing `.mjml` source file rather than introduced by the i18n extraction. Elvis was
+renamed from "Ziggy" a while ago (see `CLAUDE.md`'s "formerly Ziggy"); either fix the string to
+"Elvis" or delete it along with the dead `.mjml` templates above.
+
+## i18n-tasks baseline noise (2 missing / 22 unused keys)
+
+`bundle exec i18n-tasks health` reports these as of 2026-08-27 (post i18n-04, confirmed
+independently and originally flagged by the backend-specialist agent that did the i18n-04 work),
+all pre-existing and unrelated to that branch's changes:
+- **Missing (2)**: `date.month_names` (no locale defines it — probably meant to lean on
+  `rails-i18n`'s own `date.month_names`, check for a typo'd key or a stale override), and
+  `activerecord.errors.models.user.attributes.password_confirmation.confirmation` in `en.yml`
+  (only `fr.yml` has it).
+- **Unused (22)** — full list from `bundle exec i18n-tasks unused`:
+  - `en`: `date.formats.date_month_concise`, `errors.messages.already_confirmed`,
+    `errors.messages.confirmation_period_expired`, `errors.messages.expired`,
+    `errors.messages.not_found`, `errors.messages.not_locked`, `errors.messages.not_saved`,
+    `time.formats.date_month_concise`, `time.formats.day`, `time.formats.long_date`,
+    `time.formats.short_time`
+  - `fr`: `activerecord.attributes.activity_ref.activity_type_list.{actions_culturelles,cham,
+    child,chorale_ma,eveil_musical}`, `activerecord.errors.models.user.attributes.
+    password_confirmation.confirmation`, `date.formats.date_month_concise`,
+    `time.formats.{date_month_concise,day,long_date,short_time}`
+
+  The `errors.messages.*` (`en`) entries are `devise.en.yml` overrides that duplicate
+  `devise-i18n`'s stock English text — likely safe to delete rather than translate. The
+  `activerecord.errors.models.user.attributes.password_confirmation.confirmation` key is flagged
+  **both** missing-in-`en` and unused-in-`fr` — i.e. nothing in the code actually renders it in
+  either language, suggesting the password-confirmation mismatch error is raised some other way
+  (custom `validate` with a literal string?) and this YAML key is simply dead, a stronger
+  candidate for deletion than for adding an `en` translation. The `time`/`date` `formats.*` and
+  `activity_type_list.*` entries may be false positives — i18n-tasks' static scan can't see keys
+  built dynamically (e.g. `translate_enum`, `I18n.l(..., format: :long_date)`) — so verify each
+  with a grep before deleting anything. Worth a dedicated sweep once more of the extraction
+  branches (05/06) land.
+
+## `bundle exec i18n-tasks` crashes on Ruby 3.3.5+ unless `logger` is pre-required
+
+Found 2026-08-27 verifying the i18n-04 branch. `bundle exec i18n-tasks health` (and presumably
+`missing`/`unused`) raises `NameError: uninitialized constant ActiveSupport::LoggerThreadSafeLevel::Logger`
+before printing anything. Root cause: Ruby demoted `logger` from a default gem to a bundled gem
+starting around 3.3.5/3.4, so it's no longer implicitly available. This app's `Gemfile` already
+has `gem "logger"` (line 10) for exactly this reason, but that only puts it on the bundler load
+path — it doesn't `require` it. Booting the full Rails app works fine (`bin/rails`,
+`bundle exec rspec`) because something in Rails' own boot sequence requires `logger` before
+`activesupport` needs it; the standalone `i18n-tasks` CLI never boots Rails, so nothing requires
+it first, and `activesupport-6.1.7.10`'s `logger_thread_safe_level.rb` references the bare
+`Logger` constant assuming it's already loaded.
+
+**Workaround**: `RUBYOPT="-rlogger" bundle exec i18n-tasks health`. `bundle exec rubocop` doesn't
+need this (it requires `logger` itself internally). Worth either documenting the `RUBYOPT` prefix
+next to the `i18n-tasks` command in `CLAUDE.md`, or fixing it at the source (e.g. an
+`.i18n-tasks.yml`-adjacent Ruby require, or filing/checking upstream `i18n-tasks` for a fix) so
+nobody hits this cold again.
+
 ## Rubocop backlog
 
 `rubocop` was only added as a Gemfile dependency 2026-08-26 (see git history around that date) — it

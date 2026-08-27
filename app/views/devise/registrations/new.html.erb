@@ -40,7 +40,7 @@
       <div class="text-center form loginscreen middle-box pt-0 ">
         <div class="ibox" style="margin-bottom: 60px;">
           <div class="ibox-title d-flex justify-content-center">
-            <h5>Inscription</h5>
+            <h5><%= t("devise.registrations.new.sign_up") %></h5>
           </div>
           <div class="ibox-content">
             <%= render "devise/registrations/registration" %>
@@ -50,13 +50,12 @@
     <% else %>
       <div class="p-xs">
         <div class="no-registrations p-sm bg-white b-r-md">
-          <h2 class="font-bold text-uppercase">Inscriptions</h2>
+          <h2 class="font-bold text-uppercase"><%= t("views.devise.registrations.new.heading") %></h2>
           <hr/>
           <% if @is_pre_application_period %>
             <p class="m-t-sm lead">
-              La période des ré-inscriptions en ligne est ouverte.
-              Si vous êtes déjà adhérent, vous pouvez vous rendre dans votre
-              <%= link_to "espace personnel", root_path, { class: "alert-link" } %>.
+              <%= t("views.devise.registrations.new.pre_application_notice_html",
+                    link: link_to(t("views.devise.registrations.new.personal_space_link"), root_path, class: "alert-link")) %>
             </p>
 
             <hr/>
@@ -65,19 +64,15 @@
                if @next_season&.opening_date_for_applications
             %>
               <p class="m-t-sm lead">
-                Pour les nouvelles inscriptions, rendez-vous le
-                <strong>
-                  <%= I18n.with_locale("fr") { I18n.l(@next_season.opening_date_for_new_applications, format: :long_date) } %>
-                </strong>
-                sur cette page.
+                <%= t("views.devise.registrations.new.new_applications_notice_html",
+                      date: content_tag(:strong, I18n.with_locale("fr") { I18n.l(@next_season.opening_date_for_new_applications, format: :long_date) })) %>
               </p>
             <%
               end
             %>
           <% else %>
             <p class="m-t-sm lead">
-              Les inscriptions en ligne pour la nouvelle saison sont actuellement fermées.
-              Vous pouvez nous contacter par téléphone pour que nous traitions votre demande.
+              <%= t("views.devise.registrations.new.closed_body") %>
             </p>
           <% end %>
         </div>

@@ -13,12 +13,12 @@
     <div class="col-lg-6">
       <div class="ibox" >
         <div class="ibox-title">
-          <h5>Accédez à votre espace</h5>
+          <h5><%= t("views.devise.sessions.new.title") %></h5>
         </div>
         <div class="ibox-content">
           <%= form_for(resource, as: resource_name, url: session_path(resource_name), class: "m-t") do |f| %>
             <div class="form-group">
-              <%= f.label "Courriel ou Numéro d'adhérent" %><br/>
+              <%= f.label t("views.devise.sessions.new.login_label") %><br/>
               <%= f.text_field :login, required: true, autofocus: true, class: "form-control" %>
               <% if resource.errors.any? %>
                 <div class="alert alert-danger">
@@ -30,17 +30,17 @@
             </div>
 
             <div class="form-group">
-              <%= react_component('PasswordInput', { id: 'password', name: 'user[password]', label: 'Mot de passe' }) %>
+              <%= react_component('PasswordInput', { id: 'password', name: 'user[password]', label: t("activerecord.attributes.user.password") }) %>
             </div>
 
             <% if devise_mapping.rememberable? -%>
               <div class="form-group pull-left">
                 <%= f.check_box :remember_me, class: "icheckbox_square-green" %>
-                <%= f.label :remember_me, "Rester connecté" %>
+                <%= f.label :remember_me, t("views.devise.sessions.new.remember_me") %>
               </div>
             <% end -%>
 
-            <%= f.submit "Connexion", class: "btn btn-primary block full-width m-b" %>
+            <%= f.submit t("devise.sessions.new.sign_in"), class: "btn btn-primary block full-width m-b" %>
 
             <%= render "devise/shared/links" %>
           <% end %>
@@ -52,11 +52,11 @@
       <div class="col-lg-6">
         <div class="ibox" style="margin-bottom: 60px">
           <div class="ibox-title">
-            <h5>Vous n'avez pas de compte ?</h5>
+            <h5><%= t("views.devise.sessions.new.no_account_title") %></h5>
           </div>
           <div class="ibox-content text-center">
-            <p class="m-t-md m-b-lg">Vous pouvez créer votre espace en cliquant sur le bouton ci-dessous</p>
-            <%= link_to "Inscription", new_registration_path(resource_name), class: "btn btn-primary block full-width" %>
+            <p class="m-t-md m-b-lg"><%= t("views.devise.sessions.new.no_account_body") %></p>
+            <%= link_to t("devise.registrations.new.sign_up"), new_registration_path(resource_name), class: "btn btn-primary block full-width" %>
           </div>
         </div>
       </div>

@@ -1,0 +1,58 @@
+# i18n-tasks finds missing and unused translation keys.
+# https://github.com/glebm/i18n-tasks — run `bundle exec i18n-tasks health` for a full report.
+# See docs/I18n.md for the key-naming convention this repo follows.
+
+base_locale: fr
+locales: [fr, en]
+
+data:
+  read:
+    - config/locales/%{locale}.yml
+    - config/locales/devise.%{locale}.yml
+  write:
+    - config/locales/%{locale}.yml
+
+search:
+  paths:
+    - app/
+    - lib/elvis/
+  relative_roots:
+    - app/views
+    - app/controllers
+    - app/models
+    - app/mailers
+    - app/helpers
+
+# translate_enum (app/models/activity_ref.rb) and Parameter-backed / NotificationTemplate content
+# are outside this static UI-string sweep — see docs/I18n.md "hors périmètre".
+#
+# devise.* and errors.messages.* keys are supplied at runtime by the devise-i18n / rails-i18n gems
+# (fr/en shipped inside the gems themselves), not by a project-level
+# config/locales/devise.<locale>.yml — only devise.en.yml exists as a project override, for the
+# handful of scaffold-era strings that were customized (including its own English-only
+# errors.messages.* override, which duplicates rails-i18n's stock text and has no fr counterpart
+# by design — the fr text comes from rails-i18n directly). i18n-tasks only reads the data files
+# declared above, so it has no visibility into the gems' own translations and would otherwise flag
+# every `t("devise....")` call (see app/views/devise/**) as missing even though it resolves fine
+# at runtime. Likewise activerecord.attributes.user.password is a devise-i18n stock attribute name
+# (unmodified copy, deliberately not duplicated into fr.yml/en.yml per docs/I18n.md's "prefer
+# gem stock keys" guidance) referenced directly via t() in a few devise views.
+ignore_missing:
+  - "activerecord.attributes.activity_ref.activity_type_list.*"
+  - "activerecord.attributes.user.password"
+  - "devise.**"
+  - "errors.messages.*"
+
+# activerecord.attributes.user.{last_name,first_name,birthday}: added per the i18n-04 branch plan
+# to cover custom User fields not shipped by devise-i18n (see docs/I18n-Roadmap.md), for reuse by
+# any future form that lets Rails auto-translate these attribute names (`f.label :last_name`).
+# The current registration form keeps its own more specific "Votre Nom"/"Votre Prénom"/"Votre date
+# de naissance" wording (views.devise.registrations.registration.*_label) rather than switching to
+# the bare attribute name, to avoid a visible copy change while extracting strings — so these stay
+# statically "unused" for now, same as the pre-existing activity_ref.activity_type_list.* entries
+# below, until a form actually relies on the auto-translated attribute name.
+ignore_unused:
+  - "devise.**"
+  - "activerecord.attributes.user.last_name"
+  - "activerecord.attributes.user.first_name"
+  - "activerecord.attributes.user.birthday"

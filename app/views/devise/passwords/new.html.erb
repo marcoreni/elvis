@@ -7,22 +7,22 @@
 
     <div class="ibox">
       <div class="ibox-title">
-        <h5>Mot de Passe oublié ?</h5>
+        <h5><%= t("devise.passwords.new.forgot_your_password") %></h5>
       </div>
 
       <div class="ibox-title">
-        <label>Réinitialisation par Email</label>
+        <label><%= t("views.devise.passwords.new.subtitle") %></label>
       </div>
 
       <div class="ibox-content">
         <%= form_for(resource, as: resource_name, url: password_path(resource_name), class: "m-t", html: { method: :post }) do |f| %>
           <%= devise_error_messages! %>
           <div class="form-group">
-            <%= f.label "Courriel" %><br/>
+            <%= f.label t("views.devise.passwords.new.login_label") %><br/>
             <%= f.text_field :login, autofocus: false, autocomplete: "email", class: "form-control" %>
           </div>
 
-          <%= f.submit "Envoyer un mail de récupération", class: "btn btn-primary block full-width m-b" %>
+          <%= f.submit t("views.devise.passwords.new.submit"), class: "btn btn-primary block full-width m-b" %>
 
         <% end %>
       </div>

@@ -18,9 +18,91 @@ fr:
                     chorale_ma: Chorale MA
                     eveil_musical: Éveil musical
                     actions_culturelles: Actions culturelles
+            user:
+                last_name: Nom
+                first_name: Prénom
+                birthday: Date de naissance
         errors:
             models:
                 user:
                     attributes:
                         password_confirmation:
                             confirmation: "Le mot de passe ne concorde pas."
+
+    views:
+        devise:
+            sessions:
+                new:
+                    title: Accédez à votre espace
+                    login_label: Courriel ou Numéro d'adhérent
+                    remember_me: Rester connecté
+                    no_account_title: Vous n'avez pas de compte ?
+                    no_account_body: Vous pouvez créer votre espace en cliquant sur le bouton ci-dessous
+            registrations:
+                new:
+                    heading: Inscriptions
+                    pre_application_notice_html: "La période des ré-inscriptions en ligne est ouverte. Si vous êtes déjà adhérent, vous pouvez vous rendre dans votre %{link}."
+                    personal_space_link: espace personnel
+                    new_applications_notice_html: "Pour les nouvelles inscriptions, rendez-vous le %{date} sur cette page."
+                    closed_body: "Les inscriptions en ligne pour la nouvelle saison sont actuellement fermées. Vous pouvez nous contacter par téléphone pour que nous traitions votre demande."
+                registration:
+                    last_name_label: Votre Nom
+                    first_name_label: Votre Prénom
+                    birthday_label: Votre date de naissance
+                    password_confirmation_label: Confirmer mot de passe
+                edit:
+                    title: Modifier mon profil
+                    password_length_hint:
+                        one: "Votre mot de passe doit contenir au moins %{count} caractère minimum"
+                        other: "Votre mot de passe doit contenir au moins %{count} caractères minimum"
+                    password_confirmation_label: Confirmation du nouveau mot de passe
+                    submit: Mettre à jour
+            passwords:
+                new:
+                    subtitle: Réinitialisation par Email
+                    login_label: Courriel
+                    submit: Envoyer un mail de récupération
+                edit:
+                    title: Changez votre mot de passe
+                    password_confirmation_label: Confirmation
+            confirmations:
+                new:
+                    title: Envoyer à nouveau les instructions de confirmation
+                    submit: Ré-envoi des instructions de confirmation
+            shared:
+                links:
+                    sign_in_link: Lien vers la page de Connexion
+                    confirmation_link: Mail de validation non reçu ?
+                    unlock_link: Mail de déblocage non reçu ?
+            mailer:
+                confirmation_instructions:
+                    greeting_html: "Bonjour <strong>%{name}</strong>,"
+                    account_created_html: "Votre compte a bien été créé sur la plateforme de <strong>%{app_name}</strong>."
+                    instruction: "Confirmer votre email et créer un mot de passe via le lien ci-dessous :"
+                    confirm_button: Confirmer mon compte
+                confirmation_instructions_mjml:
+                    mj_title: Elvis - Confirmation du Compte
+                    greeting_html: "Bienvenue <b>%{name}</b>!"
+                    instruction: "Vous pouvez confirmer votre email via le lien ci-dessous:"
+                email_changed:
+                    greeting_html: "Bonjour <strong>%{email}</strong>,"
+                password_change:
+                    greeting_html: "Bonjour <strong>%{email}</strong>,"
+                    message: "Nous vous confirmons par ce mail que votre mot de passe a bien été modifié."
+                reset_password_instructions:
+                    greeting_html: "Bonjour <strong>%{name}</strong>,"
+                    instruction: "Vous avez demandé à réinitialiser votre mot de passe. Pour le modifier, cliquez sur le bouton ci-dessous :"
+                    instruction_2: "Si vous n’êtes pas à l’origine de cette demande, vous pouvez ignorer cet email. Votre mot de passe restera inchangé tant que vous ne cliquez pas sur le lien."
+                reset_password_instructions_mjml:
+                    mj_title: Ziggy - Réinitialisation du mot de passe
+                    greeting_html: "Bonjour <b>%{name}</b>!"
+                    instruction: "Un changement de mot de passe pour votre compte a été demandé. Vous pouvez le faire via le lien ci-dessous."
+                    instruction_2: "Si vous n'êtes pas à l'origine de cette requête, veuillez simplement ignorer ce mail. Votre mot de passe ne sera pas modifié tant que vous n'utiliserez pas le lien pour en définir un nouveau."
+                unlock_instructions:
+                    greeting_html: "Bonjour <strong>%{email}</strong>,"
+                    message: "Votre compte a été bloqué à cause d'un nombre important de tentatives de connexions infructueuses."
+                    instruction: "Cliquez sur le lien ci-dessous pour débloquer votre compte :"
+        sessions:
+            pick_user:
+                title_html: "Choisissez le compte pour %{email}"
+                submit: Se connecter

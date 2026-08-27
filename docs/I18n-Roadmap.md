@@ -228,11 +228,46 @@ et à mesure de son intégration :
         `Elvis::SUPPORTED_LOCALES` dans `resolve_locale`, le sélecteur de langue
         (`_language_switcher.html.erb`) et `LocaleController#update` — sans ça, le réglage admin
         n'aurait aucun effet réel nulle part.
-- [ ] **`feature/i18n-04-devise-and-public-pages`** *(dépend de 01)*
-  - [ ] `app/views/devise/**` (connexion, inscription, mot de passe, confirmation...)
-  - [ ] `app/views/users/new_application.html.erb` (pré-inscription publique)
-  - [ ] `app/views/sessions/pick_user.html.erb`
-  - [ ] Vérifier/compléter les clés `devise-i18n` manquantes pour les vues custom
+- [x] **`feature/i18n-04-devise-and-public-pages`** *(dépend de 01)*
+  - [x] `app/views/devise/**` (connexion, inscription, mot de passe, confirmation, mailer
+        `*.html.erb`/`*.mjml`, `shared/_links`, `shared/_error_messages`, `unlocks/new` —
+        celui-ci était encore intégralement en anglais, jamais localisé depuis le scaffold Devise
+        d'origine). Nouvelles clés sous `views.devise.<controller>.<action>.*`, en réutilisant
+        directement les clés stock `devise.*` du gem `devise-i18n` partout où le texte de l'appli
+        est identique ou quasi identique au texte par défaut du gem (ex. `devise.sessions.new.sign_in`
+        pour "Connexion", `devise.passwords.edit.change_my_password`, `devise.mailer.*.action`) —
+        n'ajoutant une clé projet que là où la copie a été réellement personnalisée. `registrations/edit.html.erb`
+        avait un texte de confirmation en attente resté en anglais (`"Currently waiting confirmation
+        for: ..."`) malgré le gem qui fournit déjà `devise.registrations.edit.currently_waiting_confirmation_for_email`
+        en français — corrigé au passage en le branchant sur cette clé stock.
+  - [x] `app/views/users/new_application.html.erb` — aucune chaîne en dur : c'est un pur point de
+        montage React (`react_component('PreApplication', ...)`), rien à extraire côté ERB.
+  - [x] `app/views/sessions/pick_user.html.erb` — nouvelles clés `views.sessions.pick_user.*`.
+  - [x] Clés `devise-i18n` manquantes pour les champs custom : `activerecord.attributes.user.{last_name,
+        first_name,birthday}` ajoutées à `fr.yml`/`en.yml` (le gem ne couvre que les attributs Devise
+        standards). Le formulaire d'inscription garde son libellé spécifique ("Votre Nom", "Votre
+        Prénom", "Votre date de naissance") via des clés `views.devise.registrations.registration.*`
+        plutôt que de basculer sur le nom d'attribut générique, pour ne pas changer le texte visible
+        pendant une extraction — ces trois clés `activerecord.attributes.user.*` restent donc
+        statiquement "unused" pour l'instant (`ignore_unused` documenté dans `config/i18n-tasks.yml`),
+        en attendant qu'un futur formulaire (ex. `UserEdit` en branche 05) s'appuie dessus.
+  - [x] **Déviation non prévue** : `.i18n-tasks.yml` (posé en branche 01) n'était en réalité **jamais
+        chargé** — cette version du gem (`i18n-tasks 1.1.2`) ne reconnaît que `config/i18n-tasks.yml`,
+        `config/i18n-tasks.yml.erb`, `i18n-tasks.yml` ou `i18n-tasks.yml.erb` comme nom de fichier de
+        config (voir `CONFIG_FILES` dans le gem), jamais un dotfile à la racine. Toute la config
+        (search paths, `data.read` incluant `devise.<locale>.yml`, `ignore_missing`/`ignore_unused`)
+        tournait donc silencieusement sur les valeurs par défaut du gem depuis la branche 01, sans
+        qu'aucun rapport `health`/`missing`/`unused` ne s'en aperçoive. Déplacé vers
+        `config/i18n-tasks.yml` (chemin de plus haute priorité dans `CONFIG_FILES`) dans cette
+        branche, ce qui a immédiatement fait apparaître de vrais gains de précision (ex. les clés
+        `time.formats.*`/`date.formats.*` françaises, jusque-là signalées "unused" à tort faute de
+        scanner `lib/elvis/`, sont maintenant vues comme utilisées). `ignore_missing`/`ignore_unused`
+        complétés avec `devise.**` (le `*` seul ne matche qu'un segment de clé, pas une clé
+        `devise.mailer.x.y` à 4 segments — la doc du gem elle-même donne `devise.*` en exemple, ce
+        qui ne fonctionne en réalité pas au-delà d'un niveau), `errors.messages.*` (autre namespace
+        stock dupliqué en anglais seulement dans `devise.en.yml`, sans équivalent français
+        nécessaire puisqu'il vient de `rails-i18n`) et `activerecord.attributes.user.password`
+        (attribut stock du gem référencé directement via `t()` dans les vues touchées).
 - [ ] **`feature/i18n-05-extract-users`** *(dépend de 01+02, indépendante de 04)* — vague de preuve
       de bout en bout
   - [ ] `frontend/components/UserList.jsx` (class component → `withTranslation`)
