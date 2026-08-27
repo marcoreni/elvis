@@ -80,10 +80,6 @@ fr:
                     account_created_html: "Votre compte a bien été créé sur la plateforme de <strong>%{app_name}</strong>."
                     instruction: "Confirmer votre email et créer un mot de passe via le lien ci-dessous :"
                     confirm_button: Confirmer mon compte
-                confirmation_instructions_mjml:
-                    mj_title: Elvis - Confirmation du Compte
-                    greeting_html: "Bienvenue <b>%{name}</b>!"
-                    instruction: "Vous pouvez confirmer votre email via le lien ci-dessous:"
                 email_changed:
                     greeting_html: "Bonjour <strong>%{email}</strong>,"
                 password_change:
@@ -93,11 +89,6 @@ fr:
                     greeting_html: "Bonjour <strong>%{name}</strong>,"
                     instruction: "Vous avez demandé à réinitialiser votre mot de passe. Pour le modifier, cliquez sur le bouton ci-dessous :"
                     instruction_2: "Si vous n’êtes pas à l’origine de cette demande, vous pouvez ignorer cet email. Votre mot de passe restera inchangé tant que vous ne cliquez pas sur le lien."
-                reset_password_instructions_mjml:
-                    mj_title: Ziggy - Réinitialisation du mot de passe
-                    greeting_html: "Bonjour <b>%{name}</b>!"
-                    instruction: "Un changement de mot de passe pour votre compte a été demandé. Vous pouvez le faire via le lien ci-dessous."
-                    instruction_2: "Si vous n'êtes pas à l'origine de cette requête, veuillez simplement ignorer ce mail. Votre mot de passe ne sera pas modifié tant que vous n'utiliserez pas le lien pour en définir un nouveau."
                 unlock_instructions:
                     greeting_html: "Bonjour <strong>%{email}</strong>,"
                     message: "Votre compte a été bloqué à cause d'un nombre important de tentatives de connexions infructueuses."

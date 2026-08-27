@@ -19,6 +19,12 @@ en:
                 last_name: Last name
                 first_name: First name
                 birthday: Date of birth
+        errors:
+            models:
+                user:
+                    attributes:
+                        password_confirmation:
+                            confirmation: "Password confirmation doesn't match."
 
     views:
         devise:
@@ -71,10 +77,6 @@ en:
                     account_created_html: "Your account has been created on the <strong>%{app_name}</strong> platform."
                     instruction: "Confirm your email and create a password using the link below:"
                     confirm_button: Confirm my account
-                confirmation_instructions_mjml:
-                    mj_title: Elvis - Account Confirmation
-                    greeting_html: "Welcome <b>%{name}</b>!"
-                    instruction: "You can confirm your email using the link below:"
                 email_changed:
                     greeting_html: "Hello <strong>%{email}</strong>,"
                 password_change:
@@ -84,11 +86,6 @@ en:
                     greeting_html: "Hello <strong>%{name}</strong>,"
                     instruction: "You requested to reset your password. To change it, click the button below:"
                     instruction_2: "If you did not make this request, you can ignore this email. Your password will remain unchanged until you click the link."
-                reset_password_instructions_mjml:
-                    mj_title: Ziggy - Password Reset
-                    greeting_html: "Hello <b>%{name}</b>!"
-                    instruction: "A password change for your account has been requested. You can do so using the link below."
-                    instruction_2: "If you did not make this request, simply ignore this email. Your password will not be changed until you use the link to set a new one."
                 unlock_instructions:
                     greeting_html: "Hello <strong>%{email}</strong>,"
                     message: "Your account has been locked due to a high number of failed login attempts."
