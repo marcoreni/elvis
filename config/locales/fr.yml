@@ -65,10 +65,6 @@ fr:
                 edit:
                     title: Changez votre mot de passe
                     password_confirmation_label: Confirmation
-            confirmations:
-                new:
-                    title: Envoyer à nouveau les instructions de confirmation
-                    submit: Ré-envoi des instructions de confirmation
             shared:
                 links:
                     sign_in_link: Lien vers la page de Connexion
@@ -80,19 +76,10 @@ fr:
                     account_created_html: "Votre compte a bien été créé sur la plateforme de <strong>%{app_name}</strong>."
                     instruction: "Confirmer votre email et créer un mot de passe via le lien ci-dessous :"
                     confirm_button: Confirmer mon compte
-                email_changed:
-                    greeting_html: "Bonjour <strong>%{email}</strong>,"
-                password_change:
-                    greeting_html: "Bonjour <strong>%{email}</strong>,"
-                    message: "Nous vous confirmons par ce mail que votre mot de passe a bien été modifié."
                 reset_password_instructions:
                     greeting_html: "Bonjour <strong>%{name}</strong>,"
                     instruction: "Vous avez demandé à réinitialiser votre mot de passe. Pour le modifier, cliquez sur le bouton ci-dessous :"
                     instruction_2: "Si vous n’êtes pas à l’origine de cette demande, vous pouvez ignorer cet email. Votre mot de passe restera inchangé tant que vous ne cliquez pas sur le lien."
-                unlock_instructions:
-                    greeting_html: "Bonjour <strong>%{email}</strong>,"
-                    message: "Votre compte a été bloqué à cause d'un nombre important de tentatives de connexions infructueuses."
-                    instruction: "Cliquez sur le lien ci-dessous pour débloquer votre compte :"
         sessions:
             pick_user:
                 title_html: "Choisissez le compte pour %{email}"

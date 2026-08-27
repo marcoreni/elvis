@@ -26,7 +26,7 @@ class DuePaymentTest < ActiveSupport::TestCase
         due1 = DuePayment.new
         due1.amount = 50.2
 
-        marked_dues = DuePayment._test_mark_unpaid([due1])
+        marked_dues = DuePayment.send(:identify_unpaid_dues, [due1])
 
         assert_equal(marked_dues[0].due_payment_status, unpaid_status)
     end
@@ -45,7 +45,7 @@ class DuePaymentTest < ActiveSupport::TestCase
         due1.payments << pay1
         due1.payments << pay2
 
-        marked_dues = DuePayment._test_mark_unpaid([due1])
+        marked_dues = DuePayment.send(:identify_unpaid_dues, [due1])
 
         assert_equal(marked_dues[0].due_payment_status, unpaid_status)
     end
@@ -61,7 +61,7 @@ class DuePaymentTest < ActiveSupport::TestCase
 
         due1.payments << pay1
 
-        marked_dues = DuePayment._test_mark_unpaid([due1])
+        marked_dues = DuePayment.send(:identify_unpaid_dues, [due1])
 
         assert_nil marked_dues[0].due_payment_status
     end
@@ -80,7 +80,7 @@ class DuePaymentTest < ActiveSupport::TestCase
         due1.payments << pay1
         due1.payments << pay2
 
-        marked_dues = DuePayment._test_mark_unpaid([due1])
+        marked_dues = DuePayment.send(:identify_unpaid_dues, [due1])
 
         assert_nil marked_dues[0].due_payment_status
     end
@@ -99,7 +99,7 @@ class DuePaymentTest < ActiveSupport::TestCase
         due1.payments << pay1
         due1.payments << pay2
 
-        marked_dues = DuePayment._test_mark_unpaid([due1])
+        marked_dues = DuePayment.send(:identify_unpaid_dues, [due1])
 
         assert_nil marked_dues[0].due_payment_status
     end
@@ -120,7 +120,7 @@ class DuePaymentTest < ActiveSupport::TestCase
         due1.payments << pay1
         due1.payments << pay2
 
-        marked_dues = DuePayment._test_mark_unpaid([due1])
+        marked_dues = DuePayment.send(:identify_unpaid_dues, [due1])
 
         assert_nil marked_dues[0].due_payment_status
     end

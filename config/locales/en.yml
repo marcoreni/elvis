@@ -62,10 +62,6 @@ en:
                 edit:
                     title: Change your password
                     password_confirmation_label: Confirmation
-            confirmations:
-                new:
-                    title: Resend confirmation instructions
-                    submit: Resend confirmation instructions
             shared:
                 links:
                     sign_in_link: Link to the sign-in page
@@ -77,19 +73,10 @@ en:
                     account_created_html: "Your account has been created on the <strong>%{app_name}</strong> platform."
                     instruction: "Confirm your email and create a password using the link below:"
                     confirm_button: Confirm my account
-                email_changed:
-                    greeting_html: "Hello <strong>%{email}</strong>,"
-                password_change:
-                    greeting_html: "Hello <strong>%{email}</strong>,"
-                    message: "We confirm by this email that your password has been successfully changed."
                 reset_password_instructions:
                     greeting_html: "Hello <strong>%{name}</strong>,"
                     instruction: "You requested to reset your password. To change it, click the button below:"
                     instruction_2: "If you did not make this request, you can ignore this email. Your password will remain unchanged until you click the link."
-                unlock_instructions:
-                    greeting_html: "Hello <strong>%{email}</strong>,"
-                    message: "Your account has been locked due to a high number of failed login attempts."
-                    instruction: "Click the link below to unlock your account:"
         sessions:
             pick_user:
                 title_html: "Choose the account for %{email}"
