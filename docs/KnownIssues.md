@@ -142,6 +142,69 @@ Whatever the per-package decision, pin to an exact commit SHA (or a real npm rel
 branch ref in the meantime — that alone removes the "can silently change under us" risk even before
 the fork-vs-replace decision is made.
 
+## Request/view/system specs can't run in this environment (no `yarn`, empty Shakapacker test manifest)
+
+Found 2026-08-27 while adding mailer specs for `feature/i18n-04-devise-and-public-pages` and trying
+a first request spec for the same branch's Devise pages. Any spec that renders a full page through
+`app/views/layouts/devise.html.erb` (or `application.html.erb`) hits
+`Shakapacker::Manifest::MissingEntryError: Shakapacker can't find application.css in
+.../public/packs-test/manifest.json` — the manifest is empty. Root cause: `config/shakapacker.yml`
+sets `compile: true` for `test`, which is supposed to auto-compile packs on first request, but that
+shells out to `yarn`, which isn't installed for this machine's asdf Node 20.20.2 (`bin/shakapacker`
+fails outright with `Errno::ENOENT: No such file or directory - yarn`). This is almost certainly
+also why the Minitest Capybara feature specs (see the "Minitest suite is substantially broken" entry
+above) have never worked here — same missing front-end toolchain, different symptom. Mailer specs
+are unaffected (the `mailer` layout has no pack tags), which is why
+`spec/mailers/devise_mailer_spec.rb` exists but no `spec/requests`/`spec/views` directory does.
+Install `yarn` (or point Shakapacker at a Node package manager that's actually present) before
+attempting request/view/system specs.
+
+## `devise/passwords/edit.html.erb` may be an orphaned view
+
+Found 2026-08-27, same investigation. The reset-password link Devise's own flow sends
+(`send_reset_password_instructions`) is rendered by `DeviseMailer#reset_password_instructions`
+(`app/mailers/devise_mailer.rb`), and its email template builds the link with `edit_password_url`
+(a custom top-level route, `/u/edit_password` → `UsersController#edit_password`) — not
+`edit_user_password_url`, the Devise-generated route (`/u/password/edit` →
+`PasswordsController#edit`, inherited unmodified from `Devise::PasswordsController`) that actually
+renders `app/views/devise/passwords/edit.html.erb`. No `edit_user_password_path`/`_url` call exists
+anywhere in `app/` (grepped `app --include="*.rb" --include="*.erb"`). It's possible some
+DB-stored `NotificationTemplate` (Liquid/WYSIWYG content, outside static grep's reach — see
+`docs/I18n.md`'s "hors périmètre") links to it, so this isn't confirmed dead the way the deleted
+`.mjml` templates were, but it's worth checking directly (e.g. audit `NotificationTemplate` bodies
+for `edit_user_password`) before investing further in this specific view/route pair.
+
+## Devise mailer actions with no live code path (unlock, email-changed, password-changed)
+
+Found 2026-08-27, same investigation, verified via `bin/rails routes` and
+`config/initializers/devise.rb`. Three more Devise mailer actions — beyond the two dead `.mjml`
+templates already removed — appear to be entirely unreachable, independent of `feature/i18n-04`'s
+changes (that branch translated their `.html.erb` views anyway, since determining reachability
+wasn't in scope at the time):
+- **`unlock_instructions`** (`app/views/devise/mailer/unlock_instructions.html.erb`,
+  `app/views/devise/unlocks/new.html.erb`): `User` (`app/models/user.rb`) doesn't include Devise's
+  `:lockable` module, so `devise_for :users` never generates `new_user_unlock`/`user_unlock`
+  routes (confirmed: no `unlocks#` route exists in `bin/rails routes` output) and nothing calls
+  `send_unlock_instructions` — grepping `unlock_instructions`/`send_unlock_instructions`/
+  `:lockable` across `app/` turns up nothing but the commented-out module hint in `user.rb`.
+- **`email_changed`**: `config/initializers/devise.rb` has
+  `# config.send_email_changed_notification = false` — commented out, meaning Devise's own
+  default (`false`) applies — and `User` doesn't include `:confirmable` either, so this
+  notification is never sent.
+- **`password_change`**: same file explicitly sets `config.send_password_change_notification =
+  false` (not commented, deliberately disabled).
+
+Also unreachable via routing (separate from the mailers): `app/views/devise/confirmations/new.html.erb`
+— `config/routes.rb`'s `devise_for :users` only wires a custom top-level `/confirm` route
+(`confirmations#confirm`, the app's own hand-rolled token-based confirmation flow, still very much
+alive — see `app/controllers/confirmations_controller.rb` and the many real
+`DeviseMailer.confirmation_instructions` call sites in `app/`) — never the standard Devise
+`confirmations#new`/`#create` actions that would render this view.
+
+Candidates for outright deletion (view + locale keys), same treatment as the two `.mjml` templates
+removed earlier in this branch — confirm each with a repo-wide grep first, since app-specific
+routing/callback wiring in this codebase doesn't always match Devise's stock conventions.
+
 ## Stale French mailer subjects under the English Devise locale
 
 Found 2026-08-27 while removing the dead `.mjml` mailer templates and cleaning up
