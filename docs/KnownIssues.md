@@ -142,23 +142,6 @@ Whatever the per-package decision, pin to an exact commit SHA (or a real npm rel
 branch ref in the meantime — that alone removes the "can silently change under us" risk even before
 the fork-vs-replace decision is made.
 
-## Request/view/system specs can't run in this environment (no `yarn`, empty Shakapacker test manifest)
-
-Found 2026-08-27 while adding mailer specs for `feature/i18n-04-devise-and-public-pages` and trying
-a first request spec for the same branch's Devise pages. Any spec that renders a full page through
-`app/views/layouts/devise.html.erb` (or `application.html.erb`) hits
-`Shakapacker::Manifest::MissingEntryError: Shakapacker can't find application.css in
-.../public/packs-test/manifest.json` — the manifest is empty. Root cause: `config/shakapacker.yml`
-sets `compile: true` for `test`, which is supposed to auto-compile packs on first request, but that
-shells out to `yarn`, which isn't installed for this machine's asdf Node 20.20.2 (`bin/shakapacker`
-fails outright with `Errno::ENOENT: No such file or directory - yarn`). This is almost certainly
-also why the Minitest Capybara feature specs (see the "Minitest suite is substantially broken" entry
-above) have never worked here — same missing front-end toolchain, different symptom. Mailer specs
-are unaffected (the `mailer` layout has no pack tags), which is why
-`spec/mailers/devise_mailer_spec.rb` exists but no `spec/requests`/`spec/views` directory does.
-Install `yarn` (or point Shakapacker at a Node package manager that's actually present) before
-attempting request/view/system specs.
-
 ## `devise/passwords/edit.html.erb` may be an orphaned view
 
 Found 2026-08-27, same investigation. The reset-password link Devise's own flow sends
