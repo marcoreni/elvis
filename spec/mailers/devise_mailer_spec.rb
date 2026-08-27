@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require "rails_helper"
 
 # Regression coverage for feature/i18n-04-devise-and-public-pages: these two mailer actions had
@@ -15,7 +17,7 @@ RSpec.describe DeviseMailer, type: :mailer do
     it "does not double-wrap the app name in nested <strong> tags" do
       mail = described_class.confirmation_instructions(user, token)
 
-      expect(mail.body.encoded).not_to match(%r{<strong>\s*<strong>})
+      expect(mail.body.encoded).not_to match(/<strong>\s*<strong>/)
     end
 
     it "links to the real confirmation URL, not markup" do
@@ -48,7 +50,7 @@ RSpec.describe DeviseMailer, type: :mailer do
     it "links to a real anchor href, not markup, for the reset button" do
       mail = described_class.reset_password_instructions(user, token)
 
-      expect(mail.body.encoded).not_to match(%r{href="[^"]*<a })
+      expect(mail.body.encoded).not_to match(/href="[^"]*<a /)
     end
 
     it "renders in French by default" do

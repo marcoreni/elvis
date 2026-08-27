@@ -268,6 +268,22 @@ et à mesure de son intégration :
         stock dupliqué en anglais seulement dans `devise.en.yml`, sans équivalent français
         nécessaire puisqu'il vient de `rails-i18n`) et `activerecord.attributes.user.password`
         (attribut stock du gem référencé directement via `t()` dans les vues touchées).
+  - [x] **Nettoyage post-revue** : suppression des deux templates `.mjml` de `devise/mailer/`
+        (mort — aucun gem `mjml`/`mjml-rails` au `Gemfile`, jamais rendus), ce qui a aussi retiré
+        au passage le nom de produit "Ziggy" resté dans `reset_password_instructions_mjml.mj_title`.
+        `bundle exec i18n-tasks health` rapporte désormais 0 manquant / 0 inutilisé (contre 2/22
+        avant ce nettoyage). Ajout de `bin/i18n-tasks` (binstub Bundler + `require "logger"`) car
+        Ruby 3.3.5+/3.4 a démoté `logger` en gem "bundled" — la CLI `i18n-tasks` ne bootant pas
+        Rails, elle ne le charge jamais implicitement et plantait sans ce require explicite. Deux
+        bugs de markup trouvés en revue et corrigés : `unlock_instructions.html.erb` construisait
+        son `href` à partir du HTML rendu par un `link_to` imbriqué au lieu de l'URL elle-même (bouton
+        cassé) ; `confirmation_instructions.html.erb` doublait le `<strong>` autour du nom de
+        l'appli (le call site *et* la clé `_html` l'enveloppaient chacun). Couverture de tests
+        ajoutée : `spec/mailers/devise_mailer_spec.rb` (confirmation/reset password, fr+en, garde-fou
+        de non-régression sur les deux bugs ci-dessus) et `spec/requests/devise_pages_spec.rb`
+        (sign_in/sign_up/password new+edit/pick_user, fr+en, aucune clé de traduction brute qui
+        fuite) — ce dernier nécessitait `yarn` pour que Shakapacker compile son manifest de test,
+        absent de la machine de dev jusqu'à activation via `corepack enable`.
 - [ ] **`feature/i18n-05-extract-users`** *(dépend de 01+02, indépendante de 04)* — vague de preuve
       de bout en bout
   - [ ] `frontend/components/UserList.jsx` (class component → `withTranslation`)

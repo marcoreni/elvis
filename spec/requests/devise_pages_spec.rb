@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require "rails_helper"
 
 # Regression coverage for feature/i18n-04-devise-and-public-pages: these pages had their French
@@ -31,17 +33,17 @@ RSpec.describe "Devise pages", type: :request do
 
   describe "GET /u/sign_in" do
     include_examples "a page translated in both locales", "/u/sign_in",
-      "Accédez à votre espace", "Access your account"
+                     "Accédez à votre espace", "Access your account"
   end
 
   describe "GET /u/sign_up" do
     include_examples "a page translated in both locales", "/u/sign_up",
-      "Votre Nom", "Your last name"
+                     "Votre Nom", "Your last name"
   end
 
   describe "GET /u/password/new" do
     include_examples "a page translated in both locales", "/u/password/new",
-      "Réinitialisation par Email", "Reset by Email"
+                     "Réinitialisation par Email", "Reset by Email"
   end
 
   describe "GET /u/password/edit" do
