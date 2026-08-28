@@ -427,8 +427,9 @@ et à mesure de son intégration :
             `views.payment_method.*` / `views.payment_statuses.*` / `views.payments.index.*` /
             `views.failed_payment_imports.index.*`. Nouveaux `common.actions.{delete,back}`,
             `common.labels.actions`, `common.confirm.sure` (les deux `data: { confirm: "Êtes vous
-            sur ?" }` des vues index — la valeur FR garde la formulation d'origine verbatim,
-            "Êtes vous sur ?", pas de correction de copie pendant l'extraction).
+            sur ?" }` des vues index ; deux fautes dans l'original — trait d'union manquant et
+            "sur" au lieu de "sûr" — corrigées en "Êtes-vous sûr ?" à la demande explicite du
+            mainteneur).
             `activerecord.attributes.payment_method.{label,is_special,is_credit_note,show_payment_method_to_user}`
             et `payment_status.{label,color}` ajoutés, référencés via `t()` explicite dans
             `f.label` (comme branches 05/06-evaluation). Les blocs d'erreur scaffold anglais des
