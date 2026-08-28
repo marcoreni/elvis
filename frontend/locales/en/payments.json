@@ -262,6 +262,42 @@
             "checkIssuerBulkLabel": "Cheque issuer",
             "firstCheckNumberLabel": "First cheque number (following numbers will be incremented automatically)",
             "editButton": "Edit"
+        },
+        "duePaymentsList": {
+            "columns": {
+                "number": "No.",
+                "status": "Status",
+                "date": "Date",
+                "method": "Method",
+                "amount": "Amount",
+                "actions": "Actions"
+            },
+            "heading": "Schedule",
+            "actionsDropdown": "Schedule actions",
+            "createSchedule": "Create the schedule",
+            "createSingleDue": "Create a single due date",
+            "generatePayments": "Generate the payments",
+            "createDueTitle": "Create a due date",
+            "dueForMembership": "Due date for membership(s)",
+            "previsionalDateLabel": "Expected date",
+            "bulkEditTitle": "Edit due dates",
+            "editDueTitle": "Edit due date no. {{n}}",
+            "newScheduleTitle": "New schedule",
+            "createMembershipDue": "Create a membership due date",
+            "numberOfDuesLabel": "Number of due dates",
+            "selectNumberOfDues": "Select a number of due dates",
+            "annual": "Annual (1)",
+            "quarterly": "Quarterly (3)",
+            "monthly": "Monthly (10)",
+            "other": "Other",
+            "firstDueDateLabel": "First due date",
+            "previewColumns": {
+                "number": "No.",
+                "paymentMethod": "Payment method",
+                "date": "Date",
+                "amount": "Amount"
+            },
+            "paymentTermPreference": "The student stated the following preference in their payment terms:"
         }
     }
 }

@@ -262,6 +262,42 @@
             "checkIssuerBulkLabel": "Émetteur du chèque",
             "firstCheckNumberLabel": "Numéro du premier chèque (les numéros suivants seront incrémenté automatiquement)",
             "editButton": "Editer"
+        },
+        "duePaymentsList": {
+            "columns": {
+                "number": "N°",
+                "status": "Statut",
+                "date": "Date",
+                "method": "Mode",
+                "amount": "Montant",
+                "actions": "Actions"
+            },
+            "heading": "Échéancier",
+            "actionsDropdown": "Actions échéancier",
+            "createSchedule": "Créer l’échéancier",
+            "createSingleDue": "Créer une échéance unique",
+            "generatePayments": "Générer les règlements",
+            "createDueTitle": "Création d’une échéance",
+            "dueForMembership": "Échéance pour adhésion.s",
+            "previsionalDateLabel": "Date prévisionnelle",
+            "bulkEditTitle": "Modification d’échéances",
+            "editDueTitle": "Edition de l’échéance n° {{n}}",
+            "newScheduleTitle": "Nouvel échéancier",
+            "createMembershipDue": "Créer une échéance d'adhésion",
+            "numberOfDuesLabel": "Nombre d’échéances",
+            "selectNumberOfDues": "Sélectionnez un nombre d’échéances",
+            "annual": "Annuel (1)",
+            "quarterly": "Trimestriel (3)",
+            "monthly": "Mensuel (10)",
+            "other": "Autre",
+            "firstDueDateLabel": "Date de la première échéance",
+            "previewColumns": {
+                "number": "N°",
+                "paymentMethod": "Moyen de paiement",
+                "date": "Date",
+                "amount": "Montant"
+            },
+            "paymentTermPreference": "L'élève a renseigné la préférence suivante dans ses modalités de paiement :"
         }
     }
 }
