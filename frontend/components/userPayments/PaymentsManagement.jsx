@@ -1,6 +1,7 @@
 import React, {Fragment} from "react";
 
 import swal from "sweetalert2";
+import { withTranslation } from "react-i18next";
 import _ from "lodash";
 
 import {toast} from "react-toastify";
@@ -577,7 +578,7 @@ class PaymentsManagement extends React.Component {
             })
             .error((e) => {
                 console.error(e)
-                swal("Erreur", "Une erreur est survenue", "error");
+                swal(t("general.reminder.errorTitle"), t("general.paymentMail.errorTitle"), "error");
             })
             .post(`/adhesions/${adhesionId}/update_adhesion_pricing?adhesion_price_id=${newAdhesionPricingId}`, {});
     }
@@ -648,7 +649,7 @@ class PaymentsManagement extends React.Component {
             .error((e) => {
                 console.error(e);
                 this.setStateWithCoupon(discountable_id, discountable_type, oldCoupon);
-                swal("Erreur", "Une erreur est survenue", "error");
+                swal(t("general.reminder.errorTitle"), t("general.paymentMail.errorTitle"), "error");
             });
 
         if (parseInt(couponId) === 0) {
@@ -727,11 +728,11 @@ class PaymentsManagement extends React.Component {
                     this.setState({desiredActivities: dess});
                     this.forceUpdate();
                 } else {
-                    swal("Erreur", "Impossible de mettre à jour le prorata", "error");
+                    swal(t("general.reminder.errorTitle"), t("userPayments.management.prorataUpdateFailed"), "error");
                 }
             })
             .catch(() => {
-                swal("Erreur", "Une erreur est survenue lors de la mise à jour du prorata", "error");
+                swal(t("general.reminder.errorTitle"), t("userPayments.management.prorataUpdateError"), "error");
             });
         }
     }
@@ -972,7 +973,7 @@ class PaymentsManagement extends React.Component {
                         })
                 );
 
-                toast.success("Changement de location sauvegardé", {
+                toast.success(t("userPayments.management.locationSaved"), {
                     position: toast.POSITION.BOTTOM_CENTER,
                     autoClose: 3000,
                 });
@@ -1323,10 +1324,12 @@ class PaymentsManagement extends React.Component {
     }
 
     handlePromptPaymentStatusEdit(payer, paymentId, newStatusId) {
+        const { t } = this.props;
+
         swal({
-            title: "Édition du statut",
+            title: t("general.statusEdit.title"),
             type: "warning",
-            confirmButtonText: "Valider",
+            confirmButtonText: t("common:actions.validate"),
             input: "select",
             inputOptions: _.zipObject(
                 this.props.paymentStatuses.map(status => status.id),
@@ -1335,7 +1338,7 @@ class PaymentsManagement extends React.Component {
             inputClass: "form-control",
             inputValue: newStatusId,
             showCancelButton: true,
-            cancelButtonText: "Annuler",
+            cancelButtonText: t("common:actions.cancel"),
         }).then(res => {
             const newStatusId = res.value;
             if (newStatusId) {
@@ -1347,7 +1350,7 @@ class PaymentsManagement extends React.Component {
                     },
                     body: JSON.stringify({id: paymentId, status: res.value}),
                 }).then(res => {
-                    if (!res.ok) swal("Echec", "", "error");
+                    if (!res.ok) swal(t("general.statusEditFailed"), "", "error");
                     else {
                         let payments = this.state.payments[payer.id];
                         const index = _.findIndex(
@@ -1371,13 +1374,15 @@ class PaymentsManagement extends React.Component {
 
     sendUpcominPayment()
     {
+        const { t } = this.props;
+
         swal({
             type: "question",
-            title: "Êtes-vous sûr ?",
-            text: "Envoyer les paiements à venir par email ?",
+            title: t("common:confirm.sure"),
+            text: t("userPayments.management.sendUpcomingText"),
             showCancelButton: true,
-            confirmButtonText: "Envoyer",
-            cancelButtonText: "Annuler",
+            confirmButtonText: t("common:actions.send"),
+            cancelButtonText: t("common:actions.cancel"),
         })
             .then((res) =>
             {
@@ -1388,13 +1393,13 @@ class PaymentsManagement extends React.Component {
                     api.set()
                         .success(() =>
                         {
-                            swal("Mail envoyé", "Le mail a bien été envoyé", "success");
+                            swal(t("userPayments.management.mailSentTitle"), t("userPayments.management.mailSentText"), "success");
                         })
                         .error((e) =>
                         {
                             console.error(e)
 
-                            swal("Erreur", "Une erreur est survenue", "error");
+                            swal(t("general.reminder.errorTitle"), t("general.paymentMail.errorTitle"), "error");
                         })
                         .post("/payments/send_upcoming_payment_mail", {
                             season_id: this.state.season,
@@ -1405,6 +1410,7 @@ class PaymentsManagement extends React.Component {
     }
 
     render() {
+        const { t } = this.props;
         const itemsForPayment = generateDataForPaymentSummaryTable({
             activities: this.state.activities,
             desired: this.state.desiredActivities,
@@ -1546,7 +1552,7 @@ class PaymentsManagement extends React.Component {
 
                     <div className="payment-print-content">
                         <h3 className="payment-print-payer">
-                            Payeur.s :{" "}
+                            {t("userPayments.management.payers")}{" "}
                             {this.state.payers.map((p, i, a) => (
                                 <b
                                     key={i}
@@ -1558,85 +1564,84 @@ class PaymentsManagement extends React.Component {
 
                         <div className="row payment-print-checkbox-section">
                             <div className="col-xs-6">
-                                <h2>Moyen de paiement</h2>
+                                <h2>{t("userPayments.management.paymentMethod")}</h2>
                                 <h3>
                                     <span className="payment-print-checkbox"></span>
-                                    Prélèvement
+                                    {t("userPayments.management.directDebit")}
                                 </h3>
                                 <h3>
                                     <span className="payment-print-checkbox"></span>
-                                    Chèque
+                                    {t("userPayments.management.check")}
                                 </h3>
                                 <h3>
                                     <span className="payment-print-checkbox"></span>
-                                    Espèces
+                                    {t("userPayments.management.cash")}
                                 </h3>
                             </div>
                             <div className="col-xs-6">
-                                <h2>Nombre d'échéance(s)</h2>
+                                <h2>{t("userPayments.management.numberOfDues")}</h2>
                                 <h3>
                                     <span className="payment-print-checkbox"></span>
-                                    Annuel
+                                    {t("userPayments.management.annual")}
                                 </h3>
                                 <h3>
                                     <span className="payment-print-checkbox"></span>
-                                    Trimestriel (Octobre/Janvier/Avril)
+                                    {t("userPayments.management.quarterly")}
                                 </h3>
                                 <h3>
                                     <span className="payment-print-checkbox"></span>
-                                    Mensuel (indiquer nombre d'échéances et
-                                    premier mois)
+                                    {t("userPayments.management.monthly")}
                                 </h3>
                             </div>
                         </div>
                         <div className="row payment-print-checkbox-section">
                             <div className="col-xs-6">
-                                <h2>Pour les prélèvements, date souhaitée</h2>
+                                <h2>{t("userPayments.management.debitDatePreference")}</h2>
                                 <h3>
                                     <span className="payment-print-checkbox"></span>
-                                    5 du mois
+                                    {t("userPayments.management.day5")}
                                 </h3>
                                 <h3>
                                     <span className="payment-print-checkbox"></span>
-                                    15 du mois
+                                    {t("userPayments.management.day15")}
                                 </h3>
                                 <h3>
                                     <span className="payment-print-checkbox"></span>
-                                    28 du mois
+                                    {t("userPayments.management.day28")}
                                 </h3>
                             </div>
                         </div>
                         <div className="row payment-print-checkbox-section">
                             <div className="col-lg-12">
                                 <div>
-                                    <h2>Adhésion réglée différemment</h2>{" "}
+                                    <h2>{t("userPayments.management.membershipPaidSeparately")}</h2>{" "}
                                     <h3>
                                         <span className="payment-print-checkbox"></span>
-                                        Oui{" "}
+                                        {t("userPayments.management.yes")}{" "}
                                         <span className="payment-print-checkbox"></span>
-                                        Non
+                                        {t("userPayments.management.no")}
                                     </h3>
                                 </div>
                             </div>
                         </div>
                         <div className="row payment-print-checkbox-section">
                             <div className="col-xs-6">
-                                <h3>Moyen de paiement</h3>
+                                <h3>{t("userPayments.management.paymentMethod")}</h3>
                             </div>
                             <div className="col-xs-6">
                                 <h3>
                                     <span className="payment-print-checkbox"></span>
-                                    Chèque
+                                    {t("userPayments.management.check")}
                                 </h3>
                                 <h3>
                                     <span className="payment-print-checkbox"></span>
-                                    Espèces
+                                    {t("userPayments.management.cash")}
                                 </h3>
                             </div>
                         </div>
                         <div className="row payment-print-checkbox-section">
                             <div className="col-xs-6">
-                                <h2>Commentaire.s :</h2>
+                                <h2>{t("userPayments.management.commentsLabel")}</h2>
                             </div>
                         </div>
                     </div>
@@ -1644,7 +1649,7 @@ class PaymentsManagement extends React.Component {
                 <div className="payment-page">
                     <div className="row wrapper border-bottom white-bg page-heading">
                         <div className="col-sm-12">
-                            <h2>Règlements concernant {this.props.user.first_name + " " + this.props.user.last_name}</h2>
+                            <h2>{t("userPayments.management.heading", { name: this.props.user.first_name + " " + this.props.user.last_name })}</h2>
                             <div className="flex flex-space-between-justified">
                                 <div className="flex flex-row">
                                     <button
@@ -1652,7 +1657,7 @@ class PaymentsManagement extends React.Component {
                                         onClick={() => window.print()}
                                     >
                                         <i className="fas fa-print m-r-xs"/>
-                                        Imprimer
+                                        {t("userPayments.management.print")}
                                     </button>
 
                                     {
@@ -1661,7 +1666,7 @@ class PaymentsManagement extends React.Component {
                                             onClick={this.sendUpcominPayment.bind(this)}
                                         >
                                             <i className="fas fa-paper-plane m-r-xs"/>
-                                            Envoyer
+                                            {t("common:actions.send")}
                                         </button>
                                     }
                                 </div>
@@ -1669,7 +1674,7 @@ class PaymentsManagement extends React.Component {
                                     <p>
                                         {this.state.scheduleStatus
                                             ? this.state.scheduleStatus.label
-                                            : "Pas de Statut"}
+                                            : t("userPayments.management.noStatus")}
                                     </p>
                                     <button
                                         type="button"
@@ -1677,7 +1682,7 @@ class PaymentsManagement extends React.Component {
                                         data-toggle="modal"
                                         data-target="#statusModal"
                                     >
-                                        Changer le statut
+                                        {t("userPayments.management.changeStatus")}
                                     </button>
                                     <div
                                         className="modal inmodal"
@@ -1689,7 +1694,7 @@ class PaymentsManagement extends React.Component {
                                         <div className="modal-dialog">
                                             <div className="modal-content animated">
                                                 <div className="modal-header">
-                                                    <p>Statut des règlements</p>
+                                                    <p>{t("userPayments.management.paymentsStatus")}</p>
                                                 </div>
                                                 <div className="modal-body">
                                                     {generateStatusSelection}
@@ -1701,7 +1706,7 @@ class PaymentsManagement extends React.Component {
                                                         data-dismiss="modal"
                                                     >
                                                         <i className="fas fa-times m-r-sm"></i>
-                                                        Annuler
+                                                        {t("common:actions.cancel")}
                                                     </button>
                                                     <button
                                                         className="btn btn-primary"
@@ -1711,7 +1716,7 @@ class PaymentsManagement extends React.Component {
                                                         }
                                                     >
                                                         <i className="fas fa-check m-r-sm"></i>
-                                                        Valider
+                                                        {t("common:actions.validate")}
                                                     </button>
                                                 </div>
                                             </div>
@@ -1725,7 +1730,7 @@ class PaymentsManagement extends React.Component {
                         <div className="row">
                             <div className="col-lg-4 col-md-6 col-sm-12">
                                 <div className="form-group">
-                                    <label>Saison</label>
+                                    <label>{t("userPayments.management.seasonLabel")}</label>
                                     <select
                                         className="form-control"
                                         onChange={this.handleChangeSeason.bind(
@@ -1778,7 +1783,7 @@ class PaymentsManagement extends React.Component {
                                 <div className="col-lg-4 col-md-6">
                                     <div className="alert alert-warning">
                                         <h4>
-                                            Avoir sur {previousSeason.label}
+                                            {t("userPayments.management.creditNoteOn", { season: previousSeason.label })}
                                         </h4>
                                         <ul>
                                             {previousSeasonCreditNotes.map(
@@ -1800,8 +1805,7 @@ class PaymentsManagement extends React.Component {
                                 <div className="col-lg-4 col-md-6">
                                     <div className="alert alert-warning">
                                         <h4>
-                                            Solde non nul sur{" "}
-                                            {previousSeason.label}
+                                            {t("userPayments.management.nonZeroBalanceOn", { season: previousSeason.label })}
                                         </h4>
                                         <h3 className="no-margins">
                                             {previousSeasonBalance}€
@@ -1812,7 +1816,7 @@ class PaymentsManagement extends React.Component {
                         </div>
 
                         {this.state.payers.length == 0 ?
-                            "Aucun échéancier pour cette saison"
+t("userPayments.management.noScheduleForSeason")
                             :
                             _.map(this.state.payers, payer => {
                                 const previsionalTotal = _.chain(
@@ -1850,7 +1854,7 @@ class PaymentsManagement extends React.Component {
                                         />
                                         <div className="col-lg-12 col-md-12 flex flex-center-aligned m-b-sm">
                                             <h3 className="m-r-sm">
-                                                Paiements par{" "}
+                                                {t("userPayments.management.paymentsBy")}{" "}
                                                 <a
                                                     href={`/${payer.class_name == "User"
                                                         ? "users"
@@ -1862,9 +1866,9 @@ class PaymentsManagement extends React.Component {
 
                                                 {payer["payer_paying_for_current_season?"] ? "" : <span
                                                     className="badge badge-danger m-l-sm"
-                                                    data-tippy-content="Cet utilisateur n'est plus payeur pour cette saison, mais apparaît parce que des échéances existent pour lui."
+                                                    data-tippy-content={t("userPayments.management.noLongerPayerTooltip")}
                                                     >
-                                                        N'est plus payeur
+                                                        {t("userPayments.management.noLongerPayer")}
                                                 </span>}
                                             </h3>
                                             {this.state.payers.length > 1 &&
@@ -1874,7 +1878,7 @@ class PaymentsManagement extends React.Component {
                                                             payer.id
                                                         )
                                                     }
-                                                    data-tippy-content="Changer le payeur"
+                                                    data-tippy-content={t("userPayments.management.changePayerTooltip")}
                                                     data-toggle="modal"
                                                     data-target="#switch-payer-modal"
                                                     className="btn btn-sm btn-outline btn-primary"
@@ -1891,7 +1895,7 @@ class PaymentsManagement extends React.Component {
                                             <Fragment>
                                                 <div className="col-lg-12 col-md-6 d-flex justify-content-between m-b-sm">
                                                     <div className="alert alert-info w-100">
-                                                        Modalités de paiement souhaitées : {payer.payment_terms_summary}
+                                                        {t("userPayments.management.desiredPaymentTerms", { summary: payer.payment_terms_summary })}
                                                     </div>
                                                 </div>
                                             </Fragment>
@@ -1907,7 +1911,7 @@ class PaymentsManagement extends React.Component {
                                                         className="btn btn-primary btn-xs"
                                                         onClick={() => window.open(`/payments/summary/${this.props.user.id}.pdf?season_id=${this.state.season}&payer_id=${payer.id}`)}>
                                                         <i className="fas fa-print text-primary mr-1"/>
-                                                        Imprimer une attestation de paiement
+                                                        {t("userPayments.management.printPaymentCertificate")}
                                                     </button>
 
                                                     <button
@@ -1915,7 +1919,7 @@ class PaymentsManagement extends React.Component {
                                                         className="btn btn-primary btn-xs"
                                                         onClick={() => window.open(`/payment_schedule/${(this.state.schedules[payer.id] && this.state.schedules[payer.id].id)}.pdf`)}>
                                                         <i className="fas fa-print text-primary mr-1"/>
-                                                        Imprimer l'échéancier
+                                                        {t("userPayments.management.printSchedule")}
                                                     </button>
                                                 </div>
 
@@ -1998,4 +2002,4 @@ class PaymentsManagement extends React.Component {
     }
 }
 
-export default PaymentsManagement;
+export default withTranslation("payments")(PaymentsManagement);
