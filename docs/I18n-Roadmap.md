@@ -501,7 +501,10 @@ et à mesure de son intégration :
           passage la coquille « Précedent » de ces fichiers est corrigée en « Précédent » via la
           clé partagée) ; ajout `common.actions.confirm`. Tests : `SwitchPayerModal.test.jsx`,
           `PaymentsSummary.test.jsx`, `PaymentsList.test.jsx`.
-        - [ ] **Lot 2c-ii** — `DuePaymentsList.jsx` (1358 l., ~50 chaînes).
+        - [x] **Lot 2c-ii** — branche `feature/i18n-06-payments-due-payments-list` :
+          `DuePaymentsList.jsx` (1358 l.) → `withTranslation("payments")`. Clés sous
+          `payments.userPayments.duePaymentsList.*` ; réutilise largement `userPayments.paymentsList.*`
+          (labels de modale partagés) + `common:*`. Test : `DuePaymentsList.test.jsx`.
         - [ ] **Lot 2c-iii** — `PaymentsManagement.jsx` (2001 l., le conteneur, ~60 chaînes) —
           à faire en dernier, il monte les autres.
       - `userPayments/v2/*` + `PayerPaymentTerms*.jsx` + `WrappedPayerPaymentTerms.jsx` +

@@ -9,6 +9,7 @@ import BulkEditModalAlert from "../utils/alerts/BulkEditModalAlert";
 
 // import { ADHESION_PRICE } from "./PaymentsManagement";
 import swal from "sweetalert2";
+import { withTranslation } from "react-i18next";
 import { Fragment } from "@fullcalendar/react";
 import { MONTHS } from "../../tools/constants";
 
@@ -435,15 +436,16 @@ class DuePaymentsList extends React.Component {
     }
 
     handleBulkDelete() {
+        const { t } = this.props;
+
         if (this.state.selectedRows.length > 0)
             swal({
-                title: "Suppression en masse",
-                text: `Êtes-vous sûr de vouloir supprimer ces ${this.state.selectedRows.length
-                } échéances ?`,
+                title: t("userPayments.paymentsList.bulkDeleteTitle"),
+                text: t("userPayments.paymentsList.bulkDeleteText", { n: this.state.selectedRows.length }),
                 type: "warning",
-                confirmButtonText: "Oui !",
+                confirmButtonText: t("userPayments.paymentsList.bulkDeleteConfirm"),
                 showCancelButton: true,
-                cancelButtonText: "Annuler",
+                cancelButtonText: t("common:actions.cancel"),
             }).then(v => {
                 if (v.value) {
                     this.props.handleBulkDelete(
@@ -481,6 +483,7 @@ class DuePaymentsList extends React.Component {
     }
 
     render() {
+        const { t } = this.props;
         const selectedRows = this.state.selectedRows;
         const headSelectorColumn =
             [{
@@ -505,13 +508,13 @@ class DuePaymentsList extends React.Component {
             }];
         let columns = [
             {
-                Header: "N°",
+                Header: t("userPayments.duePaymentsList.columns.number"),
                 id: "number",
                 maxWidth: 30,
                 accessor: d => d.number,
             },
             {
-                Header: "Statut",
+                Header: t("userPayments.duePaymentsList.columns.status"),
                 id: "payment_status_id",
                 maxWidth: 75,
                 className: "flex flex-center-justified",
@@ -519,7 +522,7 @@ class DuePaymentsList extends React.Component {
                 Cell: c => this.renderStatus(c),
             },
             {
-                Header: "Date",
+                Header: t("userPayments.duePaymentsList.columns.date"),
                 id: "date",
                 accessor: d =>
                     d.previsional_date != null
@@ -527,7 +530,7 @@ class DuePaymentsList extends React.Component {
                         : null,
             },
             {
-                Header: "Mode",
+                Header: t("userPayments.duePaymentsList.columns.method"),
                 id: "payment_method",
                 accessor: d => {
                     const pm = _.find(
@@ -538,7 +541,7 @@ class DuePaymentsList extends React.Component {
                 },
             },
             {
-                Header: "Montant",
+                Header: t("userPayments.duePaymentsList.columns.amount"),
                 id: "amount",
                 width: 100,
                 style: {
@@ -548,7 +551,7 @@ class DuePaymentsList extends React.Component {
                 accessor: d => `(${d.operation}) ${d.amount} €`,
             },
             {
-                Header: "Actions",
+                Header: t("userPayments.duePaymentsList.columns.actions"),
                 id: "actions",
                 sortable: false,
                 style: {
@@ -617,7 +620,7 @@ class DuePaymentsList extends React.Component {
         return (
             <div className="ibox m-b-md">
                 <div className="ibox-title">
-                    <h5>Échéancier </h5>
+                    <h5>{t("userPayments.duePaymentsList.heading")} </h5>
                     {this.props.isStudentView ?
                         "" :
                         <div className="ibox-tools">
@@ -629,7 +632,7 @@ class DuePaymentsList extends React.Component {
                                 aria-haspopup="true"
                                 aria-expanded="true"
                             >
-                                Actions échéancier <span className="caret" />
+                                {t("userPayments.duePaymentsList.actionsDropdown")} <span className="caret" />
                             </button>
                             <ul
                                 className="dropdown-menu"
@@ -643,7 +646,7 @@ class DuePaymentsList extends React.Component {
                                         }`}
                                     >
                                         <i className="fas fa-calendar m-r-sm" />
-                                        Créer l’échéancier
+                                        {t("userPayments.duePaymentsList.createSchedule")}
                                     </a>
                                 </li>
                                 <li>
@@ -657,7 +660,7 @@ class DuePaymentsList extends React.Component {
                                         }
                                     >
                                         <i className="fas fa-plus m-r-sm" />
-                                        Créer une échéance unique
+                                        {t("userPayments.duePaymentsList.createSingleDue")}
                                     </a>
                                 </li>
                                 <li>
@@ -668,7 +671,7 @@ class DuePaymentsList extends React.Component {
                                         }`}
                                     >
                                         <i className="fas fa-edit m-r-sm" />
-                                        Edition de masse
+                                        {t("userPayments.paymentsList.bulkEdit")}
                                     </a>
                                 </li>
                                 <li>
@@ -681,14 +684,14 @@ class DuePaymentsList extends React.Component {
                                         }
                                     >
                                         <i className="fas fa-arrow-right m-r-sm" />
-                                        Générer les règlements
+                                        {t("userPayments.duePaymentsList.generatePayments")}
                                     </a>
                                 </li>
                                 <li className="dropdown-divider" />
                                 <li>
                                     <a onClick={() => this.handleBulkDelete()}>
                                         <i className="fas fa-trash m-r-sm" />
-                                        Suppression de masse
+                                        {t("userPayments.paymentsList.bulkDelete")}
                                     </a>
                                 </li>
                             </ul>
@@ -701,13 +704,13 @@ class DuePaymentsList extends React.Component {
                     columns={columns}
                     defaultSorted={[{ id: "number", desc: true }]}
                     resizable={false}
-                    previousText="Précedent"
-                    nextText="Suivant"
-                    loadingText="Chargement..."
-                    noDataText="Aucune donnée"
-                    pageText="Page"
-                    ofText="sur"
-                    rowsText="résultats"
+                    previousText={t("common:reactTable.previousText")}
+                    nextText={t("common:reactTable.nextText")}
+                    loadingText={t("common:reactTable.loadingText")}
+                    noDataText={t("common:reactTable.noDataText")}
+                    pageText={t("common:reactTable.pageText")}
+                    ofText={t("common:reactTable.ofText")}
+                    rowsText={t("common:reactTable.rowsText")}
                     minRows={1}
                     showPagination={false}
                     className="whitebg"
@@ -723,7 +726,7 @@ class DuePaymentsList extends React.Component {
                     <div className="modal-dialog">
                         <div className="modal-content animated">
                             <div className="modal-header">
-                                <h3> Création d’une échéance </h3>
+                                <h3> {t("userPayments.duePaymentsList.createDueTitle")} </h3>
                             </div>
                             <div className="modal-body">
                                 {this.alertPaymentTerm(this.props.payer)}
@@ -737,14 +740,14 @@ class DuePaymentsList extends React.Component {
                                             this.handleCheckIsAdhesionDue(e)
                                         }
                                     />
-                                    <label htmlFor="forAdhesionDue">Échéance pour adhésion.s</label>
+                                    <label htmlFor="forAdhesionDue">{t("userPayments.duePaymentsList.dueForMembership")}</label>
                                 </div>}
                                 <div className="form-group">
-                                    <label>Montant</label>
+                                    <label>{t("userPayments.paymentsList.amountShortLabel")}</label>
                                     <input
                                         type="text"
                                         className="form-control"
-                                        placeholder="XX €"
+                                        placeholder={t("userPayments.paymentsList.amountPlaceholder")}
                                         value={
                                             this.state.newDuePayment.amount ||
                                             ""
@@ -757,7 +760,7 @@ class DuePaymentsList extends React.Component {
                                     />
                                 </div>
                                 <div className="form-group">
-                                    <label>Date prévisionnelle</label>
+                                    <label>{t("userPayments.duePaymentsList.previsionalDateLabel")}</label>
                                     <input
                                         type="date"
                                         className="form-control"
@@ -769,7 +772,7 @@ class DuePaymentsList extends React.Component {
                                     />
                                 </div>
                                 <div className="form-group">
-                                    <label>Mode de Paiement</label>
+                                    <label>{t("userPayments.paymentsList.paymentMethodLabel")}</label>
                                     <select
                                         className="form-control"
                                         defaultValue="placeholder"
@@ -780,7 +783,7 @@ class DuePaymentsList extends React.Component {
                                         }
                                     >
                                         <option value="placeholder" disabled>
-                                            Selectionnez un mode de paiement
+                                            {t("userPayments.paymentsList.selectPaymentMethod")}
                                         </option>
                                         <option value="" />
                                         {_.map(
@@ -799,7 +802,7 @@ class DuePaymentsList extends React.Component {
                                     </select>
                                 </div>
                                 <div className="form-group">
-                                    <label>Statut</label>
+                                    <label>{t("userPayments.paymentsList.statusLabel")}</label>
                                     <select
                                         className="form-control"
                                         defaultValue=""
@@ -809,7 +812,7 @@ class DuePaymentsList extends React.Component {
                                             )
                                         }
                                     >
-                                        <option value="">Pas de statut</option>
+                                        <option value="">{t("userPayments.paymentsList.noStatus")}</option>
                                         {this.props.statuses.map(status => (
                                             <option
                                                 key={status.id}
@@ -827,7 +830,7 @@ class DuePaymentsList extends React.Component {
                                     className="btn"
                                     data-dismiss="modal">
                                     <i className="fas fa-times m-r-sm"></i>
-                                    Annuler
+                                    {t("common:actions.cancel")}
                                 </button>
                                 <button
                                     className="btn btn-primary"
@@ -839,7 +842,7 @@ class DuePaymentsList extends React.Component {
                                     }
                                 >
                                     <i className="fas fa-save m-r-sm"></i>
-                                    Sauvegarder
+                                    {t("common:actions.save")}
                                 </button>
                             </div>
                         </div>
@@ -856,12 +859,12 @@ class DuePaymentsList extends React.Component {
                     <div className="modal-dialog">
                         <div className="modal-content animated">
                             <div className="modal-header">
-                                <h3> Modification d’échéances </h3>
+                                <h3> {t("userPayments.duePaymentsList.bulkEditTitle")} </h3>
                             </div>
                             <BulkEditModalAlert />
                             <div className="modal-body">
                                 <div className="form-group">
-                                    <label>Montant</label>
+                                    <label>{t("userPayments.paymentsList.amountShortLabel")}</label>
                                     <div className="flex">
                                         <select
                                             name="operation"
@@ -884,7 +887,7 @@ class DuePaymentsList extends React.Component {
                                     </div>
                                 </div>
                                 <div className="form-group">
-                                    <label>Mode de Paiement</label>
+                                    <label>{t("userPayments.paymentsList.paymentMethodLabel")}</label>
                                     <select
                                         className="form-control"
                                         name="payment_method_id"
@@ -894,7 +897,7 @@ class DuePaymentsList extends React.Component {
                                         defaultValue="placeholder"
                                     >
                                         <option value="placeholder" disabled>
-                                            Selectionnez un mode de paiement
+                                            {t("userPayments.paymentsList.selectPaymentMethod")}
                                         </option>
                                         <option value="" />
                                         {_.map(
@@ -919,7 +922,7 @@ class DuePaymentsList extends React.Component {
                                     className="btn"
                                     data-dismiss="modal">
                                     <i className="fas fa-times m-r-sm"></i>
-                                    Annuler
+                                    {t("common:actions.cancel")}
                                 </button>
                                 <button
                                     className="btn btn-primary"
@@ -931,7 +934,7 @@ class DuePaymentsList extends React.Component {
                                     onClick={() => this.handleBulkEditCommit()}
                                 >
                                     <i className="fas fa-edit m-r-sm"></i>
-                                    Editer
+                                    {t("userPayments.paymentsList.editButton")}
                                 </button>
                             </div>
                         </div>
@@ -948,14 +951,13 @@ class DuePaymentsList extends React.Component {
                         <div className="modal-content animated">
                             <div className="modal-header">
                                 <h3>
-                                    Edition de l’échéance n°{" "}
-                                    {this.state.duePaymentToEdit.number}
+                                    {t("userPayments.duePaymentsList.editDueTitle", { n: this.state.duePaymentToEdit.number })}
                                 </h3>
                             </div>
                             <div className="modal-body">
                                 {this.alertPaymentTerm(this.props.payer)}
                                 <div className="form-group">
-                                    <label>Montant</label>
+                                    <label>{t("userPayments.paymentsList.amountShortLabel")}</label>
                                     <div className="flex">
                                         <select
                                             name="operation"
@@ -978,7 +980,7 @@ class DuePaymentsList extends React.Component {
                                     </div>
                                 </div>
                                 <div className="form-group">
-                                    <label>Date prévisionnelle</label>
+                                    <label>{t("userPayments.duePaymentsList.previsionalDateLabel")}</label>
                                     <input
                                         type="date"
                                         className="form-control"
@@ -992,7 +994,7 @@ class DuePaymentsList extends React.Component {
                                     />
                                 </div>
                                 <div className="form-group">
-                                    <label>Mode de Paiement</label>
+                                    <label>{t("userPayments.paymentsList.paymentMethodLabel")}</label>
                                     <select
                                         className="form-control"
                                         value={
@@ -1004,7 +1006,7 @@ class DuePaymentsList extends React.Component {
                                         }
                                     >
                                         <option value={0} disabled>
-                                            Selectionnez un mode de paiement
+                                            {t("userPayments.paymentsList.selectPaymentMethod")}
                                         </option>
                                         <option value="" />
                                         {_.map(
@@ -1029,7 +1031,7 @@ class DuePaymentsList extends React.Component {
                                     className="btn"
                                     data-dismiss="modal">
                                     <i className="fas fa-times m-r-sm"></i>
-                                    Annuler
+                                    {t("common:actions.cancel")}
                                 </button>
                                 <button
                                     className="btn btn-primary"
@@ -1037,7 +1039,7 @@ class DuePaymentsList extends React.Component {
                                     onClick={() => this.handleSaveDuePayment()}
                                 >
                                     <i className="fas fa-save m-r-sm"></i>
-                                    Sauvegarder
+                                    {t("common:actions.save")}
                                 </button>
                             </div>
                         </div>
@@ -1053,7 +1055,7 @@ class DuePaymentsList extends React.Component {
                     <div className="modal-dialog">
                         <div className="modal-content animated">
                             <div className="modal-header">
-                                <h3>Nouvel échéancier</h3>
+                                <h3>{t("userPayments.duePaymentsList.newScheduleTitle")}</h3>
                             </div>
                             <div className="modal-body">
                                 {this.alertPaymentTerm(this.props.payer)}
@@ -1079,7 +1081,7 @@ class DuePaymentsList extends React.Component {
                                                     className="control-label"
                                                     htmlFor="new"
                                                 >
-                                                    Créer une échéance d'adhésion
+                                                    {t("userPayments.duePaymentsList.createMembershipDue")}
                                                 </label>
                                             </div>
                                         </div>
@@ -1202,7 +1204,7 @@ class DuePaymentsList extends React.Component {
                                 {/*        : null*/}
                                 {/*}*/}
                                 <div className="form-group">
-                                    <label>Nombre d’échéances</label>
+                                    <label>{t("userPayments.duePaymentsList.numberOfDuesLabel")}</label>
                                     <select
                                         className="form-control"
                                         value={
@@ -1215,14 +1217,14 @@ class DuePaymentsList extends React.Component {
                                         }
                                     >
                                         <option value={0} disabled>
-                                            Sélectionnez un nombre d’échéances
+                                            {t("userPayments.duePaymentsList.selectNumberOfDues")}
                                         </option>
-                                        <option value={1}>Annuel (1)</option>
+                                        <option value={1}>{t("userPayments.duePaymentsList.annual")}</option>
                                         <option value={3}>
-                                            Trimestriel (3)
+                                            {t("userPayments.duePaymentsList.quarterly")}
                                         </option>
-                                        <option value={10}>Mensuel (10)</option>
-                                        <option value={11}>Autre</option>
+                                        <option value={10}>{t("userPayments.duePaymentsList.monthly")}</option>
+                                        <option value={11}>{t("userPayments.duePaymentsList.other")}</option>
                                     </select>
 
                                     {this.state.arbitraryNumberOfDuePayments ? (
@@ -1241,7 +1243,7 @@ class DuePaymentsList extends React.Component {
                                     ) : null}
                                 </div>
                                 <div className="form-group">
-                                    <label>Date de la première échéance</label>
+                                    <label>{t("userPayments.duePaymentsList.firstDueDateLabel")}</label>
                                     <input
                                         type="date"
                                         className="form-control"
@@ -1252,7 +1254,7 @@ class DuePaymentsList extends React.Component {
                                     />
                                 </div>
                                 <div className="form-group">
-                                    <label>Mode de Paiement</label>
+                                    <label>{t("userPayments.paymentsList.paymentMethodLabel")}</label>
                                     <select
                                         className="form-control"
                                         value={this.state.payment_method_id}
@@ -1263,7 +1265,7 @@ class DuePaymentsList extends React.Component {
                                         }
                                     >
                                         <option value="placeholder" disabled>
-                                            Selectionnez un mode de paiement
+                                            {t("userPayments.paymentsList.selectPaymentMethod")}
                                         </option>
                                         <option value="" />
                                         {_(this.props.paymentMethods)
@@ -1289,10 +1291,10 @@ class DuePaymentsList extends React.Component {
                                     <table className="table">
                                         <thead>
                                         <tr>
-                                            <th>N°</th>
-                                            <th>Moyen de paiement</th>
-                                            <th>Date</th>
-                                            <th>Montant</th>
+                                            <th>{t("userPayments.duePaymentsList.previewColumns.number")}</th>
+                                            <th>{t("userPayments.duePaymentsList.previewColumns.paymentMethod")}</th>
+                                            <th>{t("userPayments.duePaymentsList.previewColumns.date")}</th>
+                                            <th>{t("userPayments.duePaymentsList.previewColumns.amount")}</th>
                                         </tr>
                                         </thead>
                                         <tbody>
@@ -1324,7 +1326,7 @@ class DuePaymentsList extends React.Component {
                                     className="btn"
                                     data-dismiss="modal">
                                     <i className="fas fa-times m-r-sm"></i>
-                                    Annuler
+                                    {t("common:actions.cancel")}
                                 </button>
                                 <button
                                     className="btn btn-primary"
@@ -1334,7 +1336,7 @@ class DuePaymentsList extends React.Component {
                                     }
                                 >
                                     <i className="fas fa-check m-r-sm"></i>
-                                    Valider
+                                    {t("common:actions.validate")}
                                 </button>
                             </div>
                         </div>
@@ -1345,14 +1347,16 @@ class DuePaymentsList extends React.Component {
     }
 
     alertPaymentTerm(payer) {
+        const { t } = this.props;
+
         if (!payer.payment_terms_summary)
             return "";
 
         return <div className={"alert alert-info"}>
-            L'élève a renseigné la préférence suivante dans ses modalités de paiement : <br />
+            {t("userPayments.duePaymentsList.paymentTermPreference")} <br />
             <strong>{payer.payment_terms_summary}</strong>
         </div>;
     }
 }
 
-export default DuePaymentsList;
+export default withTranslation("payments")(DuePaymentsList);
