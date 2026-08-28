@@ -340,11 +340,18 @@ et à mesure de son intégration :
         demande de `normalize`, préexistait à cette branche — vérifié par `git stash`). `bundle exec
         rspec` → 86 exemples, 0 échec (83 avant cette branche + 3 nouveaux). `yarn test` → 5
         fichiers/15 tests, tous verts. Vérification visuelle en navigateur (`foreman start`) **non
-        effectuée** dans cette session : l'environnement local a une chaîne d'outils Ruby cassée
-        indépendamment de ce changement (`bundle`/`bin/shakapacker` échouent, gem source Git non
-        checkoutée) et `yarn build` est également cassé de façon préexistante (`react-scripts:
-        command not found`, script obsolète vs. la config `shakapacker` réellement utilisée) — à
-        vérifier manuellement dès qu'un environnement avec un backend fonctionnel est disponible.
+        effectuée** dans cette session. La chaîne d'outils Ruby cassée signalée par l'agent frontend
+        pendant cette branche (`bundle`/`bin/shakapacker` en échec, gem source Git non checkoutée)
+        s'est révélée être un artefact d'environnement de cet agent précis (résolution `PATH`
+        incorrecte faisant pointer `ruby`/`bundle` vers l'installation Homebrew du système au lieu
+        de celle gérée par `asdf`), pas un vrai problème du dépôt — `bundle check` fonctionne
+        normalement une fois `ruby`/`bundle` correctement résolus. `yarn build`, en revanche, était
+        un vrai bug préexistant du dépôt (`react-scripts: command not found` — script obsolète
+        jamais mis à jour lors du passage à `shakapacker`) et a été corrigé séparément juste après
+        cette branche (`package.json` `build` pointe maintenant vers `bin/shakapacker` en
+        `RAILS_ENV=production`, vérifié : produit un vrai bundle webpack). La vérification visuelle
+        en navigateur reste à faire dès qu'un environnement `bin/shakapacker`/serveur Rails complet
+        est disponible.
 - [ ] **`feature/i18n-06-extract-<domaine>`** *(répétable, mutuellement indépendantes, ~15-30
       fichiers chacune)* — une branche par domaine, dans n'importe quel ordre :
   - [ ] `planning`

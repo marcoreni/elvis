@@ -3,7 +3,7 @@
   "private": true,
   "scripts": {
     "start": "react-scripts --max_old_space_size=2048 start",
-    "build": "react-scripts --max_old_space_size=2048 build",
+    "build": "RAILS_ENV=production NODE_ENV=production bin/shakapacker",
     "i18n:extract": "i18next",
     "test": "vitest run"
   },
