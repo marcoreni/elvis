@@ -64,8 +64,7 @@
         "noPaymentMethodOption": "Sans mode de règlement",
         "selectRemaining": "Sélectionner les {{n}} restantes",
         "statusEdit": {
-            "title": "Édition du statut",
-            "confirm": "Valider"
+            "title": "Édition du statut"
         },
         "statusEditFailed": "Echec",
         "bulkDeleteTitle": "Confirmation",

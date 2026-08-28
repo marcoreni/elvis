@@ -742,7 +742,7 @@ class DuePaymentList extends React.Component {
         swal({
             title: t("general.statusEdit.title"),
             type: "warning",
-            confirmButtonText: t("general.statusEdit.confirm"),
+            confirmButtonText: t("common:actions.validate"),
             input: "select",
             inputOptions: _.zipObject(
                 this.props.statuses.map(status => status.id),

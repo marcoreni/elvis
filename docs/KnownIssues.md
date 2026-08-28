@@ -266,3 +266,21 @@ has no `MessageModal` and no send-reminder path, unlike its sibling `PaymentSche
 evidently copied from. Found by the specialized `/code-review` of PR #11 (2026-08-28). Pre-existing;
 the i18n-06 lot-2a change only re-touched the `title` line. Safe to drop the whole `message` state
 block (and the `props.t` call with it) in a cleanup pass. Low priority.
+
+## generalPayments tables freeze translated column headers at construct time
+
+`DuePaymentList.jsx` and `PaymentList.jsx` (and the smaller `PaymentScheduleList` filter setup)
+build their react-table `columns` array — each `Header: t(...)` — in the **constructor**, using the
+mount-time `t`, and store it in `this.state.columns`. `render()` reads `this.state.columns`, so the
+headers (and `state.message.title`, seeded from `t("general.reminder.defaultTitle")`) never
+re-derive when i18next fires `languageChanged`.
+
+This is **currently harmless**: the language switcher (`LocaleController#update`) does a full
+server-side PATCH + redirect, so every React island is re-mounted in the new language and no
+component lives across an in-page language change (confirmed by the specialized reviews of PR #11
+and PR #12). It becomes a real bug the moment anything calls `i18n.changeLanguage(...)` in-page, or
+a second locale-aware island renders on the same page in a different language.
+
+Fix when it matters: move the `columns` build into `render()` (as was done for
+`SubPaymentList.jsx` in lot 2a) — the Filter/Cell closures already close over `this`, so it's
+mechanical but touches ~200 lines in each 1000+-line file, hence deferred.

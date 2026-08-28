@@ -64,8 +64,7 @@
         "noPaymentMethodOption": "No payment method",
         "selectRemaining": "Select the {{n}} remaining",
         "statusEdit": {
-            "title": "Edit status",
-            "confirm": "Submit"
+            "title": "Edit status"
         },
         "statusEditFailed": "Failed",
         "bulkDeleteTitle": "Confirm",

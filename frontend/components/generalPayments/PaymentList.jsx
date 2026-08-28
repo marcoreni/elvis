@@ -626,54 +626,6 @@ class PaymentList extends React.Component {
         });
     }
 
-    promptStatusEdit(id, statusId) {
-        const { t } = this.props;
-
-        swal({
-            title: t("general.statusEdit.title"),
-            type: "warning",
-            confirmButtonText: t("general.statusEdit.confirm"),
-            input: "select",
-            inputOptions: _.zipObject(
-                this.props.statuses.map(status => status.id),
-                this.props.statuses.map(status => status.label)
-            ),
-            inputClass: "form-control",
-            inputValue: statusId,
-            showCancelButton: true,
-            cancelButtonText: t("common:actions.cancel"),
-        }).then(res => {
-            const newStatusId = res.value;
-            if (newStatusId) {
-                fetch("/payments/edit_status", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "X-CSRF-Token": csrfToken,
-                    },
-                    body: JSON.stringify({id, status: res.value}),
-                }).then(res => {
-                    if (!res.ok) swal(t("general.statusEditFailed"), "", "error");
-                    else
-                        this.setState({
-                            data: this.state.data.map(p => {
-                                if (p.id == id) {
-                                    return {
-                                        ...p,
-                                        payment_status_id: parseInt(
-                                            newStatusId
-                                        ),
-                                    };
-                                }
-
-                                return p;
-                            }),
-                        });
-                });
-            }
-        });
-    }
-
     renderStatus(cell) {
         const { t } = this.props;
 
@@ -848,7 +800,7 @@ class PaymentList extends React.Component {
         swal({
             title: t("general.statusEdit.title"),
             type: "warning",
-            confirmButtonText: t("general.statusEdit.confirm"),
+            confirmButtonText: t("common:actions.validate"),
             input: "select",
             inputOptions: _.zipObject(
                 this.props.statuses.map(status => status.id),
