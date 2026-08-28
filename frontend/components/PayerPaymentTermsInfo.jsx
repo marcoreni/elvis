@@ -10,10 +10,7 @@ export default function PayerPaymentTermsInfo({availPaymentScheduleOptions}) {
         <h3 className='mb-5' style={{color: "#8AA4B1"}}>{t("terms.info.type")}</h3>
         <div>
             <h4>
-                {t("terms.info.weOffer", {
-                    count: availPaymentScheduleOptions.length,
-                    word: availPaymentScheduleOptions.length > 1 ? t("terms.info.wordOther") : t("terms.info.wordOne"),
-                })}
+                {t("terms.info.weOffer", { count: availPaymentScheduleOptions.length })}
             </h4>
 
             <div className="mt-4">

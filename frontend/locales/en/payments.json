@@ -344,9 +344,8 @@
     "terms": {
         "info": {
             "type": "Payment type",
-            "weOffer": "We offer {{count}} payment-schedule {{word}}:",
-            "wordOne": "option",
-            "wordOther": "options"
+            "weOffer_one": "We offer {{count}} payment-schedule option:",
+            "weOffer_other": "We offer {{count}} payment-schedule options:"
         },
         "payer": {
             "identificationNumber": "National identification number",
@@ -394,7 +393,6 @@
             "paymentMethod": "Payment method",
             "edit": "Edit",
             "yourDueDates": "Your due dates",
-            "preferredDayInfo": "Your preferred debit day is the {{day}}. As a result, the due dates below have been generated (subject to change by an administrator).",
             "colDueDate": "Due date",
             "colStatus": "Status",
             "statusValidated": "Validated",
@@ -410,7 +408,9 @@
             "selectOption": "Select the payment-schedule option",
             "monthsInfo": "Payment will be made in the month(s) of {{months}}",
             "selectDay": "Select the payment day",
-            "selectMethod": "Select the payment method"
+            "selectMethod": "Select the payment method",
+            "preferredDayInfo1": "Your preferred debit day is the {{day}}.",
+            "preferredDayInfo2": "As a result, the due dates below have been generated (subject to change by an administrator)."
         }
     }
 }

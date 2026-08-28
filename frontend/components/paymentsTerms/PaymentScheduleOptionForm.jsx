@@ -10,7 +10,7 @@ import { useTranslation } from "react-i18next";
 export default function PaymentScheduleOptionForm({ paymentScheduleOption, action, return_url, method, pricingCategories }) {
     const { t } = useTranslation("payments");
     if (paymentScheduleOption) {
-        if (!PAYMENT_SCHEDULE_OPTIONS_PAYMENTS_NUMBERS.map(t => t.nb).includes(paymentScheduleOption.payments_number)) {
+        if (!PAYMENT_SCHEDULE_OPTIONS_PAYMENTS_NUMBERS.map(opt => opt.nb).includes(paymentScheduleOption.payments_number)) {
             paymentScheduleOption.other_payments_number = paymentScheduleOption.payments_number;
             paymentScheduleOption.payments_number = 0;
         }
@@ -152,7 +152,7 @@ export default function PaymentScheduleOptionForm({ paymentScheduleOption, actio
                         })}
                     >
                         <option key={null} value={null}></option>
-                        {PAYMENT_SCHEDULE_OPTIONS_PAYMENTS_NUMBERS.map(t => <option key={t.nb} value={t.nb}>{t.label}</option>)}
+                        {PAYMENT_SCHEDULE_OPTIONS_PAYMENTS_NUMBERS.map(opt => <option key={opt.nb} value={opt.nb}>{opt.label}</option>)}
                         <option key={0} value={0}>{t("terms.optionForm.other")}</option>
                     </select>
                 </div>

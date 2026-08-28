@@ -231,7 +231,8 @@ export default function UserPaymentsV2({seasons, user, is_current_user, onPayCli
 
                     <div className="ibox-content p-4">
                         <div className="alert alert-info p-2 px-sm-3 py-sm-4">
-                            {t("terms.v2.preferredDayInfo", { day: paymentTerms.day_for_collection })}
+                            {t("terms.v2.preferredDayInfo1", { day: paymentTerms.day_for_collection })} <br/>
+                            {t("terms.v2.preferredDayInfo2")}
                         </div>
 
                         <table className="table table-borderless table-hover">
