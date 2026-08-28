@@ -386,11 +386,13 @@ et à mesure de son intégration :
           `form_with scope:` sans instance liée fiable — même raison que `users/new.html.erb` en
           branche 05 — donc `f.label :label` seul ne résout pas la clé) ; statiquement détectés,
           pas besoin d'`ignore_unused`.
-    - [x] **Vues scaffold mortes supprimées** : `evaluation_level_ref/{create,update}.html.erb`
-          (stubs Rails "Find me in…", jamais rendus — `create`/`update` `redirect_to`
-          inconditionnellement). `show.html.erb` (stub identique) laissé en place : `def show; end`
-          le rend encore si on tape l'URL à la main, bien qu'aucun lien n'y mène — l'action `show`
-          et sa vue semblent mortes elles aussi, à confirmer avant suppression.
+    - [x] **Vues scaffold supprimées** : `evaluation_level_ref/{create,update}.html.erb`
+          (stubs Rails "Find me in…", `create`/`update` `redirect_to` inconditionnellement). Ces
+          deux suppressions sont **consignées pour récupération éventuelle** dans
+          `docs/KnownIssues.md` (section « Scaffold views suspected dead ») — récupérables via
+          `git show 48a6208^:app/views/evaluation_level_ref/create.html.erb`. Politique révisée
+          ensuite : les branches i18n **ne suppriment plus de vues**, elles consignent seulement
+          les suspectes. `show.html.erb` (stub identique) laissé en place.
     - [x] **Bugs préexistants corrigés dans `evaluation_level_ref/edit.html.erb`** (formulaire
           d'édition cassé, découvert en écrivant le spec) : `model: @evalution_level_ref` (faute de
           frappe → `nil`, champs jamais préremplis) → `@evaluation_level_ref` ; et
@@ -425,7 +427,8 @@ et à mesure de son intégration :
             `views.payment_method.*` / `views.payment_statuses.*` / `views.payments.index.*` /
             `views.failed_payment_imports.index.*`. Nouveaux `common.actions.{delete,back}`,
             `common.labels.actions`, `common.confirm.sure` (les deux `data: { confirm: "Êtes vous
-            sur ?" }` des vues index, corrigés au passage en "Êtes-vous sûr ?").
+            sur ?" }` des vues index — la valeur FR garde la formulation d'origine verbatim,
+            "Êtes vous sur ?", pas de correction de copie pendant l'extraction).
             `activerecord.attributes.payment_method.{label,is_special,is_credit_note,show_payment_method_to_user}`
             et `payment_status.{label,color}` ajoutés, référencés via `t()` explicite dans
             `f.label` (comme branches 05/06-evaluation). Les blocs d'erreur scaffold anglais des
@@ -439,8 +442,13 @@ et à mesure de son intégration :
             français. Le format de date de la colonne « Date d'import », extrait en clé
             `payments:failedImports.importDateFormat`, a été corrigé de `hh:mm` (12 h sans AM/PM,
             ambigu — bug préexistant) vers `HH:mm` en passant.
-      - [x] **Vues scaffold mortes supprimées** : `due_payment/update.html.erb` (l'action rend du
-            JSON), `payment_statuses/show.html.erb` (0 octet ; pas d'action `show` au contrôleur).
+      - [x] **Aucune vue supprimée dans cette branche.** `due_payment/update.html.erb` et
+            `payment_statuses/show.html.erb` (stubs scaffold, apparemment jamais rendus) sont
+            *soupçonnés* morts mais **laissés en place** — une branche i18n ne fait que de
+            l'extraction de chaînes. Consignés pour analyse/suppression ultérieure dans
+            `docs/KnownIssues.md` (section « Scaffold views suspected dead ») : un 500
+            (`ActionNotFound`) ne prouve pas qu'une route est inutilisée (routes de plugins
+            préfixées, `rescue_from`, `method_missing`, appels externes…).
       - [x] **`payment_schedule/show.html.erb` laissé en français** — c'est un document
             comptable / « échéancier » (rendu aussi en PDF via `render pdf:`), même catégorie que
             l'exception documentée `payments/bill.html.erb`. À traiter comme exception délibérée,

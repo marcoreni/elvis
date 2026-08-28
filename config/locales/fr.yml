@@ -20,7 +20,7 @@ fr:
         labels:
             actions: Actions
         confirm:
-            sure: Êtes-vous sûr ?
+            sure: Êtes vous sur ?
 
     activerecord:
         attributes:
