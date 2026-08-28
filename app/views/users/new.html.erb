@@ -15,12 +15,12 @@
       <% end %>
       <div class="form-group">
         <div><%= f.label :last_name, User.human_attribute_name(:last_name) %><span class="text-danger">*</span> </div>
-        <%= f.text_field :last_name, autofocus: true, required: true, autocomplete: "last name", id: "last_name", class: "form-control" %>
+        <%= f.text_field :last_name, autofocus: true, required: true, autocomplete: "last name", class: "form-control" %>
       </div>
 
       <div class="form-group">
         <div><%= f.label :first_name, User.human_attribute_name(:first_name) %><span class="text-danger">*</span></div>
-        <%= f.text_field :first_name, autofocus: true, required: true, autocomplete: "first name", id: "first_name", class: "form-control" %>
+        <%= f.text_field :first_name, autofocus: true, required: true, autocomplete: "first name", class: "form-control" %>
       </div>
 
       <div class="form-group">

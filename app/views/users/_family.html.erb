@@ -65,8 +65,8 @@
                             <% if data[:attached_to]&.id == @user.id %>
                               <span class="relation"><%= t("views.users._family.relation_attached") %></span>
                             <% end %>
-                            <% data[:user].telephones.each do |t| %>
-                                <p><%= t.label.nil? ? "" : t.label.capitalize %>: <%= t.number %></p>
+                            <% data[:user].telephones.each do |tel| %>
+                                <p><%= tel.label.nil? ? "" : tel.label.capitalize %>: <%= tel.number %></p>
                             <% end %>
                         </div>
                     </div>

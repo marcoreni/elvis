@@ -352,6 +352,14 @@ et à mesure de son intégration :
         `RAILS_ENV=production`, vérifié : produit un vrai bundle webpack). La vérification visuelle
         en navigateur reste à faire dès qu'un environnement `bin/shakapacker`/serveur Rails complet
         est disponible.
+- [ ] **Dette repérée en revue de la branche 05, à traiter avant/pendant une branche qui rend un
+      composant `withTranslation()` en SSR** : `frontend/packs/server_rendering.js` n'importe pas
+      `../i18n` (contrairement à `app.js`). Sans effet tant que les composants traduits sont montés
+      sans `prerender: true` (cas de `UserList`/`UserEdit`), mais le premier `react_component`
+      d'un composant enveloppé de `withTranslation()` rendu côté serveur lèvera faute d'instance
+      i18next. À corriger avec précaution : l'init `frontend/i18n/index.js` s'appuie sur le
+      détecteur `htmlTag` (`document.documentElement.lang`), absent en contexte SSR — prévoir un
+      garde-fou / une locale explicite plutôt qu'un simple `import`.
 - [ ] **`feature/i18n-06-extract-<domaine>`** *(répétable, mutuellement indépendantes, ~15-30
       fichiers chacune)* — une branche par domaine, dans n'importe quel ordre :
   - [ ] `planning`
@@ -376,5 +384,8 @@ indépendant et peut être réordonné ou repris lors d'une session future.
 - Après 05 : changer la langue via le nouveau sélecteur, vérifier que la liste et la fiche
   utilisateur s'affichent entièrement en anglais sans clé de traduction brute visible, vérifier que
   le français fonctionne toujours après retour en arrière.
-- En continu : `bundle exec i18n-tasks health` et le script d'extraction JS ne doivent rapporter
-  aucune clé manquante pour les périmètres déjà balayés.
+- En continu : `bin/i18n-tasks health` (le binstub du dépôt, **pas** `bundle exec i18n-tasks` —
+  ce dernier lance le binstub global du gem, sans le `require "logger"` ajouté en branche 04, et
+  plante donc avec `uninitialized constant ActiveSupport::LoggerThreadSafeLevel::Logger` sous
+  Ruby 3.3.5+) et le script d'extraction JS ne doivent rapporter aucune clé manquante pour les
+  périmètres déjà balayés.

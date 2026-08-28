@@ -156,7 +156,7 @@ fr:
                 previous_week_title: Semaine précédente
                 previous_day_title: Jour précédent
                 next_day_title: Jour suivant
-                next_week_title: Semaines suivantes
+                next_week_title: Semaine suivante
             previsional_groups:
                 heading: Simulation de planning
                 info_notice: "Cet aperçu est produit à partir des réponses portant sur les changements de groupes. Ces réponses sont trouvables dans les questionnaires d'évaluation des élèves remplis en fin d'année par le professeur."
