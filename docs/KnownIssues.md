@@ -171,3 +171,34 @@ or cleaned up. Spotted so far (not exhaustive — nobody's run a full-codebase p
 Worth a dedicated `bundle exec rubocop -a` (or manual) cleanup pass across the whole codebase rather
 than fixing these piecemeal as they're noticed — deferred here for the same reason as the frontend
 dependency bumps above.
+
+## "Edit" action label has three divergent i18n keys
+
+Surfaced 2026-08-28 in the i18n-06 evaluation review. The single UI string "Edit" (French
+"Éditer") now has three separate translation keys, added across different branches without a shared
+one existing yet:
+
+- `common.actions.edit` — `"Éditer"` / `"Edit"` (added in i18n-06 for
+  `evaluation_level_ref/index.html.erb`)
+- `views.users._family.edit_action` — `"Éditer"` / `"Edit"` (i18n-05)
+- `views.users.show.edit_link` — `"Editer"` / `"Edit"` (i18n-05) — note the French value is
+  **missing its accent**, so it also silently diverges in copy from the other two.
+
+`common.actions.edit` is the intended canonical key going forward. The two `views.users.*` keys
+should be pointed at it (and the missing-accent value dropped) in a cleanup pass — not done in
+i18n-06 because retrofitting the users views was out of that branch's scope. Same applies to any
+other verbatim action-label duplication that predates `common.actions.*` (check `common.actions`
+against the `views.*` trees when doing the pass).
+
+## `evaluation_level_ref#show` action + view look dead
+
+Surfaced 2026-08-28 in the i18n-06 evaluation work. `EvaluationLevelRefController#show` is an empty
+`def show; end` that renders `app/views/evaluation_level_ref/show.html.erb`, which is still the
+untouched Rails scaffold stub (`<h1>EvaluationLevelRef#show</h1>` / `<p>Find me in ...</p>`). The
+sibling `create.html.erb` / `update.html.erb` scaffold stubs were deleted in i18n-06 (their actions
+`redirect_to` unconditionally, so the views were provably unreachable), but `show` still renders on
+a direct `GET /evaluation_level_ref/:id` hit even though nothing in the app links to it
+(`evaluation_level_ref/index.html.erb` only links to `edit`). A follow-up should confirm nothing
+external hits that route and then drop the `show` action, its view, and narrow the
+`resources :evaluation_level_ref` route (`config/routes.rb`) accordingly — left in place in i18n-06
+to keep that branch to string extraction.
