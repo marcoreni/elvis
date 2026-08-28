@@ -40,7 +40,45 @@
             "schedulesWithoutPayer": "Échéanciers sans payeur",
             "checks": "Chèques"
         },
-        "reminderDefaultTitle": "Rappel pour paiement",
+        "reminder": {
+            "defaultTitle": "Rappel pour paiement",
+            "confirmSendTitle": "Confirmation d'envoi",
+            "successTitle": "Succès",
+            "successText": "Message envoyé",
+            "errorTitle": "Erreur",
+            "errorStatus": "Erreur {{status}} : {{statusText}}",
+            "andNOthers": ", et {{n}} autres"
+        },
+        "tableControls": {
+            "reload": "Recharger la liste",
+            "resetFilters": "Réinitialiser les filtres",
+            "fullscreen": "Mettre le tableau en plein écran"
+        },
+        "numberFilter": {
+            "all": "Tous",
+            "member": "Adh",
+            "nonMember": "Non Adh"
+        },
+        "seasonFilter": "SAISON",
+        "unknownPayer": "Inconnu",
+        "noPaymentMethodOption": "Sans mode de règlement",
+        "selectRemaining": "Sélectionner les {{n}} restantes",
+        "statusEdit": {
+            "title": "Édition du statut"
+        },
+        "statusEditFailed": "Echec",
+        "bulkDeleteTitle": "Confirmation",
+        "csvExport": {
+            "prefix": "Exporter en CSV ",
+            "scopeSelected": "les {{n}} lignes sélectionnées)",
+            "scopeAll": "tous les paiements visibles"
+        },
+        "paymentMail": {
+            "title": "Envoyer un mail de relance",
+            "successTitle": "Succès",
+            "successText": "Mail envoyé",
+            "errorTitle": "Une erreur est survenue"
+        },
         "bulkEdit": {
             "title": "Modification d'échéances en masse",
             "dueDateLabel": "Date d'échéance"
@@ -67,16 +105,10 @@
             "unknown": "Inconnu"
         },
         "schedulesWithoutPayer": {
-            "confirmSendTitle": "Confirmation d'envoi",
-            "successTitle": "Succès",
-            "successText": "Message envoyé",
-            "errorTitle": "Erreur",
-            "errorStatus": "Erreur {{status}} : {{statusText}}",
             "selectedCount": "Vous avez sélectionné {{n}} payeur(s)",
             "selectRemaining": "Sélectionner les {{n}} restants",
             "sendMessage": "Envoyer un message",
             "sendReminderTitle": "Envoyer un rappel",
-            "andNOthers": ", et {{n}} autres",
             "heading": "{{n}} payeurs sans échéancier pour",
             "columns": {
                 "name": "Nom",
@@ -91,17 +123,62 @@
                 "checkNumber": "N° de chèque",
                 "status": "Statut"
             },
-            "unknown": "Inconnu",
             "paymentDateLabel": "Date de réglement :",
             "paymentDateTooltip": "Date de réglement",
             "allChecks": "Tous les chèques",
             "clearedChecks": "Chèques pointés",
             "unclearedChecks": "Chèques non pointés",
-            "reloadTooltip": "Recharger la liste",
-            "resetFiltersTooltip": "Réinitialiser les filtres",
-            "fullscreenTooltip": "Mettre le tableau en plein écran",
             "checkCount": "Nombre de chèques : {{n}}",
             "totalAmount": "Montant total: {{amount}}"
+        },
+        "dueDates": {
+            "columns": {
+                "validity": "Validité",
+                "number": "N°",
+                "status": "Statut",
+                "previsionalDate": "Date prévisionnelle",
+                "paymentMethod": "Mode règlement échéance",
+                "payer": "Payeur",
+                "location": "Emplacement",
+                "amount": "Montant"
+            },
+            "rowCount": "{{n}} échéances",
+            "totalDue": "Total échéances: {{amount}}",
+            "totalPaid": "Total paiements: {{amount}}",
+            "selectedCount": "Vous avez sélectionné {{n}} échéance(s)",
+            "sendUnpaidMail": "Envoyer un mail de relance aux paiements impayés",
+            "bulkEditButton": "Édition de masse",
+            "bulkDeleteText": "Voulez-vous supprimer toutes les échéances sélectionnées et les paiements associés ?",
+            "paymentMailText": "Voulez vous envoyer un mail de relance pour les paiements sélectionnés ?"
+        },
+        "payments": {
+            "columns": {
+                "number": "N°",
+                "status": "Statut",
+                "cashingDate": "Date encaissement",
+                "paymentMethod": "Mode règlement",
+                "payer": "Payeur",
+                "location": "Emplacement",
+                "amount": "Montant"
+            },
+            "statusNone": "Aucun",
+            "noPaymentMethod": "Aucun mode de règlement renseigné",
+            "rowCount": "{{n}} règlements",
+            "totalPayments": "Total paiements: {{amount}}",
+            "selectedCount": "Vous avez sélectionné {{n}} règlement(s)",
+            "sendUnpaidMail": "Envoyer un mail de relance aux règlements impayés",
+            "bulkDeleteText": "Voulez-vous supprimer tous les paiements sélectionnés ?",
+            "paymentMailText": "Voulez vous envoyer un mail de relance pour les règlements sélectionnés ?",
+            "subDuePayment": {
+                "number": "Numéro",
+                "previsionalDate": "Date prévisionnelle",
+                "paymentMethod": "Mode règlement",
+                "amount": "Montant"
+            },
+            "importResults": {
+                "title": "Résultats",
+                "text": "Réussites : {{inserted}}, Échecs : {{failed}}, Ignorés : {{ignored}}"
+            }
         }
     }
 }

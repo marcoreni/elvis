@@ -2,6 +2,7 @@ import _ from "lodash";
 import React from "react";
 import ReactTableFullScreen from "../ReactTableFullScreen";
 import swal from "sweetalert2";
+import { withTranslation, useTranslation } from "react-i18next";
 import {makeDebounce} from "../../tools/inputs";
 import {
     csrfToken,
@@ -81,6 +82,8 @@ class PaymentList extends React.Component {
     constructor(props) {
         super(props);
 
+        const { t } = props;
+
         const localStorageValue = localStorage.getItem(FILTER_STORAGE_KEY);
         const filter =
             localStorageValue != null
@@ -126,25 +129,25 @@ class PaymentList extends React.Component {
                         />,
             },
             {
-                Header: "N°",
+                Header: t("general.payments.columns.number"),
                 id: "number",
                 maxWidth: 70,
                 accessor: d => d.number,
                 Filter: ({onChange, filter}) => {
                     let nextValue = "t";
                     let badgeClass = "badge ";
-                    let label = "Tous";
+                    let label = t("general.numberFilter.all");
 
                     switch ((filter && filter.value) || "") {
                         case "t":
                             nextValue = "f";
                             badgeClass += "badge-primary";
-                            label = "Adh";
+                            label = t("general.numberFilter.member");
                             break;
                         case "f":
                             nextValue = "";
                             badgeClass += "badge-warning";
-                            label = "Non Adh";
+                            label = t("general.numberFilter.nonMember");
                             break;
                     }
 
@@ -168,7 +171,7 @@ class PaymentList extends React.Component {
                 },
             },
             {
-                Header: "Statut",
+                Header: t("general.payments.columns.status"),
                 id: "payment_status_id",
                 maxWidth: 75,
                 className: "flex flex-center-justified",
@@ -184,8 +187,8 @@ class PaymentList extends React.Component {
                         style={{width: "100%"}}
                         value={filter ? filter.value : ""}
                     >
-                        <option value="all">Tous</option>
-                        <option value={0}>Aucun</option>
+                        <option value="all">{t("general.numberFilter.all")}</option>
+                        <option value={0}>{t("general.payments.statusNone")}</option>
                         {this.props.paymentStatuses.map(method => (
                             <option key={method.id} value={method.id}>
                                 {method.label}
@@ -195,7 +198,7 @@ class PaymentList extends React.Component {
                 ),
             },
             {
-                Header: "Date encaissement",
+                Header: t("general.payments.columns.cashingDate"),
                 id: "cashing_date",
                 width: 320,
                 accessor: p =>
@@ -218,7 +221,7 @@ class PaymentList extends React.Component {
                 },
             },
             {
-                Header: "Mode règlement",
+                Header: t("general.payments.columns.paymentMethod"),
                 id: "payment_method_id",
                 sortable: false,
                 accessor: p => {
@@ -227,7 +230,7 @@ class PaymentList extends React.Component {
                         pm => pm.id == p.payment_method_id
                     );
 
-                    return pm ? pm.label : `Aucun mode de règlement renseigné`;
+                    return pm ? pm.label : t("general.payments.noPaymentMethod");
                 },
                 Filter: ({filter, onChange}) => (
                     <select
@@ -237,7 +240,7 @@ class PaymentList extends React.Component {
                     >
                         <option key={-2} value=""/>
                         <option key={-1} value="null">
-                            Sans mode de règlement
+                            {t("general.noPaymentMethodOption")}
                         </option>
                         {_.orderBy(
                             this.props.paymentMethods,
@@ -251,7 +254,7 @@ class PaymentList extends React.Component {
                 ),
             },
             {
-                Header: "Payeur",
+                Header: t("general.payments.columns.payer"),
                 maxWidth: 175,
                 id: "users.last_name",
                 Cell: props => {
@@ -265,12 +268,12 @@ class PaymentList extends React.Component {
                                 {`${user.last_name} ${user.first_name}`}
                             </a>
                         )) ||
-                        "Inconnu"
+                        t("general.unknownPayer")
                     );
                 },
             },
             {
-                Header: "Emplacement",
+                Header: t("general.payments.columns.location"),
                 id: "location_id",
                 maxWidth: 120,
                 accessor: d =>
@@ -293,7 +296,7 @@ class PaymentList extends React.Component {
                 ),
             },
             {
-                Header: "Montant",
+                Header: t("general.payments.columns.amount"),
                 maxWidth: 100,
                 id: "amount",
                 style: {
@@ -340,7 +343,7 @@ class PaymentList extends React.Component {
             data: [],
             pages: null,
             message: {
-                title: "Rappel pour paiement",
+                title: t("general.reminder.defaultTitle"),
                 content: "",
                 isEmail: true,
                 isSMS: false,
@@ -491,6 +494,8 @@ class PaymentList extends React.Component {
     }
 
     sendReminderMail() {
+        const { t } = this.props;
+
         const to = _.uniq(
             this.state.data
                 .filter(
@@ -503,8 +508,8 @@ class PaymentList extends React.Component {
         );
 
         swal({
-            title: "Confirmation d'envoi",
-            text: "Êtes-vous sûr ?",
+            title: t("general.reminder.confirmSendTitle"),
+            text: t("common:confirm.sure"),
             type: "question",
             showCancelButton: true,
         })
@@ -527,19 +532,22 @@ class PaymentList extends React.Component {
                 if (res) {
                     if (res.ok)
                         swal({
-                            title: "Succès",
-                            text: "Message envoyé",
+                            title: t("general.reminder.successTitle"),
+                            text: t("general.reminder.successText"),
                             type: "success",
                         });
                     else
                         throw new Error(
-                            `Erreur ${res.status} : ${res.statusText}`
+                            t("general.reminder.errorStatus", {
+                                status: res.status,
+                                statusText: res.statusText,
+                            })
                         );
                 }
             })
             .catch(reason =>
                 swal({
-                    title: "Erreur",
+                    title: t("general.reminder.errorTitle"),
                     text: reason,
                     type: "error",
                 })
@@ -547,23 +555,25 @@ class PaymentList extends React.Component {
     }
 
     sendPaymentMail() {
+        const { t } = this.props;
+
         swal({
-            title: "Envoyer un mail de relance",
-            text: "Voulez vous envoyer un mail de relance pour les règlements sélectionnés ?",
+            title: t("general.paymentMail.title"),
+            text: t("general.payments.paymentMailText"),
             type: "question",
             showCancelButton: true,
-            cancelButtonText: "Annuler",
+            cancelButtonText: t("common:actions.cancel"),
         }).then(res => {
             if (res.value) {
                 api.set()
                     .success(res => {
                         if (res.status === "success")
-                            swal({title: "Succès", text: "Mail envoyé", type: "success"});
+                            swal({title: t("general.paymentMail.successTitle"), text: t("general.paymentMail.successText"), type: "success"});
                     })
                     .error(errorMsg => {
                         swal({
                             type: "error",
-                            title: "Une erreur est survenue",
+                            title: t("general.paymentMail.errorTitle"),
                             text: errorMsg,
                         });
                     })
@@ -616,53 +626,9 @@ class PaymentList extends React.Component {
         });
     }
 
-    promptStatusEdit(id, statusId) {
-        swal({
-            title: "Édition du statut",
-            type: "warning",
-            confirmButtonText: "Valider",
-            input: "select",
-            inputOptions: _.zipObject(
-                this.props.statuses.map(status => status.id),
-                this.props.statuses.map(status => status.label)
-            ),
-            inputClass: "form-control",
-            inputValue: statusId,
-            showCancelButton: true,
-            cancelButtonText: "Annuler",
-        }).then(res => {
-            const newStatusId = res.value;
-            if (newStatusId) {
-                fetch("/payments/edit_status", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "X-CSRF-Token": csrfToken,
-                    },
-                    body: JSON.stringify({id, status: res.value}),
-                }).then(res => {
-                    if (!res.ok) swal("Echec", "", "error");
-                    else
-                        this.setState({
-                            data: this.state.data.map(p => {
-                                if (p.id == id) {
-                                    return {
-                                        ...p,
-                                        payment_status_id: parseInt(
-                                            newStatusId
-                                        ),
-                                    };
-                                }
-
-                                return p;
-                            }),
-                        });
-                });
-            }
-        });
-    }
-
     renderStatus(cell) {
+        const { t } = this.props;
+
         let status = this.props.paymentStatuses.find(s => s.id === cell.value);
         let paymentId = cell.original.id;
 
@@ -677,7 +643,7 @@ class PaymentList extends React.Component {
                 }}
                 onClick={e => this.promptStatusEdit(paymentId, status.id)}
             >
-                {status ? status.label : "Aucun"}
+                {status ? status.label : t("general.payments.statusNone")}
             </div>
         );
     }
@@ -709,6 +675,8 @@ class PaymentList extends React.Component {
 
     //Goto ActivitiesApplicationsList#bulkAlert
     targetsAlert() {
+        const { t } = this.props;
+
         const count =
             (this.state.targets === "all" && this.state.rowsCount) ||
             this.state.targets.length;
@@ -717,7 +685,7 @@ class PaymentList extends React.Component {
             <div className="alert alert-info m-t-sm" style={{width: "100%"}}>
                 <div className="flex flex-space-between-justified flex-center-aligned">
                     <div id="targets-infos">
-                        Vous avez sélectionné {count} règlement(s){" "}
+                        {t("general.payments.selectedCount", { n: count })}{" "}
                         {this.state.targets.length === this.state.data.length &&
                         Math.max(
                             this.state.rowsCount - this.state.targets.length,
@@ -729,10 +697,11 @@ class PaymentList extends React.Component {
                                 }
                                 className="btn btn-sm btn-info m-l-sm"
                             >
-                                Sélectionner les{" "}
-                                {this.state.rowsCount -
-                                    this.state.targets.length}{" "}
-                                restantes
+                                {t("general.selectRemaining", {
+                                    n:
+                                        this.state.rowsCount -
+                                        this.state.targets.length,
+                                })}
                             </button>
                         ) : null}
                     </div>
@@ -744,14 +713,14 @@ class PaymentList extends React.Component {
                                 data-toggle="modal"
                                 onClick={() => this.sendPaymentMail()}
                             >
-                                Envoyer un mail de relance aux règlements impayés
+                                {t("general.payments.sendUnpaidMail")}
                             </button>
                         ) : ""}
                         <button
                             className="btn btn-danger btn-sm"
                             onClick={this.bulkDelete.bind(this)}
                         >
-                            Supprimer
+                            {t("common:actions.delete")}
                         </button>
                     </div>
                 </div>
@@ -760,13 +729,14 @@ class PaymentList extends React.Component {
     }
 
     bulkDelete() {
+        const { t } = this.props;
+
         swal({
-            title: "Confirmation",
-            text:
-                "Voulez-vous supprimer tous les paiements sélectionnés ?",
+            title: t("general.bulkDeleteTitle"),
+            text: t("general.payments.bulkDeleteText"),
             type: "question",
             showCancelButton: true,
-            cancelButtonText: "Annuler",
+            cancelButtonText: t("common:actions.cancel"),
         }).then(r => {
             if (r.value) {
                 fetch("/payments/bulkdelete", {
@@ -794,6 +764,8 @@ class PaymentList extends React.Component {
     }
 
     handleFilesDropped(files) {
+        const { t } = this.props;
+
         const body = new FormData();
         body.append("file", files[0]);
 
@@ -808,8 +780,12 @@ class PaymentList extends React.Component {
             .then(res => {
                 swal({
                     type: "info",
-                    title: "Résultats",
-                    text: `Réussites : ${res.inserted}, Échecs : ${res.failed}, Ignorés : ${res.ignored}`,
+                    title: t("general.payments.importResults.title"),
+                    text: t("general.payments.importResults.text", {
+                        inserted: res.inserted,
+                        failed: res.failed,
+                        ignored: res.ignored,
+                    }),
                 }).then(() =>
                     this.setState({
                         failedCount: this.state.failedCount + res.failed,
@@ -819,10 +795,12 @@ class PaymentList extends React.Component {
     }
 
     promptStatusEdit(id, statusId) {
+        const { t } = this.props;
+
         swal({
-            title: "Édition du statut",
+            title: t("general.statusEdit.title"),
             type: "warning",
-            confirmButtonText: "Valider",
+            confirmButtonText: t("common:actions.validate"),
             input: "select",
             inputOptions: _.zipObject(
                 this.props.statuses.map(status => status.id),
@@ -831,7 +809,7 @@ class PaymentList extends React.Component {
             inputClass: "form-control",
             inputValue: statusId,
             showCancelButton: true,
-            cancelButtonText: "Annuler",
+            cancelButtonText: t("common:actions.cancel"),
         }).then(res => {
             const newStatusId = res.value;
             if (newStatusId) {
@@ -843,7 +821,7 @@ class PaymentList extends React.Component {
                     },
                     body: JSON.stringify({id, status: res.value}),
                 }).then(res => {
-                    if (!res.ok) swal("Echec", "", "error");
+                    if (!res.ok) swal(t("general.statusEditFailed"), "", "error");
                     else
                         this.setState({
                             data: this.state.data.map(p => {
@@ -864,10 +842,11 @@ class PaymentList extends React.Component {
 
     render() {
         const {data, pages, loading} = this.state;
+        const { t } = this.props;
 
         const duePaymentMethodsOptions = [
             {
-                label: "Sans mode de règlement",
+                label: t("general.noPaymentMethodOption"),
                 value: "null",
             },
             ..._.map(this.props.paymentMethods, reactOptionMapper()),
@@ -900,7 +879,8 @@ class PaymentList extends React.Component {
                 ? this.state.total - NB_DISPLAYED_RECIPIENTS
                 : totalRecipients.length - NB_DISPLAYED_RECIPIENTS
         );
-        if (restCount) recipients += `, et ${restCount} autres`;
+        if (restCount)
+            recipients += t("general.reminder.andNOthers", { n: restCount });
 
         const filteredSeasonId =
             findAndGet(
@@ -919,17 +899,17 @@ class PaymentList extends React.Component {
                 >
                     <div className="flex flex-center-aligned">
                         <h2 className="m-r">
-                            {this.state.rowsCount} règlements
+                            {t("general.payments.rowCount", { n: this.state.rowsCount })}
                         </h2>
                         <button
                             className="btn btn-primary m-r-sm"
-                            data-tippy-content="Recharger la liste"
+                            data-tippy-content={t("general.tableControls.reload")}
                             onClick={() => this.fetchData(this.state.filter)}
                         >
                             <i className="fas fa-sync"/>
                         </button>
                         <button
-                            data-tippy-content="Réinitialiser les filtres"
+                            data-tippy-content={t("general.tableControls.resetFilters")}
                             className="btn btn-primary m-r"
                             onClick={() => this.resetFilters()}
                         >
@@ -937,7 +917,7 @@ class PaymentList extends React.Component {
                         </button>
 
                         <button
-                            data-tippy-content="Mettre le tableau en plein écran"
+                            data-tippy-content={t("general.tableControls.fullscreen")}
                             className="btn btn-primary m-r"
                             onClick={() => events[0]()}
                         >
@@ -951,13 +931,13 @@ class PaymentList extends React.Component {
                             value={filteredSeasonId}
                             className="form-control m-r"
                         >
-                            <option value="">SAISON</option>
+                            <option value="">{t("general.seasonFilter")}</option>
                             {this.props.seasons.map(optionMapper())}
                         </select>
 
                         <button
                             className="btn btn-primary"
-                            data-tippy-content={'Exporter en CSV ' + (this.state.targets.length > 0 ? `les ${this.state.targets === "all" ? this.state.rowsCount : this.state.targets.length} lignes sélectionnées)` : "tous les paiements visibles")}
+                            data-tippy-content={t("general.csvExport.prefix") + (this.state.targets.length > 0 ? t("general.csvExport.scopeSelected", { n: this.state.targets === "all" ? this.state.rowsCount : this.state.targets.length }) : t("general.csvExport.scopeAll"))}
                             onClick={() => {this.onCsvExport()}}
                             disabled={this.state.csv_export_loading}
                         >
@@ -980,11 +960,12 @@ class PaymentList extends React.Component {
 
                     <div className="ibox-title-right">
                         <span>
-                            Total paiements:{" "}
-                            {new Intl.NumberFormat("fr-FR", {
-                                style: "currency",
-                                currency: "EUR",
-                            }).format(this.state.totalAmount)}
+                            {t("general.payments.totalPayments", {
+                                amount: new Intl.NumberFormat("fr-FR", {
+                                    style: "currency",
+                                    currency: "EUR",
+                                }).format(this.state.totalAmount),
+                            })}
                         </span>
                     </div>
                 </div>
@@ -1028,13 +1009,13 @@ class PaymentList extends React.Component {
                         }
                         filterable
                         resizable={false}
-                        previousText="Précédent"
-                        nextText="Suivant"
-                        loadingText="Chargement..."
-                        noDataText="Aucune donnée"
-                        pageText="Page"
-                        ofText="sur"
-                        rowsText="résultats"
+                        previousText={t("common:reactTable.previousText")}
+                        nextText={t("common:reactTable.nextText")}
+                        loadingText={t("common:reactTable.loadingText")}
+                        noDataText={t("common:reactTable.noDataText")}
+                        pageText={t("common:reactTable.pageText")}
+                        ofText={t("common:reactTable.ofText")}
+                        rowsText={t("common:reactTable.rowsText")}
                         minRows={8}
                         SubComponent={row => {
                             return (
@@ -1066,6 +1047,8 @@ class PaymentList extends React.Component {
 }
 
 function SubDuePayment({data, paymentMethods}) {
+    const { t } = useTranslation("payments");
+
     const paymentMethod = paymentMethods.find(
         pm => pm.id === data.payment_method_id
     );
@@ -1074,10 +1057,10 @@ function SubDuePayment({data, paymentMethods}) {
         <table className="table table-striped">
             <thead>
             <tr>
-                <th>Numéro</th>
-                <th>Date prévisionnelle</th>
-                <th>Mode règlement</th>
-                <th>Montant</th>
+                <th>{t("general.payments.subDuePayment.number")}</th>
+                <th>{t("general.payments.subDuePayment.previsionalDate")}</th>
+                <th>{t("general.payments.subDuePayment.paymentMethod")}</th>
+                <th>{t("general.payments.subDuePayment.amount")}</th>
             </tr>
             </thead>
             <tbody>
@@ -1092,4 +1075,4 @@ function SubDuePayment({data, paymentMethods}) {
     );
 }
 
-export default PaymentList;
+export default withTranslation("payments")(PaymentList);

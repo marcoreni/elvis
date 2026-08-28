@@ -49,7 +49,7 @@ class DuePaymentList extends React.Component {
                 sorted: [],
             },
             message: {
-                title: props.t("general.reminderDefaultTitle"),
+                title: props.t("general.reminder.defaultTitle"),
                 content: "",
                 isEmail: true,
                 isSMS: false,
@@ -90,7 +90,7 @@ class DuePaymentList extends React.Component {
         const { t } = this.props;
 
         swal({
-            title: t("general.schedulesWithoutPayer.confirmSendTitle"),
+            title: t("general.reminder.confirmSendTitle"),
             text: t("common:confirm.sure"),
             type: "question",
             showCancelButton: true,
@@ -115,13 +115,13 @@ class DuePaymentList extends React.Component {
                 if (res) {
                     if (res.ok)
                         swal({
-                            title: t("general.schedulesWithoutPayer.successTitle"),
-                            text: t("general.schedulesWithoutPayer.successText"),
+                            title: t("general.reminder.successTitle"),
+                            text: t("general.reminder.successText"),
                             type: "success",
                         });
                     else
                         throw new Error(
-                            t("general.schedulesWithoutPayer.errorStatus", {
+                            t("general.reminder.errorStatus", {
                                 status: res.status,
                                 statusText: res.statusText,
                             })
@@ -130,7 +130,7 @@ class DuePaymentList extends React.Component {
             })
             .catch(reason =>
                 swal({
-                    title: t("general.schedulesWithoutPayer.errorTitle"),
+                    title: t("general.reminder.errorTitle"),
                     text: reason,
                     type: "error",
                 })
@@ -390,7 +390,7 @@ class DuePaymentList extends React.Component {
                 : this.state.targets.length - NB_DISPLAYED_RECIPIENTS
         );
         if (restCount)
-            recipients += t("general.schedulesWithoutPayer.andNOthers", {
+            recipients += t("general.reminder.andNOthers", {
                 n: restCount,
             });
 

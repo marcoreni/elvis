@@ -40,7 +40,45 @@
             "schedulesWithoutPayer": "Schedules without a payer",
             "checks": "Cheques"
         },
-        "reminderDefaultTitle": "Payment reminder",
+        "reminder": {
+            "defaultTitle": "Payment reminder",
+            "confirmSendTitle": "Confirm sending",
+            "successTitle": "Success",
+            "successText": "Message sent",
+            "errorTitle": "Error",
+            "errorStatus": "Error {{status}}: {{statusText}}",
+            "andNOthers": ", and {{n}} others"
+        },
+        "tableControls": {
+            "reload": "Reload the list",
+            "resetFilters": "Reset filters",
+            "fullscreen": "Show the table fullscreen"
+        },
+        "numberFilter": {
+            "all": "All",
+            "member": "Mbr",
+            "nonMember": "Non-mbr"
+        },
+        "seasonFilter": "SEASON",
+        "unknownPayer": "Unknown",
+        "noPaymentMethodOption": "No payment method",
+        "selectRemaining": "Select the {{n}} remaining",
+        "statusEdit": {
+            "title": "Edit status"
+        },
+        "statusEditFailed": "Failed",
+        "bulkDeleteTitle": "Confirm",
+        "csvExport": {
+            "prefix": "Export to CSV ",
+            "scopeSelected": "the {{n}} selected rows)",
+            "scopeAll": "all visible payments"
+        },
+        "paymentMail": {
+            "title": "Send a follow-up email",
+            "successTitle": "Success",
+            "successText": "Email sent",
+            "errorTitle": "An error occurred"
+        },
         "bulkEdit": {
             "title": "Bulk-edit due dates",
             "dueDateLabel": "Due date"
@@ -67,16 +105,10 @@
             "unknown": "Unknown"
         },
         "schedulesWithoutPayer": {
-            "confirmSendTitle": "Confirm sending",
-            "successTitle": "Success",
-            "successText": "Message sent",
-            "errorTitle": "Error",
-            "errorStatus": "Error {{status}}: {{statusText}}",
             "selectedCount": "You selected {{n}} payer(s)",
             "selectRemaining": "Select the {{n}} remaining",
             "sendMessage": "Send a message",
             "sendReminderTitle": "Send a reminder",
-            "andNOthers": ", and {{n}} others",
             "heading": "{{n}} payers without a schedule for",
             "columns": {
                 "name": "Name",
@@ -91,17 +123,62 @@
                 "checkNumber": "Cheque no.",
                 "status": "Status"
             },
-            "unknown": "Unknown",
             "paymentDateLabel": "Payment date:",
             "paymentDateTooltip": "Payment date",
             "allChecks": "All cheques",
             "clearedChecks": "Cleared cheques",
             "unclearedChecks": "Uncleared cheques",
-            "reloadTooltip": "Reload the list",
-            "resetFiltersTooltip": "Reset filters",
-            "fullscreenTooltip": "Show the table fullscreen",
             "checkCount": "Number of cheques: {{n}}",
             "totalAmount": "Total amount: {{amount}}"
+        },
+        "dueDates": {
+            "columns": {
+                "validity": "Validity",
+                "number": "No.",
+                "status": "Status",
+                "previsionalDate": "Expected date",
+                "paymentMethod": "Due-date payment method",
+                "payer": "Payer",
+                "location": "Location",
+                "amount": "Amount"
+            },
+            "rowCount": "{{n}} due dates",
+            "totalDue": "Total due: {{amount}}",
+            "totalPaid": "Total paid: {{amount}}",
+            "selectedCount": "You selected {{n}} due date(s)",
+            "sendUnpaidMail": "Send a follow-up email for unpaid payments",
+            "bulkEditButton": "Bulk edit",
+            "bulkDeleteText": "Delete all selected due dates and their associated payments?",
+            "paymentMailText": "Send a follow-up email for the selected payments?"
+        },
+        "payments": {
+            "columns": {
+                "number": "No.",
+                "status": "Status",
+                "cashingDate": "Cashing date",
+                "paymentMethod": "Payment method",
+                "payer": "Payer",
+                "location": "Location",
+                "amount": "Amount"
+            },
+            "statusNone": "None",
+            "noPaymentMethod": "No payment method specified",
+            "rowCount": "{{n}} payments",
+            "totalPayments": "Total payments: {{amount}}",
+            "selectedCount": "You selected {{n}} payment(s)",
+            "sendUnpaidMail": "Send a follow-up email for unpaid payments",
+            "bulkDeleteText": "Delete all selected payments?",
+            "paymentMailText": "Send a follow-up email for the selected payments?",
+            "subDuePayment": {
+                "number": "Number",
+                "previsionalDate": "Expected date",
+                "paymentMethod": "Payment method",
+                "amount": "Amount"
+            },
+            "importResults": {
+                "title": "Results",
+                "text": "Successes: {{inserted}}, Failures: {{failed}}, Skipped: {{ignored}}"
+            }
         }
     }
 }
