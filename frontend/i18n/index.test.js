@@ -37,6 +37,6 @@ describe("frontend/i18n", () => {
         const { default: i18n } = await import("./index");
 
         expect(i18n.options.defaultNS).toBe("common");
-        expect(i18n.options.ns).toEqual(["common", "users"]);
+        expect(i18n.options.ns).toEqual(["common", "users", "evaluation"]);
     });
 });

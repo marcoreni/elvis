@@ -16,6 +16,9 @@ en:
     common:
         actions:
             validate: Submit
+            save: Save
+            add: Add
+            edit: Edit
 
     activerecord:
         attributes:
@@ -26,6 +29,9 @@ en:
                 is_admin: Administrator
                 is_teacher: Teacher
                 adherent: Member
+            evaluation_level_ref:
+                label: Label
+                value: Number
         errors:
             models:
                 user:
@@ -211,3 +217,17 @@ en:
                 error_title: Error
             upload_csv:
                 heading: Import your community
+        evaluation_appointments:
+            incomplete:
+                heading: New students without an evaluation slot
+        evaluation_level_ref:
+            index:
+                heading: Evaluation levels
+                add_level: Add a level
+            new:
+                heading: Add a level
+            edit:
+                heading: 'Editing level "%{label}"'
+        student_evaluations_stats:
+            stats:
+                heading: 'Evaluation summary - %{season}'

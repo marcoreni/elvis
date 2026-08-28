@@ -1,17 +1,18 @@
 import React, { Fragment } from "react";
+import { withTranslation } from "react-i18next";
 import CollapsePanel from "../utils/ui/collapse_panel";
 import EvaluationForm from "./EvaluationForm";
 import * as api from "../../tools/api";
 import { fullname } from "../../tools/format";
 import _ from "lodash";
 
-function renderEvaluationHeader(user, season, activity, hasAnswered, collapsed) {
+function renderEvaluationHeader(t, user, season, activity, hasAnswered, collapsed) {
     const level = user.levels.find(l =>
         l.activity_ref_id === activity.activity_ref_id &&
         l.season_id === season.id
     );
 
-    const levelStr = level && level.evaluation_level_ref && `NIVEAU ${level.evaluation_level_ref.label}`;
+    const levelStr = level && level.evaluation_level_ref && t("header.level", { label: level.evaluation_level_ref.label });
 
     return (
         <Fragment>
@@ -21,7 +22,7 @@ function renderEvaluationHeader(user, season, activity, hasAnswered, collapsed) 
                 </span>
             ) : (
                 <span className="label label-warning m-l-xs pull-right">
-                    {"A évaluer"}
+                    {t("header.toEvaluate")}
                 </span>
             )}
 
@@ -111,6 +112,7 @@ class Evaluation extends React.Component {
             activity,
             questions,
             referenceData,
+            t,
         } = this.props;
 
         const {
@@ -132,7 +134,7 @@ class Evaluation extends React.Component {
                 <CollapsePanel
                     key={u.id}
                     className="panel-default"
-                    header={renderEvaluationHeader(u, season, activity, hasAnswered, currentStudent !== u.id)}
+                    header={renderEvaluationHeader(t, u, season, activity, hasAnswered, currentStudent !== u.id)}
                     onClick={() => this.handleSetCurrentStudent(u.id)}
                     collapsed={currentStudent !== u.id}
                 >
@@ -140,9 +142,16 @@ class Evaluation extends React.Component {
                         <span className={`label label-${previousSeasonLevel && previousSeasonLevel.evaluation_level_ref ? "info" : "danger"}`}>
                             {
                                 (previousSeasonLevel && previousSeasonLevel.evaluation_level_ref ?
-                                    `Niveau ${previousSeasonLevel.evaluation_level_ref.label} pour ${activity.activity_ref.activity_ref_kind.name} en ${season.previous.label}`
+                                    t("previousLevel.found", {
+                                        level: previousSeasonLevel.evaluation_level_ref.label,
+                                        kind: activity.activity_ref.activity_ref_kind.name,
+                                        season: season.previous.label,
+                                    })
                                     :
-                                    `Pas de niveau trouvé pour ${activity.activity_ref.activity_ref_kind.name} en ${season.previous.label}`).toUpperCase()
+                                    t("previousLevel.notFound", {
+                                        kind: activity.activity_ref.activity_ref_kind.name,
+                                        season: season.previous.label,
+                                    })).toUpperCase()
                             }
                         </span>
                     </div>
@@ -165,4 +174,4 @@ class Evaluation extends React.Component {
     }
 }
 
-export default Evaluation;
+export default withTranslation("evaluation")(Evaluation);

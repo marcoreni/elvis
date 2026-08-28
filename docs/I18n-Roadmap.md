@@ -364,7 +364,54 @@ et à mesure de son intégration :
       fichiers chacune)* — une branche par domaine, dans n'importe quel ordre :
   - [ ] `planning`
   - [ ] `activities`
-  - [ ] `evaluation`
+  - [x] `evaluation` — branche `feature/i18n-06-extract-evaluation` *(dépend de 01+02)*
+    - [x] `frontend/components/evaluation/` : `Evaluation.jsx`, `EvaluationForm.jsx`,
+          `StudentEvaluationsStats.jsx` passés en `withTranslation("evaluation")` (nouveau
+          namespace i18next `evaluation` — `frontend/locales/{fr,en}/evaluation.json`, câblé dans
+          `frontend/i18n/index.js`). `EvaluationForm` est importé par ~6 composants des domaines
+          `planning`/`activityApplications` — le HOC est transparent pour eux (prop `submitLabel`
+          explicite toujours prioritaire, exports nommés `validateQuestions` etc. inchangés).
+          `EvaluationMenu.jsx` et `question/*` : aucune chaîne en dur propre à ce périmètre
+          (seulement `MESSAGES.no_answer` de `tools/constants`, partagé, hors périmètre ; plus un
+          message d'erreur dev `TARGET … NOT SUPPORTED` dans `select_question.jsx`, laissé en
+          anglais comme les `console.error`). `select_targets.jsx` : les champs `label:`
+          ("Niveaux", "Saisons", …) sont **du code mort** — `select_question.jsx` ne lit que
+          `setName`/`valueAccessor`/`labelAccessor` — laissés tels quels, pas traduits.
+    - [x] `app/views/` : `evaluation_appointments/incomplete.html.erb`,
+          `evaluation_level_ref/{index,new,edit}.html.erb`, `student_evaluations_stats/stats.html.erb`.
+          Clés sous `views.evaluation_appointments.*` / `views.evaluation_level_ref.*` /
+          `views.student_evaluations_stats.*`. Nouveaux `common.actions.{save,add,edit}` (doublons
+          verbatim "Sauvegarder"/"Ajouter"/"Éditer"). `activerecord.attributes.evaluation_level_ref.{label,value}`
+          ajoutés et référencés via `t()` explicite dans `f.label` (le formulaire est
+          `form_with scope:` sans instance liée fiable — même raison que `users/new.html.erb` en
+          branche 05 — donc `f.label :label` seul ne résout pas la clé) ; statiquement détectés,
+          pas besoin d'`ignore_unused`.
+    - [x] **Vues scaffold mortes supprimées** : `evaluation_level_ref/{create,update}.html.erb`
+          (stubs Rails "Find me in…", jamais rendus — `create`/`update` `redirect_to`
+          inconditionnellement). `show.html.erb` (stub identique) laissé en place : `def show; end`
+          le rend encore si on tape l'URL à la main, bien qu'aucun lien n'y mène — l'action `show`
+          et sa vue semblent mortes elles aussi, à confirmer avant suppression.
+    - [x] **Bugs préexistants corrigés dans `evaluation_level_ref/edit.html.erb`** (formulaire
+          d'édition cassé, découvert en écrivant le spec) : `model: @evalution_level_ref` (faute de
+          frappe → `nil`, champs jamais préremplis) → `@evaluation_level_ref` ; et
+          `url: evaluation_level_ref_path` sans id → `evaluation_level_ref_path(@evaluation_level_ref)`
+          (route membre, levait `UrlGenerationError` au rendu).
+    - [x] **Correction au passage (revue)** : `new.html.erb`/`edit.html.erb` avaient
+          `id: "label"`/`id: "value"` en dur sur les `text_field`, qui ne correspondaient pas au
+          `for` généré par `f.label :label`/`:value` (`for="evaluation_level_ref_label"` etc.) —
+          même classe de défaut que le finding #6 de la branche 05. Overrides `id:` supprimés pour
+          que Rails régénère un id cohérent avec le `for` ; aucun JS ne visait les anciens ids.
+    - [x] **Tests** : `spec/requests/evaluation_pages_spec.rb` (index/new/edit `evaluation_level_ref`,
+          fr/en, interpolation du libellé dans le titre d'édition, garde anti-`"translation missing"`) ;
+          `frontend/components/evaluation/{Evaluation,EvaluationForm,StudentEvaluationsStats}.test.jsx`
+          (Vitest, même pattern `i18n.changeLanguage` que la branche 05). **Non couvert**
+          (documenté dans le spec) : `student_evaluations_stats#stats` et
+          `evaluation_appointments#incomplete` nécessitent une `Season` `is_current` persistée, et
+          il n'existe pas encore de factory `Season` (le modèle a des validations de présence +
+          inter-dates qui rendent un build inline lourd). Une seule chaîne de titre extraite pour
+          chacune ; câbler une fixture `Season` est un TODO de suivi.
+    - [x] **Vérification** : `bin/i18n-tasks health` → 0 manquant / 0 inutilisé (365 clés).
+          `bundle exec rspec` → 93 exemples, 0 échec. `yarn test` → 8 fichiers / 22 tests, verts.
   - [ ] `courses` / `formules`
   - [ ] `parameters` / `editParameters` restants
   - [ ] `payments` (en excluant l'exception volontaire `bill.html.erb`)

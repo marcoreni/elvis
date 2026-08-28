@@ -1,5 +1,5 @@
 <div class="row wrapper border-bottom white-bg page-heading">
-    <h2>Ajouter un Niveau</h2>
+    <h2><%= t("views.evaluation_level_ref.new.heading") %></h2>
 </div>
 
 <br />
@@ -7,15 +7,15 @@
 <div class="col-lg-4">
     <%= form_with scope: :evaluation_level_ref, url: evaluation_level_ref_index_path, local: true do |f| %>
           <div class="form-group">
-            <%= f.label :label %><br />
-            <%= f.text_field :label, autofocus: false, id: "label", class: "form-control" %>
+            <%= f.label :label, t("activerecord.attributes.evaluation_level_ref.label") %><br />
+            <%= f.text_field :label, autofocus: false, class: "form-control" %>
           </div>
 
           <div class="form-group">
-            <%= f.label :numéro %><br />
-            <%= f.text_field :value, autofocus: false, id: "value", class: "form-control" %>
+            <%= f.label :value, t("activerecord.attributes.evaluation_level_ref.value") %><br />
+            <%= f.text_field :value, autofocus: false, class: "form-control" %>
           </div>
 
-          <%= f.submit "Ajouter", class: "btn btn-primary block full-width m-b" %>
+          <%= f.submit t("common.actions.add"), class: "btn btn-primary block full-width m-b" %>
     <% end %>
 </div>
