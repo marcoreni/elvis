@@ -570,6 +570,8 @@ class PaymentsManagement extends React.Component {
     }
 
     handleChangeAdhesionPricingChoice(adhesionId, newAdhesionPricingId) {
+        const { t } = this.props;
+
         api.set()
             .success(() => {
                 const adhesion = this.state.adhesions.find(adhesion => adhesion.id === adhesionId);
@@ -640,6 +642,7 @@ class PaymentsManagement extends React.Component {
         return oldCoupon;
     }
     handleChangePercentOffChoice(discountable_id, discountable_type, couponId) {
+        const { t } = this.props;
         const coupon = _.find(this.props.coupons, c => c.id == couponId);
 
         const oldCoupon = this.setStateWithCoupon(discountable_id, discountable_type, coupon);
@@ -703,6 +706,7 @@ class PaymentsManagement extends React.Component {
     }
 
     handleChangeProrataForDesiredActivity(id, prorata) {
+        const { t } = this.props;
         let dess = {...this.state.desiredActivities};
         let des = _.find(dess, i => i.id == id);
 
@@ -946,6 +950,7 @@ class PaymentsManagement extends React.Component {
     }
 
     handleSwitchLocation(scheduleId, locationId) {
+        const { t } = this.props;
         let schedules =
             scheduleId || Object.values(this.state.schedules).map(v => v.id);
 
@@ -1816,7 +1821,7 @@ class PaymentsManagement extends React.Component {
                         </div>
 
                         {this.state.payers.length == 0 ?
-t("userPayments.management.noScheduleForSeason")
+                            t("userPayments.management.noScheduleForSeason")
                             :
                             _.map(this.state.payers, payer => {
                                 const previsionalTotal = _.chain(
