@@ -15,6 +15,12 @@ fr:
             save: Sauvegarder
             add: Ajouter
             edit: Éditer
+            delete: Supprimer
+            back: Retour
+        labels:
+            actions: Actions
+        confirm:
+            sure: Êtes-vous sûr ?
 
     activerecord:
         attributes:
@@ -35,6 +41,14 @@ fr:
             evaluation_level_ref:
                 label: Libellé
                 value: Numéro
+            payment_method:
+                label: Libellé
+                is_special: Est spécial
+                is_credit_note: A crédit
+                show_payment_method_to_user: Afficher au client ?
+            payment_status:
+                label: Libellé
+                color: Couleur
         errors:
             models:
                 user:
@@ -234,3 +248,27 @@ fr:
         student_evaluations_stats:
             stats:
                 heading: 'Synthèse des évaluations - %{season}'
+        failed_payment_imports:
+            index:
+                heading: Liste des imports de paiements ratés
+        payment_method:
+            index:
+                heading: Moyens de paiement
+                create: Créer un moyen de paiement
+            new:
+                heading: Création d'une méthode de paiement
+            edit:
+                heading: Modification d'une méthode de paiement
+            form:
+                built_in_notice: Comme il s'agit d'un moyen de paiement intégré, vous ne pouvez pas modifier son nom.
+        payment_statuses:
+            index:
+                heading: Statuts de paiement
+                create: Créer un statut de paiement
+            new:
+                heading: Nouveau statut de paiement
+            edit:
+                heading: Modification d'un statut de paiement
+        payments:
+            index:
+                heading: Suivi des paiements

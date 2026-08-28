@@ -19,6 +19,12 @@ en:
             save: Save
             add: Add
             edit: Edit
+            delete: Delete
+            back: Back
+        labels:
+            actions: Actions
+        confirm:
+            sure: Are you sure?
 
     activerecord:
         attributes:
@@ -32,6 +38,14 @@ en:
             evaluation_level_ref:
                 label: Label
                 value: Number
+            payment_method:
+                label: Label
+                is_special: Is special
+                is_credit_note: Is credit note
+                show_payment_method_to_user: Show to customer?
+            payment_status:
+                label: Label
+                color: Color
         errors:
             models:
                 user:
@@ -231,3 +245,27 @@ en:
         student_evaluations_stats:
             stats:
                 heading: 'Evaluation summary - %{season}'
+        failed_payment_imports:
+            index:
+                heading: Failed payment imports
+        payment_method:
+            index:
+                heading: Payment methods
+                create: Create a payment method
+            new:
+                heading: Creating a payment method
+            edit:
+                heading: Editing a payment method
+            form:
+                built_in_notice: As this is a built-in payment method, you cannot change its name.
+        payment_statuses:
+            index:
+                heading: Payment statuses
+                create: Create a payment status
+            new:
+                heading: New payment status
+            edit:
+                heading: Editing a payment status
+        payments:
+            index:
+                heading: Payment tracking

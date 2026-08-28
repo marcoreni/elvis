@@ -1,0 +1,36 @@
+{
+    "failedImports": {
+        "title": "Imports ratés",
+        "columns": {
+            "selection": "Sélection",
+            "reason": "Raison",
+            "firstName": "Prénom",
+            "lastName": "Nom",
+            "dueDate": "Date d'échéance",
+            "cashingDate": "Date du prélèvement",
+            "importDate": "Date d'import",
+            "importAmount": "Montant import",
+            "actions": "Actions"
+        },
+        "reasonUnspecified": "non précisée",
+        "importDateFormat": "DD/MM/YYYY [à] HH:mm",
+        "bulk": {
+            "byReason": "SUPPRESSION DE MASSE PAR RAISON",
+            "deleteAll": "TOUT SUPPRIMER ({{n}})",
+            "deleteSelected": "SUPPRIMER {{n}} IMPORTS",
+            "deleteAllOfReason": "SUPPRIMER TOU.TE.S LES {{reason}}"
+        },
+        "confirm": {
+            "title": "Suppression",
+            "textMany": "Voulez-vous vraiment supprimer toutes ces tentatives ?",
+            "textOne": "Voulez-vous vraiment supprimer cette tentative ?",
+            "yes": "Oui",
+            "no": "Non"
+        },
+        "importTitle": "Import",
+        "importConfirmText": "Êtes-vous sûr des informations ?",
+        "failureTitle": "Échec",
+        "importNotFound": "Cet import n'existe pas",
+        "successTitle": "Réussite"
+    }
+}

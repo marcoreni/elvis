@@ -5,6 +5,7 @@ import ReactTable from "react-table";
 import moment from "moment";
 import swal from "sweetalert2";
 import _ from "lodash";
+import { withTranslation } from "react-i18next";
 import { ISO_DATE_FORMAT, csrfToken } from "./utils";
 
 /*
@@ -47,13 +48,15 @@ class FailedPaymentImportsPage extends React.Component {
     }
 
     promptBulkDeleteByReason() {
+        const { t } = this.props;
+
         swal({
-            title: "Suppression",
-            text: "Voulez-vous vraiment supprimer toutes ces tentatives ?",
+            title: t("failedImports.confirm.title"),
+            text: t("failedImports.confirm.textMany"),
             type: "warning",
-            confirmButtonText: "Oui",
+            confirmButtonText: t("failedImports.confirm.yes"),
             showCancelButton: true,
-            cancelButtonText: "Non",
+            cancelButtonText: t("failedImports.confirm.no"),
             focusCancel: true,
         }).then(reason => {
             if (reason.value) {
@@ -83,15 +86,15 @@ class FailedPaymentImportsPage extends React.Component {
     }
 
     promptBulkDelete() {
-        
+        const { t } = this.props;
 
         swal({
-            title: "Suppression",
-            text: "Voulez-vous vraiment supprimer toutes ces tentatives ?",
+            title: t("failedImports.confirm.title"),
+            text: t("failedImports.confirm.textMany"),
             type: "warning",
-            confirmButtonText: "Oui",
+            confirmButtonText: t("failedImports.confirm.yes"),
             showCancelButton: true,
-            cancelButtonText: "Non",
+            cancelButtonText: t("failedImports.confirm.no"),
             focusCancel: true,
         }).then(reason => {
             if (reason.value) {
@@ -125,15 +128,15 @@ class FailedPaymentImportsPage extends React.Component {
     }
 
     promptDelete(id) {
-        
+        const { t } = this.props;
 
         swal({
-            title: "Suppression",
-            text: "Voulez-vous vraiment supprimer cette tentative ?",
+            title: t("failedImports.confirm.title"),
+            text: t("failedImports.confirm.textOne"),
             type: "warning",
-            confirmButtonText: "Oui",
+            confirmButtonText: t("failedImports.confirm.yes"),
             showCancelButton: true,
-            cancelButtonText: "Non",
+            cancelButtonText: t("failedImports.confirm.no"),
             focusCancel: true,
         }).then(reason => {
             if (reason.value)
@@ -149,29 +152,28 @@ class FailedPaymentImportsPage extends React.Component {
                         });
                     else
                         swal({
-                            title: "Échec",
+                            title: t("failedImports.failureTitle"),
                             type: "error",
-                            text: "Cet import n'existe pas",
+                            text: t("failedImports.importNotFound"),
                         });
                 });
         });
     }
 
     promptSubmit(row) {
+        const { t } = this.props;
         const data = { ...row };
 
         data.due_date = moment(data.due_date).format("DD/MM/YYYY");
         data.cashing_date = moment(data.cashing_date).format("DD/MM/YYYY");
 
-        
-
         swal({
-            title: "Import",
-            text: "Êtes-vous sûr des informations ?",
+            title: t("failedImports.importTitle"),
+            text: t("failedImports.importConfirmText"),
             type: "question",
-            confirmButtonText: "Oui",
+            confirmButtonText: t("failedImports.confirm.yes"),
             showCancelButton: true,
-            cancelButtonText: "Non",
+            cancelButtonText: t("failedImports.confirm.no"),
             focusCancel: true,
         }).then(reason => {
             if (reason.value)
@@ -187,7 +189,7 @@ class FailedPaymentImportsPage extends React.Component {
                     .then(res => {
                         if (res.success)
                             swal({
-                                title: "Réussite",
+                                title: t("failedImports.successTitle"),
                                 text: res.message,
                                 type: "success",
                             }).then(() => {
@@ -199,7 +201,7 @@ class FailedPaymentImportsPage extends React.Component {
                             });
                         else
                             swal({
-                                title: "Échec",
+                                title: t("failedImports.failureTitle"),
                                 text: res.message,
                                 type: "error",
                             }).then(() => {
@@ -341,6 +343,8 @@ class FailedPaymentImportsPage extends React.Component {
     }
 
     render() {
+        const { t } = this.props;
+
         const payerNotFound = this.props.reasons.find(
             d => d.code === "payer_not_found",
         );
@@ -353,7 +357,7 @@ class FailedPaymentImportsPage extends React.Component {
 
         const columns = [
             {
-                Header: "Sélection",
+                Header: t("failedImports.columns.selection"),
                 Filter: () => (
                     <div className="flex flex-center-aligned flex-center-justified">
                         <input
@@ -386,7 +390,7 @@ class FailedPaymentImportsPage extends React.Component {
                 ),
             },
             {
-                Header: "Raison",
+                Header: t("failedImports.columns.reason"),
                 id: "reason",
                 accessor: "failed_payment_import_reason_id",
                 filterable: true,
@@ -412,11 +416,11 @@ class FailedPaymentImportsPage extends React.Component {
                         this.props.reasons,
                         rea => rea.id === cell.value,
                     );
-                    return (reason && reason.label) || "non précisée";
+                    return (reason && reason.label) || t("failedImports.reasonUnspecified");
                 },
             },
             {
-                Header: "Prénom",
+                Header: t("failedImports.columns.firstName"),
                 id: "first_name",
                 accessor: "first_name",
                 Cell: c =>
@@ -427,7 +431,7 @@ class FailedPaymentImportsPage extends React.Component {
                     ),
             },
             {
-                Header: "Nom",
+                Header: t("failedImports.columns.lastName"),
                 id: "last_name",
                 accessor: "last_name",
                 Cell: c =>
@@ -438,7 +442,7 @@ class FailedPaymentImportsPage extends React.Component {
                     ),
             },
             {
-                Header: "Date d'échéance",
+                Header: t("failedImports.columns.dueDate"),
                 id: "due_date",
                 accessor: d => moment(d.due_date),
                 Cell: c =>
@@ -449,19 +453,19 @@ class FailedPaymentImportsPage extends React.Component {
                     ),
             },
             {
-                Header: "Date du prélèvement",
+                Header: t("failedImports.columns.cashingDate"),
                 id: "cashing_date",
                 accessor: d => moment(d.cashing_date),
                 Cell: cell => cell.value.format("DD/MM/YYYY"),
             },
             {
-                Header: "Date d'import",
+                Header: t("failedImports.columns.importDate"),
                 id: "import_date",
                 accessor: d => moment(d.created_at),
-                Cell: cell => cell.value.format("DD/MM/YYYY à hh:mm"),
+                Cell: cell => cell.value.format(t("failedImports.importDateFormat")),
             },
             {
-                Header: "Montant import",
+                Header: t("failedImports.columns.importAmount"),
                 maxWidth: 125,
                 id: "amount",
                 accessor: "amount",
@@ -473,7 +477,7 @@ class FailedPaymentImportsPage extends React.Component {
                     ),
             },
             {
-                Header: "Actions",
+                Header: t("failedImports.columns.actions"),
                 maxWidth: 100,
                 Cell: c => (
                     <div className="flex flex-space-around-justified">
@@ -498,18 +502,20 @@ class FailedPaymentImportsPage extends React.Component {
             },
         ];
 
-        let bulkDeleteButtonLabel = "SUPPRESSION DE MASSE PAR RAISON";
+        let bulkDeleteButtonLabel = t("failedImports.bulk.byReason");
 
         if (this.state.selectAll)
-            bulkDeleteButtonLabel = `TOUT SUPPRIMER (${
-                this.state.data.length
-            })`;
+            bulkDeleteButtonLabel = t("failedImports.bulk.deleteAll", {
+                n: this.state.data.length,
+            });
         else if (this.state.selectedRows.length)
-            bulkDeleteButtonLabel = `SUPPRIMER ${
-                this.state.selectedRows.length
-            } IMPORTS`;
+            bulkDeleteButtonLabel = t("failedImports.bulk.deleteSelected", {
+                n: this.state.selectedRows.length,
+            });
         else if (this.state.selectedReason)
-            bulkDeleteButtonLabel = `SUPPRIMER TOU.TE.S LES ${this.state.selectedReason.label.toUpperCase()}`;
+            bulkDeleteButtonLabel = t("failedImports.bulk.deleteAllOfReason", {
+                reason: this.state.selectedReason.label.toUpperCase(),
+            });
 
         const bulkDeleteButtonOnClickCb =
             this.state.selectAll || this.state.selectedRows.length
@@ -521,7 +527,7 @@ class FailedPaymentImportsPage extends React.Component {
                 <div className="ibox">
                     <div className="ibox-title">
                         <div className="flex flex-space-between-justified">
-                            <h2>Imports ratés</h2>
+                            <h2>{t("failedImports.title")}</h2>
                             <div className="flex flex-center-aligned">
                                 <select
                                     className="form-control m-r-md"
@@ -575,4 +581,4 @@ class FailedPaymentImportsPage extends React.Component {
     }
 }
 
-export default FailedPaymentImportsPage;
+export default withTranslation("payments")(FailedPaymentImportsPage);

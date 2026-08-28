@@ -1,7 +1,7 @@
 
 <div class="row wrapper border-bottom white-bg page-heading m-b-md">
-  <h2>Statuts de paiement</h2>
-    <%= link_to 'Créer un statut de paiement', new_payment_status_path, :class => 'btn btn-primary' %>
+  <h2><%= t("views.payment_statuses.index.heading") %></h2>
+    <%= link_to t("views.payment_statuses.index.create"), new_payment_status_path, :class => 'btn btn-primary' %>
 </div>
 
 <p id="notice"><%= notice %></p>
@@ -9,9 +9,9 @@
 <table class="table table-bordered bg-white m-t-md">
   <thead>
   <tr>
-    <th>Label</th>
-    <th>Couleur</th>
-    <th colspan="2">Actions</th>
+    <th><%= t("activerecord.attributes.payment_status.label") %></th>
+    <th><%= t("activerecord.attributes.payment_status.color") %></th>
+    <th colspan="2"><%= t("common.labels.actions") %></th>
   </tr>
   </thead>
 
@@ -20,8 +20,8 @@
     <tr>
       <td><%= ps.label %></td>
       <td style="color: <%= ps.color %>"><%= ps.color %></td>
-      <td><%= link_to 'Éditer', edit_payment_status_path(ps), :class => 'btn btn-primary' %></td>
-      <td><%= link_to 'Supprimer', payment_status_path(ps), method: :delete, data: { confirm: 'Êtes vous sur ?' }, :class => 'btn btn-primary' %></td>
+      <td><%= link_to t("common.actions.edit"), edit_payment_status_path(ps), :class => 'btn btn-primary' %></td>
+      <td><%= link_to t("common.actions.delete"), payment_status_path(ps), method: :delete, data: { confirm: t("common.confirm.sure") }, :class => 'btn btn-primary' %></td>
     </tr>
   <% end %>
   </tbody>

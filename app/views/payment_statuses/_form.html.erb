@@ -12,18 +12,18 @@
   <% end %>
   <div class="row">
     <div class="field form-group col-lg-3 col-md-4 col-sm-12">
-      <%= form.label :label %>
+      <%= form.label :label, t("activerecord.attributes.payment_status.label") %>
       <%= form.text_field :label, :class => 'form-control', :required => true %>
     </div>
 
     <div class="field form-group col-lg-3 col-md-4 col-sm-12">
-      <%= form.label :color %>
+      <%= form.label :color, t("activerecord.attributes.payment_status.color") %>
       <%= form.color_field :color, :class => 'form-control', :required => true %>
     </div>
   </div>
 
   <div class="actions">
-    <%= link_to 'Retour', parameters_payment_parameters_url, :class => 'btn btn-primary' %>
-    <%= form.submit "Sauvegarder", :class => 'btn btn-primary' %>
+    <%= link_to t("common.actions.back"), parameters_payment_parameters_url, :class => 'btn btn-primary' %>
+    <%= form.submit t("common.actions.save"), :class => 'btn btn-primary' %>
   </div>
 <% end %>

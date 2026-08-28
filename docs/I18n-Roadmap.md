@@ -386,11 +386,13 @@ et à mesure de son intégration :
           `form_with scope:` sans instance liée fiable — même raison que `users/new.html.erb` en
           branche 05 — donc `f.label :label` seul ne résout pas la clé) ; statiquement détectés,
           pas besoin d'`ignore_unused`.
-    - [x] **Vues scaffold mortes supprimées** : `evaluation_level_ref/{create,update}.html.erb`
-          (stubs Rails "Find me in…", jamais rendus — `create`/`update` `redirect_to`
-          inconditionnellement). `show.html.erb` (stub identique) laissé en place : `def show; end`
-          le rend encore si on tape l'URL à la main, bien qu'aucun lien n'y mène — l'action `show`
-          et sa vue semblent mortes elles aussi, à confirmer avant suppression.
+    - [x] **Vues scaffold supprimées** : `evaluation_level_ref/{create,update}.html.erb`
+          (stubs Rails "Find me in…", `create`/`update` `redirect_to` inconditionnellement). Ces
+          deux suppressions sont **consignées pour récupération éventuelle** dans
+          `docs/KnownIssues.md` (section « Scaffold views suspected dead ») — récupérables via
+          `git show 48a6208^:app/views/evaluation_level_ref/create.html.erb`. Politique révisée
+          ensuite : les branches i18n **ne suppriment plus de vues**, elles consignent seulement
+          les suspectes. `show.html.erb` (stub identique) laissé en place.
     - [x] **Bugs préexistants corrigés dans `evaluation_level_ref/edit.html.erb`** (formulaire
           d'édition cassé, découvert en écrivant le spec) : `model: @evalution_level_ref` (faute de
           frappe → `nil`, champs jamais préremplis) → `@evaluation_level_ref` ; et
@@ -414,7 +416,58 @@ et à mesure de son intégration :
           `bundle exec rspec` → 93 exemples, 0 échec. `yarn test` → 8 fichiers / 22 tests, verts.
   - [ ] `courses` / `formules`
   - [ ] `parameters` / `editParameters` restants
-  - [ ] `payments` (en excluant l'exception volontaire `bill.html.erb`)
+  - [~] `payments` — **branche `feature/i18n-06-extract-payments` : 1er lot fait, reste à
+        découper.** Le domaine `payments` est bien plus gros que les autres (~19 vues ERB, ~31
+        composants React), donc découpé :
+    - [x] **Lot 1 (cette branche) — écrans d'admin CRUD + imports ratés** :
+      - [x] `app/views/payment_method/{index,new,edit,_form}.html.erb`,
+            `app/views/payment_statuses/{index,new,edit,_form}.html.erb`,
+            `app/views/payments/index.html.erb`,
+            `app/views/failed_payment_imports/index.html.erb`. Clés sous
+            `views.payment_method.*` / `views.payment_statuses.*` / `views.payments.index.*` /
+            `views.failed_payment_imports.index.*`. Nouveaux `common.actions.{delete,back}`,
+            `common.labels.actions`, `common.confirm.sure` (les deux `data: { confirm: "Êtes vous
+            sur ?" }` des vues index ; deux fautes dans l'original — trait d'union manquant et
+            "sur" au lieu de "sûr" — corrigées en "Êtes-vous sûr ?" à la demande explicite du
+            mainteneur).
+            `activerecord.attributes.payment_method.{label,is_special,is_credit_note,show_payment_method_to_user}`
+            et `payment_status.{label,color}` ajoutés, référencés via `t()` explicite dans
+            `f.label` (comme branches 05/06-evaluation). Les blocs d'erreur scaffold anglais des
+            deux `_form.html.erb` (`"N error prohibited this ... from being saved:"`) laissés tels
+            quels (anglais scaffold, pas de la copie française à extraire).
+      - [x] `frontend/components/FailedPaymentImportsPage.jsx` → `withTranslation("payments")`,
+            nouveau namespace i18next `payments` (`frontend/locales/{fr,en}/payments.json`, câblé
+            dans `frontend/i18n/index.js`). Les `res.message` renvoyés par le contrôleur restent
+            en dur côté backend (autre passe : i18n des réponses JSON contrôleur, hors périmètre) —
+            donc en `en` les swal de `promptSubmit` affichent un titre traduit mais un corps encore
+            français. Le format de date de la colonne « Date d'import », extrait en clé
+            `payments:failedImports.importDateFormat`, a été corrigé de `hh:mm` (12 h sans AM/PM,
+            ambigu — bug préexistant) vers `HH:mm` en passant.
+      - [x] **Aucune vue supprimée dans cette branche.** `due_payment/update.html.erb` et
+            `payment_statuses/show.html.erb` (stubs scaffold, apparemment jamais rendus) sont
+            *soupçonnés* morts mais **laissés en place** — une branche i18n ne fait que de
+            l'extraction de chaînes. Consignés pour analyse/suppression ultérieure dans
+            `docs/KnownIssues.md` (section « Scaffold views suspected dead ») : un 500
+            (`ActionNotFound`) ne prouve pas qu'une route est inutilisée (routes de plugins
+            préfixées, `rescue_from`, `method_missing`, appels externes…).
+      - [x] **`payment_schedule/show.html.erb` laissé en français** — c'est un document
+            comptable / « échéancier » (rendu aussi en PDF via `render pdf:`), même catégorie que
+            l'exception documentée `payments/bill.html.erb`. À traiter comme exception délibérée,
+            pas comme oubli.
+      - [x] **Tests** : `spec/requests/payment_admin_pages_spec.rb` (payment_method /
+            payment_statuses index+new+edit, edit d'un moyen `built_in` pour couvrir la clé
+            `built_in_notice`, payments#index, failed_payment_imports#index, fr+en, garde
+            anti-`"translation missing"`) ; `frontend/components/FailedPaymentImportsPage.test.jsx`.
+      - [x] **Vérification** : `bin/i18n-tasks health` → 0 manquant / 0 inutilisé (407 clés).
+            `bundle exec rspec` → 105 exemples, 0 échec. `yarn test` → 9 fichiers / 24 tests.
+    - [ ] **Lot 2 (à faire) — tableaux de bord React** : `frontend/components/generalPayments/*`
+          (~62 chaînes), `frontend/components/userPayments/**` incl. `v2/*` (~42),
+          `paymentsTerms/PaymentScheduleOptionForm.jsx`, `PayerPaymentTerms*.jsx`,
+          `WrappedPayerPaymentTerms.jsx`, `utils/{DuePaymentStatuses.jsx,PaymentStatuses.js}`, et
+          les vues qui les montent (`payments/show.html.erb`, `user_payments/show_common.html.erb`,
+          `payment_schedule_options/{new,edit}.html.erb` — purs points de montage).
+    - [ ] **`parameters/Payments/*` (12 composants) + `app/views/parameters/payments_parameters/index.html.erb`**
+          rattachés au domaine `parameters`, pas `payments` — à faire dans la branche `parameters`.
   - [ ] (compléter cette liste au fur et à mesure que d'autres domaines sont identifiés)
 
 Seules 01 et 02 bloquent les branches d'extraction ; à partir de 03 tout est mutuellement

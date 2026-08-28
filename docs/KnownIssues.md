@@ -190,15 +190,40 @@ i18n-06 because retrofitting the users views was out of that branch's scope. Sam
 other verbatim action-label duplication that predates `common.actions.*` (check `common.actions`
 against the `views.*` trees when doing the pass).
 
-## `evaluation_level_ref#show` action + view look dead
+## Scaffold views suspected dead — recovery log + removal candidates
 
-Surfaced 2026-08-28 in the i18n-06 evaluation work. `EvaluationLevelRefController#show` is an empty
-`def show; end` that renders `app/views/evaluation_level_ref/show.html.erb`, which is still the
-untouched Rails scaffold stub (`<h1>EvaluationLevelRef#show</h1>` / `<p>Find me in ...</p>`). The
-sibling `create.html.erb` / `update.html.erb` scaffold stubs were deleted in i18n-06 (their actions
-`redirect_to` unconditionally, so the views were provably unreachable), but `show` still renders on
-a direct `GET /evaluation_level_ref/:id` hit even though nothing in the app links to it
-(`evaluation_level_ref/index.html.erb` only links to `edit`). A follow-up should confirm nothing
-external hits that route and then drop the `show` action, its view, and narrow the
-`resources :evaluation_level_ref` route (`config/routes.rb`) accordingly — left in place in i18n-06
-to keep that branch to string extraction.
+Surfaced 2026-08-28 across the i18n-06 evaluation + payments work. Several admin CRUD `resources :x`
+declarations have `show`/`create`/`update` routes whose controller actions either don't exist or
+`redirect_to`/`render json:` unconditionally, so the matching Rails-scaffold view stubs
+(`<h1>X#show</h1>` / `<p>Find me in ...</p>` / 0-byte) look unreachable.
+
+**A 500 (`AbstractController::ActionNotFound`) or an unconditional redirect does NOT prove the
+route is unused.** This app prepends plugin routes *before* its own (`CLAUDE.md` → plugin system:
+"plugin routes are deliberately prepended ... so plugins can override core behavior"), so an
+activated plugin can supply a real `show`/`update` that never appears in `app/`. Add `rescue_from`,
+`method_missing`, `respond_to` fallbacks, external API callers, and bookmarked URLs, and "returns
+500 in my local checkout" is weak evidence. Treat everything below as *unconfirmed* and prefer
+recovery over deletion until someone audits plugins + prod logs.
+
+### Already deleted (recover if in doubt)
+
+- `app/views/evaluation_level_ref/create.html.erb`, `app/views/evaluation_level_ref/update.html.erb`
+  — deleted in `feature/i18n-06-extract-evaluation` (commit `48a6208`, now merged to `develop` via
+  `4a32bac`). Reason given at the time: `create`/`update` `redirect_to` unconditionally.
+  **Recover with** `git show 48a6208^:app/views/evaluation_level_ref/create.html.erb`
+  (and `...update.html.erb`).
+
+### Not deleted — left in place, flagged for a later audit
+
+- `app/views/evaluation_level_ref/show.html.erb` — empty `def show; end` still renders it.
+- `app/views/payment_statuses/show.html.erb` (0 bytes) — no `show` action on
+  `PaymentStatusesController`; `resources :payment_statuses` still routes `GET /payment_statuses/:id`.
+  Was briefly deleted in `feature/i18n-06-extract-payments`, then **restored** per the
+  recover-don't-delete policy.
+- `app/views/due_payment/update.html.erb` — `DuePaymentController#update` does `render json:`
+  unconditionally. Same: briefly deleted in that branch, then restored.
+- `payment_method` also has no `show` action while `resources :payment_method` routes `show`.
+
+When someone picks this up: audit activated plugins' route files and prod request logs for these
+paths first; only then drop the dead actions/views and tighten the route declarations with
+`only:`/`except:` in `config/routes.rb`.
