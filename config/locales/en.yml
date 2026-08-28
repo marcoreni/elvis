@@ -13,12 +13,19 @@ en:
         formats:
             date_month_concise: '%B %d, %Y'
 
+    common:
+        actions:
+            validate: Submit
+
     activerecord:
         attributes:
             user:
                 last_name: Last name
                 first_name: First name
                 birthday: Date of birth
+                is_admin: Administrator
+                is_teacher: Teacher
+                adherent: Member
         errors:
             models:
                 user:
@@ -81,3 +88,126 @@ en:
             pick_user:
                 title_html: "Choose the account for %{email}"
                 submit: Sign in
+        users:
+            _family:
+                heading: "Household:"
+                subtitle_self: People whose registrations you manage
+                subtitle_other: "People whose registrations are managed by %{name}"
+                add_contact: Add a contact
+                relation_attached: Linked user
+                to_call_title: Contact first
+                paying_title: Payer
+                legal_referent_title: Legal guardian
+                family_link_heading: Family link
+                edit_family_link: Edit family link
+                no_family_link_heading: No family link
+                profile_heading: Profile
+                view_action: View
+                edit_action: Edit
+                activities_heading: Activities
+                preregister_action: Pre-register
+                empty_state_html: "If you would like to register a family member for an activity, click the <b>add a new member</b> button, then click the corresponding <b>pre-register</b> button"
+                empty_state_heading: No family members added yet
+            adherent_card:
+                title: Member card
+                course: "> %{activity} course (%{civility} %{last_name})"
+                room_at_location: "Room %{room} at %{location} / %{day}, %{time}"
+                civility_mr: Mr
+                civility_mrs: Mrs
+            attach_view:
+                heading: Linked accounts for
+                attached_notice: This account is linked to
+            create_account:
+                email_prompt_missing: Please complete your email
+                email_prompt_confirm: Is this your email?
+                password_label: Password
+                password_confirmation_label: Confirm your password
+            edit_activities:
+                heading: "%{name}'s activities"
+            edit_password:
+                heading: Set your password
+                already_set_notice: Password already set, please sign in with your login/password
+                redirect_link: Go to the sign-in page
+                new_password_label: New password
+                confirm_password_label: Confirm new password
+            evaluate:
+                heading: Student evaluations
+                info_notice: These evaluations will be used to register students for the next season
+            first_login:
+                heading: Welcome!
+                email_prompt_missing: Please complete your email
+                email_prompt_confirm: Is this your email?
+            index:
+                heading: User list
+                create_user: Create a user
+                import_users: Import users
+            new:
+                heading: Create a new user
+                attached_account_label: Linked account
+                confirm_email_label: Send a confirmation email
+                activities_label: Activities
+                submit: Create
+            presence_sheet:
+                heading: Attendance sheet
+                teacher_heading: "Teacher: %{name}"
+                previous_week_title: Previous week
+                previous_day_title: Previous day
+                next_day_title: Next day
+                next_week_title: Next week
+            previsional_groups:
+                heading: Schedule simulation
+                info_notice: "This preview is generated from the answers about group changes. These answers can be found in the student evaluation questionnaires filled in by the teacher at the end of the year."
+                legend_heading: Legend
+                no_group_change: No group change
+                group_change_informed: Group change, informed
+                group_change_uninformed: Group change, not informed
+                continues_next_season: The student is continuing next season
+                stops_next_season: The student is not continuing next season
+                uncertain: The student is undecided
+            season_activities:
+                heading: Student evaluation
+                info_notice: "The levels shown are those recommended for the next season (%{season})."
+            show:
+                attached_badge: Linked user
+                student_badge: Student
+                user_badge: User
+                member_number: "Member No. %{number}"
+                adhesion_valid_until: Membership valid until
+                expires_in_days:
+                    one: Expires in %{count} day
+                    other: Expires in %{count} days
+                attached_to_label: Linked to user
+                age_years:
+                    one: "%{count} year"
+                    other: "%{count} years"
+                email_label: Email
+                phone_label: Phone
+                no_phone: No phone number
+                address_label:
+                    one: Address
+                    other: Addresses
+                register_action: Register
+                edit_profile_action: Edit profile
+                edit_password_action: Edit password
+                planning_action: Schedule
+                hours_sheet_action: Hours sheet
+                season_courses_action: Season courses
+                payments_action: Payments
+                application_request_action: Application request
+                preregistrations_action: Pre-registrations
+                reset_password_button: Reset password
+                reset_password_error: "The password could not be reset. Please try again."
+                reset_password_success: An email has been sent to the user to reset their password.
+                delete_user_button: Delete this user
+                delete_user_confirm: This will delete the user, their family links, and their membership. Are you sure?
+                delete_user_additional_message: "Any linked users will automatically be detached and sent an email to create their password (if they have an email different from this account)."
+                tab_activities: Activities
+                tab_family: Family links
+                tab_absences: Absences
+                edit_link: Edit
+                no_activity: No activity
+                unknown_schedule: Unknown schedule
+                stopped_on: Stopped on
+                error_title: Error
+            upload_csv:
+                heading: Import your community

@@ -16,7 +16,7 @@
     <div class="card-right">
         <div class="card-header">
             <div class="card-header-text">
-                <h2>Carte adhérent</h2>
+                <h2><%= t("views.users.adherent_card.title") %></h2>
                 <p><b><%= @user.full_name %> (#<%= @user.adherent_number %>)</b></p>
                 <% unless @user.birthday.nil? %>
                     <p><%= @user.birthday.strftime("%d/%m/%Y") %></p>
@@ -35,8 +35,15 @@
         </div>
         <% @user.activities.each do |a| %>
             <div class="card-lesson">
-                <p><b>> Cours de <%= a.activity_ref.label %> (<%= a.teacher.sex == "m" ? "M" : "Mme" %> <%= a.teacher.last_name %>)</b></p>
-                <p>Salle <%= a.room.label %> à <%= a.location.label %> / <%= l(a.time_interval.start, format: "%A").capitalize %>, <%= a.time_interval.start.strftime("%H:%M") %></p>
+                <p><b><%= t("views.users.adherent_card.course",
+                            activity: a.activity_ref.label,
+                            civility: a.teacher.sex == "m" ? t("views.users.adherent_card.civility_mr") : t("views.users.adherent_card.civility_mrs"),
+                            last_name: a.teacher.last_name) %></b></p>
+                <p><%= t("views.users.adherent_card.room_at_location",
+                          room: a.room.label,
+                          location: a.location.label,
+                          day: l(a.time_interval.start, format: "%A").capitalize,
+                          time: a.time_interval.start.strftime("%H:%M")) %></p>
             </div>
         <% end %>
     </div>

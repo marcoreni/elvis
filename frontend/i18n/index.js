@@ -6,10 +6,12 @@ import "moment/locale/fr";
 
 import common_fr from "../locales/fr/common.json";
 import common_en from "../locales/en/common.json";
+import users_fr from "../locales/fr/users.json";
+import users_en from "../locales/en/users.json";
 
 const resources = {
-    fr: {common: common_fr},
-    en: {common: common_en},
+    fr: {common: common_fr, users: users_fr},
+    en: {common: common_en, users: users_en},
 };
 
 // Derived from `resources` so it can't drift from what's actually loaded here. Still needs to
@@ -33,7 +35,7 @@ i18n
         supportedLngs: SUPPORTED_LOCALES,
         fallbackLng: initialLocale,
         defaultNS: "common",
-        ns: ["common"],
+        ns: ["common", "users"],
         detection: {
             // Only fall back to localStorage/navigator if <html lang> is somehow missing.
             order: ["htmlTag", "localStorage", "navigator"],

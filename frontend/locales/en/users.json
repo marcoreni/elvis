@@ -1,0 +1,98 @@
+{
+    "list": {
+        "actions": {
+            "exportCsv": "Export to CSV",
+            "mergeDuplicates": "Merge duplicates",
+            "sendConfirmationMail": "Send confirmation email",
+            "deleteSelected": "Delete the selected user"
+        },
+        "table": {
+            "headers": {
+                "role": "Role",
+                "accountType": "Account type",
+                "lastName": "Last name",
+                "firstName": "First name",
+                "birthday": "Date of birth",
+                "actions": "Actions"
+            },
+            "roleBadges": {
+                "admin": "Administrator",
+                "teacher": "Teacher",
+                "student": "Student",
+                "member": "Member",
+                "user": "User"
+            },
+            "roleFilter": {
+                "all": "All users",
+                "adherent": "Members",
+                "admin": "Administrators",
+                "user": "Others",
+                "student": "Students",
+                "teacher": "Teachers"
+            },
+            "accountTypeFilter": {
+                "all": "All accounts",
+                "main": "Main accounts",
+                "attached": "Linked accounts"
+            },
+            "accountType": {
+                "attached": "Linked",
+                "main": "Main"
+            },
+            "actionsCell": {
+                "planning": "Schedule",
+                "payments": "Payments",
+                "attachments": "Linked accounts"
+            },
+            "previousText": "Previous",
+            "nextText": "Next",
+            "loadingText": "Loading...",
+            "noDataText": "No data",
+            "pageText": "Page",
+            "ofText": "of",
+            "rowsText": "results"
+        },
+        "totalCount_one": "{{count}} user in total",
+        "totalCount_other": "{{count}} users in total",
+        "csvExport": {
+            "generatingTitle": "Generating CSV file",
+            "pleaseWait": "Please wait...",
+            "errorTitle": "An error occurred",
+            "errorText": "Please try again later",
+            "ok": "Ok"
+        },
+        "confirmationMail": {
+            "alreadyConfirmedTitleAll": "All users have already confirmed their account",
+            "alreadyConfirmedTitleSelected": "All selected users have already confirmed their account",
+            "sentTitle": "The following users received a confirmation email:",
+            "errorTitle": "An error occurred",
+            "ok": "Ok"
+        },
+        "deleteUser": {
+            "titleSingle": "Delete the selected user",
+            "titleMultiple": "Delete the selected users",
+            "bodySingle": "This will delete the user, their family links, and their membership. Are you sure?",
+            "bodyMultiple": "This will delete the users, their family links, and their memberships. Are you sure?",
+            "note": "Linked accounts will be detached, and an email will be sent to them to create a password (if their email differs from this account's).",
+            "confirmButton": "Yes, delete",
+            "cancelButton": "Cancel",
+            "successMessage_one": "{{count}} user successfully deleted.",
+            "successMessage_other": "{{count}} users successfully deleted.",
+            "errorCountMessage_one": "{{count}} error encountered.",
+            "errorCountMessage_other": "{{count}} errors encountered.",
+            "doneTitle": "Deletion complete",
+            "ok": "Ok",
+            "bulkErrorTitle": "Error",
+            "bulkErrorText": "An error occurred during the bulk deletion."
+        }
+    },
+    "edit": {
+        "title": "Editing profile:",
+        "tabs": {
+            "coordinates": "Contact details",
+            "evaluations": "Evaluations",
+            "roles": "Roles"
+        },
+        "errorTitle": "Error!"
+    }
+}

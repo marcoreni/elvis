@@ -1,5 +1,6 @@
 import React from "react";
 import _ from "lodash";
+import {withTranslation} from "react-i18next";
 
 import LevelInfos from "./personalInfos/LevelInfos";
 import UserForm from "./userForm/UserForm";
@@ -27,6 +28,8 @@ class UserEdit extends React.Component {
     }
 
     handleSubmit(values) {
+        const {t} = this.props;
+
         this.setState({
             infos: {
                 ...this.state.infos,
@@ -41,7 +44,7 @@ class UserEdit extends React.Component {
             })
             .error((res) => {
                 swal({
-                    title: "Erreur !",
+                    title: t("edit.errorTitle"),
                     type: "error",
                     text: res
                 });
@@ -91,11 +94,13 @@ class UserEdit extends React.Component {
     }
 
     render() {
+        const {t} = this.props;
+
         return (
             <React.Fragment>
                 <div className="row wrapper border-bottom white-bg page-heading">
                     <h2>
-                        Édition du profil : <b>{fullname(this.props.user)}</b>
+                        {t("edit.title")} <b>{fullname(this.props.user)}</b>
                     </h2>
                 </div>
 
@@ -103,7 +108,7 @@ class UserEdit extends React.Component {
                     tabs={[
                         {
                             id: "coordinates",
-                            header: "Coordonnées",
+                            header: t("edit.tabs.coordinates"),
                             body: (
                                 <UserForm
                                     user={{
@@ -127,7 +132,7 @@ class UserEdit extends React.Component {
                         },
                         (this.props.current_user || {}).is_admin || (this.props.current_user || {}).is_teacher ? {
                             id: "levels",
-                            header: "Évaluations",
+                            header: t("edit.tabs.evaluations"),
                             body: (
                                 <LevelInfos
                                     infos={this.state.infos}
@@ -156,7 +161,7 @@ class UserEdit extends React.Component {
                         } : undefined,
                         (this.props.current_user || {}).is_admin ? {
                             id: "roles",
-                            header: "Rôles",
+                            header: t("edit.tabs.roles"),
                             body: <Roles
                                     user={this.props.user}
                                     lessonsPlanned={this.props.lessonsPlanned}
@@ -170,4 +175,4 @@ class UserEdit extends React.Component {
     }
 }
 
-export default UserEdit;
+export default withTranslation("users")(UserEdit);

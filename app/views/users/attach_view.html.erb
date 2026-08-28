@@ -1,6 +1,6 @@
 <div class="row wrapper border-bottom white-bg page-heading m-b-md">
     <h2>
-        Rattachements de
+        <%= t("views.users.attach_view.heading") %>
         <a href="/users/<%= @user.id %>">
             <%= @user.first_name %> <%= @user.last_name.upcase %>
         </a>
@@ -12,7 +12,7 @@
         <% if @user.attached_to_id && @referent_user %>
             <div class="ibox">
                 <div class="ibox-title">
-                    <h4>Ce compte est rattaché à
+                    <h4><%= t("views.users.attach_view.attached_notice") %>
                         <a href="/users/<%= @user.attached_to_id %>/attach_view">
                             <%= @referent_user.first_name %> <%= @referent_user.last_name %>
                         </a>

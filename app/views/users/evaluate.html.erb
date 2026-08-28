@@ -1,11 +1,11 @@
 <h1><strong><%="#{@user.first_name} #{@user.last_name}"%></strong><br><%= format_for_display(@activity_ref) %></h1>
 
-<h3>Évaluations des élèves</h3>
+<h3><%= t("views.users.evaluate.heading") %></h3>
 
 <div class="row">
     <div class="col-lg-8 col-md-10 col-sm-12">
         <div class="alert alert-info">
-            Ces évaluations serviront pour inscrire les élèves sur la prochaine saison
+            <%= t("views.users.evaluate.info_notice") %>
         </div>
         <div>
             <%= react_component("evaluation/Evaluation", {

@@ -1,0 +1,98 @@
+{
+    "list": {
+        "actions": {
+            "exportCsv": "Exporter en CSV",
+            "mergeDuplicates": "Fusionner des doublons",
+            "sendConfirmationMail": "Envoyer le mail de confirmation",
+            "deleteSelected": "Supprimer l'utilisateur sélectionné"
+        },
+        "table": {
+            "headers": {
+                "role": "Rôle",
+                "accountType": "Type de compte",
+                "lastName": "Nom",
+                "firstName": "Prénom",
+                "birthday": "Date de naissance",
+                "actions": "Actions"
+            },
+            "roleBadges": {
+                "admin": "Administrateur",
+                "teacher": "Professeur",
+                "student": "Élève",
+                "member": "Adhérent",
+                "user": "Utilisateur"
+            },
+            "roleFilter": {
+                "all": "Tous les utilisateurs",
+                "adherent": "Adhérents",
+                "admin": "Administrateurs",
+                "user": "Autres",
+                "student": "Élèves",
+                "teacher": "Professeurs"
+            },
+            "accountTypeFilter": {
+                "all": "Tous les comptes",
+                "main": "Comptes principaux",
+                "attached": "Comptes rattachés"
+            },
+            "accountType": {
+                "attached": "Rattaché",
+                "main": "Principal"
+            },
+            "actionsCell": {
+                "planning": "Planning",
+                "payments": "Paiements",
+                "attachments": "Rattachements"
+            },
+            "previousText": "Précédent",
+            "nextText": "Suivant",
+            "loadingText": "Chargement...",
+            "noDataText": "Aucune donnée",
+            "pageText": "Page",
+            "ofText": "sur",
+            "rowsText": "résultats"
+        },
+        "totalCount_one": "{{count}} utilisateur au total",
+        "totalCount_other": "{{count}} utilisateurs au total",
+        "csvExport": {
+            "generatingTitle": "Génération du fichier CSV",
+            "pleaseWait": "Veuillez patienter...",
+            "errorTitle": "Une erreur est survenue",
+            "errorText": "Veuillez réessayer plus tard",
+            "ok": "Ok"
+        },
+        "confirmationMail": {
+            "alreadyConfirmedTitleAll": "Tous les utilisateurs ont déjà confirmé leur compte",
+            "alreadyConfirmedTitleSelected": "Tous les utilisateurs sélectionnés ont déjà confirmé leur compte",
+            "sentTitle": "Les utilisateurs suivants ont reçu un mail de confirmation :",
+            "errorTitle": "Une erreur est survenue",
+            "ok": "Ok"
+        },
+        "deleteUser": {
+            "titleSingle": "Supprimer l'utilisateur sélectionné",
+            "titleMultiple": "Supprimer les utilisateurs sélectionnés",
+            "bodySingle": "Cela supprimera l'utilisateur, ses liens familiaux ainsi que son adhésion. Êtes-vous sûr ?",
+            "bodyMultiple": "Cela supprimera les utilisateurs, leurs liens familiaux ainsi que leurs adhésions. Êtes-vous sûr ?",
+            "note": "Les utilisateurs associés seront détachés, et un email leur sera envoyé pour créer un mot de passe (si leur email est différent de celui de ce compte).",
+            "confirmButton": "Oui, supprimer",
+            "cancelButton": "Annuler",
+            "successMessage_one": "{{count}} utilisateur supprimé avec succès.",
+            "successMessage_other": "{{count}} utilisateurs supprimés avec succès.",
+            "errorCountMessage_one": "{{count}} erreur rencontrée.",
+            "errorCountMessage_other": "{{count}} erreurs rencontrées.",
+            "doneTitle": "Suppression terminée",
+            "ok": "Ok",
+            "bulkErrorTitle": "Erreur",
+            "bulkErrorText": "Une erreur est survenue lors de la suppression de masse."
+        }
+    },
+    "edit": {
+        "title": "Édition du profil :",
+        "tabs": {
+            "coordinates": "Coordonnées",
+            "evaluations": "Évaluations",
+            "roles": "Rôles"
+        },
+        "errorTitle": "Erreur !"
+    }
+}

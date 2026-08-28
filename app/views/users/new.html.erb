@@ -1,5 +1,5 @@
 <div class="row wrapper border-bottom white-bg page-heading m-b-md">
-  <h2>Créer un nouvel utilisateur</h2>
+  <h2><%= t("views.users.new.heading") %></h2>
 </div>
 <div class="row">
   <div class="col-lg-6 m-l-sm col-sm-11">
@@ -14,17 +14,17 @@
         </div>
       <% end %>
       <div class="form-group">
-        <div><%= f.label :nom %><span class="text-danger">*</span> </div>
+        <div><%= f.label :last_name, User.human_attribute_name(:last_name) %><span class="text-danger">*</span> </div>
         <%= f.text_field :last_name, autofocus: true, required: true, autocomplete: "last name", id: "last_name", class: "form-control" %>
       </div>
 
       <div class="form-group">
-        <div><%= f.label :prénom %><span class="text-danger">*</span></div>
+        <div><%= f.label :first_name, User.human_attribute_name(:first_name) %><span class="text-danger">*</span></div>
         <%= f.text_field :first_name, autofocus: true, required: true, autocomplete: "first name", id: "first_name", class: "form-control" %>
       </div>
 
       <div class="form-group">
-        <div><%= f.label :date_de_naissance %><span class="text-danger">*</span></div>
+        <div><%= f.label :birthday, User.human_attribute_name(:birthday) %><span class="text-danger">*</span></div>
         <%= f.date_field :birthday, required: true, class: "form-control" %>
       </div>
 
@@ -36,7 +36,7 @@
       <div class="form-group">
         <%= react_component("common/SelectMultiple", {
           isMulti: false,
-          title: "Compte rattaché à",
+          title: t("views.users.new.attached_account_label"),
           name: "user[attached_to_id]",
           all_features: @users_to_attach.map { |user| ["#{user.full_name} (#{user.adherent_number})", user.id] }
         }) %>
@@ -45,21 +45,21 @@
       <div class="form-group">
         <div class="checkbox checkbox-primary">
           <%= f.check_box :is_admin, autocomplete: "off", id: "admin" %>
-          <%= f.label "Administrateur", for: "admin", class: "control-label" %>
+          <%= f.label :is_admin, User.human_attribute_name(:is_admin), for: "admin", class: "control-label" %>
         </div>
       </div>
 
       <div class="form-group">
         <div class="checkbox checkbox-primary">
           <%= f.check_box :is_teacher, autocomplete: "off", id: "isTeacher", onChange: "onProfChange()"%>
-          <%= f.label "Professeur", for: "isTeacher", class: "control-label" %>
+          <%= f.label :is_teacher, User.human_attribute_name(:is_teacher), for: "isTeacher", class: "control-label" %>
         </div>
       </div>
 
 
       <% if @activity_refs.any? %>
         <div class="form-group" style="display:none">
-          <%= f.label :Activités %>
+          <%= f.label :activity_refs, t("views.users.new.activities_label") %>
           <div class="checkbox-list" id="activity-checkbox-list">
             <% for activity_ref in @activity_refs %>
               <div>
@@ -74,17 +74,17 @@
       <div class="form-group">
         <div class="checkbox checkbox-primary">
           <%= f.check_box :adherent, { id: "adherent" }, true, false %>
-          <%= f.label "Adhérent", for: "adherent", class: "control-label" %>
+          <%= f.label :adherent, User.human_attribute_name(:adherent), for: "adherent", class: "control-label" %>
         </div>
 
         <div class="form-group">
           <div class="checkbox checkbox-primary">
             <%= f.check_box :confirm, { id: "confirm" }, true, false %>
-            <%= f.label "Envoyer un mail de confirmation", for: "confirm", class: "control-label" %>
+            <%= f.label t("views.users.new.confirm_email_label"), for: "confirm", class: "control-label" %>
           </div>
         </div>
 
-        <%= f.submit "Création", class: "btn btn-primary block full-width m-b" %>
+        <%= f.submit t("views.users.new.submit"), class: "btn btn-primary block full-width m-b" %>
     <% end %>
     </div>
     <script type="text/javascript">

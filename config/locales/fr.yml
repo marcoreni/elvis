@@ -9,6 +9,10 @@ fr:
         formats:
             date_month_concise: '%d %B %Y'
 
+    common:
+        actions:
+            validate: Valider
+
     activerecord:
         attributes:
             activity_ref:
@@ -22,6 +26,9 @@ fr:
                 last_name: Nom
                 first_name: Prénom
                 birthday: Date de naissance
+                is_admin: Administrateur
+                is_teacher: Professeur
+                adherent: Adhérent
         errors:
             models:
                 user:
@@ -84,3 +91,126 @@ fr:
             pick_user:
                 title_html: "Choisissez le compte pour %{email}"
                 submit: Se connecter
+        users:
+            _family:
+                heading: "Foyer :"
+                subtitle_self: Personnes dont vous gérez les inscriptions
+                subtitle_other: "Personnes dont les inscriptions sont gérées par %{name}"
+                add_contact: Ajouter un contact
+                relation_attached: Utilisateur rattaché
+                to_call_title: À contacter en premier
+                paying_title: Payeur
+                legal_referent_title: Représentant légal
+                family_link_heading: Lien Familial
+                edit_family_link: Edition du lien familial
+                no_family_link_heading: Pas de lien familial
+                profile_heading: Profil
+                view_action: Voir
+                edit_action: Éditer
+                activities_heading: Activités
+                preregister_action: Pré-inscrire
+                empty_state_html: "Si vous souhaitez inscrire un membre de votre famille à une activité, cliquez sur le bouton <b>ajouter un nouveau membre</b>, puis cliquez sur le bouton <b>pré-inscrire</b> correspondant"
+                empty_state_heading: Pas de membres de famille renseignés pour le moment
+            adherent_card:
+                title: Carte adhérent
+                course: "> Cours de %{activity} (%{civility} %{last_name})"
+                room_at_location: "Salle %{room} à %{location} / %{day}, %{time}"
+                civility_mr: M
+                civility_mrs: Mme
+            attach_view:
+                heading: Rattachements de
+                attached_notice: Ce compte est rattaché à
+            create_account:
+                email_prompt_missing: Veuillez completer votre email
+                email_prompt_confirm: Est-ce bien votre email ?
+                password_label: Mot de passe
+                password_confirmation_label: Confirmation de votre mot de passe
+            edit_activities:
+                heading: "Activités de l'utilisateur %{name}"
+            edit_password:
+                heading: Définissez votre mot de passe
+                already_set_notice: Mot de passe déjà défini, veuillez vous connecter avec votre login/mot de passe
+                redirect_link: Redirection vers la page de login
+                new_password_label: Nouveau mot de passe
+                confirm_password_label: Confirmation du nouveau mot de passe
+            evaluate:
+                heading: Évaluations des élèves
+                info_notice: Ces évaluations serviront pour inscrire les élèves sur la prochaine saison
+            first_login:
+                heading: Bienvenue !
+                email_prompt_missing: Veuillez completer votre email
+                email_prompt_confirm: Est-ce bien votre email ?
+            index:
+                heading: Liste des utilisateurs
+                create_user: Créer un utilisateur
+                import_users: Importer utilisateurs
+            new:
+                heading: Créer un nouvel utilisateur
+                attached_account_label: Compte rattaché à
+                confirm_email_label: Envoyer un mail de confirmation
+                activities_label: Activités
+                submit: Création
+            presence_sheet:
+                heading: Feuille de présence
+                teacher_heading: "Professeur: %{name}"
+                previous_week_title: Semaine précédente
+                previous_day_title: Jour précédent
+                next_day_title: Jour suivant
+                next_week_title: Semaines suivantes
+            previsional_groups:
+                heading: Simulation de planning
+                info_notice: "Cet aperçu est produit à partir des réponses portant sur les changements de groupes. Ces réponses sont trouvables dans les questionnaires d'évaluation des élèves remplis en fin d'année par le professeur."
+                legend_heading: Légende
+                no_group_change: Pas de changement de groupe
+                group_change_informed: Changement de groupe informé
+                group_change_uninformed: Changement de groupe non informé
+                continues_next_season: L'élève continue la saison prochaine
+                stops_next_season: L'élève ne continue pas la saison prochaine
+                uncertain: L'élève est incertain
+            season_activities:
+                heading: Evaluation des élèves
+                info_notice: "Les niveaux affichés sont ceux préconisés pour la saison suivante (%{season})."
+            show:
+                attached_badge: Utilisateur rattaché
+                student_badge: Élève
+                user_badge: Utilisateur
+                member_number: "Adhérent n°%{number}"
+                adhesion_valid_until: Adhésion valide jusqu'au
+                expires_in_days:
+                    one: Expire dans %{count} jour
+                    other: Expire dans %{count} jours
+                attached_to_label: Utilisateur rattaché à
+                age_years:
+                    one: "%{count} an"
+                    other: "%{count} ans"
+                email_label: Mail
+                phone_label: Téléphone
+                no_phone: Pas de numéro de téléphone
+                address_label:
+                    one: Adresse
+                    other: Adresses
+                register_action: S'inscrire
+                edit_profile_action: Éditer le profil
+                edit_password_action: Éditer le Mot de passe
+                planning_action: Planning
+                hours_sheet_action: Feuille d'heures
+                season_courses_action: Cours de la saison
+                payments_action: Règlements
+                application_request_action: Demande d'inscription
+                preregistrations_action: Pré-inscriptions
+                reset_password_button: Réinitialiser le mot de passe
+                reset_password_error: "Le mot de passe n'a pas pu être réinitialisé. Veuillez réessayer."
+                reset_password_success: Un email a été envoyé à l'utilisateur pour réinitialiser son mot de passe.
+                delete_user_button: Supprimer cet utilisateur
+                delete_user_confirm: Cela supprimera l'utilisateur, ses liens familiaux ainsi que son adhésion. Êtes-vous sûr ?
+                delete_user_additional_message: "Les éventuels utilisateurs rattachés seront automatiquement détachés et un email leur seront adressés pour créer leur mot de passe (s'ils ont un email différent de ce compte)."
+                tab_activities: Activités
+                tab_family: Liens familiaux
+                tab_absences: Absences
+                edit_link: Editer
+                no_activity: Aucune activité
+                unknown_schedule: Horaire inconnu
+                stopped_on: Arrêt le
+                error_title: Erreur
+            upload_csv:
+                heading: Import de votre communauté

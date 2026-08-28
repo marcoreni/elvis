@@ -1,16 +1,16 @@
 <div class="page-heading">
     <h1>
-        <strong>Feuille de présence</strong>
+        <strong><%= t("views.users.presence_sheet.heading") %></strong>
     </h1>
 </div>
-<h2>Professeur: <%= @user.first_name %> <%= @user.last_name %></h2>
+<h2><%= t("views.users.presence_sheet.teacher_heading", name: "#{@user.first_name} #{@user.last_name}") %></h2>
  <div class="calendar-header">
     <div class="calendar-header-group">
         <div class="date-component">
-            <%= link_to presence_sheet_path(@user.id, date: @prev_week.strftime("%F")), class: "btn btn-primary m-r-sm", title: "Semaine précédente" do %>
+            <%= link_to presence_sheet_path(@user.id, date: @prev_week.strftime("%F")), class: "btn btn-primary m-r-sm", title: t("views.users.presence_sheet.previous_week_title") do %>
               <i class="fas fa-arrow-left"></i><i class="fas fa-arrow-left"></i>
             <% end %>
-            <%= link_to presence_sheet_path(@user.id, date: @prev_date.strftime("%F")), class: "btn btn-primary", title: "Jour précédent" do %>
+            <%= link_to presence_sheet_path(@user.id, date: @prev_date.strftime("%F")), class: "btn btn-primary", title: t("views.users.presence_sheet.previous_day_title") do %>
                 <i class="fas fa-arrow-left"></i>
             <% end %>
 
@@ -18,10 +18,10 @@
                 <%= @date.strftime("%d/%m/%Y") %>
             </h4>
 
-            <%= link_to presence_sheet_path(@user.id, date: @next_date.strftime("%F")), class: "btn btn-primary", title: "Jour suivant" do %>
+            <%= link_to presence_sheet_path(@user.id, date: @next_date.strftime("%F")), class: "btn btn-primary", title: t("views.users.presence_sheet.next_day_title") do %>
                 <i class="fas fa-arrow-right"></i>
             <% end %>
-          <%= link_to presence_sheet_path(@user.id, date: @next_week.strftime("%F")), class: "btn btn-primary m-l-sm", title: "Semaine suivantes" do %>
+          <%= link_to presence_sheet_path(@user.id, date: @next_week.strftime("%F")), class: "btn btn-primary m-l-sm", title: t("views.users.presence_sheet.next_week_title") do %>
             <i class="fas fa-arrow-right"></i><i class="fas fa-arrow-right"></i>
           <% end %>
         </div>

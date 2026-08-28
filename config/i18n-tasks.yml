@@ -61,16 +61,25 @@ ignore_unused:
   # when it's the one actually hit at runtime.
   - "time.formats.*"
   - "date.formats.*"
-  # activerecord.attributes.user.{last_name,first_name,birthday}: added per the i18n-04 branch
-  # plan to cover custom User fields not shipped by devise-i18n (see docs/I18n-Roadmap.md), for
-  # reuse by any future form that lets Rails auto-translate these attribute names
-  # (`f.label :last_name`). The current registration form keeps its own more specific "Votre
-  # Nom"/"Votre Prénom"/"Votre date de naissance" wording
-  # (views.devise.registrations.registration.*_label) rather than switching to the bare
-  # attribute name, to avoid a visible copy change while extracting strings — so these stay
-  # statically unused for now, until a form actually relies on the auto-translated attribute
-  # name.
+  # activerecord.attributes.user.{last_name,first_name}: added per the i18n-04 branch plan to
+  # cover custom User fields not shipped by devise-i18n (see docs/I18n-Roadmap.md), for reuse by
+  # any future form that lets Rails auto-translate these attribute names (`f.label :last_name`).
+  # The devise registration form keeps its own more specific "Votre Nom"/"Votre Prénom" wording
+  # (views.devise.registrations.registration.*_label) rather than switching to the bare attribute
+  # name, to avoid a visible copy change while extracting strings — so these stay statically
+  # unused for now, until a form actually relies on the auto-translated attribute name. Note:
+  # app/views/users/new.html.erb (feature/i18n-05-extract-users) now calls
+  # `User.human_attribute_name(:last_name)`/`(:first_name)` explicitly — required there because
+  # that form is `form_with scope: :user` with no bound model instance, so `f.label :last_name`
+  # alone can't resolve `object.class` to look up the translation and silently falls back to a
+  # bare humanized ("Last name") string instead. `Model.human_attribute_name(...)` isn't a
+  # `t(...)`/`I18n.t(...)` call i18n-tasks' static scan recognizes either (confirmed: removing
+  # these two from ignore_unused still reports them unused), so the same "statically unused
+  # despite genuine runtime use" reasoning still applies — they stay listed here.
+  # `activerecord.attributes.user.birthday`, by contrast, gained a genuine explicit
+  # `t("activerecord.attributes.user.birthday")` call in app/views/users/show.html.erb (a normal
+  # bound `@user`, not a scope-only form, so plain `t()` was the natural choice there), which *is*
+  # statically detected — so it was removed from this list.
   - "activerecord.attributes.user.last_name"
   - "activerecord.attributes.user.first_name"
-  - "activerecord.attributes.user.birthday"
   - "devise.**"

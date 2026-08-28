@@ -1,6 +1,6 @@
 <div class="page-heading">
     <h1>
-        <strong>Evaluation des élèves</strong>
+        <strong><%= t("views.users.season_activities.heading") %></strong>
         <br />
         <small><%= Season.current.label %></small>
     </h1>
@@ -9,7 +9,7 @@
 <div class=flex>
     <p class="alert alert-info">
         <i style="font-size: large" class="fas fa-info-circle m-r-xs"></i>
-        Les niveaux affichés sont ceux préconisés pour la saison suivante (<%= @season ? @season["label"]: "" %>).
+        <%= t("views.users.season_activities.info_notice", season: @season ? @season["label"] : "") %>
     </p>
 </div>
 

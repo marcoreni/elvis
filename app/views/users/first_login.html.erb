@@ -6,22 +6,22 @@
 
         <div class="ibox">
             <div class="ibox-title">
-              <h5>Bienvenue !</h5>
+              <h5><%= t("views.users.first_login.heading") %></h5>
             </div>
 
             <div class="ibox-content">
-        
+
                 <%= form_for(current_user, url: {action: "update_email"}) do |f| %>
                     <div class="form-group">
                         <% if current_user.email.nil? %>
-                            <%= f.label "Veuillez completer votre email" %><br />
+                            <%= f.label t("views.users.first_login.email_prompt_missing") %><br />
                         <% else %>
-                            <%= f.label "Est-ce bien votre email ?" %><br />
+                            <%= f.label t("views.users.first_login.email_prompt_confirm") %><br />
                         <% end %>
                         <%= f.email_field :email, autocomplete: "off", class: "form-control", placeholder: "example@example.org" %>
                     </div>
 
-                    <%= f.submit "Valider", class: "btn btn-primary block full-width m-b" %>
+                    <%= f.submit t("common.actions.validate"), class: "btn btn-primary block full-width m-b" %>
                 <% end %>
             
             </div>

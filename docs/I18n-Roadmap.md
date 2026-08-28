@@ -284,13 +284,67 @@ et à mesure de son intégration :
         (sign_in/sign_up/password new+edit/pick_user, fr+en, aucune clé de traduction brute qui
         fuite) — ce dernier nécessitait `yarn` pour que Shakapacker compile son manifest de test,
         absent de la machine de dev jusqu'à activation via `corepack enable`.
-- [ ] **`feature/i18n-05-extract-users`** *(dépend de 01+02, indépendante de 04)* — vague de preuve
+- [x] **`feature/i18n-05-extract-users`** *(dépend de 01+02, indépendante de 04)* — vague de preuve
       de bout en bout
-  - [ ] `frontend/components/UserList.jsx` (class component → `withTranslation`)
-  - [ ] `frontend/components/UserEdit.jsx`
-  - [ ] `app/views/users/**`
-  - [ ] Traduction anglaise complète de ce périmètre (première langue seconde prouvée de bout en
-        bout)
+  - [x] `frontend/components/UserList.jsx` (class component → `withTranslation`) — export par
+        défaut enveloppé dans `withTranslation("users")`, accès via `this.props.t("users:list...")`
+        dans les méthodes de classe. Premier composant du repo à réellement utiliser
+        l'infrastructure i18next posée en branche 03 (`LocalizationParameters.jsx` de la branche 03
+        restait 100% en dur) — établit le pattern HOC de zéro, aucun précédent en base.
+  - [x] `frontend/components/UserEdit.jsx` — même traitement (`withTranslation("users")`,
+        `t("users:edit...")`), limité au texte propre à ce fichier (titre de page, titre d'erreur
+        swal, en-têtes des 3 onglets `TabbedComponent`). `LevelInfos`/`UserForm`/
+        `TabbedComponent`/`Roles`, montés par ce composant, restent hors périmètre.
+  - [x] Nouveau namespace i18next `users` : `frontend/locales/{fr,en}/users.json` (68 clés chacun,
+        parité vérifiée), câblé dans `frontend/i18n/index.js` (`resources.{fr,en}.users`, ajout à
+        `ns: [...]`) selon le pattern déjà utilisé pour `common`.
+  - [x] `app/views/users/**` — 15 des 18 fichiers du dossier (tous sauf `hours_sheet.html.erb`,
+        `new_application.html.erb`, déjà traités/vides, et `edit.html.erb` qui s'est confirmé être
+        un pur point de montage React sans chaîne en dur). Nouvelles clés sous
+        `views.users.<vue>.*`. Un doublon verbatim ("Valider" ×3) a justifié la création du tout
+        premier namespace `common.actions.*` côté backend (`common.actions.validate`) — les
+        branches 01-04 n'en avaient pas eu besoin. Réutilisation de
+        `activerecord.attributes.user.*` (nouvelles clés `is_admin`/`is_teacher`/`adherent`
+        ajoutées) au lieu de dupliquer "Administrateur"/"Professeur"/"Adhérent" entre `new.html.erb`
+        et `show.html.erb`.
+  - [x] Traduction anglaise complète de ce périmètre (première langue seconde prouvée de bout en
+        bout) — toutes les clés `views.users.*`/`common.actions.validate` posées dans `fr.yml` et
+        `en.yml` en même temps, toutes les clés `users.json` posées dans les deux locales frontend
+        en même temps ; parité vérifiée par script (aucune clé orpheline dans un sens ou l'autre).
+  - [x] **Bug réel détecté par les tests** : `app/views/users/new.html.erb` utilise
+        `form_with scope: :user` (pas d'instance liée), donc `f.label :is_admin` etc. ne pouvait pas
+        résoudre `object.class` pour retomber sur `activerecord.attributes.user.*` — le libellé
+        retombait silencieusement sur la version humanisée anglaise du nom d'attribut ("Is admin")
+        même en français. Corrigé en appelant explicitement `User.human_attribute_name(:is_admin)`
+        etc. comme contenu du label dans ce fichier. Détecté par le spec `users#new` ajouté pour
+        cette branche, pas repéré à la première passe d'extraction.
+  - [x] **Correction au passage** : `app/views/users/show.html.erb` passait `title: 'Error'` en dur
+        (anglais, non traduit) dans les `swal_props` du montage `SwalBackEndModal` — remplacé par
+        `t("views.users.show.error_title")` conformément à la règle "un composant React ne reçoit
+        qu'une chaîne déjà interpolée, jamais une clé brute".
+  - [x] **Déviation mineure vs. le plan initial** : `hours_sheet.html.erb` fait en réalité 119
+        octets/1 ligne (un unique `react_component("HoursSheet", {...})`), pas 0 octet comme
+        indiqué initialement dans le brief de cette branche — le constat de fond ("rien à extraire")
+        reste correct, seule la description physique du fichier était légèrement fausse.
+  - [x] **Nouveaux tests** : `spec/requests/users_pages_spec.rb` (RSpec, pattern identique à
+        `devise_pages_spec.rb` — rendu `users#index`/`show`/`new` en fr/en via le cookie `locale`,
+        assertions sur du texte traduit réel, garde anti-`"translation missing"`) ;
+        `frontend/components/UserList.test.jsx` et `UserEdit.test.jsx` (Vitest,
+        `@testing-library/react`). **Pattern de bascule de langue en test établi pour les
+        prochaines branches** : appeler `i18n.changeLanguage("en"|"fr")` directement sur le
+        singleton exporté par `frontend/i18n/index.js` (câblé comme instance par défaut de
+        `react-i18next` via `initReactI18next`) suffit pour un composant classe enveloppé de
+        `withTranslation()` — pas besoin d'envelopper le rendu dans un `<I18nextProvider>` explicite
+        dans le test.
+  - [x] **Vérification** : `bin/i18n-tasks health` → 0 manquant / 0 inutilisé (le seul résidu, une
+        demande de `normalize`, préexistait à cette branche — vérifié par `git stash`). `bundle exec
+        rspec` → 86 exemples, 0 échec (83 avant cette branche + 3 nouveaux). `yarn test` → 5
+        fichiers/15 tests, tous verts. Vérification visuelle en navigateur (`foreman start`) **non
+        effectuée** dans cette session : l'environnement local a une chaîne d'outils Ruby cassée
+        indépendamment de ce changement (`bundle`/`bin/shakapacker` échouent, gem source Git non
+        checkoutée) et `yarn build` est également cassé de façon préexistante (`react-scripts:
+        command not found`, script obsolète vs. la config `shakapacker` réellement utilisée) — à
+        vérifier manuellement dès qu'un environnement avec un backend fonctionnel est disponible.
 - [ ] **`feature/i18n-06-extract-<domaine>`** *(répétable, mutuellement indépendantes, ~15-30
       fichiers chacune)* — une branche par domaine, dans n'importe quel ordre :
   - [ ] `planning`

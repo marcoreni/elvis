@@ -1,5 +1,6 @@
 import React from "react";
 import _ from "lodash";
+import {withTranslation} from "react-i18next";
 
 const moment = require("moment");
 
@@ -123,10 +124,12 @@ class UserList extends React.Component {
     }
 
     onCsvExport() {
+        const {t} = this.props;
+
         swal({
             type: "info",
-            title: "Génération du fichier CSV",
-            text: "Veuillez patienter...",
+            title: t("list.csvExport.generatingTitle"),
+            text: t("list.csvExport.pleaseWait"),
             allowEscapeKey: false,
             allowOutsideClick: false
         });
@@ -148,55 +151,64 @@ class UserList extends React.Component {
                 console.error(err);
                 swal({
                     type: "error",
-                    title: "Une erreur est survenue",
-                    text: "Veuillez réessayer plus tard",
-                    confirmButtonText: "Ok"
+                    title: t("list.csvExport.errorTitle"),
+                    text: t("list.csvExport.errorText"),
+                    confirmButtonText: t("list.csvExport.ok")
                 });
             });
     }
 
     sendConfirmationMail() {
+        const {t} = this.props;
+
         api.set()
             .success((datas) => {
                 if (!datas || datas.length === 0) {
                     swal({
-                        title: `Tous les utilisateurs ${this.state.selected.length > 0 ? "sélectionnés" : ""} ont déjà confirmé leur compte`,
+                        title: this.state.selected.length > 0
+                            ? t("list.confirmationMail.alreadyConfirmedTitleSelected")
+                            : t("list.confirmationMail.alreadyConfirmedTitleAll"),
                         type: "warning",
-                        confirmButtonText: "Ok"
+                        confirmButtonText: t("list.confirmationMail.ok")
                     });
                 } else {
                     swal({
-                        title: `Les utilisateurs suivants ont reçu un mail de confirmation :`,
+                        title: t("list.confirmationMail.sentTitle"),
                         html: "<ul>" + datas.map(d => `<li>${d}</li>`).join("") + "</ul>",
                         type: "success",
-                        confirmButtonText: "Ok"
+                        confirmButtonText: t("list.confirmationMail.ok")
                     });
                 }
             })
             .error((error) => {
                 swal({
-                    title: `Une erreur est survenue`,
+                    title: t("list.confirmationMail.errorTitle"),
                     type: "error",
-                    confirmButtonText: "Ok"
+                    confirmButtonText: t("list.confirmationMail.ok")
                 });
             })
             .post('/users/resend_confirmation', {ids: this.state.selected.length > 0 ? this.state.selected : this.state.data.map(d => d.id)});
     }
 
    handleDeleteUser = () => {
+    const {t} = this.props;
     const selectedUserIds = this.state.selected;
     let successCount = 0;
     let errorCount = 0;
     const isSingleUser = selectedUserIds.length === 1;
 
     swal({
-        title: `Supprimer ${isSingleUser ? "l'utilisateur sélectionné" : "les utilisateurs sélectionnés"}`,
-        html: `<h4>Cela supprimera ${isSingleUser ? "l'utilisateur, ses liens familiaux ainsi que son adhésion" : "les utilisateurs, leurs liens familiaux ainsi que leurs adhésions"}. Êtes-vous sûr ?</h4></br>
-               <p>Les utilisateurs associés seront détachés, et un email leur sera envoyé pour créer un mot de passe (si leur email est différent de celui de ce compte).</p>`,
+        title: isSingleUser
+            ? t("list.deleteUser.titleSingle")
+            : t("list.deleteUser.titleMultiple"),
+        html: `<h4>${isSingleUser
+            ? t("list.deleteUser.bodySingle")
+            : t("list.deleteUser.bodyMultiple")}</h4></br>
+               <p>${t("list.deleteUser.note")}</p>`,
         type: "warning",
         showCancelButton: true,
-        confirmButtonText: "Oui, supprimer",
-        cancelButtonText: "Annuler"
+        confirmButtonText: t("list.deleteUser.confirmButton"),
+        cancelButtonText: t("list.deleteUser.cancelButton")
     }).then((result) => {
         if (result.value) {
             Promise.all(
@@ -207,27 +219,25 @@ class UserList extends React.Component {
                         .del(`/destroy/User/${id}`)
                 )
             ).then(() => {
-                const successMessage = successCount === 1 ?
-                    "1 utilisateur supprimé avec succès." :
-                    `${successCount} utilisateurs supprimés avec succès.`;
+                const successMessage = t("list.deleteUser.successMessage", {count: successCount});
                 const errorMessage = errorCount > 0 ?
-                    `<p>${errorCount} erreur(s) rencontrée(s).</p>` :
+                    `<p>${t("list.deleteUser.errorCountMessage", {count: errorCount})}</p>` :
                     "";
 
                 swal({
-                    title: "Suppression terminée",
+                    title: t("list.deleteUser.doneTitle"),
                     html: `<p>${successMessage}</p>${errorMessage}`,
                     type: successCount > 0 ? "success" : "error",
-                    confirmButtonText: "Ok"
+                    confirmButtonText: t("list.deleteUser.ok")
                 });
                 this.fetchData(this.state.filter);
                 this.setState({ selected: [] });
             }).catch(() => {
                 swal({
-                    title: "Erreur",
-                    text: "Une erreur est survenue lors de la suppression de masse.",
+                    title: t("list.deleteUser.bulkErrorTitle"),
+                    text: t("list.deleteUser.bulkErrorText"),
                     type: "error",
-                    confirmButtonText: "Ok"
+                    confirmButtonText: t("list.deleteUser.ok")
                 });
             });
         }
@@ -237,6 +247,7 @@ class UserList extends React.Component {
 
     render() {
         const {data, pages, loading} = this.state;
+        const {t} = this.props;
 
         const columns = [
             {
@@ -283,7 +294,7 @@ class UserList extends React.Component {
                 width: 75,
             },
             {
-                Header: "Rôle",
+                Header: t("list.table.headers.role"),
                 id: "role",
                 width: 200,
                 accessor: d => {
@@ -293,7 +304,7 @@ class UserList extends React.Component {
                                 href={`/users/${d.id}`}
                                 className="badge badge-success"
                             >
-                                Administrateur
+                                {t("list.table.roleBadges.admin")}
                             </a>
                         );
                     } else if (d.is_teacher) {
@@ -302,7 +313,7 @@ class UserList extends React.Component {
                                 href={`/users/${d.id}`}
                                 className="badge badge-warning"
                             >
-                                Professeur
+                                {t("list.table.roleBadges.teacher")}
                             </a>
                         );
                     } else if (hasActivity(d)) {
@@ -311,7 +322,7 @@ class UserList extends React.Component {
                                 href={`/users/${d.id}`}
                                 className="badge badge-warning"
                             >
-                                Élève
+                                {t("list.table.roleBadges.student")}
                             </a>
                         );
                     } else if (anyActive(d.adhesions)) {
@@ -320,7 +331,7 @@ class UserList extends React.Component {
                                 href={`/users/${d.id}`}
                                 className="badge badge-warning"
                             >
-                                Adhérent
+                                {t("list.table.roleBadges.member")}
                             </a>
                         );
                     } else {
@@ -329,7 +340,7 @@ class UserList extends React.Component {
                                 href={`/users/${d.id}`}
                                 className="badge badge-primary"
                             >
-                                Utilisateur
+                                {t("list.table.roleBadges.user")}
                             </a>
                         );
                     }
@@ -342,19 +353,19 @@ class UserList extends React.Component {
                         style={{width: "100%"}}
                         value={filter ? filter.value : "all"}
                     >
-                        <option value="all">Tous les utilisateurs</option>
-                        <option value="adherent">Adhérents</option>
-                        <option value="admin">Administrateurs</option>
-                        <option value="user">Autres</option>
-                        <option value="student">Élèves</option>
-                        <option value="teacher">Professeurs</option>
+                        <option value="all">{t("list.table.roleFilter.all")}</option>
+                        <option value="adherent">{t("list.table.roleFilter.adherent")}</option>
+                        <option value="admin">{t("list.table.roleFilter.admin")}</option>
+                        <option value="user">{t("list.table.roleFilter.user")}</option>
+                        <option value="student">{t("list.table.roleFilter.student")}</option>
+                        <option value="teacher">{t("list.table.roleFilter.teacher")}</option>
                     </select>
                 ),
             },
             {
                 width: 200,
                 id: "attached",
-                Header: "Type de compte",
+                Header: t("list.table.headers.accountType"),
                 sortable: false,
                 filterable: true,
                 Filter: ({filter, onChange}) => (
@@ -363,16 +374,18 @@ class UserList extends React.Component {
                         style={{width: "100%"}}
                         value={filter ? filter.value : "all"}
                     >
-                        <option value="">Tous les comptes</option>
-                        <option value="true">Comptes principaux</option>
-                        <option value="false">Comptes rattachés</option>
+                        <option value="">{t("list.table.accountTypeFilter.all")}</option>
+                        <option value="true">{t("list.table.accountTypeFilter.main")}</option>
+                        <option value="false">{t("list.table.accountTypeFilter.attached")}</option>
                     </select>
                 ),
-                accessor: d => d.attached_to_id ? "Rattaché" : "Principal"
+                accessor: d => d.attached_to_id
+                    ? t("list.table.accountType.attached")
+                    : t("list.table.accountType.main")
             },
             {
                 id: "last_name",
-                Header: "Nom",
+                Header: t("list.table.headers.lastName"),
                 accessor: d => (
                     <a
                         href={`/users/${d.id}`}
@@ -384,7 +397,7 @@ class UserList extends React.Component {
             },
             {
                 id: "first_name",
-                Header: "Prénom",
+                Header: t("list.table.headers.firstName"),
                 accessor: d => (
                     <a
                         href={`/users/${d.id}`}
@@ -395,7 +408,7 @@ class UserList extends React.Component {
                 ),
             },
             {
-                Header: "Date de naissance",
+                Header: t("list.table.headers.birthday"),
                 id: "birthday",
                 accessor: "birthday",
                 width: 150,
@@ -419,7 +432,7 @@ class UserList extends React.Component {
             },
             {
                 id: "actions",
-                Header: "Actions",
+                Header: t("list.table.headers.actions"),
                 Cell: props => {
                     return (
                         <div className="btn-wrapper">
@@ -436,7 +449,7 @@ class UserList extends React.Component {
                                         className="btn btn-xs btn-primary m-b-sm"
                                     >
                                         <i className="fas fa-calendar"/>
-                                        &nbsp; Planning
+                                        &nbsp; {t("list.table.actionsCell.planning")}
                                     </a>
                                 ) : null}
                             </div>
@@ -456,7 +469,7 @@ class UserList extends React.Component {
                                             className="btn btn-xs btn-primary m-r-sm m-b-sm"
                                         >
                                             <i className="fas fa-euro-sign"/>
-                                            &nbsp; Paiements
+                                            &nbsp; {t("list.table.actionsCell.payments")}
                                         </a>
                                     ) : (
                                         ""
@@ -473,7 +486,7 @@ class UserList extends React.Component {
                                     className="btn btn-xs btn-primary m-r-sm m-b-sm"
                                 >
                                     <i className="fas fa-user-friends"/>
-                                    &nbsp; Rattachements
+                                    &nbsp; {t("list.table.actionsCell.attachments")}
                                 </a>
                                 :
                                 ''
@@ -497,22 +510,22 @@ class UserList extends React.Component {
                         onClick={() => this.onCsvExport()}
                     >
                         <i className="fas fa-upload m-r-sm"/>
-                        Exporter en CSV
+                        {t("list.actions.exportCsv")}
                     </button>
 
                     <a className="btn btn-primary m-r" href="/scripts/merge_users">
-                        Fusionner des doublons
+                        {t("list.actions.mergeDuplicates")}
                     </a>
 
                     <button
-                        data-tippy-content="Envoyer le mail de confirmation"
+                        data-tippy-content={t("list.actions.sendConfirmationMail")}
                         className="btn btn-warning m-r" onClick={this.sendConfirmationMail}>
                         <i className="fas fa-envelope"/>
                     </button>
 
                     {this.state.selected.length > 0 ? (
                         <button
-                            data-tippy-content="Supprimer l'utilisateur sélectionné"
+                            data-tippy-content={t("list.actions.deleteSelected")}
                             className={"btn btn-danger m-r"} onClick={this.handleDeleteUser}>
                             <i className="fas fa-trash"/>
                         </button>
@@ -540,18 +553,18 @@ class UserList extends React.Component {
                         }
                     }}
                     resizable={false}
-                    previousText="Précédent"
-                    nextText="Suivant"
-                    loadingText="Chargement..."
-                    noDataText="Aucune donnée"
-                    pageText="Page"
-                    ofText="sur"
-                    rowsText="résultats"
+                    previousText={t("list.table.previousText")}
+                    nextText={t("list.table.nextText")}
+                    loadingText={t("list.table.loadingText")}
+                    noDataText={t("list.table.noDataText")}
+                    pageText={t("list.table.pageText")}
+                    ofText={t("list.table.ofText")}
+                    rowsText={t("list.table.rowsText")}
                     minRows={1}
                 />
 
                 <div className="flex flex-center-justified m-t-xs">
-                    <h3>{`${this.state.total} utilisateurs au total`}</h3>
+                    <h3>{t("list.totalCount", {count: this.state.total})}</h3>
                 </div>
 
                 <Modal
@@ -569,4 +582,4 @@ class UserList extends React.Component {
     }
 }
 
-export default UserList;
+export default withTranslation("users")(UserList);

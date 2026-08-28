@@ -1,13 +1,13 @@
 <div class="row wrapper border-bottom white-bg page-heading m-b-md">
     <h2>
-        Liste des utilisateurs
+        <%= t("views.users.index.heading") %>
         <div class="btn-group pull-right">
             <%= link_to new_user_path, class: "btn btn-sm btn-primary m-r-sm m-b-sm" do %>
-                <i class="fas fa-plus"></i> Créer un utilisateur
+                <i class="fas fa-plus"></i> <%= t("views.users.index.create_user") %>
             <% end %>
-            
+
             <%= link_to "import_users", class: "btn btn-sm btn-primary m-r-sm m-b-sm" do %>
-                <i class="fas fa-plus"></i> Importer utilisateurs
+                <i class="fas fa-plus"></i> <%= t("views.users.index.import_users") %>
             <% end %>
         </div>
     </h2>

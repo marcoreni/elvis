@@ -17,32 +17,30 @@
 
         <div class="profile-info">
           <p class="no-margins" style="font-size: 15px; color: #222"><b><%= @user.full_name %></b></p>
-          <p>Adhérent n°<%= unless @user.adherent_number.nil?;
-                              @user.adherent_number;
-                            end %></p>
+          <p><%= t("views.users.show.member_number", number: @user.adherent_number) %></p>
 
           <% if @user.is_admin %>
-            <span class="label d-inline-block label-success m-t-xs w-auto">Administrateur</span>
+            <span class="label d-inline-block label-success m-t-xs w-auto"><%= t("activerecord.attributes.user.is_admin") %></span>
           <% end %>
 
           <% if @user.is_teacher %>
-            <span class="label d-inline-block label-warning m-t-xs w-auto">Professeur</span>
+            <span class="label d-inline-block label-warning m-t-xs w-auto"><%= t("activerecord.attributes.user.is_teacher") %></span>
           <% end %>
 
           <% if @user.attached? %>
-            <span class="label d-inline-block m-t-xs w-auto" style="background-color: #009f9a; color: white">Utilisateur rattaché</span>
+            <span class="label d-inline-block m-t-xs w-auto" style="background-color: #009f9a; color: white"><%= t("views.users.show.attached_badge") %></span>
           <% end %>
 
           <% unless @user.activities.empty? %>
-            <span class="label d-inline-block label-purple m-t-xs w-auto" >Élève</span>
+            <span class="label d-inline-block label-purple m-t-xs w-auto" ><%= t("views.users.show.student_badge") %></span>
           <%  end %>
 
           <% unless @adhesion.nil? %>
-            <span class="label d-inline-block label-purple m-t-xs w-auto">Adhérent</span>
+            <span class="label d-inline-block label-purple m-t-xs w-auto"><%= t("activerecord.attributes.user.adherent") %></span>
           <%  end %>
 
           <% if @adhesion.nil? && !@user.is_teacher && !@user.is_admin && @user.activities.empty? && !@user.attached? %>
-            <span class="label d-inline-block label-primary w-auto">Utilisateur</span>
+            <span class="label d-inline-block label-primary w-auto"><%= t("views.users.show.user_badge") %></span>
           <% end %>
         </div>
       </div>
@@ -51,11 +49,11 @@
         <div class="ibox-content">
           <div class="info-group no-margin">
             <%# <i class="fas fa-bell"></i> %>
-            <p> Adhésion valide jusqu'au <b><%= @user.get_last_adhesion.validity_end_date.strftime("%d/%m/%Y") %></b></p>
+            <p> <%= t("views.users.show.adhesion_valid_until") %> <b><%= @user.get_last_adhesion.validity_end_date.strftime("%d/%m/%Y") %></b></p>
             <% if !@distance_to_end_date.nil? && @distance_to_end_date < 30 && @distance_to_end_date > 0 %>
               <div class="alert alert-danger m-t-md text-center">
                 <i class="fas fa-exclamation-circle"></i>
-                Expire dans <%= @distance_to_end_date.ceil %> jours
+                <%= t("views.users.show.expires_in_days", count: @distance_to_end_date.ceil) %>
               </div>
             <% end %>
           </div>
@@ -65,7 +63,7 @@
       <div class="ibox-content">
         <% if @user.attached? %>
           <div class="info-group">
-            <p class="info-label">Utilisateur rattaché à</p>
+            <p class="info-label"><%= t("views.users.show.attached_to_label") %></p>
             <%= link_to user_path(@user.attached_to) do %>
               <%= @user.attached_to.full_name %> (<%= @user.attached_to.adherent_number %>)
             <% end %>
@@ -74,9 +72,9 @@
         <%# AGE %>
         <% unless @user.birthday.nil? %>
           <div class="info-group">
-            <p class="info-label">Date de naissance</p>
+            <p class="info-label"><%= t("activerecord.attributes.user.birthday") %></p>
             <p>
-              <%= @user.birthday.strftime("%d/%m/%Y") %> | <b><%= @age %> ans</b>
+              <%= @user.birthday.strftime("%d/%m/%Y") %> | <b><%= t("views.users.show.age_years", count: @age) %></b>
             </p>
           </div>
         <% end %>
@@ -118,7 +116,7 @@
         <% end %>
         <%# MAIL %>
         <div class="info-group">
-          <p class="info-label">Mail</p>
+          <p class="info-label"><%= t("views.users.show.email_label") %></p>
           <p>
             <a href="mailto:<%= @user.email %>"><%= @user.email %></a>
           </p>
@@ -126,9 +124,9 @@
 
         <%# PHONE %>
         <div class="info-group">
-          <p class="info-label">Téléphone</p>
+          <p class="info-label"><%= t("views.users.show.phone_label") %></p>
           <% if @user.telephones.empty? %>
-            <p><i><small>Pas de numéro de téléphone</small></i></p>
+            <p><i><small><%= t("views.users.show.no_phone") %></small></i></p>
           <% else %>
             <% @user.telephones.each do |tel| %>
               <p><b><%= tel.label.nil? ? "" : tel.label.capitalize %> : </b> <%= tel.number %></p>
@@ -139,7 +137,7 @@
         <%# ADRESSES %>
         <% unless @user.addresses.empty? %>
           <div class="info-group">
-            <p class="info-label"><%= "Adresse".pluralize(@user.addresses.count) %></p>
+            <p class="info-label"><%= t("views.users.show.address_label", count: @user.addresses.count) %></p>
 
             <% @user.addresses.each do |address| %>
               <div class="info-adress">
@@ -160,38 +158,38 @@
         <div class="">
           <% if (@current_user == @user || !@current_user.teacher?) && Season.registration_opened %>
             <%= link_to("/inscriptions/new?user_id=#{@current_user.id}", class: "btn btn-primary btn-block m-t-sm") do %>
-              <i class="fas fa-plus"></i> S'inscrire
+              <i class="fas fa-plus"></i> <%= t("views.users.show.register_action") %>
             <% end %>
         <% end %>
 
           <% if @current_user == @user || @current_user.admin? or can?(:read, @user) %>
             <% if can?(:manage, @user) %>
               <%= link_to edit_user_path(@user), class: "btn btn-primary btn-outline btn-block m-t" do %>
-                <i class="fas fa-edit"></i> Éditer le profil
+                <i class="fas fa-edit"></i> <%= t("views.users.show.edit_profile_action") %>
               <% end %>
             <% end %>
           <% end %>
 
           <% if @current_user == @user %>
             <%= link_to edit_registration_path(@user), class: "btn btn-primary btn-outline btn-block m-t" do %>
-              <i class="fas fa-keyboard"></i> Éditer le Mot de passe
+              <i class="fas fa-keyboard"></i> <%= t("views.users.show.edit_password_action") %>
             <% end %>
           <% end %>
 
           <% if @current_user.is_admin || (@user.teacher? && can?(:read, @user.planning)) %>
             <% unless @user.planning.nil? %>
               <%= link_to planning_path(@user.planning), class: "btn btn-primary btn-block m-t" do %>
-                <i class="fas  fa-calendar"></i> Planning
+                <i class="fas  fa-calendar"></i> <%= t("views.users.show.planning_action") %>
               <% end %>
             <% end %>
           <% end %>
 
           <% if @user.teacher? and @current_user.admin? %>
             <%= link_to "/users/#{@user.id}/hours_sheet", class: "btn btn-primary btn-block m-t" do %>
-              <i class="fas  fa-calendar"></i> Feuille d'heures
+              <i class="fas  fa-calendar"></i> <%= t("views.users.show.hours_sheet_action") %>
             <% end %>
             <%= link_to({ controller: "users", action: "season_activities", id: @user.id }, class: "btn btn-primary btn-block m-t") do %>
-              <i class="fas fa-music"></i> Cours de la saison
+              <i class="fas fa-music"></i> <%= t("views.users.show.season_courses_action") %>
             <% end %>
           <% end %>
 
@@ -218,7 +216,7 @@
             <%# </div> %>
             <%# PAYMENT BTN LINK %>
             <%= link_to payment_summary_path(@user.id), class: "btn btn-primary btn-block" do %>
-              <i class="fas fa-euro-sign"></i> Règlements
+              <i class="fas fa-euro-sign"></i> <%= t("views.users.show.payments_action") %>
             <% end %>
           </div>
         <% end %>
@@ -236,13 +234,13 @@
             <% unless @user.activity_applications.empty? %> <%# si l'utilisateur a des demandes d'inscription %>
               <%= link_to(activities_application_path(@user.activity_applications.sort_by { |aa| aa.created_at }.last), class: "btn btn-primary btn-block") do %>
                 <i class="fas  fa-clipboard"></i>
-                Demande d'inscription
+                <%= t("views.users.show.application_request_action") %>
               <% end %>
             <% end %>
             <% if @user.attached_to_id.nil? %> <%# si l'utilisateur n'est pas un compte rattaché %>
                 <%= link_to(new_application_path(@user), class: "btn btn-primary btn-block m-t-sm") do %>
                   <%# <i class="fas  fa-plus"></i> %>
-                  Pré-inscriptions
+                  <%= t("views.users.show.preregistrations_action") %>
                 <% end %>
             <% end %>
           </div>
@@ -266,10 +264,10 @@
                   is_admin: @user.is_admin,
                   is_teacher: @user.is_teacher
                 },
-                text: "Réinitialiser le mot de passe",
+                text: t("views.users.show.reset_password_button"),
                 className: "btn btn-warning btn-block m-t-sm",
-                textError: "Le mot de passe n'a pas pu être réinitialisé. Veuillez réessayer.",
-                textSuccess: "Un email a été envoyé à l'utilisateur pour réinitialiser son mot de passe.",
+                textError: t("views.users.show.reset_password_error"),
+                textSuccess: t("views.users.show.reset_password_success"),
                 textNoData: nil
               }) %>
             <% end %>
@@ -278,9 +276,9 @@
           <%= react_component("RemoveComponent", {
             classname: "User",
             id: @user.id,
-            text: "Supprimer cet utilisateur",
-            validationText: "Cela supprimera l'utilisateur, ses liens familiaux ainsi que son adhésion. Êtes-vous sûr ?",
-            additionalMessage: "Les éventuels utilisateurs rattachés seront automatiquement détachés et un email leur seront adressés pour créer leur mot de passe (s'ils ont un email différent de ce compte).",
+            text: t("views.users.show.delete_user_button"),
+            validationText: t("views.users.show.delete_user_confirm"),
+            additionalMessage: t("views.users.show.delete_user_additional_message"),
             btnProps: {
               className: "btn btn-danger btn-block m-t-sm"
             }
@@ -294,9 +292,9 @@
   <div class="profile-right-col">
     <div class="tabs-container">
       <ul class="nav nav-tabs flex" role="tablist">
-        <li style="height: auto;" class="<%= @tab.nil? || @tab == "act" ? "active" : "" %>"><a class="nav-link" data-toggle="tab" href="#tab-act">Activités</a> </li>
-        <li style="height: auto;" class="<%= @tab == "family" ? "active" : "" %>"><a class="nav-link" data-toggle="tab" href="#tab-family">Liens familiaux</a></li>
-        <li style="height: auto;" class="<%= @tab == "abs" ? "active" : "" %>"><a class="nav-link" data-toggle="tab" href="#tab-abs">Absences</a></li>
+        <li style="height: auto;" class="<%= @tab.nil? || @tab == "act" ? "active" : "" %>"><a class="nav-link" data-toggle="tab" href="#tab-act"><%= t("views.users.show.tab_activities") %></a> </li>
+        <li style="height: auto;" class="<%= @tab == "family" ? "active" : "" %>"><a class="nav-link" data-toggle="tab" href="#tab-family"><%= t("views.users.show.tab_family") %></a></li>
+        <li style="height: auto;" class="<%= @tab == "abs" ? "active" : "" %>"><a class="nav-link" data-toggle="tab" href="#tab-abs"><%= t("views.users.show.tab_absences") %></a></li>
       </ul>
 
       <div class="tab-content p-2 bg-white" style="border-color: #e7eaec; border-style: solid; border-width: 0px 1px 1px 1px;">
@@ -308,16 +306,16 @@
           <% if @user.is_teacher %>
             <h2 class="title-profile" style="display:flex; flex-direction:column;">
               <div class="m-r-md">
-                Activités
+                <%= t("views.users.show.tab_activities") %>
                 <% if current_user.is_admin %>
-                  <%= link_to "Editer", edit_user_activities_path(@user), class: "btn btn-primary btn-xs" %>
+                  <%= link_to t("views.users.show.edit_link"), edit_user_activities_path(@user), class: "btn btn-primary btn-xs" %>
                 <% end %>
               </div>
             </h2>
             <div class="row">
               <% if @user.activity_refs.empty? %>
                 <div class="col-sm-12">
-                  Aucune activité
+                  <%= t("views.users.show.no_activity") %>
                 </div>
               <% else %>
                 <% @user.activity_refs.each do |activity| %>
@@ -344,7 +342,7 @@
 
             <% if @user.activities.empty? %>
               <div class="activity-thumb-list align-middle d-flex justify-content-center my-5">
-                <p><i>Aucune activité</i></p>
+                <p><i><%= t("views.users.show.no_activity") %></i></p>
               </div>
             <% else %>
               <div class="row">
@@ -391,7 +389,7 @@
                                       <%# use found activity_instance or activity (has same attributes) %>
                                       <% tmp ||= a %>
                                       <% if tmp.time_interval.nil? %>
-                                        <p class="activity-date">Horaire inconnu</p>
+                                        <p class="activity-date"><%= t("views.users.show.unknown_schedule") %></p>
                                       <% else %>
                                         <p class="activity-date"><%= I18n.localize(tmp.time_interval.start.in_time_zone("Europe/Paris"), format: "%A") %>
                                           | <%= tmp.time_interval.start.in_time_zone("Europe/Paris").strftime("%H:%M") %>
@@ -400,7 +398,7 @@
                                       <% activity_application = @applications[@applications.keys.find { |acts| acts.include?(a.id) }]
                                          unless activity_application&.stopped_at.nil? %>
                                         <p class="text-danger">
-                                          <span>Arrêt le</span>
+                                          <span><%= t("views.users.show.stopped_on") %></span>
                                           <%= @applications[@applications.keys.find { |acts| acts.include?(a.id) }].stopped_at.in_time_zone("Europe/Paris").strftime(" %d/%m/%Y") %>
                                         </p>
                                         <% if @current_user.is_admin %>
@@ -444,5 +442,5 @@
 </div>
 
 <% unless flash[:destroy_error].nil? %>
-  <%= react_component("utils/SwalBackEndModal", {swal_props: { title: 'Error', type: 'error', html: flash[:destroy_error] }})  %>
+  <%= react_component("utils/SwalBackEndModal", {swal_props: { title: t("views.users.show.error_title"), type: 'error', html: flash[:destroy_error] }})  %>
 <% end %>
