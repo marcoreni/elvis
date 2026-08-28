@@ -43,14 +43,7 @@
                 "planning": "Schedule",
                 "payments": "Payments",
                 "attachments": "Linked accounts"
-            },
-            "previousText": "Previous",
-            "nextText": "Next",
-            "loadingText": "Loading...",
-            "noDataText": "No data",
-            "pageText": "Page",
-            "ofText": "of",
-            "rowsText": "results"
+            }
         },
         "totalCount_one": "{{count}} user in total",
         "totalCount_other": "{{count}} users in total",

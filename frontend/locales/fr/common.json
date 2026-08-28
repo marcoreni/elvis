@@ -2,5 +2,14 @@
   "actions": {
     "save": "Enregistrer",
     "cancel": "Annuler"
+  },
+  "reactTable": {
+    "previousText": "Précédent",
+    "nextText": "Suivant",
+    "loadingText": "Chargement...",
+    "noDataText": "Aucune donnée",
+    "pageText": "Page",
+    "ofText": "sur",
+    "rowsText": "résultats"
   }
 }

@@ -2,5 +2,14 @@
   "actions": {
     "save": "Save",
     "cancel": "Cancel"
+  },
+  "reactTable": {
+    "previousText": "Previous",
+    "nextText": "Next",
+    "loadingText": "Loading...",
+    "noDataText": "No data",
+    "pageText": "Page",
+    "ofText": "of",
+    "rowsText": "results"
   }
 }

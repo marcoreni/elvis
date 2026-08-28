@@ -39,6 +39,9 @@ describe("UserList", () => {
         expect(screen.getByText("Date de naissance")).toBeInTheDocument();
         expect(screen.getByText("Actions")).toBeInTheDocument();
         expect(screen.getByText("Tous les utilisateurs")).toBeInTheDocument();
+        // react-table pagination text now comes from the shared common:reactTable.* keys
+        expect(screen.getByText("Précédent")).toBeInTheDocument();
+        expect(screen.getByText("Suivant")).toBeInTheDocument();
 
         // Let the debounced initial fetch settle so it doesn't leak a state update into the
         // next test.
@@ -58,6 +61,8 @@ describe("UserList", () => {
         expect(screen.getByText("Date of birth")).toBeInTheDocument();
         expect(screen.getByText("Actions")).toBeInTheDocument();
         expect(screen.getByText("All users")).toBeInTheDocument();
+        expect(screen.getByText("Previous")).toBeInTheDocument();
+        expect(screen.getByText("Next")).toBeInTheDocument();
 
         await waitFor(() => expect(global.fetch).toHaveBeenCalled(), {timeout: 2000});
     });
