@@ -190,15 +190,22 @@ i18n-06 because retrofitting the users views was out of that branch's scope. Sam
 other verbatim action-label duplication that predates `common.actions.*` (check `common.actions`
 against the `views.*` trees when doing the pass).
 
-## `evaluation_level_ref#show` action + view look dead
+## Dead Rails-scaffold `show` routes on admin CRUD resources
 
-Surfaced 2026-08-28 in the i18n-06 evaluation work. `EvaluationLevelRefController#show` is an empty
-`def show; end` that renders `app/views/evaluation_level_ref/show.html.erb`, which is still the
-untouched Rails scaffold stub (`<h1>EvaluationLevelRef#show</h1>` / `<p>Find me in ...</p>`). The
-sibling `create.html.erb` / `update.html.erb` scaffold stubs were deleted in i18n-06 (their actions
-`redirect_to` unconditionally, so the views were provably unreachable), but `show` still renders on
-a direct `GET /evaluation_level_ref/:id` hit even though nothing in the app links to it
-(`evaluation_level_ref/index.html.erb` only links to `edit`). A follow-up should confirm nothing
-external hits that route and then drop the `show` action, its view, and narrow the
-`resources :evaluation_level_ref` route (`config/routes.rb`) accordingly — left in place in i18n-06
-to keep that branch to string extraction.
+Surfaced 2026-08-28 across the i18n-06 evaluation + payments work. Several `resources :x`
+declarations expose a `show` route that has no real implementation:
+
+- `EvaluationLevelRefController#show` is an empty `def show; end` rendering the untouched scaffold
+  stub `app/views/evaluation_level_ref/show.html.erb` (`<h1>EvaluationLevelRef#show</h1>` /
+  `<p>Find me in ...</p>`). Nothing links to it (`index.html.erb` only links to `edit`). Its
+  sibling `create.html.erb` / `update.html.erb` stubs were deleted in i18n-06 (actions
+  `redirect_to` unconditionally). The empty view + `show` action are still there.
+- `PaymentStatusesController` has **no `show` action at all**, yet `resources :payment_statuses`
+  still generates `GET /payment_statuses/:id`, so hitting it raises `AbstractController::ActionNotFound`
+  (500). The empty `app/views/payment_statuses/show.html.erb` was deleted in i18n-06-payments (it
+  couldn't be reached — the missing action fails first). `payment_method` similarly has no `show`
+  action and `resources :payment_method` still routes `show`.
+
+A follow-up should confirm nothing external hits these routes, then drop the dead `show` actions
+and views and narrow the route declarations (`only:`/`except:` in `config/routes.rb`). Left alone
+in the i18n branches to keep them to string extraction.

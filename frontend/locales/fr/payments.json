@@ -13,7 +13,7 @@
             "actions": "Actions"
         },
         "reasonUnspecified": "non précisée",
-        "importDateFormat": "DD/MM/YYYY [à] hh:mm",
+        "importDateFormat": "DD/MM/YYYY [à] HH:mm",
         "bulk": {
             "byReason": "SUPPRESSION DE MASSE PAR RAISON",
             "deleteAll": "TOUT SUPPRIMER ({{n}})",

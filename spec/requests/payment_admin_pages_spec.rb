@@ -79,6 +79,17 @@ RSpec.describe "Payment admin pages", type: :request do
       get edit_payment_method_path(payment_method)
       expect(unescaped_body).to include("Editing a payment method")
     end
+
+    it "shows the translated built-in notice when editing a built-in method" do
+      builtin = PaymentMethod.create!(label: "Espèces test", built_in: true)
+
+      get edit_payment_method_path(builtin)
+      expect(unescaped_body).to include("Comme il s'agit d'un moyen de paiement intégré")
+
+      cookies[:locale] = "en"
+      get edit_payment_method_path(builtin)
+      expect(unescaped_body).to include("As this is a built-in payment method")
+    end
   end
 
   describe "GET /payment_statuses (index)" do

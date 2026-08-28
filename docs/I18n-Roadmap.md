@@ -434,7 +434,11 @@ et à mesure de son intégration :
       - [x] `frontend/components/FailedPaymentImportsPage.jsx` → `withTranslation("payments")`,
             nouveau namespace i18next `payments` (`frontend/locales/{fr,en}/payments.json`, câblé
             dans `frontend/i18n/index.js`). Les `res.message` renvoyés par le contrôleur restent
-            en dur côté backend (autre passe : i18n des réponses JSON contrôleur, hors périmètre).
+            en dur côté backend (autre passe : i18n des réponses JSON contrôleur, hors périmètre) —
+            donc en `en` les swal de `promptSubmit` affichent un titre traduit mais un corps encore
+            français. Le format de date de la colonne « Date d'import », extrait en clé
+            `payments:failedImports.importDateFormat`, a été corrigé de `hh:mm` (12 h sans AM/PM,
+            ambigu — bug préexistant) vers `HH:mm` en passant.
       - [x] **Vues scaffold mortes supprimées** : `due_payment/update.html.erb` (l'action rend du
             JSON), `payment_statuses/show.html.erb` (0 octet ; pas d'action `show` au contrôleur).
       - [x] **`payment_schedule/show.html.erb` laissé en français** — c'est un document
@@ -442,10 +446,11 @@ et à mesure de son intégration :
             l'exception documentée `payments/bill.html.erb`. À traiter comme exception délibérée,
             pas comme oubli.
       - [x] **Tests** : `spec/requests/payment_admin_pages_spec.rb` (payment_method /
-            payment_statuses index+new+edit, payments#index, failed_payment_imports#index, fr+en,
-            garde anti-`"translation missing"`) ; `frontend/components/FailedPaymentImportsPage.test.jsx`.
+            payment_statuses index+new+edit, edit d'un moyen `built_in` pour couvrir la clé
+            `built_in_notice`, payments#index, failed_payment_imports#index, fr+en, garde
+            anti-`"translation missing"`) ; `frontend/components/FailedPaymentImportsPage.test.jsx`.
       - [x] **Vérification** : `bin/i18n-tasks health` → 0 manquant / 0 inutilisé (407 clés).
-            `bundle exec rspec` → 104 exemples, 0 échec. `yarn test` → 9 fichiers / 24 tests.
+            `bundle exec rspec` → 105 exemples, 0 échec. `yarn test` → 9 fichiers / 24 tests.
     - [ ] **Lot 2 (à faire) — tableaux de bord React** : `frontend/components/generalPayments/*`
           (~62 chaînes), `frontend/components/userPayments/**` incl. `v2/*` (~42),
           `paymentsTerms/PaymentScheduleOptionForm.jsx`, `PayerPaymentTerms*.jsx`,

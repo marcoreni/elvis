@@ -13,7 +13,7 @@
             "actions": "Actions"
         },
         "reasonUnspecified": "unspecified",
-        "importDateFormat": "MM/DD/YYYY [at] hh:mm",
+        "importDateFormat": "MM/DD/YYYY [at] HH:mm",
         "bulk": {
             "byReason": "BULK DELETE BY REASON",
             "deleteAll": "DELETE ALL ({{n}})",
