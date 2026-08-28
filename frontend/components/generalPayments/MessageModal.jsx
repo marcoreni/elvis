@@ -1,6 +1,9 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 
 export default function MessageModal({ id, onChange, onSend, message, recipients, }) {
+    const { t } = useTranslation("payments");
+
     return <div className="modal inmodal"
         id={id}
         tabIndex="-1"
@@ -8,27 +11,27 @@ export default function MessageModal({ id, onChange, onSend, message, recipients
         <div className="modal-dialog">
             <div className="modal-content animated">
                 <div className="modal-header">
-                    <h2>Envoi d'un rappel</h2>
+                    <h2>{t("general.message.title")}</h2>
                 </div>
                 <div className="modal-body">
-                    <h3>Titre</h3>
+                    <h3>{t("general.message.titleLabel")}</h3>
                     <input
                         type="text"
                         name="title"
                         className="form-control"
                         size="60"
-                        placeholder="Votre titre ici..."
+                        placeholder={t("general.message.titlePlaceholder")}
                         onChange={onChange}
                         value={message.title}/>
-                    <h3>Destinataire.s</h3>
+                    <h3>{t("general.message.recipientsLabel")}</h3>
                     <p>{recipients}</p>
-                    <h3>Message</h3>
+                    <h3>{t("general.message.messageLabel")}</h3>
                     <textarea
                         resizable="false"
                         className="form-control"
                         cols="60"
                         rows="4"
-                        placeholder="Votre message ici..."
+                        placeholder={t("general.message.messagePlaceholder")}
                         name="content"
                         onChange={onChange}
                         value={message.content}>
@@ -79,14 +82,14 @@ export default function MessageModal({ id, onChange, onSend, message, recipients
                         className="btn"
                         data-dismiss="modal">
                         <i className="fas fa-times m-r-sm"></i>
-                        Annuler
+                        {t("common:actions.cancel")}
                     </button>
                     <button
                         onClick={onSend}
                         className="btn btn-primary"
                         data-dismiss="modal">
                         <i className="fas fa-paper-plane m-r-sm"></i>
-                        Envoyer
+                        {t("general.message.send")}
                 </button>
                 </div>
             </div>

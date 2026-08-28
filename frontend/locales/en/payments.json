@@ -32,5 +32,76 @@
         "failureTitle": "Failure",
         "importNotFound": "This import does not exist",
         "successTitle": "Success"
+    },
+    "general": {
+        "tabs": {
+            "dueDates": "Due dates",
+            "payments": "Payments",
+            "schedulesWithoutPayer": "Schedules without a payer",
+            "checks": "Cheques"
+        },
+        "reminderDefaultTitle": "Payment reminder",
+        "bulkEdit": {
+            "title": "Bulk-edit due dates",
+            "dueDateLabel": "Due date"
+        },
+        "message": {
+            "title": "Send a reminder",
+            "titleLabel": "Title",
+            "titlePlaceholder": "Your title here...",
+            "recipientsLabel": "Recipient(s)",
+            "messageLabel": "Message",
+            "messagePlaceholder": "Your message here...",
+            "send": "Send"
+        },
+        "subPayments": {
+            "columns": {
+                "method": "Payment method",
+                "reception": "Received",
+                "cashing": "Cashed",
+                "checkNumber": "Cheque no.",
+                "checkIssuer": "Cheque issuer",
+                "amount": "Amount"
+            },
+            "unspecified": "Not specified",
+            "unknown": "Unknown"
+        },
+        "schedulesWithoutPayer": {
+            "confirmSendTitle": "Confirm sending",
+            "successTitle": "Success",
+            "successText": "Message sent",
+            "errorTitle": "Error",
+            "errorStatus": "Error {{status}}: {{statusText}}",
+            "selectedCount": "You selected {{n}} payer(s)",
+            "selectRemaining": "Select the {{n}} remaining",
+            "sendMessage": "Send a message",
+            "sendReminderTitle": "Send a reminder",
+            "andNOthers": ", and {{n}} others",
+            "heading": "{{n}} payers without a schedule for",
+            "columns": {
+                "name": "Name",
+                "actions": "Actions"
+            }
+        },
+        "checks": {
+            "columns": {
+                "payer": "Payer",
+                "memberNumbers": "Associated member no.",
+                "amount": "Amount",
+                "checkNumber": "Cheque no.",
+                "status": "Status"
+            },
+            "unknown": "Unknown",
+            "paymentDateLabel": "Payment date:",
+            "paymentDateTooltip": "Payment date",
+            "allChecks": "All cheques",
+            "clearedChecks": "Cleared cheques",
+            "unclearedChecks": "Uncleared cheques",
+            "reloadTooltip": "Reload the list",
+            "resetFiltersTooltip": "Reset filters",
+            "fullscreenTooltip": "Show the table fullscreen",
+            "checkCount": "Number of cheques: {{n}}",
+            "totalAmount": "Total amount: {{amount}}"
+        }
     }
 }

@@ -3,6 +3,9 @@
     "save": "Save",
     "cancel": "Cancel"
   },
+  "confirm": {
+    "sure": "Are you sure?"
+  },
   "reactTable": {
     "previousText": "Previous",
     "nextText": "Next",

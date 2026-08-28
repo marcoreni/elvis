@@ -1,5 +1,6 @@
 import _, { filter } from "lodash";
 import React from "react";
+import { withTranslation } from "react-i18next";
 import ReactTableFullScreen from "../ReactTableFullScreen";
 import Switch from "react-switch";
 import { makeDebounce } from "../../tools/inputs";
@@ -94,7 +95,7 @@ class CheckList extends React.Component {
             data: [],
             pages: null,
             message: {
-                title: "Rappel pour paiement",
+                title: props.t("general.reminderDefaultTitle"),
                 content: "",
                 isEmail: true,
                 isSMS: false,
@@ -191,6 +192,7 @@ class CheckList extends React.Component {
 
     render() {
         const { data, pages, loading } = this.state;
+        const { t } = this.props;
 
         let referenceDate = this.state.filter.filtered.find(
             obj => obj.id === "reference_date"
@@ -205,7 +207,7 @@ class CheckList extends React.Component {
 
         const columns = [
             {
-                Header: "Payeur",
+                Header: t("general.checks.columns.payer"),
                 // maxWidth: 175,
                 id: "users.last_name",
                 Cell: props => {
@@ -219,12 +221,12 @@ class CheckList extends React.Component {
                                 {`${user.last_name} ${user.first_name}`}
                             </a>
                         )) ||
-                        "Inconnu"
+                        t("general.checks.unknown")
                     );
                 },
             },
             {
-                Header: "N° Adhérent associés",
+                Header: t("general.checks.columns.memberNumbers"),
                 // maxWidth: 100,
                 id: "users.adherent_number",
                 Cell: props => {
@@ -260,7 +262,7 @@ class CheckList extends React.Component {
                 filterable: true,
             },
             {
-                Header: "Montant",
+                Header: t("general.checks.columns.amount"),
                 maxWidth: 100,
                 id: "payments.amount",
                 style: {
@@ -272,7 +274,7 @@ class CheckList extends React.Component {
                 sortable: true,
             },
             {
-                Header: "N° de chèque",
+                Header: t("general.checks.columns.checkNumber"),
                 // maxWidth: 100,
                 id: "check_number",
                 style: {
@@ -284,7 +286,7 @@ class CheckList extends React.Component {
                 sortable: true,
             },
             {
-                Header: "Statut",
+                Header: t("general.checks.columns.status"),
                 // maxWidth: 100,
                 id: "check_status",
                 accessor: "check_status",
@@ -317,10 +319,10 @@ class CheckList extends React.Component {
                     style={{ width: "100%" }}
                 >
                     <div className="flex flex-center-aligned">
-                        <h2 className="m-r">Date de réglement :</h2>
+                        <h2 className="m-r">{t("general.checks.paymentDateLabel")}</h2>
                         <div
                             className="input-group"
-                            data-tippy-content="Date de réglement"
+                            data-tippy-content={t("general.checks.paymentDateTooltip")}
                             style={{ maxWidth: "200px" }}
                         >
                             <div className="input-group-addon">
@@ -350,7 +352,7 @@ class CheckList extends React.Component {
                                     checked={radioCheckValue === "all"}
                                     onChange={() => {}}
                                 />
-                                Tous les chèques
+                                {t("general.checks.allChecks")}
                             </label>
                             <label className="radio-inline">
                                 <input
@@ -360,7 +362,7 @@ class CheckList extends React.Component {
                                     checked={radioCheckValue === "true"}
                                     onChange={() => {}}
                                 />
-                                Chèques pointés
+                                {t("general.checks.clearedChecks")}
                             </label>
                             <label className="radio-inline">
                                 <input
@@ -370,25 +372,25 @@ class CheckList extends React.Component {
                                     checked={radioCheckValue === "false"}
                                     onChange={() => {}}
                                 />
-                                Chèques non pointés
+                                {t("general.checks.unclearedChecks")}
                             </label>
                         </div>
                         <button
                             className="btn btn-primary m-r"
-                            data-tippy-content="Recharger la liste"
+                            data-tippy-content={t("general.checks.reloadTooltip")}
                             onClick={() => this.fetchData(this.state.filter)}
                         >
                             <i className="fas fa-sync" />
                         </button>
                         <button
-                            data-tippy-content="Réinitialiser les filtres"
+                            data-tippy-content={t("general.checks.resetFiltersTooltip")}
                             className="btn btn-primary m-r"
                             onClick={() => this.resetFilters()}
                         >
                             <i className="fas fa-times"></i>
                         </button>
                         <button
-                            data-tippy-content="Mettre le tableau en plein écran"
+                            data-tippy-content={t("general.checks.fullscreenTooltip")}
                             className="btn btn-primary m-r"
                             onClick={() => events[0]()}
                         >
@@ -396,17 +398,20 @@ class CheckList extends React.Component {
                         </button>
 
                         <h2 className="m-r">
-                            Nombre de chèques : {this.state.rowsCount}
+                            {t("general.checks.checkCount", {
+                                n: this.state.rowsCount,
+                            })}
                         </h2>
                     </div>
 
                     <div className="ibox-title-right">
                         <span>
-                            Montant total:{" "}
-                            {new Intl.NumberFormat("fr-FR", {
-                                style: "currency",
-                                currency: "EUR",
-                            }).format(this.state.totalAmount)}
+                            {t("general.checks.totalAmount", {
+                                amount: new Intl.NumberFormat("fr-FR", {
+                                    style: "currency",
+                                    currency: "EUR",
+                                }).format(this.state.totalAmount),
+                            })}
                         </span>
                     </div>
                 </div>
@@ -464,13 +469,13 @@ class CheckList extends React.Component {
                         }
                         filterable
                         resizable={false}
-                        previousText="Précédent"
-                        nextText="Suivant"
-                        loadingText="Chargement..."
-                        noDataText="Aucune donnée"
-                        pageText="Page"
-                        ofText="sur"
-                        rowsText="résultats"
+                        previousText={t("common:reactTable.previousText")}
+                        nextText={t("common:reactTable.nextText")}
+                        loadingText={t("common:reactTable.loadingText")}
+                        noDataText={t("common:reactTable.noDataText")}
+                        pageText={t("common:reactTable.pageText")}
+                        ofText={t("common:reactTable.ofText")}
+                        rowsText={t("common:reactTable.rowsText")}
                         minRows={1}
                     />
                 </div>
@@ -479,4 +484,4 @@ class CheckList extends React.Component {
     }
 }
 
-export default CheckList;
+export default withTranslation("payments")(CheckList);

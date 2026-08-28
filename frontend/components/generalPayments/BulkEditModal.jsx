@@ -1,6 +1,9 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 
 export default function BulkEditModal({ id, onChange, onSubmit, }) {
+    const { t } = useTranslation("payments");
+
     return <div className="modal inmodal"
         id={id}
         tabIndex="-1"
@@ -8,11 +11,11 @@ export default function BulkEditModal({ id, onChange, onSubmit, }) {
         <div className="modal-dialog">
             <div className="modal-content animated">
                 <div className="modal-header">
-                    <h2>Modification d'échéances en masse</h2>
+                    <h2>{t("general.bulkEdit.title")}</h2>
                 </div>
                 <div className="modal-body">
                     <div className="form-group">
-                        <label htmlFor="bulk-due-date">Date d'échéance</label>
+                        <label htmlFor="bulk-due-date">{t("general.bulkEdit.dueDateLabel")}</label>
                         <input
                             onChange={e => onChange(e.target.name, e.target.value)}
                             className="form-control"
@@ -27,14 +30,14 @@ export default function BulkEditModal({ id, onChange, onSubmit, }) {
                         className="btn"
                         data-dismiss="modal">
                         <i className="fas fa-times m-r-sm"></i>
-                        Annuler
+                        {t("common:actions.cancel")}
                     </button>
                     <button
                         onClick={onSubmit}
                         className="btn btn-primary"
                         data-dismiss="modal">
                         <i className="fas fa-save m-r-sm"></i>
-                        Enregistrer
+                        {t("common:actions.save")}
                 </button>
                 </div>
             </div>
