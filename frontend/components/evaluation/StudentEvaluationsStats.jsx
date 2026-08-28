@@ -1,18 +1,21 @@
 import React, { Component } from "react";
 import Table from "react-table";
+import { withTranslation } from "react-i18next";
 
-export default class StudentEvaluationStats extends Component {
+class StudentEvaluationStats extends Component {
     constructor(props) {
         super(props);
-        
+
         this.state = {};
     }
 
     render() {
+        const { t } = this.props;
+
         const columns = [
             {
                 id: "teacher",
-                Header: "Professeur",
+                Header: t("stats.teacher"),
                 accessor: d => `${d.teacher.last_name} ${d.teacher.first_name}`,
                 Cell: c => <a href={`/users/${c.original.teacher.id}`}>
                     {c.value}
@@ -20,7 +23,7 @@ export default class StudentEvaluationStats extends Component {
             },
             {
                 id: "nb_students",
-                Header: "Nombre élèves",
+                Header: t("stats.studentsCount"),
                 accessor: d => d.nb_students,
                 Cell: c => <div className="text-right font-bold font-size-big">
                     {c.value}
@@ -28,7 +31,7 @@ export default class StudentEvaluationStats extends Component {
             },
             {
                 id: "nb_evaluated_students",
-                Header: "Nombre évaluations",
+                Header: t("stats.evaluationsCount"),
                 accessor: d => d.nb_evaluated_students,
                 Cell: c => <div className={`text-right font-bold font-size-big text-${c.original.evaluations_completion_rate_level}`}>
                     {c.value}
@@ -36,7 +39,7 @@ export default class StudentEvaluationStats extends Component {
             },
             {
                 id: "nb_redirections",
-                Header: "Nombre changements",
+                Header: t("stats.changesCount"),
                 accessor: d => d.nb_redirections,
                 Cell: c => <div className={`text-right font-bold font-size-big`}>
                     {c.value}
@@ -44,7 +47,7 @@ export default class StudentEvaluationStats extends Component {
             },
             {
                 id: "nb_informed_redirections",
-                Header: "Nombre élèves/parents prévenus",
+                Header: t("stats.informedCount"),
                 accessor: d => d.nb_informed_redirections,
                 Cell: c => <div className={`text-right font-bold font-size-big text-${c.original.redirection_information_rate_level}`}>
                     {c.value}
@@ -52,7 +55,7 @@ export default class StudentEvaluationStats extends Component {
             },
             {
                 id: "evaluations_completion_rate",
-                Header: "% d'évaluations complétées",
+                Header: t("stats.completionRate"),
                 accessor: d => d.evaluations_completion_rate,
                 Cell: c => <div className="progress" style={{margin: "0", background: "white"}}>
                     <div className={`progress-bar progress-bar-${c.original.evaluations_completion_rate_level}`}
@@ -72,3 +75,5 @@ export default class StudentEvaluationStats extends Component {
             sortable />;
     }
 }
+
+export default withTranslation("evaluation")(StudentEvaluationStats);

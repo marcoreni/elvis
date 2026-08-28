@@ -8,10 +8,12 @@ import common_fr from "../locales/fr/common.json";
 import common_en from "../locales/en/common.json";
 import users_fr from "../locales/fr/users.json";
 import users_en from "../locales/en/users.json";
+import evaluation_fr from "../locales/fr/evaluation.json";
+import evaluation_en from "../locales/en/evaluation.json";
 
 const resources = {
-    fr: {common: common_fr, users: users_fr},
-    en: {common: common_en, users: users_en},
+    fr: {common: common_fr, users: users_fr, evaluation: evaluation_fr},
+    en: {common: common_en, users: users_en, evaluation: evaluation_en},
 };
 
 // Derived from `resources` so it can't drift from what's actually loaded here. Still needs to
@@ -35,7 +37,7 @@ i18n
         supportedLngs: SUPPORTED_LOCALES,
         fallbackLng: initialLocale,
         defaultNS: "common",
-        ns: ["common", "users"],
+        ns: ["common", "users", "evaluation"],
         detection: {
             // Only fall back to localStorage/navigator if <html lang> is somehow missing.
             order: ["htmlTag", "localStorage", "navigator"],

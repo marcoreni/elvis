@@ -1,5 +1,6 @@
 import React from "react";
 import _ from "lodash";
+import { withTranslation } from "react-i18next";
 import Question, { checkCondition } from "./question";
 
 export function filterQuestionsByCondition(questions, answers) {
@@ -33,9 +34,7 @@ export function validateQuestions(questions, answers) {
     );
 }
 
-const DEFAULT_SUBMIT_LABEL = "Enregistrer les réponses";
-
-export default class EvaluationForm extends React.Component {
+class EvaluationForm extends React.Component {
     constructor(props) {
         super(props);
 
@@ -88,6 +87,7 @@ export default class EvaluationForm extends React.Component {
             className,
             readOnly,
             onSubmit,
+            t,
         } = this.props;
 
         const {
@@ -119,9 +119,11 @@ export default class EvaluationForm extends React.Component {
                     style={{ alignSelf: "end" }}
                     disabled={!areAllQuestionsAnswered}
                     onClick={() => onSubmit(answers)}>
-                    {submitLabel || DEFAULT_SUBMIT_LABEL}
+                    {submitLabel || t("form.defaultSubmitLabel")}
                 </button>
             }
         </div>;
     }
 }
+
+export default withTranslation("evaluation")(EvaluationForm);

@@ -1,0 +1,21 @@
+{
+    "header": {
+        "toEvaluate": "A évaluer",
+        "level": "NIVEAU {{label}}"
+    },
+    "previousLevel": {
+        "found": "Niveau {{level}} pour {{kind}} en {{season}}",
+        "notFound": "Pas de niveau trouvé pour {{kind}} en {{season}}"
+    },
+    "form": {
+        "defaultSubmitLabel": "Enregistrer les réponses"
+    },
+    "stats": {
+        "teacher": "Professeur",
+        "studentsCount": "Nombre élèves",
+        "evaluationsCount": "Nombre évaluations",
+        "changesCount": "Nombre changements",
+        "informedCount": "Nombre élèves/parents prévenus",
+        "completionRate": "% d'évaluations complétées"
+    }
+}

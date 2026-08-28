@@ -1,7 +1,7 @@
 <div class="row wrapper border-bottom white-bg page-heading">
-    <h2>Niveaux d'évaluation
+    <h2><%= t("views.evaluation_level_ref.index.heading") %>
         <%= link_to new_evaluation_level_ref_path do %>
-            <button class="btn btn-primary btn-sm pull-right" ><i class="fas fa-plus"></i> Ajouter un niveau</button>
+            <button class="btn btn-primary btn-sm pull-right" ><i class="fas fa-plus"></i> <%= t("views.evaluation_level_ref.index.add_level") %></button>
         <% end %>
     </h2>
 </div>
@@ -16,7 +16,7 @@
                     <tr>
                         <td><%= level.value %></td>
                         <td><%= level.label %></td>
-                        <td><%= link_to "Éditer", edit_evaluation_level_ref_path(level), class: "btn btn-xs btn-primary pull-right" %></td>
+                        <td><%= link_to t("common.actions.edit"), edit_evaluation_level_ref_path(level), class: "btn btn-xs btn-primary pull-right" %></td>
                     </tr>
                 <% end %>
             </tbody>
