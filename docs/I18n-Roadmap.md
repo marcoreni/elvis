@@ -460,12 +460,26 @@ et à mesure de son intégration :
             anti-`"translation missing"`) ; `frontend/components/FailedPaymentImportsPage.test.jsx`.
       - [x] **Vérification** : `bin/i18n-tasks health` → 0 manquant / 0 inutilisé (407 clés).
             `bundle exec rspec` → 105 exemples, 0 échec. `yarn test` → 9 fichiers / 24 tests.
-    - [ ] **Lot 2 (à faire) — tableaux de bord React** : `frontend/components/generalPayments/*`
-          (~62 chaînes), `frontend/components/userPayments/**` incl. `v2/*` (~42),
-          `paymentsTerms/PaymentScheduleOptionForm.jsx`, `PayerPaymentTerms*.jsx`,
-          `WrappedPayerPaymentTerms.jsx`, `utils/{DuePaymentStatuses.jsx,PaymentStatuses.js}`, et
-          les vues qui les montent (`payments/show.html.erb`, `user_payments/show_common.html.erb`,
-          `payment_schedule_options/{new,edit}.html.erb` — purs points de montage).
+    - [x] **Prep — clés `react-table` partagées** : branche `feature/i18n-common-react-table-keys`
+          (indépendante, à faire avant les gros lots de tableaux de bord). Les 7 props de
+          traduction de `react-table` (`previousText`…`rowsText`) sont dupliquées en dur dans ~10
+          composants et vivaient en plus dans `users.json` sous `list.table.*`. Promues dans
+          `frontend/locales/{fr,en}/common.json` → `common.reactTable.*` ; `UserList.jsx` migré
+          (`t("common:reactTable.previousText")`), les 7 clés retirées de `users.json`. Doc :
+          `docs/I18n.md` § « Convention de nommage des clés (frontend) ». Les futures branches de
+          domaine réutilisent ces clés au lieu d'en redéclarer.
+    - [ ] **Lot 2 (à faire) — tableaux de bord React** : bien plus gros que l'estimation initiale
+          (~330 chaînes, 20 fichiers dont plusieurs > 1000 lignes) → à découper en plusieurs
+          branches :
+      - `generalPayments/*` coque + feuilles (`GeneralPayments`, `BulkEditModal`, `MessageModal`,
+        `SubPaymentList`, `PaymentScheduleList`, `CheckList`) — ~70 chaînes.
+      - `generalPayments/{DuePaymentList,PaymentList}` — ~90 chaînes, deux fichiers > 1000 lignes.
+      - `userPayments/*` legacy (`PaymentsManagement` 2001 l., `DuePaymentsList` 1358 l.,
+        `PaymentsList`, `PaymentsSummary`, `SwitchPayerModal`) — ~120 chaînes.
+      - `userPayments/v2/*` + `PayerPaymentTerms*.jsx` + `WrappedPayerPaymentTerms.jsx` +
+        `paymentsTerms/PaymentScheduleOptionForm.jsx` + `utils/{DuePaymentStatuses.jsx,PaymentStatuses.js}`
+        — ~50 chaînes ; vues de montage `payments/show.html.erb`, `user_payments/show_common.html.erb`,
+        `payment_schedule_options/{new,edit}.html.erb` (purs points de montage).
     - [ ] **`parameters/Payments/*` (12 composants) + `app/views/parameters/payments_parameters/index.html.erb`**
           rattachés au domaine `parameters`, pas `payments` — à faire dans la branche `parameters`.
   - [ ] (compléter cette liste au fur et à mesure que d'autres domaines sont identifiés)

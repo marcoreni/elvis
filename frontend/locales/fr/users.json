@@ -43,14 +43,7 @@
                 "planning": "Planning",
                 "payments": "Paiements",
                 "attachments": "Rattachements"
-            },
-            "previousText": "Précédent",
-            "nextText": "Suivant",
-            "loadingText": "Chargement...",
-            "noDataText": "Aucune donnée",
-            "pageText": "Page",
-            "ofText": "sur",
-            "rowsText": "résultats"
+            }
         },
         "totalCount_one": "{{count}} utilisateur au total",
         "totalCount_other": "{{count}} utilisateurs au total",
