@@ -1,6 +1,7 @@
 import React, {Fragment} from "react";
 import _ from "lodash";
 import swal from "sweetalert2";
+import { withTranslation } from "react-i18next";
 
 const moment = require("moment");
 
@@ -150,16 +151,16 @@ class PaymentsList extends React.Component {
     }
 
     handleBulkDelete() {
+        const { t } = this.props;
+
         if (this.state.selectedRows.length > 0)
             swal({
-                title: "Suppression en masse",
-                text: `Êtes-vous sûr de vouloir supprimer ces ${
-                    this.state.selectedRows.length
-                } échéances ?`,
+                title: t("userPayments.paymentsList.bulkDeleteTitle"),
+                text: t("userPayments.paymentsList.bulkDeleteText", { n: this.state.selectedRows.length }),
                 type: "warning",
-                confirmButtonText: "Oui !",
+                confirmButtonText: t("userPayments.paymentsList.bulkDeleteConfirm"),
                 showCancelButton: true,
-                cancelButtonText: "Annuler",
+                cancelButtonText: t("common:actions.cancel"),
             }).then(v => {
                 if (v.value)
                     this.props.handleBulkDelete(
@@ -195,6 +196,7 @@ class PaymentsList extends React.Component {
 
 
     render() {
+        const { t } = this.props;
         const duePayments = this.props.duePayments;
         const settledDuePaymentsIds = _.map(
             this.props.payments,
@@ -225,7 +227,7 @@ class PaymentsList extends React.Component {
             }];
         let columns = [
             {
-                Header: "N°",
+                Header: t("userPayments.paymentsList.columns.number"),
                 width: 30,
                 id: "due_payment_number",
                 accessor: d => {
@@ -240,7 +242,7 @@ class PaymentsList extends React.Component {
                 },
             },
             {
-                Header: "Statut",
+                Header: t("userPayments.paymentsList.columns.status"),
                 id: "payment_status_id",
                 maxWidth: 75,
                 className: "flex flex-center-justified",
@@ -248,7 +250,7 @@ class PaymentsList extends React.Component {
                 Cell: c => this.renderStatus(c),
             },
             {
-                Header: "Mode",
+                Header: t("userPayments.paymentsList.columns.method"),
                 id: "payment_type",
                 accessor: d => {
                     const pm = _.find(
@@ -259,7 +261,7 @@ class PaymentsList extends React.Component {
                 },
             },
             {
-                Header: "Réception",
+                Header: t("userPayments.paymentsList.columns.reception"),
                 id: "reception_date",
                 maxWidth: 100,
                 accessor: d =>
@@ -268,7 +270,7 @@ class PaymentsList extends React.Component {
                         : "",
             },
             {
-                Header: "Encaissement",
+                Header: t("userPayments.paymentsList.columns.cashing"),
                 id: "cashing_date",
                 maxWidth: 100,
                 accessor: d =>
@@ -277,7 +279,7 @@ class PaymentsList extends React.Component {
                         : "",
             },
             {
-                Header: "# Chèque",
+                Header: t("userPayments.paymentsList.columns.checkNumber"),
                 id: "check_number",
                 maxWidth: 150,
                 style: {
@@ -297,7 +299,7 @@ class PaymentsList extends React.Component {
             //     accessor: d => d.check_issuer_name,
             // },
             {
-                Header: "Montant",
+                Header: t("userPayments.paymentsList.columns.amount"),
                 id: "amount",
                 maxWidth: 100,
                 style: {
@@ -307,7 +309,7 @@ class PaymentsList extends React.Component {
                 accessor: d => `(${d.operation}) ${d.amount} €`,
             },
             {
-                Header: "Actions",
+                Header: t("userPayments.paymentsList.columns.actions"),
                 id: "receipt",
                 style: {
                     display: "block",
@@ -359,7 +361,7 @@ class PaymentsList extends React.Component {
         return (
             <div className="ibox">
                 <div className="ibox-title">
-                    <h5>Règlements </h5>
+                    <h5>{t("userPayments.paymentsList.heading")} </h5>
                     {this.props.isStudentView ?
                         "" :
                         <div className="ibox-tools">
@@ -371,7 +373,7 @@ class PaymentsList extends React.Component {
                                 aria-haspopup="true"
                                 aria-expanded="true"
                             >
-                                Actions règlements <span className="caret"/>
+                                {t("userPayments.paymentsList.actionsDropdown")} <span className="caret"/>
                             </button>
 
                             <ul
@@ -387,7 +389,7 @@ class PaymentsList extends React.Component {
                                         }`}
                                     >
                                         <i className="fas fa-plus m-r-sm"/>
-                                        Nouveau règlement
+                                        {t("userPayments.paymentsList.newPayment")}
                                     </a>
                                 </li>
                                 <li>
@@ -400,14 +402,14 @@ class PaymentsList extends React.Component {
                                         }
                                     >
                                         <i className="fas fa-edit m-r-sm"/>
-                                        Edition de masse
+                                        {t("userPayments.paymentsList.bulkEdit")}
                                     </a>
                                 </li>
                                 <li className="dropdown-divider"/>
                                 <li>
                                     <a onClick={() => this.handleBulkDelete()}>
                                         <i className="fas fa-trash m-r-sm"/>
-                                        Suppression de masse
+                                        {t("userPayments.paymentsList.bulkDelete")}
                                     </a>
                                 </li>
                             </ul>
@@ -420,13 +422,13 @@ class PaymentsList extends React.Component {
                     columns={columns}
                     resizable={false}
                     defaultSorted={[{ id: "due_payment_number", desc: true }]}
-                    previousText="Précedent"
-                    nextText="Suivant"
-                    loadingText="Chargement..."
-                    noDataText="Aucune donnée"
-                    pageText="Page"
-                    ofText="sur"
-                    rowsText="résultats"
+                    previousText={t("common:reactTable.previousText")}
+                    nextText={t("common:reactTable.nextText")}
+                    loadingText={t("common:reactTable.loadingText")}
+                    noDataText={t("common:reactTable.noDataText")}
+                    pageText={t("common:reactTable.pageText")}
+                    ofText={t("common:reactTable.ofText")}
+                    rowsText={t("common:reactTable.rowsText")}
                     minRows={1}
                     showPagination={false}
                     className="whitebg"
@@ -444,13 +446,13 @@ class PaymentsList extends React.Component {
                             <div className="modal-header">
                                 <h3>
                                     {this.state.id != null
-                                        ? "Edition Règlement"
-                                        : "Nouveau Règlement"}
+                                        ? t("userPayments.paymentsList.editPaymentTitle")
+                                        : t("userPayments.paymentsList.newPaymentTitle")}
                                 </h3>
                             </div>
                             <div className="modal-body">
                                 <div className="form-group">
-                                    <label>Mode de Paiement</label>
+                                    <label>{t("userPayments.paymentsList.paymentMethodLabel")}</label>
                                     <select
                                         className="form-control"
                                         value={this.state.payment_method_id}
@@ -459,7 +461,7 @@ class PaymentsList extends React.Component {
                                         }
                                     >
                                         <option value="placeholder" disabled>
-                                            Selectionnez un mode de paiement
+                                            {t("userPayments.paymentsList.selectPaymentMethod")}
                                         </option>
                                         <option value="" />
                                         {_.map(
@@ -478,7 +480,7 @@ class PaymentsList extends React.Component {
                                     </select>
                                 </div>
                                 <div className="form-group">
-                                    <label>Choix de l'échéance</label>
+                                    <label>{t("userPayments.paymentsList.dueChoiceLabel")}</label>
                                     <select
                                         className="form-control"
                                         value={this.state.due_payment_id}
@@ -487,7 +489,7 @@ class PaymentsList extends React.Component {
                                         }
                                     >
                                         <option value={0}>
-                                            Selectionnez une échéance
+                                            {t("userPayments.paymentsList.selectDue")}
                                         </option>
                                         {_(duePayments)
                                             .sortBy(d => d.number)
@@ -495,10 +497,8 @@ class PaymentsList extends React.Component {
                                                 return (
                                                     <option key={i} value={dp.id}>
                                                         {dp.number == 0
-                                                            ? "Adhésion"
-                                                            : `Echéance N°${
-                                                                dp.number
-                                                            }`}
+                                                            ? t("userPayments.paymentsList.membership")
+                                                            : t("userPayments.paymentsList.dueNumber", { n: dp.number })}
                                                     </option>
                                                 );
                                             })
@@ -506,7 +506,7 @@ class PaymentsList extends React.Component {
                                     </select>
                                 </div>
                                 <div className="form-group">
-                                    <label>Montant (€)</label>
+                                    <label>{t("userPayments.paymentsList.amountLabel")}</label>
                                     <div className="flex">
                                         <select
                                             name="operation"
@@ -524,11 +524,11 @@ class PaymentsList extends React.Component {
                                                 this.handleChangeAmount(e)
                                             }
                                             className="form-control"
-                                            placeholder="XX €" />
+                                            placeholder={t("userPayments.paymentsList.amountPlaceholder")} />
                                     </div>
                                 </div>
                                 <div className="form-group">
-                                    <label>Statut</label>
+                                    <label>{t("userPayments.paymentsList.statusLabel")}</label>
                                     <select
                                         className="form-control"
                                         name="status"
@@ -537,7 +537,7 @@ class PaymentsList extends React.Component {
                                         )}
                                         value={this.state.payment_status_id}
                                     >
-                                        <option value="">Pas de statut</option>
+                                        <option value="">{t("userPayments.paymentsList.noStatus")}</option>
                                         {this.props.statuses.map(status => (
                                             <option
                                                 key={status.id}
@@ -551,7 +551,7 @@ class PaymentsList extends React.Component {
                                 {this.state.payment_method_id == 2 ? (
                                     <React.Fragment>
                                         <div className="form-group">
-                                            <label>Date de réception</label>
+                                            <label>{t("userPayments.paymentsList.receptionDateLabel")}</label>
                                             <input
                                                 type="date"
                                                 className="form-control"
@@ -566,7 +566,7 @@ class PaymentsList extends React.Component {
                                             />
                                         </div>
                                         <div className="form-group">
-                                            <label>N° du Chèque</label>
+                                            <label>{t("userPayments.paymentsList.checkNumberLabel")}</label>
                                             <input
                                                 type="text"
                                                 className="form-control"
@@ -582,7 +582,7 @@ class PaymentsList extends React.Component {
                                             />
                                         </div>
                                         <div className="form-group">
-                                            <label>Emmeteur du Chèque</label>
+                                            <label>{t("userPayments.paymentsList.checkIssuerLabel")}</label>
                                             <input
                                                 type="text"
                                                 className="form-control"
@@ -600,7 +600,7 @@ class PaymentsList extends React.Component {
                                     </React.Fragment>
                                 ) : null}
                                 <div className="form-group">
-                                    <label>Date d'encaissement</label>
+                                    <label>{t("userPayments.paymentsList.cashingDateLabel")}</label>
                                     <input
                                         type="date"
                                         className="form-control"
@@ -617,7 +617,7 @@ class PaymentsList extends React.Component {
                                     className="btn"
                                     data-dismiss="modal">
                                     <i className="fas fa-times m-r-sm"></i>
-                                    Annuler
+                                    {t("common:actions.cancel")}
                                 </button>
                                 <button
                                     className="btn btn-primary"
@@ -626,8 +626,8 @@ class PaymentsList extends React.Component {
                                 >
                                     <i className="fas fa-plus m-r-sm"></i>
                                     {this.state.id != null
-                                        ? "Sauvegarder"
-                                        : "Créer"}
+                                        ? t("common:actions.save")
+                                        : t("userPayments.paymentsList.createButton")}
                                 </button>
                             </div>
                         </div>
@@ -643,12 +643,12 @@ class PaymentsList extends React.Component {
                     <div className="modal-dialog">
                         <div className="modal-content animated">
                             <div className="modal-header">
-                                <h3>Edition de règlements</h3>
+                                <h3>{t("userPayments.paymentsList.bulkEditTitle")}</h3>
                             </div>
                             <BulkEditModalAlert />
                             <div className="modal-body">
                                 <div className="form-group">
-                                    <label>Montant</label>
+                                    <label>{t("userPayments.paymentsList.amountShortLabel")}</label>
                                     <div className="flex">
                                         <select
                                             name="operation"
@@ -665,11 +665,11 @@ class PaymentsList extends React.Component {
                                             name="amount"
                                             onChange={e => this.handleBulkEditChange(e)}
                                             className="form-control"
-                                            placeholder="XX €" />
+                                            placeholder={t("userPayments.paymentsList.amountPlaceholder")} />
                                     </div>
                                 </div>
                                 <div className="form-group">
-                                    <label>Mode de Paiement</label>
+                                    <label>{t("userPayments.paymentsList.paymentMethodLabel")}</label>
                                     <select
                                         className="form-control"
                                         name="payment_method_id"
@@ -679,7 +679,7 @@ class PaymentsList extends React.Component {
                                         )}
                                     >
                                         <option value="placeholder" disabled>
-                                            Selectionnez un mode de paiement
+                                            {t("userPayments.paymentsList.selectPaymentMethod")}
                                         </option>
                                         <option value="" />
                                         {_.map(
@@ -698,7 +698,7 @@ class PaymentsList extends React.Component {
                                     </select>
                                 </div>
                                 <div className="form-group">
-                                    <label>Date de réception</label>
+                                    <label>{t("userPayments.paymentsList.receptionDateLabel")}</label>
                                     <input
                                         type="date"
                                         className="form-control"
@@ -709,7 +709,7 @@ class PaymentsList extends React.Component {
                                     />
                                 </div>
                                 <div className="form-group">
-                                    <label>Date d'encaissement</label>
+                                    <label>{t("userPayments.paymentsList.cashingDateLabel")}</label>
                                     <input
                                         type="date"
                                         className="form-control"
@@ -720,7 +720,7 @@ class PaymentsList extends React.Component {
                                     />
                                 </div>
                                 <div className="form-group">
-                                    <label>Émetteur du chèque</label>
+                                    <label>{t("userPayments.paymentsList.checkIssuerBulkLabel")}</label>
                                     <input
                                         type="text"
                                         className="form-control"
@@ -732,9 +732,7 @@ class PaymentsList extends React.Component {
                                 </div>
                                 <div className="form-group">
                                     <label>
-                                        Numéro du premier chèque (les numéros
-                                        suivants seront incrémenté
-                                        automatiquement)
+                                        {t("userPayments.paymentsList.firstCheckNumberLabel")}
                                     </label>
                                     <input
                                         type="number"
@@ -746,7 +744,7 @@ class PaymentsList extends React.Component {
                                     />
                                 </div>
                                 <div className="form-group">
-                                    <label>Statut</label>
+                                    <label>{t("userPayments.paymentsList.statusLabel")}</label>
                                     <select
                                         className="form-control"
                                         name="status_id"
@@ -755,7 +753,7 @@ class PaymentsList extends React.Component {
                                         )}
                                         value={this.state.payment_status_id}
                                     >
-                                        <option value="">Pas de statut</option>
+                                        <option value="">{t("userPayments.paymentsList.noStatus")}</option>
                                         {this.props.statuses.map(status => (
                                             <option
                                                 key={status.id}
@@ -773,7 +771,7 @@ class PaymentsList extends React.Component {
                                     className="btn"
                                     data-dismiss="modal">
                                     <i className="fas fa-times m-r-sm"></i>
-                                    Annuler
+                                    {t("common:actions.cancel")}
                                 </button>
                                 <button
                                     className="btn btn-primary"
@@ -785,7 +783,7 @@ class PaymentsList extends React.Component {
                                     }
                                 >
                                     <i className="fas fa-edit m-r-sm"></i>
-                                    Editer
+                                    {t("userPayments.paymentsList.editButton")}
                                 </button>
                             </div>
                         </div>
@@ -796,4 +794,4 @@ class PaymentsList extends React.Component {
     }
 }
 
-export default PaymentsList;
+export default withTranslation("payments")(PaymentsList);

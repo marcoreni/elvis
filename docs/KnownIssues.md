@@ -284,3 +284,31 @@ a second locale-aware island renders on the same page in a different language.
 Fix when it matters: move the `columns` build into `render()` (as was done for
 `SubPaymentList.jsx` in lot 2a) — the Filter/Cell closures already close over `this`, so it's
 mechanical but touches ~200 lines in each 1000+-line file, hence deferred.
+
+## French typos preserved verbatim during i18n extraction — clean up the locale files
+
+The i18n branches copy every French string **verbatim** into the locale files (no copy changes
+during extraction — see the `common.confirm.sure` episode). Several source strings had typos, now
+sitting in `frontend/locales/fr/payments.json` (and a few in `config/locales/fr.yml`). Once the
+payments i18n lots are all merged, do one pass over the locale files to fix these — it's a pure
+value edit, no component or key changes:
+
+`frontend/locales/fr/payments.json`:
+- `general.statusEditFailed` — "Echec" → "Échec"
+- `general.subPayments.columns.method` — "Mode de réglement" → "Mode de règlement"
+- `general.subPayments.columns.checkIssuer` — "Emmeteur du Chèque" → "Émetteur du chèque"
+- `general.checks.paymentDateLabel` / `.paymentDateTooltip` — "Date de réglement" → "Date de règlement"
+- `userPayments.paymentsList.bulkEdit` — "Edition de masse" → "Édition de masse"
+- `userPayments.paymentsList.bulkEditTitle` — "Edition de règlements" → "Édition de règlements"
+- `userPayments.paymentsList.editPaymentTitle` — "Edition Règlement" → "Édition du règlement"
+- `userPayments.paymentsList.editButton` — "Editer" → "Éditer"
+- `userPayments.paymentsList.dueNumber` — "Echéance N°{{n}}" → "Échéance n° {{n}}"
+- `userPayments.paymentsList.selectPaymentMethod` — "Selectionnez un mode de paiement" → "Sélectionnez un mode de paiement"
+- `userPayments.paymentsList.selectDue` — "Selectionnez une échéance" → "Sélectionnez une échéance"
+- `userPayments.paymentsList.checkIssuerLabel` — "Emmeteur du Chèque" → "Émetteur du chèque"
+- `userPayments.paymentsList.firstCheckNumberLabel` — "…seront incrémenté automatiquement" → "…seront incrémentés automatiquement"
+
+Also re-scan the whole `frontend/locales/fr/` + `config/locales/fr.yml` when doing this (grep for
+`Edition\b`, `Editer\b`, `Selectionn`, `réglement`, `Echéance`, `Echec`, `Emmeteur`, `Precedent`);
+the list above is only what was noticed in passing, not an exhaustive audit. The English side of
+these keys is already spelled correctly.
