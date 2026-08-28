@@ -505,8 +505,15 @@ et à mesure de son intégration :
           `DuePaymentsList.jsx` (1358 l.) → `withTranslation("payments")`. Clés sous
           `payments.userPayments.duePaymentsList.*` ; réutilise largement `userPayments.paymentsList.*`
           (labels de modale partagés) + `common:*`. Test : `DuePaymentsList.test.jsx`.
-        - [ ] **Lot 2c-iii** — `PaymentsManagement.jsx` (2001 l., le conteneur, ~60 chaînes) —
-          à faire en dernier, il monte les autres.
+        - [x] **Lot 2c-iii** — branche `feature/i18n-06-payments-management` :
+          `PaymentsManagement.jsx` (2001 l., conteneur) → `withTranslation("payments")`. Clés sous
+          `payments.userPayments.management.*` (formulaire imprimable, en-tête de page, swal/toast
+          d'édition de statut + envoi de mail, avoirs/soldes de la saison précédente, bandeau
+          « n'est plus payeur ») ; réutilise `general.statusEdit.title`,
+          `general.statusEditFailed`, `general.reminder.errorTitle`,
+          `general.paymentMail.errorTitle`, `common:*` ; ajout `common.actions.send`. Test :
+          `PaymentsManagement.test.jsx`. **Lot 2c terminé** — le point de montage
+          `payments/show.html.erb` est un pur `react_component`, rien à extraire côté ERB.
       - `userPayments/v2/*` + `PayerPaymentTerms*.jsx` + `WrappedPayerPaymentTerms.jsx` +
         `paymentsTerms/PaymentScheduleOptionForm.jsx` + `utils/{DuePaymentStatuses.jsx,PaymentStatuses.js}`
         — ~50 chaînes ; vues de montage `payments/show.html.erb`, `user_payments/show_common.html.erb`,
