@@ -1,16 +1,19 @@
 import React, {Fragment} from "react";
+import {useTranslation} from "react-i18next";
 import ToggleButtonGroup from "./ToggleButtonGroup";
 
 export default function PayerPaymentTermsInfo({availPaymentScheduleOptions}) {
+    const {t} = useTranslation("payments");
     availPaymentScheduleOptions.sort((a, b) => a.index - b.index);
 
     return <div className="row">
-        <h3 className='mb-5' style={{color: "#8AA4B1"}}>Type de paiement</h3>
+        <h3 className='mb-5' style={{color: "#8AA4B1"}}>{t("terms.info.type")}</h3>
         <div>
             <h4>
-                Nous
-                proposons {availPaymentScheduleOptions.length} {availPaymentScheduleOptions.length > 1 ? "options" : "option"} d'échéancier
-                de paiement :
+                {t("terms.info.weOffer", {
+                    count: availPaymentScheduleOptions.length,
+                    word: availPaymentScheduleOptions.length > 1 ? t("terms.info.wordOther") : t("terms.info.wordOne"),
+                })}
             </h4>
 
             <div className="mt-4">

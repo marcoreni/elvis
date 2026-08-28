@@ -340,5 +340,77 @@
             "printPaymentCertificate": "Imprimer une attestation de paiement",
             "printSchedule": "Imprimer l'échéancier"
         }
+    },
+    "terms": {
+        "info": {
+            "type": "Type de paiement",
+            "weOffer": "Nous proposons {{count}} {{word}} d'échéancier de paiement :",
+            "wordOne": "option",
+            "wordOther": "options"
+        },
+        "payer": {
+            "identificationNumber": "Numéro national d'identification",
+            "paymentTerms": "Modalités de paiement",
+            "chooseOption": "Choisissez une option",
+            "paymentDate": "Date de règlement",
+            "paymentMethods": "Moyens de paiement",
+            "payers": "Payeur(s)"
+        },
+        "optionForm": {
+            "addDayTitle": "Ajouter un jour de règlement",
+            "addDayPrompt": "Veuillez saisir le jour de règlement",
+            "addDayEmpty": "Veuillez saisir un jour de règlement",
+            "addDayInvalid": "Veuillez saisir un jour de règlement valide",
+            "needOneDay": "Veuillez ajouter au moins un jour de règlement",
+            "needMonthPerDue": "Veuillez sélectionner un mois de règlement pour chaque échéance",
+            "close": "Fermer",
+            "editTitle": "Modifier l'option d'échéancier de paiement \"{{label}}\"",
+            "addTitle": "Ajouter une option d'échéancier de paiement",
+            "nameLabel": "Nom de l'option d'échéancier de paiement",
+            "numberOfDues": "Nombre d'échéances",
+            "other": "Autres",
+            "associatedPricing": "Tarif associé",
+            "associatedPricingHelp": "Sélectionner le type de tarif que vous voulez associer à cette option d'échéancier de paiement. Les types de tarifs sont à définir dans le menu Paiement > paramétrage",
+            "none": "Aucun",
+            "selectMonths": "Sélectionner le ou les mois de règlement",
+            "collectionDay": "Jour du règlement",
+            "collectionDayHelp": "Ajouter un ou plusieurs jours possibles de règlement. L'élève pourra choisir le jour souhaité."
+        },
+        "v2": {
+            "prorataUpdateError": "Une erreur est survenue lors de la mise à jour du prorata",
+            "fetchPaymentInfoError": "Une erreur est survenue lors de la récupération des informations de paiement.",
+            "myPayments": "Mes règlements",
+            "paymentsOf": "Règlements de {{name}}",
+            "generalInfo": "Vos informations générales",
+            "colActivities": "Activités",
+            "colStudent": "Élève",
+            "colProrata": "Prorata",
+            "colAmount": "Montant",
+            "totalAmount": "Montant total: {{amount}} €",
+            "pay": "Payer",
+            "yourPaymentTerms": "Vos modalités de paiement",
+            "payment": "Paiement",
+            "notSet": "Non saisi",
+            "paymentMethod": "Moyen de paiement",
+            "edit": "Modifier",
+            "yourDueDates": "Vos échéances",
+            "preferredDayInfo": "Votre jour de prélèvement préféré est le {{day}}. Par conséquent, les échéances ci-dessous ont été générées (sous réserve de modification par un administrateur).",
+            "colDueDate": "Date de l'échéance",
+            "colStatus": "Statut",
+            "statusValidated": "Validé",
+            "statusUpcoming": "A venir",
+            "statusLate": "En retard",
+            "fetchTermsError": "Une erreur est survenue lors de la récupération des conditions de paiement.",
+            "fetchDataError": "Une erreur est survenue lors de la récupération des données",
+            "fetchMethodsError": "Une erreur est survenue lors de la récupération des moyens de paiement",
+            "savedText": "Les modalités de paiement ont bien été enregistrées.",
+            "saveError": "Une erreur est survenue lors de l'enregistrement des modalités de paiement.",
+            "modalWarning": "Attention, une fois la modalité sélectionnée, vous ne pourrez plus la modifier pour cette saision",
+            "modalWarning2": "Il sera possible de modfier le jour et la méthode de paiement.",
+            "selectOption": "Sélectionnez l'option d'échéancier de paiement",
+            "monthsInfo": "Le règlement sera fait au(x) mois de {{months}}",
+            "selectDay": "Sélectionnez le jour de règlement",
+            "selectMethod": "Sélectionnez le moyen de paiement"
+        }
     }
 }

@@ -3,11 +3,13 @@ import _ from "lodash";
 import * as api from "../../../tools/api";
 import swal from "sweetalert2";
 import PaymentTermsSettingModal from "./PaymentTermsSettingModal";
+import {useTranslation} from "react-i18next";
 
 const LOCAL_STORAGE_KEY_SEASON = "user_payments_v2_season";
 
 export default function UserPaymentsV2({seasons, user, is_current_user, onPayClicked, onSeasonChanged})
 {
+    const {t} = useTranslation("payments");
     const savedSeasonId = parseInt(localStorage.getItem(LOCAL_STORAGE_KEY_SEASON));
 
     const [season, setSeason] = useState(seasons.find(s => s.id == savedSeasonId) || _.sortBy(seasons, "start").pop());
@@ -30,7 +32,7 @@ export default function UserPaymentsV2({seasons, user, is_current_user, onPayCli
             })
             .error(() => {
                 getDatas(); // Recharger les données en cas d'erreur
-                swal("Erreur", "Une erreur est survenue lors de la mise à jour du prorata", "error");
+                swal(t("general.reminder.errorTitle"), t("terms.v2.prorataUpdateError"), "error");
             })
             .patch(`/desired_activities/${id}/update_prorata`, {
                 prorata: prorata
@@ -51,8 +53,8 @@ export default function UserPaymentsV2({seasons, user, is_current_user, onPayCli
                 console.error(data);
 
                 swal({
-                    title: "Erreur",
-                    text: "Une erreur est survenue lors de la récupération des informations de paiement.",
+                    title: t("general.reminder.errorTitle"),
+                    text: t("terms.v2.fetchPaymentInfoError"),
                     type: "error",
                 });
             })
@@ -72,7 +74,7 @@ export default function UserPaymentsV2({seasons, user, is_current_user, onPayCli
     return <Fragment>
         <div className="row wrapper border-bottom white-bg page-heading m-b-md">
             <h2>
-                {is_current_user ? "Mes règlements" : "Règlements de " + user.full_name}
+                {is_current_user ? t("terms.v2.myPayments") : t("terms.v2.paymentsOf", { name: user.full_name })}
             </h2>
         </div>
 
@@ -90,7 +92,7 @@ export default function UserPaymentsV2({seasons, user, is_current_user, onPayCli
             <div className="col-sm-12 col-md-9 col-xl-6">
                 <div className="ibox">
                     <div className="ibox-title">
-                        <h3>Vos informations générales</h3>
+                        <h3>{t("terms.v2.generalInfo")}</h3>
                     </div>
 
                     <div className="ibox-content p-4">
@@ -99,10 +101,10 @@ export default function UserPaymentsV2({seasons, user, is_current_user, onPayCli
                                 <table className="table table-borderless m-b-md table-hover">
                                     <thead>
                                     <tr>
-                                        <th>Activités</th>
-                                        <th>Élève</th>
-                                        <th>Prorata</th>
-                                        <th>Montant</th>
+                                        <th>{t("terms.v2.colActivities")}</th>
+                                        <th>{t("terms.v2.colStudent")}</th>
+                                        <th>{t("terms.v2.colProrata")}</th>
+                                        <th>{t("terms.v2.colAmount")}</th>
                                     </tr>
                                     </thead>
 
@@ -152,14 +154,14 @@ export default function UserPaymentsV2({seasons, user, is_current_user, onPayCli
 
                         <div className="row">
                             <div className="col-sm-12">
-                                <h3>Montant total: {_.sumBy(data, d => d.amount)} €</h3>
+                                <h3>{t("terms.v2.totalAmount", { amount: _.sumBy(data, d => d.amount) })}</h3>
                             </div>
                         </div>
 
                         {onPayClicked && typeof onPayClicked === "function" && <div className="row">
                             <div className="col-sm-12 text-right">
                                 <button className="btn btn-primary px-sm-5" onClick={() => onPayClicked(season)}>
-                                    Payer
+                                    {t("terms.v2.pay")}
                                 </button>
                             </div>
                         </div>}
@@ -170,21 +172,21 @@ export default function UserPaymentsV2({seasons, user, is_current_user, onPayCli
             <div className="col-sm-6 col-md-3 col-xl-4">
                 <div className="ibox">
                     <div className="ibox-title">
-                        <h3>Vos modalités de paiement</h3>
+                        <h3>{t("terms.v2.yourPaymentTerms")}</h3>
                     </div>
 
                     <div className="ibox-content p-4">
                         <div className="row m-b-md">
                             <div className="col-sm-12">
-                                <h4>Paiement</h4>
+                                <h4>{t("terms.v2.payment")}</h4>
 
-                                {(paymentTerms || {}).term_name || "Non saisi"}
+                                {(paymentTerms || {}).term_name || t("terms.v2.notSet")}
                             </div>
                         </div>
 
                         {(paymentTerms || {}).payment_method && <div className="row">
                             <div className="col-sm-12">
-                                <h4>Moyen de paiement</h4>
+                                <h4>{t("terms.v2.paymentMethod")}</h4>
                             </div>
 
                             <div className="col-sm-6">
@@ -211,7 +213,7 @@ export default function UserPaymentsV2({seasons, user, is_current_user, onPayCli
                                     season={season}
                                     isForNew={!(paymentTerms || {}).payment_method}
                                     onSaved={() => getDatas()}>
-                                    {(paymentTerms || {}).payment_method ? "Modifier" : "Ajouter"}
+                                    {(paymentTerms || {}).payment_method ? t("terms.v2.edit") : t("common:actions.add")}
                                 </PaymentTermsSettingModal>
                             </div>
                         </div>
@@ -224,21 +226,20 @@ export default function UserPaymentsV2({seasons, user, is_current_user, onPayCli
             <div className="col-sm-12 col-md-9 col-xl-6">
                 <div className="ibox">
                     <div className="ibox-title">
-                        <h3>Vos échéances</h3>
+                        <h3>{t("terms.v2.yourDueDates")}</h3>
                     </div>
 
                     <div className="ibox-content p-4">
                         <div className="alert alert-info p-2 px-sm-3 py-sm-4">
-                            Votre jour de prélèvement préféré est le {paymentTerms.day_for_collection}. <br/>
-                            Par conséquent, les échéances ci-dessous ont été générées (sous réserve de modification par un administrateur).
+                            {t("terms.v2.preferredDayInfo", { day: paymentTerms.day_for_collection })}
                         </div>
 
                         <table className="table table-borderless table-hover">
                             <thead>
                             <tr>
-                                <th>Date de l'échéance</th>
-                                <th>Montant</th>
-                                <th>Statut</th>
+                                <th>{t("terms.v2.colDueDate")}</th>
+                                <th>{t("terms.v2.colAmount")}</th>
+                                <th>{t("terms.v2.colStatus")}</th>
                             </tr>
                             </thead>
 
@@ -248,7 +249,7 @@ export default function UserPaymentsV2({seasons, user, is_current_user, onPayCli
                                 <td>{d.amount} €</td>
                                 <td>
                                         <span style={{width: "87px"}} className={`d-block text-center text-white p-2 px-sm-4 ${d.status === 0 ? "bg-green" : d.status === 1 ? "bg-warning" : "bg-danger"}`}>
-                                            {d.status === 0 ? "Validé" : d.status === 1 ? "A venir" : "En retard"}
+                                            {d.status === 0 ? t("terms.v2.statusValidated") : d.status === 1 ? t("terms.v2.statusUpcoming") : t("terms.v2.statusLate")}
                                         </span>
                                 </td>
                             </tr>)}

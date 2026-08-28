@@ -340,5 +340,77 @@
             "printPaymentCertificate": "Print a payment certificate",
             "printSchedule": "Print the schedule"
         }
+    },
+    "terms": {
+        "info": {
+            "type": "Payment type",
+            "weOffer": "We offer {{count}} payment-schedule {{word}}:",
+            "wordOne": "option",
+            "wordOther": "options"
+        },
+        "payer": {
+            "identificationNumber": "National identification number",
+            "paymentTerms": "Payment terms",
+            "chooseOption": "Choose an option",
+            "paymentDate": "Payment date",
+            "paymentMethods": "Payment methods",
+            "payers": "Payer(s)"
+        },
+        "optionForm": {
+            "addDayTitle": "Add a payment day",
+            "addDayPrompt": "Please enter the payment day",
+            "addDayEmpty": "Please enter a payment day",
+            "addDayInvalid": "Please enter a valid payment day",
+            "needOneDay": "Please add at least one payment day",
+            "needMonthPerDue": "Please select a payment month for each due date",
+            "close": "Close",
+            "editTitle": "Edit payment-schedule option \"{{label}}\"",
+            "addTitle": "Add a payment-schedule option",
+            "nameLabel": "Payment-schedule option name",
+            "numberOfDues": "Number of due dates",
+            "other": "Other",
+            "associatedPricing": "Associated pricing",
+            "associatedPricingHelp": "Select the pricing type you want to associate with this payment-schedule option. Pricing types are defined in the Payment > settings menu.",
+            "none": "None",
+            "selectMonths": "Select the payment month(s)",
+            "collectionDay": "Payment day",
+            "collectionDayHelp": "Add one or more possible payment days. The student will be able to choose the preferred day."
+        },
+        "v2": {
+            "prorataUpdateError": "An error occurred while updating the prorata",
+            "fetchPaymentInfoError": "An error occurred while retrieving the payment information.",
+            "myPayments": "My payments",
+            "paymentsOf": "Payments for {{name}}",
+            "generalInfo": "Your general information",
+            "colActivities": "Activities",
+            "colStudent": "Student",
+            "colProrata": "Prorata",
+            "colAmount": "Amount",
+            "totalAmount": "Total amount: {{amount}} €",
+            "pay": "Pay",
+            "yourPaymentTerms": "Your payment terms",
+            "payment": "Payment",
+            "notSet": "Not set",
+            "paymentMethod": "Payment method",
+            "edit": "Edit",
+            "yourDueDates": "Your due dates",
+            "preferredDayInfo": "Your preferred debit day is the {{day}}. As a result, the due dates below have been generated (subject to change by an administrator).",
+            "colDueDate": "Due date",
+            "colStatus": "Status",
+            "statusValidated": "Validated",
+            "statusUpcoming": "Upcoming",
+            "statusLate": "Late",
+            "fetchTermsError": "An error occurred while retrieving the payment terms.",
+            "fetchDataError": "An error occurred while retrieving the data",
+            "fetchMethodsError": "An error occurred while retrieving the payment methods",
+            "savedText": "The payment terms were saved successfully.",
+            "saveError": "An error occurred while saving the payment terms.",
+            "modalWarning": "Warning: once the option is selected, you will not be able to change it for this season",
+            "modalWarning2": "It will be possible to change the day and the payment method.",
+            "selectOption": "Select the payment-schedule option",
+            "monthsInfo": "Payment will be made in the month(s) of {{months}}",
+            "selectDay": "Select the payment day",
+            "selectMethod": "Select the payment method"
+        }
     }
 }

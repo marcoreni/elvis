@@ -5,7 +5,8 @@
     "delete": "Supprimer",
     "validate": "Valider",
     "confirm": "Confirmer",
-    "send": "Envoyer"
+    "send": "Envoyer",
+    "add": "Ajouter"
   },
   "confirm": {
     "sure": "Êtes-vous sûr ?"

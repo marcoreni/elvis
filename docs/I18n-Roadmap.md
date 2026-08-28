@@ -514,10 +514,20 @@ et à mesure de son intégration :
           `general.paymentMail.errorTitle`, `common:*` ; ajout `common.actions.send`. Test :
           `PaymentsManagement.test.jsx`. **Lot 2c terminé** — le point de montage
           `payments/show.html.erb` est un pur `react_component`, rien à extraire côté ERB.
-      - `userPayments/v2/*` + `PayerPaymentTerms*.jsx` + `WrappedPayerPaymentTerms.jsx` +
-        `paymentsTerms/PaymentScheduleOptionForm.jsx` + `utils/{DuePaymentStatuses.jsx,PaymentStatuses.js}`
-        — ~50 chaînes ; vues de montage `payments/show.html.erb`, `user_payments/show_common.html.erb`,
-        `payment_schedule_options/{new,edit}.html.erb` (purs points de montage).
+      - [x] **Lot 2d** — branche `feature/i18n-06-payments-terms` : composants « modalités de
+        paiement ». `PayerPaymentTerms.jsx` + `PayerPaymentTermsInfo.jsx` +
+        `paymentsTerms/PaymentScheduleOptionForm.jsx` + `userPayments/v2/{UserPaymentsV2,PaymentTermsSettingModal}.jsx`
+        (tous des composants fonction → `useTranslation("payments")`). Clés sous `payments.terms.*`
+        (`info`/`payer`/`optionForm`/`v2`) ; réutilise `general.reminder.{errorTitle,successTitle}` ;
+        ajout `common.actions.add`. `WrappedPayerPaymentTerms.jsx` (chaînes = `MESSAGES.*` de
+        `tools/constants`, partagées) et `utils/{DuePaymentStatuses.jsx,PaymentStatuses.js}`
+        (constantes d'ID pures) : rien à extraire. Vues de montage
+        (`user_payments/show_common.html.erb`, `payment_schedule_options/{new,edit}.html.erb`) :
+        purs `react_component`. Tests : `PayerPaymentTerms.test.jsx`,
+        `PaymentScheduleOptionForm.test.jsx`, `UserPaymentsV2.test.jsx`. **Lot 2 (payments) terminé.**
+        Bug préexistant repéré (non corrigé, hors périmètre extraction) : `PayerPaymentTerms.jsx`
+        utilise `_.uniq` dans `handleAddPayer` sans importer `lodash` → `ReferenceError` à l'ajout
+        d'un payeur — à consigner / corriger séparément.
     - [ ] **`parameters/Payments/*` (12 composants) + `app/views/parameters/payments_parameters/index.html.erb`**
           rattachés au domaine `parameters`, pas `payments` — à faire dans la branche `parameters`.
   - [ ] (compléter cette liste au fur et à mesure que d'autres domaines sont identifiés)
