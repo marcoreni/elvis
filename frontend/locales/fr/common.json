@@ -3,7 +3,8 @@
     "save": "Enregistrer",
     "cancel": "Annuler",
     "delete": "Supprimer",
-    "validate": "Valider"
+    "validate": "Valider",
+    "confirm": "Confirmer"
   },
   "confirm": {
     "sure": "Êtes-vous sûr ?"

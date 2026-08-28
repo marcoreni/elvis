@@ -1,4 +1,5 @@
 import React, { Fragment } from "react";
+import { withTranslation } from "react-i18next";
 import _ from "lodash";
 import ReactTable from "react-table";
 import SelectCoupon from "../utils/SelectCoupon";
@@ -42,10 +43,12 @@ class PaymentsSummary extends React.Component {
     }
 
     createCoupon(coupon) {
+        const { t } = this.props;
+
         return this.dataService
             .createData(coupon)
             .then((newCoupon) => {
-                alert("Le taux de remise a été créé avec succès");
+                alert(t("userPayments.summary.couponCreated"));
                 this.setState((prevState) => {
                     this.insertCoupon(prevState.coupons, newCoupon);
                     return { coupons: prevState.coupons };
@@ -53,7 +56,7 @@ class PaymentsSummary extends React.Component {
             })
             .catch((err) => {
                 console.error(err);
-                alert("Une erreur est survenue lors de la création du taux de remise");
+                alert(t("userPayments.summary.couponCreateError"));
             })
             .finally(() => {
                 this.closeCreateCouponModal();
@@ -73,6 +76,7 @@ class PaymentsSummary extends React.Component {
     }
 
     processDataWithFormulas(data) {
+        const { t } = this.props;
         const processedData = _.cloneDeep(data);
 
         const activitiesByFormula = {};
@@ -100,8 +104,8 @@ class PaymentsSummary extends React.Component {
             if (formulaActivities.length > 0) {
                 const firstActivity = formulaActivities[0];
                 const formulaDetails = this.props.formulas
-                    ? _.find(this.props.formulas, f => f.id == formulaId) || { id: formulaId, name: `Formule inconnue`, description: "" }
-                    : { id: formulaId, name: `Formule #${formulaId}`, description: "" };
+                    ? _.find(this.props.formulas, f => f.id == formulaId) || { id: formulaId, name: t("userPayments.summary.unknownFormula"), description: "" }
+                    : { id: formulaId, name: t("userPayments.summary.formulaNumber", { id: formulaId }), description: "" };
 
                 const formulaPrice = (formulaDetails.formule_pricings && formulaDetails.formule_pricings.length > 0)
                     ? formulaDetails.formule_pricings[0].price
@@ -147,6 +151,7 @@ class PaymentsSummary extends React.Component {
     }
 
     render() {
+        const { t } = this.props;
 
         const {
             payers,
@@ -174,14 +179,14 @@ class PaymentsSummary extends React.Component {
                 },
             },
             {
-                Header: "Activité",
+                Header: t("userPayments.summary.columns.activity"),
                 id: "activity",
                 accessor: d => {
                     return (
                         <div>
                             <div>
                                 {d.isFormula && (
-                                    <i title="Formule" />
+                                    <i title={t("userPayments.summary.formulaTooltip")} />
                                 )}
                                 {d.isFormulaItem && (
                                     <span className="ml-3" style={{ color: "#777" }}>
@@ -199,7 +204,7 @@ class PaymentsSummary extends React.Component {
                             )}
                             {d.stopped_at ? (
                                 <div className="text-danger">
-                                    {`(Arrêt le : ${moment(d.stopped_at).format("DD/MM/YYYY")})`}
+                                    {t("userPayments.summary.stoppedOn", { date: moment(d.stopped_at).format("DD/MM/YYYY") })}
                                 </div>
                             ) : null}
                         </div>
@@ -207,19 +212,19 @@ class PaymentsSummary extends React.Component {
                 },
             },
             {
-                Header: "Formule",
+                Header: t("userPayments.summary.columns.formula"),
                 id: "formula",
                 accessor: d => {
                     return (
                         <div>
-                            {d.isFormula && <i title="Formule" />}
+                            {d.isFormula && <i title={t("userPayments.summary.formulaTooltip")} />}
                             {d.formula ? (
                                 <div>
                                     {d.formula.name}
                                     {d.formula.description && <p>{d.formula.description}</p>}
                                 </div>
                             ) : (
-                                <span>Aucune formule</span>
+                                <span>{t("userPayments.summary.noFormula")}</span>
                             )}
                         </div>
                     );
@@ -227,7 +232,7 @@ class PaymentsSummary extends React.Component {
             },
 
             {
-                Header: "N° d'adhérent",
+                Header: t("userPayments.summary.columns.adherentNumber"),
                 id: "adherent_number",
                 width: 50,
                 accessor: d =>
@@ -236,7 +241,7 @@ class PaymentsSummary extends React.Component {
                         : "",
             },
             {
-                Header: "Élève",
+                Header: t("userPayments.summary.columns.student"),
                 id: "student",
                 accessor: d =>
                     d.user ? (
@@ -246,23 +251,23 @@ class PaymentsSummary extends React.Component {
                     ) : null,
             },
             {
-                Header: "Tarif",
+                Header: t("userPayments.summary.columns.price"),
                 id: "tarif",
                 maxWidth: 100,
                 Cell: props => {
                     if (props.original.isFormula) {
-                        return <p>Tarif formule</p>;
+                        return <p>{t("userPayments.summary.formulaPrice")}</p>;
                     }
 
                     if (props.original.isFormulaItem) {
-                        return <p>Inclus dans la formule</p>;
+                        return <p>{t("userPayments.summary.includedInFormula")}</p>;
                     }
 
                     if (props.original.packId) {
                         return (
                             <p>
                                 {_.get(props, ["original", "packPrice", "pricing_category", "name"]) ||
-                                    "Inconnue"}
+                                    t("userPayments.summary.unknownFem")}
                             </p>
                         );
                     }
@@ -288,7 +293,7 @@ class PaymentsSummary extends React.Component {
                                     }
                                 >
                                     <option value="0" disabled>
-                                        Sélectionner un tarif
+                                        {t("userPayments.summary.selectPrice")}
                                     </option>
                                     {(this.props.adhesionPrices || []).map(adhesionPrice => (
                                         <option key={adhesionPrice.id} value={adhesionPrice.id}>
@@ -303,7 +308,7 @@ class PaymentsSummary extends React.Component {
                         const pricingCategory = this.props.pricingCategories.find(
                             p => p.id === props.original.pricingCategoryId
                         );
-                        return <p>{pricingCategory ? pricingCategory.label : "aucun tarif défini"}</p>;
+                        return <p>{pricingCategory ? pricingCategory.label : t("userPayments.summary.noPriceDefined")}</p>;
                     } else {
                         let activity_ref_pricings = props.original.ref.activity_ref_pricing;
                         let season = this.props.seasons.find(s => s.id === this.props.season);
@@ -326,7 +331,7 @@ class PaymentsSummary extends React.Component {
                                 }
                             >
                                 <option value="0" disabled>
-                                    Sélectionner un tarif
+                                    {t("userPayments.summary.selectPrice")}
                                 </option>
                                 {pricings.map(assoc => {
                                     const pricingCategory = this.props.pricingCategories.find(
@@ -348,7 +353,7 @@ class PaymentsSummary extends React.Component {
                     (this.props.pricingCategories.find(p => p.id === d.pricingCategoryId) || {}).label,
             },
             {
-                Header: "Prix unitaire",
+                Header: t("userPayments.summary.columns.unitPrice"),
                 id: "unitPrice",
                 maxWidth: 75,
                 accessor: d => <p>{d.unitPrice + " €"}</p>,
@@ -358,7 +363,7 @@ class PaymentsSummary extends React.Component {
                 },
             },
             {
-                Header: "Prorata",
+                Header: t("userPayments.summary.columns.prorata"),
                 id: "prorata",
                 maxWidth: 100,
                 Cell: props => {
@@ -367,7 +372,7 @@ class PaymentsSummary extends React.Component {
                     const currentProrata = props.original.prorata || intendedNbLessons;
 
                     if (this.props.isStudentView) {
-                        return <p>{currentProrata} sur {intendedNbLessons}</p>;
+                        return <p>{t("userPayments.summary.prorataOf", { current: currentProrata, total: intendedNbLessons })}</p>;
                     }
 
                     return (
@@ -400,7 +405,7 @@ class PaymentsSummary extends React.Component {
                 },
             },
             {
-                Header: "Montant total",
+                Header: t("userPayments.summary.columns.totalAmount"),
                 id: "initial_total",
                 maxWidth: 150,
                 accessor: d => {
@@ -418,7 +423,7 @@ class PaymentsSummary extends React.Component {
                 },
             },
             {
-                Header: "Remise",
+                Header: t("userPayments.summary.columns.discount"),
                 id: "coupon",
                 maxWidth: 100,
                 accessor: d => {
@@ -468,7 +473,7 @@ class PaymentsSummary extends React.Component {
                 },
             },
             {
-                Header: "Montant total remisé",
+                Header: t("userPayments.summary.columns.discountedTotal"),
                 id: "discounted total",
                 maxWidth: 150,
                 accessor: d => {
@@ -490,7 +495,7 @@ class PaymentsSummary extends React.Component {
                 Footer: (
                     <span>
                         <span style={{ fontSize: "16px" }}>
-                          Total:
+                          {t("userPayments.summary.footerTotal")}
                           <strong>
                             {` ${
                                 totalDue == null
@@ -504,7 +509,7 @@ class PaymentsSummary extends React.Component {
                         </span>
                         <br />
                         <span style={{ fontSize: "16px" }}>
-                          Total échéancier:
+                          {t("userPayments.summary.footerScheduleTotal")}
                           <strong>
                             {` ${
                                 previsionalTotal == null
@@ -518,7 +523,7 @@ class PaymentsSummary extends React.Component {
                         </span>
                         <br />
                         <span style={{ fontSize: "16px" }}>
-                          Total réglé à ce jour:
+                          {t("userPayments.summary.footerPaidToDate")}
                           <strong>
                             {` ${
                                 totalPaymentsToDay == 0 && previsionalTotal == null
@@ -532,7 +537,7 @@ class PaymentsSummary extends React.Component {
                         </span>
                         <br />
                         <span style={{ fontSize: "16px" }}>
-                          Solde:
+                          {t("userPayments.summary.footerBalance")}
                           <strong>
                             {` ${
                                 totalPayments == 0 && previsionalTotal == null
@@ -555,7 +560,7 @@ class PaymentsSummary extends React.Component {
                     {!this.props.isStudentView &&
                     _.values(this.props.schedules).length > 0 ? (
                         <div className="form-group">
-                            <label>Emplacement global</label>
+                            <label>{t("userPayments.summary.globalLocation")}</label>
                             <div>
                                 {this.props.locations.map((l, i) => (
                                     <label key={i} className="radio-inline">
@@ -584,7 +589,7 @@ class PaymentsSummary extends React.Component {
                 </div>
 
                 <div className="ibox-title">
-                    <h2>Infos générales</h2>
+                    <h2>{t("userPayments.summary.generalInfo")}</h2>
                     <div className="ibox-tools">
 
                                 <button
@@ -593,7 +598,7 @@ class PaymentsSummary extends React.Component {
                                     id="addCoupon"
                                     onClick={() => this.showCreateCouponModal()}>
                                     <i className="fas fa-plus m-r-xs" />
-                                    Créer un taux de remise
+                                    {t("userPayments.summary.createCoupon")}
                                 </button>
                     </div>
                 </div>
@@ -603,13 +608,13 @@ class PaymentsSummary extends React.Component {
                     columns={generalColumns}
                     defaultSorted={[{ id: "activity", desc: false }]}
                     resizable={false}
-                    previousText="Précedent"
-                    nextText="Suivant"
-                    loadingText="Chargement..."
-                    noDataText="Aucune donnée"
-                    pageText="Page"
-                    ofText="sur"
-                    rowsText="résultats"
+                    previousText={t("common:reactTable.previousText")}
+                    nextText={t("common:reactTable.nextText")}
+                    loadingText={t("common:reactTable.loadingText")}
+                    noDataText={t("common:reactTable.noDataText")}
+                    pageText={t("common:reactTable.pageText")}
+                    ofText={t("common:reactTable.ofText")}
+                    rowsText={t("common:reactTable.rowsText")}
                     minRows={1}
                     showPagination={false}
                     className="-striped whitebg"
@@ -618,7 +623,7 @@ class PaymentsSummary extends React.Component {
                 <CreateCouponModal
                     component={CouponFormContent}
                     isOpen={this.state.showCreateCouponModal}
-                    createTitle={`Créer un taux de remise`}
+                    createTitle={t("userPayments.summary.createCoupon")}
                     onRequestClose={() => this.closeCreateCouponModal()}
                     onSubmit={item => this.createCoupon(item)}
                 />
@@ -627,4 +632,4 @@ class PaymentsSummary extends React.Component {
     }
 }
 
-export default PaymentsSummary;
+export default withTranslation("payments")(PaymentsSummary);

@@ -3,7 +3,8 @@
     "save": "Save",
     "cancel": "Cancel",
     "delete": "Delete",
-    "validate": "Submit"
+    "validate": "Submit",
+    "confirm": "Confirm"
   },
   "confirm": {
     "sure": "Are you sure?"

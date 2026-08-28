@@ -180,5 +180,88 @@
                 "text": "Successes: {{inserted}}, Failures: {{failed}}, Skipped: {{ignored}}"
             }
         }
+    },
+    "userPayments": {
+        "switchPayer": {
+            "title": "Change payer",
+            "replacePayerBy": "Replace payer {{name}} with",
+            "choosePlaceholder": "CHOOSE THE NEW PAYER"
+        },
+        "summary": {
+            "couponCreated": "The discount rate was created successfully",
+            "couponCreateError": "An error occurred while creating the discount rate",
+            "unknownFormula": "Unknown package",
+            "formulaNumber": "Package #{{id}}",
+            "columns": {
+                "activity": "Activity",
+                "formula": "Package",
+                "adherentNumber": "Member no.",
+                "student": "Student",
+                "price": "Price",
+                "unitPrice": "Unit price",
+                "prorata": "Prorata",
+                "totalAmount": "Total amount",
+                "discount": "Discount",
+                "discountedTotal": "Discounted total"
+            },
+            "formulaTooltip": "Package",
+            "stoppedOn": "(Stopped on: {{date}})",
+            "noFormula": "No package",
+            "formulaPrice": "Package price",
+            "includedInFormula": "Included in the package",
+            "unknownFem": "Unknown",
+            "selectPrice": "Select a price",
+            "noPriceDefined": "no price defined",
+            "prorataOf": "{{current}} of {{total}}",
+            "footerTotal": "Total:",
+            "footerScheduleTotal": "Schedule total:",
+            "footerPaidToDate": "Total paid to date:",
+            "footerBalance": "Balance:",
+            "globalLocation": "Global location",
+            "generalInfo": "General information",
+            "createCoupon": "Create a discount rate"
+        },
+        "paymentsList": {
+            "bulkDeleteTitle": "Bulk delete",
+            "bulkDeleteText": "Are you sure you want to delete these {{n}} due dates?",
+            "bulkDeleteConfirm": "Yes!",
+            "columns": {
+                "number": "No.",
+                "status": "Status",
+                "method": "Method",
+                "reception": "Received",
+                "cashing": "Cashed",
+                "checkNumber": "Cheque #",
+                "amount": "Amount",
+                "actions": "Actions"
+            },
+            "heading": "Payments",
+            "actionsDropdown": "Payment actions",
+            "newPayment": "New payment",
+            "bulkEdit": "Bulk edit",
+            "bulkDelete": "Bulk delete",
+            "editPaymentTitle": "Edit payment",
+            "newPaymentTitle": "New payment",
+            "paymentMethodLabel": "Payment method",
+            "selectPaymentMethod": "Select a payment method",
+            "dueChoiceLabel": "Due-date choice",
+            "selectDue": "Select a due date",
+            "membership": "Membership",
+            "dueNumber": "Due date no. {{n}}",
+            "amountLabel": "Amount (€)",
+            "amountPlaceholder": "XX €",
+            "statusLabel": "Status",
+            "noStatus": "No status",
+            "receptionDateLabel": "Reception date",
+            "checkNumberLabel": "Cheque no.",
+            "checkIssuerLabel": "Cheque issuer",
+            "cashingDateLabel": "Cashing date",
+            "createButton": "Create",
+            "bulkEditTitle": "Edit payments",
+            "amountShortLabel": "Amount",
+            "checkIssuerBulkLabel": "Cheque issuer",
+            "firstCheckNumberLabel": "First cheque number (following numbers will be incremented automatically)",
+            "editButton": "Edit"
+        }
     }
 }

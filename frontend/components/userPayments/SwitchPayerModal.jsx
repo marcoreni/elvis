@@ -1,7 +1,9 @@
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { optionMapper, USER_OPTIONS } from "../utils";
 
 export default function SwitchPayerModal({ payer, payers, onSubmit }) {
+    const { t } = useTranslation("payments");
     const [newPayerId, setNewPayerId] = useState("");
 
     const payersOptions = payer && payers
@@ -13,7 +15,7 @@ export default function SwitchPayerModal({ payer, payers, onSubmit }) {
             <div className="modal-content">
                 <div className="modal-header">
                     <div className="flex flex-space-between-justified flex-center-aligned p">
-                        <h2 className="modal-title">Changement de payeur</h2>
+                        <h2 className="modal-title">{t("userPayments.switchPayer.title")}</h2>
                         <button
                             type="button"
                             className="close"
@@ -27,12 +29,12 @@ export default function SwitchPayerModal({ payer, payers, onSubmit }) {
                 </div>
                 <div className="modal-body">
                     {payer && <div>
-                        <h4>Remplacer le payeur {payer.first_name} {payer.last_name} par</h4>
+                        <h4>{t("userPayments.switchPayer.replacePayerBy", { name: `${payer.first_name} ${payer.last_name}` })}</h4>
                         <select
                             className="form-control"
                             onChange={e => setNewPayerId(e.target.value)}
                             value={newPayerId}>
-                            <option value="">CHOISISSEZ LE NOUVEAU PAYEUR</option>
+                            <option value="">{t("userPayments.switchPayer.choosePlaceholder")}</option>
                             {payersOptions}
                         </select>
                     </div>}
@@ -42,7 +44,7 @@ export default function SwitchPayerModal({ payer, payers, onSubmit }) {
                         onClick={() => onSubmit(newPayerId)}
                         disabled={!newPayerId}
                         className="btn btn-primary pull-right">
-                        Confirmer
+                        {t("common:actions.confirm")}
                     </button>
                 </div>
             </div>

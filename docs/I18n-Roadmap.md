@@ -484,10 +484,26 @@ et à mesure de son intégration :
         qui est sans effet tant qu'on ne bascule pas en `en`. Tests :
         `GeneralPayments.test.jsx`, `PaymentModals.test.jsx`, `SubPaymentList.test.jsx`,
         `PaymentTables.test.jsx` (12 tests). `yarn test` → 13 fichiers / 36 tests.
-      - [ ] **Lot 2b — `generalPayments/{DuePaymentList,PaymentList}`** — ~90 chaînes, deux
-        fichiers > 1000 lignes.
-      - `userPayments/*` legacy (`PaymentsManagement` 2001 l., `DuePaymentsList` 1358 l.,
-        `PaymentsList`, `PaymentsSummary`, `SwitchPayerModal`) — ~120 chaînes.
+      - [x] **Lot 2b — `generalPayments/{DuePaymentList,PaymentList}`** — branche
+        `feature/i18n-06-payments-general-tables` (PR #12, mergée). ~1100 lignes chacun ;
+        `withTranslation("payments")`. A aussi restructuré les clés de la 2a dans des sous-arbres
+        partagés (`general.reminder.*`, `general.tableControls.*`, `general.{numberFilter,
+        csvExport,statusEdit,paymentMail,seasonFilter,unknownPayer,noPaymentMethodOption,
+        selectRemaining,bulkDeleteTitle,statusEditFailed}`) et migré `PaymentScheduleList` /
+        `CheckList` dessus ; ajout `common.actions.{delete,validate}` (frontend). Revue
+        `/code-review` : suppression du `promptStatusEdit` dupliqué mort dans `PaymentList.jsx`,
+        latence « colonnes figées au constructeur » consignée dans `docs/KnownIssues.md`.
+      - **`userPayments/*` legacy** (~4800 lignes, découpé) :
+        - [x] **Lot 2c-i** — branche `feature/i18n-06-payments-user-legacy` :
+          `SwitchPayerModal.jsx` (fonction → `useTranslation`), `PaymentsSummary.jsx`,
+          `PaymentsList.jsx` (classes → `withTranslation`). Clés sous `payments.userPayments.*`
+          (`switchPayer`/`summary`/`paymentsList`) ; `react-table` via `common:reactTable.*` (au
+          passage la coquille « Précedent » de ces fichiers est corrigée en « Précédent » via la
+          clé partagée) ; ajout `common.actions.confirm`. Tests : `SwitchPayerModal.test.jsx`,
+          `PaymentsSummary.test.jsx`, `PaymentsList.test.jsx`.
+        - [ ] **Lot 2c-ii** — `DuePaymentsList.jsx` (1358 l., ~50 chaînes).
+        - [ ] **Lot 2c-iii** — `PaymentsManagement.jsx` (2001 l., le conteneur, ~60 chaînes) —
+          à faire en dernier, il monte les autres.
       - `userPayments/v2/*` + `PayerPaymentTerms*.jsx` + `WrappedPayerPaymentTerms.jsx` +
         `paymentsTerms/PaymentScheduleOptionForm.jsx` + `utils/{DuePaymentStatuses.jsx,PaymentStatuses.js}`
         — ~50 chaînes ; vues de montage `payments/show.html.erb`, `user_payments/show_common.html.erb`,

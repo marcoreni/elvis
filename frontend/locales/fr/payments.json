@@ -180,5 +180,88 @@
                 "text": "Réussites : {{inserted}}, Échecs : {{failed}}, Ignorés : {{ignored}}"
             }
         }
+    },
+    "userPayments": {
+        "switchPayer": {
+            "title": "Changement de payeur",
+            "replacePayerBy": "Remplacer le payeur {{name}} par",
+            "choosePlaceholder": "CHOISISSEZ LE NOUVEAU PAYEUR"
+        },
+        "summary": {
+            "couponCreated": "Le taux de remise a été créé avec succès",
+            "couponCreateError": "Une erreur est survenue lors de la création du taux de remise",
+            "unknownFormula": "Formule inconnue",
+            "formulaNumber": "Formule #{{id}}",
+            "columns": {
+                "activity": "Activité",
+                "formula": "Formule",
+                "adherentNumber": "N° d'adhérent",
+                "student": "Élève",
+                "price": "Tarif",
+                "unitPrice": "Prix unitaire",
+                "prorata": "Prorata",
+                "totalAmount": "Montant total",
+                "discount": "Remise",
+                "discountedTotal": "Montant total remisé"
+            },
+            "formulaTooltip": "Formule",
+            "stoppedOn": "(Arrêt le : {{date}})",
+            "noFormula": "Aucune formule",
+            "formulaPrice": "Tarif formule",
+            "includedInFormula": "Inclus dans la formule",
+            "unknownFem": "Inconnue",
+            "selectPrice": "Sélectionner un tarif",
+            "noPriceDefined": "aucun tarif défini",
+            "prorataOf": "{{current}} sur {{total}}",
+            "footerTotal": "Total:",
+            "footerScheduleTotal": "Total échéancier:",
+            "footerPaidToDate": "Total réglé à ce jour:",
+            "footerBalance": "Solde:",
+            "globalLocation": "Emplacement global",
+            "generalInfo": "Infos générales",
+            "createCoupon": "Créer un taux de remise"
+        },
+        "paymentsList": {
+            "bulkDeleteTitle": "Suppression en masse",
+            "bulkDeleteText": "Êtes-vous sûr de vouloir supprimer ces {{n}} échéances ?",
+            "bulkDeleteConfirm": "Oui !",
+            "columns": {
+                "number": "N°",
+                "status": "Statut",
+                "method": "Mode",
+                "reception": "Réception",
+                "cashing": "Encaissement",
+                "checkNumber": "# Chèque",
+                "amount": "Montant",
+                "actions": "Actions"
+            },
+            "heading": "Règlements",
+            "actionsDropdown": "Actions règlements",
+            "newPayment": "Nouveau règlement",
+            "bulkEdit": "Edition de masse",
+            "bulkDelete": "Suppression de masse",
+            "editPaymentTitle": "Edition Règlement",
+            "newPaymentTitle": "Nouveau Règlement",
+            "paymentMethodLabel": "Mode de Paiement",
+            "selectPaymentMethod": "Selectionnez un mode de paiement",
+            "dueChoiceLabel": "Choix de l'échéance",
+            "selectDue": "Selectionnez une échéance",
+            "membership": "Adhésion",
+            "dueNumber": "Echéance N°{{n}}",
+            "amountLabel": "Montant (€)",
+            "amountPlaceholder": "XX €",
+            "statusLabel": "Statut",
+            "noStatus": "Pas de statut",
+            "receptionDateLabel": "Date de réception",
+            "checkNumberLabel": "N° du Chèque",
+            "checkIssuerLabel": "Emmeteur du Chèque",
+            "cashingDateLabel": "Date d'encaissement",
+            "createButton": "Créer",
+            "bulkEditTitle": "Edition de règlements",
+            "amountShortLabel": "Montant",
+            "checkIssuerBulkLabel": "Émetteur du chèque",
+            "firstCheckNumberLabel": "Numéro du premier chèque (les numéros suivants seront incrémenté automatiquement)",
+            "editButton": "Editer"
+        }
     }
 }
