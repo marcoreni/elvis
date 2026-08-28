@@ -172,7 +172,7 @@ class DuePaymentList extends React.Component {
             >
                 <div className="flex flex-space-between-justified flex-center-aligned">
                     <div id="targets-infos">
-                        {t("general.schedulesWithoutPayer.selectedCount", { count })}{" "}
+                        {t("general.schedulesWithoutPayer.selectedCount", { n: count })}{" "}
                         {this.state.targets.length === this.state.data.length &&
                         Math.max(
                             this.state.total - this.state.targets.length,
@@ -185,7 +185,7 @@ class DuePaymentList extends React.Component {
                                 className="btn btn-sm btn-info m-l-sm"
                             >
                                 {t("general.schedulesWithoutPayer.selectRemaining", {
-                                    count:
+                                    n:
                                         this.state.total -
                                         this.state.targets.length,
                                 })}
@@ -391,7 +391,7 @@ class DuePaymentList extends React.Component {
         );
         if (restCount)
             recipients += t("general.schedulesWithoutPayer.andNOthers", {
-                count: restCount,
+                n: restCount,
             });
 
         return (
@@ -399,7 +399,7 @@ class DuePaymentList extends React.Component {
                 <div className="flex">
                     <h2>
                         {t("general.schedulesWithoutPayer.heading", {
-                            count: this.state.total,
+                            n: this.state.total,
                         })}
                         <select className="transparentSelector"
                             onChange={e => {

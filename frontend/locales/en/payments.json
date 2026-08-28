@@ -72,12 +72,12 @@
             "successText": "Message sent",
             "errorTitle": "Error",
             "errorStatus": "Error {{status}}: {{statusText}}",
-            "selectedCount": "You selected {{count}} payer(s)",
-            "selectRemaining": "Select the {{count}} remaining",
+            "selectedCount": "You selected {{n}} payer(s)",
+            "selectRemaining": "Select the {{n}} remaining",
             "sendMessage": "Send a message",
             "sendReminderTitle": "Send a reminder",
-            "andNOthers": ", and {{count}} others",
-            "heading": "{{count}} payers without a schedule for",
+            "andNOthers": ", and {{n}} others",
+            "heading": "{{n}} payers without a schedule for",
             "columns": {
                 "name": "Name",
                 "actions": "Actions"
@@ -100,7 +100,7 @@
             "reloadTooltip": "Reload the list",
             "resetFiltersTooltip": "Reset filters",
             "fullscreenTooltip": "Show the table fullscreen",
-            "checkCount": "Number of cheques: {{count}}",
+            "checkCount": "Number of cheques: {{n}}",
             "totalAmount": "Total amount: {{amount}}"
         }
     }

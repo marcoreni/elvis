@@ -399,7 +399,7 @@ class CheckList extends React.Component {
 
                         <h2 className="m-r">
                             {t("general.checks.checkCount", {
-                                count: this.state.rowsCount,
+                                n: this.state.rowsCount,
                             })}
                         </h2>
                     </div>

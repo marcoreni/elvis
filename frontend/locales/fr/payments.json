@@ -72,12 +72,12 @@
             "successText": "Message envoyé",
             "errorTitle": "Erreur",
             "errorStatus": "Erreur {{status}} : {{statusText}}",
-            "selectedCount": "Vous avez sélectionné {{count}} payeur(s)",
-            "selectRemaining": "Sélectionner les {{count}} restants",
+            "selectedCount": "Vous avez sélectionné {{n}} payeur(s)",
+            "selectRemaining": "Sélectionner les {{n}} restants",
             "sendMessage": "Envoyer un message",
             "sendReminderTitle": "Envoyer un rappel",
-            "andNOthers": ", et {{count}} autres",
-            "heading": "{{count}} payeurs sans échéancier pour",
+            "andNOthers": ", et {{n}} autres",
+            "heading": "{{n}} payeurs sans échéancier pour",
             "columns": {
                 "name": "Nom",
                 "actions": "Actions"
@@ -100,8 +100,8 @@
             "reloadTooltip": "Recharger la liste",
             "resetFiltersTooltip": "Réinitialiser les filtres",
             "fullscreenTooltip": "Mettre le tableau en plein écran",
-            "checkCount": "Nombre de chèques : {{count}}",
-            "totalAmount": "Montant total : {{amount}}"
+            "checkCount": "Nombre de chèques : {{n}}",
+            "totalAmount": "Montant total: {{amount}}"
         }
     }
 }
