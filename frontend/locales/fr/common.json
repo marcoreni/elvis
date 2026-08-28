@@ -1,7 +1,9 @@
 {
   "actions": {
     "save": "Enregistrer",
-    "cancel": "Annuler"
+    "cancel": "Annuler",
+    "delete": "Supprimer",
+    "validate": "Valider"
   },
   "confirm": {
     "sure": "Êtes-vous sûr ?"

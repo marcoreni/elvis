@@ -3,6 +3,7 @@ import React from "react";
 import Select from "react-select";
 import ReactTableFullScreen from "../ReactTableFullScreen";
 import swal from "sweetalert2";
+import { withTranslation } from "react-i18next";
 import {makeDebounce} from "../../tools/inputs";
 import {
     csrfToken,
@@ -79,6 +80,8 @@ class DuePaymentList extends React.Component {
     constructor(props) {
         super(props);
 
+        const { t } = props;
+
         const localStorageValue = localStorage.getItem(FILTER_STORAGE_KEY);
         const filter =
             localStorageValue != null
@@ -87,7 +90,7 @@ class DuePaymentList extends React.Component {
 
         const duePaymentMethodsOptions = [
             {
-                label: "Sans mode de règlement",
+                label: t("general.noPaymentMethodOption"),
                 value: "null",
             },
             ..._.map(this.props.paymentMethods, reactOptionMapper()),
@@ -132,7 +135,7 @@ class DuePaymentList extends React.Component {
                 ),
             },
             {
-                Header: "Validité",
+                Header: t("general.dueDates.columns.validity"),
                 id: "validity",
                 maxWidth: 50,
                 accessor: d => this.state.validityMap[d.id],
@@ -208,25 +211,25 @@ class DuePaymentList extends React.Component {
                 },
             },
             {
-                Header: "N°",
+                Header: t("general.dueDates.columns.number"),
                 id: "number",
                 maxWidth: 70,
                 accessor: d => d.number,
                 Filter: ({onChange, filter}) => {
                     let nextValue = "t";
                     let badgeClass = "badge ";
-                    let label = "Tous";
+                    let label = t("general.numberFilter.all");
 
                     switch ((filter && filter.value) || "") {
                         case "t":
                             nextValue = "f";
                             badgeClass += "badge-primary";
-                            label = "Adh";
+                            label = t("general.numberFilter.member");
                             break;
                         case "f":
                             nextValue = "";
                             badgeClass += "badge-warning";
-                            label = "Non Adh";
+                            label = t("general.numberFilter.nonMember");
                             break;
                     }
 
@@ -250,7 +253,7 @@ class DuePaymentList extends React.Component {
                 },
             },
             {
-                Header: "Statut",
+                Header: t("general.dueDates.columns.status"),
                 id: "due_payment_status_id",
                 maxWidth: 100,
                 className: "flex flex-center-justified",
@@ -272,7 +275,7 @@ class DuePaymentList extends React.Component {
                 ),
             },
             {
-                Header: "Date prévisionnelle",
+                Header: t("general.dueDates.columns.previsionalDate"),
                 id: "previsional_date",
                 width: 250,
                 accessor: d => moment(d.previsional_date).format("DD/MM/YYYY"),
@@ -293,7 +296,7 @@ class DuePaymentList extends React.Component {
                 },
             },
             {
-                Header: "Mode règlement échéance",
+                Header: t("general.dueDates.columns.paymentMethod"),
                 id: "payment_method_id",
                 maxWidth: 300,
                 accessor: d => {
@@ -333,7 +336,7 @@ class DuePaymentList extends React.Component {
                 ),
             },
             {
-                Header: "Payeur",
+                Header: t("general.dueDates.columns.payer"),
                 maxWidth: 175,
                 id: "payer_name",
                 Cell: props => {
@@ -344,12 +347,12 @@ class DuePaymentList extends React.Component {
                                 {`${user.last_name} ${user.first_name}`}
                             </a>
                         )) ||
-                        "Inconnu"
+                        t("general.unknownPayer")
                     );
                 },
             },
             {
-                Header: "Emplacement",
+                Header: t("general.dueDates.columns.location"),
                 id: "location_id",
                 maxWidth: 120,
                 accessor: d =>
@@ -372,7 +375,7 @@ class DuePaymentList extends React.Component {
                 ),
             },
             {
-                Header: "Montant",
+                Header: t("general.dueDates.columns.amount"),
                 maxWidth: 100,
                 id: "amount",
                 style: {
@@ -419,7 +422,7 @@ class DuePaymentList extends React.Component {
             data: [],
             pages: null,
             message: {
-                title: "Rappel pour paiement",
+                title: t("general.reminder.defaultTitle"),
                 content: "",
                 isEmail: true,
                 isSMS: false,
@@ -601,6 +604,8 @@ class DuePaymentList extends React.Component {
     }
 
     sendReminderMail() {
+        const { t } = this.props;
+
         const to = _.uniq(
             this.state.data
                 .filter(
@@ -613,8 +618,8 @@ class DuePaymentList extends React.Component {
         );
 
         swal({
-            title: "Confirmation d'envoi",
-            text: "Êtes-vous sûr ?",
+            title: t("general.reminder.confirmSendTitle"),
+            text: t("common:confirm.sure"),
             type: "question",
             showCancelButton: true,
         })
@@ -637,19 +642,22 @@ class DuePaymentList extends React.Component {
                 if (res) {
                     if (res.ok)
                         swal({
-                            title: "Succès",
-                            text: "Message envoyé",
+                            title: t("general.reminder.successTitle"),
+                            text: t("general.reminder.successText"),
                             type: "success",
                         });
                     else
                         throw new Error(
-                            `Erreur ${res.status} : ${res.statusText}`
+                            t("general.reminder.errorStatus", {
+                                status: res.status,
+                                statusText: res.statusText,
+                            })
                         );
                 }
             })
             .catch(reason =>
                 swal({
-                    title: "Erreur",
+                    title: t("general.reminder.errorTitle"),
                     text: reason,
                     type: "error",
                 })
@@ -657,23 +665,25 @@ class DuePaymentList extends React.Component {
     }
 
     sendPaymentMail() {
+        const { t } = this.props;
+
         swal({
-            title: "Envoyer un mail de relance",
-            text: "Voulez vous envoyer un mail de relance pour les paiements sélectionnés ?",
+            title: t("general.paymentMail.title"),
+            text: t("general.dueDates.paymentMailText"),
             type: "question",
             showCancelButton: true,
-            cancelButtonText: "Annuler",
+            cancelButtonText: t("common:actions.cancel"),
         }).then(res => {
             if (res.value) {
                 api.set()
                     .success(res => {
                         if (res.status === "success")
-                            swal({title: "Succès", text: "Mail envoyé", type: "success"});
+                            swal({title: t("general.paymentMail.successTitle"), text: t("general.paymentMail.successText"), type: "success"});
                     })
                     .error(errorMsg => {
                         swal({
                             type: "error",
-                            title: "Une erreur est survenue",
+                            title: t("general.paymentMail.errorTitle"),
                             text: errorMsg,
                         });
                     })
@@ -727,10 +737,12 @@ class DuePaymentList extends React.Component {
     }
 
     promptStatusEdit(id, statusId) {
+        const { t } = this.props;
+
         swal({
-            title: "Édition du statut",
+            title: t("general.statusEdit.title"),
             type: "warning",
-            confirmButtonText: "Valider",
+            confirmButtonText: t("general.statusEdit.confirm"),
             input: "select",
             inputOptions: _.zipObject(
                 this.props.statuses.map(status => status.id),
@@ -739,7 +751,7 @@ class DuePaymentList extends React.Component {
             inputClass: "form-control",
             inputValue: statusId,
             showCancelButton: true,
-            cancelButtonText: "Annuler",
+            cancelButtonText: t("common:actions.cancel"),
         }).then(res => {
             const newStatusId = res.value;
             if (newStatusId) {
@@ -751,7 +763,7 @@ class DuePaymentList extends React.Component {
                     },
                     body: JSON.stringify({id, status: res.value}),
                 }).then(res => {
-                    if (!res.ok) swal("Echec", "", "error");
+                    if (!res.ok) swal(t("general.statusEditFailed"), "", "error");
                     else
                         this.setState({
                             data: this.state.data.map(dp => {
@@ -837,6 +849,8 @@ class DuePaymentList extends React.Component {
 
     //Goto ActivitiesApplicationsList#bulkAlert
     targetsAlert() {
+        const { t } = this.props;
+
         const count =
             (this.state.targets === "all" && this.state.rowsCount) ||
             this.state.targets.length;
@@ -845,7 +859,7 @@ class DuePaymentList extends React.Component {
             <div className="alert alert-info m-t-sm" style={{width: "100%"}}>
                 <div className="flex flex-space-between-justified flex-center-aligned">
                     <div id="targets-infos">
-                        Vous avez sélectionné {count} échéance(s){" "}
+                        {t("general.dueDates.selectedCount", { n: count })}{" "}
                         {this.state.targets.length === this.state.data.length &&
                         Math.max(
                             this.state.rowsCount - this.state.targets.length,
@@ -857,10 +871,11 @@ class DuePaymentList extends React.Component {
                                 }
                                 className="btn btn-sm btn-info m-l-sm"
                             >
-                                Sélectionner les{" "}
-                                {this.state.rowsCount -
-                                    this.state.targets.length}{" "}
-                                restantes
+                                {t("general.selectRemaining", {
+                                    n:
+                                        this.state.rowsCount -
+                                        this.state.targets.length,
+                                })}
                             </button>
                         ) : null}
                     </div>
@@ -872,7 +887,7 @@ class DuePaymentList extends React.Component {
                                 data-toggle="modal"
                                 onClick={() => this.sendPaymentMail()}
                             >
-                                Envoyer un mail de relance aux paiements impayés
+                                {t("general.dueDates.sendUnpaidMail")}
                             </button>
                         ) : ""}
                         <button
@@ -880,13 +895,13 @@ class DuePaymentList extends React.Component {
                             data-toggle="modal"
                             data-target={`#${BULK_MODAL_ID}`}
                         >
-                            Édition de masse
+                            {t("general.dueDates.bulkEditButton")}
                         </button>
                         <button
                             className="btn btn-danger btn-sm"
                             onClick={this.bulkDelete.bind(this)}
                         >
-                            Supprimer
+                            {t("common:actions.delete")}
                         </button>
                     </div>
                 </div>
@@ -895,10 +910,11 @@ class DuePaymentList extends React.Component {
     }
 
     bulkDelete() {
+        const { t } = this.props;
+
         swal({
-            title: "Confirmation",
-            text:
-                "Voulez-vous supprimer toutes les échéances sélectionnées et les paiements associés ?",
+            title: t("general.bulkDeleteTitle"),
+            text: t("general.dueDates.bulkDeleteText"),
             type: "question",
             showCancelButton: true,
         }).then(r => {
@@ -928,6 +944,7 @@ class DuePaymentList extends React.Component {
 
     render() {
         const {data, pages, loading} = this.state;
+        const { t } = this.props;
 
 
         const totalRecipients = _.chain(this.state.data)
@@ -957,7 +974,8 @@ class DuePaymentList extends React.Component {
                 ? this.state.total - NB_DISPLAYED_RECIPIENTS
                 : totalRecipients.length - NB_DISPLAYED_RECIPIENTS
         );
-        if (restCount) recipients += `, et ${restCount} autres`;
+        if (restCount)
+            recipients += t("general.reminder.andNOthers", { n: restCount });
 
         const filteredSeasonId =
             findAndGet(
@@ -976,17 +994,17 @@ class DuePaymentList extends React.Component {
                 >
                     <div className="flex flex-center-aligned">
                         <h2 className="m-r">
-                            {this.state.rowsCount} échéances
+                            {t("general.dueDates.rowCount", { n: this.state.rowsCount })}
                         </h2>
                         <button
                             className="btn btn-primary m-r-sm"
-                            data-tippy-content="Recharger la liste"
+                            data-tippy-content={t("general.tableControls.reload")}
                             onClick={() => this.fetchData(this.state.filter)}
                         >
                             <i className="fas fa-sync"/>
                         </button>
                         <button
-                            data-tippy-content="Réinitialiser les filtres"
+                            data-tippy-content={t("general.tableControls.resetFilters")}
                             className="btn btn-primary m-r-sm"
                             onClick={() => this.resetFilters()}
                         >
@@ -994,7 +1012,7 @@ class DuePaymentList extends React.Component {
                         </button>
 
                         <button
-                            data-tippy-content="Mettre le tableau en plein écran"
+                            data-tippy-content={t("general.tableControls.fullscreen")}
                             className="btn btn-primary m-r"
                             onClick={() => events[0]()}
                         >
@@ -1009,13 +1027,13 @@ class DuePaymentList extends React.Component {
                             value={filteredSeasonId}
                             className="form-control m-r"
                         >
-                            <option value="">SAISON</option>
+                            <option value="">{t("general.seasonFilter")}</option>
                             {this.props.seasons.map(optionMapper())}
                         </select>
 
                         <button
                             className="btn btn-primary"
-                            data-tippy-content={'Exporter en CSV ' + (this.state.targets.length > 0 ? `les ${this.state.targets === "all" ? this.state.rowsCount : this.state.targets.length} lignes sélectionnées)` : "tous les paiements visibles")}
+                            data-tippy-content={t("general.csvExport.prefix") + (this.state.targets.length > 0 ? t("general.csvExport.scopeSelected", { n: this.state.targets === "all" ? this.state.rowsCount : this.state.targets.length }) : t("general.csvExport.scopeAll"))}
                             onClick={() => {this.onCsvExport()}}
                             disabled={this.state.csv_export_loading}
                         >
@@ -1025,19 +1043,21 @@ class DuePaymentList extends React.Component {
 
                     <div className="ibox-title-right">
                         <span>
-                            Total échéances:{" "}
-                            {new Intl.NumberFormat("fr-FR", {
-                                style: "currency",
-                                currency: "EUR",
-                            }).format(this.state.totalAmount)}
+                            {t("general.dueDates.totalDue", {
+                                amount: new Intl.NumberFormat("fr-FR", {
+                                    style: "currency",
+                                    currency: "EUR",
+                                }).format(this.state.totalAmount),
+                            })}
                         </span>
 
                         <span>
-                            Total paiements:{" "}
-                            {new Intl.NumberFormat("fr-FR", {
-                                style: "currency",
-                                currency: "EUR",
-                            }).format(this.state.totalPaidAmount)}
+                            {t("general.dueDates.totalPaid", {
+                                amount: new Intl.NumberFormat("fr-FR", {
+                                    style: "currency",
+                                    currency: "EUR",
+                                }).format(this.state.totalPaidAmount),
+                            })}
                         </span>
                     </div>
                 </div>
@@ -1081,13 +1101,13 @@ class DuePaymentList extends React.Component {
                         }
                         filterable
                         resizable={false}
-                        previousText="Précédent"
-                        nextText="Suivant"
-                        loadingText="Chargement..."
-                        noDataText="Aucune donnée"
-                        pageText="Page"
-                        ofText="sur"
-                        rowsText="résultats"
+                        previousText={t("common:reactTable.previousText")}
+                        nextText={t("common:reactTable.nextText")}
+                        loadingText={t("common:reactTable.loadingText")}
+                        noDataText={t("common:reactTable.noDataText")}
+                        pageText={t("common:reactTable.pageText")}
+                        ofText={t("common:reactTable.ofText")}
+                        rowsText={t("common:reactTable.rowsText")}
                         minRows={10}
                         SubComponent={row => {
                             if (row.original.payments.length > 0) {
@@ -1141,4 +1161,4 @@ class DuePaymentList extends React.Component {
     }
 }
 
-export default DuePaymentList;
+export default withTranslation("payments")(DuePaymentList);

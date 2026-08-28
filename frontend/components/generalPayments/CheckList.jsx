@@ -95,7 +95,7 @@ class CheckList extends React.Component {
             data: [],
             pages: null,
             message: {
-                title: props.t("general.reminderDefaultTitle"),
+                title: props.t("general.reminder.defaultTitle"),
                 content: "",
                 isEmail: true,
                 isSMS: false,
@@ -221,7 +221,7 @@ class CheckList extends React.Component {
                                 {`${user.last_name} ${user.first_name}`}
                             </a>
                         )) ||
-                        t("general.checks.unknown")
+                        t("general.unknownPayer")
                     );
                 },
             },
@@ -377,20 +377,20 @@ class CheckList extends React.Component {
                         </div>
                         <button
                             className="btn btn-primary m-r"
-                            data-tippy-content={t("general.checks.reloadTooltip")}
+                            data-tippy-content={t("general.tableControls.reload")}
                             onClick={() => this.fetchData(this.state.filter)}
                         >
                             <i className="fas fa-sync" />
                         </button>
                         <button
-                            data-tippy-content={t("general.checks.resetFiltersTooltip")}
+                            data-tippy-content={t("general.tableControls.resetFilters")}
                             className="btn btn-primary m-r"
                             onClick={() => this.resetFilters()}
                         >
                             <i className="fas fa-times"></i>
                         </button>
                         <button
-                            data-tippy-content={t("general.checks.fullscreenTooltip")}
+                            data-tippy-content={t("general.tableControls.fullscreen")}
                             className="btn btn-primary m-r"
                             onClick={() => events[0]()}
                         >
