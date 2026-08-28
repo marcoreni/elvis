@@ -1,0 +1,36 @@
+{
+    "failedImports": {
+        "title": "Failed imports",
+        "columns": {
+            "selection": "Selection",
+            "reason": "Reason",
+            "firstName": "First name",
+            "lastName": "Last name",
+            "dueDate": "Due date",
+            "cashingDate": "Cashing date",
+            "importDate": "Import date",
+            "importAmount": "Import amount",
+            "actions": "Actions"
+        },
+        "reasonUnspecified": "unspecified",
+        "importDateFormat": "MM/DD/YYYY [at] hh:mm",
+        "bulk": {
+            "byReason": "BULK DELETE BY REASON",
+            "deleteAll": "DELETE ALL ({{n}})",
+            "deleteSelected": "DELETE {{n}} IMPORTS",
+            "deleteAllOfReason": "DELETE ALL {{reason}}"
+        },
+        "confirm": {
+            "title": "Deletion",
+            "textMany": "Do you really want to delete all these attempts?",
+            "textOne": "Do you really want to delete this attempt?",
+            "yes": "Yes",
+            "no": "No"
+        },
+        "importTitle": "Import",
+        "importConfirmText": "Are the details correct?",
+        "failureTitle": "Failure",
+        "importNotFound": "This import does not exist",
+        "successTitle": "Success"
+    }
+}
