@@ -75,6 +75,11 @@ RSpec.describe "Evaluation pages", type: :request do
       expect(unescaped_body).to include('Edition du niveau "Intermédiaire"')
     end
 
+    it "pre-fills the form fields from the record (regression: the model: binding was a typo)" do
+      get edit_evaluation_level_ref_path(level)
+      expect(response.body).to include('value="Intermédiaire"').and include('value="3"')
+    end
+
     it "renders in English when the locale cookie is set" do
       cookies[:locale] = "en"
       get edit_evaluation_level_ref_path(level)

@@ -396,6 +396,11 @@ et à mesure de son intégration :
           frappe → `nil`, champs jamais préremplis) → `@evaluation_level_ref` ; et
           `url: evaluation_level_ref_path` sans id → `evaluation_level_ref_path(@evaluation_level_ref)`
           (route membre, levait `UrlGenerationError` au rendu).
+    - [x] **Correction au passage (revue)** : `new.html.erb`/`edit.html.erb` avaient
+          `id: "label"`/`id: "value"` en dur sur les `text_field`, qui ne correspondaient pas au
+          `for` généré par `f.label :label`/`:value` (`for="evaluation_level_ref_label"` etc.) —
+          même classe de défaut que le finding #6 de la branche 05. Overrides `id:` supprimés pour
+          que Rails régénère un id cohérent avec le `for` ; aucun JS ne visait les anciens ids.
     - [x] **Tests** : `spec/requests/evaluation_pages_spec.rb` (index/new/edit `evaluation_level_ref`,
           fr/en, interpolation du libellé dans le titre d'édition, garde anti-`"translation missing"`) ;
           `frontend/components/evaluation/{Evaluation,EvaluationForm,StudentEvaluationsStats}.test.jsx`
