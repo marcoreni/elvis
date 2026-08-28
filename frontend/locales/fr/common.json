@@ -3,6 +3,9 @@
     "save": "Enregistrer",
     "cancel": "Annuler"
   },
+  "confirm": {
+    "sure": "Êtes-vous sûr ?"
+  },
   "reactTable": {
     "previousText": "Précédent",
     "nextText": "Suivant",

@@ -1,6 +1,7 @@
 import React from "react";
 
 import swal from "sweetalert2";
+import { withTranslation } from "react-i18next";
 
 import DuePaymentList from "./DuePaymentList";
 import PaymentList from "./PaymentList";
@@ -20,13 +21,14 @@ class GeneralPayments extends React.Component {
     }
 
     render() {
+        const { t } = this.props;
 
         return (
             <div className="col-lg-12 page-reglement">
                 <TabbedComponent tabs={[
                     {
                         id: "due_payments",
-                        header: "Échéances",
+                        header: t("general.tabs.dueDates"),
                         body: <DuePaymentList
                             paymentMethods={this.props.paymentMethods}
                             locations={this.props.locations}
@@ -40,7 +42,7 @@ class GeneralPayments extends React.Component {
                     },
                     {
                         id: "payments",
-                        header: "Règlements",
+                        header: t("general.tabs.payments"),
                         body: <PaymentList
                             paymentMethods={this.props.paymentMethods}
                             locations={this.props.locations}
@@ -53,12 +55,12 @@ class GeneralPayments extends React.Component {
                     },
                     {
                         id: "schedules_without_payer",
-                        header: "Échéanciers sans payeur",
+                        header: t("general.tabs.schedulesWithoutPayer"),
                         body: <PaymentScheduleList seasons={this.props.seasons} />,
                     },
                     {
                         id: "checks",
-                        header: "Chèques",
+                        header: t("general.tabs.checks"),
                         body: <CheckList/>,
                     },
                 ]}>
@@ -69,4 +71,4 @@ class GeneralPayments extends React.Component {
     }
 }
 
-export default GeneralPayments;
+export default withTranslation("payments")(GeneralPayments);

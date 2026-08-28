@@ -468,12 +468,24 @@ et à mesure de son intégration :
           (`t("common:reactTable.previousText")`), les 7 clés retirées de `users.json`. Doc :
           `docs/I18n.md` § « Convention de nommage des clés (frontend) ». Les futures branches de
           domaine réutilisent ces clés au lieu d'en redéclarer.
-    - [ ] **Lot 2 (à faire) — tableaux de bord React** : bien plus gros que l'estimation initiale
-          (~330 chaînes, 20 fichiers dont plusieurs > 1000 lignes) → à découper en plusieurs
+    - [~] **Lot 2 — tableaux de bord React** : bien plus gros que l'estimation initiale
+          (~330 chaînes, 20 fichiers dont plusieurs > 1000 lignes) → découpé en plusieurs
           branches :
-      - `generalPayments/*` coque + feuilles (`GeneralPayments`, `BulkEditModal`, `MessageModal`,
-        `SubPaymentList`, `PaymentScheduleList`, `CheckList`) — ~70 chaînes.
-      - `generalPayments/{DuePaymentList,PaymentList}` — ~90 chaînes, deux fichiers > 1000 lignes.
+      - [x] **Lot 2a — `generalPayments/*` coque + feuilles** : branche
+        `feature/i18n-06-payments-general-shell`. `GeneralPayments.jsx` (onglets),
+        `BulkEditModal.jsx`, `MessageModal.jsx` (composants fonction → `useTranslation`),
+        `SubPaymentList.jsx`, `PaymentScheduleList.jsx` (classe exportée sous le nom trompeur
+        `DuePaymentList`), `CheckList.jsx` (classes → `withTranslation`). Clés sous
+        `payments.general.*` ; props `react-table` via `common:reactTable.*` (branche prep) ;
+        boutons via `common:actions.{save,cancel}` ; nouvelle clé partagée `common.confirm.sure`
+        (frontend). `SubPaymentList` : `columns` déplacées du constructeur vers `render()` pour
+        suivre le changement de langue. `DuePaymentList.jsx` / `PaymentList.jsx` **pas touchés**
+        (lot 2b) — `GeneralPayments` les monte toujours, ils restent en français par défaut, ce
+        qui est sans effet tant qu'on ne bascule pas en `en`. Tests :
+        `GeneralPayments.test.jsx`, `PaymentModals.test.jsx`, `SubPaymentList.test.jsx`,
+        `PaymentTables.test.jsx` (12 tests). `yarn test` → 13 fichiers / 36 tests.
+      - [ ] **Lot 2b — `generalPayments/{DuePaymentList,PaymentList}`** — ~90 chaînes, deux
+        fichiers > 1000 lignes.
       - `userPayments/*` legacy (`PaymentsManagement` 2001 l., `DuePaymentsList` 1358 l.,
         `PaymentsList`, `PaymentsSummary`, `SwitchPayerModal`) — ~120 chaînes.
       - `userPayments/v2/*` + `PayerPaymentTerms*.jsx` + `WrappedPayerPaymentTerms.jsx` +
