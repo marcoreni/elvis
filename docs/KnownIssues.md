@@ -238,8 +238,9 @@ bug, the `{{count}}` vs `{{n}}` plural-resolution inconsistency).
 
 **Action:** re-review these with the specialized agent, most-recent first:
 
-- PR #11 `feature/i18n-06-payments-general-shell` — a specialized review was launched for this one
-  at creation time (2026-08-28); confirm its findings were addressed.
+- PR #11 `feature/i18n-06-payments-general-shell` — specialized `/code-review` run 2026-08-28:
+  **no correctness bugs**; one pre-existing cleanup finding logged below (`CheckList` dead
+  `message` state). Done.
 - PR #10 `feature/i18n-common-react-table-keys` (merged) — **not** specialized-reviewed.
 - PR #9  `feature/i18n-06-extract-payments` (merged) — **not** specialized-reviewed.
 - PR #8  `feature/i18n-06-extract-evaluation` (merged) — **not** specialized-reviewed.
@@ -256,3 +257,12 @@ merge, not just an inline read.
 only a `TabbedComponent` with four tab definitions — neither symbol appears to be used. Pre-existing
 (not introduced by the i18n-06 lot-2a extraction); flagged during that PR's review. Verify and
 remove if genuinely unused. Low priority.
+
+## `generalPayments/CheckList.jsx` — dead `message` state
+
+`CheckList` initializes `this.state.message = { title, content, isEmail, isSMS }` (title now seeded
+from `props.t("general.reminderDefaultTitle")`), but the component never renders or reads it — it
+has no `MessageModal` and no send-reminder path, unlike its sibling `PaymentScheduleList` it was
+evidently copied from. Found by the specialized `/code-review` of PR #11 (2026-08-28). Pre-existing;
+the i18n-06 lot-2a change only re-touched the `title` line. Safe to drop the whole `message` state
+block (and the `props.t` call with it) in a cleanup pass. Low priority.
