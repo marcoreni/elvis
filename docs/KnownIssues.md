@@ -227,3 +227,32 @@ recovery over deletion until someone audits plugins + prod logs.
 When someone picks this up: audit activated plugins' route files and prod request logs for these
 paths first; only then drop the dead actions/views and tighten the route declarations with
 `only:`/`except:` in `config/routes.rb`.
+
+## i18n PRs #7–#11 not reviewed by a specialized code-review agent
+
+The i18n extraction PRs were reviewed **inline by the assistant only** (read the diff, run the
+test suites, check locale-key parity) — not by the dedicated `/code-review` skill / specialized
+review agent. That inline process has already missed things a structured pass would likely have
+caught (e.g. the `for`/`id` label mismatch repeated across branches, the `hh` vs `HH` date-format
+bug, the `{{count}}` vs `{{n}}` plural-resolution inconsistency).
+
+**Action:** re-review these with the specialized agent, most-recent first:
+
+- PR #11 `feature/i18n-06-payments-general-shell` — a specialized review was launched for this one
+  at creation time (2026-08-28); confirm its findings were addressed.
+- PR #10 `feature/i18n-common-react-table-keys` (merged) — **not** specialized-reviewed.
+- PR #9  `feature/i18n-06-extract-payments` (merged) — **not** specialized-reviewed.
+- PR #8  `feature/i18n-06-extract-evaluation` (merged) — **not** specialized-reviewed.
+- (PR #7 `feature/i18n-05-extract-users`, merged — also inline-only; lower priority, it had the
+  most inline scrutiny.)
+
+**Process change:** every future i18n PR (payments lots 2b/2c/2d, planning, activities,
+courses/formules, parameters) must be run through the specialized `/code-review` agent before
+merge, not just an inline read.
+
+## `generalPayments/GeneralPayments.jsx` — likely-dead imports
+
+`GeneralPayments.jsx` imports `swal` (`sweetalert2`) and `csrfToken` (`../utils`) but its body is
+only a `TabbedComponent` with four tab definitions — neither symbol appears to be used. Pre-existing
+(not introduced by the i18n-06 lot-2a extraction); flagged during that PR's review. Verify and
+remove if genuinely unused. Low priority.
