@@ -56,7 +56,13 @@ class Parameter < ApplicationRecord
   # Duplicate `label` rows (there is no unique index) are resolved deterministically to the
   # lowest id; get_value's plain find_by has no ORDER BY, so which row it returns is DB-order
   # dependent — usually, but not guaranteed, the same one.
+  #
+  # Labels and `defaults` keys are stringified (the DB column is a string); like get_value, a
+  # nil result (absent row, or an isolated parse failure) falls to the label's default, but a
+  # stored `false`/`0`/`""` is returned as-is.
   def self.get_values(*labels, defaults: {})
+    labels = labels.map(&:to_s)
+    defaults = defaults.transform_keys(&:to_s)
     key_for = labels.index_with { |label| "parameter_#{label}" }
     cached = Rails.cache.read_multi(*key_for.values)
     missing = labels.reject { |label| cached.key?(key_for[label]) }
@@ -76,7 +82,10 @@ class Parameter < ApplicationRecord
       Rails.cache.write_multi(to_cache, expires_in: 1.hour) if to_cache.any?
     end
 
-    labels.index_with { |label| cached[key_for[label]] || defaults[label] }
+    labels.index_with do |label|
+      value = cached[key_for[label]]
+      value.nil? ? defaults[label] : value
+    end
   end
 
   private
