@@ -4,7 +4,52 @@
     },
     "kinds": {
         "course": "Course",
-        "option": "Option"
+        "option": "Option",
+        "evaluation": "Evaluation",
+        "pause": "Break"
+    },
+    "createActivityModal": {
+        "creatingPause": "Creating a break",
+        "creatingAvailability": "Creating an availability",
+        "slotWillBeAddedFor": "This slot will be added for:",
+        "slotIsRecurrent": "This slot is recurring",
+        "addCourse": "Add a course",
+        "addAvailability": "Add an availability",
+        "addPause": "Add a break",
+        "title": "Creating an availability slot",
+        "createAvailabilityLabel": "Create the availability:",
+        "onSelectedSlotOption": "on the selected slot",
+        "infoSelectedSlot": "The availability will be added to the selected slot.",
+        "infoFirstWeek": "The availability will be added to the first week of the season.",
+        "typeLabel": "Type"
+    },
+    "evaluationModal": {
+        "confirmDelete": "Do you really want to delete this slot?",
+        "schedule": "Time",
+        "teacher": "Teacher",
+        "activity": "Activity",
+        "student": "Student",
+        "readSelfAssessment": "Read self-assessment",
+        "selfAssessment": "Self-assessment:",
+        "none": "NONE",
+        "pleaseGoToPage": "Please go to the",
+        "evaluationManagementPage": "Evaluation management",
+        "toValidateEvaluationSlots": "page to validate evaluation slots."
+    },
+    "multiViewModal": {
+        "teacher": "Teacher",
+        "replacedBy": "Replaced by",
+        "hoursCountedForAbsentTeacher": "Hours counted for the absent teacher",
+        "yes": "Yes",
+        "no": "No",
+        "availabilityDetails": "Availability details",
+        "schedule": "Time range",
+        "comment": "Comment",
+        "slotDetails": "Slot details",
+        "group": "Group",
+        "room": "Room",
+        "students": "Students",
+        "none": "None"
     },
     "pauseDetailModal": {
         "notDefined": "Not set",

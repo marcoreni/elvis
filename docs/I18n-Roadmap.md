@@ -398,11 +398,22 @@ et à mesure de son intégration :
           1 bug corrigé (`YearlyCalendar` importait `withTranslation` mais l'export n'était pas
           enveloppé → `t is not a function` au rendu ; commit `5e36a87`, + cas de test de
           non-régression).
-    - [ ] **Lot 2b — modales à helpers module-level** : `CreateActivityModal`, `EvaluationModal`,
-          `MultiViewModal` (nombreuses chaînes portées par des sous-composants module-level →
-          `t` à faire descendre en prop). `EvaluationModal` : `renderStudentOptions` est du code
-          mort (jamais appelé) — ne pas extraire, éventuellement supprimer. Deux orthographes de
-          « Élève » dans `EvaluationModal` (« Elève » / « Élève ») à unifier.
+    - [x] **Lot 2b — modales à helpers module-level** : branche
+          `feature/i18n-06-extract-planning-modals-2`. `CreateActivityModal` (classe
+          `CreateIntervalModal`), `EvaluationModal`, `MultiViewModal` → `withTranslation("planning")`.
+          `MultiViewModal` fait descendre `t` en prop dans `AvailabilityIntervalContent` /
+          `ValidatedIntervalContent` / `TeacherItem` (helpers module-level) ; `EvaluationModal`
+          n'a besoin de rien de tel (ses chaînes sont des props `label=` passées depuis
+          `render()`). Nouvelles clés `planning.{createActivityModal,evaluationModal,multiViewModal}.*`
+          + `planning.kinds.{evaluation,pause}` ; réutilise `planning.kinds.course`,
+          `planning.common.close`, `common:actions.{cancel,save,delete}` (59 clés au total,
+          parité fr/en exacte). Les deux orthographes « Elève »/« Élève » d'`EvaluationModal`
+          unifiées sur une seule clé `evaluationModal.student` = « Élève ».
+          `renderStudentOptions` (code mort, jamais appelé) laissé tel quel, non extrait.
+          Le message riche « Veuillez aller sur la page **Gestion des évaluations** pour valider… »
+          découpé en 3 clés autour du `<strong>` conservé dans le JSX. Tests :
+          `frontend/components/planning/PlanningModals2b.test.jsx` (5 tests, fr+en). `yarn test`
+          → 27 fichiers / 76 tests verts.
     - [ ] **Lot 3** : `Calendar.jsx` + `TimeInterval*.jsx` + `SimplePlanning.jsx`.
     - [ ] **Lot 4** : `Planning.jsx` (1792 l., conteneur).
     - [ ] **Lot 5** : `ActivityDetailsModal.jsx` (2053 l.).

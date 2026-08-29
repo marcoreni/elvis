@@ -4,7 +4,52 @@
     },
     "kinds": {
         "course": "Cours",
-        "option": "Option"
+        "option": "Option",
+        "evaluation": "Evaluation",
+        "pause": "Pause"
+    },
+    "createActivityModal": {
+        "creatingPause": "Création d'une pause",
+        "creatingAvailability": "Création d'une disponibilité",
+        "slotWillBeAddedFor": "Ce créneau sera ajouté pour :",
+        "slotIsRecurrent": "Ce créneau est récurrent",
+        "addCourse": "Ajout d'un cours",
+        "addAvailability": "Ajout d'une disponibilité",
+        "addPause": "Ajout d'une pause",
+        "title": "Création d'un créneau de disponibilité",
+        "createAvailabilityLabel": "Créer la disponibilité :",
+        "onSelectedSlotOption": "sur le créneau sélectionné",
+        "infoSelectedSlot": "La disponibilité sera ajoutée au créneau sélectionné.",
+        "infoFirstWeek": "La disponibilité sera ajoutée à la 1ère semaine de la saison.",
+        "typeLabel": "Type"
+    },
+    "evaluationModal": {
+        "confirmDelete": "Voulez-vous vraiment supprimer ce créneau ?",
+        "schedule": "Horaire",
+        "teacher": "Professeur",
+        "activity": "Activité",
+        "student": "Élève",
+        "readSelfAssessment": "Lire auto-évaluation",
+        "selfAssessment": "Auto-évaluation :",
+        "none": "AUCUN",
+        "pleaseGoToPage": "Veuillez aller sur la page",
+        "evaluationManagementPage": "Gestion des évaluations",
+        "toValidateEvaluationSlots": "pour valider des créneaux d'évaluation."
+    },
+    "multiViewModal": {
+        "teacher": "Enseignant",
+        "replacedBy": "Remplacé par",
+        "hoursCountedForAbsentTeacher": "Heures comptées pour le professeur absent",
+        "yes": "Oui",
+        "no": "Non",
+        "availabilityDetails": "Détails de la disponibilité",
+        "schedule": "Horaires",
+        "comment": "Commentaire",
+        "slotDetails": "Détails du créneau",
+        "group": "Groupe",
+        "room": "Salle",
+        "students": "Elèves",
+        "none": "Aucun"
     },
     "pauseDetailModal": {
         "notDefined": "Non défini",

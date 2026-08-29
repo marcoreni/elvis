@@ -1,6 +1,7 @@
 import React, { Fragment } from "react";
 import PropTypes from "prop-types";
 import _ from "lodash";
+import { withTranslation } from "react-i18next";
 
 const moment = require("moment");
 
@@ -51,17 +52,18 @@ class CreateIntervalModal extends React.Component {
         }
 
     render() {
+        const { t } = this.props;
         let component;
 
         if (this.props.currentUserIsAdmin && this.props.recurrenceActivated) {
             if (this.state.isAdminSelectIntervalRecurrence) {
                 component = <div className="mb-3">
-                    <h3>Création d'une {this.state.kind === "p" ? "pause" : "disponibilité"}</h3>
+                    <h3>{this.state.kind === "p" ? t("createActivityModal.creatingPause") : t("createActivityModal.creatingAvailability")}</h3>
                     <hr />
 
                     <div className="row">
                         <div className="col-sm-12">
-                            Ce créneau sera ajouté pour : <br />
+                            {t("createActivityModal.slotWillBeAddedFor")} <br />
                             <strong>{toFullDateFr(this.props.newInterval.start)}</strong> de &nbsp;
                             <strong>{new Date(this.props.newInterval.start).toLocaleTimeString()}</strong> à &nbsp;
                             <strong>{new Date(this.props.newInterval.end).toLocaleTimeString()}</strong>
@@ -72,7 +74,7 @@ class CreateIntervalModal extends React.Component {
                         <div className="col-sm-12 py-3">
                             <Checkbox
                                 id="isRecurrent"
-                                label="Ce créneau est récurrent"
+                                label={t("createActivityModal.slotIsRecurrent")}
                                 input={{
                                     checked: this.state.isRecurrent,
                                     onChange: e => this.setState({ isRecurrent: e.target.checked }),
@@ -116,7 +118,7 @@ class CreateIntervalModal extends React.Component {
                             <i className="fas fa-calendar-day"></i>
                         </div>
                         <div className="col-md-11 text-left">
-                            Ajout d'un cours
+                            {t("createActivityModal.addCourse")}
                         </div>
                     </div>
 
@@ -126,7 +128,7 @@ class CreateIntervalModal extends React.Component {
                             <i className="far fa-calendar-check"></i>
                         </div>
                         <div className="col-md-11 text-left">
-                            Ajout d'une disponibilité
+                            {t("createActivityModal.addAvailability")}
                         </div>
                     </div>
 
@@ -136,23 +138,23 @@ class CreateIntervalModal extends React.Component {
                             <i className="fas fa-coffee"></i>
                         </div>
                         <div className="col-md-11 text-left">
-                            Ajout d'une pause
+                            {t("createActivityModal.addPause")}
                         </div>
                     </div>
                 </div>;
             }
         } else {
             component = <Fragment>
-                <h3>Création d'un créneau de disponibilité</h3>
+                <h3>{t("createActivityModal.title")}</h3>
                 <hr />
                 <form className="m-b">
-                    <label className="label-control">Créer la disponibilité :</label>
+                    <label className="label-control">{t("createActivityModal.createAvailabilityLabel")}</label>
                     <select
                         className="form-control"
                         value={this.state.season}
                         onChange={e => this.handleChangeSeason(e.target.value)}>
                         <option key={-1} value="">
-                            sur le créneau sélectionné
+                            {t("createActivityModal.onSelectedSlotOption")}
                         </option>
                         {this.props.seasons.map((s, i) =>
                             <option key={i} value={s.id}>{s.label}</option>
@@ -161,11 +163,11 @@ class CreateIntervalModal extends React.Component {
                     <p style={{ margin: "10px" }}>
                         <i className="fas fa-info-circle m-r-sm"></i>
                         {this.state.season === ""
-                            ? "La disponibilité sera ajoutée au créneau sélectionné."
-                            : "La disponibilité sera ajoutée à la 1ère semaine de la saison."}
+                            ? t("createActivityModal.infoSelectedSlot")
+                            : t("createActivityModal.infoFirstWeek")}
                     </p>
 
-                    <label className="label-control">Type</label>
+                    <label className="label-control">{t("createActivityModal.typeLabel")}</label>
 
                     <span className="radio radio-primary">
                         <input
@@ -177,7 +179,7 @@ class CreateIntervalModal extends React.Component {
                             onChange={e => this.handleOptionChange(e)}
                         />
                         <label htmlFor="c">
-                            <span>Cours</span>
+                            <span>{t("kinds.course")}</span>
                         </label>
                     </span>
 
@@ -191,7 +193,7 @@ class CreateIntervalModal extends React.Component {
                             onChange={e => this.handleOptionChange(e)}
                         />
                         <label htmlFor="o">
-                            <span>Option</span>
+                            <span>{t("kinds.option")}</span>
                         </label>
                     </span>
 
@@ -205,7 +207,7 @@ class CreateIntervalModal extends React.Component {
                             onChange={e => this.handleOptionChange(e)}
                         />
                         <label htmlFor="e">
-                            <span>Evaluation</span>
+                            <span>{t("kinds.evaluation")}</span>
                         </label>
                     </span>
 
@@ -219,7 +221,7 @@ class CreateIntervalModal extends React.Component {
                             onChange={e => this.handleOptionChange(e)}
                         />
                         <label htmlFor="p">
-                            <span>Pause</span>
+                            <span>{t("kinds.pause")}</span>
                         </label>
                     </span>
                 </form>
@@ -232,13 +234,13 @@ class CreateIntervalModal extends React.Component {
                 <div className="flex flex-space-between-justified">
                     <button type="button" onClick={this.props.closeModal} className="btn">
                         <i className="fas fa-times m-r-sm"></i>
-                        Annuler
+                        {t("common:actions.cancel")}
                     </button>
                     <button
                         className="btn btn-primary"
                         onClick={() => this.handleSave()}
                     >
-                        Enregistrer
+                        {t("common:actions.save")}
                     </button>
                 </div>
             </div>
@@ -257,4 +259,4 @@ CreateIntervalModal.propTypes = {
     recurrenceActivated: PropTypes.bool,
 };
 
-export default CreateIntervalModal;
+export default withTranslation("planning")(CreateIntervalModal);

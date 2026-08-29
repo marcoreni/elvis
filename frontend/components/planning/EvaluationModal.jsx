@@ -1,4 +1,5 @@
 import React, { Fragment } from "react";
+import { withTranslation } from "react-i18next";
 import * as api from "../../tools/api";
 import ErrorList from "../common/ErrorList";
 import { toTimeRange, fullnameWithAge, fullname } from "../../tools/format";
@@ -150,7 +151,7 @@ class EvaluationModal extends React.PureComponent {
     }
 
     handleDelete() {
-        if (window.confirm("Voulez-vous vraiment supprimer ce créneau ?")) {
+        if (window.confirm(this.props.t("evaluationModal.confirmDelete"))) {
             const { schedule, onDelete } = this.props;
 
             api.set()
@@ -172,7 +173,7 @@ class EvaluationModal extends React.PureComponent {
             referenceData,
         } = this.state;
 
-        const { schedule, newStudentLevelQuestions } = this.props;
+        const { schedule, newStudentLevelQuestions, t } = this.props;
 
         if (!schedule) {
             return null;
@@ -185,23 +186,23 @@ class EvaluationModal extends React.PureComponent {
                 {schedule.is_validated && schedule.evaluation_appointment ? (
                     <ul className="list-group">
                         <ListItem
-                            label="Horaire"
+                            label={t("evaluationModal.schedule")}
                             value={toTimeRange(schedule)}
                         />
                         <ListItem
-                            label="Professeur"
+                            label={t("evaluationModal.teacher")}
                             value={fullname(
                                 schedule.evaluation_appointment.teacher
                             )}
                         />
                         <ListItem
-                            label="Activité"
+                            label={t("evaluationModal.activity")}
                             value={schedule.evaluation_appointment.activity_ref.kind} />
                         {
                             schedule.evaluation_appointment.student ?
                                 <Fragment>
                                     <ListItemWithControl
-                                        label="Elève"
+                                        label={t("evaluationModal.student")}
                                         value={fullnameWithAge(
                                             schedule.evaluation_appointment.student
                                         )}
@@ -209,12 +210,12 @@ class EvaluationModal extends React.PureComponent {
                                             <button className="btn btn-xs btn-primary"
                                                 onClick={() => this.fetchQuestionnaire()}>
                                                 <i className="fas fa-file m-r-xs"></i>
-                                                Lire auto-évaluation
+                                                {t("evaluationModal.readSelfAssessment")}
                                             </button>
                                         } />
                                     {questionnaire &&
                                         <li className="list-group-item">
-                                            <span className="font-bold">Auto-évaluation :</span>
+                                            <span className="font-bold">{t("evaluationModal.selfAssessment")}</span>
                                             <EvaluationForm
                                                 readOnly
                                                 className="p"
@@ -224,12 +225,12 @@ class EvaluationModal extends React.PureComponent {
                                         </li>}
                                 </Fragment> :
                                 <ListItem
-                                    label="Élève"
-                                    value={<strong>AUCUN</strong>} />
+                                    label={t("evaluationModal.student")}
+                                    value={<strong>{t("evaluationModal.none")}</strong>} />
                         }
                     </ul>
                 ) : (
-                    <h3>Veuillez aller sur la page <strong>Gestion des évaluations</strong> pour valider des créneaux d'évaluation.</h3>
+                    <h3>{t("evaluationModal.pleaseGoToPage")} <strong>{t("evaluationModal.evaluationManagementPage")}</strong> {t("evaluationModal.toValidateEvaluationSlots")}</h3>
                 )}
 
                 <div className="clearfix">
@@ -238,7 +239,7 @@ class EvaluationModal extends React.PureComponent {
                         disabled={isFetching}
                         onClick={() => this.handleDelete()}
                     >
-                        {"Supprimer"}
+                        {t("common:actions.delete")}
                     </button>
                 </div>
             </div>
@@ -246,4 +247,4 @@ class EvaluationModal extends React.PureComponent {
     }
 }
 
-export default EvaluationModal;
+export default withTranslation("planning")(EvaluationModal);
