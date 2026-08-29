@@ -43,6 +43,21 @@ class Parameter < ApplicationRecord
     end || default
   end
 
+  # Like get_value, for several labels at once: one cache round-trip (fetch_multi -> read_multi)
+  # instead of one per label. Uses the same "parameter_<label>" keys and 1h TTL as get_value, so
+  # expire_cache still invalidates entries written here. Returns { label => parsed_value_or_default }.
+  def self.get_values(*labels, defaults: {})
+    keys = labels.map { |label| "parameter_#{label}" }
+
+    by_key = Rails.cache.fetch_multi(*keys, expires_in: 1.hour) do |cache_key|
+      Parameter.find_by(label: cache_key.delete_prefix("parameter_"))&.parse
+    end
+
+    labels.each_with_object({}) do |label, out|
+      out[label] = by_key["parameter_#{label}"] || defaults[label]
+    end
+  end
+
   private
 
   # Without this, any save/destroy leaves Parameter.get_value's cache (keyed by label, 1h TTL)

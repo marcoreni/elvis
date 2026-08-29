@@ -18,9 +18,20 @@ class LocaleController < ApplicationController
   # ITP, or non-navigational requests), which used to strand guests without a referer on
   # root_path — sessions#new for a signed-out user, not the public page they switched language
   # from. The frontend passes the page it's actually on instead.
+  #
+  # Only same-origin relative paths are accepted, to keep this from becoming an open redirect.
+  # A plain `start_with?("//")` check is not enough: browsers normalize a backslash to a slash,
+  # so "/\evil.com" (and "/\/evil.com", "/ /evil.com", tab/newline variants) would be sent as
+  # Location and then navigated to as the scheme-relative "//evil.com". Parse it and require a
+  # host-less, scheme-less relative reference whose path starts with a single "/".
   def safe_return_to
-    path = params[:return_to]
+    path = params[:return_to].to_s
+    return if path.empty? || !path.start_with?("/") || path.start_with?("//", "/\\")
 
-    path if path.present? && path.start_with?("/") && !path.start_with?("//")
+    uri = URI.parse(path)
+    # relative? already implies no scheme and no host; the "//" / "/\\" cases are handled above.
+    path if uri.relative? && uri.host.nil? && uri.path.start_with?("/")
+  rescue URI::InvalidURIError
+    nil
   end
 end

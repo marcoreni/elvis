@@ -101,16 +101,9 @@ class ApplicationController < ActionController::Base
   # one the admin explicitly disabled, and only fall back to the raw default as an absolute last
   # resort (e.g. available_locales itself came back empty).
   def resolve_locale
-    installation_default = begin
-      Parameter.get_value("app.localization.default_language", default: I18n.default_locale.to_s)
-    rescue StandardError => e
-      Rails.logger.error("[i18n] Parameter.get_value(\"app.localization.default_language\") failed: #{e.message}")
-      nil
-    end
-
     available = available_locales.map(&:to_sym)
 
-    [current_user&.locale, cookies[:locale], installation_default, I18n.default_locale]
+    [current_user&.locale, cookies[:locale], localization_settings[:default_language], I18n.default_locale]
       .map { |candidate| candidate.to_s.presence&.to_sym }
       .find { |locale| locale && available.include?(locale) } ||
       available.first ||
@@ -121,16 +114,36 @@ class ApplicationController < ActionController::Base
   # Elvis::SUPPORTED_LOCALES the admin enabled via the "Langues" settings screen (Parameter
   # "app.localization.available_languages", see Parameters::LocalizationParametersController).
   # Falls back to all supported locales if the admin hasn't configured this yet (or if the
-  # Parameter lookup fails — see the rescue above, same hot-path concern applies here). Used both
-  # to clamp locale resolution above and to drive the language switcher UI.
+  # Parameter lookup fails — see localization_settings). Used both to clamp locale resolution
+  # above and to drive the language switcher UI.
   def available_locales
-    @available_locales ||= begin
-      Elvis::SUPPORTED_LOCALES & Parameter.get_value(
-        "app.localization.available_languages", default: Elvis::SUPPORTED_LOCALES
+    @available_locales ||= Elvis::SUPPORTED_LOCALES & localization_settings[:available_languages]
+  end
+
+  # Both localization Parameters in a single cache round-trip (fetch_multi), memoized per
+  # request. switch_locale is a prepend_around_action that runs on *every* request (JSON/API
+  # included), so reading these two rarely-changing values as two separate cache GETs was two
+  # Redis round-trips per request in production; this collapses them to one. On any failure,
+  # fall back to the code-shipped defaults (same values the two reads used to fall back to
+  # individually).
+  def localization_settings
+    @localization_settings ||= begin
+      values = Parameter.get_values(
+        "app.localization.default_language",
+        "app.localization.available_languages",
+        defaults: {
+          "app.localization.default_language" => I18n.default_locale.to_s,
+          "app.localization.available_languages" => Elvis::SUPPORTED_LOCALES
+        }
       )
+
+      {
+        default_language: values["app.localization.default_language"],
+        available_languages: values["app.localization.available_languages"]
+      }
     rescue StandardError => e
-      Rails.logger.error("[i18n] Parameter.get_value(\"app.localization.available_languages\") failed: #{e.message}")
-      Elvis::SUPPORTED_LOCALES
+      Rails.logger.error("[i18n] localization settings lookup failed: #{e.message}")
+      { default_language: I18n.default_locale.to_s, available_languages: Elvis::SUPPORTED_LOCALES }
     end
   end
 

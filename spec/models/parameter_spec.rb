@@ -25,4 +25,42 @@ RSpec.describe Parameter, type: :model do
       expect(Parameter.get_value("spec.cache_test_destroy", default: "fallback")).to eq("fallback")
     end
   end
+
+  describe ".get_values" do
+    it "returns parsed values keyed by label, applying per-label defaults for misses" do
+      Parameter.create!(label: "spec.multi.a", value_type: "string", value: "alpha")
+      Parameter.create!(label: "spec.multi.list", value_type: "json", value: %w[x y].to_json)
+
+      result = Parameter.get_values(
+        "spec.multi.a", "spec.multi.list", "spec.multi.missing",
+        defaults: { "spec.multi.missing" => "fallback" }
+      )
+
+      expect(result).to eq(
+        "spec.multi.a" => "alpha",
+        "spec.multi.list" => %w[x y],
+        "spec.multi.missing" => "fallback"
+      )
+    end
+
+    it "reads through the same cache keys as get_value (one round-trip via fetch_multi)" do
+      Parameter.create!(label: "spec.multi.shared", value_type: "string", value: "cached")
+      # prime via get_value
+      Parameter.get_value("spec.multi.shared")
+
+      expect(Rails.cache).to receive(:fetch_multi).once.and_call_original
+      expect(Parameter).not_to receive(:find_by) # all hits, no DB fallback
+
+      expect(Parameter.get_values("spec.multi.shared")).to eq("spec.multi.shared" => "cached")
+    end
+
+    it "picks up a change immediately (shares expire_cache with get_value)" do
+      parameter = Parameter.create!(label: "spec.multi.invalidate", value_type: "string", value: "before")
+      expect(Parameter.get_values("spec.multi.invalidate")).to eq("spec.multi.invalidate" => "before")
+
+      parameter.update!(value: "after")
+
+      expect(Parameter.get_values("spec.multi.invalidate")).to eq("spec.multi.invalidate" => "after")
+    end
+  end
 end

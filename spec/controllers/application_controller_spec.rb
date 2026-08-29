@@ -38,12 +38,20 @@ RSpec.describe ApplicationController, type: :controller do
       expect(response.body).to eq(I18n.default_locale.to_s)
     end
 
-    it "falls back to I18n.default_locale when Parameter.get_value raises" do
-      allow(Parameter).to receive(:get_value).and_raise(StandardError, "boom")
+    it "falls back to I18n.default_locale when the localization settings lookup raises" do
+      allow(Parameter).to receive(:get_values).and_raise(StandardError, "boom")
 
       get :index
 
       expect(response.body).to eq(I18n.default_locale.to_s)
+    end
+
+    it "reads both localization Parameters in a single lookup, not one per value" do
+      allow(Parameter).to receive(:get_values).and_call_original
+
+      get :index
+
+      expect(Parameter).to have_received(:get_values).once
     end
 
     it "falls back to an actually-available locale, not the raw I18n.default_locale, when the admin disabled it (regression: PR #5 finding #3)" do

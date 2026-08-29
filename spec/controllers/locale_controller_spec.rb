@@ -63,6 +63,28 @@ RSpec.describe LocaleController, type: :controller do
 
         expect(response).to redirect_to(root_path)
       end
+
+      # Browsers normalize a backslash to a forward slash, so "/\evil.com" is delivered as the
+      # scheme-relative "//evil.com" — the guard must reject it (and its variants) too.
+      [
+        "/\\evil.example.com",
+        "/\\/evil.example.com",
+        "/\t/evil.example.com",
+        "/ /evil.example.com",
+        "/\n//evil.example.com"
+      ].each do |hostile|
+        it "ignores the open-redirect payload #{hostile.inspect}" do
+          patch :update, params: { locale: "en", return_to: hostile }
+
+          expect(response).to redirect_to(root_path)
+        end
+      end
+
+      it "keeps the query string and fragment of a safe relative path" do
+        patch :update, params: { locale: "en", return_to: "/students?page=2#list" }
+
+        expect(response).to redirect_to("/students?page=2#list")
+      end
     end
   end
 end

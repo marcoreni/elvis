@@ -35,6 +35,11 @@ const SUPPORTED_LOCALES = Object.keys(resources);
 // default.
 const initialLocale = (typeof document !== "undefined" && document.documentElement.lang) || "fr";
 
+// Keep moment's locale tracking the active UI language. Registered *before* init() so an
+// init-time `languageChanged` emit (inline resources + the synchronous htmlTag detector resolve
+// the language during init, not in a later microtask) is not missed.
+i18n.on("languageChanged", (lng) => moment.locale(lng || initialLocale));
+
 i18n
     .use(LanguageDetector)
     .use(initReactI18next)
@@ -53,8 +58,9 @@ i18n
         },
     });
 
-// Centralizes moment's locale so it always tracks the active UI language.
-moment.locale(i18n.language);
-i18n.on("languageChanged", (lng) => moment.locale(lng));
+// Apply once against the language init() just resolved (falling back to the server-rendered
+// <html lang> value). `moment.locale(undefined)` is a getter and would silently leave moment on
+// its built-in "en", so never pass a possibly-undefined value here.
+moment.locale(i18n.language || initialLocale);
 
 export default i18n;
