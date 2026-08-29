@@ -43,6 +43,51 @@ class Parameter < ApplicationRecord
     end || default
   end
 
+  # Like get_value, for several labels at once, but batched on both sides: one cache read_multi
+  # for the hits and a single SELECT for any misses (vs. one cache GET + one find_by per label).
+  # Uses the same "parameter_<label>" keys and 1h TTL as get_value, so expire_cache still
+  # invalidates entries written here. Returns { label => parsed_value_or_default }.
+  #
+  # A row whose #parse raises is isolated to its own label — logged, treated as "no value"
+  # (default) for this call, and deliberately NOT written to the cache, so get_value on the same
+  # key keeps its own behavior (raise) and a raw-SQL repair is picked up on the next call rather
+  # than masked by a cached nil for up to an hour.
+  #
+  # Duplicate `label` rows (there is no unique index) are resolved deterministically to the
+  # lowest id; get_value's plain find_by has no ORDER BY, so which row it returns is DB-order
+  # dependent — usually, but not guaranteed, the same one.
+  #
+  # Labels and `defaults` keys are stringified (the DB column is a string); like get_value, a
+  # nil result (absent row, or an isolated parse failure) falls to the label's default, but a
+  # stored `false`/`0`/`""` is returned as-is.
+  def self.get_values(*labels, defaults: {})
+    labels = labels.map(&:to_s)
+    defaults = defaults.transform_keys(&:to_s)
+    key_for = labels.index_with { |label| "parameter_#{label}" }
+    cached = Rails.cache.read_multi(*key_for.values)
+    missing = labels.reject { |label| cached.key?(key_for[label]) }
+
+    if missing.any?
+      rows = Parameter.where(label: missing).order(id: :desc).index_by(&:label)
+      to_cache = {}
+
+      missing.each do |label|
+        value = rows[label]&.parse
+        to_cache[key_for[label]] = value
+        cached[key_for[label]] = value
+      rescue StandardError => e
+        Rails.logger.error("[Parameter] get_values: #{label.inspect} failed to parse: #{e.message}")
+      end
+
+      Rails.cache.write_multi(to_cache, expires_in: 1.hour) if to_cache.any?
+    end
+
+    labels.index_with do |label|
+      value = cached[key_for[label]]
+      value.nil? ? defaults[label] : value
+    end
+  end
+
   private
 
   # Without this, any save/destroy leaves Parameter.get_value's cache (keyed by label, 1h TTL)

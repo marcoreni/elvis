@@ -63,6 +63,45 @@ RSpec.describe LocaleController, type: :controller do
 
         expect(response).to redirect_to(root_path)
       end
+
+      # Browsers normalize a backslash to a forward slash, so "/\evil.com" is delivered as the
+      # scheme-relative "//evil.com" — the guard must reject it (and its variants) too.
+      [
+        "/\\evil.example.com",
+        "/\\/evil.example.com",
+        "/\t/evil.example.com",
+        "/ /evil.example.com",
+        "/\n//evil.example.com",
+        # a CR/LF anywhere would otherwise survive into redirect_to and 500 on Rack's header check
+        "/dashboard\r\nX-Injected: 1",
+        "/ok\npath"
+      ].each do |hostile|
+        it "ignores the payload #{hostile.inspect} and stays on root_path" do
+          patch :update, params: { locale: "en", return_to: hostile }
+
+          expect(response).to redirect_to(root_path)
+        end
+      end
+
+      it "keeps the query string and fragment of a safe relative path" do
+        patch :update, params: { locale: "en", return_to: "/students?page=2#list" }
+
+        expect(response).to redirect_to("/students?page=2#list")
+      end
+
+      # The guard must not reject legitimate same-origin paths a strict URI parser would choke on
+      # — accented segments (this is a French app) and query strings with unencoded characters.
+      [
+        "/activités",
+        "/recherche?q=été|automne",
+        "/étudiants?nom=François^"
+      ].each do |safe|
+        it "still honours the same-origin path #{safe.inspect}" do
+          patch :update, params: { locale: "en", return_to: safe }
+
+          expect(response).to redirect_to(safe)
+        end
+      end
     end
   end
 end

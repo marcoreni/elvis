@@ -38,25 +38,52 @@ RSpec.describe ApplicationController, type: :controller do
       expect(response.body).to eq(I18n.default_locale.to_s)
     end
 
-    it "falls back to I18n.default_locale when Parameter.get_value raises" do
-      allow(Parameter).to receive(:get_value).and_raise(StandardError, "boom")
+    it "falls back to I18n.default_locale when the localization settings lookup raises" do
+      allow(Parameter).to receive(:get_values).and_raise(StandardError, "boom")
 
       get :index
 
       expect(response.body).to eq(I18n.default_locale.to_s)
     end
 
+    it "reads both localization Parameters in a single lookup, not one per value" do
+      allow(Parameter).to receive(:get_values).and_call_original
+
+      get :index
+
+      expect(Parameter).to have_received(:get_values).once
+    end
+
     it "falls back to an actually-available locale, not the raw I18n.default_locale, when the admin disabled it (regression: PR #5 finding #3)" do
+      # Admin enabled only "en"; there is no default_language row, so it resolves to the raw
+      # I18n.default_locale ("fr") — which is not in the enabled set and must not be picked.
       Parameter.create!(label: "app.localization.available_languages", value_type: "json", value: ["en"].to_json)
-      allow(Parameter).to receive(:get_value).and_call_original
-      allow(Parameter).to receive(:get_value)
-        .with("app.localization.default_language", default: anything)
-        .and_raise(StandardError, "boom")
 
       get :index
 
       expect(I18n.default_locale.to_s).to eq("fr") # sanity: this scenario requires fr to be the raw default
       expect(response.body).to eq("en")
+    end
+
+    it "does not blow up when available_languages is stored as a non-list value" do
+      # A legacy row / console / plugin write could leave a scalar here. `SUPPORTED_LOCALES &
+      # "en"` would raise on every request; instead the misconfigured value is ignored, all
+      # supported locales are exposed, and resolution falls to the installation default.
+      Parameter.create!(label: "app.localization.available_languages", value_type: "string", value: "en")
+
+      get :index
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to eq(I18n.default_locale.to_s)
+    end
+
+    it "treats an explicitly empty available_languages list as 'disable everything'" do
+      Parameter.create!(label: "app.localization.available_languages", value_type: "json", value: [].to_json)
+
+      get :index
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to eq(I18n.default_locale.to_s)
     end
   end
 
