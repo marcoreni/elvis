@@ -1,6 +1,7 @@
 import React from "react";
 import PropTypes from "prop-types";
 import _ from "lodash";
+import { withTranslation } from "react-i18next";
 
 const moment = require("moment");
 
@@ -24,6 +25,7 @@ class StudentModal extends React.Component {
     }
 
     renderKindOption() {
+        const { t } = this.props;
         return (
             <form>
                 <div className="checkbox-custom">
@@ -35,7 +37,7 @@ class StudentModal extends React.Component {
                             checked={this.state.kind == "c"}
                             onChange={e => this.handleOptionChange(e)}
                         />
-                        <span>Cours</span>
+                        <span>{t("kinds.course")}</span>
                     </label>
                 </div>
                 <div className="checkbox-custom">
@@ -47,7 +49,7 @@ class StudentModal extends React.Component {
                             checked={this.state.kind == "o"}
                             onChange={e => this.handleOptionChange(e)}
                         />
-                        <span>Option</span>
+                        <span>{t("kinds.option")}</span>
                     </label>
                 </div>
             </form>
@@ -55,14 +57,15 @@ class StudentModal extends React.Component {
     }
 
     render() {
+        const { t } = this.props;
         return (
             <div>
-                <h4>Selection</h4>
+                <h4>{t("studentModal.title")}</h4>
                 {this.renderKindOption()}
-                <button onClick={() => this.handleSave()}>Enregistrer</button>
+                <button onClick={() => this.handleSave()}>{t("common:actions.save")}</button>
             </div>
         );
     }
 }
 
-export default StudentModal;
+export default withTranslation("planning")(StudentModal);

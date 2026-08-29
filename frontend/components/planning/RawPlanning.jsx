@@ -1,6 +1,7 @@
 import React, {Fragment} from "react";
 import {array, bool, object} from "prop-types";
 import _ from "lodash";
+import {withTranslation} from "react-i18next";
 
 import * as TimeIntervalHelpers from "./TimeIntervalHelpers";
 import {
@@ -38,7 +39,7 @@ const StudendItems = ({students}) => {
     );
 };
 
-const OptionItems = ({options, color}) => {
+const OptionItems = ({options, color, t}) => {
     return (
         <Fragment>
             {_.map(options, opt => (
@@ -50,7 +51,7 @@ const OptionItems = ({options, color}) => {
                     >
                         {fullnameWithAge(
                             opt.desired_activity.activity_application.user
-                        )} (option)
+                        )} {t("rawPlanning.optionMarker")}
                     </a>
                 </li>
             ))}
@@ -58,7 +59,7 @@ const OptionItems = ({options, color}) => {
     );
 };
 
-const RawActivity = ({timeInterval, isTeacher, seasons, evaluationsLevelRefs}) => {
+const RawActivity = ({timeInterval, isTeacher, seasons, evaluationsLevelRefs, t}) => {
     // Vars
     const activity =
         timeInterval.activity || timeInterval.activity_instance.activity;
@@ -119,14 +120,13 @@ const RawActivity = ({timeInterval, isTeacher, seasons, evaluationsLevelRefs}) =
                     {isTeacher ? null : <p>{fullname(teacher)}</p>}
 
                     <p className="font-bold font-italic">
-                        {students.length + options.length}/
-                        {activity.activity_ref.occupation_limit} élèves -{" "}
+                        {t("rawPlanning.occupancy", {n: students.length + options.length, limit: activity.activity_ref.occupation_limit})} -{" "}
                         {studentsGlobalLevel}
                     </p>
 
                     <ul className="list-group">
                         <StudendItems students={students}/>
-                        <OptionItems options={options} color={'purple'}/>
+                        <OptionItems options={options} color={'purple'} t={t}/>
                     </ul>
                 </div>
             </div>
@@ -140,7 +140,7 @@ class RawPlanning extends React.Component {
     }
 
     renderDayColumns(tis) {
-        const {isTeacher, seasons, evaluations_level_refs} = this.props;
+        const {isTeacher, seasons, evaluations_level_refs, t} = this.props;
         return Array.isArray(tis) && tis.length
             ? tis
                 .sort((a, b) => toDate(a.start) - toDate(b.start))
@@ -153,6 +153,7 @@ class RawPlanning extends React.Component {
                                 seasons={seasons}
                                 isTeacher={isTeacher}
                                 evaluationsLevelRefs={evaluations_level_refs}
+                                t={t}
                             />
                         );
                     }
@@ -163,7 +164,7 @@ class RawPlanning extends React.Component {
     }
 
     render() {
-        const {data} = this.props;
+        const {data, t} = this.props;
         const sortedData = Object.keys(data).sort();
 
         return (
@@ -172,7 +173,7 @@ class RawPlanning extends React.Component {
                     <div className="flex">
                         {sortedData.length == 0 ? (
                             <p className="p-sm lead">
-                                {"Aucune activité cette semaine."}
+                                {t("rawPlanning.noActivityThisWeek")}
                             </p>
                         ) : null}
                     </div>
@@ -203,4 +204,4 @@ RawPlanning.propTypes = {
     seasons: array,
 };
 
-export default RawPlanning;
+export default withTranslation("planning")(RawPlanning);

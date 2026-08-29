@@ -1,11 +1,14 @@
 import React from "react";
 import moment from "moment";
+import { useTranslation } from "react-i18next";
 
 const PauseDetailModal = ({
                               pauseInterval,
                               closeModal,
                               onDelete,
                           }) => {
+    const { t } = useTranslation("planning");
+
     if (!pauseInterval) {
         if (closeModal) {
             setTimeout(() => closeModal(), 0);
@@ -19,10 +22,10 @@ const PauseDetailModal = ({
             if (dateValue && moment(dateValue).isValid()) {
                 return moment(dateValue).format("HH[h]mm");
             }
-            return "Non défini";
+            return t("pauseDetailModal.notDefined");
         } catch (error) {
             console.error("Erreur de formatage de date:", error);
-            return "Non défini";
+            return t("pauseDetailModal.notDefined");
         }
     };
 
@@ -31,17 +34,17 @@ const PauseDetailModal = ({
 
     return (
         <div>
-            <h3>Détail de la pause</h3>
+            <h3>{t("pauseDetailModal.title")}</h3>
             <hr/>
 
             <p>
-                Début : <b>{startTime}</b><br/>
-                Fin : <b>{endTime}</b>
+                {t("pauseDetailModal.start")} <b>{startTime}</b><br/>
+                {t("pauseDetailModal.end")} <b>{endTime}</b>
             </p>
 
             {pauseInterval.comment && (
                 <div className="alert alert-info">
-                    <strong>Commentaire</strong><br/>
+                    <strong>{t("pauseDetailModal.comment")}</strong><br/>
                     {pauseInterval.comment.content}
                 </div>
             )}
@@ -51,7 +54,7 @@ const PauseDetailModal = ({
             <div className="flex flex-space-between-justified">
                 <button className="btn" onClick={closeModal} type="button">
                     <i className="fas fa-times m-r-sm"/>
-                    Fermer
+                    {t("common.close")}
                 </button>
 
                 {pauseInterval.id && (
@@ -63,7 +66,7 @@ const PauseDetailModal = ({
                         type="button"
                     >
                         <i className="fas fa-trash m-r-sm" />
-                        Supprimer la pause
+                        {t("pauseDetailModal.deletePause")}
                     </button>
                 )}
             </div>

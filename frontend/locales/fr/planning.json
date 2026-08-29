@@ -1,0 +1,40 @@
+{
+    "common": {
+        "close": "Fermer"
+    },
+    "kinds": {
+        "course": "Cours",
+        "option": "Option"
+    },
+    "pauseDetailModal": {
+        "notDefined": "Non défini",
+        "title": "Détail de la pause",
+        "start": "Début :",
+        "end": "Fin :",
+        "comment": "Commentaire",
+        "deletePause": "Supprimer la pause"
+    },
+    "studentModal": {
+        "title": "Selection"
+    },
+    "roomActivitiesListModal": {
+        "title": "Activités de la salle {{label}}"
+    },
+    "selectActivity": {
+        "title": "Autres Activités à afficher",
+        "allLocationsPlaceholder": "Tous les emplacements",
+        "selectActivitiesPlaceholder": "Sélectionner d'autres activités"
+    },
+    "selectTeachers": {
+        "planningOf": "Planning de"
+    },
+    "yearlyCalendar": {
+        "coursesPlanned": "{{n}} cours prévus sur la saison",
+        "legendExisting": "Existant"
+    },
+    "rawPlanning": {
+        "noActivityThisWeek": "Aucune activité cette semaine.",
+        "optionMarker": "(option)",
+        "occupancy": "{{n}}/{{limit}} élèves"
+    }
+}

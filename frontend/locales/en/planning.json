@@ -1,0 +1,40 @@
+{
+    "common": {
+        "close": "Close"
+    },
+    "kinds": {
+        "course": "Course",
+        "option": "Option"
+    },
+    "pauseDetailModal": {
+        "notDefined": "Not set",
+        "title": "Break details",
+        "start": "Start:",
+        "end": "End:",
+        "comment": "Comment",
+        "deletePause": "Delete the break"
+    },
+    "studentModal": {
+        "title": "Selection"
+    },
+    "roomActivitiesListModal": {
+        "title": "Activities for room {{label}}"
+    },
+    "selectActivity": {
+        "title": "Other activities to display",
+        "allLocationsPlaceholder": "All locations",
+        "selectActivitiesPlaceholder": "Select other activities"
+    },
+    "selectTeachers": {
+        "planningOf": "Planning of"
+    },
+    "yearlyCalendar": {
+        "coursesPlanned": "{{n}} courses scheduled this season",
+        "legendExisting": "Existing"
+    },
+    "rawPlanning": {
+        "noActivityThisWeek": "No activity this week.",
+        "optionMarker": "(option)",
+        "occupancy": "{{n}}/{{limit}} students"
+    }
+}

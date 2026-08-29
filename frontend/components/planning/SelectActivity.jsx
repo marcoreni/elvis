@@ -2,6 +2,7 @@ import React from "react";
 import { array, func, number } from "prop-types";
 import _ from "lodash";
 import Select from "react-select";
+import { withTranslation } from "react-i18next";
 import { reactOptionMapper } from "../utils";
 
 //------------------
@@ -165,21 +166,21 @@ class SelectActivity extends React.Component {
     };
 
     render() {
-        const { mode, locations } = this.props;
+        const { mode, locations, t } = this.props;
         const { options, values } = this.state;
 
         return <div>
-            <h3>Autres Activités à afficher</h3>
+            <h3>{t("selectActivity.title")}</h3>
             <div className="flex flex-center-aligned" style={{ minWidth: "400px" }}>
                 {mode === "room" && <Select
-                    placeholder="Tous les emplacements"
+                    placeholder={t("selectActivity.allLocationsPlaceholder")}
                     isClearable
                     onChange={v => this.handleChangeLocation(v)}
                     options={locations.map(reactOptionMapper())}
                     className="m-r-sm"
                     styles={SELECT_STYLES} />}
                 <Select
-                    placeholder="Sélectionner d'autres activités"
+                    placeholder={t("selectActivity.selectActivitiesPlaceholder")}
                     isMulti
                     isClearable
                     hideSelectedOptions
@@ -202,4 +203,4 @@ SelectActivity.propTypes = {
     onChange: func,
 };
 
-export default SelectActivity;
+export default withTranslation("planning")(SelectActivity);

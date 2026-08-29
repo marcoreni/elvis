@@ -380,10 +380,26 @@ et à mesure de son intégration :
           persistée + gros fixtures par action (même blocage « factory Season » que la branche
           evaluation) — différées, clés vérifiées par `bin/i18n-tasks health` (0/0). Vérification :
           health 0 manquant / 0 inutilisé (467 clés).
-    - [ ] **Lot 2 — modales feuilles** : `CreateActivityModal`, `EvaluationModal`,
-          `MultiViewModal`, `PauseDetailModal`, `QuestionnaireModal`, `StudentModal`,
-          `RoomActivitiesListModal`, `SelectActivity/Location/Teachers`, `RawPlanning`,
-          `YearlyCalendar`. Crée le namespace i18next `planning`.
+    - [x] **Lot 2a — composants feuilles simples** : branche
+          `feature/i18n-06-extract-planning-modals`. `PauseDetailModal`, `QuestionnaireModal`,
+          `RoomActivitiesListModal`, `SelectTeachers` (fonction → `useTranslation`) ;
+          `StudentModal`, `SelectActivity`, `YearlyCalendar`, `RawPlanning` (classe →
+          `withTranslation("planning")`). **Crée le namespace i18next `planning`**
+          (`frontend/locales/{fr,en}/planning.json`, câblé dans `frontend/i18n/index.js` +
+          `index.test.js`). Clés sous `planning.<composant>.*` + partagées `planning.common.close`
+          et `planning.kinds.{course,option}` (réutilisées entre `StudentModal` et
+          `YearlyCalendar`). `QuestionnaireModal` réutilise `common:reactTable.loadingText` ;
+          `StudentModal` réutilise `common:actions.save`. `RawPlanning` : `t` passé en prop aux
+          sous-composants module-level `RawActivity`/`OptionItems`. `SelectLocation.jsx` : aucune
+          chaîne visible, non touché. Interpolation `{{n}}`/`{{limit}}`/`{{label}}` (jamais
+          `{{count}}`). 1 faute préservée verbatim (`studentModal.title` « Selection »), consignée
+          dans `docs/KnownIssues.md`. Tests : `frontend/components/planning/PlanningModals.test.jsx`
+          (8 tests, fr+en). `yarn test` → 26 fichiers / 70 tests verts.
+    - [ ] **Lot 2b — modales à helpers module-level** : `CreateActivityModal`, `EvaluationModal`,
+          `MultiViewModal` (nombreuses chaînes portées par des sous-composants module-level →
+          `t` à faire descendre en prop). `EvaluationModal` : `renderStudentOptions` est du code
+          mort (jamais appelé) — ne pas extraire, éventuellement supprimer. Deux orthographes de
+          « Élève » dans `EvaluationModal` (« Elève » / « Élève ») à unifier.
     - [ ] **Lot 3** : `Calendar.jsx` + `TimeInterval*.jsx` + `SimplePlanning.jsx`.
     - [ ] **Lot 4** : `Planning.jsx` (1792 l., conteneur).
     - [ ] **Lot 5** : `ActivityDetailsModal.jsx` (2053 l.).

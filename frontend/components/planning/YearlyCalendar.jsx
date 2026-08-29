@@ -1,6 +1,7 @@
 import React from "react";
 import { Calendar as ReactYearlyCalendar } from "react-yearly-calendar";
 import _, {isArray} from "lodash";
+import { withTranslation } from "react-i18next";
 import { ISO_DATE_FORMAT } from "../utils";
 
 const moment = require("moment");
@@ -18,6 +19,7 @@ export default class YearlyCalendar extends React.Component
 
     render()
     {
+        const { t } = this.props;
         const legend = this.props.legend
 
         // appel d'une fonction à chaque rendu et on force le rendu après chaques clic pour contourner un bug de réact
@@ -48,7 +50,7 @@ export default class YearlyCalendar extends React.Component
         return (
             <div>
                 <h2>{this.props.label}</h2>
-                <h3>{_.size((isArray(activityInstances) ? activityInstances : Object.values(activityInstances)).filter(ai => ai.selected))} cours prévus sur la saison</h3>
+                <h3>{t("yearlyCalendar.coursesPlanned", {n: _.size((isArray(activityInstances) ? activityInstances : Object.values(activityInstances)).filter(ai => ai.selected))})}</h3>
                 <ReactYearlyCalendar
                     start={moment(this.props.season && this.props.season.start)}
                     end={moment(this.props.season && this.props.season.end)}
@@ -63,12 +65,12 @@ export default class YearlyCalendar extends React.Component
 
                 <div className="flex m-t">
                     <div className="flex m-r-sm">
-                        <b className="m-r-xs">{legend ? legend.selected : "Cours"}</b>
+                        <b className="m-r-xs">{legend ? legend.selected : t("kinds.course")}</b>
                         <div className="calendar-key-color" style={{backgroundColor: "#d63031"}}>
                         </div>
                     </div>
                     <div className="flex m-r-sm">
-                        <b className="m-r-xs">{legend? legend.unselected : "Existant"}</b>
+                        <b className="m-r-xs">{legend? legend.unselected : t("yearlyCalendar.legendExisting")}</b>
                         <div className="calendar-key-color" style={{backgroundColor: "#d630318F"}}>
                         </div>
                     </div>
