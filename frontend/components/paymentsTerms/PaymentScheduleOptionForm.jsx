@@ -5,10 +5,12 @@ import swal from "sweetalert2";
 import { toast } from "react-toastify";
 import * as api from "../../tools/api";
 import { PAYMENT_SCHEDULE_OPTIONS_PAYMENTS_NUMBERS } from "../advancedSearch/utils";
+import { useTranslation } from "react-i18next";
 
 export default function PaymentScheduleOptionForm({ paymentScheduleOption, action, return_url, method, pricingCategories }) {
+    const { t } = useTranslation("payments");
     if (paymentScheduleOption) {
-        if (!PAYMENT_SCHEDULE_OPTIONS_PAYMENTS_NUMBERS.map(t => t.nb).includes(paymentScheduleOption.payments_number)) {
+        if (!PAYMENT_SCHEDULE_OPTIONS_PAYMENTS_NUMBERS.map(opt => opt.nb).includes(paymentScheduleOption.payments_number)) {
             paymentScheduleOption.other_payments_number = paymentScheduleOption.payments_number;
             paymentScheduleOption.payments_number = 0;
         }
@@ -37,17 +39,17 @@ export default function PaymentScheduleOptionForm({ paymentScheduleOption, actio
 
     const onDayForCollectionAdd = () => {
         swal({
-            title: "Ajouter un jour de règlement",
-            text: "Veuillez saisir le jour de règlement",
+            title: t("terms.optionForm.addDayTitle"),
+            text: t("terms.optionForm.addDayPrompt"),
             input: "number",
             showCancelButton: true,
-            confirmButtonText: "Ajouter",
-            cancelButtonText: "Annuler",
+            confirmButtonText: t("common:actions.add"),
+            cancelButtonText: t("common:actions.cancel"),
             inputValidator: (value) => {
                 if (!value) {
-                    return "Veuillez saisir un jour de règlement";
+                    return t("terms.optionForm.addDayEmpty");
                 } else if (value < 1 || value > 31) {
-                    return "Veuillez saisir un jour de règlement valide";
+                    return t("terms.optionForm.addDayInvalid");
                 }
             },
         }).then((result) => {
@@ -66,14 +68,14 @@ export default function PaymentScheduleOptionForm({ paymentScheduleOption, actio
      */
     const submit = (e) => {
         if ((statedPaymentScheduleOption.available_payments_days || []).length === 0) {
-            toast.error("Veuillez ajouter au moins un jour de règlement", {
+            toast.error(t("terms.optionForm.needOneDay"), {
                 autoClose: 3000,
             });
             return;
         }
 
         if ((statedPaymentScheduleOption.payments_months || []).length !== (statedPaymentScheduleOption.payments_number || parseInt(statedPaymentScheduleOption.other_payments_number))) {
-            toast.error("Veuillez sélectionner un mois de règlement pour chaque échéance", {
+            toast.error(t("terms.optionForm.needMonthPerDue"), {
                 autoClose: 3000,
             });
             return;
@@ -95,10 +97,10 @@ export default function PaymentScheduleOptionForm({ paymentScheduleOption, actio
             })
             .error(res => {
                 swal({
-                    title: "Erreur",
+                    title: t("general.reminder.errorTitle"),
                     text: res.error,
                     type: "error",
-                    confirmButtonText: "Fermer",
+                    confirmButtonText: t("terms.optionForm.close"),
                 });
             });
 
@@ -110,7 +112,7 @@ export default function PaymentScheduleOptionForm({ paymentScheduleOption, actio
     return <Fragment>
         <div className="row wrapper border-bottom white-bg page-heading m-b-md">
             <h2>
-                {statedPaymentScheduleOption.id ? `Modifier l'option d'échéancier de paiement "${paymentScheduleOption.label}"` : "Ajouter une option d'échéancier de paiement"}
+                {statedPaymentScheduleOption.id ? t("terms.optionForm.editTitle", { label: paymentScheduleOption.label }) : t("terms.optionForm.addTitle")}
             </h2>
         </div>
 
@@ -122,7 +124,7 @@ export default function PaymentScheduleOptionForm({ paymentScheduleOption, actio
         >
             <div className="row mb-3">
                 <div className={"col-md-12"}>
-                    <h4>Nom de l'option d'échéancier de paiement <span className={"text-danger"}>*</span></h4>
+                    <h4>{t("terms.optionForm.nameLabel")} <span className={"text-danger"}>*</span></h4>
                     <input
                         type={"text"}
                         className={"form-control"}
@@ -138,7 +140,7 @@ export default function PaymentScheduleOptionForm({ paymentScheduleOption, actio
 
             <div className="row mb-3">
                 <div className={"col-md-12"}>
-                    <h4>Nombre d'échéances <span className={"text-danger"}>*</span></h4>
+                    <h4>{t("terms.optionForm.numberOfDues")} <span className={"text-danger"}>*</span></h4>
 
                     <select
                         className="custom-select form-control"
@@ -150,15 +152,15 @@ export default function PaymentScheduleOptionForm({ paymentScheduleOption, actio
                         })}
                     >
                         <option key={null} value={null}></option>
-                        {PAYMENT_SCHEDULE_OPTIONS_PAYMENTS_NUMBERS.map(t => <option key={t.nb} value={t.nb}>{t.label}</option>)}
-                        <option key={0} value={0}>Autres</option>
+                        {PAYMENT_SCHEDULE_OPTIONS_PAYMENTS_NUMBERS.map(opt => <option key={opt.nb} value={opt.nb}>{opt.label}</option>)}
+                        <option key={0} value={0}>{t("terms.optionForm.other")}</option>
                     </select>
                 </div>
             </div>
 
             {statedPaymentScheduleOption.payments_number === 0 && <div className="row mb-3">
                 <div className={"col-md-12"}>
-                    <h4>Autres <span className={"text-danger"}>*</span></h4>
+                    <h4>{t("terms.optionForm.other")} <span className={"text-danger"}>*</span></h4>
                     <input
                         type={"number"}
                         min={1}
@@ -175,9 +177,8 @@ export default function PaymentScheduleOptionForm({ paymentScheduleOption, actio
 
             <div className="row mb-5">
                 <div className={"col-md-12"}>
-                    <h4>Tarif associé </h4>
-                    <small>Sélectionner le type de tarif que vous voulez associer à cette option d'échéancier de
-                        paiement. Les types de tarifs sont à définir dans le menu Paiement > paramétrage</small>
+                    <h4>{t("terms.optionForm.associatedPricing")} </h4>
+                    <small>{t("terms.optionForm.associatedPricingHelp")}</small>
 
                     <select
                         className="custom-select form-control"
@@ -187,7 +188,7 @@ export default function PaymentScheduleOptionForm({ paymentScheduleOption, actio
                             pricing_category_id: parseInt(e.target.value),
                         })}
                     >
-                        <option key={0} value={null}>Aucun</option>
+                        <option key={0} value={null}>{t("terms.optionForm.none")}</option>
                         {pricingCategories.map(pricingCategory => <option key={pricingCategory.id} value={pricingCategory.id}>{pricingCategory.name}</option>)}
                     </select>
                 </div>
@@ -195,7 +196,7 @@ export default function PaymentScheduleOptionForm({ paymentScheduleOption, actio
 
             <div className="row">
                 <div className={"col-md-12"}>
-                    <h4>Sélectionner le ou les mois de règlement</h4>
+                    <h4>{t("terms.optionForm.selectMonths")}</h4>
 
                     <ToggleButtonGroup
                         maxSelected={statedPaymentScheduleOption.payments_number === 0 ? statedPaymentScheduleOption.other_payments_number || 12 : statedPaymentScheduleOption.payments_number}
@@ -213,16 +214,16 @@ export default function PaymentScheduleOptionForm({ paymentScheduleOption, actio
 
             <div className={"row mt-5"}>
                 <div className={"col-md-12"}>
-                    <h4>Jour du règlement</h4>
+                    <h4>{t("terms.optionForm.collectionDay")}</h4>
                 </div>
 
                 <div className={"col-md-12 mt-3"}>
-                    Ajouter un ou plusieurs jours possibles de règlement. L'élève pourra choisir le jour souhaité.
+                    {t("terms.optionForm.collectionDayHelp")}
                 </div>
 
                 <div className={"col-md-12 mt-3 text-right"}>
                     <button className={"btn btn-primary"} onClick={onDayForCollectionAdd} type={"button"}>
-                        <i className={"fa fa-plus"} /> Ajouter un jour de règlement
+                        <i className={"fa fa-plus"} /> {t("terms.optionForm.addDayTitle")}
                     </button>
                 </div>
             </div>
@@ -240,7 +241,7 @@ export default function PaymentScheduleOptionForm({ paymentScheduleOption, actio
             <div className="row mt-4">
                 <div className={"col-md-12 text-right"}>
                     <button type="submit" className={"btn btn-primary"}>
-                        Enregistrer
+                        {t("common:actions.save")}
                     </button>
                 </div>
             </div>

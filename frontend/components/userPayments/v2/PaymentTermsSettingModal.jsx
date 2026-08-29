@@ -4,9 +4,11 @@ import * as api from "../../../tools/api";
 import swal from "sweetalert2";
 import { MONTHS } from "../../../tools/constants";
 import ToggleButtonGroup from "../../ToggleButtonGroup";
+import {useTranslation} from "react-i18next";
 
 export default function PaymentTermsSettingModal({season, user, children, onSaved, isForNew = false})
 {
+    const {t} = useTranslation("payments");
     const [modalIsOpen, setModalIsOpen] = useState(false);
     const [paymentTerm, setPaymentTerm] = useState({paymentScheduleOptionId: null, onDay: null, paymentMethodIndex: null});
 
@@ -37,8 +39,8 @@ export default function PaymentTermsSettingModal({season, user, children, onSave
                 console.error(data);
 
                 swal({
-                    title: "Erreur",
-                    text: "Une erreur est survenue lors de la récupération des conditions de paiement.",
+                    title: t("general.reminder.errorTitle"),
+                    text: t("terms.v2.fetchTermsError"),
                     type: "error",
                 });
             })
@@ -64,8 +66,8 @@ export default function PaymentTermsSettingModal({season, user, children, onSave
                     console.error(data);
 
                     swal({
-                        title: "Erreur",
-                        text: "Une erreur est survenue lors de la récupération des données",
+                        title: t("general.reminder.errorTitle"),
+                        text: t("terms.v2.fetchDataError"),
                         type: "error",
                     });
                 })
@@ -84,8 +86,8 @@ export default function PaymentTermsSettingModal({season, user, children, onSave
                     console.error(data);
 
                     swal({
-                        title: "Erreur",
-                        text: "Une erreur est survenue lors de la récupération des moyens de paiement",
+                        title: t("general.reminder.errorTitle"),
+                        text: t("terms.v2.fetchMethodsError"),
                         type: "error",
                     });
                 })
@@ -108,8 +110,8 @@ export default function PaymentTermsSettingModal({season, user, children, onSave
                 setModalIsOpen(false);
 
                 swal({
-                    title: "Succès",
-                    text: "Les modalités de paiement ont bien été enregistrées.",
+                    title: t("general.reminder.successTitle"),
+                    text: t("terms.v2.savedText"),
                     type: "success",
                 });
 
@@ -124,8 +126,8 @@ export default function PaymentTermsSettingModal({season, user, children, onSave
                 console.error(data);
 
                 swal({
-                    title: "Erreur",
-                    text: "Une erreur est survenue lors de l'enregistrement des modalités de paiement.",
+                    title: t("general.reminder.errorTitle"),
+                    text: t("terms.v2.saveError"),
                     type: "error",
                 });
             })
@@ -153,14 +155,14 @@ export default function PaymentTermsSettingModal({season, user, children, onSave
         >
             <div className="row">
                 <div className="m-t-md alert alert-warning px-sm-3 py-sm-4">
-                    Attention, une fois la modalité sélectionnée, vous ne pourrez plus la modifier pour cette saision<br/>
-                    Il sera possible de modfier le jour et la méthode de paiement.
+                    {t("terms.v2.modalWarning")}<br/>
+                    {t("terms.v2.modalWarning2")}
                 </div>
             </div>
 
             <div className="row">
                 <div className="col-sm-6">
-                    <p>Sélectionnez l'option d'échéancier de paiement </p>
+                    <p>{t("terms.v2.selectOption")} </p>
                     <select className="form-control"
                             disabled={!isForNew}
                             value={paymentTerm.paymentScheduleOptionId || ""}
@@ -171,14 +173,14 @@ export default function PaymentTermsSettingModal({season, user, children, onSave
                 </div>
                 <div className="col-sm-12">
                     {paymentTerm.paymentScheduleOptionId && <div className="m-t-md alert alert-info px-sm-3 py-sm-4">
-                        Le règlement sera fait au(x) mois de {payTermObject.payments_months.map(m => MONTHS[m]).join(", ")}
+                        {t("terms.v2.monthsInfo", { months: payTermObject.payments_months.map(m => MONTHS[m]).join(", ") })}
                     </div>}
                 </div>
             </div>
 
             <div className="m-t-md row">
                 <div className="col-sm-12">
-                    <p>Sélectionnez le jour de règlement</p>
+                    <p>{t("terms.v2.selectDay")}</p>
 
                     <div className="row">
                         {payTermObject && <ToggleButtonGroup
@@ -192,7 +194,7 @@ export default function PaymentTermsSettingModal({season, user, children, onSave
 
             <div className="row m-t-md">
                 <div className="col-sm-12">
-                    <p>Sélectionnez le moyen de paiement</p>
+                    <p>{t("terms.v2.selectMethod")}</p>
                 </div>
 
                 <ToggleButtonGroup
@@ -213,7 +215,7 @@ export default function PaymentTermsSettingModal({season, user, children, onSave
             <div className="row m-t-md">
                 <div className="col-sm-12 text-right">
                     <button className="btn btn-primary px-sm-5" onClick={onSave}>
-                        Enregistrer
+                        {t("common:actions.save")}
                     </button>
                 </div>
             </div>
