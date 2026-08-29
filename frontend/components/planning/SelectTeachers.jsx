@@ -1,10 +1,12 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 export default function SelectTeachers({listTeacher, selectedName, currentUser, date}) {
+    const { t } = useTranslation("planning");
     return (
         <div className="row wrapper border-bottom white-bg page-heading">
             <h2>
                 <div className="dropdown">
-                    Planning de
+                    {t("selectTeachers.planningOf")}
                     <button data-toggle="dropdown"
                             className="dropdown-toggle transparentSelector font-underlined img-rounded"
                             aria-expanded="false"> {selectedName.last_name} {selectedName.first_name} <b className="caret"></b>

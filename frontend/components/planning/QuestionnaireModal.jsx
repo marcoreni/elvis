@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import EvaluationForm from "../evaluation/EvaluationForm";
 import Modal from "react-modal";
 import { getAnswersObject } from "../evaluation/Evaluation";
@@ -12,6 +13,7 @@ const QuestionnaireModal = ({
     toggleModal,
     isOpen,
 }) => {
+    const { t } = useTranslation("planning");
     const isLoading = !student || !questions || !questionnaire;
 
     return (
@@ -28,7 +30,7 @@ const QuestionnaireModal = ({
                 </button>
 
                 {isLoading ? (
-                    <p>{"Chargement..."}</p>
+                    <p>{t("common:reactTable.loadingText")}</p>
                 ) : (
                     <div>
                         <h3>{fullname(student)}</h3>

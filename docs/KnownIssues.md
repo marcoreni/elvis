@@ -326,6 +326,10 @@ value edit, no component or key changes:
 - `views.planning.show_availabilities_for_date.lock_link_message` — "…vraiment verouiller le planning…" → "…vraiment verrouiller le planning…"
 - `views.planning.show_for_conflict.heading` — "Resolution du conflit" → "Résolution du conflit"
 
+`frontend/locales/fr/planning.json` (added by feature/i18n-06-extract-planning-modals, lot 2a):
+- `studentModal.title` — "Selection" → "Sélection" (missing accent; preserved verbatim from
+  `StudentModal.jsx`)
+
 Also re-scan the whole `frontend/locales/fr/` + `config/locales/fr.yml` when doing this (grep for
 `Edition\b`, `Editer\b`, `Selectionn`, `réglement`, `Echéance`, `Echec`, `Emmeteur`, `Precedent`,
 `Creer\b`, `verouiller`, `Resolution\b`); the list above is only what was noticed in passing, not
