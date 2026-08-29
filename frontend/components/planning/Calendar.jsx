@@ -281,7 +281,9 @@ class CustomCalendar extends React.Component {
                             seasons: props.seasons,
                             user: props.user,
                             isMonthView: this.props.view === "month",
-                            t,
+                            // read the current prop (not the mount-time `t`) so schedule titles
+                            // re-render in the active language when the calendar re-renders
+                            t: this.props.t,
                         }
                     );
                 },
@@ -322,20 +324,25 @@ class CustomCalendar extends React.Component {
 
     calculateTotalHours() {
         const currentDate = moment(this.props.day);
+        // isoWeek (always Monday-start) rather than "week" (locale-dependent): the tui-calendar
+        // grid is hardcoded to startDayOfWeek: 1, so the week-total window must be Monday-start
+        // regardless of the active locale. (This used to be kept aligned by a hardcoded
+        // moment.locale("fr") here, now removed — locale is centralized in frontend/i18n.)
+        const granularity = this.props.view === "week" ? "isoWeek" : this.props.view;
 
         const lessonIntervals = this.props.intervals.filter(
             i =>
                 (i.isValidated && i.kind === "c") ||
                 (i.kind === "p" &&
                     i.start !== i.end &&
-                    moment(i.start).isSame(currentDate, this.props.view))
+                    moment(i.start).isSame(currentDate, granularity))
         );
         const optionIntervals = this.props.intervals.filter(
             i =>
                 i.isValidated &&
                 i.kind === "o" &&
                 i.start !== i.end &&
-                moment(i.start).isSame(currentDate, this.props.view)
+                moment(i.start).isSame(currentDate, granularity)
         );
 
         const lessonMinutes = lessonIntervals.map(i =>

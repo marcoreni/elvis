@@ -31,7 +31,7 @@ afterEach(async () => {
     await i18n.changeLanguage("fr");
 });
 
-describe("getTimeTemplate (month view, non-validated schedule)", () => {
+describe("getTimeTemplate — month view, non-validated schedule", () => {
     const schedule = {
         start: new Date("2026-09-01T10:00:00Z"),
         end: new Date("2026-09-01T11:00:00Z"),
@@ -51,6 +51,65 @@ describe("getTimeTemplate (month view, non-validated schedule)", () => {
         await i18n.changeLanguage("en");
         const html = getTimeTemplate(schedule, false, false, { isMonthView: true, t: planningT() });
         expect(html).toContain("Avail. Course");
+    });
+
+    test("private schedule uses the (now translated) private label", async () => {
+        await i18n.changeLanguage("fr");
+        const html = getTimeTemplate({ ...schedule, isPrivate: true }, false, false, { isMonthView: true, t: planningT() });
+        expect(html).toContain("Privé");
+        expect(html).not.toContain("Private");
+    });
+});
+
+// tui-calendar hands getTimeTemplate a TZDate (has both toDate() and toUTCString()); the
+// non-month branch calls schedule.start.toDate() while the shared prelude calls toUTCString().
+const tzDate = iso => {
+    const d = new Date(iso);
+    return { toDate: () => d, toUTCString: () => d.toUTCString() };
+};
+
+describe("getTimeTemplate — week/day view (non-month branch)", () => {
+    const base = {
+        start: tzDate("2026-09-01T10:00:00Z"),
+        end: tzDate("2026-09-01T11:00:00Z"),
+        kind: "e",
+        isPrivate: false,
+        isValidated: false,
+        isReadOnly: false,
+        recurrenceRule: null,
+        attendees: [],
+        location: "Salle 1",
+        teacher: { first_name: "Ada", last_name: "Lovelace" },
+        raw: {},
+        activity: null,
+        activityInstance: null,
+    };
+
+    test("availability title in French / English", async () => {
+        await i18n.changeLanguage("fr");
+        expect(getTimeTemplate(base, false, false, { t: planningT() })).toContain("Dispo. Evaluation");
+
+        await i18n.changeLanguage("en");
+        expect(getTimeTemplate(base, false, false, { t: planningT() })).toContain("Avail. Evaluation");
+    });
+
+    test("cover-teacher line uses the reused replacedBy key", async () => {
+        const covered = {
+            ...base,
+            activity: {
+                teacher: { id: 1 },
+                users: [],
+                activity_ref: { id: 7, occupation_limit: 4 },
+            },
+            activityInstance: { inactive_students: [] },
+            raw: { activity_instance: { cover_teacher: { id: 2, first_name: "Grace", last_name: "Hopper" } } },
+        };
+
+        await i18n.changeLanguage("fr");
+        expect(getTimeTemplate(covered, false, false, { t: planningT(), user: { id: 1 } })).toContain("Remplacé par");
+
+        await i18n.changeLanguage("en");
+        expect(getTimeTemplate(covered, false, false, { t: planningT(), user: { id: 1 } })).toContain("Replaced by");
     });
 });
 

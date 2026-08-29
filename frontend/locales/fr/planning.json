@@ -13,7 +13,7 @@
         "availabilityOption": "Dispo. Option",
         "availabilityCourse": "Dispo. Cours",
         "availabilityEvaluation": "Dispo. Evaluation",
-        "private": "Private"
+        "private": "Privé"
     },
     "calendar": {
         "daynamesShort": ["Dim", "Lun", "Mar", "Mer", "Jeu", "Ven", "Sam"],

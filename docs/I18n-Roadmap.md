@@ -430,7 +430,7 @@ et à mesure de son intégration :
           → `withTranslation("planning")` ; `t` descendu (via prop / options) dans `getTimeTemplate`
           (templates HTML `tui-calendar`) et `CalendarControls`. Nouvelles clés
           `planning.scheduleTitles.*` (« Disponibilité », « Dispo. Option/Cours/Evaluation »,
-          « Private » — verbatim, cf. KnownIssues) et `planning.calendar.*` (`daynamesShort` en
+          « Privé » — corrigé de « Private » sur signalement revue) et `planning.calendar.*` (`daynamesShort` en
           tableau JSON via `t(..., {returnObjects:true})`, `moreSchedules` `{{n}}`, `presences`,
           `substituteFor`, `views.{month,week,day}`, `tooltips.{seasonStart,today,nextSeason}`,
           `hoursSummary` `{{lesson}}/{{option}}`). Réutilise `kinds.pause`,
@@ -438,8 +438,13 @@ et à mesure de son intégration :
           en dur dans `calculateTotalHours` supprimé (la locale moment est centralisée dans
           `frontend/i18n/index.js`). `ConflictDisplayItem` = code mort (jamais rendu) → laissé,
           consigné dans KnownIssues. `getTimeTemplate` et `CalendarControls` exportés pour le test
-          (tui-calendar ne monte pas proprement en jsdom). Test : `Calendar.test.jsx` (4, fr+en).
-          `yarn test` → 30 fichiers / 87 tests.
+          (tui-calendar ne monte pas proprement en jsdom). Test : `Calendar.test.jsx` (7, fr+en —
+          vue mois, vue semaine/jour, ligne remplaçant). `yarn test` → 30 fichiers / 90 tests.
+          **Revue `/code-review`** : `calculateTotalHours` passé à `isoWeek` (fenêtre du total
+          d'heures alignée sur la grille lundi-début quelle que soit la locale) ; template `time:`
+          lit `this.props.t` (titres de créneaux suivent la langue au re-render) ;
+          `scheduleTitles.private` corrigé en « Privé » ; couverture branche non-mois ajoutée.
+          Résidu consigné (KnownIssues) : `daynames` + templates `function` figés au mount.
     - [ ] **Lot 3c** : `TimeIntervalHelpers.jsx` — module de helpers **purs** partagés
           (`formatIntervalsForSchedule` titres « Disponibilité »/« Dispo. Evaluation »/« Evaluation » ;
           `levelDisplay` « NON INDIQUÉ » / « À PRÉCISER » ; `averageAgeDisplay`). Appelé depuis
