@@ -394,7 +394,10 @@ et à mesure de son intégration :
           chaîne visible, non touché. Interpolation `{{n}}`/`{{limit}}`/`{{label}}` (jamais
           `{{count}}`). 1 faute préservée verbatim (`studentModal.title` « Selection »), consignée
           dans `docs/KnownIssues.md`. Tests : `frontend/components/planning/PlanningModals.test.jsx`
-          (8 tests, fr+en). `yarn test` → 26 fichiers / 70 tests verts.
+          (9 tests, fr+en). `yarn test` → 26 fichiers / 71 tests verts. **Revue `/code-review` :
+          1 bug corrigé (`YearlyCalendar` importait `withTranslation` mais l'export n'était pas
+          enveloppé → `t is not a function` au rendu ; commit `5e36a87`, + cas de test de
+          non-régression).
     - [ ] **Lot 2b — modales à helpers module-level** : `CreateActivityModal`, `EvaluationModal`,
           `MultiViewModal` (nombreuses chaînes portées par des sous-composants module-level →
           `t` à faire descendre en prop). `EvaluationModal` : `renderStudentOptions` est du code

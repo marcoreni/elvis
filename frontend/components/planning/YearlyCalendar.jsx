@@ -6,7 +6,7 @@ import { ISO_DATE_FORMAT } from "../utils";
 
 const moment = require("moment");
 
-export default class YearlyCalendar extends React.Component
+class YearlyCalendar extends React.Component
 {
     constructor(props)
     {
@@ -79,3 +79,5 @@ export default class YearlyCalendar extends React.Component
         );
     }
 }
+
+export default withTranslation("planning")(YearlyCalendar);

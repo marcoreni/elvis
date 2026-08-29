@@ -17,6 +17,7 @@ import StudentModal from "./StudentModal";
 import SelectTeachers from "./SelectTeachers";
 import RawPlanning from "./RawPlanning";
 import SelectActivity from "./SelectActivity";
+import YearlyCalendar from "./YearlyCalendar";
 
 afterEach(async () => {
     await i18n.changeLanguage("fr");
@@ -99,6 +100,30 @@ describe("RawPlanning", () => {
         await i18n.changeLanguage("en");
         rerender(<RawPlanning data={{}} seasons={[]} isTeacher={false} />);
         expect(screen.getByText("No activity this week.")).toBeInTheDocument();
+    });
+});
+
+describe("YearlyCalendar", () => {
+    // Regression guard: YearlyCalendar is a withTranslation("planning")-wrapped class; a missing
+    // wrapper would surface here as "t is not a function" rather than a silent prod crash.
+    const props = {
+        label: "Cours de guitare",
+        season: {start: "2026-09-01", end: "2027-06-30", holidays: []},
+        activityInstances: [],
+        handlePickDate: () => {},
+    };
+
+    test("renders its translated headings in both locales", async () => {
+        await i18n.changeLanguage("fr");
+        const {rerender} = render(<YearlyCalendar {...props} />);
+        expect(screen.getByText("0 cours prévus sur la saison")).toBeInTheDocument();
+        expect(screen.getByText("Cours")).toBeInTheDocument();
+        expect(screen.getByText("Existant")).toBeInTheDocument();
+
+        await i18n.changeLanguage("en");
+        rerender(<YearlyCalendar {...props} />);
+        expect(screen.getByText("0 courses scheduled this season")).toBeInTheDocument();
+        expect(screen.getByText("Existing")).toBeInTheDocument();
     });
 });
 
