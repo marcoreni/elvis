@@ -414,7 +414,36 @@ et à mesure de son intégration :
           chacune ; câbler une fixture `Season` est un TODO de suivi.
     - [x] **Vérification** : `bin/i18n-tasks health` → 0 manquant / 0 inutilisé (365 clés).
           `bundle exec rspec` → 93 exemples, 0 échec. `yarn test` → 8 fichiers / 22 tests, verts.
-  - [ ] `courses` / `formules`
+  - [ ] `courses`
+  - [x] `formules` — branche `feature/i18n-06-extract-formules` *(dépend de 01+02)*
+    - [x] `frontend/components/formules/` : `Formules.jsx` (liste + swal archive/suppression) et
+          `EditFormule.jsx` (formulaire créer/éditer, modale d'ajout d'activités, tableau de
+          tarifs) passés en `useTranslation("formules")` (nouveau namespace i18next `formules` —
+          `frontend/locales/{fr,en}/formules.json`, câblé dans `frontend/i18n/index.js`). Clés sous
+          `formules.list.*` / `formules.form.*`. Réutilise `common:actions.{save,validate}`,
+          `common:confirm.sure` et `common:reactTable.*` (⚠️ `Formules.jsx` disait `rowsText="lignes"`
+          en dur — remplacé par la clé partagée `common:reactTable.rowsText` = « résultats » / « results »,
+          léger changement de libellé assumé, même choix que lot 2c-i pour « Précédent »).
+    - [x] `EditFormule.jsx` : l'interpolation sous-lexicale `actionType` (« création »/« modification »
+          injectée dans « Erreur de … » / « … lors de la … de la formule ») supprimée au profit d'une
+          sélection à deux clés (`isCreating ? t(...Create) : t(...Edit)`), grammaticalement sûre en
+          anglais. Idem « La formule a été créée/modifiée avec succès ». Le helper module-level
+          `CreateButton` (label en dur « Créer un tarif ») remplacé par une closure inline dans le
+          composant pour accéder à `t`.
+    - [x] `app/views/formules/{index,new,edit}.html.erb` : seuls les `<h2>` contenaient du texte —
+          clés `views.formules.{index,new,edit}.heading` (fr.yml + en.yml, « formule » → « package »
+          comme dans `payments.json`). `show.html.erb` = pur point de montage `react_component`,
+          rien à extraire.
+    - [x] `NewFormule.jsx` + `NewFormulePricingDataService.js` : `NewFormule` (composant) monté
+          nulle part — écran « créer » historique remplacé par `EditFormule`. **Non traduit, laissé
+          en place** (politique recover-don't-delete) ; consigné dans `docs/KnownIssues.md`
+          (« `formules/NewFormule.jsx` — dead »). `NewFormulePricingDataService` reste utilisé par
+          `EditFormule`.
+    - [x] Pas de composant `formules/*` rendu en SSR (`prerender`) — la dette
+          `server_rendering.js` (ligne ~355) ne bloque donc pas cette branche.
+    - [ ] **Tests** : `Formules.test.jsx`, `EditFormule.test.jsx` (Vitest, pattern `i18n.changeLanguage`),
+          `spec/requests/formules_pages_spec.rb` (index/new/edit fr+en, garde anti-`"translation missing"`).
+    - [ ] **Vérification** : `bin/i18n-tasks health`, `bundle exec rspec`, `yarn test`, `/code-review`.
   - [ ] `parameters` / `editParameters` restants
   - [~] `payments` — **branche `feature/i18n-06-extract-payments` : 1er lot fait, reste à
         découper.** Le domaine `payments` est bien plus gros que les autres (~19 vues ERB, ~31

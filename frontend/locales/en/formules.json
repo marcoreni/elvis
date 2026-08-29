@@ -1,0 +1,74 @@
+{
+    "list": {
+        "intro": "You can create packages to offer a single price for several activities.",
+        "create": "Create a package",
+        "columns": {
+            "name": "Package name",
+            "activities": "Activities or activity families",
+            "actions": "Actions"
+        },
+        "archivedBadge": "Archived",
+        "archiveAction": "Archive",
+        "unarchiveAction": "Unarchive",
+        "deleteDisabledTitle": "A package that is in use cannot be deleted",
+        "delete": {
+            "confirmText": "Do you really want to delete this package?",
+            "successTitle": "Package deleted",
+            "successText": "The package was deleted successfully",
+            "errorTitle": "An error occurred while deleting the package"
+        },
+        "archive": {
+            "archivedTitle": "Package archived",
+            "unarchivedTitle": "Package unarchived",
+            "archivedText": "The package is no longer offered at registration. Existing registrations are not affected.",
+            "unarchivedText": "The package is offered at registration again.",
+            "errorTitle": "An error occurred while archiving the package"
+        },
+        "fetchError": "An error occurred while fetching the data"
+    },
+    "form": {
+        "name": {
+            "label": "Package name"
+        },
+        "description": {
+            "label": "Description"
+        },
+        "activities": {
+            "label": "Activities",
+            "addButton": "Add an activity",
+            "help": "Add the activities or an activity family that make up your track",
+            "emptyTitle": "No activity specified",
+            "emptyAction": "Add an activity to the package"
+        },
+        "pricing": {
+            "createButton": "Create a price",
+            "columns": {
+                "name": "Name",
+                "amount": "Price in €",
+                "seasons": "Seasons concerned"
+            },
+            "oneResourceTypeName": "a price",
+            "thisResourceTypeName": "this price"
+        },
+        "modal": {
+            "title": "Add activities to a package",
+            "selectLabel": "Select a family or activities",
+            "nbLabel": "Number of activities to choose among the selected activities"
+        },
+        "validation": {
+            "nbActivities": "Please enter a valid number greater than 0.",
+            "atLeastOnePricing": "You must add at least one price.",
+            "priceNotZero": "The price cannot be zero."
+        },
+        "submit": {
+            "errorTitleCreate": "Creation error",
+            "errorTitleEdit": "Update error",
+            "successCreate": "The package was created successfully",
+            "successEdit": "The package was updated successfully",
+            "requestErrorCreate": "An error occurred while creating the package",
+            "requestErrorEdit": "An error occurred while updating the package"
+        },
+        "fetchError": "An error occurred while fetching the data",
+        "fetchSeasonsError": "An error occurred while fetching the seasons or price categories"
+    }
+}

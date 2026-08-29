@@ -1,4 +1,5 @@
 import React, { Fragment, useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import * as api from "../../tools/api";
 import swal from "sweetalert2";
 import ReactTable from "react-table";
@@ -50,6 +51,8 @@ import _ from "lodash";
  */
 export default function EditFormule({formule})
 {
+    const {t} = useTranslation("formules");
+
     const [name, setName] = useState(formule.name);
     const [description, setDescription] = useState(formule.description);
     const [active, setActive] = useState(formule.active);
@@ -90,13 +93,13 @@ export default function EditFormule({formule})
                 })
                 .error(res =>
                 {
-                    swal("Une erreur est survenue lors de la récupération des données", res.error, "error");
+                    swal(t("form.fetchError"), res.error, "error");
                 })
                 .get('/activity_ref_kind', {});
         }
         catch (e)
         {
-            await swal("Une erreur est survenue lors de la récupération des données", e.message, "error");
+            await swal(t("form.fetchError"), e.message, "error");
         }
     }
 
@@ -111,13 +114,13 @@ export default function EditFormule({formule})
                 })
                 .error(res =>
                 {
-                    swal("Une erreur est survenue lors de la récupération des données", res.error, "error");
+                    swal(t("form.fetchError"), res.error, "error");
                 })
                 .get('/activity_ref', {});
         }
         catch (e)
         {
-            await swal("Une erreur est survenue lors de la récupération des données", e.message, "error");
+            await swal(t("form.fetchError"), e.message, "error");
         }
     }
 
@@ -133,13 +136,13 @@ export default function EditFormule({formule})
                 })
                 .error(res =>
                 {
-                    swal("Une erreur est survenue lors de la récupération des saisons ou des catégories de prix", res.error, "error");
+                    swal(t("form.fetchSeasonsError"), res.error, "error");
                 })
                 .get("/activity_ref_pricings/get_seasons_and_pricing_categories", {});
         }
         catch (e)
         {
-            await swal("Une erreur est survenue lors de la récupération des saisons ou des catégories de prix", e.message, "error");
+            await swal(t("form.fetchSeasonsError"), e.message, "error");
         }
 
     }
@@ -192,7 +195,7 @@ export default function EditFormule({formule})
         {
             setValidationError(prevState => ({
                 ...prevState,
-                nbActivitiesToSelect: 'Veuillez entrer un nombre valide supérieur à 0.'
+                nbActivitiesToSelect: t("form.validation.nbActivities")
             }));
             setNumberOfItems(isNaN(value) ? '' : value);
         }
@@ -225,32 +228,33 @@ export default function EditFormule({formule})
         e.preventDefault();
 
         const isCreating = !formule.id;
-        const actionType = isCreating ? "création" : "modification";
+        const errorTitle = isCreating ? t("form.submit.errorTitleCreate") : t("form.submit.errorTitleEdit");
+        const requestErrorTitle = isCreating ? t("form.submit.requestErrorCreate") : t("form.submit.requestErrorEdit");
 
         if (selectedPricings.length === 0) {
             setValidationError(prevState => ({
                 ...prevState,
-                priceCategory: 'Vous devez ajouter au moins un tarif.'
+                priceCategory: t("form.validation.atLeastOnePricing")
             }));
 
-            swal(`Erreur de ${actionType}`, "Vous devez ajouter au moins un tarif.", "error");
+            swal(errorTitle, t("form.validation.atLeastOnePricing"), "error");
             return;
         }
 
         if (selectedPricings.some(p => p.price === 0)) {
             setValidationError(prevState => ({
                 ...prevState,
-                price: 'Le prix ne peut pas être nul.'
+                price: t("form.validation.priceNotZero")
             }));
 
-            swal(`Erreur de ${actionType}`, "Le prix ne peut pas être nul.", "error");
+            swal(errorTitle, t("form.validation.priceNotZero"), "error");
             return;
         }
 
         const request = api.set()
             .success(res => {
                 swal({
-                    title: `La formule a été ${isCreating ? 'créée' : 'modifiée'} avec succès`,
+                    title: isCreating ? t("form.submit.successCreate") : t("form.submit.successEdit"),
                     type: "success",
                     timer: 1500,
                 });
@@ -265,9 +269,9 @@ export default function EditFormule({formule})
             })
             .error(res => {
                 if(res.errors)
-                    swal(`Une erreur est survenue lors de la ${actionType} de la formule`, res.error, "error");
+                    swal(requestErrorTitle, res.error, "error");
                 else
-                    swal(`Une erreur est survenue lors de la ${actionType} de la formule`, "", "error");
+                    swal(requestErrorTitle, "", "error");
             });
 
         if(formule.id) {
@@ -322,17 +326,17 @@ export default function EditFormule({formule})
     const pricingColumns = [
         {
             id: "pricing_name",
-            Header: "Nom",
+            Header: t("form.pricing.columns.name"),
             accessor: "pricing_category.name",
         },
         {
             id: "amount",
-            Header: "Tarif en €",
+            Header: t("form.pricing.columns.amount"),
             accessor: "price",
         },
         {
             id: "selectedSeasons",
-            Header: "Saisons concernées",
+            Header: t("form.pricing.columns.seasons"),
             Cell: row => {
                 const seasonStart = allSeasons.find(s => s.id === row.original.from_season_id);
                 const seasonEnd = row.original.to_season_id !== undefined ? allSeasons.find(s => s.id === row.original.to_season_id) : null;
@@ -378,20 +382,20 @@ export default function EditFormule({formule})
             <div className="row">
                 <div className="col-md-6 col-xs-12">
                     <div className="form-group mb-5">
-                        <label htmlFor="name">Nom de la formule</label>
+                        <label htmlFor="name">{t("form.name.label")}</label>
                         <input type="text" className="form-control" value={name}
                                onChange={e => setName(e.target.value)} />
                     </div>
 
                     <div className="form-group mb-5">
-                        <label htmlFor="description">Description</label>
+                        <label htmlFor="description">{t("form.description.label")}</label>
                         <textarea className="form-control" id="description" rows="3" value={description}
                                   onChange={e => setDescription(e.target.value)} />
                     </div>
 
                         <div className="row">
                             <div className="col-sm-10">
-                                <label htmlFor="activites">Activités</label>
+                                <label htmlFor="activites">{t("form.activities.label")}</label>
                             </div>
                             <div className="col-sm-2 text-right">
                                 <button
@@ -399,7 +403,7 @@ export default function EditFormule({formule})
                                     className="btn btn-primary"
                                     onClick={() => setActivityModalIsOpen(true)}
                                 >
-                                    Ajouter une activité
+                                    {t("form.activities.addButton")}
                                 </button>
                             </div>
                         </div>
@@ -407,8 +411,7 @@ export default function EditFormule({formule})
                         <div className="row">
                             <div className="col-12 mt-2 mb-3">
                                 <p style={{ color: "#555" }}>
-                                    Ajouter les activités ou une famille
-                                    d’activité qui composent votre parcours
+                                    {t("form.activities.help")}
                                 </p>
                             </div>
                         </div>
@@ -426,14 +429,14 @@ export default function EditFormule({formule})
                                     }}
                                 >
                                     <p className="h6 mb-2 font-weight-bold" style={{ color: "#000000" }}>
-                                        Aucune activité renseignée
+                                        {t("form.activities.emptyTitle")}
                                     </p>
                                     <button
                                         type="button"
                                         className="btn btn-link p-0"
                                         onClick={() => setActivityModalIsOpen(true)}
                                     >
-                                        Ajouter une activité à la formule
+                                        {t("form.activities.emptyAction")}
                                     </button>
                                 </div>
                             </div>
@@ -490,7 +493,12 @@ export default function EditFormule({formule})
                             dataService={pricingDataService}
                             columns={pricingColumns}
                             actionButtons={DefaultActionButtons}
-                            createButton={CreateButton.bind(this)}
+                            createButton={({onCreate}) => (
+                                <DefaultCreateButton
+                                    label={t("form.pricing.createButton")}
+                                    onCreate={onCreate}
+                                />
+                            )}
                             formContentComponent={
                                 (props) => <ActivityRefPricingModal
                                     {...props}
@@ -499,8 +507,8 @@ export default function EditFormule({formule})
                                 />
                             }
                             showFullScreenButton={false}
-                            oneResourceTypeName="un tarif"
-                            thisResourceTypeName="ce tarif"
+                            oneResourceTypeName={t("form.pricing.oneResourceTypeName")}
+                            thisResourceTypeName={t("form.pricing.thisResourceTypeName")}
                             defaultSorted={[{id: "to_season_id", desc: true}, {id: "pricing_category_id", asc: true}]}
                         />
                     </div>
@@ -508,7 +516,7 @@ export default function EditFormule({formule})
             </div>
 
             <div className="col-md-12 mt-5">
-                <button type="submit" className="btn btn-primary">Enregistrer</button>
+                <button type="submit" className="btn btn-primary">{t("common:actions.save")}</button>
             </div>
         </form>
 
@@ -517,10 +525,10 @@ export default function EditFormule({formule})
             <button type="button" className="close" onClick={() => setActivityModalIsOpen(false)}>&times;</button>
 
             <div className="row m-5">
-                <h2 className="m-0">Ajouter des activités à une formule</h2>
+                <h2 className="m-0">{t("form.modal.title")}</h2>
                 <div className="mt-5">
                     <div className="form-group mb-5">
-                        <label htmlFor="activites">Sélectionner une famille ou des activités</label>
+                        <label htmlFor="activites">{t("form.modal.selectLabel")}</label>
                         <ReactSelect
                             options={displayActivities()}
                             isMulti={true}
@@ -542,8 +550,7 @@ export default function EditFormule({formule})
                             <div className="text-danger">{validationError.selectedActivities}</div>}
                     </div>
                     <div className="form-group mb-5">
-                        <label htmlFor="activitiesToSelect">Nombre d'activités à choisir parmi les activités
-                            sélectionnées</label>
+                        <label htmlFor="activitiesToSelect">{t("form.modal.nbLabel")}</label>
                         <input
                             type="text"
                             className="form-control"
@@ -558,17 +565,8 @@ export default function EditFormule({formule})
                 </div>
             </div>
             <div className="row text-right m-5">
-                <button className="btn btn-primary" onClick={handleValidateActivitiesChanges}>Valider</button>
+                <button className="btn btn-primary" onClick={handleValidateActivitiesChanges}>{t("common:actions.validate")}</button>
             </div>
         </Modal>
     </div>
-}
-
-function CreateButton({onCreate}) {
-    return (
-        <DefaultCreateButton
-            label={"Créer un tarif"}
-            onCreate={onCreate}
-        />
-    );
 }
