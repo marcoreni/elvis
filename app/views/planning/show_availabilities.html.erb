@@ -1,15 +1,15 @@
 <div class="row wrapper border-bottom white-bg page-heading">
-    <h1>Mes disponibilités</h1>
+    <h1><%= t("views.planning.show_availabilities.heading") %></h1>
 </div>
 
 <div class="row p-sm">
     <div class="col-lg-6">
         <% unless @next_season.nil? %>
             <div class="jumbotron bg-white">
-                <h2>Cours de la prochaine Saison</h2>
-                <p>Mes disponibilités pour les cours de la <%= @next_season.label %>.</p>
+                <h2><%= t("views.planning.show_availabilities.next_season_title") %></h2>
+                <p><%= t("views.planning.show_availabilities.next_season_text", season: @next_season.label) %></p>
                 <p>
-                    <%= link_to "Modifier", availabilities_planning_path(@planning["id"]), class: "btn btn-primary" %>
+                    <%= link_to t("views.planning.actions.edit"), availabilities_planning_path(@planning["id"]), class: "btn btn-primary" %>
                 </p>
             </div>
         <% end %>
@@ -17,12 +17,12 @@
 
     <div class="col-lg-6">
         <div class="jumbotron bg-white">
-            <h2>Evaluations des nouveaux élèves</h2>
-            <p>Mes disponibilités pour les évaluations de la <%= @eval_season.label %>.</p>
+            <h2><%= t("views.planning.show_availabilities.eval_title") %></h2>
+            <p><%= t("views.planning.show_availabilities.eval_text", season: @eval_season.label) %></p>
             <div>
                 <%= react_component("availability/WeekSelector", {
                     planningId: @planning[:id],
-                    buttonLabel: "Modifier"
+                    buttonLabel: t("views.planning.actions.edit")
                 }) %>
             </div>
         </div>

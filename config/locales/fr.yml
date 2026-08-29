@@ -279,3 +279,41 @@ fr:
         payments:
             index:
                 heading: Suivi des paiements
+        planning:
+            actions:
+                lock_the_planning: Verrouiller le planning
+                unlock_the_planning: Déverrouiller le planning
+                edit: Modifier
+            validation_alert:
+                warning: Attention
+                teacher: "Vous avez jusqu'au %{date} pour valider votre planning !"
+                admin: "Les professeurs ont jusqu'au %{date} pour valider leur planning. Ils en sont informés."
+            index_for_rooms:
+                heading: Plannings des Salles de Cours
+                new_room: Creer une nouvelle salle
+                empty: "Aucune salle de cours n'est enregistrée."
+            index_for_teachers:
+                heading: Plannings des professeurs
+            show:
+                my_planning: Mon Planning
+                planning_of: Planning de
+            show_generic:
+                my_availabilities_for: "Mes disponibilités pour %{season}"
+                planning_of_user: "Planning de %{first_name} %{last_name}"
+                change_teacher: Changer de professeur
+            show_availabilities:
+                heading: Mes disponibilités
+                next_season_title: Cours de la prochaine Saison
+                next_season_text: "Mes disponibilités pour les cours de la %{season}."
+                eval_title: Evaluations des nouveaux élèves
+                eval_text: "Mes disponibilités pour les évaluations de la %{season}."
+            show_availabilities_for_date:
+                heading: "Mes disponibilités :"
+                eval_range: "Evaluations du %{from} au %{to}"
+                copy_link_label: Copier le planning de la saison en cours
+                copy_link_message: "Voulez-vous vraiment importer le planning de la saison en cours ? Cela supprimera toutes les modifications pour la saison prochaine."
+                lock_link_message: "Voulez-vous vraiment verouiller le planning ? Vous devrez vous adresser à un.e permanent.e pour tout changement."
+            show_for_conflict:
+                heading: Resolution du conflit
+            show_for_room:
+                heading: Planning de la salle

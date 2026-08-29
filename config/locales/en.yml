@@ -276,3 +276,41 @@ en:
         payments:
             index:
                 heading: Payment tracking
+        planning:
+            actions:
+                lock_the_planning: Lock the planning
+                unlock_the_planning: Unlock the planning
+                edit: Edit
+            validation_alert:
+                warning: Warning
+                teacher: "You have until %{date} to validate your planning!"
+                admin: "Teachers have until %{date} to validate their planning. They have been notified."
+            index_for_rooms:
+                heading: Classroom plannings
+                new_room: Create a new classroom
+                empty: "No classroom is registered."
+            index_for_teachers:
+                heading: Teacher plannings
+            show:
+                my_planning: My planning
+                planning_of: Planning of
+            show_generic:
+                my_availabilities_for: "My availability for %{season}"
+                planning_of_user: "Planning of %{first_name} %{last_name}"
+                change_teacher: Change teacher
+            show_availabilities:
+                heading: My availability
+                next_season_title: Next season's classes
+                next_season_text: "My availability for the %{season} classes."
+                eval_title: New student evaluations
+                eval_text: "My availability for the %{season} evaluations."
+            show_availabilities_for_date:
+                heading: "My availability:"
+                eval_range: "Evaluations from %{from} to %{to}"
+                copy_link_label: Copy the current season's planning
+                copy_link_message: "Do you really want to import the current season's planning? This will delete all changes for next season."
+                lock_link_message: "Do you really want to lock the planning? You will need to contact a staff member for any change."
+            show_for_conflict:
+                heading: Conflict resolution
+            show_for_room:
+                heading: Planning of the classroom

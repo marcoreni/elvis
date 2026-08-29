@@ -321,7 +321,12 @@ value edit, no component or key changes:
 - `userPayments.paymentsList.checkIssuerLabel` — "Emmeteur du Chèque" → "Émetteur du chèque"
 - `userPayments.paymentsList.firstCheckNumberLabel` — "…seront incrémenté automatiquement" → "…seront incrémentés automatiquement"
 
+`config/locales/fr.yml` (added by feature/i18n-06-extract-planning lot 1):
+- `views.planning.index_for_rooms.new_room` — "Creer une nouvelle salle" → "Créer une nouvelle salle"
+- `views.planning.show_availabilities_for_date.lock_link_message` — "…vraiment verouiller le planning…" → "…vraiment verrouiller le planning…"
+- `views.planning.show_for_conflict.heading` — "Resolution du conflit" → "Résolution du conflit"
+
 Also re-scan the whole `frontend/locales/fr/` + `config/locales/fr.yml` when doing this (grep for
-`Edition\b`, `Editer\b`, `Selectionn`, `réglement`, `Echéance`, `Echec`, `Emmeteur`, `Precedent`);
-the list above is only what was noticed in passing, not an exhaustive audit. The English side of
-these keys is already spelled correctly.
+`Edition\b`, `Editer\b`, `Selectionn`, `réglement`, `Echéance`, `Echec`, `Emmeteur`, `Precedent`,
+`Creer\b`, `verouiller`, `Resolution\b`); the list above is only what was noticed in passing, not
+an exhaustive audit. The English side of these keys is already spelled correctly.

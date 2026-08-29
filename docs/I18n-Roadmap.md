@@ -362,7 +362,32 @@ et à mesure de son intégration :
       garde-fou / une locale explicite plutôt qu'un simple `import`.
 - [ ] **`feature/i18n-06-extract-<domaine>`** *(répétable, mutuellement indépendantes, ~15-30
       fichiers chacune)* — une branche par domaine, dans n'importe quel ordre :
-  - [ ] `planning`
+  - [~] `planning` — **le plus gros domaine du chantier** (~10 vues ERB + ~10 000 lignes de React,
+        dont `Planning.jsx` 1792 l. et `ActivityDetailsModal.jsx` 2053 l.). Découpé en lots
+        empilés, un PR par lot (même approche que `payments`) :
+    - [x] **Lot 1 — vues ERB** : branche `feature/i18n-06-extract-planning`. Tous les
+          `app/views/planning/*.erb` : titres, alertes de date-limite de validation, boutons
+          verrouiller/déverrouiller, labels/messages des `ConfirmLink`. Clés backend sous
+          `views.planning.*` (`actions.{lock_the_planning,unlock_the_planning,edit}` réutilisées
+          entre 3 vues ; `validation_alert.{warning,teacher,admin}` partagées entre `show` et
+          `show_generic` ; le reste par vue). Interpolation Rails `%{...}` (dates, saison, nom du
+          prof). `show_all_rooms.html.erb` / `show_simple.erb` = purs points de montage
+          `react_component`, rien à extraire. **Pas encore de namespace i18next `planning`** (lot 1
+          n'a aucune chaîne React) — il sera créé au premier lot React. 3 fautes de frappe
+          préservées verbatim, consignées dans `docs/KnownIssues.md` (« Creer », « verouiller »,
+          « Resolution »). Tests : `spec/requests/planning_pages_spec.rb` couvre `index_for_rooms`
+          / `index_for_teachers` en fr+en ; les vues `show*` ont besoin d'une `Season` courante
+          persistée + gros fixtures par action (même blocage « factory Season » que la branche
+          evaluation) — différées, clés vérifiées par `bin/i18n-tasks health` (0/0). Vérification :
+          health 0 manquant / 0 inutilisé (467 clés).
+    - [ ] **Lot 2 — modales feuilles** : `CreateActivityModal`, `EvaluationModal`,
+          `MultiViewModal`, `PauseDetailModal`, `QuestionnaireModal`, `StudentModal`,
+          `RoomActivitiesListModal`, `SelectActivity/Location/Teachers`, `RawPlanning`,
+          `YearlyCalendar`. Crée le namespace i18next `planning`.
+    - [ ] **Lot 3** : `Calendar.jsx` + `TimeInterval*.jsx` + `SimplePlanning.jsx`.
+    - [ ] **Lot 4** : `Planning.jsx` (1792 l., conteneur).
+    - [ ] **Lot 5** : `ActivityDetailsModal.jsx` (2053 l.).
+    - [ ] **Lot 6** : sous-arbres `activity_management/*` + `practice_planning/*`.
   - [ ] `activities`
   - [x] `evaluation` — branche `feature/i18n-06-extract-evaluation` *(dépend de 01+02)*
     - [x] `frontend/components/evaluation/` : `Evaluation.jsx`, `EvaluationForm.jsx`,

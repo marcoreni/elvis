@@ -1,26 +1,26 @@
 <div class="row wrapper border-bottom white-bg page-heading">
     <% unless current_user.admin? %>
         <h2>
-            Mes disponibilités pour <%= @season["label"] %>
+            <%= t("views.planning.show_generic.my_availabilities_for", season: @season["label"]) %>
             <% if !@planning[:is_locked] and current_user.teacher? %>
                 <%= button_to({ :action => "lock"}, {:form_class => "pull-right", :class => "btn btn-primary"}) do %>
-                    <i class="fas fa-lock"></i> Verrouiller le planning
+                    <i class="fas fa-lock"></i> <%= t("views.planning.actions.lock_the_planning") %>
                 <% end %>
             <% end %>
         </h2>
     <% else %>
         <h2>
-            Planning de <%= @planning[:user][:first_name] %> <%= @planning[:user][:last_name] %>
+            <%= t("views.planning.show_generic.planning_of_user", first_name: @planning[:user][:first_name], last_name: @planning[:user][:last_name]) %>
 
             <% if @planning[:is_locked] and current_user.admin? %>
                 <%= button_to({ :action => "unlock"}, {:form_class => "pull-right", :class => "btn btn-primary btn-xs m-l-lg"}) do %>
-                    <i class="fas fa-unlock"></i> Déverrouiller le planning
+                    <i class="fas fa-unlock"></i> <%= t("views.planning.actions.unlock_the_planning") %>
                 <% end %>
             <% end %>
 
             <div class="dropdown pull-right text-xs">
                 <button data-toggle="dropdown" class="dropdown-toggle btn btn-primary btn-xs" aria-expanded="false">
-                    Changer de professeur <b class="caret"></b>
+                    <%= t("views.planning.show_generic.change_teacher") %> <b class="caret"></b>
                 </button>
                 <ul class="dropdown-menu m-t-xs">
                     <% @teachers.each do |teacher| %>
@@ -36,14 +36,14 @@
     <% if current_user.teacher? %>
         <div class="alert alert-danger" role="alert">
             <i class="fas fa-exclamation-triangle" aria-hidden="true"></i>
-            <strong>Attention</strong>
+            <strong><%= t("views.planning.validation_alert.warning") %></strong>
             <i class="fas fa-exclamation-triangle" aria-hidden="true"></i>
-            Vous avez jusqu'au <%= @validation_date.to_s(:french) %> pour valider votre planning !
+            <%= t("views.planning.validation_alert.teacher", date: @validation_date.to_s(:french)) %>
         </div>
     <% elsif current_user.admin? %>
         <div class="alert alert-warning" role="alert">
             <i class="fas fa-info-circle" aria-hidden="true"></i>
-            Les professeurs ont jusqu'au <%= @validation_date.to_s(:french) %> pour valider leur planning. Ils en sont informés.
+            <%= t("views.planning.validation_alert.admin", date: @validation_date.to_s(:french)) %>
         </div>
     <% end %>
 <% end %>
