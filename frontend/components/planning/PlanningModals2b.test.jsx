@@ -7,6 +7,7 @@
 import React from "react";
 import moment from "moment";
 import {render, screen} from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import i18n from "../../i18n";
 
 import CreateIntervalModal from "./CreateActivityModal";
@@ -43,7 +44,7 @@ describe("CreateActivityModal (CreateIntervalModal)", () => {
         expect(screen.getByText("Créer la disponibilité :")).toBeInTheDocument();
         expect(screen.getByText("La disponibilité sera ajoutée au créneau sélectionné.")).toBeInTheDocument();
         expect(screen.getByText("Cours")).toBeInTheDocument();
-        expect(screen.getByText("Evaluation")).toBeInTheDocument();
+        expect(screen.getByText("Évaluation")).toBeInTheDocument();
         expect(screen.getByText("Pause")).toBeInTheDocument();
         expect(screen.getByText("Annuler")).toBeInTheDocument();
         expect(screen.getByText("Enregistrer")).toBeInTheDocument();
@@ -56,6 +57,25 @@ describe("CreateActivityModal (CreateIntervalModal)", () => {
         expect(screen.getByText("The availability will be added to the selected slot.")).toBeInTheDocument();
         expect(screen.getByText("Cancel")).toBeInTheDocument();
         expect(screen.getByText("Save")).toBeInTheDocument();
+    });
+
+    test("admin recurrence view: choice buttons, then the slot-summary with from/to connectors", async () => {
+        await i18n.changeLanguage("en");
+        render(<CreateIntervalModal {...props()} currentUserIsAdmin recurrenceActivated />);
+
+        // First screen: the three "add ..." choices.
+        expect(screen.getByText("Add a course")).toBeInTheDocument();
+        expect(screen.getByText("Add an availability")).toBeInTheDocument();
+        expect(screen.getByText("Add a break")).toBeInTheDocument();
+
+        // Picking one reveals the slot summary, whose "de"/"à" connectors were previously
+        // hardcoded French (lot-2b review finding).
+        await userEvent.click(screen.getByText("Add an availability"));
+        expect(screen.getByRole("heading", {name: "Creating an availability"})).toBeInTheDocument();
+        const summary = screen.getByText("This slot will be added for:", {exact: false});
+        expect(summary).toHaveTextContent(/\bfrom\b/);
+        expect(summary).toHaveTextContent(/\bto\b/);
+        expect(summary).not.toHaveTextContent(/ de | à /);
     });
 });
 

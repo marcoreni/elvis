@@ -407,13 +407,17 @@ et à mesure de son intégration :
           `render()`). Nouvelles clés `planning.{createActivityModal,evaluationModal,multiViewModal}.*`
           + `planning.kinds.{evaluation,pause}` ; réutilise `planning.kinds.course`,
           `planning.common.close`, `common:actions.{cancel,save,delete}` (59 clés au total,
-          parité fr/en exacte). Les deux orthographes « Elève »/« Élève » d'`EvaluationModal`
-          unifiées sur une seule clé `evaluationModal.student` = « Élève ».
-          `renderStudentOptions` (code mort, jamais appelé) laissé tel quel, non extrait.
+          parité fr/en exacte, 61 après revue). Les deux orthographes « Elève »/« Élève »
+          d'`EvaluationModal` unifiées sur `evaluationModal.student` = « Élève » ; par cohérence
+          (revue `/code-review`), `kinds.evaluation` et `multiViewModal.students` corrigés de même
+          (« Evaluation » → « Évaluation », « Elèves » → « Élèves ») — consigné dans
+          `docs/KnownIssues.md`. `renderStudentOptions` (code mort) laissé tel quel.
           Le message riche « Veuillez aller sur la page **Gestion des évaluations** pour valider… »
-          découpé en 3 clés autour du `<strong>` conservé dans le JSX. Tests :
-          `frontend/components/planning/PlanningModals2b.test.jsx` (5 tests, fr+en). `yarn test`
-          → 27 fichiers / 76 tests verts.
+          découpé en 3 clés autour du `<strong>` conservé dans le JSX. Connecteurs « de »/« à » du
+          résumé de créneau (vue admin récurrence) extraits en `createActivityModal.timeFrom/timeTo`
+          (ratés à la 1re passe, repérés en revue). Tests :
+          `frontend/components/planning/PlanningModals2b.test.jsx` (6 tests, fr+en, dont la vue
+          admin récurrence via `userEvent.click`). `yarn test` → 27 fichiers / 77 tests verts.
     - [ ] **Lot 3** : `Calendar.jsx` + `TimeInterval*.jsx` + `SimplePlanning.jsx`.
     - [ ] **Lot 4** : `Planning.jsx` (1792 l., conteneur).
     - [ ] **Lot 5** : `ActivityDetailsModal.jsx` (2053 l.).

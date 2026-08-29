@@ -5,13 +5,15 @@
     "kinds": {
         "course": "Cours",
         "option": "Option",
-        "evaluation": "Evaluation",
+        "evaluation": "Évaluation",
         "pause": "Pause"
     },
     "createActivityModal": {
         "creatingPause": "Création d'une pause",
         "creatingAvailability": "Création d'une disponibilité",
         "slotWillBeAddedFor": "Ce créneau sera ajouté pour :",
+        "timeFrom": "de",
+        "timeTo": "à",
         "slotIsRecurrent": "Ce créneau est récurrent",
         "addCourse": "Ajout d'un cours",
         "addAvailability": "Ajout d'une disponibilité",
@@ -48,7 +50,7 @@
         "slotDetails": "Détails du créneau",
         "group": "Groupe",
         "room": "Salle",
-        "students": "Elèves",
+        "students": "Élèves",
         "none": "Aucun"
     },
     "pauseDetailModal": {

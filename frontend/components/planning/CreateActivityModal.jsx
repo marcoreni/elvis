@@ -64,8 +64,8 @@ class CreateIntervalModal extends React.Component {
                     <div className="row">
                         <div className="col-sm-12">
                             {t("createActivityModal.slotWillBeAddedFor")} <br />
-                            <strong>{toFullDateFr(this.props.newInterval.start)}</strong> de &nbsp;
-                            <strong>{new Date(this.props.newInterval.start).toLocaleTimeString()}</strong> à &nbsp;
+                            <strong>{toFullDateFr(this.props.newInterval.start)}</strong> {t("createActivityModal.timeFrom")} &nbsp;
+                            <strong>{new Date(this.props.newInterval.start).toLocaleTimeString()}</strong> {t("createActivityModal.timeTo")} &nbsp;
                             <strong>{new Date(this.props.newInterval.end).toLocaleTimeString()}</strong>
                         </div>
                     </div>

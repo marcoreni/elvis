@@ -12,6 +12,8 @@
         "creatingPause": "Creating a break",
         "creatingAvailability": "Creating an availability",
         "slotWillBeAddedFor": "This slot will be added for:",
+        "timeFrom": "from",
+        "timeTo": "to",
         "slotIsRecurrent": "This slot is recurring",
         "addCourse": "Add a course",
         "addAvailability": "Add an availability",

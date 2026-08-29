@@ -330,6 +330,14 @@ value edit, no component or key changes:
 - `studentModal.title` — "Selection" → "Sélection" (missing accent; preserved verbatim from
   `StudentModal.jsx`)
 
+Accent fixes **already applied** in `frontend/locales/fr/planning.json` during
+feature/i18n-06-extract-planning-modals-2 (lot 2b) — the source spellings were corrected rather
+than preserved, for consistency with the `evaluationModal.student` = "Élève" unification in the
+same lot (the `EvaluationModal.jsx` source had both "Elève" and "Élève"):
+- `kinds.evaluation` — source "Evaluation" → "Évaluation"
+- `multiViewModal.students` — source "Elèves" → "Élèves"
+- `evaluationModal.student` — source "Elève"/"Élève" → "Élève"
+
 Also re-scan the whole `frontend/locales/fr/` + `config/locales/fr.yml` when doing this (grep for
 `Edition\b`, `Editer\b`, `Selectionn`, `réglement`, `Echéance`, `Echec`, `Emmeteur`, `Precedent`,
 `Creer\b`, `verouiller`, `Resolution\b`); the list above is only what was noticed in passing, not
