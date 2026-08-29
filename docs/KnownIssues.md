@@ -267,6 +267,19 @@ evidently copied from. Found by the specialized `/code-review` of PR #11 (2026-0
 the i18n-06 lot-2a change only re-touched the `title` line. Safe to drop the whole `message` state
 block (and the `props.t` call with it) in a cleanup pass. Low priority.
 
+## `formules/NewFormule.jsx` — dead, superseded by `EditFormule.jsx`
+
+`frontend/components/formules/NewFormule.jsx` (a standalone default-export function component,
+~460 lines) plus its helper `NewFormulePricingDataService.js` look like an earlier "create" screen
+that `EditFormule.jsx` replaced — `EditFormule` handles both create and edit via `formule.id ?`,
+and it's the only formule editor mounted (`app/views/formules/{new,edit,show}.html.erb` all
+`react_component("formules/EditFormule", …)`). `NewFormule` (the component) is imported/mounted
+**nowhere**; only `NewFormulePricingDataService` is still referenced (by `EditFormule.jsx`, for the
+unsaved-formule pricing path). Surfaced 2026-08-29 during the i18n-06 `formules` extraction — left
+**untranslated and in place** per the recover-don't-delete policy above. Verify against activated
+plugins / prod logs, then delete `NewFormule.jsx` (keep `NewFormulePricingDataService.js`). Low
+priority.
+
 ## generalPayments tables freeze translated column headers at construct time
 
 `DuePaymentList.jsx` and `PaymentList.jsx` (and the smaller `PaymentScheduleList` filter setup)

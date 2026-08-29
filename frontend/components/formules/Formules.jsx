@@ -1,10 +1,13 @@
 import React, {useState} from 'react';
 import ReactTable from "react-table";
+import {useTranslation} from "react-i18next";
 import * as api from "../../tools/api";
 import swal from "sweetalert2";
 
 
 export default function Formules() {
+    const {t} = useTranslation("formules");
+
     const [data, setData] = useState([]);
     const [pages, setPages] = useState(0);
     const [loading, setLoading] = useState(false);
@@ -12,8 +15,8 @@ export default function Formules() {
     function deleteFormule(formule)
     {
         swal({
-            title: "Êtes-vous sûr ?",
-            text: "Voulez-vous vraiment supprimer cette formule ?",
+            title: t("common:confirm.sure"),
+            text: t("list.delete.confirmText"),
             type: "warning",
             buttons: true,
             dangerMode: true,
@@ -25,19 +28,19 @@ export default function Formules() {
                         .success(res => {
                             fetchData({page: 0, pageSize: 10, sorted: [], filtered: {}}, null);
                             swal({
-                                title: "Formule supprimée",
-                                text: "La formule a été supprimée avec succès",
+                                title: t("list.delete.successTitle"),
+                                text: t("list.delete.successText"),
                                 type: "success",
                                 timer: 1000
                             })
                         })
                         .error(res => {
-                            swal("Une erreur est survenue lors de la suppression de la formule", res.error, "error");
+                            swal(t("list.delete.errorTitle"), res.error, "error");
                         })
                         .del('/formules/' + formule.id, {})
                 } catch (error) {
                     console.error(error);
-                    swal("Une erreur est survenue lors de la suppression de la formule", error.message, "error");
+                    swal(t("list.delete.errorTitle"), error.message, "error");
                 }
             }
         });
@@ -50,16 +53,16 @@ export default function Formules() {
             .success(() => {
                 fetchData({page: 0, pageSize: 10, sorted: [], filtered: {}}, null);
                 swal({
-                    title: isArchived ? "Formule désarchivée" : "Formule archivée",
+                    title: isArchived ? t("list.archive.unarchivedTitle") : t("list.archive.archivedTitle"),
                     text: isArchived
-                        ? "La formule est de nouveau proposée à l'inscription."
-                        : "La formule n'est plus proposée à l'inscription. Les inscriptions existantes ne sont pas impactées.",
+                        ? t("list.archive.unarchivedText")
+                        : t("list.archive.archivedText"),
                     type: "success",
                     timer: 2500,
                 });
             })
             .error(res => {
-                swal("Une erreur est survenue lors de l'archivage de la formule", res.error, "error");
+                swal(t("list.archive.errorTitle"), res.error, "error");
             })
             .patch('/formules/' + formule.id + '/archive', {});
     }
@@ -69,24 +72,24 @@ export default function Formules() {
         return [
             {
                 id: "name",
-                Header: "Nom de la formule",
+                Header: t("list.columns.name"),
                 accessor: d => d.name,
                 Cell: props => (
                     <span>
                         {props.original.name}
                         {props.original["archived?"] &&
-                            <span className="badge badge-secondary m-l-sm">Archivée</span>}
+                            <span className="badge badge-secondary m-l-sm">{t("list.archivedBadge")}</span>}
                     </span>
                 ),
             },
             {
                 id: "activites",
-                Header: "Activités ou familles d'activités",
+                Header: t("list.columns.activities"),
                 accessor: d => (d.activities || []).map(activite => activite.display_name).join(', '),
             },
             {
                 id: "actions",
-                Header: "Actions",
+                Header: t("list.columns.actions"),
                 Cell: props => {
                     const isUsed = props.original["used?"];
                     const isArchived = props.original["archived?"];
@@ -97,7 +100,7 @@ export default function Formules() {
                             </a>
 
                             <a className="btn-sm btn-info m-r-sm"
-                               title={isArchived ? "Désarchiver" : "Archiver"}
+                               title={isArchived ? t("list.unarchiveAction") : t("list.archiveAction")}
                                onClick={() => archiveFormule(props.original)}>
                                 <i className={isArchived ? "fas fa-box-open" : "fas fa-archive"}/>
                             </a>
@@ -105,7 +108,7 @@ export default function Formules() {
                             {isUsed ? (
                                 <span className="btn-sm btn-warning disabled"
                                       style={{opacity: 0.5, cursor: "not-allowed"}}
-                                      title="Impossible de supprimer une formule utilisée">
+                                      title={t("list.deleteDisabledTitle")}>
                                     <i className="fas fa-trash"/>
                                 </span>
                             ) : (
@@ -131,7 +134,7 @@ export default function Formules() {
                     setPages(res.pages);
                 })
                 .error(res => {
-                    swal("Une erreur est survenue lors de la récupération des données", res.error, "error");
+                    swal(t("list.fetchError"), res.error, "error");
 
                 })
                 .get('/formules', {
@@ -141,7 +144,7 @@ export default function Formules() {
                     filtered: JSON.stringify(state.filtered)
                 })
         } catch (error) {
-            swal("Une erreur est survenue lors de la récupération des données", error, "error");
+            swal(t("list.fetchError"), error, "error");
         } finally {
             setLoading(false);
         }
@@ -149,10 +152,10 @@ export default function Formules() {
 
     return (
         <div>
-            <p>Vous pouvez créer des formules pour proposer un prix pour plusieurs activités.</p>
+            <p>{t("list.intro")}</p>
             <div className="text-right">
                 <a className="btn btn-sm btn-primary" href={"/formules/new"}>
-                    <i className="fa fa-plus mr-2"></i>Créer une formule
+                    <i className="fa fa-plus mr-2"></i>{t("list.create")}
                 </a>
             </div>
 
@@ -167,13 +170,13 @@ export default function Formules() {
                         manual
                         className="-striped -highlight"
                         defaultPageSize={10}
-                        previousText="Précédent"
-                        nextText="Suivant"
-                        loadingText="Chargement..."
-                        noDataText="Aucune donnée"
-                        pageText="Page"
-                        ofText="sur"
-                        rowsText="lignes"
+                        previousText={t("common:reactTable.previousText")}
+                        nextText={t("common:reactTable.nextText")}
+                        loadingText={t("common:reactTable.loadingText")}
+                        noDataText={t("common:reactTable.noDataText")}
+                        pageText={t("common:reactTable.pageText")}
+                        ofText={t("common:reactTable.ofText")}
+                        rowsText={t("common:reactTable.rowsText")}
                     />
                 </div>
             </div>

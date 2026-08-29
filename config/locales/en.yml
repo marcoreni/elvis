@@ -248,6 +248,13 @@ en:
         failed_payment_imports:
             index:
                 heading: Failed payment imports
+        formules:
+            index:
+                heading: Packages
+            new:
+                heading: Create a package
+            edit:
+                heading: Edit a package
         payment_method:
             index:
                 heading: Payment methods

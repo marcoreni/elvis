@@ -251,6 +251,13 @@ fr:
         failed_payment_imports:
             index:
                 heading: Liste des imports de paiements ratés
+        formules:
+            index:
+                heading: Formules
+            new:
+                heading: Créer une formule
+            edit:
+                heading: Modifier une formule
         payment_method:
             index:
                 heading: Moyens de paiement
