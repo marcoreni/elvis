@@ -8,6 +8,30 @@
         "evaluation": "Evaluation",
         "pause": "Break"
     },
+    "scheduleTitles": {
+        "availability": "Availability",
+        "availabilityOption": "Avail. Option",
+        "availabilityCourse": "Avail. Course",
+        "availabilityEvaluation": "Avail. Evaluation",
+        "private": "Private"
+    },
+    "calendar": {
+        "daynamesShort": ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
+        "moreSchedules": "{{n}} more",
+        "presences": "Attendance",
+        "substituteFor": "Substitute for",
+        "views": {
+            "month": "Month",
+            "week": "Week",
+            "day": "Day"
+        },
+        "tooltips": {
+            "seasonStart": "Season start",
+            "today": "Today",
+            "nextSeason": "Next season"
+        },
+        "hoursSummary": "Teaching hours: {{lesson}}, Options: {{option}}"
+    },
     "createActivityModal": {
         "creatingPause": "Creating a break",
         "creatingAvailability": "Creating an availability",

@@ -1,6 +1,7 @@
 import React from "react";
 import util from "tui-code-snippet";
 import Calendar from "tui-calendar";
+import { withTranslation } from "react-i18next";
 
 import * as TimeIntervalHelpers from "./TimeIntervalHelpers";
 import { getHoursString } from "../utils/DateUtils";
@@ -17,7 +18,7 @@ const EVENT_TYPES = [
     "clickSchedule",
 ];
 
-function getTimeTemplate(schedule, isMultiView, show_activity_code, {isAllDay=false, isRoomCalendar=false, seasons=[], user=null, isMonthView=false,}) {
+export function getTimeTemplate(schedule, isMultiView, show_activity_code, {isAllDay=false, isRoomCalendar=false, seasons=[], user=null, isMonthView=false, t=(k => k),}) {
     let html = [];
     const start = day(schedule.start.toUTCString());
     const end = day(schedule.end.toUTCString());
@@ -31,16 +32,16 @@ function getTimeTemplate(schedule, isMultiView, show_activity_code, {isAllDay=fa
 
         let monthTitle;
         if (schedule.isPrivate) {
-            monthTitle = "Private";
+            monthTitle = t("scheduleTitles.private");
         } else if (schedule.isValidated) {
             monthTitle = schedule.title;
         } else {
             switch (schedule.kind) {
-                case "o": monthTitle = "Dispo. Option"; break;
-                case "c": monthTitle = "Dispo. Cours"; break;
-                case "e": monthTitle = "Dispo. Evaluation"; break;
-                case "p": monthTitle = "Pause"; break;
-                default: monthTitle = "Disponibilité";
+                case "o": monthTitle = t("scheduleTitles.availabilityOption"); break;
+                case "c": monthTitle = t("scheduleTitles.availabilityCourse"); break;
+                case "e": monthTitle = t("scheduleTitles.availabilityEvaluation"); break;
+                case "p": monthTitle = t("kinds.pause"); break;
+                default: monthTitle = t("scheduleTitles.availability");
             }
         }
 
@@ -80,7 +81,7 @@ function getTimeTemplate(schedule, isMultiView, show_activity_code, {isAllDay=fa
     if (schedule.isPrivate)
     {
         locationTeacherDisplayLine += '<span class="calendar-font-icon ic-lock-b"></span>';
-        locationTeacherDisplayLine += " Private";
+        locationTeacherDisplayLine += " " + t("scheduleTitles.private");
     }
     else
     {
@@ -121,19 +122,19 @@ function getTimeTemplate(schedule, isMultiView, show_activity_code, {isAllDay=fa
                 TimeIntervalHelpers.averageAgeDisplay(TimeIntervalHelpers.averageAge(students));
         }
 
-        let title = "Disponibilité";
+        let title = t("scheduleTitles.availability");
         switch (schedule.kind) {
             case "o":
-                title = "Dispo. Option";
+                title = t("scheduleTitles.availabilityOption");
                 break;
             case "c":
-                title = "Dispo. Cours";
+                title = t("scheduleTitles.availabilityCourse");
                 break;
             case "e":
-                title = "Dispo. Evaluation";
+                title = t("scheduleTitles.availabilityEvaluation");
                 break;
             case "p":
-                title = "Pause";
+                title = t("kinds.pause");
                 break;
         }
         if (schedule.isValidated) {
@@ -151,9 +152,9 @@ function getTimeTemplate(schedule, isMultiView, show_activity_code, {isAllDay=fa
             const teacher = _.get(schedule.activity, "teacher");
 
             if(teacher && teacher.id === user.id) {
-                studentTeacherDisplayLine += `Remplacé par <a style="color:inherit;font-weight:bold;" href="/users/${coverTeacher.id}">${coverTeacher.first_name} ${coverTeacher.last_name}</a>`;
+                studentTeacherDisplayLine += `${t("multiViewModal.replacedBy")} <a style="color:inherit;font-weight:bold;" href="/users/${coverTeacher.id}">${coverTeacher.first_name} ${coverTeacher.last_name}</a>`;
             } else if(teacher && coverTeacher.id === user.id) {
-                studentTeacherDisplayLine = `Remplaçant de <a style="color:inherit;font-weight:bold;" href="/users/${teacher.id}">${teacher.first_name} ${teacher.last_name}</a>`
+                studentTeacherDisplayLine = `${t("calendar.substituteFor")} <a style="color:inherit;font-weight:bold;" href="/users/${teacher.id}">${teacher.first_name} ${teacher.last_name}</a>`
             }
         }
     }
@@ -193,7 +194,8 @@ class CustomCalendar extends React.Component {
         this.calRef = React.createRef();
     }
 
-    componentDidMount() {     
+    componentDidMount() {
+        const { t } = this.props;
         const timezoneName = moment.tz.guess();
         Calendar.setTimezoneOffsetCallback(function(timestamp) {
             return moment.tz.zone(timezoneName).utcOffset(timestamp);
@@ -219,7 +221,7 @@ class CustomCalendar extends React.Component {
             week: {
                 startDayOfWeek: 1,
                 narrowWeekend: false,
-                daynames: ["Dim", "Lun", "Mar", "Mer", "Jeu", "Ven", "Sam"],
+                daynames: t("calendar.daynamesShort", { returnObjects: true }),
                 hourStart: 8,
                 hourEnd: 22,
             },
@@ -237,7 +239,7 @@ class CustomCalendar extends React.Component {
                 },
                 monthGridHeaderExceed(hiddenSchedules) {
                     return '<span class="tui-full-calendar-weekday-grid-more-schedules">' +
-                        hiddenSchedules + " autres</span>";
+                        t("calendar.moreSchedules", { n: hiddenSchedules }) + "</span>";
                 },
                 weekDayname(dayname) {
                     return `<div class="flex">
@@ -259,7 +261,7 @@ class CustomCalendar extends React.Component {
                             (props.isAdmin || props.isTeacher)
                                 ? `<a href="/users/${props.user.id}/presence_sheet/${dayname.renderDate}"
                                 class="badge badge-primary" style="align-self: center;">
-                                Présences
+                                ${t("calendar.presences")}
                             </a>`
                                 : ""
                         }
@@ -278,7 +280,8 @@ class CustomCalendar extends React.Component {
                             isRoomCalendar: props.isRoomCalendar,
                             seasons: props.seasons,
                             user: props.user,
-                            isMonthView: this.props.view === "month"
+                            isMonthView: this.props.view === "month",
+                            t,
                         }
                     );
                 },
@@ -318,7 +321,6 @@ class CustomCalendar extends React.Component {
     }
 
     calculateTotalHours() {
-        moment.locale("fr");
         const currentDate = moment(this.props.day);
 
         const lessonIntervals = this.props.intervals.filter(
@@ -430,6 +432,7 @@ class CustomCalendar extends React.Component {
             <React.Fragment>
                 {this.props.conflict || this.props.generic ? null : (
                     <CalendarControls
+                        t={this.props.t}
                         currentDate={this.props.day}
                         conflicts={this.props.conflicts}
                         view={this.props.view}
@@ -453,7 +456,7 @@ class CustomCalendar extends React.Component {
                 )}
 
                 <div className="loader-wrap">
-                    {this.props.loading && <div className="loader">Chargement...</div>}
+                    {this.props.loading && <div className="loader">{this.props.t("common:reactTable.loadingText")}</div>}
                     <div ref={this.calRef} className={"conflict-calendar" + (this.props.loading && " loading" || "")} />
                 </div>
             </React.Fragment>
@@ -461,7 +464,8 @@ class CustomCalendar extends React.Component {
     }
 }
 
-const CalendarControls = ({
+export const CalendarControls = ({
+    t,
     currentDate,
     view,
     totalHours,
@@ -506,19 +510,19 @@ const CalendarControls = ({
                             className={`btn btn-primary ${view === "month" && "active"}`}
                             onClick={() => handleToggleView("month")}
                         >
-                            Mois
+                            {t("calendar.views.month")}
                         </button>
                         <button
                             className={`btn btn-primary ${view === "week" && "active"}`}
                             onClick={() => handleToggleView("week")}
                         >
-                            Semaine
+                            {t("calendar.views.week")}
                         </button>
                         <button
                             className={`btn btn-primary ${view === "day" && "active"}`}
                             onClick={() => handleToggleView("day")}
                         >
-                            Jour
+                            {t("calendar.views.day")}
                         </button>
                     </div>
                     <span className="separator">|</span>
@@ -528,19 +532,19 @@ const CalendarControls = ({
                     <div className="btn-group">
                         <button
                             className="btn btn-primary"
-                            data-tippy-content="Début de saison"
+                            data-tippy-content={t("calendar.tooltips.seasonStart")}
                             onClick={() => handleToggleSeasonStartView()}>
                             <i className="fas fa-angle-double-left"></i>
                         </button>
                         <button
                             className="btn btn-primary"
-                            data-tippy-content="Aujourd'hui"
+                            data-tippy-content={t("calendar.tooltips.today")}
                             onClick={() => handleToggleTodayView()}>
                             <i className="fas fa-arrow-down"></i>
                         </button>
                         <button
                             className="btn btn-primary"
-                            data-tippy-content="Prochaine Saison"
+                            data-tippy-content={t("calendar.tooltips.nextSeason")}
                             onClick={() => handleToggleNextSeasonStartView()}>
                             <i className="fas fa-angle-double-right"></i>
                         </button>
@@ -573,9 +577,10 @@ const CalendarControls = ({
                     ) : null}
                     <div className="m-l">
                         <h3>
-                            {`Nombre d'heures de cours : ${getHoursString(
-                                totalHours.lesson
-                            )}, Options: ${getHoursString(totalHours.option)}`}
+                            {t("calendar.hoursSummary", {
+                                lesson: getHoursString(totalHours.lesson),
+                                option: getHoursString(totalHours.option),
+                            })}
                         </h3>
                     </div>
                 </div>
@@ -670,4 +675,4 @@ const CurrentDateDisplay = ({ currentDate, view }) => {
     return <h4>{dateFormat}</h4>;
 };
 
-export default CustomCalendar;
+export default withTranslation("planning")(CustomCalendar);

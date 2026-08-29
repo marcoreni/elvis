@@ -280,6 +280,18 @@ unsaved-formule pricing path). Surfaced 2026-08-29 during the i18n-06 `formules`
 plugins / prod logs, then delete `NewFormule.jsx` (keep `NewFormulePricingDataService.js`). Low
 priority.
 
+## `planning/Calendar.jsx` — dead `ConflictDisplayItem`; `"Private"` untranslated in source
+
+Surfaced 2026-08-30 during the i18n-06 planning lot 3b (`Calendar.jsx`) extraction:
+
+- `ConflictDisplayItem` (component, ~55 lines, strings "Voir le conflit" / "Résolu") is
+  referenced **only** from inside a `{/* … */}` JSX comment block in `CalendarControls`, so it
+  never renders. Left untranslated and in place per the recover-don't-delete policy; verify and
+  delete along with the commented conflict-dropdown block.
+- `scheduleTitles.private` is `"Private"` in **both** `fr` and `en` planning.json — the source
+  literal (`getTimeTemplate`) was already the English word, extracted verbatim. It is almost
+  certainly meant to be `"Privé"` in French; fix in the post-extraction locale cleanup pass.
+
 ## generalPayments tables freeze translated column headers at construct time
 
 `DuePaymentList.jsx` and `PaymentList.jsx` (and the smaller `PaymentScheduleList` filter setup)
