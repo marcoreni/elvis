@@ -1,10 +1,10 @@
 <div class="row wrapper border-bottom white-bg page-heading sticked">
     <h2>
-        Mes disponibilités : 
+        <%= t("views.planning.show_availabilities_for_date.heading") %>
         <% if @for_season %>
             <%= @next_season.label %>
         <% else %>
-            Evaluations du <%= @day.strftime("%d/%m/%Y") %> au <%= @day_end.strftime("%d/%m/%Y") %>
+            <%= t("views.planning.show_availabilities_for_date.eval_range", from: @day.strftime("%d/%m/%Y"), to: @day_end.strftime("%d/%m/%Y")) %>
         <% end %>
     </h2>
 </div>
@@ -15,8 +15,8 @@
             <%= react_component("common/ConfirmLink", { 
                 link: @copy_link,
                 icon: "fa-copy",
-                label: "Copier le planning de la saison en cours",
-                message: "Voulez-vous vraiment importer le planning de la saison en cours ? Cela supprimera toutes les modifications pour la saison prochaine."
+                label: t("views.planning.show_availabilities_for_date.copy_link_label"),
+                message: t("views.planning.show_availabilities_for_date.copy_link_message")
             }) %>
         </div>
 
@@ -24,8 +24,8 @@
             <%= react_component("common/ConfirmLink", { 
                 link: @lock_link,
                 icon: "fa-lock",
-                label: "Verrouiller le planning",
-                message: "Voulez-vous vraiment verouiller le planning ? Vous devrez vous adresser à un.e permanent.e pour tout changement."
+                label: t("views.planning.actions.lock_the_planning"),
+                message: t("views.planning.show_availabilities_for_date.lock_link_message")
             }) %>
         </div>
     </div>
