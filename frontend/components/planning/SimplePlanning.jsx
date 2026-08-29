@@ -2,6 +2,7 @@ import React, { Fragment } from "react";
 import { array, object } from "prop-types";
 import moment from "moment";
 import _ from "lodash";
+import { withTranslation } from "react-i18next";
 
 import * as TimeIntervalHelpers from "./TimeIntervalHelpers";
 import {
@@ -84,7 +85,7 @@ const OptionItems = ({ options , selectedPlanning, currentPlanning }) => {
 
 };
 
-const SimpleActivity = ({ timeInterval, seasons, selectedPlanning, currentPlanning }) => {
+const SimpleActivity = ({ timeInterval, seasons, selectedPlanning, currentPlanning, t }) => {
     if (!timeInterval.activity_instance) {
         return null;
     }
@@ -121,9 +122,8 @@ const SimpleActivity = ({ timeInterval, seasons, selectedPlanning, currentPlanni
                     <p>{activity.room.label}</p>
 
                     <p className="font-bold font-italic">
-                        {students.length + options.length}/
-                        {activity.activity_ref.occupation_limit}
-                        {" élèves "}
+                        {t("rawPlanning.occupancy", {n: students.length + options.length, limit: activity.activity_ref.occupation_limit})}
+                        {" "}
                         {TimeIntervalHelpers.levelDisplayForActivity({ ...activity, users: students, time_interval: timeInterval }, seasons)}
                     </p>
 
@@ -171,7 +171,7 @@ class SimpleEvaluation extends React.PureComponent {
     }
 
     render() {
-        const { timeInterval } = this.props;
+        const { timeInterval, t } = this.props;
         const appointment = timeInterval.evaluation_appointment;
 
         if (!appointment) {
@@ -191,7 +191,7 @@ class SimpleEvaluation extends React.PureComponent {
                             {toHourMin(toDate(timeInterval.end))}
 
                             <span className="label bg-kind-e text-white pull-right">
-                                {"EVAL"}
+                                {t("simplePlanning.evalBadge")}
                             </span>
                         </h4>
                     </div>
@@ -210,7 +210,7 @@ class SimpleEvaluation extends React.PureComponent {
                                 className="btn btn-default btn-xs btn-block"
                                 onClick={() => this.fetchQuestionnaire()}
                             >
-                                {"Lire auto-évaluation"}
+                                {t("evaluationModal.readSelfAssessment")}
                             </button>
                         </div>
                     </div>
@@ -240,7 +240,7 @@ class SimplePlanning extends React.Component {
     }
 
     renderDayColumns(tis) {
-        const { seasons, selectedPlanning, currentPlanning } = this.props;
+        const { seasons, selectedPlanning, currentPlanning, t } = this.props;
         return Array.isArray(tis) && tis.length
             ? tis
                   .sort((a, b) => toDate(a.start) - toDate(b.start))
@@ -253,6 +253,7 @@ class SimplePlanning extends React.Component {
                                       timeInterval={ti}
                                       toggleModal={this.toggleEvalModal}
                                       setQuestionnaire={this.setQuestionnaire}
+                                      t={t}
                                   />
                               );
                           } else {
@@ -263,7 +264,7 @@ class SimplePlanning extends React.Component {
                                       seasons={seasons}
                                       selectedPlanning={selectedPlanning}
                                       currentPlanning={currentPlanning}
-
+                                      t={t}
                                   />
                               );
                           }
@@ -317,6 +318,7 @@ class SimplePlanning extends React.Component {
     }
 
     render() {
+        const { t } = this.props;
         const {
             loading,
             data,
@@ -377,13 +379,13 @@ class SimplePlanning extends React.Component {
                 </div>
 
                 {loading ? (
-                    <div>{"Chargement..."}</div>
+                    <div>{t("common:reactTable.loadingText")}</div>
                 ) : (
                     <Fragment>
                         <div className="flex">
                             {sortedData.length == 0 ? (
                                 <p className="p-sm lead">
-                                    {"Aucune activité cette semaine."}
+                                    {t("rawPlanning.noActivityThisWeek")}
                                 </p>
                             ) : null}
                         </div>
@@ -428,4 +430,4 @@ SimplePlanning.propTypes = {
     seasons: array,
 };
 
-export default SimplePlanning;
+export default withTranslation("planning")(SimplePlanning);

@@ -64,6 +64,9 @@
     "studentModal": {
         "title": "Selection"
     },
+    "simplePlanning": {
+        "evalBadge": "EVAL"
+    },
     "roomActivitiesListModal": {
         "title": "Activities for room {{label}}"
     },
