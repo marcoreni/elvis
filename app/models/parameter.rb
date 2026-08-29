@@ -48,25 +48,32 @@ class Parameter < ApplicationRecord
   # Uses the same "parameter_<label>" keys and 1h TTL as get_value, so expire_cache still
   # invalidates entries written here. Returns { label => parsed_value_or_default }.
   #
-  # Matches get_value's per-label semantics on the two edges where naive batching would diverge:
-  # a row whose #parse raises is isolated to that label (nil, logged) rather than aborting the
-  # whole batch; and with duplicate label rows (no unique index on `label`) the lowest-id row
-  # wins, same as find_by.
+  # A row whose #parse raises is isolated to its own label — logged, treated as "no value"
+  # (default) for this call, and deliberately NOT written to the cache, so get_value on the same
+  # key keeps its own behavior (raise) and a raw-SQL repair is picked up on the next call rather
+  # than masked by a cached nil for up to an hour.
+  #
+  # Duplicate `label` rows (there is no unique index) are resolved deterministically to the
+  # lowest id; get_value's plain find_by has no ORDER BY, so which row it returns is DB-order
+  # dependent — usually, but not guaranteed, the same one.
   def self.get_values(*labels, defaults: {})
     key_for = labels.index_with { |label| "parameter_#{label}" }
     cached = Rails.cache.read_multi(*key_for.values)
-
     missing = labels.reject { |label| cached.key?(key_for[label]) }
-    unless missing.empty?
-      found = Parameter.where(label: missing).order(id: :desc).index_by(&:label)
-      fresh = missing.index_with do |label|
-        found[label]&.parse
+
+    if missing.any?
+      rows = Parameter.where(label: missing).order(id: :desc).index_by(&:label)
+      to_cache = {}
+
+      missing.each do |label|
+        value = rows[label]&.parse
+        to_cache[key_for[label]] = value
+        cached[key_for[label]] = value
       rescue StandardError => e
         Rails.logger.error("[Parameter] get_values: #{label.inspect} failed to parse: #{e.message}")
-        nil
       end
-      Rails.cache.write_multi(fresh.transform_keys { |label| key_for[label] }, expires_in: 1.hour)
-      cached.merge!(fresh.transform_keys { |label| key_for[label] })
+
+      Rails.cache.write_multi(to_cache, expires_in: 1.hour) if to_cache.any?
     end
 
     labels.index_with { |label| cached[key_for[label]] || defaults[label] }

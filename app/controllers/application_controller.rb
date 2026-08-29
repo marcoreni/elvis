@@ -113,27 +113,26 @@ class ApplicationController < ActionController::Base
   # Locales this installation actually exposes to its users — the subset of the code-shipped
   # Elvis::SUPPORTED_LOCALES the admin enabled via the "Langues" settings screen (Parameter
   # "app.localization.available_languages", see Parameters::LocalizationParametersController).
-  # Falls back to all supported locales if the admin hasn't configured this yet, if the Parameter
-  # lookup fails (see localization_settings), or if the stored value isn't a list (a legacy row
-  # or a non-json write would otherwise make `SUPPORTED_LOCALES & value` raise on every request).
-  # Used both to clamp locale resolution above and to drive the language switcher UI.
+  # localization_settings already handles a failed/absent lookup (returns the SUPPORTED_LOCALES
+  # default). Here we only guard the *shape* of the stored value: a proper list is intersected
+  # with SUPPORTED_LOCALES as-is (an explicit empty list means "disable everything", and
+  # resolve_locale then falls to I18n.default_locale); anything that isn't a list (a legacy row,
+  # a non-json write) is treated as misconfiguration and we expose all supported locales rather
+  # than let `SUPPORTED_LOCALES & scalar` raise on every request. Drives locale clamping above
+  # and the language switcher UI.
   def available_locales
     @available_locales ||= begin
       configured = localization_settings[:available_languages]
-      enabled = Elvis::SUPPORTED_LOCALES & Array(configured)
-      enabled.presence || Elvis::SUPPORTED_LOCALES
-    rescue StandardError => e
-      Rails.logger.error("[i18n] available_locales computation failed: #{e.message}")
-      Elvis::SUPPORTED_LOCALES
+      configured.is_a?(Array) ? Elvis::SUPPORTED_LOCALES & configured : Elvis::SUPPORTED_LOCALES
     end
   end
 
-  # Both localization Parameters in a single cache round-trip (fetch_multi), memoized per
-  # request. switch_locale is a prepend_around_action that runs on *every* request (JSON/API
-  # included), so reading these two rarely-changing values as two separate cache GETs was two
-  # Redis round-trips per request in production; this collapses them to one. On any failure,
-  # fall back to the code-shipped defaults (same values the two reads used to fall back to
-  # individually).
+  # Both localization Parameters in a single cache round-trip (read_multi via Parameter.get_values),
+  # memoized per request. switch_locale is a prepend_around_action that runs on *every* request
+  # (JSON/API included), so reading these two rarely-changing values as two separate cache GETs
+  # was two Redis round-trips per request in production; this collapses them to one. On any
+  # failure, fall back to the code-shipped defaults (same values the two reads fell back to
+  # individually before).
   def localization_settings
     @localization_settings ||= begin
       values = Parameter.get_values(

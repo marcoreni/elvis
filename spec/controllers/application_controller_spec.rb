@@ -66,14 +66,24 @@ RSpec.describe ApplicationController, type: :controller do
     end
 
     it "does not blow up when available_languages is stored as a non-list value" do
-      # A legacy row / console / plugin write could leave a scalar here; Array() coercion +
-      # rescue must keep this off the 500 path (it runs on every request).
+      # A legacy row / console / plugin write could leave a scalar here. `SUPPORTED_LOCALES &
+      # "en"` would raise on every request; instead the misconfigured value is ignored, all
+      # supported locales are exposed, and resolution falls to the installation default.
       Parameter.create!(label: "app.localization.available_languages", value_type: "string", value: "en")
 
       get :index
 
       expect(response).to have_http_status(:ok)
-      expect(response.body).to eq("en")
+      expect(response.body).to eq(I18n.default_locale.to_s)
+    end
+
+    it "treats an explicitly empty available_languages list as 'disable everything'" do
+      Parameter.create!(label: "app.localization.available_languages", value_type: "json", value: [].to_json)
+
+      get :index
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to eq(I18n.default_locale.to_s)
     end
   end
 

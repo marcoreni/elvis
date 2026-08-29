@@ -73,5 +73,31 @@ RSpec.describe Parameter, type: :model do
 
       expect(Parameter.get_values("spec.multi.invalidate")).to eq("spec.multi.invalidate" => "after")
     end
+
+    context "when one label's value will not parse" do
+      before do
+        Parameter.create!(label: "spec.multi.ok", value_type: "string", value: "fine")
+        # value_type json + non-json value -> #parse raises JSON::ParserError
+        Parameter.create!(label: "spec.multi.broken", value_type: "json", value: "not json")
+      end
+
+      it "isolates it: the other label still resolves, the broken one gets its default" do
+        result = Parameter.get_values(
+          "spec.multi.ok", "spec.multi.broken",
+          defaults: { "spec.multi.broken" => "fallback" }
+        )
+
+        expect(result).to eq("spec.multi.ok" => "fine", "spec.multi.broken" => "fallback")
+      end
+
+      it "does not poison the shared cache key (get_value still raises, a repair is seen at once)" do
+        Parameter.get_values("spec.multi.broken", defaults: { "spec.multi.broken" => "fallback" })
+
+        expect { Parameter.get_value("spec.multi.broken") }.to raise_error(JSON::ParserError)
+
+        Parameter.find_by(label: "spec.multi.broken").update!(value: %w[a b].to_json)
+        expect(Parameter.get_values("spec.multi.broken")).to eq("spec.multi.broken" => %w[a b])
+      end
+    end
   end
 end
