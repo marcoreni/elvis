@@ -43,15 +43,26 @@ RSpec.describe Parameter, type: :model do
       )
     end
 
-    it "reads through the same cache keys as get_value (one round-trip via fetch_multi)" do
+    it "reads through the same cache keys as get_value (one read_multi, no DB on a warm cache)" do
       Parameter.create!(label: "spec.multi.shared", value_type: "string", value: "cached")
-      # prime via get_value
+      # prime the "parameter_spec.multi.shared" cache entry via get_value
       Parameter.get_value("spec.multi.shared")
 
-      expect(Rails.cache).to receive(:fetch_multi).once.and_call_original
-      expect(Parameter).not_to receive(:find_by) # all hits, no DB fallback
+      expect(Rails.cache).to receive(:read_multi).once.with("parameter_spec.multi.shared").and_call_original
+      expect(Parameter).not_to receive(:where) # all hits, no DB fallback
 
       expect(Parameter.get_values("spec.multi.shared")).to eq("spec.multi.shared" => "cached")
+    end
+
+    it "resolves all misses in a single SELECT" do
+      Parameter.create!(label: "spec.multi.q1", value_type: "string", value: "one")
+      Parameter.create!(label: "spec.multi.q2", value_type: "string", value: "two")
+
+      expect(Parameter).to receive(:where).once.with(label: %w[spec.multi.q1 spec.multi.q2]).and_call_original
+
+      expect(Parameter.get_values("spec.multi.q1", "spec.multi.q2")).to eq(
+        "spec.multi.q1" => "one", "spec.multi.q2" => "two"
+      )
     end
 
     it "picks up a change immediately (shares expire_cache with get_value)" do

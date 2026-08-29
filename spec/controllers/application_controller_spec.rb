@@ -55,15 +55,24 @@ RSpec.describe ApplicationController, type: :controller do
     end
 
     it "falls back to an actually-available locale, not the raw I18n.default_locale, when the admin disabled it (regression: PR #5 finding #3)" do
+      # Admin enabled only "en"; there is no default_language row, so it resolves to the raw
+      # I18n.default_locale ("fr") — which is not in the enabled set and must not be picked.
       Parameter.create!(label: "app.localization.available_languages", value_type: "json", value: ["en"].to_json)
-      allow(Parameter).to receive(:get_value).and_call_original
-      allow(Parameter).to receive(:get_value)
-        .with("app.localization.default_language", default: anything)
-        .and_raise(StandardError, "boom")
 
       get :index
 
       expect(I18n.default_locale.to_s).to eq("fr") # sanity: this scenario requires fr to be the raw default
+      expect(response.body).to eq("en")
+    end
+
+    it "does not blow up when available_languages is stored as a non-list value" do
+      # A legacy row / console / plugin write could leave a scalar here; Array() coercion +
+      # rescue must keep this off the 500 path (it runs on every request).
+      Parameter.create!(label: "app.localization.available_languages", value_type: "string", value: "en")
+
+      get :index
+
+      expect(response).to have_http_status(:ok)
       expect(response.body).to eq("en")
     end
   end

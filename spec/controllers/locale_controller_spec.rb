@@ -85,6 +85,20 @@ RSpec.describe LocaleController, type: :controller do
 
         expect(response).to redirect_to("/students?page=2#list")
       end
+
+      # The guard must not reject legitimate same-origin paths a strict URI parser would choke on
+      # — accented segments (this is a French app) and query strings with unencoded characters.
+      [
+        "/activités",
+        "/recherche?q=été|automne",
+        "/étudiants?nom=François^"
+      ].each do |safe|
+        it "still honours the same-origin path #{safe.inspect}" do
+          patch :update, params: { locale: "en", return_to: safe }
+
+          expect(response).to redirect_to(safe)
+        end
+      end
     end
   end
 end

@@ -113,11 +113,19 @@ class ApplicationController < ActionController::Base
   # Locales this installation actually exposes to its users — the subset of the code-shipped
   # Elvis::SUPPORTED_LOCALES the admin enabled via the "Langues" settings screen (Parameter
   # "app.localization.available_languages", see Parameters::LocalizationParametersController).
-  # Falls back to all supported locales if the admin hasn't configured this yet (or if the
-  # Parameter lookup fails — see localization_settings). Used both to clamp locale resolution
-  # above and to drive the language switcher UI.
+  # Falls back to all supported locales if the admin hasn't configured this yet, if the Parameter
+  # lookup fails (see localization_settings), or if the stored value isn't a list (a legacy row
+  # or a non-json write would otherwise make `SUPPORTED_LOCALES & value` raise on every request).
+  # Used both to clamp locale resolution above and to drive the language switcher UI.
   def available_locales
-    @available_locales ||= Elvis::SUPPORTED_LOCALES & localization_settings[:available_languages]
+    @available_locales ||= begin
+      configured = localization_settings[:available_languages]
+      enabled = Elvis::SUPPORTED_LOCALES & Array(configured)
+      enabled.presence || Elvis::SUPPORTED_LOCALES
+    rescue StandardError => e
+      Rails.logger.error("[i18n] available_locales computation failed: #{e.message}")
+      Elvis::SUPPORTED_LOCALES
+    end
   end
 
   # Both localization Parameters in a single cache round-trip (fetch_multi), memoized per

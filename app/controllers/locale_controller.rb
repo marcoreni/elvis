@@ -20,18 +20,16 @@ class LocaleController < ApplicationController
   # from. The frontend passes the page it's actually on instead.
   #
   # Only same-origin relative paths are accepted, to keep this from becoming an open redirect.
-  # A plain `start_with?("//")` check is not enough: browsers normalize a backslash to a slash,
-  # so "/\evil.com" (and "/\/evil.com", "/ /evil.com", tab/newline variants) would be sent as
-  # Location and then navigated to as the scheme-relative "//evil.com". Parse it and require a
-  # host-less, scheme-less relative reference whose path starts with a single "/".
+  # A plain `start_with?("//")` check is not enough: what a browser resolves to a scheme-relative
+  # URL is a leading "/" followed by another "/", a "\" (normalized to "/"), or a control/space
+  # char it strips from the URL. Reject exactly those; everything else that starts with "/" is a
+  # same-origin path (including accented paths like "/activités" and query strings with
+  # unencoded characters, which a URI parse would wrongly reject).
   def safe_return_to
     path = params[:return_to].to_s
-    return if path.empty? || !path.start_with?("/") || path.start_with?("//", "/\\")
+    return unless path.start_with?("/")
+    return if path[1..]&.match?(%r{\A[/\\\x00-\x20]})
 
-    uri = URI.parse(path)
-    # relative? already implies no scheme and no host; the "//" / "/\\" cases are handled above.
-    path if uri.relative? && uri.host.nil? && uri.path.start_with?("/")
-  rescue URI::InvalidURIError
-    nil
+    path
   end
 end
