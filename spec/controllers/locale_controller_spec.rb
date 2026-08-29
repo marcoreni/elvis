@@ -71,9 +71,12 @@ RSpec.describe LocaleController, type: :controller do
         "/\\/evil.example.com",
         "/\t/evil.example.com",
         "/ /evil.example.com",
-        "/\n//evil.example.com"
+        "/\n//evil.example.com",
+        # a CR/LF anywhere would otherwise survive into redirect_to and 500 on Rack's header check
+        "/dashboard\r\nX-Injected: 1",
+        "/ok\npath"
       ].each do |hostile|
-        it "ignores the open-redirect payload #{hostile.inspect}" do
+        it "ignores the payload #{hostile.inspect} and stays on root_path" do
           patch :update, params: { locale: "en", return_to: hostile }
 
           expect(response).to redirect_to(root_path)

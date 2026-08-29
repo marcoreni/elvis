@@ -3,8 +3,6 @@
 // than a hand-maintained copy. Each case re-imports the module after resetting document.lang,
 // since both are computed once at module-eval time.
 
-import moment from "moment";
-
 describe("frontend/i18n", () => {
     afterEach(() => {
         vi.resetModules();
@@ -46,9 +44,12 @@ describe("frontend/i18n", () => {
     // init(), but that ran before the language was resolved / and the languageChanged listener
     // was registered after init() — so moment stayed on its built-in "en" until the next
     // changeLanguage(). It must now match the resolved language immediately on import.
+    // `moment` is imported here from the same module graph ./index just used (after any
+    // vi.resetModules()), not a stale top-level binding.
     test("moment's locale matches the resolved i18n language right after import", async () => {
         document.documentElement.lang = "fr";
         const { default: i18n } = await import("./index");
+        const { default: moment } = await import("moment");
 
         expect(i18n.language).toBe("fr");
         expect(moment.locale()).toBe("fr");
@@ -57,6 +58,7 @@ describe("frontend/i18n", () => {
     test("moment's locale follows a later changeLanguage()", async () => {
         document.documentElement.lang = "fr";
         const { default: i18n } = await import("./index");
+        const { default: moment } = await import("moment");
 
         await i18n.changeLanguage("en");
         expect(moment.locale()).toBe("en");

@@ -47,14 +47,24 @@ class Parameter < ApplicationRecord
   # for the hits and a single SELECT for any misses (vs. one cache GET + one find_by per label).
   # Uses the same "parameter_<label>" keys and 1h TTL as get_value, so expire_cache still
   # invalidates entries written here. Returns { label => parsed_value_or_default }.
+  #
+  # Matches get_value's per-label semantics on the two edges where naive batching would diverge:
+  # a row whose #parse raises is isolated to that label (nil, logged) rather than aborting the
+  # whole batch; and with duplicate label rows (no unique index on `label`) the lowest-id row
+  # wins, same as find_by.
   def self.get_values(*labels, defaults: {})
     key_for = labels.index_with { |label| "parameter_#{label}" }
     cached = Rails.cache.read_multi(*key_for.values)
 
     missing = labels.reject { |label| cached.key?(key_for[label]) }
     unless missing.empty?
-      found = Parameter.where(label: missing).index_by(&:label)
-      fresh = missing.index_with { |label| found[label]&.parse }
+      found = Parameter.where(label: missing).order(id: :desc).index_by(&:label)
+      fresh = missing.index_with do |label|
+        found[label]&.parse
+      rescue StandardError => e
+        Rails.logger.error("[Parameter] get_values: #{label.inspect} failed to parse: #{e.message}")
+        nil
+      end
       Rails.cache.write_multi(fresh.transform_keys { |label| key_for[label] }, expires_in: 1.hour)
       cached.merge!(fresh.transform_keys { |label| key_for[label] })
     end

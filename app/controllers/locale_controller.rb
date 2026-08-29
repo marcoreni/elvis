@@ -20,15 +20,19 @@ class LocaleController < ApplicationController
   # from. The frontend passes the page it's actually on instead.
   #
   # Only same-origin relative paths are accepted, to keep this from becoming an open redirect.
-  # A plain `start_with?("//")` check is not enough: what a browser resolves to a scheme-relative
-  # URL is a leading "/" followed by another "/", a "\" (normalized to "/"), or a control/space
-  # char it strips from the URL. Reject exactly those; everything else that starts with "/" is a
-  # same-origin path (including accented paths like "/activités" and query strings with
-  # unencoded characters, which a URI parse would wrongly reject).
+  # A plain `start_with?("//")` check is not enough:
+  #   - a leading "/" followed by "/", "\" (browser-normalized to "/"), or a space resolves to a
+  #     scheme-relative "//host" URL;
+  #   - a raw control char (CR/LF especially) survives into redirect_to and trips Rack's header
+  #     validation -> 500.
+  # Reject both; everything else starting with "/" is a same-origin path — including accented
+  # ones like "/activités" and query strings with unencoded characters, which a URI parse would
+  # wrongly reject.
   def safe_return_to
     path = params[:return_to].to_s
     return unless path.start_with?("/")
-    return if path[1..]&.match?(%r{\A[/\\\x00-\x20]})
+    return if path.match?(/[[:cntrl:]]/)
+    return if path[1..]&.match?(%r{\A[/\\ ]})
 
     path
   end
