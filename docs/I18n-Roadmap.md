@@ -418,7 +418,21 @@ et à mesure de son intégration :
           (ratés à la 1re passe, repérés en revue). Tests :
           `frontend/components/planning/PlanningModals2b.test.jsx` (6 tests, fr+en, dont la vue
           admin récurrence via `userEvent.click`). `yarn test` → 27 fichiers / 77 tests verts.
-    - [ ] **Lot 3** : `Calendar.jsx` + `TimeInterval*.jsx` + `SimplePlanning.jsx`.
+    - [x] **Lot 3a** : branche `feature/i18n-06-extract-planning-simple`. `SimplePlanning.jsx`
+          (classe → `withTranslation("planning")`, `t` descendu en prop dans `SimpleActivity`
+          module-level + le fils `SimpleEvaluation`). 1 nouvelle clé
+          `planning.simplePlanning.evalBadge` (« EVAL ») ; le reste réutilise
+          `rawPlanning.{occupancy,noActivityThisWeek}`, `evaluationModal.readSelfAssessment`,
+          `common:reactTable.loadingText`. `TimeInterval.jsx` : aucune chaîne visible, non touché.
+          Test : `SimplePlanning.test.jsx` (2, fr+en). `yarn test` → 81 tests verts.
+    - [ ] **Lot 3b** : `Calendar.jsx` (673 l. de templates HTML `tui-calendar`) +
+          `TimeIntervalHelpers.jsx` (module de helpers purs). Le plus délicat du domaine :
+          `getTimeTemplate` (Calendar) et `formatIntervalsForSchedule` (Helpers) construisent des
+          titres (« Disponibilité », « Dispo. Cours/Option/Evaluation », « Pause », « Private »)
+          hors de tout composant → `t` à faire descendre depuis les appelants (config tui-calendar,
+          plusieurs composants planning). Aussi : abréviations de jours « Dim…Sam », barre d'outils
+          (« Aujourd'hui », « Prochaine Saison », « Début de saison »), « Résolu », « NON INDIQUÉ »
+          / « À PRÉCISER » (`levelDisplay`).
     - [ ] **Lot 4** : `Planning.jsx` (1792 l., conteneur).
     - [ ] **Lot 5** : `ActivityDetailsModal.jsx` (2053 l.).
     - [ ] **Lot 6** : sous-arbres `activity_management/*` + `practice_planning/*`.
