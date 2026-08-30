@@ -298,6 +298,25 @@ Surfaced 2026-08-30 during the i18n-06 planning lot 3b (`Calendar.jsx`) extracti
   outlives a locale change. Fix (if it ever matters) = destroy + recreate the tui-calendar
   instance on `languageChanged`.
 
+## `planning/ActivityDetailsModal.jsx` — dead `TeachersEditor` + `renderTeacherSelection`
+
+Surfaced 2026-08-30 during the i18n-06 planning lot 5 extraction. Both are defined but never
+rendered/called:
+
+- `TeachersEditor` (module-level function component, ~130 lines) — no `<TeachersEditor …/>` site
+  anywhere. The live equivalent is almost certainly
+  `frontend/components/planning/activity_management/teachers_editor.jsx` (lot 6).
+- `ActivityDetailsModal.renderTeacherSelection()` (class method) — never called from `render()`
+  or elsewhere.
+
+Both had their strings extracted anyway (given `useTranslation` / `const { t } = this.props`
+respectively) so they stay consistent if revived; the `t(...)` calls in them are inert. Verify
+against `activity_management/*` and prod usage, then delete.
+
+**When deleting `TeachersEditor`**: its keys `planning.activityModal.teachersEditor.{teacher,
+main,remove,needMainTeacher,cannotRemoveMain}` go with it, but `planning.activityModal.noMainTeacher`
+does **not** live under that subtree — it's used by the live `ActivityEdition.render()`. Leave it.
+
 ## generalPayments tables freeze translated column headers at construct time
 
 `DuePaymentList.jsx` and `PaymentList.jsx` (and the smaller `PaymentScheduleList` filter setup)
@@ -363,6 +382,16 @@ preserved verbatim from `Planning.jsx`:
 - `container.toasts.updateFailed` — "Echec de la mise à jour" → "Échec de la mise à jour"
 - `container.toasts.courseUpdated` = "Le cours est mis à jour !" vs `container.toasts.courseUpdatedShort`
   = "Le cours est mis-à-jour!" — the same message with two different source spellings; unify.
+
+`frontend/locales/fr/planning.json` (added by feature/i18n-06-extract-planning-activity-modal (lot 5)) —
+preserved verbatim from `ActivityDetailsModal.jsx`:
+- `activityModal.editGroupNameTitle` — "Editer le nom du groupe de cette activité" → "Éditer le nom du groupe de cette activité"
+- `activityModal.toBeSpecified` — "A PRECISER" → "À PRÉCISER"
+- `activityModal.attendanceTable.student` — "Elève" → "Élève"
+- Intentional **trailing spaces** kept verbatim in `activityModal.createCoursesButton`
+  ("Créer les cours de cette activité "), `activityModal.createCourseButton` ("Créer ce cours "),
+  and `activityModal.teacherChangeWarningLabel` ("Attention : " — a `<b>` prefix). A blanket
+  "trim the locale files" pass must not strip these — they glue onto the next word/element.
 
 Also re-scan the whole `frontend/locales/fr/` + `config/locales/fr.yml` when doing this (grep for
 `Edition\b`, `Editer\b`, `Selectionn`, `réglement`, `Echéance`, `Echec`, `Emmeteur`, `Precedent`,

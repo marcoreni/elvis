@@ -466,7 +466,21 @@ et à mesure de son intégration :
           `docs/KnownIssues.md`. Test : `Planning.test.jsx` (2, fr+en — bandeau + barre de filtres ;
           `Calendar` et `ActivityDetailsModal` mockés, `generic` pour couper le fetch au mount).
           `yarn test` → 30 fichiers / 92 tests. Namespace `planning.json` = 108 clés, parité fr/en.
-    - [ ] **Lot 5** : `ActivityDetailsModal.jsx` (2053 l.).
+    - [x] **Lot 5** : branche `feature/i18n-06-extract-planning-activity-modal`.
+          `ActivityDetailsModal.jsx` (2053 l., ~11 composants dans un seul fichier). Les 4 classes
+          (`ActivityDetailsModal` exportée → `withTranslation("planning")` ; `AttendanceTable`,
+          `EditGroupNameInput`, `ActivityEdition` internes → `t` descendu en prop depuis
+          `ActivityDetailsModal.render()`) ; les 7 composants fonction → `useTranslation("planning")`.
+          `const { t } = this.props` ajouté aux 4 `render()`/méthodes concernées. 56 clés sous
+          `planning.activityModal.*` (sous-arbres `tabs`, `scope`, `attendanceTable`,
+          `teachersEditor` ; message de conflit prof interpolé `{{name}}/{{from}}/{{to}}`).
+          Réutilise `common:actions.save`, `planning.calendar.substituteFor`. **Traduction : agent
+          `translator`** (parité 164/164) ; 3 fautes préservées verbatim (`Editer`, `A PRECISER`,
+          `Elève`) + espaces de fin intentionnels, consignées dans `docs/KnownIssues.md`.
+          `TeachersEditor` (composant) et `renderTeacherSelection` (méthode) = code mort (jamais
+          rendus/appelés) — extraits quand même, consignés. `TimeSelection`/`LocationSelection`/
+          `RoomSelection`/`TeacherCoveringEditor` exportés pour le test (le modal ne monte pas en
+          jsdom). Test : `ActivityDetailsModal.test.jsx` (agent `qa`).
     - [ ] **Lot 6** : sous-arbres `activity_management/*` + `practice_planning/*`.
   - [ ] `activities`
   - [x] `evaluation` — branche `feature/i18n-06-extract-evaluation` *(dépend de 01+02)*
