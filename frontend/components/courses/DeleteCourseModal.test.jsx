@@ -11,14 +11,17 @@
 // to be safe.
 
 import React from "react";
-import {render, screen, waitFor} from "@testing-library/react";
+import {render, screen, waitFor, fireEvent} from "@testing-library/react";
 import moment from "moment";
 import i18n from "../../i18n";
+import swal from "sweetalert2";
 import DeleteCourseModal from "./DeleteCourseModal";
 
 vi.mock("../planning/YearlyCalendar", () => ({
     default: () => <div data-testid="yearly-calendar-stub" />,
 }));
+
+vi.mock("sweetalert2", () => ({default: {fire: vi.fn()}}));
 
 const okJson = body =>
     vi.fn().mockResolvedValue({
@@ -94,5 +97,29 @@ describe("DeleteCourseModal — i18n", () => {
         expect(screen.getByRole("button", {name: "Submit"})).toBeInTheDocument();
 
         await waitFor(() => expect(global.fetch).toHaveBeenCalled());
+    });
+
+    // The onSubmit handler is a closure inside render(), and its three swal.fire branches are the
+    // only place `t` is used outside plain JSX. Guard the "all recurrences, nothing deletable"
+    // branch: with the mount fetch resolving [], activityInstances === [], so repetition:"all"
+    // yields instanceIds.length === 0 and must swal the translated "noneDeletable" text — not
+    // throw (which is what a future hoist of this closure to a class method would cause).
+    test("submitting 'delete all' with nothing deletable swals the translated warning", async () => {
+        await i18n.changeLanguage("fr");
+        render(<DeleteCourseModal {...makeProps()} />);
+        await waitFor(() => expect(global.fetch).toHaveBeenCalled());
+
+        fireEvent.click(
+            screen.getByText("Supprimer toutes les récurrences de ce cours.")
+        );
+        fireEvent.click(screen.getByRole("button", {name: "Valider"}));
+
+        await waitFor(() => expect(swal.fire).toHaveBeenCalled());
+        expect(swal.fire).toHaveBeenCalledWith(
+            expect.objectContaining({
+                title: "Attention",
+                text: "Aucun cours ne peut être supprimé.",
+            })
+        );
     });
 });
