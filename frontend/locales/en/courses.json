@@ -23,10 +23,21 @@
         "stepName": "Choose the slot"
     },
     "addTeacher": {
-        "stepName": "Choose the teacher"
+        "stepName": "Choose the teacher",
+        "teacherLabel": "Teacher",
+        "addTeacherTooltip": "Add a teacher",
+        "noTeacherForActivity": "No teacher teaches the selected activity.",
+        "noAvailabilities": "This teacher has not entered any availabilities.",
+        "notAvailableWholeSlot": "This teacher is not available for the whole selected slot",
+        "availableInstead": "However, they are available from {{start}} to {{end}} on the same day",
+        "slotBusy": "This slot is already taken for this teacher: {{activity}} course from {{start}} to {{end}} - {{room}}."
     },
     "addLocation": {
-        "stepName": "Choose the location"
+        "stepName": "Choose the location",
+        "filterBySite": "Filter by location",
+        "addLocationTooltip": "Add a location",
+        "room": "Room",
+        "addRoomTooltip": "Add a room"
     },
     "summary": {
         "title": "Summary",

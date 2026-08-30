@@ -143,6 +143,7 @@ export default class AddTeacherForCourse extends React.Component {
     }
 
     render() {
+        const { t } = this.props;
         const href_path = this.props.href_path;
         const {
             firstDayEndTime,
@@ -215,7 +216,7 @@ export default class AddTeacherForCourse extends React.Component {
                     <div className="ibox">
                         <div className="ibox-title flex">
                             <i className="fa fa-user m-sm"></i>
-                            <h3>Choix du professeur</h3>
+                            <h3>{t("addTeacher.stepName")}</h3>
                         </div>
                         <div className="ibox-content">
                             <div className="row">
@@ -232,7 +233,7 @@ export default class AddTeacherForCourse extends React.Component {
                                                     value: teacherId,
                                                 }}
                                                 meta={{}}
-                                                label="Professeur"
+                                                label={t("addTeacher.teacherLabel")}
                                                 required={true}
                                                 options={teachers.map(
                                                     teacher => {
@@ -246,14 +247,14 @@ export default class AddTeacherForCourse extends React.Component {
                                                     icon: "fa fa-plus-circle",
                                                     href_path: `${href_path}/users/new`,
                                                     text: "",
-                                                    tooltip:
-                                                        "Ajouter un professeur",
+                                                    tooltip: t(
+                                                        "addTeacher.addTeacherTooltip"
+                                                    ),
                                                 }}
                                             />
                                         ) : (
                                             <div className="alert alert-danger">
-                                                Aucun professeur n'enseigne
-                                                l'activité choisie.
+                                                {t("addTeacher.noTeacherForActivity")}
                                             </div>
                                         ))}
                                 </div>
@@ -264,8 +265,7 @@ export default class AddTeacherForCourse extends React.Component {
                                         0 && (
                                         <div className="col-md-12">
                                             <div className="alert alert-warning">
-                                                Ce professeur n'a pas renseigné
-                                                de disponibilités.
+                                                {t("addTeacher.noAvailabilities")}
                                             </div>
                                         </div>
                                     )}
@@ -273,8 +273,12 @@ export default class AddTeacherForCourse extends React.Component {
                                         selectedTeacher.activity_overlapped && (
                                             <div className="col-md-12">
                                                 <div className="alert alert-danger">
-                                                    {`Ce créneau est déjà occupé pour ce professeur:
-                                                 cours de ${selectedTeacher.activity_overlapped.activity_ref} de ${selectedTeacher.activity_overlapped.start} à ${selectedTeacher.activity_overlapped.end}  - ${selectedTeacher.activity_overlapped.room}.`}
+                                                    {t("addTeacher.slotBusy", {
+                                                        activity: selectedTeacher.activity_overlapped.activity_ref,
+                                                        start: selectedTeacher.activity_overlapped.start,
+                                                        end: selectedTeacher.activity_overlapped.end,
+                                                        room: selectedTeacher.activity_overlapped.room,
+                                                    })}
                                                 </div>
                                             </div>
                                         )}
@@ -284,25 +288,16 @@ export default class AddTeacherForCourse extends React.Component {
                                             <div className="col-md-12">
                                                 <div className="alert alert-danger">
                                                     <p>
-                                                        Ce professeur n'est pas
-                                                        disponible sur
-                                                        l'ensemble du créneau
-                                                        choisi
+                                                        {t("addTeacher.notAvailableWholeSlot")}
                                                     </p>
                                                     {Object.keys(
                                                         overlappedInterval
                                                     ).length > 0 && (
                                                         <p>
-                                                            En revanche, il est
-                                                            disponible de{" "}
-                                                            {
-                                                                overlappedInterval.start
-                                                            }{" "}
-                                                            à{" "}
-                                                            {
-                                                                overlappedInterval.end
-                                                            }{" "}
-                                                            ce même jour
+                                                            {t("addTeacher.availableInstead", {
+                                                                start: overlappedInterval.start,
+                                                                end: overlappedInterval.end,
+                                                            })}
                                                         </p>
                                                     )}
                                                 </div>
