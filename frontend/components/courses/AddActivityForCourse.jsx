@@ -1,12 +1,16 @@
 import React from "react";
-import { withTranslation } from "react-i18next";
 import { MESSAGES } from "../../tools/constants";
 import InputSelect from "../common/InputSelect";
 import { toast } from "react-toastify";
 import * as api from "../../tools/api.js";
 import AddCourseSummary from "./AddCourseSummary";
 
-class AddActivityForCourse extends React.Component {
+// NOTE: exported as a plain class, not withTranslation()-wrapped. This is a
+// StepZilla step; StepZilla only wires its per-step `isValidated()` hook when the
+// step element `instanceof Component` (react-stepzilla main.js), and a
+// withTranslation HOC (a function component / forwardRef) fails that check,
+// silently disabling step validation. `t` is threaded in as a prop from AddCourse.
+export default class AddActivityForCourse extends React.Component {
     constructor(props) {
         super(props);
 
@@ -248,5 +252,3 @@ class AddActivityForCourse extends React.Component {
         );
     }
 }
-
-export default withTranslation("courses")(AddActivityForCourse);

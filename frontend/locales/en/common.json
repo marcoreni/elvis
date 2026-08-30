@@ -8,6 +8,7 @@
     "send": "Send",
     "add": "Add"
   },
+  "loading": "Loading...",
   "confirm": {
     "sure": "Are you sure?"
   },

@@ -1,9 +1,11 @@
 // Component test for the i18n extraction on the "courses" domain lot 1 — AddActivityForCourse.
 //
-// Class component wrapped in `withTranslation("courses")`. On mount it fires two requests through
-// tools/api (`api.get("/activity_ref_kinds")` and `api.get("/activity_ref")`); global.fetch is
-// stubbed so both resolve. The heavy `AddCourseSummary` child is mocked out so this file only
-// asserts on AddActivityForCourse's own translated copy.
+// Plain class component (NOT withTranslation-wrapped — it's a StepZilla step and the HOC would
+// break StepZilla's isValidated() wiring); `t` is passed in as a prop, mirroring how AddCourse
+// threads it down. On mount it fires two requests through tools/api
+// (`api.get("/activity_ref_kinds")` and `api.get("/activity_ref")`); global.fetch is stubbed so
+// both resolve. The heavy `AddCourseSummary` child is mocked out so this file only asserts on
+// AddActivityForCourse's own translated copy.
 //
 // Two shapes are covered:
 //  - fetches resolve with empty arrays -> the two <InputSelect> labels render
@@ -32,7 +34,23 @@ afterEach(async () => {
     await i18n.changeLanguage("fr");
 });
 
-const props = {href_path: "", summary: {}, onChange: () => {}};
+// `t` is a prop now — bind it to the courses namespace, tracking whatever language the test set.
+const makeProps = () => ({
+    t: i18n.getFixedT(i18n.language, "courses"),
+    href_path: "",
+    summary: {},
+    onChange: () => {},
+});
+
+// Regression guard for the review finding: StepZilla only wires a step's isValidated() hook when
+// the step element is `instanceof Component` (react-stepzilla main.js). Wrapping this export in
+// withTranslation() (a function component) makes that check fail and silently disables the
+// step's "choose an activity before continuing" validation. Keep it an unwrapped class.
+test("is exported as a plain class extending React.Component (StepZilla ref gate)", () => {
+    expect(AddActivityForCourse.prototype instanceof React.Component).toBe(true);
+    expect(AddActivityForCourse.WrappedComponent).toBeUndefined();
+    expect(AddActivityForCourse.prototype.isValidated).toBeTypeOf("function");
+});
 
 describe("AddActivityForCourse — activities available", () => {
     beforeEach(() => {
@@ -41,7 +59,7 @@ describe("AddActivityForCourse — activities available", () => {
 
     test("renders the French step name and field labels", async () => {
         await i18n.changeLanguage("fr");
-        render(<AddActivityForCourse {...props} />);
+        render(<AddActivityForCourse {...makeProps()} />);
 
         expect(await screen.findByText("Filtrer par famille d'activité")).toBeInTheDocument();
         expect(screen.getByText("Choix de l'activité")).toBeInTheDocument();
@@ -52,7 +70,7 @@ describe("AddActivityForCourse — activities available", () => {
 
     test("renders the English step name and field labels", async () => {
         await i18n.changeLanguage("en");
-        render(<AddActivityForCourse {...props} />);
+        render(<AddActivityForCourse {...makeProps()} />);
 
         expect(await screen.findByText("Filter by activity family")).toBeInTheDocument();
         expect(screen.getByText("Choose the activity")).toBeInTheDocument();
@@ -73,7 +91,7 @@ describe("AddActivityForCourse — no activity yet (fetch fails)", () => {
 
     test("renders the French empty-state prompt and CTA", async () => {
         await i18n.changeLanguage("fr");
-        render(<AddActivityForCourse {...props} />);
+        render(<AddActivityForCourse {...makeProps()} />);
 
         expect(await screen.findByText("Pas encore d'activité renseignée ?")).toBeInTheDocument();
         expect(screen.getByText("Choix de l'activité")).toBeInTheDocument();
@@ -82,7 +100,7 @@ describe("AddActivityForCourse — no activity yet (fetch fails)", () => {
 
     test("renders the English empty-state prompt and CTA", async () => {
         await i18n.changeLanguage("en");
-        render(<AddActivityForCourse {...props} />);
+        render(<AddActivityForCourse {...makeProps()} />);
 
         expect(await screen.findByText("No activity added yet?")).toBeInTheDocument();
         expect(screen.getByText("Choose the activity")).toBeInTheDocument();

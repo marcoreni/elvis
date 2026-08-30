@@ -192,6 +192,7 @@ class AddCourse extends React.Component {
                 name: t("addActivity.stepName"),
                 component: (
                     <AddActivityForCourse
+                        t={t}
                         href_path={href_path}
                         activityRefId={activityRef ? activityRef.id : undefined}
                         activityRefKindId={activityRefKind}
@@ -310,7 +311,7 @@ class AddCourse extends React.Component {
                     )}
                 />
             );
-        } else { return <div>{t("common:reactTable.loadingText")}</div> }
+        } else { return <div>{t("common:loading")}</div> }
 
     }
 }
