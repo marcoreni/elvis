@@ -34,17 +34,26 @@ translation discipline built up over the i18n chantier is captured somewhere reu
   idiomatic English matching the repo's established renderings ("formule" → "package", etc.),
   exact fr/en key parity (`bin/i18n-tasks health` / flatten-diff), and the `{{n}}` vs `{{count}}`
   interpolation rule. Invoke for any task that adds, changes, or audits translation strings.
+- **`qa`** — writes and fixes tests: RSpec request/model/controller specs and Vitest component
+  tests. Knows the two-suite split (RSpec preferred, Minitest broken), the thin factory set and
+  its edges (no `Room`/`Location`/`Season`/`Formule` factory; `:activity_ref` needs
+  `activity_ref_kind:`), the `config.order = :random` flakes, the cache-bust `around` for
+  `Season.current`/`Parameter`, and the frontend test tricks the i18n work accumulated
+  (`i18n.changeLanguage` switching, jsdom stubs for canvas / bootstrap `aria-hidden` modals /
+  tui-calendar, mocking heavy children + the `tools/api` chain). Invoke to add coverage for a
+  change or to diagnose a failing spec.
 
 Use `backend-specialist` / `frontend-specialist` directly for single-sided work; reach for
 `orchestrator` only when a task genuinely needs both halves coordinated. Run `code-reviewer`
 before every merge. Route translation strings through `translator` (a `frontend-specialist` doing
-a component refactor hands the strings off rather than writing the locale files ad hoc).
+a component refactor hands the strings off rather than writing the locale files ad hoc), and test
+coverage through `qa`.
 
 ## Model choice
 
 - `backend-specialist`, `frontend-specialist` — Sonnet 5 (`model: sonnet`).
-- `translator` — Sonnet 5. Translation of fr↔en is a well-bounded task Sonnet handles; bump to
-  opus only if translation-quality regressions become a recurring review finding.
+- `translator`, `qa` — Sonnet 5. Both are well-bounded implementation tasks Sonnet handles; bump
+  either to opus only if quality regressions in that role become a recurring review finding.
 - `orchestrator` — **Opus 5** (`model: opus`), promoted 2026-08-30. The cross-cutting
   seam/reconciliation judgment is the role most likely to benefit from a stronger model, which
   the original "keep it simple, all Sonnet" note already anticipated.
@@ -54,7 +63,8 @@ a component refactor hands the strings off rather than writing the locale files 
 ## Where this came from
 
 `backend-specialist` / `frontend-specialist` / `orchestrator` were written 2026-08-26 alongside the
-PR #2 i18n review fixes. `code-reviewer` and `translator` were added 2026-08-30, and the
+PR #2 i18n review fixes. `code-reviewer`, `translator` and `qa` were added 2026-08-30, and the
 orchestrator moved to Opus, after the payments + planning i18n domains — distilling the review
-rigor and the verbatim-translation policy that had been carried informally (and in the session
-memory) across ~20 stacked PRs.
+rigor, the verbatim-translation policy, and the test patterns (factory edges, jsdom stubs,
+`i18n.changeLanguage` switching) that had been carried informally, and in the session memory,
+across ~20 stacked PRs.
