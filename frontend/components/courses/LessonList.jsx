@@ -1398,7 +1398,12 @@ const UserRow = ({
             seasons
         );
 
-        return computedLevel && computedLevel !== "À PRÉCISER"
+        // levelDisplayForActivity returns the French sentinels "À PRÉCISER" / "NON INDIQUÉ"
+        // (from TimeIntervalHelpers, not yet i18n'd) for the no-level case — map both to the
+        // translated placeholder so an English row doesn't show a lone French cell.
+        return computedLevel &&
+            computedLevel !== "À PRÉCISER" &&
+            computedLevel !== "NON INDIQUÉ"
             ? computedLevel
             : t("lessonList.userRow.notSpecified");
     };

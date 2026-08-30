@@ -31,21 +31,52 @@ import {render, screen, waitFor} from "@testing-library/react";
 import i18n from "../../i18n";
 import LessonList from "./LessonList";
 
+// The stub also stashes the live `SubComponent` render prop so a test can invoke it and reach
+// the otherwise-unexported UserList / UserRow.
+let lastReactTableProps = null;
 vi.mock("react-table", () => ({
-    default: props => (
-        <div data-testid="react-table-stub">
-            {(props.columns || []).map((c, i) => (
-                <span key={i} data-testid="rt-header">
-                    {typeof c.Header === "string" ? c.Header : ""}
-                </span>
-            ))}
-            <span data-testid="rt-noDataText">{props.noDataText}</span>
-            <span data-testid="rt-previousText">{props.previousText}</span>
-            <span data-testid="rt-nextText">{props.nextText}</span>
-            <span data-testid="rt-loadingText">{props.loadingText}</span>
-        </div>
-    ),
+    default: props => {
+        lastReactTableProps = props;
+        return (
+            <div data-testid="react-table-stub">
+                {(props.columns || []).map((c, i) => (
+                    <span key={i} data-testid="rt-header">
+                        {typeof c.Header === "string" ? c.Header : ""}
+                    </span>
+                ))}
+                <span data-testid="rt-noDataText">{props.noDataText}</span>
+                <span data-testid="rt-previousText">{props.previousText}</span>
+                <span data-testid="rt-nextText">{props.nextText}</span>
+                <span data-testid="rt-loadingText">{props.loadingText}</span>
+            </div>
+        );
+    },
 }));
+
+// UserRow fires api.set().error().success().get(...) in a useEffect. Chainable no-op stub whose
+// .get never invokes the success callback, so `studentLevel` stays null and displayLevel() falls
+// through to the levelDisplayForActivity branch — the one the lot-4 review flagged.
+vi.mock("../../tools/api", () => {
+    const chain = {};
+    chain.set = () => chain;
+    chain.success = () => chain;
+    chain.error = () => chain;
+    chain.get = () => chain;
+    chain.post = () => chain;
+    chain.del = () => chain;
+    return {...chain, set: () => chain};
+});
+
+// Partial mock: keep every real helper except force levelDisplayForActivity to return the French
+// "NON INDIQUÉ" sentinel (its real no-level-rows return) so the English row must still show the
+// translated placeholder, not the raw sentinel.
+vi.mock("../planning/TimeIntervalHelpers", async importOriginal => {
+    const actual = await importOriginal();
+    return {
+        ...actual,
+        levelDisplayForActivity: () => "NON INDIQUÉ",
+    };
+});
 
 vi.mock("../generalPayments/MessageModal", () => ({
     default: () => <div data-testid="message-modal-stub" />,
@@ -187,6 +218,65 @@ describe("LessonList — column header row (i18n)", () => {
         expect(headers).not.toContain("Professeur");
 
         await waitFor(() => expect(global.fetch).toHaveBeenCalled());
+    });
+});
+
+// Reach UserList / UserRow through the react-table `SubComponent` render prop (the stub stashes
+// it). This is the diff's riskiest edit — UserList was rewritten from `=> ( … )` to
+// `=> { … return ( … ) }` — and it's where the lot-4 review found the Level cell rendering a raw
+// French sentinel in English mode.
+describe("row expander (UserList / UserRow) — i18n", () => {
+    const activityFixture = () => ({
+        id: 10,
+        activity_ref_id: 3,
+        time_interval: {id: 7, start: "2025-09-08T17:00:00"},
+        time_interval_id: 7,
+        activity_ref: {is_work_group: false},
+        teacher: {id: 2},
+        student_evaluations: [],
+        options: [],
+        activities_instruments: [],
+        users: [
+            {
+                id: 99,
+                first_name: "Jean",
+                last_name: "Dupont",
+                birthday: "2014-01-01",
+                // begin_at must be <= the reference date (≈ today) or SubComponent filters the
+                // user out and renders null.
+                begin_at: "2020-01-01",
+                stopped_at: undefined,
+            },
+        ],
+    });
+
+    const renderSubRow = async lng => {
+        await i18n.changeLanguage(lng);
+        render(<LessonList {...makeProps()} />);
+        await waitFor(() => expect(lastReactTableProps).not.toBeNull());
+        const sub = lastReactTableProps.SubComponent({original: activityFixture()});
+        return render(sub);
+    };
+
+    test("fr — expander header + level sentinel render in French", async () => {
+        const {getByText} = await renderSubRow("fr");
+        expect(getByText("0/1 évaluations remplies")).toBeInTheDocument();
+        expect(getByText("Consulter les évaluations")).toBeInTheDocument();
+        expect(getByText("Nom")).toBeInTheDocument();
+        // displayLevel(): levelDisplayForActivity -> "NON INDIQUÉ" -> translated placeholder
+        expect(getByText("NON INDIQUÉ")).toBeInTheDocument();
+    });
+
+    test("en — expander header + level sentinel render in English (no raw French)", async () => {
+        const {getByText, queryByText} = await renderSubRow("en");
+        expect(getByText("0/1 evaluations completed")).toBeInTheDocument();
+        expect(getByText("View evaluations")).toBeInTheDocument();
+        expect(getByText("Name")).toBeInTheDocument();
+        // regression: this used to render the raw "NON INDIQUÉ" from the helper in en mode
+        expect(queryByText("NON INDIQUÉ")).not.toBeInTheDocument();
+        expect(getByText("NOT SPECIFIED")).toBeInTheDocument();
+        // UserRow age cell: t("lessonList.userRow.ageYears", { age })
+        expect(getByText(/\d+ years old/)).toBeInTheDocument();
     });
 });
 
