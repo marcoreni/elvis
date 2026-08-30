@@ -457,6 +457,17 @@ admin CRUD) — preserved verbatim from the ERB/React sources:
   HTML collapses them anyway). The string is otherwise preserved verbatim, including the missing
   French space before the colon: `professeur:` → `professeur :` (still a typo, still pending).
 
+`frontend/locales/fr/courses.json` (added by feature/i18n-06-courses lot 3 —
+`AddSlotForCourse.jsx`, `DeleteCourseModal.jsx`):
+- `deleteCourse.prompt` — "Souhaitez-vous:" → "Souhaitez-vous :" (missing French space before the
+  colon; preserved verbatim from `DeleteCourseModal.jsx`, same treatment as the lot-2
+  `professeur:` entry above).
+- `deleteCourse.deleteAll` / `deleteCourse.deleteSelected` / `addSlot.editSeasonPeriodHint` /
+  `addSlot.weeklyRecurrenceInfo` — extracted from multi-line JSX text (and, for `deleteAll`, a
+  leading space after the `<label>` tag). Leading/among-word whitespace collapsed to single
+  spaces during extraction; no visible change (HTML collapses it, and a `{" "}` already precedes
+  the affected label). Same normalization note as the lot-2 `slotBusy` entry.
+
 Also re-scan the whole `frontend/locales/fr/` + `config/locales/fr.yml` when doing this (grep for
 `Edition\b`, `Editer\b`, `Selectionn`, `réglement`, `Echéance`, `Echec`, `Emmeteur`, `Precedent`,
 `Creer\b`, `verouiller`, `Resolution\b`); the list above is only what was noticed in passing, not

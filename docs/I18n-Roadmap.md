@@ -606,7 +606,17 @@ et à mesure de son intégration :
           insécable (préservé verbatim, consigné dans `docs/KnownIssues.md`). Tests Vitest
           (2 fichiers, gardes classe-nue + résolution des clés interpolées), 12 tests.
           **Vérification** : `yarn test` → 38 fichiers / 141 tests, verts.
-    - [ ] **Lot 3** — `AddSlotForCourse.jsx` (~42 chaînes) + `DeleteCourseModal.jsx` (~26 chaînes).
+    - [x] **Lot 3** — branche `feature/i18n-06-extract-courses-lot3`. Étape « créneau » de
+          l'assistant + modale de suppression : `AddSlotForCourse.jsx` (classe StepZilla nue,
+          `t` en prop depuis `AddCourse`) + `DeleteCourseModal.jsx` (modale react-final-form
+          autonome montée par `LessonList`, donc `withTranslation("courses")` ; le closure
+          `onSubmit` est défini dans `render()` et récupère `t` de cette portée). +27 clés
+          `courses` (`addSlot.*` avec un bloc `weekdays.{monday..saturday}`, nouveau bloc
+          `deleteCourse.*` ; 66 au total, parité fr/en). Réutilise
+          `common:actions.{cancel,validate}`. `deleteCourse.prompt` garde le source verbatim
+          « Souhaitez-vous: » (espace manquant avant `:`), consigné dans `docs/KnownIssues.md`.
+          Tests Vitest (2 fichiers, gardes classe/HOC + branche swal du `onSubmit`), 7 tests.
+          **Vérification** : `yarn test` → 40 fichiers / 148 tests, verts.
     - [ ] **Lot 4** — `LessonList.jsx` (1415 lignes).
   - [x] `formules` — branche `feature/i18n-06-extract-formules` *(dépend de 01+02)*
     - [x] `frontend/components/formules/` : `Formules.jsx` (liste + swal archive/suppression) et

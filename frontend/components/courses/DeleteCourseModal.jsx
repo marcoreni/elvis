@@ -2,13 +2,14 @@ import { values } from "lodash";
 import moment from "moment";
 import React from "react";
 import { Form, Field } from "react-final-form";
+import { withTranslation } from "react-i18next";
 import * as TimeIntervalHelpers from "../planning/TimeIntervalHelpers";
 import YearlyCalendar from "../planning/YearlyCalendar";
 import { ISO_DATE_FORMAT } from "../utils";
 import * as api from "../../tools/api.js";
 import swal from "sweetalert2";
 
-export default class DeleteCourseModal extends React.Component {
+class DeleteCourseModal extends React.Component {
     constructor(props) {
         super(props);
 
@@ -67,6 +68,7 @@ export default class DeleteCourseModal extends React.Component {
     }
 
     render() {
+        const { t } = this.props;
         const {
             selected,
             season,
@@ -94,8 +96,8 @@ export default class DeleteCourseModal extends React.Component {
                         if(instanceIds.length === 0)
                         {
                             swal.fire({
-                                title: "Attention",
-                                text: "Aucun cours ne peut être supprimé.",
+                                title: t("deleteCourse.warningTitle"),
+                                text: t("deleteCourse.noneDeletable"),
                                 type: "error",
                             });
 
@@ -109,8 +111,8 @@ export default class DeleteCourseModal extends React.Component {
                         if(instanceIds.length === 0)
                         {
                             swal.fire({
-                                title: "Attention",
-                                text: "Aucun cours n'a été sélectionné.",
+                                title: t("deleteCourse.warningTitle"),
+                                text: t("deleteCourse.noneSelected"),
                                 type: "error",
                             });
 
@@ -122,8 +124,8 @@ export default class DeleteCourseModal extends React.Component {
                             .filter(ai => new Date(ai.time_interval.start) <= today && ai.student_count >= 0).length > 0)
                         {
                             swal.fire({
-                                title: "Attention",
-                                text: "Vous ne pouvez pas supprimer un cours qui est déjà passé et qui a des élèves inscrits.",
+                                title: t("deleteCourse.warningTitle"),
+                                text: t("deleteCourse.pastWithStudents"),
                                 type: "warning",
                             });
 
@@ -145,10 +147,10 @@ export default class DeleteCourseModal extends React.Component {
                 render={({ handleSubmit }) => (
                     <form onSubmit={handleSubmit} className="p-lg">
                         <div className="row">
-                            <h3 className="text-center">Supprimer un cours</h3>
+                            <h3 className="text-center">{t("deleteCourse.title")}</h3>
 
                             <div className="row">
-                                <p>Souhaitez-vous:</p>
+                                <p>{t("deleteCourse.prompt")}</p>
                                 <div
                                     className="form-group"
                                     onClick={e => {
@@ -165,8 +167,7 @@ export default class DeleteCourseModal extends React.Component {
                                             value="all"
                                             id={"delete_all"}
                                         />{" "}
-                                        <label htmlFor={"delete_all"}> Supprimer toutes les récurrences de ce
-                                        cours.</label>
+                                        <label htmlFor={"delete_all"}>{t("deleteCourse.deleteAll")}</label>
                                     </p>
                                     <p>
                                         <Field
@@ -176,8 +177,7 @@ export default class DeleteCourseModal extends React.Component {
                                             value="select"
                                             id={"delete_select"}
                                         />{" "}
-                                        <label htmlFor={"delete_select"}>Sélectionner les récurrences à
-                                            supprimer.</label>
+                                        <label htmlFor={"delete_select"}>{t("deleteCourse.deleteSelected")}</label>
                                     </p>
                                 </div>
                             </div>
@@ -197,7 +197,7 @@ export default class DeleteCourseModal extends React.Component {
                                             classes
                                         )
                                     }
-                                    legend={{selected:"Cours existant",unselected:"Cours à supprimer"}}
+                                    legend={{selected: t("deleteCourse.legendExisting"), unselected: t("deleteCourse.legendToDelete")}}
                                 />
                             )}
                         </div>
@@ -208,13 +208,13 @@ export default class DeleteCourseModal extends React.Component {
                                     className="btn btn-md m-sm"
                                     onClick={this.props.onClose}
                                 >
-                                    Annuler
+                                    {t("common:actions.cancel")}
                                 </button>
                                 <button
                                     type="submit"
                                     className="btn btn-primary btn-md"
                                 >
-                                    Valider
+                                    {t("common:actions.validate")}
                                 </button>
                             </div>
                         </div>
@@ -224,3 +224,5 @@ export default class DeleteCourseModal extends React.Component {
         );
     }
 }
+
+export default withTranslation("courses")(DeleteCourseModal);
