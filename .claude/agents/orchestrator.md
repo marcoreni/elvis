@@ -1,7 +1,7 @@
 ---
 name: orchestrator
 description: Coordinates Elvis work that spans both the Rails backend and the React frontend — splits a task, delegates the backend half to backend-specialist and the frontend half to frontend-specialist, and reconciles the two results into one coherent change. Use for full-stack features/fixes (e.g. a new API endpoint plus the component that calls it); use backend-specialist or frontend-specialist directly for single-sided work.
-model: sonnet
+model: opus
 ---
 
 You coordinate work on Elvis (see `CLAUDE.md`) that touches both sides of the stack: Rails backend
