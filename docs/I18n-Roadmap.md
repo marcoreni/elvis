@@ -576,7 +576,29 @@ et à mesure de son intégration :
           chacune ; câbler une fixture `Season` est un TODO de suivi.
     - [x] **Vérification** : `bin/i18n-tasks health` → 0 manquant / 0 inutilisé (365 clés).
           `bundle exec rspec` → 93 exemples, 0 échec. `yarn test` → 8 fichiers / 22 tests, verts.
-  - [ ] `courses`
+  - [ ] `courses` — branche `feature/i18n-06-extract-courses` *(dépend de 01+02 ; réutilise `planning:*`)*
+    - [x] **Lot 1** — assistant « Ajouter un cours » (3 fichiers, `frontend/components/courses/`) :
+          `AddCourse.jsx`, `AddCourseSummary.jsx`, `AddActivityForCourse.jsx`. Nouveau namespace
+          i18next `courses` (`frontend/locales/{fr,en}/courses.json`, 28 clés, câblé dans
+          `frontend/i18n/index.js` + assertion `ns` de `index.test.js`). Clés sous `addCourse.*` /
+          `addActivity.*` / `addSlot.stepName` / `addTeacher.stepName` / `addLocation.stepName` /
+          `summary.*`. Réutilise `planning:container.holidaysAlert` /
+          `planning:container.manageHolidaysLink` / `planning:common.close` (bloc d'alerte vacances,
+          même précédent que `Planning.jsx`) et le nouveau `common:loading` (« Chargement... »,
+          extrait du loader pleine page — remplace un emprunt à `common:reactTable.loadingText`).
+    - [x] **Correction de revue (finding HIGH)** : `AddActivityForCourse` est une *étape* StepZilla ;
+          StepZilla ne branche son hook `isValidated()` par étape que si l'élément est
+          `instanceof Component`, et un HOC `withTranslation()` (composant fonction) casse ce test —
+          validation d'étape silencieusement désactivée. Laissé en classe nue non wrappée, `t`
+          passé en prop depuis `AddCourse`. Test de non-régression ajouté.
+    - [x] **Tests** : `frontend/components/courses/{AddCourse,AddCourseSummary,AddActivityForCourse}.test.jsx`
+          (Vitest, pattern `i18n.changeLanguage`, fr + en), 10 tests.
+    - [x] **Vérification** : `yarn test` → 36 fichiers / 129 tests, verts.
+          `bin/i18n-tasks health` → 0 manquant / 0 inutilisé (aucun `.yml` touché ce lot).
+    - [ ] **Lot 2** — `AddLocationForCourse.jsx` + `AddTeacherForCourse.jsx` (étapes 3–4 de
+          l'assistant, mêmes classes StepZilla nues).
+    - [ ] **Lot 3** — `AddSlotForCourse.jsx` (~42 chaînes) + `DeleteCourseModal.jsx` (~26 chaînes).
+    - [ ] **Lot 4** — `LessonList.jsx` (1415 lignes).
   - [x] `formules` — branche `feature/i18n-06-extract-formules` *(dépend de 01+02)*
     - [x] `frontend/components/formules/` : `Formules.jsx` (liste + swal archive/suppression) et
           `EditFormule.jsx` (formulaire créer/éditer, modale d'ajout d'activités, tableau de
