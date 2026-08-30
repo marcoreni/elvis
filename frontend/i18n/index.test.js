@@ -37,7 +37,28 @@ describe("frontend/i18n", () => {
         const { default: i18n } = await import("./index");
 
         expect(i18n.options.defaultNS).toBe("common");
-        expect(i18n.options.ns).toEqual(["common", "users", "evaluation", "payments", "formules", "planning"]);
+        expect(i18n.options.ns).toEqual(["common", "users", "evaluation", "payments", "formules", "planning", "activities"]);
+    });
+
+    // fr and en must define exactly the same key set in every loaded namespace. `fallbackLng`
+    // is "fr" in jsdom, so a missing en key silently renders the French value — a per-component
+    // "renders in en" test can't catch that when the two locales happen to share a value. This
+    // guards every namespace at once.
+    test("every namespace has identical fr/en key sets", async () => {
+        document.documentElement.lang = "fr";
+        const { default: i18n } = await import("./index");
+
+        const flat = (obj, prefix = "") =>
+            Object.entries(obj).flatMap(([k, v]) => {
+                const key = prefix ? `${prefix}.${k}` : k;
+                return v && typeof v === "object" && !Array.isArray(v) ? flat(v, key) : [key];
+            });
+
+        for (const ns of i18n.options.ns) {
+            const fr = flat(i18n.getResourceBundle("fr", ns) || {}).sort();
+            const en = flat(i18n.getResourceBundle("en", ns) || {}).sort();
+            expect({ ns, keys: en }).toEqual({ ns, keys: fr });
+        }
     });
 
     // Regression: moment.locale() used to be set with `moment.locale(i18n.language)` right after

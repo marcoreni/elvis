@@ -10,7 +10,7 @@
   <% end %>
 
   <div class="form-group">
-    <%= f.label "Nom"%><br />
+    <%= f.label :name, t("views.activity_ref_kind.form.name_label") %><br />
     <%= f.text_field :name, autofocus: true, id: "label", class: "form-control", required: true, minLength: 3 %>
   </div>
 
@@ -28,13 +28,13 @@
         isMulti: false,
         isClearable: true,
         confirmBeforeClear: false,
-        title: "Activité par défaut",
+        title: t("views.activity_ref_kind.form.default_activity"),
         name: "activity_ref_kind[default_activity_ref_id]"
       }) %>
     </div>
   <% end %>
 
   <div class="form-group">
-    <%= f.submit "Sauvegarder", class: "btn btn-primary block full-width m-b" %>
+    <%= f.submit t("common.actions.save"), class: "btn btn-primary block full-width m-b" %>
   </div>
 <% end %>

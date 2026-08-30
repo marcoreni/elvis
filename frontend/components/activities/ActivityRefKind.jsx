@@ -2,9 +2,10 @@ import React from "react";
 import BaseDataTable from "../parameters/BaseDataTable";
 import {csrfToken} from "../utils";
 import swal from "sweetalert2";
+import { withTranslation } from "react-i18next";
 
 
-export default class ActivityRefKind extends BaseDataTable
+class ActivityRefKind extends BaseDataTable
 {
     constructor(props)
     {
@@ -13,17 +14,17 @@ export default class ActivityRefKind extends BaseDataTable
         this.state.columns = [
             {
                 id: "name",
-                Header: "Nom",
+                Header: this.props.t("activities:activityRefKind.columns.name"),
                 accessor: d => d.name,
             },
             {
                 id: "default_activity_ref",
-                Header: "Activité par défaut",
+                Header: this.props.t("activities:activityRefKind.columns.defaultActivity"),
                 accessor: d => d.default_activity_ref ? d.default_activity_ref.label : "",
             },
             {
                 id: "actions",
-                Header: "Actions",
+                Header: this.props.t("activities:columns.actions"),
                 Cell: props => {
                     return (
                         <div className="btn-wrapper">
@@ -48,11 +49,11 @@ export default class ActivityRefKind extends BaseDataTable
     deleteStatus(status)
     {
         swal({
-            title: "Voulez-vous vraiment supprimer le type '" + status.name + "' ?",
+            title: this.props.t("activities:activityRefKind.confirmDelete", {name: status.name}),
             type: "warning",
             showCancelButton: true,
-            cancelButtonText: "non",
-            confirmButtonText: 'oui'
+            cancelButtonText: this.props.t("activities:common.no"),
+            confirmButtonText: this.props.t("activities:common.yes")
         }).then(res =>
         {
             if(res.value)
@@ -74,7 +75,7 @@ export default class ActivityRefKind extends BaseDataTable
                         } else {
                             result.json().then(text => {
                                 swal({
-                                    title: "Erreur",
+                                    title: this.props.t("activities:common.errorTitle"),
                                     type: "error",
                                     text: text['message'] + " (" + text['activities'] + ")"
                                 })
@@ -84,5 +85,6 @@ export default class ActivityRefKind extends BaseDataTable
             }
         });
     }
-
 }
+
+export default withTranslation("activities")(ActivityRefKind);

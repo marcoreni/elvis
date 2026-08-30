@@ -16,10 +16,12 @@ import formules_fr from "../locales/fr/formules.json";
 import formules_en from "../locales/en/formules.json";
 import planning_fr from "../locales/fr/planning.json";
 import planning_en from "../locales/en/planning.json";
+import activities_fr from "../locales/fr/activities.json";
+import activities_en from "../locales/en/activities.json";
 
 const resources = {
-    fr: {common: common_fr, users: users_fr, evaluation: evaluation_fr, payments: payments_fr, formules: formules_fr, planning: planning_fr},
-    en: {common: common_en, users: users_en, evaluation: evaluation_en, payments: payments_en, formules: formules_en, planning: planning_en},
+    fr: {common: common_fr, users: users_fr, evaluation: evaluation_fr, payments: payments_fr, formules: formules_fr, planning: planning_fr, activities: activities_fr},
+    en: {common: common_en, users: users_en, evaluation: evaluation_en, payments: payments_en, formules: formules_en, planning: planning_en, activities: activities_en},
 };
 
 // Derived from `resources` so it can't drift from what's actually loaded here. Still needs to
@@ -56,7 +58,7 @@ i18n
         supportedLngs: SUPPORTED_LOCALES,
         fallbackLng: initialLocale,
         defaultNS: "common",
-        ns: ["common", "users", "evaluation", "payments", "formules", "planning"],
+        ns: ["common", "users", "evaluation", "payments", "formules", "planning", "activities"],
         detection: {
             // Only fall back to localStorage/navigator if <html lang> is somehow missing.
             order: ["htmlTag", "localStorage", "navigator"],

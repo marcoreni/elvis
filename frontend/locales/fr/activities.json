@@ -1,0 +1,23 @@
+{
+    "columns": {
+        "actions": "Actions"
+    },
+    "activityRefKind": {
+        "columns": {
+            "name": "Nom",
+            "defaultActivity": "Activité par défaut"
+        },
+        "confirmDelete": "Voulez-vous vraiment supprimer le type '{{name}}' ?"
+    },
+    "instruments": {
+        "columns": {
+            "label": "Label"
+        },
+        "confirmDelete": "Voulez-vous vraiment supprimer l'instrument '{{label}}' ?"
+    },
+    "common": {
+        "yes": "oui",
+        "no": "non",
+        "errorTitle": "Erreur"
+    }
+}
