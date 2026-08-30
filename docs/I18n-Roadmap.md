@@ -504,7 +504,28 @@ et à mesure de son intégration :
         « À PRÉCISER » de `levelDisplay`) ; helper appelé depuis 4+ domaines.
       - `ConflictDisplayItem` de `Calendar.jsx` (« Résolu »/« Voir le conflit ») — code mort,
         déjà consigné dans `docs/KnownIssues.md`.
-  - [ ] `activities`
+  - [~] `activities` — domaine plus large que prévu (catalogue d'activités). Découpé :
+    - [x] **Lot 1 — CRUD admin catalogue** : branche `feature/i18n-06-extract-activities`.
+          `frontend/components/activities/{ActivityRefKind,Instruments}.jsx` (classes ext.
+          `BaseDataTable` → `withTranslation("activities")`, nouveau namespace i18next `activities`).
+          `app/views/activity_ref/{index,edit,new}.html.erb` +
+          `app/views/activity_ref_kind/{index,new,_form}.html.erb` +
+          `app/views/instruments/{index,new,_form}.erb` → clés `views.activity_ref.*` /
+          `views.activity_ref_kind.*` / `views.instruments.*`. Réutilise
+          `common.actions.{save,edit,delete}`, `common.confirm.sure`. Traduction : agent
+          `translator`. Test : agent `qa` (+ test de parité fr/en générique dans
+          `frontend/i18n/index.test.js`, ajouté sur signalement revue). Colonnes construites dans
+          le constructeur (figées à la langue de montage) — consigné. Anomalies préservées
+          verbatim (`Editer` → `Éditer` ; `destroy_error_title` = « Error » en dur ;
+          `Nom_de_l'instrument` ; « Ajouter une Activité »/« activité » casse incohérente) —
+          consignées. `f.label` corrigé pour prendre `:attr, texte` (pas `texte` seul).
+          **NB** : `parameters/BaseDataTable.jsx` (classe de base des 2 tableaux) a son propre
+          chrome FR en dur (« Créer » + props react-table) alors que `common:reactTable.*` existe
+          déjà — à faire quand le domaine `parameters` sera traité, pas ici.
+    - [ ] **Lot 2 — `activityRef/ActivityRefContainer`** (formulaire édition/création d'activité,
+          gros arbre React sous `frontend/components/activityRef/`).
+    - [ ] **Lot 3** — `app/views/{activity,activity_instance,my_activities,activities_applications}/*`
+          + `frontend/components/activityApplications/*` (flux d'inscription côté élève — gros).
   - [x] `evaluation` — branche `feature/i18n-06-extract-evaluation` *(dépend de 01+02)*
     - [x] `frontend/components/evaluation/` : `Evaluation.jsx`, `EvaluationForm.jsx`,
           `StudentEvaluationsStats.jsx` passés en `withTranslation("evaluation")` (nouveau
@@ -585,7 +606,9 @@ et à mesure de son intégration :
     - [ ] **Tests** : `Formules.test.jsx`, `EditFormule.test.jsx` (Vitest, pattern `i18n.changeLanguage`),
           `spec/requests/formules_pages_spec.rb` (index/new/edit fr+en, garde anti-`"translation missing"`).
     - [ ] **Vérification** : `bin/i18n-tasks health`, `bundle exec rspec`, `yarn test`, `/code-review`.
-  - [ ] `parameters` / `editParameters` restants
+  - [ ] `parameters` / `editParameters` restants — inclut aussi : `parameters/BaseDataTable.jsx`
+        (chrome FR en dur, cf. lot activities 1), `parameters/Practice/Instruments.jsx` (2e
+        tableau « Instruments » distinct, colonnes `#`/`Nom`/`Actif ?`/`Actions`, encore en FR).
   - [~] `payments` — **branche `feature/i18n-06-extract-payments` : 1er lot fait, reste à
         découper.** Le domaine `payments` est bien plus gros que les autres (~19 vues ERB, ~31
         composants React), donc découpé :

@@ -234,6 +234,36 @@ fr:
                 error_title: Erreur
             upload_csv:
                 heading: Import de votre communauté
+        activity_ref:
+            index:
+                heading: Référentiel des activités
+                add: Ajouter une activité
+                export: Exporter
+                type: "Type: %{kind}"
+                places: "Places possibles: %{limit} (max: %{hard_limit})"
+                duration_hours: "Durée: %{hours}h%{minutes}"
+                duration_minutes: "Durée: %{minutes} minutes"
+                destroy_error_title: Error
+                destroy_error: Vous ne pouvez pas supprimer l'activité car elle est liée à d'autres données.
+            edit:
+                heading: "Editer l'activité \"%{label}\""
+            new:
+                heading: Ajouter une Activité
+        activity_ref_kind:
+            index:
+                heading: Familles d'activités
+            new:
+                heading: Ajouter une famille d'activité
+            form:
+                name_label: Nom
+                default_activity: Activité par défaut
+        instruments:
+            index:
+                heading: Instruments
+            new:
+                heading: Ajouter un instrument
+            form:
+                label_field: Nom_de_l'instrument
         evaluation_appointments:
             incomplete:
                 heading: Liste des nouveaux élèves sans créneau d'évaluation

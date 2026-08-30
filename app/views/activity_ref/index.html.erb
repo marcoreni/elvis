@@ -1,10 +1,10 @@
 <div class="row wrapper border-bottom white-bg page-heading">
-  <h2>Référentiel des activités
+  <h2><%= t("views.activity_ref.index.heading") %>
     <%= link_to new_activity_ref_path do %>
-      <button class="btn btn-primary btn-sm pull-right m-sm"><i class="fas fa-plus"></i> Ajouter une activité</button>
+      <button class="btn btn-primary btn-sm pull-right m-sm"><i class="fas fa-plus"></i> <%= t("views.activity_ref.index.add") %></button>
     <% end %>
     <%= link_to activity_ref_index_path(format: :csv) do %>
-      <button class="btn btn-primary btn-sm pull-right m-sm"><i class="fas fa-download"></i> Exporter</button>
+      <button class="btn btn-primary btn-sm pull-right m-sm"><i class="fas fa-download"></i> <%= t("views.activity_ref.index.export") %></button>
     <% end %>
   </h2>
 </div>
@@ -25,21 +25,21 @@
           </div>
           <div class="col-sm-8">
             <h4><strong><%= a.label %></strong></h4>
-            <p>Type: <%= kind.name %></p>
-            <p>Places possibles: <%= a.occupation_limit %> (max: <%= a.occupation_hard_limit %>)</p>
+            <p><%= t("views.activity_ref.index.type", kind: kind.name) %></p>
+            <p><%= t("views.activity_ref.index.places", limit: a.occupation_limit, hard_limit: a.occupation_hard_limit) %></p>
             <% unless a.duration.nil? %>
               <% hours = a.duration / 60 %>
               <% minutes = a.duration % 60 %>
               <% if hours > 0 %>
-                <p>Durée: <%= "#{hours}h#{minutes.to_s.rjust(2, '0')}" %></p>
+                <p><%= t("views.activity_ref.index.duration_hours", hours: hours, minutes: minutes.to_s.rjust(2, '0')) %></p>
               <% else %>
-                <p>Durée: <%= "#{minutes} minutes" %></p>
+                <p><%= t("views.activity_ref.index.duration_minutes", minutes: minutes) %></p>
               <% end %>
             <% end %>
 
             <div class="d-flex">
               <%= link_to edit_activity_ref_path(a), class: "mr-2" do %>
-                <button class="btn btn-sm btn-primary">Éditer</button>
+                <button class="btn btn-sm btn-primary"><%= t("common.actions.edit") %></button>
               <% end %>
               <%#= link_to a, method: :delete, data: { confirm: "Êtes vous sûr ?" } do %>
               <!--              <button class="btn btn-sm btn-warning">Supprimer</button>-->
@@ -48,11 +48,11 @@
               <%= react_component("RemoveComponent", {
                 classname: "activity_ref",
                 id: a.id,
-                validationText: "Êtes-vous sûr ?",
+                validationText: t("common.confirm.sure"),
                 btnProps: {
                   className: "btn btn-sm btn-warning"
                 },
-                children: "Supprimer"
+                children: t("common.actions.delete")
               }) %>
             </div>
           </div>
@@ -65,5 +65,5 @@
 <% end %>
 
 <% unless flash[:destroy_error].nil? %>
-  <%= react_component("utils/SwalBackEndModal", { swal_props: { title: 'Error', type: 'error', text: "Vous ne pouvez pas supprimer l'activité car elle est liée à d'autres données." } }) %>
+  <%= react_component("utils/SwalBackEndModal", { swal_props: { title: t("views.activity_ref.index.destroy_error_title"), type: 'error', text: t("views.activity_ref.index.destroy_error") } }) %>
 <% end %>

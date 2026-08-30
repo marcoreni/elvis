@@ -223,6 +223,9 @@ recovery over deletion until someone audits plugins + prod logs.
 - `app/views/due_payment/update.html.erb` — `DuePaymentController#update` does `render json:`
   unconditionally. Same: briefly deleted in that branch, then restored.
 - `payment_method` also has no `show` action while `resources :payment_method` routes `show`.
+- `app/views/activity_ref/{create,update}.html.erb` — 85-byte Rails-scaffold stubs
+  (`<h1>ActivityRef#create</h1>`). `ActivityRefController#create`/`#update` always `render json:`,
+  so unreachable. Left untouched by i18n-06 activities lot 1.
 
 When someone picks this up: audit activated plugins' route files and prod request logs for these
 paths first; only then drop the dead actions/views and tighten the route declarations with
@@ -372,6 +375,11 @@ Fix when it matters: move the `columns` build into `render()` (as was done for
 `SubPaymentList.jsx` in lot 2a) — the Filter/Cell closures already close over `this`, so it's
 mechanical but touches ~200 lines in each 1000+-line file, hence deferred.
 
+Same pattern (added by i18n-06 activities lot 1): `activities/ActivityRefKind.jsx` and
+`activities/Instruments.jsx` build `this.state.columns` with `this.props.t(...)` `Header`s in the
+constructor. Harmless for the same reason (full-reload locale switch); `BaseDataTable` reads
+`this.state.columns` so moving the build needs the same care.
+
 ## French typos preserved verbatim during i18n extraction — clean up the locale files
 
 The i18n branches copy every French string **verbatim** into the locale files (no copy changes
@@ -429,6 +437,16 @@ preserved verbatim from `ActivityDetailsModal.jsx`:
   ("Créer les cours de cette activité "), `activityModal.createCourseButton` ("Créer ce cours "),
   and `activityModal.teacherChangeWarningLabel` ("Attention : " — a `<b>` prefix). A blanket
   "trim the locale files" pass must not strip these — they glue onto the next word/element.
+
+`config/locales/fr.yml` (added by feature/i18n-06 activities lot 1 — activity_ref / activity_ref_kind
+admin CRUD) — preserved verbatim from the ERB/React sources:
+- `views.activity_ref.index.destroy_error_title` — source literal is the English word "Error"; fr
+  should be "Erreur" (`Error` → `Erreur`)
+- `views.activity_ref.edit.heading` — "Editer l'activité \"%{label}\"" → "Éditer l'activité \"%{label}\""
+  (missing accent on "Editer")
+- `views.instruments.form.label_field` — "Nom_de_l'instrument" → "Nom de l'instrument" (stray underscores)
+- `views.activity_ref.new.heading` = "Ajouter une **A**ctivité" while `views.activity_ref.index.add`
+  = "Ajouter une **a**ctivité" — same phrase, inconsistent capital, both preserved verbatim
 
 Also re-scan the whole `frontend/locales/fr/` + `config/locales/fr.yml` when doing this (grep for
 `Edition\b`, `Editer\b`, `Selectionn`, `réglement`, `Echéance`, `Echec`, `Emmeteur`, `Precedent`,

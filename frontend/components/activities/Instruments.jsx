@@ -2,9 +2,10 @@ import React from "react";
 import BaseDataTable from "../parameters/BaseDataTable";
 import {csrfToken} from "../utils";
 import swal from "sweetalert2";
+import { withTranslation } from "react-i18next";
 
 
-export default class Instruments extends BaseDataTable
+class Instruments extends BaseDataTable
 {
     constructor(props)
     {
@@ -13,12 +14,12 @@ export default class Instruments extends BaseDataTable
         this.state.columns = [
             {
                 id: "label",
-                Header: "Label",
+                Header: this.props.t("activities:instruments.columns.label"),
                 accessor: d => d.label,
             },
             {
                 id: "actions",
-                Header: "Actions",
+                Header: this.props.t("activities:columns.actions"),
                 Cell: props => {
                     return (
                         <div className="btn-wrapper">
@@ -43,11 +44,11 @@ export default class Instruments extends BaseDataTable
     deleteStatus(status)
     {
         swal({
-            title: "Voulez-vous vraiment supprimer l'instrument '" + status.label + "' ?",
+            title: this.props.t("activities:instruments.confirmDelete", {label: status.label}),
             type: "warning",
             showCancelButton: true,
-            cancelButtonText: "non",
-            confirmButtonText: 'oui'
+            cancelButtonText: this.props.t("activities:common.no"),
+            confirmButtonText: this.props.t("activities:common.yes")
         }).then(res =>
         {
             if(res.value)
@@ -73,7 +74,7 @@ export default class Instruments extends BaseDataTable
                             result.text().then(text =>
                             {
                                 swal({
-                                    title: "Erreur",
+                                    title: this.props.t("activities:common.errorTitle"),
                                     type: "error",
                                     text: text
                                 })
@@ -83,5 +84,6 @@ export default class Instruments extends BaseDataTable
             }
         });
     }
-
 }
+
+export default withTranslation("activities")(Instruments);

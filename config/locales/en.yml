@@ -231,6 +231,36 @@ en:
                 error_title: Error
             upload_csv:
                 heading: Import your community
+        activity_ref:
+            index:
+                heading: Activities reference list
+                add: Add an activity
+                export: Export
+                type: "Type: %{kind}"
+                places: "Possible spots: %{limit} (max: %{hard_limit})"
+                duration_hours: "Duration: %{hours}h%{minutes}"
+                duration_minutes: "Duration: %{minutes} minutes"
+                destroy_error_title: Error
+                destroy_error: You cannot delete the activity because it is linked to other data.
+            edit:
+                heading: 'Editing activity "%{label}"'
+            new:
+                heading: Add an activity
+        activity_ref_kind:
+            index:
+                heading: Activity families
+            new:
+                heading: Add an activity family
+            form:
+                name_label: Name
+                default_activity: Default activity
+        instruments:
+            index:
+                heading: Instruments
+            new:
+                heading: Add an instrument
+            form:
+                label_field: Instrument name
         evaluation_appointments:
             incomplete:
                 heading: New students without an evaluation slot
