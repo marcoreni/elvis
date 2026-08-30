@@ -468,10 +468,57 @@ admin CRUD) — preserved verbatim from the ERB/React sources:
   spaces during extraction; no visible change (HTML collapses it, and a `{" "}` already precedes
   the affected label). Same normalization note as the lot-2 `slotBusy` entry.
 
+`frontend/locales/fr/courses.json` (added by feature/i18n-06-extract-courses-lot4 —
+`LessonList.jsx`) — preserved verbatim from the component (the reference-date help popover was
+assembled from 6 concatenated string literals):
+- `lessonList.help.body` — `</u>. tous les cours` → `</u>. Tous les cours` (lowercase after the
+  full stop)
+- `lessonList.help.body` — `imaginons le cas suivant:` → `imaginons le cas suivant :` (missing
+  French space before the colon)
+- `lessonList.help.body` — `que les nombres la colonne "Occupation"` → `que les nombres de la
+  colonne "Occupation"` (missing "de")
+- `lessonList.help.body` — `l'occupation seras de 3` → `l'occupation sera de 3` ("seras" → "sera")
+
+The literal `\n`, the `<br />` tags, the single-quote HTML attributes and the trailing space
+before the final `</p>` inside `lessonList.help.body` are intentional source artifacts kept
+verbatim — a blanket "trim / normalize the locale files" pass must not touch them. The English
+side (`lessonList.help.body`) is a clean translation with these defects fixed, as expected.
+
 Also re-scan the whole `frontend/locales/fr/` + `config/locales/fr.yml` when doing this (grep for
 `Edition\b`, `Editer\b`, `Selectionn`, `réglement`, `Echéance`, `Echec`, `Emmeteur`, `Precedent`,
 `Creer\b`, `verouiller`, `Resolution\b`); the list above is only what was noticed in passing, not
 an exhaustive audit. The English side of these keys is already spelled correctly.
+
+## `courses/LessonList.jsx` — residual French after the lot-4 i18n extraction
+
+The lot-4 extraction (`feature/i18n-06-extract-courses-lot4`) translated every string the component
+*owns*, but three things still render French in English mode and are deliberately out of that
+lot's scope:
+
+- **Level column / row-expander level cell** — `displayLevel()` compares `studentLevel` and
+  `TimeIntervalHelpers.levelDisplayForActivity(...)` against the French sentinel literals
+  `"NON INDIQUÉ"` and `"À PRÉCISER"`. Lot 4 maps *both* sentinels to the translated
+  `lessonList.userRow.notSpecified`, but the comparisons themselves still hard-code the French
+  strings, which live in `frontend/components/planning/TimeIntervalHelpers.jsx:264,270,271`
+  (not yet extracted). **When the planning lot i18ns `TimeIntervalHelpers`, these `===` /
+  `!==` checks in `LessonList.jsx` (~lines 1384, 1401-1403) break silently** — `displayLevel()`
+  will fall through to the raw helper output. Extract helper + call-site comparisons together.
+  Any *real* level label the helper returns (e.g. a season-defined "Débutant") is data, not
+  chrome, and is left as-is.
+- **Day column** — the `Jour` header is translated but the `Cell` (`moment(start).format("dddd")`)
+  and the day-filter `<option>`s (`day.format("dddd")`) stay `lundi`/`mardi` because the component
+  calls `moment.locale("fr")` at module scope *and* on every `render()` (`LessonList.jsx:13, 594`).
+  That call also clobbers the process-wide moment locale that `frontend/i18n/index.js` maintains,
+  so any component rendered after `LessonList` on the same page gets French dates too. Pre-existing,
+  not introduced by lot 4.
+- **Started/Stopped dates** in the row expander use `Intl.DateTimeFormat("fr")`
+  (`LessonList.jsx` ~1418, 1423) — always `DD/MM/YYYY`, ambiguous for en-US users.
+
+Also: `message.title` defaults to `i18n.t("courses:lessonList.messageDefaultTitle")` evaluated in
+the **constructor**, so it's frozen at construct time and won't follow a later `changeLanguage`
+(harmless — a locale switch is a full server reload; same class of issue as the
+generalPayments/`planning/Calendar.jsx` frozen-header notes above). The 12 react-table column
+headers are fine — they're rebuilt inside `render()`.
 
 ## `frontend/tools/constants.js` — hardcoded French `WEEKDAYS` / `MONTHS` / `MESSAGES` leak into English mode
 

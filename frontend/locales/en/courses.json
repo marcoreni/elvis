@@ -80,5 +80,85 @@
         "deleteSelected": "Select the recurrences to delete.",
         "legendExisting": "Existing course",
         "legendToDelete": "Course to delete"
+    },
+    "lessonList": {
+        "fetchError": "An error occurred while retrieving the data",
+        "messageDefaultTitle": "Course information",
+        "successTitle": "Success",
+        "courseDeleted": "The course has been deleted",
+        "ok": "Ok",
+        "genericError": "An error occurred",
+        "selectedInstancesDeleted": "The selected instances have been deleted",
+        "confirmationTitle": "Confirmation",
+        "bulkDeleteConfirm": "Do you want to delete all the selected courses? This action cannot be undone.",
+        "yesDelete": "Yes, delete",
+        "selectedCoursesDeleted": "The selected courses have been deleted.",
+        "deleteFailedTitle": "Deletion failed",
+        "serverError": "A server-side error occurred.",
+        "errorTitle": "Error",
+        "deleteFailedRetry": "The deletion failed. Please try again.",
+        "noCourseSelectedTitle": "No course selected",
+        "noCourseSelectedText": "Please select at least one course to download the student list",
+        "downloadStudentList": "Download the student list",
+        "sendMessage": "Send a message",
+        "sendConfirmTitle": "Send confirmation",
+        "messageSent": "Message sent",
+        "httpError": "Error {{status}}: {{statusText}}",
+        "resetFilters": "Reset filters",
+        "exportCsv": "Export to CSV",
+        "referenceDateTooltip": "Reference date for student headcounts",
+        "deleteModalLabel": "Delete the course",
+        "toBeSpecified": "TO BE SPECIFIED",
+        "selectedCount_one": "You have selected {{count}} course",
+        "selectedCount_other": "You have selected {{count}} courses",
+        "selectRemaining_one": "Select the {{count}} remaining one",
+        "selectRemaining_other": "Select the {{count}} remaining ones",
+        "courseCount_one": "{{count}} course",
+        "courseCount_other": "{{count}} courses",
+        "andNOthers_one": ", and {{count}} other",
+        "andNOthers_other": ", and {{count}} others",
+        "columns": {
+            "day": "Day",
+            "schedule": "Schedule",
+            "group": "Group",
+            "activity": "Activity",
+            "teacher": "Teacher",
+            "room": "Room",
+            "location": "Location",
+            "occupation": "Occupancy",
+            "age": "Age",
+            "level": "Level",
+            "season": "Season",
+            "action": "Action"
+        },
+        "occupation": {
+            "all": "All",
+            "empty": "Empty",
+            "notEmpty": "Not empty",
+            "notFull": "Not full",
+            "full": "Full"
+        },
+        "actions": {
+            "view": "View",
+            "exportContacts": "Export contact information",
+            "delete": "Delete"
+        },
+        "help": {
+            "title": "About the reference date",
+            "body": "<p class='text-justify'><u>This is <strong>not</strong> a filter on the courses</u>. All courses are always displayed. It is a filter that only changes the numbers in the table's \"Occupancy\" column.<br />Students may be enrolled in or unenrolled from a course during the season, so this filter is here to give the headcount of the courses as of a specific date. This provides a kind of \"history\" of course headcounts. By default, the selected date is the day before the current day, so that you see the current student headcount.</p><p class='text-left'>For example, consider the following case: <br />there are 3 students in a course on 10/04/2022 and one of the students leaves the course on 11/04/2022. <br />If the filter is set to 12/04/2022 or later, the occupancy of this course will be 2, whereas if the filter is set to 11/04/2022 or earlier, the occupancy will be 3.</p>"
+        },
+        "userList": {
+            "evaluationsFilled": "{{done}}/{{total}} evaluations completed",
+            "viewEvaluations": "View evaluations",
+            "name": "Name",
+            "instrument": "Instrument",
+            "startedOn": "Started on",
+            "stoppedOn": "Stopped on"
+        },
+        "userRow": {
+            "notAssigned": "NOT ASSIGNED",
+            "notSpecified": "NOT SPECIFIED",
+            "ageYears": "{{age}} years old"
+        }
     }
 }

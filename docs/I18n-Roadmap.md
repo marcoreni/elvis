@@ -576,7 +576,8 @@ et à mesure de son intégration :
           chacune ; câbler une fixture `Season` est un TODO de suivi.
     - [x] **Vérification** : `bin/i18n-tasks health` → 0 manquant / 0 inutilisé (365 clés).
           `bundle exec rspec` → 93 exemples, 0 échec. `yarn test` → 8 fichiers / 22 tests, verts.
-  - [ ] `courses` — branche `feature/i18n-06-extract-courses` *(dépend de 01+02 ; réutilise `planning:*`)*
+  - [x] `courses` — namespace i18next `courses` *(dépend de 01+02 ; réutilise `planning:*` + `common:*`)*.
+        4 lots, tous mergés (PR #29–#32). `frontend/locales/{fr,en}/courses.json` = 132 feuilles.
     - [x] **Lot 1** — assistant « Ajouter un cours » (3 fichiers, `frontend/components/courses/`) :
           `AddCourse.jsx`, `AddCourseSummary.jsx`, `AddActivityForCourse.jsx`. Nouveau namespace
           i18next `courses` (`frontend/locales/{fr,en}/courses.json`, 28 clés, câblé dans
@@ -617,7 +618,34 @@ et à mesure de son intégration :
           « Souhaitez-vous: » (espace manquant avant `:`), consigné dans `docs/KnownIssues.md`.
           Tests Vitest (2 fichiers, gardes classe/HOC + branche swal du `onSubmit`), 7 tests.
           **Vérification** : `yarn test` → 40 fichiers / 148 tests, verts.
-    - [ ] **Lot 4** — `LessonList.jsx` (1415 lignes).
+    - [x] **Lot 4** — branche `feature/i18n-06-extract-courses-lot4`. `LessonList.jsx` (1415 lignes,
+          dernier composant du domaine `courses`). Classe `LessonList` en `withTranslation("courses")` ;
+          `const { t } = this.props` dans `onSubmit` / `bulkDelete` / `downloadStudentsList` /
+          `renderTargetsAlert` / `sendReminderMail` / `render`. Le `fetchInstancesList` module-level et
+          le titre de message par défaut du constructeur passent par le singleton `i18n.t("courses:…")`.
+          `UserList` / `UserRow` (composants fonction module-level) passés en `useTranslation("courses")`.
+          Lambdas `t => t.last_name` renommées `teacher =>` (anti-shadowing). +66 feuilles sous
+          `lessonList.*` (messages plats, `columns.*`, `occupation.*`, `actions.*`, `help.title/body`,
+          `userList.*`, `userRow.*`), dont 4 clés plurielles (`_one`/`_other`) et l'interpolation
+          `httpError` / `evaluationsFilled` / `ageYears` ; 132 au total, parité fr/en. Réutilise
+          `common:actions.cancel`, `common:confirm.sure`, `common:reactTable.*`. `help.body` garde le
+          HTML source verbatim (`\n`, `<br />`, attributs en quotes simples) + 4 fautes FR, consignées
+          dans `docs/KnownIssues.md`.
+    - [x] **Correction de revue (finding MEDIUM)** : `displayLevel()` (dans `UserRow`) ne mappait que
+          le sentinel `"À PRÉCISER"` vers la clé traduite ; `levelDisplayForActivity` renvoie aussi
+          `"NON INDIQUÉ"` (cas sans niveau, le plus courant), qui passait tel quel → cellule FR brute
+          en mode EN. Les deux sentinels sont maintenant mappés vers `lessonList.userRow.notSpecified`.
+          Le résidu FR de `LessonList` hors périmètre lot 4 (comparaisons de sentinels couplées à
+          `TimeIntervalHelpers` non encore extrait, `moment.locale("fr")` sur les cellules « Jour »,
+          `Intl.DateTimeFormat("fr")`, titre de message figé au constructeur) est consigné dans
+          `docs/KnownIssues.md`.
+    - [x] **Tests** : `frontend/components/courses/LessonList.test.jsx` (Vitest) — garde HOC,
+          assertions sur la ligne d'en-têtes montée + props i18n react-table (fr/en, dont le retrait
+          de la colonne prof en `isTeacherView`), accès à `UserList`/`UserRow` via le render prop
+          `SubComponent` (dont la non-régression du sentinel de niveau), et résolution des clés
+          plurielles/interpolées au niveau i18n. 24 tests.
+    - [x] **Vérification** : `yarn test` → 41 fichiers / 172 tests, verts.
+          `bin/i18n-tasks health` non applicable (aucun `.yml` touché). **Domaine `courses` terminé.**
   - [x] `formules` — branche `feature/i18n-06-extract-formules` *(dépend de 01+02)*
     - [x] `frontend/components/formules/` : `Formules.jsx` (liste + swal archive/suppression) et
           `EditFormule.jsx` (formulaire créer/éditer, modale d'ajout d'activités, tableau de

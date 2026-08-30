@@ -80,5 +80,85 @@
         "deleteSelected": "Sélectionner les récurrences à supprimer.",
         "legendExisting": "Cours existant",
         "legendToDelete": "Cours à supprimer"
+    },
+    "lessonList": {
+        "fetchError": "Erreur lors du rapatriement des données",
+        "messageDefaultTitle": "Informations cours",
+        "successTitle": "Succès",
+        "courseDeleted": "Le cours a été supprimé",
+        "ok": "Ok",
+        "genericError": "Une erreur est survenue",
+        "selectedInstancesDeleted": "Les instances sélectionnées ont été supprimées",
+        "confirmationTitle": "Confirmation",
+        "bulkDeleteConfirm": "Voulez-vous supprimer tous les cours sélectionnés ? Cette action est irréversible.",
+        "yesDelete": "Oui, supprimer",
+        "selectedCoursesDeleted": "Les cours sélectionnés ont été supprimés.",
+        "deleteFailedTitle": "Échec de la suppression",
+        "serverError": "Une erreur s'est produite côté serveur.",
+        "errorTitle": "Erreur",
+        "deleteFailedRetry": "La suppression a échoué. Veuillez réessayer.",
+        "noCourseSelectedTitle": "Aucun cours sélectionné",
+        "noCourseSelectedText": "Veuillez sélectionner au moins un cours pour télécharger la liste des élèves",
+        "downloadStudentList": "Télécharger la liste des élèves",
+        "sendMessage": "Envoyer un message",
+        "sendConfirmTitle": "Confirmation d'envoi",
+        "messageSent": "Message envoyé",
+        "httpError": "Erreur {{status}} : {{statusText}}",
+        "resetFilters": "Réinitialiser les filtres",
+        "exportCsv": "Exporter en CSV",
+        "referenceDateTooltip": "Date de référence pour effectifs d'élèves",
+        "deleteModalLabel": "Supprimer le cours",
+        "toBeSpecified": "À PRÉCISER",
+        "selectedCount_one": "Vous avez sélectionné {{count}} cours",
+        "selectedCount_other": "Vous avez sélectionné {{count}} cours",
+        "selectRemaining_one": "Sélectionner le {{count}} restant",
+        "selectRemaining_other": "Sélectionner les {{count}} restants",
+        "courseCount_one": "{{count}} cours",
+        "courseCount_other": "{{count}} cours",
+        "andNOthers_one": ", et {{count}} autre",
+        "andNOthers_other": ", et {{count}} autres",
+        "columns": {
+            "day": "Jour",
+            "schedule": "Horaires",
+            "group": "Groupe",
+            "activity": "Activité",
+            "teacher": "Professeur",
+            "room": "Salle",
+            "location": "Emplacement",
+            "occupation": "Occupation",
+            "age": "Âge",
+            "level": "Niveau",
+            "season": "Saison",
+            "action": "Action"
+        },
+        "occupation": {
+            "all": "Tous",
+            "empty": "Vide",
+            "notEmpty": "Non vide",
+            "notFull": "Non plein",
+            "full": "Plein"
+        },
+        "actions": {
+            "view": "Visualiser",
+            "exportContacts": "Exporter les infos de contact",
+            "delete": "Supprimer"
+        },
+        "help": {
+            "title": "Aide sur la date de référence",
+            "body": "<p class='text-justify'><u>Ce n'est <strong>pas</strong> un filtre sur les cours</u>. tous les cours sont toujours affichés. C'est un filtre qui ne change que les nombres la colonne \"Occupation\" du tableau.<br />Il est possible pour des élèves d'être inscrit ou désinscrit d'un cours pendant la saison...\nCe filtre est donc ici afin d'avoir l'effectif des cours en fonction d'une date précise. Cela pour avoir une sorte \"d'historique\" de l'effectif des cours. Par défaut la date sélectionnée est celle du jour précédant le jour actuel pour avoir l'effectif actuel des élèves.</p><p class='text-left'>Par exemple, imaginons le cas suivant: <br />il y a 3 élèves à un cours le 10/04/2022 et un des élèves quitte le cours le 11/04/2022. <br />Si le filtre se situe au 12/04/2022 ou après, l'occupation de ce cours sera de 2, alors que si ce filtre se situe au 11/04/2022 ou avant, l'occupation seras de 3. </p>"
+        },
+        "userList": {
+            "evaluationsFilled": "{{done}}/{{total}} évaluations remplies",
+            "viewEvaluations": "Consulter les évaluations",
+            "name": "Nom",
+            "instrument": "Instrument",
+            "startedOn": "Début le",
+            "stoppedOn": "Arrêt le"
+        },
+        "userRow": {
+            "notAssigned": "NON ASSIGNÉ",
+            "notSpecified": "NON INDIQUÉ",
+            "ageYears": "{{age}} ans"
+        }
     }
 }

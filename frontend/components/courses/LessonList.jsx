@@ -2,6 +2,8 @@ import React from "react";
 import ReactTable from "react-table";
 import Select from "react-select";
 import { toast } from "react-toastify";
+import { withTranslation, useTranslation } from "react-i18next";
+import i18n from "../../i18n";
 import moment from "moment";
 import Modal from "react-modal";
 import MessageModal from "../generalPayments/MessageModal";
@@ -103,7 +105,7 @@ function fetchInstancesList(filter, format = "json") {
         })
         .catch((error) => {
             console.error(error);
-            toast.error("Erreur lors du rapatriement des données", {
+            toast.error(i18n.t("courses:lessonList.fetchError"), {
                 autoClose: 3000,
             });
         });
@@ -133,7 +135,7 @@ function formatOccupationRate(studentCount, limit, options) {
     return <span style={styles}>{`${studentCount}/${limit}`}</span>;
 }
 
-export default class LessonList extends React.Component {
+class LessonList extends React.Component {
     constructor(props) {
         super(props);
 
@@ -155,7 +157,7 @@ export default class LessonList extends React.Component {
             loading: false,
             listPreferences,
             message: {
-                title: "Informations cours",
+                title: i18n.t("courses:lessonList.messageDefaultTitle"),
                 content: "",
                 isEmail: true,
                 isSMS: false,
@@ -202,18 +204,19 @@ export default class LessonList extends React.Component {
     }
 
     onSubmit(values) {
+        const { t } = this.props;
         const activity = this.state.activity;
 
         if (values.repetition === "all") {
             api.set()
                 .success(() => {
                     swal.fire({
-                        title: "Succès",
+                        title: t("lessonList.successTitle"),
                         type: "success",
                         allowOutsideClick: false,
-                        text: "Le cours a été supprimé",
+                        text: t("lessonList.courseDeleted"),
                         width: "400px",
-                        confirmButtonText: "Ok",
+                        confirmButtonText: t("lessonList.ok"),
                     }).then(res => {
                         if (res.value) {
                             window.location.href = `/activities?auth_token=${csrfToken}`;
@@ -224,7 +227,7 @@ export default class LessonList extends React.Component {
                     console.log("error deleting course : ", errorMsg);
                     swal({
                         type: "error",
-                        title: "Une erreur est survenue",
+                        title: t("lessonList.genericError"),
                     });
                 })
                 .del(`/activity/${activity.id}`);
@@ -232,12 +235,12 @@ export default class LessonList extends React.Component {
             api.set()
                 .success(() => {
                     swal.fire({
-                        title: "Succès",
+                        title: t("lessonList.successTitle"),
                         type: "success",
                         allowOutsideClick: false,
-                        text: "Les instances sélectionnées ont été supprimées",
+                        text: t("lessonList.selectedInstancesDeleted"),
                         width: "400px",
-                        confirmButtonText: "Ok",
+                        confirmButtonText: t("lessonList.ok"),
                     }).then(res => {
                         if (res.value) {
                             window.location.href = `/activities?auth_token=${csrfToken}`;
@@ -248,20 +251,21 @@ export default class LessonList extends React.Component {
                     console.log("error deleting course : ", errorMsg);
                     swal({
                         type: "error",
-                        title: "Une erreur est survenue",
+                        title: t("lessonList.genericError"),
                     });
                 })
                 .del(`/activity_instances?instance_ids=${values.instanceIds}&time_interval_ids=${values.timeIntervalIds}&activity_id=${activity.id}`);
         }
     }
     bulkDelete() {
+        const { t } = this.props;
         swal({
-            title: "Confirmation",
-            text: "Voulez-vous supprimer tous les cours sélectionnés ? Cette action est irréversible.",
+            title: t("lessonList.confirmationTitle"),
+            text: t("lessonList.bulkDeleteConfirm"),
             type: "warning",
             showCancelButton: true,
-            confirmButtonText: "Oui, supprimer",
-            cancelButtonText: "Annuler",
+            confirmButtonText: t("lessonList.yesDelete"),
+            cancelButtonText: t("common:actions.cancel"),
         }).then(r => {
             if (r.value) {
                 fetch("/lessons/bulkdelete", {
@@ -284,15 +288,15 @@ export default class LessonList extends React.Component {
                                 targets: [],
                             });
                             swal({
-                                title: "Succès",
-                                text: "Les cours sélectionnés ont été supprimés.",
+                                title: t("lessonList.successTitle"),
+                                text: t("lessonList.selectedCoursesDeleted"),
                                 type: "success",
                             });
                         } else {
                             swal({
                                 type: "error",
-                                title: "Échec de la suppression",
-                                text: "Une erreur s'est produite côté serveur.",
+                                title: t("lessonList.deleteFailedTitle"),
+                                text: t("lessonList.serverError"),
                             });
                         }
                     })
@@ -300,8 +304,8 @@ export default class LessonList extends React.Component {
                         console.error("Erreur lors de la suppression :", err);
                         swal({
                             type: "error",
-                            title: "Erreur",
-                            text: "La suppression a échoué. Veuillez réessayer.",
+                            title: t("lessonList.errorTitle"),
+                            text: t("lessonList.deleteFailedRetry"),
                         });
                     });
             }
@@ -380,6 +384,7 @@ export default class LessonList extends React.Component {
     }
 
     async downloadStudentsList() {
+        const { t } = this.props;
         var activityIds = [];
         if (this.state.targets === "all") {
             const filter = { ...this.state.filter };
@@ -396,8 +401,8 @@ export default class LessonList extends React.Component {
         if (activityIds.length === 0) {
             swal({
                 type: "error",
-                title: "Aucun cours sélectionné",
-                text: "Veuillez sélectionner au moins un cours pour télécharger la liste des élèves",
+                title: t("lessonList.noCourseSelectedTitle"),
+                text: t("lessonList.noCourseSelectedText"),
             });
         } else {
             const download = document.createElement("a");
@@ -453,6 +458,7 @@ export default class LessonList extends React.Component {
     }
 
     renderTargetsAlert() {
+        const { t } = this.props;
         const count =
             (this.state.targets === "all" && this.state.total) ||
             this.state.targets.length;
@@ -461,7 +467,7 @@ export default class LessonList extends React.Component {
             <div className="alert alert-info m-t-sm" style={{ width: "100%" }}>
                 <div className="flex flex-space-between-justified flex-center-aligned">
                     <div id="targets-infos">
-                        Vous avez sélectionné {count} cours{" "}
+                        {t("lessonList.selectedCount", { count })}{" "}
                         {this.state.targets.length === this.state.data.length &&
                         Math.max(
                             this.state.total - this.state.targets.length,
@@ -473,9 +479,9 @@ export default class LessonList extends React.Component {
                                 }
                                 className="btn btn-sm btn-info m-l-sm"
                             >
-                                Sélectionner les{" "}
-                                {this.state.total - this.state.targets.length}{" "}
-                                restants
+                                {t("lessonList.selectRemaining", {
+                                    count: this.state.total - this.state.targets.length,
+                                })}
                             </button>
                         ) : null}
                     </div>
@@ -484,7 +490,7 @@ export default class LessonList extends React.Component {
                             className="btn btn-sm btn-primary m-r"
                             onClick={() => this.downloadStudentsList()}
                         >
-                            Télécharger la liste des élèves
+                            {t("lessonList.downloadStudentList")}
                         </button>
                         <button
                             className="btn btn-sm btn-primary m-r"
@@ -492,7 +498,7 @@ export default class LessonList extends React.Component {
                             data-toggle="modal"
                             data-target={`#${MESSAGE_MODAL_ID}`}
                         >
-                            Envoyer un message
+                            {t("lessonList.sendMessage")}
                         </button>
                        {/* <button
                             className="btn btn-sm btn-danger m-r"
@@ -508,6 +514,7 @@ export default class LessonList extends React.Component {
 
 
     sendReminderMail(referenceDate = undefined) {
+        const { t } = this.props;
         const to = _.chain(this.state.data)
             .filter(({ id }) => this.state.targets.includes(id))
             .map(d => d.users)
@@ -525,8 +532,8 @@ export default class LessonList extends React.Component {
             .value();
 
         swal({
-            title: "Confirmation d'envoi",
-            text: "Êtes-vous sûr ?",
+            title: t("lessonList.sendConfirmTitle"),
+            text: t("common:confirm.sure"),
             type: "question",
             showCancelButton: true,
         })
@@ -549,19 +556,22 @@ export default class LessonList extends React.Component {
                 if (res) {
                     if (res.ok)
                         swal({
-                            title: "Succès",
-                            text: "Message envoyé",
+                            title: t("lessonList.successTitle"),
+                            text: t("lessonList.messageSent"),
                             type: "success",
                         });
                     else
                         throw new Error(
-                            `Erreur ${res.status} : ${res.statusText}`,
+                            t("lessonList.httpError", {
+                                status: res.status,
+                                statusText: res.statusText,
+                            }),
                         );
                 }
             })
             .catch(reason =>
                 swal({
-                    title: "Erreur",
+                    title: t("lessonList.errorTitle"),
                     text: reason,
                     type: "error",
                 }),
@@ -582,6 +592,7 @@ export default class LessonList extends React.Component {
 
     render() {
         moment.locale("fr");
+        const { t } = this.props;
 
         const activity = this.state.activity;
 
@@ -591,8 +602,8 @@ export default class LessonList extends React.Component {
 
         const teachersOptions = _.sortBy(
             this.props.teachers,
-            t => t.last_name,
-        ).map(optionMapper({ label: t => `${t.last_name} ${t.first_name}` }));
+            teacher => teacher.last_name,
+        ).map(optionMapper({ label: teacher => `${teacher.last_name} ${teacher.first_name}` }));
 
         const seasonsOptions = _.sortBy(this.props.seasons || [], s => s.label).map(
             optionMapper(),
@@ -659,7 +670,7 @@ export default class LessonList extends React.Component {
                 ? this.state.total - NB_DISPLAYED_RECIPIENTS
                 : totalRecipients.length - NB_DISPLAYED_RECIPIENTS,
         );
-        if (restCount) recipients += `, et ${restCount} autres`;
+        if (restCount) recipients += t("lessonList.andNOthers", { count: restCount });
 
         const tableColumns = [
             {
@@ -695,7 +706,7 @@ export default class LessonList extends React.Component {
                 ),
             },
             {
-                Header: "Jour",
+                Header: t("lessonList.columns.day"),
                 id: "day",
                 maxWidth: 110,
                 accessor: d => d.time_interval,
@@ -712,7 +723,7 @@ export default class LessonList extends React.Component {
                 ),
             },
             {
-                Header: "Horaires",
+                Header: t("lessonList.columns.schedule"),
                 id: "time_interval",
                 sortable: false,
                 minWidth: 140,
@@ -758,14 +769,14 @@ export default class LessonList extends React.Component {
                 },
             },
             {
-                Header: "Groupe",
+                Header: t("lessonList.columns.group"),
                 id: "group_name",
                 maxWidth: 60,
                 accessor: d => d.group_name,
                 Cell: c => <strong>{c.value}</strong>,
             },
             {
-                Header: "Activité",
+                Header: t("lessonList.columns.activity"),
                 id: "activity_ref_id",
                 maxWidth: 250,
                 accessor: d => d.activity_ref_id,
@@ -791,7 +802,7 @@ export default class LessonList extends React.Component {
                 ),
             },
             ...(!this.props.isTeacherView ? [{
-                Header: "Professeur",
+                Header: t("lessonList.columns.teacher"),
                 id: "teacher_id",
                 maxWidth: 200,
                 accessor: d => d.teacher,
@@ -807,7 +818,7 @@ export default class LessonList extends React.Component {
                 ),
             }] : []),
             {
-                Header: "Salle",
+                Header: t("lessonList.columns.room"),
                 id: "room",
                 maxWidth: 125,
                 accessor: a => {
@@ -832,7 +843,7 @@ export default class LessonList extends React.Component {
                 ),
             },
             {
-                Header: "Emplacement",
+                Header: t("lessonList.columns.location"),
                 id: "location",
                 maxWidth: 125,
                 accessor: a => a.location.label,
@@ -848,34 +859,34 @@ export default class LessonList extends React.Component {
                 ),
             },
             {
-                Header: "Occupation",
+                Header: t("lessonList.columns.occupation"),
                 id: "occupation",
                 maxWidth: 110,
                 Cell: c => formatActivityHeadcount(c.original, referenceDate),
                 Filter: ({ filter, onChange }) => {
                     const options = [
-                        { value: null, text: "Tous", icon: "Ω" },
+                        { value: null, text: t("lessonList.occupation.all"), icon: "Ω" },
                         {
                             value: "EMPTY",
-                            text: "Vide",
+                            text: t("lessonList.occupation.empty"),
                             icon: "fas fa-circle",
                             faIcon: true,
                         },
                         {
                             value: "NOR_EMPTY_NOR_FULL",
-                            text: "Non vide",
+                            text: t("lessonList.occupation.notEmpty"),
                             icon: "fas fa-adjust",
                             faIcon: true,
                         },
                         {
                             value: "NOT_FULL",
-                            text: "Non plein",
+                            text: t("lessonList.occupation.notFull"),
                             icon: "fas fa-adjust fa-flip-horizontal",
                             faIcon: true,
                         },
                         {
                             value: "FULL",
-                            text: "Plein",
+                            text: t("lessonList.occupation.full"),
                             icon: "fas fa-circle",
                             faIcon: true,
                             color: "#d63031",
@@ -931,7 +942,7 @@ export default class LessonList extends React.Component {
                 },
             },
             {
-                Header: "Âge",
+                Header: t("lessonList.columns.age"),
                 id: "average_age",
                 maxWidth: 50,
                 accessor: d => {
@@ -940,7 +951,7 @@ export default class LessonList extends React.Component {
                 Cell: c => TimeIntervalHelpers.averageAgeDisplay(c.value),
             },
             {
-                Header: "Niveau",
+                Header: t("lessonList.columns.level"),
                 id: "level",
                 maxWidth: 125,
                 accessor: d => d,
@@ -950,7 +961,7 @@ export default class LessonList extends React.Component {
                         defaultValue={filter ? filter.value : ""}
                     >
                         <option value="" />
-                        <option value="TBD">À PRÉCISER</option>
+                        <option value="TBD">{t("lessonList.toBeSpecified")}</option>
                         {this.props.evaluationLevelRefs.map(r => (
                             <option key={r.id} value={r.id}>
                                 {r.label}
@@ -965,7 +976,7 @@ export default class LessonList extends React.Component {
                     ),
             },
             {
-                Header: "Saison",
+                Header: t("lessonList.columns.season"),
                 maxWidth: 150,
                 id: "season_id",
                 accessor: d => d.time_interval,
@@ -996,7 +1007,7 @@ export default class LessonList extends React.Component {
                 },
             },
             {
-                Header: "Action",
+                Header: t("lessonList.columns.action"),
                 id: "action",
                 filterable: false,
                 sortable: false,
@@ -1004,7 +1015,7 @@ export default class LessonList extends React.Component {
                     <div className="btn-toolbar">
                         <a
                             className="btn btn-sm btn-primary"
-                            data-tippy-content="Visualiser"
+                            data-tippy-content={t("lessonList.actions.view")}
                             style={{ pointer: "cursor" }}
                             href={
                                 c.original.time_interval
@@ -1020,13 +1031,13 @@ export default class LessonList extends React.Component {
                         </a>
                         <DownloadButton
                             url={`/activity/${c.original.id}/users.csv`}
-                            data-tippy-content="Exporter les infos de contact"
+                            data-tippy-content={t("lessonList.actions.exportContacts")}
                         >
                             <i className="fas fa-table" />
                         </DownloadButton>
                         <button
                             className="btn btn-sm btn-warning"
-                            data-tippy-content="Supprimer"
+                            data-tippy-content={t("lessonList.actions.delete")}
                             style={{ pointer: "cursor" }}
                             onClick={() => {
                                 this.toggleModal();
@@ -1055,7 +1066,7 @@ export default class LessonList extends React.Component {
             <div className="ibox">
                 <div className="ibox-title">
                     <div className="flex flex-center-aligned">
-                        <h2 className="m-r">{this.state.total} cours</h2>
+                        <h2 className="m-r">{t("lessonList.courseCount", { count: this.state.total })}</h2>
                         <ListPreferences
                             preferences={this.state.listPreferences}
                             columns={tableColumns.slice(1)}
@@ -1064,14 +1075,14 @@ export default class LessonList extends React.Component {
                         />
                         <button
                             className="btn btn-primary m-r"
-                            data-tippy-content="Réinitialiser les filtres"
+                            data-tippy-content={t("lessonList.resetFilters")}
                             onClick={() => this.resetFilters()}
                         >
                             <i className="fas fa-times" />
                         </button>
                         <button
                             className="btn btn-primary m-r"
-                            data-tippy-content="Exporter en CSV"
+                            data-tippy-content={t("lessonList.exportCsv")}
                             onClick={() => this.downloadExport()}
                         >
                             <i className="fas fa-download" />
@@ -1082,7 +1093,7 @@ export default class LessonList extends React.Component {
                         >
                             <div
                                 className="input-group"
-                                data-tippy-content="Date de référence pour effectifs d'élèves"
+                                data-tippy-content={t("lessonList.referenceDateTooltip")}
                                 style={{ maxWidth: "250px" }}
                             >
                                 <div className="input-group-addon">
@@ -1106,15 +1117,8 @@ export default class LessonList extends React.Component {
                                         swal({
                                             type: "info",
                                             customClass: "bigSwal",
-                                            title:
-                                                "Aide sur la date de référence",
-                                            html:
-                                                "<p class='text-justify'><u>Ce n'est <strong>pas</strong> un filtre sur les cours</u>. tous les cours sont toujours affichés. C'est un filtre qui ne change que les nombres la colonne \"Occupation\" du tableau.<br />" +
-                                                "Il est possible pour des élèves d'être inscrit ou désinscrit d'un cours pendant la saison...\n" +
-                                                "Ce filtre est donc ici afin d'avoir l'effectif des cours en fonction d'une date précise. Cela pour avoir une sorte \"d'historique\" de l'effectif des cours. Par défaut la date sélectionnée est celle du jour précédant le jour actuel pour avoir l'effectif actuel des élèves.</p>" +
-                                                "<p class='text-left'>Par exemple, imaginons le cas suivant: <br />" +
-                                                "il y a 3 élèves à un cours le 10/04/2022 et un des élèves quitte le cours le 11/04/2022. <br />" +
-                                                "Si le filtre se situe au 12/04/2022 ou après, l'occupation de ce cours sera de 2, alors que si ce filtre se situe au 11/04/2022 ou avant, l'occupation seras de 3. </p>",
+                                            title: t("lessonList.help.title"),
+                                            html: t("lessonList.help.body"),
                                         });
                                     }}
                                 >
@@ -1166,13 +1170,13 @@ export default class LessonList extends React.Component {
                         filterable
                         sortable
                         resizable={true}
-                        previousText="Précédent"
-                        nextText="Suivant"
-                        loadingText="Chargement..."
-                        noDataText="Aucune donnée"
-                        pageText="Page"
-                        ofText="sur"
-                        rowsText="résultats"
+                        previousText={t("common:reactTable.previousText")}
+                        nextText={t("common:reactTable.nextText")}
+                        loadingText={t("common:reactTable.loadingText")}
+                        noDataText={t("common:reactTable.noDataText")}
+                        pageText={t("common:reactTable.pageText")}
+                        ofText={t("common:reactTable.ofText")}
+                        rowsText={t("common:reactTable.rowsText")}
                         minRows={10}
                         getTrProps={(state, rowInfo, column) => {
                             if (rowInfo) {
@@ -1229,7 +1233,7 @@ export default class LessonList extends React.Component {
                         <Modal
                             isOpen={this.state.isModalOpen}
                             ariaHideApp={false}
-                            contentLabel="Supprimer le cours"
+                            contentLabel={t("lessonList.deleteModalLabel")}
                             onRequestClose={this.toggleModal}
                             style={{
                                 content: {
@@ -1264,29 +1268,35 @@ export default class LessonList extends React.Component {
     }
 }
 
-const UserList = ({ activity, seasons, referenceDate = undefined }) => (
+export default withTranslation("courses")(LessonList);
+
+const UserList = ({ activity, seasons, referenceDate = undefined }) => {
+    const { t } = useTranslation("courses");
+    return (
     <div className="flex-column">
         <div className="flex" style={{ padding: "15px" }}>
             <h3 className="m-r">
-                {activity.student_evaluations.length}/{activity.users.length}{" "}
-                évaluations remplies
+                {t("lessonList.userList.evaluationsFilled", {
+                    done: activity.student_evaluations.length,
+                    total: activity.users.length,
+                })}
             </h3>
             <a
                 className="btn btn-primary"
                 href={`/users/${activity.teacher.id}/activity/${activity.id}/evaluate`}
             >
-                Consulter les évaluations
+                {t("lessonList.userList.viewEvaluations")}
             </a>
         </div>
         <table className="table table-bordered">
             <thead>
             <tr>
-                <th>Nom</th>
-                <th>Âge</th>
-                <th>Niveau</th>
-                {activity.activity_ref.is_work_group && <th>Instrument</th>}
-                <th>Début le</th>
-                <th>Arrêt le</th>
+                <th>{t("lessonList.userList.name")}</th>
+                <th>{t("lessonList.columns.age")}</th>
+                <th>{t("lessonList.columns.level")}</th>
+                {activity.activity_ref.is_work_group && <th>{t("lessonList.userList.instrument")}</th>}
+                <th>{t("lessonList.userList.startedOn")}</th>
+                <th>{t("lessonList.userList.stoppedOn")}</th>
             </tr>
             </thead>
             <tbody>
@@ -1311,7 +1321,8 @@ const UserList = ({ activity, seasons, referenceDate = undefined }) => (
             </tbody>
         </table>
     </div>
-);
+    );
+};
 
 const UserRow = ({
                      user,
@@ -1320,6 +1331,7 @@ const UserRow = ({
                      isOption = false,
                      referenceDate = undefined,
                  }) => {
+    const { t } = useTranslation("courses");
     const customStyle = isOption ? { color: "#9575CD" } : {};
 
     if (referenceDate !== undefined) {
@@ -1342,7 +1354,7 @@ const UserRow = ({
                 .filter((ai) => ai.user_id === user.id)
                 .map((ai) => _.get(ai, "instrument.label"))
                 .join(", ")) ||
-        "NON ASSIGNÉ";
+        t("lessonList.userRow.notAssigned");
 
     const [desiredActivityId, setDesiredActivityId] = React.useState(null);
     const [studentLevel, setStudentLevel] = React.useState(null);
@@ -1370,7 +1382,7 @@ const UserRow = ({
     // Modification principale : priorité à studentLevel, puis vérification explicite
     const displayLevel = () => {
         if (studentLevel === "NON INDIQUÉ") {
-            return "NON INDIQUÉ";
+            return t("lessonList.userRow.notSpecified");
         }
         if (studentLevel) {
             return studentLevel;
@@ -1386,9 +1398,14 @@ const UserRow = ({
             seasons
         );
 
-        return computedLevel && computedLevel !== "À PRÉCISER"
+        // levelDisplayForActivity returns the French sentinels "À PRÉCISER" / "NON INDIQUÉ"
+        // (from TimeIntervalHelpers, not yet i18n'd) for the no-level case — map both to the
+        // translated placeholder so an English row doesn't show a lone French cell.
+        return computedLevel &&
+            computedLevel !== "À PRÉCISER" &&
+            computedLevel !== "NON INDIQUÉ"
             ? computedLevel
-            : "NON INDIQUÉ";
+            : t("lessonList.userRow.notSpecified");
     };
 
     return (
@@ -1398,7 +1415,7 @@ const UserRow = ({
                     {user.first_name} {user.last_name}
                 </a>
             </td>
-            <td>{TimeIntervalHelpers.age(user.birthday)} ans</td>
+            <td>{t("lessonList.userRow.ageYears", { age: TimeIntervalHelpers.age(user.birthday) })}</td>
             <td>{displayLevel()}</td>
             {isWorkGroup && <td>{userInstrument}</td>}
             <td>
