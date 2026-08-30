@@ -356,6 +356,14 @@ same lot (the `EvaluationModal.jsx` source had both "Elève" and "Élève"):
 - `multiViewModal.students` — source "Elèves" → "Élèves"
 - `evaluationModal.student` — source "Elève"/"Élève" → "Élève"
 
+`frontend/locales/fr/planning.json` (added by feature/i18n-06-extract-planning-container, lot 4) —
+preserved verbatim from `Planning.jsx`:
+- `container.modals.slotDetail` — "Detail d'un créneau" → "Détail d'un créneau" (a11y contentLabel)
+- `container.modals.slotCreation` — "Creation d'un créneau" → "Création d'un créneau" (a11y contentLabel)
+- `container.toasts.updateFailed` — "Echec de la mise à jour" → "Échec de la mise à jour"
+- `container.toasts.courseUpdated` = "Le cours est mis à jour !" vs `container.toasts.courseUpdatedShort`
+  = "Le cours est mis-à-jour!" — the same message with two different source spellings; unify.
+
 Also re-scan the whole `frontend/locales/fr/` + `config/locales/fr.yml` when doing this (grep for
 `Edition\b`, `Editer\b`, `Selectionn`, `réglement`, `Echéance`, `Echec`, `Emmeteur`, `Precedent`,
 `Creer\b`, `verouiller`, `Resolution\b`); the list above is only what was noticed in passing, not

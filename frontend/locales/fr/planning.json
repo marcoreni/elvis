@@ -110,5 +110,43 @@
         "noActivityThisWeek": "Aucune activité cette semaine.",
         "optionMarker": "(option)",
         "occupancy": "{{n}}/{{limit}} élèves"
+    },
+    "container": {
+        "holidaysAlert": "Attention, les vacances scolaires n'ont pas été importées.",
+        "manageHolidaysLink": "Gérer dès maintenant les dates de vacances de votre école.",
+        "otherTeachers": "Autres professeurs",
+        "otherRooms": "Autres salles",
+        "toDisplay": "à afficher",
+        "allRooms": "Toutes les salles",
+        "resetFilters": "Réinitialiser les filtres",
+        "roomActivitiesTooltip": "Activités de cette salle",
+        "modals": {
+            "slotDetail": "Detail d'un créneau",
+            "slotCreation": "Creation d'un créneau"
+        },
+        "entities": {
+            "room": "salle",
+            "teacher": "professeur",
+            "unknown": "entité inconnue"
+        },
+        "toasts": {
+            "fetchError": "Erreur lors du rapatriement des données",
+            "coursesCreated": "Les cours pour l'activité sont créés",
+            "bulkUpdateResult": "Mise à jour de {{updated}} cours et création de {{conflicts}} conflits",
+            "courseUpdated": "Le cours est mis à jour !",
+            "courseUpdatedShort": "Le cours est mis-à-jour!",
+            "pauseUpdated": "La pause est à jour",
+            "availabilityUpdated": "La disponibilité est à jour",
+            "updateAllFollowing": "Mettre à jour tous les cours suivants",
+            "successConflicts": "{{success}} succès - {{conflicts}} conflits",
+            "conflictResolved": "Conflit Résolu !",
+            "backToPlanning": "Retour au planning",
+            "activityAndCoursesDeleted": "L'activité et les cours associés sont supprimés",
+            "courseDeleted": "Le cours est supprimé!",
+            "deleteAllOtherCourses": "Supprimer tous les autres cours de cette activité",
+            "updateErrorInstanceNotFound": "Erreur de la mise à jour (instance introuvable)",
+            "updateFailed": "Echec de la mise à jour",
+            "entityChanged": "Changement de {{entity}} de ce cours effectué."
+        }
     }
 }

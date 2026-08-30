@@ -452,7 +452,20 @@ et à mesure de son intégration :
           `RawPlanning`, `TimeInterval`, `SimplePlanning` — donc `t` à faire descendre dans **4+
           domaines**. À traiter comme une passe transverse dédiée (comme `feature/i18n-common-react-table-keys`),
           pas dans un lot planning.
-    - [ ] **Lot 4** : `Planning.jsx` (1792 l., conteneur).
+    - [x] **Lot 4** : branche `feature/i18n-06-extract-planning-container`. `Planning.jsx`
+          (1792 l., conteneur) → `withTranslation("planning")`. Toutes les chaînes vivent dans ses
+          propres méthodes/`render()` (toasts — dont plusieurs JSX + interpolés, bandeau vacances,
+          barre de filtres, `contentLabel` des modales) → aucun `t` à faire descendre. Nouvelles
+          clés sous `planning.container.*` (`toasts.*` ~17, `entities.{room,teacher,unknown}`,
+          `modals.*`, bandeau/filtres) ; interpolation `{{updated}}/{{conflicts}}/{{success}}/{{entity}}`
+          (jamais `{{count}}`). Réutilise `common.close`, `common:actions.{cancel,confirm}`,
+          `pauseDetailModal.title`. Interpolation sous-lexicale `typeLabel` (« salle »/« professeur »/
+          « entité inconnue » injecté dans « Changement de … ») résolue via `entities.*` + une clé
+          `entityChanged` avec `{{entity}}`. 4 fautes/incohérences préservées verbatim (contentLabels
+          « Detail »/« Creation », « Echec », deux variantes de « cours mis à jour ») consignées dans
+          `docs/KnownIssues.md`. Test : `Planning.test.jsx` (2, fr+en — bandeau + barre de filtres ;
+          `Calendar` et `ActivityDetailsModal` mockés, `generic` pour couper le fetch au mount).
+          `yarn test` → 30 fichiers / 92 tests. Namespace `planning.json` = 108 clés, parité fr/en.
     - [ ] **Lot 5** : `ActivityDetailsModal.jsx` (2053 l.).
     - [ ] **Lot 6** : sous-arbres `activity_management/*` + `practice_planning/*`.
   - [ ] `activities`
