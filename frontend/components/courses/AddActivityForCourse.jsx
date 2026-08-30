@@ -5,6 +5,11 @@ import { toast } from "react-toastify";
 import * as api from "../../tools/api.js";
 import AddCourseSummary from "./AddCourseSummary";
 
+// NOTE: exported as a plain class, not withTranslation()-wrapped. This is a
+// StepZilla step; StepZilla only wires its per-step `isValidated()` hook when the
+// step element `instanceof Component` (react-stepzilla main.js), and a
+// withTranslation HOC (a function component / forwardRef) fails that check,
+// silently disabling step validation. `t` is threaded in as a prop from AddCourse.
 export default class AddActivityForCourse extends React.Component {
     constructor(props) {
         super(props);
@@ -103,6 +108,7 @@ export default class AddActivityForCourse extends React.Component {
     }
 
     render() {
+        const { t } = this.props;
         const {
             activityRefId,
             activityRefKindId,
@@ -119,7 +125,7 @@ export default class AddActivityForCourse extends React.Component {
                     <div className="ibox">
                         <div className="ibox-title flex">
                             <i className="fa fa-music m-sm"></i>
-                            <h3>Choix de l'activité</h3>
+                            <h3>{t("addActivity.stepName")}</h3>
                         </div>
                         <div className="ibox-content">
                             <div className="row">
@@ -184,14 +190,13 @@ export default class AddActivityForCourse extends React.Component {
                                                 value: activityRefKindId,
                                             }}
                                             meta={{}}
-                                            label="Filtrer par famille d'activité"
+                                            label={t("addActivity.filterByFamily")}
                                             options={activityRefKindOptions}
                                             button={{
                                                 icon: "fa fa-plus-circle",
                                                 href_path: `${href_path}/activity_ref_kind/new`,
                                                 text: "",
-                                                tooltip:
-                                                    "Ajouter une famille d'activité",
+                                                tooltip: t("addActivity.addFamily"),
                                             }}
                                         />
                                     )}
@@ -207,14 +212,14 @@ export default class AddActivityForCourse extends React.Component {
                                                 value: activityRefId,
                                             }}
                                             meta={{}}
-                                            label="Activité"
+                                            label={t("addActivity.activity")}
                                             required={true}
                                             options={activityRefOptions}
                                             button={{
                                                 icon: "fa fa-plus-circle",
                                                 href_path: `${href_path}/activity_ref/new`,
                                                 text: "",
-                                                tooltip: "Ajouter une activité",
+                                                tooltip: t("addActivity.addActivity"),
                                             }}
                                         />
                                     )}
@@ -222,14 +227,13 @@ export default class AddActivityForCourse extends React.Component {
                                         !activityRefKindOptions && (
                                             <div>
                                                 <label>
-                                                    Pas encore d'activité
-                                                    renseignée ?
+                                                    {t("addActivity.noActivityYet")}
                                                 </label>
                                                 <a
                                                     href={`${href_path}/activity_ref_kind/new`}
                                                     className="btn btn-primary btn-md"
                                                 >
-                                                    Créer une activité
+                                                    {t("addActivity.createActivity")}
                                                 </a>
                                             </div>
                                         )}

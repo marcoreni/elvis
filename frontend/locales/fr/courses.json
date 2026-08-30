@@ -1,0 +1,42 @@
+{
+    "addCourse": {
+        "title": "Ajouter un cours",
+        "loading": "chargement...",
+        "created": "Votre cours a bien été créé",
+        "successTitle": "Bravo !",
+        "seeCourseList": "Voir la liste des cours",
+        "createAnother": "Créer un autre cours",
+        "genericError": "Une erreur est survenue",
+        "nextStep": "Étape suivante",
+        "prevStep": "Étape précédente"
+    },
+    "addActivity": {
+        "stepName": "Choix de l'activité",
+        "filterByFamily": "Filtrer par famille d'activité",
+        "addFamily": "Ajouter une famille d'activité",
+        "activity": "Activité",
+        "addActivity": "Ajouter une activité",
+        "noActivityYet": "Pas encore d'activité renseignée ?",
+        "createActivity": "Créer une activité"
+    },
+    "addSlot": {
+        "stepName": "Choix du créneau"
+    },
+    "addTeacher": {
+        "stepName": "Choix du professeur"
+    },
+    "addLocation": {
+        "stepName": "Choix du lieu"
+    },
+    "summary": {
+        "title": "Récapitulatif",
+        "activity": "Activité",
+        "slot": "Créneau",
+        "teacher": "Professeur",
+        "place": "Lieu",
+        "location": "Lieu",
+        "room": "Salle",
+        "timeFrom": "de",
+        "timeTo": "à"
+    }
+}

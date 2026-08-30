@@ -1,4 +1,5 @@
 import React from "react";
+import { withTranslation } from "react-i18next";
 import { Form } from "react-final-form";
 import StepZilla from "react-stepzilla";
 import swal from "sweetalert2";
@@ -12,7 +13,7 @@ import * as api from "../../tools/api.js";
 import moment from "moment-timezone";
 import { csrfToken } from "../utils";
 
-export default class AddCourse extends React.Component {
+class AddCourse extends React.Component {
     constructor(props) {
         super(props);
 
@@ -68,6 +69,7 @@ export default class AddCourse extends React.Component {
     }
 
     handleSubmit() {
+        const { t } = this.props;
 
         const {season, teacher, activityRef, room, dayOfWeek, fromDate, toDate, firstDayStartTime, firstDayEndTime} = this.state
         if (
@@ -84,23 +86,23 @@ export default class AddCourse extends React.Component {
             toast.error(MESSAGES.err_data_missing, { autoClose: 3000 });
         } else {
             swal({
-                title: "chargement...",
+                title: t("addCourse.loading"),
                 onOpen: () => swal.showLoading(),
             });
             const authToken = _.get(this.state, "infos.authentication_token");
             api.set()
                 .success(res => {
-                    let htmltext = "<p>Votre cours a bien été créé</p>";
+                    let htmltext = `<p>${t("addCourse.created")}</p>`;
 
                     swal.fire({
-                        title: "Bravo !",
+                        title: t("addCourse.successTitle"),
                         html: htmltext,
                         type: "success",
                         allowOutsideClick: false,
                         showCancelButton: true,
                         width: "400px",
-                        cancelButtonText: "Voir la liste des cours",
-                        confirmButtonText: "Créer un autre cours",
+                        cancelButtonText: t("addCourse.seeCourseList"),
+                        confirmButtonText: t("addCourse.createAnother"),
                     }).then(res => {
                         if (res.value) {
                             window.location.href = `/addCourse?auth_token=${csrfToken}`;
@@ -113,7 +115,7 @@ export default class AddCourse extends React.Component {
                     console.log("error adding course : ", errorMsg);
                     swal({
                         type: "error",
-                        title: "Une erreur est survenue",
+                        title: t("addCourse.genericError"),
                     });
                 })
                 .post(
@@ -150,6 +152,7 @@ export default class AddCourse extends React.Component {
     };
 
     render() {
+        const { t } = this.props;
         let {
             season,
             teacher,
@@ -186,9 +189,10 @@ export default class AddCourse extends React.Component {
 
         const steps = [
             {
-                name: "Choix de l'activité",
+                name: t("addActivity.stepName"),
                 component: (
                     <AddActivityForCourse
+                        t={t}
                         href_path={href_path}
                         activityRefId={activityRef ? activityRef.id : undefined}
                         activityRefKindId={activityRefKind}
@@ -198,7 +202,7 @@ export default class AddCourse extends React.Component {
                 ),
             },
             {
-                name: "Choix du créneau",
+                name: t("addSlot.stepName"),
                 component: (
                     <AddSlotForCourse
                         initialValues={{
@@ -216,7 +220,7 @@ export default class AddCourse extends React.Component {
                 ),
             },
             {
-                name: "Choix du professeur",
+                name: t("addTeacher.stepName"),
                 component: (
                     <AddTeacherForCourse
                         initialValues={{
@@ -238,7 +242,7 @@ export default class AddCourse extends React.Component {
                 ),
             },
             {
-                name: "Choix du lieu",
+                name: t("addLocation.stepName"),
                 component: (
                     <AddLocationForCourse
                         initialValues={{
@@ -271,29 +275,29 @@ export default class AddCourse extends React.Component {
                             <div className="padding-page application-form">
                                 {this.state.holidays.length === 0 && this.state.showAlert && (
                                     <div className="alert alert-danger mb-5" role="alert">
-                                        Attention, les vacances scolaires n'ont pas été importées.&nbsp;
+                                        {t("planning:container.holidaysAlert")}&nbsp;
                                         <a href={`/seasons/${this.state.season.id}/edit`}>
-                                            Gérer dès maintenant les dates de vacances de votre école.
+                                            {t("planning:container.manageHolidaysLink")}
                                         </a>
 
                                         <button
                                             type="button"
                                             className="close"
-                                            aria-label="Close"
+                                            aria-label={t("planning:common.close")}
                                             onClick={this.closeAlert}
                                         >
                                             <span aria-hidden="true">&times;</span>
                                         </button>
                                     </div>
                                 )}
-                                <h1 className="text-center">Ajouter un cours</h1>
+                                <h1 className="text-center">{t("addCourse.title")}</h1>
                                 <div className="step-progress">
                                     <StepZilla
                                         steps={steps}
                                         showSteps={true}
                                         stepsNavigation={true}
-                                        nextButtonText={"Étape suivante"}
-                                        backButtonText={"Étape précédente"}
+                                        nextButtonText={t("addCourse.nextStep")}
+                                        backButtonText={t("addCourse.prevStep")}
                                         nextButtonCls={
                                             "btn btn-prev btn-primary btn-md pull-right"
                                         }
@@ -307,7 +311,9 @@ export default class AddCourse extends React.Component {
                     )}
                 />
             );
-        } else { return <div>Chargement...</div> }
+        } else { return <div>{t("common:loading")}</div> }
 
     }
 }
+
+export default withTranslation("courses")(AddCourse);

@@ -452,3 +452,22 @@ Also re-scan the whole `frontend/locales/fr/` + `config/locales/fr.yml` when doi
 `Edition\b`, `Editer\b`, `Selectionn`, `réglement`, `Echéance`, `Echec`, `Emmeteur`, `Precedent`,
 `Creer\b`, `verouiller`, `Resolution\b`); the list above is only what was noticed in passing, not
 an exhaustive audit. The English side of these keys is already spelled correctly.
+
+## `frontend/tools/constants.js` — hardcoded French `WEEKDAYS` / `MONTHS` / `MESSAGES` leak into English mode
+
+Surfaced during the i18n-06 `courses` lot 1 extraction (`AddCourse.jsx`, `AddCourseSummary.jsx`,
+`AddActivityForCourse.jsx`). These modules were switched to `t()` for their own copy, but they
+still read three shared French-only constants that were left as-is:
+
+- `WEEKDAYS` / `MONTHS` (`tools/constants.js`) — French day/month name arrays. `AddCourseSummary.jsx`
+  builds its slot line from them, so in English the recap reads e.g.
+  `Lundi 16 Juin 2025 from 08h00 to 09h00`.
+- `MESSAGES.err_data_missing` ("Impossible de continuer, des données obligatoires sont manquantes.")
+  — toasted from `AddCourse.jsx`.
+- `MESSAGES.err_must_choose_activity` ("Veuillez choisir une activité avant de continuer.") —
+  toasted from `AddActivityForCourse.jsx#isValidated`.
+
+`tools/constants.js` is imported from many components across the app, so this is a cross-cutting
+pass in its own right (a `common:` namespace + a `useTranslation`/prop for the class consumers),
+not something to fix piecemeal inside one domain lot. Left verbatim for now; logged here so a
+later "constants i18n" lot picks them all up together. Grep: `from "../../tools/constants"`.
