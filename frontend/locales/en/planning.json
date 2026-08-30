@@ -148,5 +148,71 @@
             "updateFailed": "Update failed",
             "entityChanged": "Changed the {{entity}} of this course."
         }
+    },
+    "activityModal": {
+        "tabs": {
+            "attendance": "Attendance",
+            "edition": "Course",
+            "replacement": "Replacement",
+            "recurrences": "Recurrences"
+        },
+        "editButton": "Edit",
+        "updateRecurrencesButton": "Update recurrences",
+        "savingTitle": "Saving changes",
+        "pleaseWait": "Please wait...",
+        "errorTitle": "Error",
+        "editError": "An error occurred while saving the changes",
+        "updatingRecurrencesTitle": "Updating recurrences",
+        "deleteCourse": "Delete this course",
+        "deleteSlot": "Delete the slot",
+        "groupToDefine": "Group to be defined",
+        "editGroupNameTitle": "Edit the group name for this activity",
+        "teacherComment": "Teacher's comment",
+        "createActivityTitle": "Creating an activity",
+        "slotInvalid": "The time slot is invalid.",
+        "recurrentActivity": "This activity is recurring",
+        "createCoursesButton": "Create this activity's courses ",
+        "createCourseButton": "Create this course ",
+        "noStudents": "No student is enrolled in this course yet.",
+        "teacherLabel": "Teacher",
+        "otherTeacherLabel": "Other teacher",
+        "chooseTeacher": "Choose a teacher",
+        "teacherBusy": "Teacher \"{{name}}\" is already busy during this time slot ({{from}} - {{to}})",
+        "startLabel": "Start",
+        "endLabel": "End",
+        "activityLabel": "Activity",
+        "chooseActivity": "Choose an activity",
+        "locationLabel": "Location",
+        "chooseLocation": "Choose a location",
+        "roomLabel": "Room",
+        "chooseRoom": "Choose a room",
+        "noSuitableRooms": "No suitable room available for this course, other rooms:",
+        "dateLabel": "Date",
+        "globalLevel": "Overall level",
+        "toBeSpecified": "TO BE SPECIFIED",
+        "scope": {
+            "single": "Apply to this session only",
+            "following": "Apply to this session and the following ones",
+            "all": "Apply to all sessions of the season"
+        },
+        "teacherChangeWarningLabel": "Warning: ",
+        "teacherChangeWarning": "No check is performed when changing the teacher. The teacher change will only take effect from this session onward, and will be applied to all the following ones.",
+        "groupName": "Group name",
+        "groupNameHelp": "Changing the group name for this instance will change it for all occurrences of this activity.",
+        "attendanceTable": {
+            "adherentNumber": "Member no.",
+            "student": "Student",
+            "present": "Present"
+        },
+        "teachersEditor": {
+            "teacher": "Teacher",
+            "main": "Main",
+            "remove": "Remove",
+            "needMainTeacher": "Each course needs at least one main teacher",
+            "cannotRemoveMain": "You can only remove a main teacher if there is another one"
+        },
+        "noSubstitute": "NO SUBSTITUTE",
+        "hoursCountedForAbsent": "Hours counted for the absent teacher?",
+        "noMainTeacher": "No main teacher for this course"
     }
 }

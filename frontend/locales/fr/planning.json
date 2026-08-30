@@ -148,5 +148,71 @@
             "updateFailed": "Echec de la mise à jour",
             "entityChanged": "Changement de {{entity}} de ce cours effectué."
         }
+    },
+    "activityModal": {
+        "tabs": {
+            "attendance": "Présences",
+            "edition": "Cours",
+            "replacement": "Remplacement",
+            "recurrences": "Récurrences"
+        },
+        "editButton": "Modifier",
+        "updateRecurrencesButton": "Mettre à jour les récurrences",
+        "savingTitle": "Modification en cours",
+        "pleaseWait": "Veuillez patienter...",
+        "errorTitle": "Erreur",
+        "editError": "Une erreur est survenue lors de la modification",
+        "updatingRecurrencesTitle": "Mise à jour des récurrences",
+        "deleteCourse": "Supprimer ce cours",
+        "deleteSlot": "Supprimer le créneau",
+        "groupToDefine": "Groupe à définir",
+        "editGroupNameTitle": "Editer le nom du groupe de cette activité",
+        "teacherComment": "Commentaire du professeur",
+        "createActivityTitle": "Création d'une activité",
+        "slotInvalid": "Le créneau horaire est invalide.",
+        "recurrentActivity": "Cette activité est récurrente",
+        "createCoursesButton": "Créer les cours de cette activité ",
+        "createCourseButton": "Créer ce cours ",
+        "noStudents": "Pour le moment, aucun élève n'est inscrit à ce cours.",
+        "teacherLabel": "Professeur",
+        "otherTeacherLabel": "Autre professeur",
+        "chooseTeacher": "Choisir un Professeur",
+        "teacherBusy": "Le professeur \"{{name}}\" est déjà occupé durant ce créneau horaire ({{from}} - {{to}})",
+        "startLabel": "Début",
+        "endLabel": "Fin",
+        "activityLabel": "Activité",
+        "chooseActivity": "Choisir une activité",
+        "locationLabel": "Emplacement",
+        "chooseLocation": "Choisir un Lieu",
+        "roomLabel": "Salle",
+        "chooseRoom": "Choisir une salle",
+        "noSuitableRooms": "Aucune salle adaptée disponible pour ce cours, autres salles:",
+        "dateLabel": "Date",
+        "globalLevel": "Niveau global",
+        "toBeSpecified": "A PRECISER",
+        "scope": {
+            "single": "N'affecter que cette séance",
+            "following": "Affecter cette séance et les suivantes",
+            "all": "Affecter toutes les séances de la saison"
+        },
+        "teacherChangeWarningLabel": "Attention : ",
+        "teacherChangeWarning": "Aucune vérification n'est faite lors d'un changement de professeur. Le changement de professeur ne sera opéré qu'à partir de cette séance, et répercuté sur toutes celles la suivant.",
+        "groupName": "Nom du groupe",
+        "groupNameHelp": "Changer le nom du groupe pour cette instance le modifiera pour toutes les occurences de cette activité.",
+        "attendanceTable": {
+            "adherentNumber": "N° Adh",
+            "student": "Elève",
+            "present": "Présent"
+        },
+        "teachersEditor": {
+            "teacher": "Professeur",
+            "main": "Principal",
+            "remove": "Supprimer",
+            "needMainTeacher": "Il faut au moins un professeur principal par cours",
+            "cannotRemoveMain": "Vous ne pouvez supprimer un professeur principal que s'il y en a un autre"
+        },
+        "noSubstitute": "PAS DE REMPLAÇANT",
+        "hoursCountedForAbsent": "Heures comptées pour le professeur absent ?",
+        "noMainTeacher": "Aucun professeur principal pour ce cours"
     }
 }

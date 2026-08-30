@@ -1,6 +1,7 @@
 import React, {Fragment} from "react";
 import _, {toInteger} from "lodash";
 import Select from "react-select";
+import { withTranslation, useTranslation } from "react-i18next";
 import ErrorList from "../common/ErrorList";
 import * as TimeIntervalHelpers from "./TimeIntervalHelpers";
 import {csrfToken, findAndGet, ISO_DATE_FORMAT, optionMapper, USER_OPTIONS} from "../utils";
@@ -693,6 +694,7 @@ class ActivityDetailsModal extends React.Component {
     // ========================================
 
     renderTeacherSelection() {
+        const { t } = this.props;
         const renderMainTeacherOptions = this.state.teachers_constrained
             .filter(teacher => teacher.id !== this.state.assistantTeacherId)
             .map((teacher, i) => (
@@ -712,7 +714,7 @@ class ActivityDetailsModal extends React.Component {
         return (
             <div className="flex-column m-b-md">
                 <label className="label-control" htmlFor="o">
-                    Professeur
+                    {t("activityModal.teacherLabel")}
                 </label>
                 <select
                     onChange={e =>
@@ -722,12 +724,12 @@ class ActivityDetailsModal extends React.Component {
                     className="form-control m-b"
                 >
                     <option value={0} disabled>
-                        Choisir un Professeur
+                        {t("activityModal.chooseTeacher")}
                     </option>
                     {renderMainTeacherOptions}
                 </select>
                 <label className="label-control" htmlFor="o">
-                    Autre professeur
+                    {t("activityModal.otherTeacherLabel")}
                 </label>
                 <select
                     className="form-control m-b"
@@ -736,7 +738,7 @@ class ActivityDetailsModal extends React.Component {
                     }
                     value={this.state.assistantTeacherId || 0}
                 >
-                    <option value={0}>Choisir un Professeur</option>
+                    <option value={0}>{t("activityModal.chooseTeacher")}</option>
                     {renderAssistantTeacherOptions}
                 </select>
             </div>
@@ -744,6 +746,7 @@ class ActivityDetailsModal extends React.Component {
     }
 
     render() {
+        const { t } = this.props;
         const errors = [
             ...(this.props.errors || []),
             ...(this.state.errors || [])
@@ -789,11 +792,11 @@ class ActivityDetailsModal extends React.Component {
             }
 
             const mainTeacher = this.props.teachers.find(
-                t => t.id == this.state.mainTeacherId
+                tt => tt.id == this.state.mainTeacherId
             );
 
             const assistantTeacher = this.props.teachers.find(
-                t => t.id == this.state.assistantTeacherId
+                tt => tt.id == this.state.assistantTeacherId
             );
 
             let styleOptionalStudents = {color: "#9575CD"};
@@ -823,6 +826,7 @@ class ActivityDetailsModal extends React.Component {
                     this.props.interval.activity_instance
                         .student_attendances) ? (
                     <AttendanceTable
+                        t={t}
                         handleUpdateAll={(aids, attended) => {
                             const attendances = [];
 
@@ -887,12 +891,13 @@ class ActivityDetailsModal extends React.Component {
                     />
                 ) : (
                     <h2 className="m-lg">
-                        Pour le moment, aucun élève n'est inscrit à ce cours.
+                        {t("activityModal.noStudents")}
                     </h2>
                 );
 
             const editionPanelContent = this.props.isAdmin || (this.props.isTeacher && this.props.teacher_can_edit && _.get(this.props.planning, "user.id") === this.props.currentUserId) ? (
                 <ActivityEdition
+                    t={t}
                     selection={this.state.changes.instance}
                     rooms={this.props.room_refs}
                     evaluationLevelRefs={this.props.evaluation_level_refs}
@@ -949,13 +954,13 @@ class ActivityDetailsModal extends React.Component {
             const tabs = [
                 {
                     id: "attendances-tab",
-                    header: "Présences",
+                    header: t("activityModal.tabs.attendance"),
                     active: true,
                     body: attendancesPanelContent,
                 },
                 {
                     id: "edition-tab",
-                    header: "Cours",
+                    header: t("activityModal.tabs.edition"),
                     active: false,
                     body: withSave(editionPanelContent, {
                         onSave: async () => {
@@ -963,8 +968,8 @@ class ActivityDetailsModal extends React.Component {
 
                             let popupTimer = setTimeout(() => {
                                 swal({
-                                    title: "Modification en cours",
-                                    text: "Veuillez patienter...",
+                                    title: t("activityModal.savingTitle"),
+                                    text: t("activityModal.pleaseWait"),
                                     allowOutsideClick: false,
                                     allowEscapeKey: false,
                                     allowEnterKey: false,
@@ -984,8 +989,8 @@ class ActivityDetailsModal extends React.Component {
                                     swal.close();
                                 }
                                 swal({
-                                    title: "Erreur",
-                                    text: "Une erreur est survenue lors de la modification",
+                                    title: t("activityModal.errorTitle"),
+                                    text: t("activityModal.editError"),
                                     icon: "error"
                                 });
                             } finally {
@@ -994,24 +999,25 @@ class ActivityDetailsModal extends React.Component {
                         },
                         label: this.state.isEditing ? (
                             <>
-                                Modifier <i className="fas fa-circle-notch fa-spin"></i>
+                                {t("activityModal.editButton")} <i className="fas fa-circle-notch fa-spin"></i>
                             </>
                         ) : (
-                            "Modifier"
+                            t("activityModal.editButton")
                         ),
                     }),
                 },
                 {
                     id: "instance-tab",
-                    header: "Remplacement",
+                    header: t("activityModal.tabs.replacement"),
                     active: false,
                     body: withSave(instancePanelContent, {
                         onSave: () => this.props.handleEditActivityInstance(this.state.changes.instance),
+                        label: t("common:actions.save"),
                     }),
                 },
                 {
                     id: "recurrences-tab",
-                    header: "Récurrences",
+                    header: t("activityModal.tabs.recurrences"),
                     active: false,
                     body: (() => {
                         let disabled = false;
@@ -1022,8 +1028,8 @@ class ActivityDetailsModal extends React.Component {
                                     return;
 
                                 swal({
-                                    title: "Mise à jour des récurrences",
-                                    text: "Veuillez patienter...",
+                                    title: t("activityModal.updatingRecurrencesTitle"),
+                                    text: t("activityModal.pleaseWait"),
                                     allowOutsideClick: false,
                                     allowEscapeKey: false,
                                     allowEnterKey: false,
@@ -1042,7 +1048,7 @@ class ActivityDetailsModal extends React.Component {
                                 swal.close();
                                 disabled = false;
                             },
-                            label: "Mettre à jour les récurrences",
+                            label: t("activityModal.updateRecurrencesButton"),
                         })
                     })(),
                 },
@@ -1063,7 +1069,7 @@ class ActivityDetailsModal extends React.Component {
                             }
                         >
                             <i className="fas fa-trash m-r-sm"/>
-                            Supprimer ce cours
+                            {t("activityModal.deleteCourse")}
                         </button>
                     </React.Fragment>
                 ) : null;
@@ -1076,9 +1082,9 @@ class ActivityDetailsModal extends React.Component {
 
                             {!this.state.isEditingGroup ?
                                 <h2>
-                                    {this.state.activity.group_name ? this.state.activity.group_name : "Groupe à définir"}
+                                    {this.state.activity.group_name ? this.state.activity.group_name : t("activityModal.groupToDefine")}
                                     <button
-                                        title="Editer le nom du groupe de cette activité"
+                                        title={t("activityModal.editGroupNameTitle")}
                                         className="btn btn-primary btn-sm pull-right"
                                         onClick={() => this.toggleGroupNameEdit()}
                                     >
@@ -1087,6 +1093,7 @@ class ActivityDetailsModal extends React.Component {
                                 </h2>
                                 :
                                 <EditGroupNameInput
+                                    t={t}
                                     onChange={(value) => this.handleGroupNameChange(value)}
                                     value={this.state.groupName || this.state.activity.group_name}
                                     onSave={() => this.handleUpdateActivity()}
@@ -1113,7 +1120,7 @@ class ActivityDetailsModal extends React.Component {
                             {
                                 this.props.interval.comment &&
                                 <div className="alert alert-info">
-                                    <strong>Commentaire du professeur</strong><br/>
+                                    <strong>{t("activityModal.teacherComment")}</strong><br/>
                                     {this.props.interval.comment.content}
                                 </div>
                             }
@@ -1137,7 +1144,7 @@ class ActivityDetailsModal extends React.Component {
             <div>
                 {!this.props.generic && (this.props.isAdmin || this.props.isTeacher) ? (
                     <React.Fragment>
-                        <h3>Création d'une activité</h3>
+                        <h3>{t("activityModal.createActivityTitle")}</h3>
                         <hr/>
                         {this.state.conflicting_interval ? (
                             <div className="alert alert-danger">
@@ -1155,26 +1162,17 @@ class ActivityDetailsModal extends React.Component {
                         {this.state.conflicting_interval_teacher != null ? (
                             <div className="alert alert-danger">
                                 <p>
-                                    Le professeur "
-                                    {this.props.planning.user.first_name}{" "}
-                                    {this.props.planning.user.last_name}" est
-                                    déjà occupé durant ce créneau horaire (
-                                    {moment(
-                                        this.state.conflicting_interval_teacher
-                                            .start
-                                    ).format("HH:mm")}{" "}
-                                    -{" "}
-                                    {moment(
-                                        this.state.conflicting_interval_teacher
-                                            .end
-                                    ).format("HH:mm")}
-                                    )
+                                    {t("activityModal.teacherBusy", {
+                                        name: `${this.props.planning.user.first_name} ${this.props.planning.user.last_name}`,
+                                        from: moment(this.state.conflicting_interval_teacher.start).format("HH:mm"),
+                                        to: moment(this.state.conflicting_interval_teacher.end).format("HH:mm"),
+                                    })}
                                 </p>
                             </div>
                         ) : null}
                         {timeIntervalInvalid ? (
                             <div className="alert alert-danger">
-                                <p>Le créneau horaire est invalide.</p>
+                                <p>{t("activityModal.slotInvalid")}</p>
                             </div>
                         ) : null}
 
@@ -1221,7 +1219,7 @@ class ActivityDetailsModal extends React.Component {
                                     }
                                 />
                                 <label className="control-label">
-                                    Cette activité est récurrente
+                                    {t("activityModal.recurrentActivity")}
                                 </label>
                             </div>
 
@@ -1244,7 +1242,7 @@ class ActivityDetailsModal extends React.Component {
                         {
                             this.props.interval.comment &&
                             <div className="alert alert-info">
-                                <strong>Commentaire du professeur</strong><br/>
+                                <strong>{t("activityModal.teacherComment")}</strong><br/>
                                 {this.props.interval.comment.content}
                             </div>
                         }
@@ -1258,8 +1256,8 @@ class ActivityDetailsModal extends React.Component {
                                 moment(this.state.endTime, "HH:mm")
                             }>
                             {this.state.isRecurrent
-                                ? "Créer les cours de cette activité "
-                                : "Créer ce cours "}
+                                ? t("activityModal.createCoursesButton")
+                                : t("activityModal.createCourseButton")}
                             {this.state.submitting ?
                                 <i className="fas fa-circle-notch fa-spin"></i>
                                 :
@@ -1280,7 +1278,7 @@ class ActivityDetailsModal extends React.Component {
                         }}
                     >
                         <i className="fas fa-trash m-r-sm"/>
-                        Supprimer le créneau
+                        {t("activityModal.deleteSlot")}
                     </button>
                 </div>
             </div>
@@ -1300,6 +1298,7 @@ class AttendanceTable extends React.Component {
     }
 
     render() {
+        const { t } = this.props;
         const {handleUpdate, handleUpdateAll} = this.props;
 
         let bulkValue = null;
@@ -1318,10 +1317,10 @@ class AttendanceTable extends React.Component {
         return <table className="table">
             <thead>
             <tr>
-                <th>N° Adh</th>
-                <th>Elève</th>
+                <th>{t("activityModal.attendanceTable.adherentNumber")}</th>
+                <th>{t("activityModal.attendanceTable.student")}</th>
                 <th>
-                    Présent
+                    {t("activityModal.attendanceTable.present")}
                     <AttendanceControl
                         value={bulkValue}
                         handleUpdate={v => {
@@ -1437,7 +1436,7 @@ class AttendanceTable extends React.Component {
     }
 }
 
-class EditGroupNameInput extends React.PureComponent {
+export class EditGroupNameInput extends React.PureComponent {
     constructor(props) {
         super(props);
 
@@ -1460,11 +1459,12 @@ class EditGroupNameInput extends React.PureComponent {
     }
 
     render() {
+        const { t } = this.props;
         return (
             <Fragment>
                 <div className="input-group m-b-md">
                     <span className="input-group-addon">
-                        {"Nom du groupe"}
+                        {t("activityModal.groupName")}
                     </span>
                     <input
                         className="form-control"
@@ -1475,27 +1475,28 @@ class EditGroupNameInput extends React.PureComponent {
                     />
                     <span className="input-group-btn">
                         <button className="btn btn-primary" onClick={this.props.onSave}>
-                            {"Enregistrer"}
+                            {t("common:actions.save")}
                         </button>
                     </span>
                 </div>
 
                 <p className="alert alert-info">
-                    {"Changer le nom du groupe pour cette instance le modifiera pour toutes les occurences de cette activité."}
+                    {t("activityModal.groupNameHelp")}
                 </p>
             </Fragment>
         );
     }
 }
 
-const GroupNameInput = ({
+export const GroupNameInput = ({
                             value,
                             onChange,
                         }) => {
+    const { t } = useTranslation("planning");
     return (
         <div className="form-group">
             <label className="control-label" htmlFor="groupName">
-                {"Nom du groupe"}
+                {t("activityModal.groupName")}
             </label>
 
             <input
@@ -1510,7 +1511,8 @@ const GroupNameInput = ({
     );
 };
 
-const TimeSelection = ({startTime, endTime, handleSelectTime}) => {
+export const TimeSelection = ({startTime, endTime, handleSelectTime}) => {
+    const { t } = useTranslation("planning");
     const start = moment(startTime.toDate());
     const end = moment(endTime.toDate());
     return (
@@ -1518,7 +1520,7 @@ const TimeSelection = ({startTime, endTime, handleSelectTime}) => {
             <div className="row m-b">
                 <div className="col-md-2">
                     <label className="control-label" htmlFor="o">
-                        Début
+                        {t("activityModal.startLabel")}
                     </label>
                 </div>
                 <div className="col-md-4">
@@ -1531,7 +1533,7 @@ const TimeSelection = ({startTime, endTime, handleSelectTime}) => {
                 </div>
                 <div className="col-md-2">
                     <label className="control-label" htmlFor="o">
-                        Fin
+                        {t("activityModal.endLabel")}
                     </label>
                 </div>
                 <div className="col-md-4">
@@ -1547,15 +1549,16 @@ const TimeSelection = ({startTime, endTime, handleSelectTime}) => {
     );
 };
 
-const ActivitySelection = ({
+export const ActivitySelection = ({
                                activities,
                                activityId,
                                handleSelectActivity,
                            }) => {
+    const { t } = useTranslation("planning");
     return (
         <form>
             <label className="control-label" htmlFor="o">
-                Activité
+                {t("activityModal.activityLabel")}
             </label>
             <select
                 className="form-control m-b"
@@ -1563,7 +1566,7 @@ const ActivitySelection = ({
                 value={activityId || 0}
             >
                 <option value={0} disabled>
-                    Choisir une activité
+                    {t("activityModal.chooseActivity")}
                 </option>
                 {_.map(activities.sort((a, b) => a.label.localeCompare(b.label)), (activity, i) => {
                     return (
@@ -1578,7 +1581,8 @@ const ActivitySelection = ({
     );
 };
 
-const LocationSelection = ({locations, locationId, handleSelectLocation}) => {
+export const LocationSelection = ({locations, locationId, handleSelectLocation}) => {
+    const { t } = useTranslation("planning");
 
     if (locations.length === 1) {
         return (
@@ -1604,7 +1608,7 @@ const LocationSelection = ({locations, locationId, handleSelectLocation}) => {
                 value={locationId || 0}
             >
                 <option value={0} disabled>
-                    Choisir un Lieu
+                    {t("activityModal.chooseLocation")}
                 </option>
                 {_.map(locations, (l, i) => {
                     return (
@@ -1618,12 +1622,13 @@ const LocationSelection = ({locations, locationId, handleSelectLocation}) => {
     );
 };
 
-const RoomSelection = ({
+export const RoomSelection = ({
                            roomsConstrained,
                            roomId,
                            roomRefs,
                            handleSelectRoom,
                        }) => {
+    const { t } = useTranslation("planning");
     const renderRoomOptions = _.map(roomsConstrained, (room, i) => {
         return (
             <option key={i} value={room.id}>
@@ -1643,7 +1648,7 @@ const RoomSelection = ({
     return (
         <form>
             <label className="control-label" htmlFor="o">
-                Salle
+                {t("activityModal.roomLabel")}
             </label>
             {roomsConstrained.length > 0 ? (
                 <select
@@ -1652,19 +1657,18 @@ const RoomSelection = ({
                     value={roomId || 0}
                 >
                     <option value={0} disabled>
-                        Choisir une salle
+                        {t("activityModal.chooseRoom")}
                     </option>
                     {renderRoomOptions}
                 </select>
             ) : (
                 <React.Fragment>
                     <p>
-                        Aucune salle adaptée disponible pour ce cours, autres
-                        salles:
+                        {t("activityModal.noSuitableRooms")}
                     </p>
                     <select className="form-control m-b" onChange={e => handleSelectRoom(e)} value={roomId || 0}>
                         <option value={0} disabled>
-                            Choisir une salle
+                            {t("activityModal.chooseRoom")}
                         </option>
                         {renderAllRoomOptions}
                     </select>
@@ -1688,6 +1692,7 @@ class ActivityEdition extends React.Component {
     }
 
     render() {
+        const { t } = this.props;
         const {
             selection,
             startTime,
@@ -1718,7 +1723,7 @@ class ActivityEdition extends React.Component {
         return (
             <div>
                 <div className="input-group m-b-xs w-100 mb-4">
-                    <label>Date</label>
+                    <label>{t("activityModal.dateLabel")}</label>
                     <input
                         name="startDate"
                         type="date"
@@ -1729,7 +1734,7 @@ class ActivityEdition extends React.Component {
                 </div>
                 <div className="flex flex-end-aligned m-b-sm w-100 mb-4">
                     <div className="imput-group mr-2 w-100">
-                        <label>Début</label>
+                        <label>{t("activityModal.startLabel")}</label>
                         <input
                             name="startTime"
                             type="time"
@@ -1739,7 +1744,7 @@ class ActivityEdition extends React.Component {
                         />
                     </div>
                     <div className="imput-group ml-2 w-100">
-                        <label>Fin</label>
+                        <label>{t("activityModal.endLabel")}</label>
                         <input
                             name="endTime"
                             type="time"
@@ -1750,7 +1755,7 @@ class ActivityEdition extends React.Component {
                     </div>
                 </div>
                 <div className="input-group m-b-xs w-100 mb-4">
-                    <label>Emplacement</label>
+                    <label>{t("activityModal.locationLabel")}</label>
                     <select
                         name="location_id"
                         className="form-control"
@@ -1760,19 +1765,19 @@ class ActivityEdition extends React.Component {
                     </select>
                 </div>
                 <div className="input-group m-b-xs w-100 mb-4">
-                    <label>Niveau global</label>
+                    <label>{t("activityModal.globalLevel")}</label>
                     <select
                         name="evaluation_level_ref_id"
                         className="form-control"
                         value={selectedEvaluationLevelRefId || ""}
                         onChange={({target: {name, value}}) => _onChange(name, value)}>
-                        <option value="">A PRECISER</option>
+                        <option value="">{t("activityModal.toBeSpecified")}</option>
                         {evaluationLevelRefs.map(optionMapper())}
                     </select>
                 </div>
                 <div className="flex flex-end-aligned m-b-sm mb-4">
                     <div className="input-group mr-4 mb-4">
-                        <label>Salle</label>
+                        <label>{t("activityModal.roomLabel")}</label>
                         <select
                             name="room_id"
                             className="form-control"
@@ -1791,22 +1796,19 @@ class ActivityEdition extends React.Component {
                         className="form-control mb-4"
                         name="instances_update_scope"
                         style={{flex: "1 1"}}>
-                        <option value={InstancesUpdateScope.SINGULAR}>N'affecter que cette séance</option>
-                        <option value={InstancesUpdateScope.FOLLOWING}>Affecter cette séance et les suivantes</option>
-                        <option value={InstancesUpdateScope.ALL}>Affecter toutes les séances de la saison</option>
+                        <option value={InstancesUpdateScope.SINGULAR}>{t("activityModal.scope.single")}</option>
+                        <option value={InstancesUpdateScope.FOLLOWING}>{t("activityModal.scope.following")}</option>
+                        <option value={InstancesUpdateScope.ALL}>{t("activityModal.scope.all")}</option>
                     </select>
                 </div>
 
                 <div className="alert alert-warning" style={{width: "500px"}}>
-                    <b>Attention : </b>Aucune vérification n'est faite lors d'un
-                    changement de professeur. Le changement de professeur ne sera
-                    opéré qu'à partir de cette séance, et répercuté sur toutes celles
-                    la suivant.
+                    <b>{t("activityModal.teacherChangeWarningLabel")}</b>{t("activityModal.teacherChangeWarning")}
                 </div>
 
                 {selectedTeacherId ? (
                     <div className="input-group m-b-sm w-100">
-                        <label>Professeur</label>
+                        <label>{t("activityModal.teacherLabel")}</label>
                         <select
                             className="form-control"
                             name="teacher_id"
@@ -1816,7 +1818,7 @@ class ActivityEdition extends React.Component {
                         </select>
                     </div>
                 ) : (
-                    "Aucun professeur principal pour ce cours"
+                    t("activityModal.noMainTeacher")
                 )}
             </div>
         );
@@ -1831,11 +1833,12 @@ const TeachersEditor = ({
                             onAddTeacher,
                             onRemoveTeacher,
                         }) => {
+    const { t } = useTranslation("planning");
     const notSelectedTeachersOptions = teachers
-        .filter(t => !selected.map(ta => ta.user_id).includes(t.id))
-        .map(t => (
-            <option key={t.id} value={t.id}>
-                {`${t.first_name} ${t.last_name}`}
+        .filter(tt => !selected.map(ta => ta.user_id).includes(tt.id))
+        .map(tt => (
+            <option key={tt.id} value={tt.id}>
+                {`${tt.first_name} ${tt.last_name}`}
             </option>
         ));
     return (
@@ -1843,9 +1846,9 @@ const TeachersEditor = ({
             <table className="table table-bordered">
                 <thead>
                 <tr>
-                    <th>Professeur</th>
-                    <th>Principal</th>
-                    <th>Supprimer</th>
+                    <th>{t("activityModal.teachersEditor.teacher")}</th>
+                    <th>{t("activityModal.teachersEditor.main")}</th>
+                    <th>{t("activityModal.teachersEditor.remove")}</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -1869,10 +1872,10 @@ const TeachersEditor = ({
                                         value={ta.user_id}
                                     >
                                         {`${teachers.find(
-                                            t => t.id === ta.user_id
+                                            tt => tt.id === ta.user_id
                                         ).first_name
                                         } ${teachers.find(
-                                            t => t.id === ta.user_id
+                                            tt => tt.id === ta.user_id
                                         ).last_name
                                         }`}
                                     </option>,
@@ -1887,13 +1890,13 @@ const TeachersEditor = ({
                                 disabled={
                                     ta.is_main &&
                                     !(
-                                        selected.filter(t => t.is_main)
+                                        selected.filter(tt => tt.is_main)
                                             .length > 1
                                     )
                                 }
                                 title={
                                     ta.is_main
-                                        ? "Il faut au moins un professeur principal par cours"
+                                        ? t("activityModal.teachersEditor.needMainTeacher")
                                         : ""
                                 }
                                 onChange={() =>
@@ -1907,13 +1910,13 @@ const TeachersEditor = ({
                                 disabled={
                                     ta.is_main &&
                                     !(
-                                        selected.filter(t => t.is_main)
+                                        selected.filter(tt => tt.is_main)
                                             .length > 1
                                     )
                                 }
                                 title={
                                     ta.is_main
-                                        ? "Vous ne pouvez supprimer un professeur principal que s'il y en a un autre"
+                                        ? t("activityModal.teachersEditor.cannotRemoveMain")
                                         : ""
                                 }
                                 onClick={() => onRemoveTeacher(ta.user_id)}
@@ -1952,7 +1955,7 @@ const coveringEditorSelectStyles = {
     },
 };
 
-const TeacherCoveringEditor = ({
+export const TeacherCoveringEditor = ({
                                    teacher,
                                    coverTeacherId,
                                    areHoursCounted,
@@ -1960,20 +1963,21 @@ const TeacherCoveringEditor = ({
                                    teachers,
                                    onChange,
                                }) => {
+    const { t } = useTranslation("planning");
     const teachersOptions = [
         {
-            label: "PAS DE REMPLAÇANT",
+            label: t("activityModal.noSubstitute"),
             value: "",
             canCover: true,
         },
         ..._(teachers)
-            .filter(t => t.id !== _.get(teacher, "id"))
-            .map(t => {
-                const canCover = coverTeacherId == t.id || potentialCoveringTeachers && potentialCoveringTeachers.includes(t.id);
+            .filter(tt => tt.id !== _.get(teacher, "id"))
+            .map(tt => {
+                const canCover = coverTeacherId == tt.id || potentialCoveringTeachers && potentialCoveringTeachers.includes(tt.id);
 
                 return {
-                    label: `${t.last_name} ${t.first_name} ${canCover ? "✓" : "❌"}`,
-                    value: t.id,
+                    label: `${tt.last_name} ${tt.first_name} ${canCover ? "✓" : "❌"}`,
+                    value: tt.id,
                     canCover,
                     isDisabled: !canCover,
                 };
@@ -1991,13 +1995,13 @@ const TeacherCoveringEditor = ({
         <div>
             <div className="form-group">
                 <label>
-                    Remplaçant de {_.get(teacher, "first_name")}{" "}
+                    {t("calendar.substituteFor")} {_.get(teacher, "first_name")}{" "}
                     {_.get(teacher, "last_name")}
                 </label>
                 <Select
                     value={selectedOption}
                     options={teachersOptions}
-                    placeholder="PAS DE REMPLAÇANT"
+                    placeholder={t("activityModal.noSubstitute")}
                     styles={coveringEditorSelectStyles}
                     onChange={v => onChange("cover_teacher_id", v.value || null)}>
                 </Select>
@@ -2006,7 +2010,7 @@ const TeacherCoveringEditor = ({
             {coverTeacherId ? (
                 <div className="form-group">
                     <label className="m-r">
-                        Heures comptées pour le professeur absent ?
+                        {t("activityModal.hoursCountedForAbsent")}
                     </label>
                     <div className="flex">
                         <div className="flex flex-end-aligned m-r">
@@ -2050,4 +2054,4 @@ const formatInstances = (instances, startTime, endTime) => _(instances)
     }))
     .value();
 
-export default ActivityDetailsModal;
+export default withTranslation("planning")(ActivityDetailsModal);
