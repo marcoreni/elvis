@@ -1,4 +1,5 @@
 import React, { Fragment } from "react";
+import { withTranslation } from "react-i18next";
 import { fullname } from "../../../tools/format";
 
 const moment = require("moment-timezone");
@@ -53,7 +54,7 @@ class PracticeMultiViewModal extends React.Component {
     }
 
     render() {
-        const { schedule } = this.props;
+        const { schedule, t } = this.props;
         // Do not render if schedule is falsy
         if (!schedule) {
             return null;
@@ -62,10 +63,10 @@ class PracticeMultiViewModal extends React.Component {
         // Render
         return (
             <div>
-                <h3>Création d'une réservation</h3>
+                <h3>{t("practice.multiView.title")}</h3>
                 <hr />
                 <form className="m-b">
-                    <label className="label-control">Groupe</label>
+                    <label className="label-control">{t("multiViewModal.group")}</label>
                     <select
                         className="form-control"
                         value={this.state.band}
@@ -80,7 +81,7 @@ class PracticeMultiViewModal extends React.Component {
                         }
                     </select>
 
-                    <label className="label-control">Début</label>
+                    <label className="label-control">{t("activityModal.startLabel")}</label>
                     <input 
                         className="form-control"
                         type="time"
@@ -89,7 +90,7 @@ class PracticeMultiViewModal extends React.Component {
                         onChange={e => this.handleStartChange(e.target.value)}
                     />
 
-                    <label className="label-control">Fin</label>
+                    <label className="label-control">{t("activityModal.endLabel")}</label>
                     <input 
                         className="form-control"
                         type="time"
@@ -101,13 +102,13 @@ class PracticeMultiViewModal extends React.Component {
                 <div className="flex flex-space-between-justified">
                     <button type="button" onClick={this.props.onClose} className="btn">
                         <i className="fas fa-times m-r-sm"></i>
-                        Annuler
+                        {t("common:actions.cancel")}
                     </button>
                     <button
                         className="btn btn-primary"
                         onClick={() => this.handleSave()}
                     >
-                        Enregistrer
+                        {t("common:actions.save")}
                     </button>
                 </div>
             </div>
@@ -115,4 +116,4 @@ class PracticeMultiViewModal extends React.Component {
     }
 }
 
-export default PracticeMultiViewModal;
+export default withTranslation("planning")(PracticeMultiViewModal);

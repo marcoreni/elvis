@@ -1149,13 +1149,11 @@ class ActivityDetailsModal extends React.Component {
                         {this.state.conflicting_interval ? (
                             <div className="alert alert-danger">
                                 <p>
-                                    La
-                                    salle <b>{findAndGet(this.props.rooms, {id: parseInt(this.state.room_id)}, "label", "??")}</b>
-                                    &nbsp;est déjà occupée de <b>{moment(
-                                    this.state.conflicting_interval.start
-                                ).format("HH[h]mm") /*[] in format is the escaping sequence*/}</b> à <b>{moment(
-                                    this.state.conflicting_interval.end
-                                ).format("HH[h]mm")}</b>
+                                    {t("activityModal.roomBusy", {
+                                        room: findAndGet(this.props.rooms, {id: parseInt(this.state.room_id)}, "label", "??"),
+                                        from: moment(this.state.conflicting_interval.start).format("HH[h]mm"),
+                                        to: moment(this.state.conflicting_interval.end).format("HH[h]mm"),
+                                    })}
                                 </p>
                             </div>
                         ) : null}

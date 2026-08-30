@@ -1,9 +1,10 @@
 import React, { Fragment } from "react";
+import { withTranslation } from "react-i18next";
 import { fullname } from "../../../tools/format";
 
 const moment = require("moment-timezone");
 
-export default class PracticeHandleSessions extends React.Component {
+class PracticeHandleSessions extends React.Component {
     constructor(props){
         super(props);
 
@@ -134,15 +135,15 @@ export default class PracticeHandleSessions extends React.Component {
     }
 
     render() {
-        const {session, rooms, bands} = this.props;
+        const {session, rooms, bands, t} = this.props;
         // let {start, stop} = {start: this.state.dateStart, stop: this.state.dateEnd};
         // start = new Date(start).toISOString().substring(0, 10);
         // console.log(start)
         return <div>
-            <h3>Édition de réservation</h3>
+            <h3>{t("practice.handleSessions.title")}</h3>
             <hr/>
             <div >
-                <label> Salle </label>
+                <label> {t("activityModal.roomLabel")} </label>
                 <select id="room" 
                     onChange={e => this.roomChange(e)}
                     value={this.state.roomId}>
@@ -156,7 +157,7 @@ export default class PracticeHandleSessions extends React.Component {
                 </select>
             </div>
             <div >
-                <label> Groupe </label>
+                <label> {t("multiViewModal.group")} </label>
                 <select id="band" 
                     onChange={e => this.bandChange(e)}
                     value={this.state.bandId}>
@@ -170,34 +171,36 @@ export default class PracticeHandleSessions extends React.Component {
                 </select>
             </div>
             <div >
-                <label> Créneau </label>
+                <label> {t("practice.slot")} </label>
                 <div className="flex flex-space-between-justified">
-                    <label>Date:</label><input type="date" id="start" value={this.state.dateStart} onChange={e => this.dateChange(e)}/>
-                    <label>début:</label><input type="time" id="hourStart" value={this.state.hourStart} onChange={e => this.hourStartChange(e)}/>
-                    <label>fin:</label><input type="time" id="hourEnd" value={this.state.hourEnd} onChange={e => this.hourEndChange(e)}/>
+                    <label>{t("practice.date")}</label><input type="date" id="start" value={this.state.dateStart} onChange={e => this.dateChange(e)}/>
+                    <label>{t("practice.startShort")}</label><input type="time" id="hourStart" value={this.state.hourStart} onChange={e => this.hourStartChange(e)}/>
+                    <label>{t("practice.endShort")}</label><input type="time" id="hourEnd" value={this.state.hourEnd} onChange={e => this.hourEndChange(e)}/>
                 </div>
             </div>
             <div className="flex flex-space-between-justified">
                 <button type="button" onClick={this.props.onClose} className="btn" >
                     <i className="fas fa-times m-r-sm"></i>
-                    Annuler
+                    {t("common:actions.cancel")}
                 </button>
                 <button
                     className="btn btn-warning"
                     onClick={() => this.onDelete()}
-                    title={"non implémenté"}
+                    title={t("practice.notImplemented")}
                 >
-                    Supprimer
+                    {t("common:actions.delete")}
                 </button>
                 <button
                     className="btn btn-primary"
                     onClick={() => this.handleSave()}
                     disabled={!this.state.validated}
-                    title={this.state.validated ? "" : "la date n'est pas valide"}
+                    title={this.state.validated ? "" : t("practice.invalidDate")}
                 >
-                    Enregistrer
+                    {t("common:actions.save")}
                 </button>
             </div>
         </div>
     }
 }
+
+export default withTranslation("planning")(PracticeHandleSessions);

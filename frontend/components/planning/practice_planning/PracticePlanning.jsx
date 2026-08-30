@@ -1,4 +1,5 @@
 import React from "react";
+import { withTranslation } from "react-i18next";
 import FullCalendar from "@fullcalendar/react";
 import interactionPlugin from "@fullcalendar/interaction";
 import resourceTimelinePlugin from "@fullcalendar/resource-timeline";
@@ -265,7 +266,7 @@ export function createEventId() {
     return String(eventGuid++);
 }
 
-export default class PracticePlanning extends React.Component {
+class PracticePlanning extends React.Component {
     constructor(props) {
         super(props);
 
@@ -468,7 +469,7 @@ export default class PracticePlanning extends React.Component {
                             center: "title",
                             right: "resourceTimelineDay,resourceTimelineWeek",
                         }}
-                        buttonText={{today: "aujourd'hui"}}
+                        buttonText={{today: this.props.t("practice.today")}}
                         initialView="resourceTimelineDay"
                         views={{
                             resourceTimelineWeek: {
@@ -485,7 +486,7 @@ export default class PracticePlanning extends React.Component {
                         slotMaxTime="22:00:00"
                         events={this.state.events} // alternatively, use the `events` setting to fetch from a feed
                         // resourceAreaHeaderContent="Rooms"
-                        resourceAreaColumns={[{headerContent: 'Salles'}]}
+                        resourceAreaColumns={[{headerContent: this.props.t("practice.rooms")}]}
                         resourceAreaWidth="15%"
                         // initialResources={RESSOURCES}
                         initialResources={this.state.rooms}
@@ -509,7 +510,7 @@ export default class PracticePlanning extends React.Component {
                     isOpen={this.state.isMultiViewModalOpen}
                     onRequestClose={() => this.closeMultiViewModal()}
                     className="test2"
-                    contentLabel="Detail d'un créneau"
+                    contentLabel={this.props.t("container.modals.slotDetail")}
                 >
                     <PracticeMultiViewModal
                         onClose={() => this.closeMultiViewModal()}
@@ -526,7 +527,7 @@ export default class PracticePlanning extends React.Component {
                     isOpen={this.state.isHandleSessionsOpen}
                     onRequestClose={() => this.closeHandleSessionsModal()}
                     className="test2"
-                    contentLabel="Modification d'un créneau"
+                    contentLabel={this.props.t("practice.modals.slotEdit")}
                 >
                     <PracticeHandleSessions
                         onClose={() => this.closeHandleSessionsModal()}
@@ -550,3 +551,5 @@ function renderEventContent(eventInfo) {
         </React.Fragment>
     );
 }
+
+export default withTranslation("planning")(PracticePlanning);
