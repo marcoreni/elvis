@@ -468,6 +468,22 @@ admin CRUD) — preserved verbatim from the ERB/React sources:
   spaces during extraction; no visible change (HTML collapses it, and a `{" "}` already precedes
   the affected label). Same normalization note as the lot-2 `slotBusy` entry.
 
+`frontend/locales/fr/courses.json` (added by feature/i18n-06-extract-courses-lot4 —
+`LessonList.jsx`) — preserved verbatim from the component (the reference-date help popover was
+assembled from 6 concatenated string literals):
+- `lessonList.help.body` — `</u>. tous les cours` → `</u>. Tous les cours` (lowercase after the
+  full stop)
+- `lessonList.help.body` — `imaginons le cas suivant:` → `imaginons le cas suivant :` (missing
+  French space before the colon)
+- `lessonList.help.body` — `que les nombres la colonne "Occupation"` → `que les nombres de la
+  colonne "Occupation"` (missing "de")
+- `lessonList.help.body` — `l'occupation seras de 3` → `l'occupation sera de 3` ("seras" → "sera")
+
+The literal `\n`, the `<br />` tags, the single-quote HTML attributes and the trailing space
+before the final `</p>` inside `lessonList.help.body` are intentional source artifacts kept
+verbatim — a blanket "trim / normalize the locale files" pass must not touch them. The English
+side (`lessonList.help.body`) is a clean translation with these defects fixed, as expected.
+
 Also re-scan the whole `frontend/locales/fr/` + `config/locales/fr.yml` when doing this (grep for
 `Edition\b`, `Editer\b`, `Selectionn`, `réglement`, `Echéance`, `Echec`, `Emmeteur`, `Precedent`,
 `Creer\b`, `verouiller`, `Resolution\b`); the list above is only what was noticed in passing, not
