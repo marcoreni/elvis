@@ -1,0 +1,42 @@
+{
+    "addCourse": {
+        "title": "Add a course",
+        "loading": "loading...",
+        "created": "Your course has been created",
+        "successTitle": "Well done!",
+        "seeCourseList": "See the course list",
+        "createAnother": "Create another course",
+        "genericError": "An error occurred",
+        "nextStep": "Next step",
+        "prevStep": "Previous step"
+    },
+    "addActivity": {
+        "stepName": "Choose the activity",
+        "filterByFamily": "Filter by activity family",
+        "addFamily": "Add an activity family",
+        "activity": "Activity",
+        "addActivity": "Add an activity",
+        "noActivityYet": "No activity added yet?",
+        "createActivity": "Create an activity"
+    },
+    "addSlot": {
+        "stepName": "Choose the slot"
+    },
+    "addTeacher": {
+        "stepName": "Choose the teacher"
+    },
+    "addLocation": {
+        "stepName": "Choose the location"
+    },
+    "summary": {
+        "title": "Summary",
+        "activity": "Activity",
+        "slot": "Slot",
+        "teacher": "Teacher",
+        "place": "Place",
+        "location": "Location",
+        "room": "Room",
+        "timeFrom": "from",
+        "timeTo": "to"
+    }
+}

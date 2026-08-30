@@ -1,13 +1,15 @@
 import React, { Component } from "react";
+import { withTranslation } from "react-i18next";
 import { WEEKDAYS, MONTHS } from "../../tools/constants";
 
 
-export default class AddCourseSummary extends Component {
+class AddCourseSummary extends Component {
     constructor(props) {
         super(props);
     }
 
     render() {
+        const { t } = this.props;
         let summary = this.props.summary;
         const firstDayStartTime = summary.firstDayStartTime
             ? summary.firstDayStartTime
@@ -20,14 +22,14 @@ export default class AddCourseSummary extends Component {
             <div className="ibox">
                 <div className="ibox-title flex">
                     <i className="fas fa-clipboard-list m-b-sm m-r-sm"></i>
-                    <h3>Récapitulatif</h3>
+                    <h3>{t("summary.title")}</h3>
                 </div>
 
                 <div className="ibox-content">
                     <div className="border-bottom m-t-xs">
                         <div className="flex">
                             <i className={`fas fa-music m-r-sm m-t-xs`}></i>
-                            <h4>Activité</h4>
+                            <h4>{t("summary.activity")}</h4>
                         </div>
 
                         {summary.activityRef ? (
@@ -42,7 +44,7 @@ export default class AddCourseSummary extends Component {
                     <div className="border-bottom m-t-xs">
                         <div className="flex">
                             <i className={`fas fa-clock m-r-sm m-t-xs`}></i>
-                            <h4>Créneau</h4>
+                            <h4>{t("summary.slot")}</h4>
                         </div>
 
                         {firstDayStartTime &&
@@ -52,11 +54,11 @@ export default class AddCourseSummary extends Component {
                                 {WEEKDAYS[summary.dayOfWeek % 7]}{" "}
                                 {firstDayStartTime._d.getDate()}{" "}
                                 {MONTHS[firstDayStartTime._d.getMonth()]}{" "}
-                                {firstDayStartTime._d.getFullYear()} de{" "}
+                                {firstDayStartTime._d.getFullYear()} {t("summary.timeFrom")}{" "}
                                 {firstDayStartTime
                                     .format("HH:mm")
                                     .replace(":", "h")}{" "}
-                                à{" "}
+                                {t("summary.timeTo")}{" "}
                                 {firstDayEndTime
                                     .format("HH:mm")
                                     .replace(":", "h")}
@@ -69,7 +71,7 @@ export default class AddCourseSummary extends Component {
                     <div className="border-bottom m-t-xs">
                         <div className="flex">
                             <i className={`fas fa-user m-r-sm m-t-xs`}></i>
-                            <h4>Professeur</h4>
+                            <h4>{t("summary.teacher")}</h4>
                         </div>
 
                         {summary.teacher ? (
@@ -87,18 +89,18 @@ export default class AddCourseSummary extends Component {
                             <i
                                 className={`fas fa-map-marker-alt m-r-sm m-t-xs`}
                             ></i>
-                            <h4>Lieu</h4>
+                            <h4>{t("summary.place")}</h4>
                         </div>
 
                         {summary.location && summary.room ? (
                             <div className="m-l-lg m-t-sm">
                                 <p>
-                                    <strong>Lieu</strong>
+                                    <strong>{t("summary.location")}</strong>
                                     <br />
                                     {summary.location}
                                 </p>
                                 <p>
-                                    <strong>Salle</strong>
+                                    <strong>{t("summary.room")}</strong>
                                     <br />
                                     {summary.room}
                                 </p>
@@ -112,3 +114,5 @@ export default class AddCourseSummary extends Component {
         );
     }
 }
+
+export default withTranslation("courses")(AddCourseSummary);
