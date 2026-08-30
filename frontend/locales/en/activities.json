@@ -19,5 +19,28 @@
         "yes": "yes",
         "no": "no",
         "errorTitle": "Error"
+    },
+    "activityRef": {
+        "container": {
+            "saved": "Saved successfully",
+            "genericError": "An error occurred",
+            "tabs": {
+                "basics": "Activity",
+                "application": "Registration",
+                "workgroup": "Workshop",
+                "teachers": "Teachers"
+            },
+            "errors": {
+                "hardLimitTooLow": "must be greater than the number of spots",
+                "toAgeTooLow": "must be greater than the minimum age",
+                "required": "is required"
+            }
+        },
+        "pricing": {
+            "inUseError": "This pricing is used by one or more students. You cannot delete it."
+        },
+        "teachers": {
+            "title": "Teachers"
+        }
     }
 }

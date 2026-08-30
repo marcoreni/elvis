@@ -1,4 +1,5 @@
 import React, { Fragment } from "react";
+import {withTranslation} from "react-i18next";
 import {csrfToken} from "../utils";
 import Select from "react-select";
 import { Field } from "react-final-form";
@@ -6,7 +7,7 @@ import { MESSAGES } from "../../tools/constants";
 import { required } from "../../tools/validators";
 import SelectMultiple from "../common/SelectMultiple";
 
-export default class ActivityRefTeachers extends React.Component
+class ActivityRefTeachers extends React.Component
 {
     constructor(props)
     {
@@ -31,18 +32,19 @@ export default class ActivityRefTeachers extends React.Component
             .then(res => res.json())
             .then(json =>
             {
-                this.setState({ all_teachers: json.map(t => ({ id: t.id, last_name: t.last_name, first_name: t.first_name})) });
+                this.setState({ all_teachers: json.map(teacher => ({ id: teacher.id, last_name: teacher.last_name, first_name: teacher.first_name})) });
             });
     }
 
     render()
     {
+        const {t} = this.props;
         return <div>
             {this.state.all_teachers.length > 0 && <SelectMultiple
-                title="Professeurs"
+                title={t("activityRef.teachers.title")}
                 name="teachers"
                 isMulti
-                all_features={this.state.all_teachers.map(t => [`${t.last_name} ${t.first_name}`, t.id])}
+                all_features={this.state.all_teachers.map(teacher => [`${teacher.last_name} ${teacher.first_name}`, teacher.id])}
                 features={this.state.teachers}
                 mutators={this.props.mutators}
             />}
@@ -51,3 +53,5 @@ export default class ActivityRefTeachers extends React.Component
         </div>
     }
 }
+
+export default withTranslation("activities")(ActivityRefTeachers);

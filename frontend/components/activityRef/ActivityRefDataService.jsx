@@ -1,5 +1,6 @@
 import DataService from "../common/baseDataTable/DataService";
 import * as api from "../../tools/api";
+import i18n from "../../i18n";
 
 export default class ActivityRefDataService extends DataService
 {
@@ -62,7 +63,7 @@ export default class ActivityRefDataService extends DataService
             if (isInUse) {
                 reject({
                     status: 400,
-                    message: "Cette tarification est utilisée par un ou plusieurs élève(s). Vous ne pouvez pas la supprimer."
+                    message: i18n.t("activities:activityRef.pricing.inUseError")
                 });
             } else {
                 api.set()
