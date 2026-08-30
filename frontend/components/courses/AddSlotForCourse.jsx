@@ -55,6 +55,8 @@ export default class AddSlotForCourse extends React.Component {
     }
 
     isValidated() {
+        // NB: when MESSAGES.* is eventually i18n'd, this non-render method will need its own
+        // `const { t } = this.props;` — it has none today because MESSAGES is still hardcoded.
         const { dayOfWeek, startTime, endTime, fromDate, toDate } = this.state;
 
         if (!startTime || !endTime || !dayOfWeek) {
@@ -187,6 +189,7 @@ export default class AddSlotForCourse extends React.Component {
     }
 
     render() {
+        const { t } = this.props;
         const {
             seasons,
             seasonId,
@@ -204,7 +207,7 @@ export default class AddSlotForCourse extends React.Component {
                     <div className="ibox">
                         <div className="ibox-title flex">
                             <i className="fa fa-clock m-sm"></i>
-                            <h3>Choix d'un créneau</h3>
+                            <h3>{t("addSlot.title")}</h3>
                         </div>
                         <div className="ibox-content">
                             <div className="row">
@@ -219,7 +222,7 @@ export default class AddSlotForCourse extends React.Component {
                                                     defaultValue: seasonId,
                                                 }}
                                                 meta={{}}
-                                                label="Saison"
+                                                label={t("addSlot.season")}
                                                 required={true}
                                                 options={seasons.map(season => {
                                                     return {
@@ -231,7 +234,7 @@ export default class AddSlotForCourse extends React.Component {
                                                     icon: "fa fa-plus-circle",
                                                     href_path: `${href_path}/seasons/new`,
                                                     text: "",
-                                                    tooltip: "Créer une saison",
+                                                    tooltip: t("addSlot.addSeasonTooltip"),
                                                 }}
                                             />
                                         )}
@@ -240,7 +243,7 @@ export default class AddSlotForCourse extends React.Component {
                                 {
                                     <div className="col-md-4">
                                         <Input
-                                            label="Début"
+                                            label={t("addSlot.startDate")}
                                             required={true}
                                             input={{
                                                 id: "fromDate",
@@ -260,7 +263,7 @@ export default class AddSlotForCourse extends React.Component {
                                 {
                                     <div className="col-md-4">
                                         <Input
-                                            label="Fin"
+                                            label={t("addSlot.endDate")}
                                             required={true}
                                             input={{
                                                 id: "toDate",
@@ -282,15 +285,14 @@ export default class AddSlotForCourse extends React.Component {
                                 <div className="col-md-4"></div>
                                 <div className="col-md-8 font-weight-bold">
                                     <i className="fa fa-exclamation-circle m-r-xs"></i>
-                                    Vous pouvez modifier la période de la saison
-                                    sélectionnée
+                                    {t("addSlot.editSeasonPeriodHint")}
                                 </div>
                             </div>
                             <div className="row">
                                 <div className="col-md-12">
                                     <div className="form-group">
                                         <label>
-                                            Jour{" "}
+                                            {t("addSlot.day")}{" "}
                                             <span className="text-danger">
                                                 *
                                             </span>
@@ -319,7 +321,7 @@ export default class AddSlotForCourse extends React.Component {
                                                         value="1"
                                                         autoComplete="off"
                                                     />{" "}
-                                                    Lundi
+                                                    {t("addSlot.weekdays.monday")}
                                                 </label>
                                                 <label className="btn btn-primary btn-outline m-r-sm">
                                                     <input
@@ -328,7 +330,7 @@ export default class AddSlotForCourse extends React.Component {
                                                         value="2"
                                                         autoComplete="off"
                                                     />{" "}
-                                                    Mardi
+                                                    {t("addSlot.weekdays.tuesday")}
                                                 </label>
                                                 <label className="btn btn-primary btn-outline m-r-sm">
                                                     <input
@@ -337,7 +339,7 @@ export default class AddSlotForCourse extends React.Component {
                                                         value="3"
                                                         autoComplete="off"
                                                     />{" "}
-                                                    Mercredi
+                                                    {t("addSlot.weekdays.wednesday")}
                                                 </label>
                                                 <label className="btn btn-primary btn-outline m-r-sm">
                                                     <input
@@ -346,7 +348,7 @@ export default class AddSlotForCourse extends React.Component {
                                                         value="4"
                                                         autoComplete="off"
                                                     />{" "}
-                                                    Jeudi
+                                                    {t("addSlot.weekdays.thursday")}
                                                 </label>
                                                 <label className="btn btn-primary btn-outline m-r-sm">
                                                     <input
@@ -355,7 +357,7 @@ export default class AddSlotForCourse extends React.Component {
                                                         value="5"
                                                         autoComplete="off"
                                                     />{" "}
-                                                    Vendredi
+                                                    {t("addSlot.weekdays.friday")}
                                                 </label>
                                                 <label className="btn btn-primary btn-outline">
                                                     <input
@@ -364,7 +366,7 @@ export default class AddSlotForCourse extends React.Component {
                                                         value="6"
                                                         autoComplete="off"
                                                     />{" "}
-                                                    Samedi
+                                                    {t("addSlot.weekdays.saturday")}
                                                 </label>
                                             </div>
                                         </div>
@@ -374,7 +376,7 @@ export default class AddSlotForCourse extends React.Component {
                             <div className="row ">
                                 <div className="col-md-2">
                                     <label>
-                                        Horaire{" "}
+                                        {t("addSlot.schedule")}{" "}
                                         <span className="text-danger">*</span>
                                     </label>
                                 </div>
@@ -387,7 +389,7 @@ export default class AddSlotForCourse extends React.Component {
                                             className="input-group-addon font-bold bg-muted"
                                             style={{ minWidth: "50px" }}
                                         >
-                                            {"De"}
+                                            {t("addSlot.from")}
                                         </span>
                                         <input
                                             className="form-control"
@@ -415,7 +417,7 @@ export default class AddSlotForCourse extends React.Component {
                                             className="input-group-addon font-bold bg-muted"
                                             style={{ minWidth: "50px" }}
                                         >
-                                            {"à"}
+                                            {t("addSlot.to")}
                                         </span>
                                         <input
                                             className="form-control"
@@ -442,9 +444,7 @@ export default class AddSlotForCourse extends React.Component {
                             <div className="row">
                                 <div className="col-lg-8">
                                     <p className="alert alert-info">
-                                        Votre cours va être créé avec une
-                                        récurrence hebdomadaire (hors vacances
-                                        scolaires)
+                                        {t("addSlot.weeklyRecurrenceInfo")}
                                     </p>
                                 </div>
                             </div>

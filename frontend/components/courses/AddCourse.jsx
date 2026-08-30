@@ -205,6 +205,7 @@ class AddCourse extends React.Component {
                 name: t("addSlot.stepName"),
                 component: (
                     <AddSlotForCourse
+                        t={t}
                         initialValues={{
                             seasonId: season ? season.id : undefined,
                             startTime: startTime,

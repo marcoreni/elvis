@@ -20,7 +20,26 @@
         "createActivity": "Create an activity"
     },
     "addSlot": {
-        "stepName": "Choose the slot"
+        "stepName": "Choose the slot",
+        "title": "Choose a slot",
+        "season": "Season",
+        "addSeasonTooltip": "Create a season",
+        "startDate": "Start",
+        "endDate": "End",
+        "editSeasonPeriodHint": "You can edit the period of the selected season",
+        "day": "Day",
+        "weekdays": {
+            "monday": "Monday",
+            "tuesday": "Tuesday",
+            "wednesday": "Wednesday",
+            "thursday": "Thursday",
+            "friday": "Friday",
+            "saturday": "Saturday"
+        },
+        "schedule": "Schedule",
+        "from": "From",
+        "to": "to",
+        "weeklyRecurrenceInfo": "Your course will be created with a weekly recurrence (excluding school holidays)"
     },
     "addTeacher": {
         "stepName": "Choose the teacher",
@@ -49,5 +68,17 @@
         "room": "Room",
         "timeFrom": "from",
         "timeTo": "to"
+    },
+    "deleteCourse": {
+        "warningTitle": "Warning",
+        "noneDeletable": "No course can be deleted.",
+        "noneSelected": "No course has been selected.",
+        "pastWithStudents": "You cannot delete a course that has already taken place and has enrolled students.",
+        "title": "Delete a course",
+        "prompt": "Would you like to:",
+        "deleteAll": "Delete all recurrences of this course.",
+        "deleteSelected": "Select the recurrences to delete.",
+        "legendExisting": "Existing course",
+        "legendToDelete": "Course to delete"
     }
 }

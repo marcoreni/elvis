@@ -20,7 +20,26 @@
         "createActivity": "Créer une activité"
     },
     "addSlot": {
-        "stepName": "Choix du créneau"
+        "stepName": "Choix du créneau",
+        "title": "Choix d'un créneau",
+        "season": "Saison",
+        "addSeasonTooltip": "Créer une saison",
+        "startDate": "Début",
+        "endDate": "Fin",
+        "editSeasonPeriodHint": "Vous pouvez modifier la période de la saison sélectionnée",
+        "day": "Jour",
+        "weekdays": {
+            "monday": "Lundi",
+            "tuesday": "Mardi",
+            "wednesday": "Mercredi",
+            "thursday": "Jeudi",
+            "friday": "Vendredi",
+            "saturday": "Samedi"
+        },
+        "schedule": "Horaire",
+        "from": "De",
+        "to": "à",
+        "weeklyRecurrenceInfo": "Votre cours va être créé avec une récurrence hebdomadaire (hors vacances scolaires)"
     },
     "addTeacher": {
         "stepName": "Choix du professeur",
@@ -49,5 +68,17 @@
         "room": "Salle",
         "timeFrom": "de",
         "timeTo": "à"
+    },
+    "deleteCourse": {
+        "warningTitle": "Attention",
+        "noneDeletable": "Aucun cours ne peut être supprimé.",
+        "noneSelected": "Aucun cours n'a été sélectionné.",
+        "pastWithStudents": "Vous ne pouvez pas supprimer un cours qui est déjà passé et qui a des élèves inscrits.",
+        "title": "Supprimer un cours",
+        "prompt": "Souhaitez-vous:",
+        "deleteAll": "Supprimer toutes les récurrences de ce cours.",
+        "deleteSelected": "Sélectionner les récurrences à supprimer.",
+        "legendExisting": "Cours existant",
+        "legendToDelete": "Cours à supprimer"
     }
 }
