@@ -280,6 +280,24 @@ unsaved-formule pricing path). Surfaced 2026-08-29 during the i18n-06 `formules`
 plugins / prod logs, then delete `NewFormule.jsx` (keep `NewFormulePricingDataService.js`). Low
 priority.
 
+## `planning/Calendar.jsx` — dead `ConflictDisplayItem`; tui-calendar strings frozen at mount
+
+Surfaced 2026-08-30 during the i18n-06 planning lot 3b (`Calendar.jsx`) extraction:
+
+- `ConflictDisplayItem` (component, ~55 lines, strings "Voir le conflit" / "Résolu") is
+  referenced **only** from inside a `{/* … */}` JSX comment block in `CalendarControls`, so it
+  never renders. Left untranslated and in place per the recover-don't-delete policy; verify and
+  delete along with the commented conflict-dropdown block.
+- `week.daynames` is passed to the `tui-calendar` constructor once in `componentDidMount` (a
+  frozen array), and the `monthGridHeaderExceed` / `weekDayname` template functions capture the
+  mount-time `t`. So after an in-page `i18n.changeLanguage`, the day-name headers, "N autres"
+  and "Présences" stay in the old language while `CalendarControls` (fresh `t` each render) and
+  the `time:` schedule-title template (reads `this.props.t`) switch. Same class as the
+  generalPayments "column headers frozen at construct time" note below, and harmless for the
+  same reason: `LocaleController#update` does a full server reload, so no calendar instance
+  outlives a locale change. Fix (if it ever matters) = destroy + recreate the tui-calendar
+  instance on `languageChanged`.
+
 ## generalPayments tables freeze translated column headers at construct time
 
 `DuePaymentList.jsx` and `PaymentList.jsx` (and the smaller `PaymentScheduleList` filter setup)

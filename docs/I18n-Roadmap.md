@@ -425,14 +425,33 @@ et à mesure de son intégration :
           `rawPlanning.{occupancy,noActivityThisWeek}`, `evaluationModal.readSelfAssessment`,
           `common:reactTable.loadingText`. `TimeInterval.jsx` : aucune chaîne visible, non touché.
           Test : `SimplePlanning.test.jsx` (2, fr+en). `yarn test` → 81 tests verts.
-    - [ ] **Lot 3b** : `Calendar.jsx` (673 l. de templates HTML `tui-calendar`) +
-          `TimeIntervalHelpers.jsx` (module de helpers purs). Le plus délicat du domaine :
-          `getTimeTemplate` (Calendar) et `formatIntervalsForSchedule` (Helpers) construisent des
-          titres (« Disponibilité », « Dispo. Cours/Option/Evaluation », « Pause », « Private »)
-          hors de tout composant → `t` à faire descendre depuis les appelants (config tui-calendar,
-          plusieurs composants planning). Aussi : abréviations de jours « Dim…Sam », barre d'outils
-          (« Aujourd'hui », « Prochaine Saison », « Début de saison »), « Résolu », « NON INDIQUÉ »
-          / « À PRÉCISER » (`levelDisplay`).
+    - [x] **Lot 3b** : branche `feature/i18n-06-extract-planning-calendar`. **`Calendar.jsx`
+          uniquement** (`TimeIntervalHelpers.jsx` sorti du périmètre — voir lot 3c). `CustomCalendar`
+          → `withTranslation("planning")` ; `t` descendu (via prop / options) dans `getTimeTemplate`
+          (templates HTML `tui-calendar`) et `CalendarControls`. Nouvelles clés
+          `planning.scheduleTitles.*` (« Disponibilité », « Dispo. Option/Cours/Evaluation »,
+          « Privé » — corrigé de « Private » sur signalement revue) et `planning.calendar.*` (`daynamesShort` en
+          tableau JSON via `t(..., {returnObjects:true})`, `moreSchedules` `{{n}}`, `presences`,
+          `substituteFor`, `views.{month,week,day}`, `tooltips.{seasonStart,today,nextSeason}`,
+          `hoursSummary` `{{lesson}}/{{option}}`). Réutilise `kinds.pause`,
+          `multiViewModal.replacedBy`, `common:reactTable.loadingText`. `moment.locale("fr")` codé
+          en dur dans `calculateTotalHours` supprimé (la locale moment est centralisée dans
+          `frontend/i18n/index.js`). `ConflictDisplayItem` = code mort (jamais rendu) → laissé,
+          consigné dans KnownIssues. `getTimeTemplate` et `CalendarControls` exportés pour le test
+          (tui-calendar ne monte pas proprement en jsdom). Test : `Calendar.test.jsx` (7, fr+en —
+          vue mois, vue semaine/jour, ligne remplaçant). `yarn test` → 30 fichiers / 90 tests.
+          **Revue `/code-review`** : `calculateTotalHours` passé à `isoWeek` (fenêtre du total
+          d'heures alignée sur la grille lundi-début quelle que soit la locale) ; template `time:`
+          lit `this.props.t` (titres de créneaux suivent la langue au re-render) ;
+          `scheduleTitles.private` corrigé en « Privé » ; couverture branche non-mois ajoutée.
+          Résidu consigné (KnownIssues) : `daynames` + templates `function` figés au mount.
+    - [ ] **Lot 3c** : `TimeIntervalHelpers.jsx` — module de helpers **purs** partagés
+          (`formatIntervalsForSchedule` titres « Disponibilité »/« Dispo. Evaluation »/« Evaluation » ;
+          `levelDisplay` « NON INDIQUÉ » / « À PRÉCISER » ; `averageAgeDisplay`). Appelé depuis
+          `Planning.jsx` (lot 4), `courses/LessonList.jsx`, `activityApplications/summary/Activity.jsx`,
+          `RawPlanning`, `TimeInterval`, `SimplePlanning` — donc `t` à faire descendre dans **4+
+          domaines**. À traiter comme une passe transverse dédiée (comme `feature/i18n-common-react-table-keys`),
+          pas dans un lot planning.
     - [ ] **Lot 4** : `Planning.jsx` (1792 l., conteneur).
     - [ ] **Lot 5** : `ActivityDetailsModal.jsx` (2053 l.).
     - [ ] **Lot 6** : sous-arbres `activity_management/*` + `practice_planning/*`.
