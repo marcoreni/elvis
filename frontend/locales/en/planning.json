@@ -110,5 +110,43 @@
         "noActivityThisWeek": "No activity this week.",
         "optionMarker": "(option)",
         "occupancy": "{{n}}/{{limit}} students"
+    },
+    "container": {
+        "holidaysAlert": "Warning: school holidays have not been imported.",
+        "manageHolidaysLink": "Manage your school's holiday dates now.",
+        "otherTeachers": "Other teachers",
+        "otherRooms": "Other rooms",
+        "toDisplay": "to display",
+        "allRooms": "All rooms",
+        "resetFilters": "Reset filters",
+        "roomActivitiesTooltip": "Activities for this room",
+        "modals": {
+            "slotDetail": "Slot details",
+            "slotCreation": "Creating a slot"
+        },
+        "entities": {
+            "room": "room",
+            "teacher": "teacher",
+            "unknown": "unknown entity"
+        },
+        "toasts": {
+            "fetchError": "Error while fetching the data",
+            "coursesCreated": "The activity's courses have been created",
+            "bulkUpdateResult": "{{updated}} courses updated and {{conflicts}} conflicts created",
+            "courseUpdated": "The course has been updated!",
+            "courseUpdatedShort": "The course has been updated!",
+            "pauseUpdated": "The break is up to date",
+            "availabilityUpdated": "The availability is up to date",
+            "updateAllFollowing": "Update all following courses",
+            "successConflicts": "{{success}} succeeded - {{conflicts}} conflicts",
+            "conflictResolved": "Conflict resolved!",
+            "backToPlanning": "Back to the planning",
+            "activityAndCoursesDeleted": "The activity and its courses have been deleted",
+            "courseDeleted": "The course has been deleted!",
+            "deleteAllOtherCourses": "Delete all other courses of this activity",
+            "updateErrorInstanceNotFound": "Update error (instance not found)",
+            "updateFailed": "Update failed",
+            "entityChanged": "Changed the {{entity}} of this course."
+        }
     }
 }

@@ -4,6 +4,7 @@ import _ from "lodash";
 import fetch from "isomorphic-unfetch";
 
 import {toast} from "react-toastify";
+import {withTranslation} from "react-i18next";
 import * as api from "../../tools/api";
 
 const moment = require("moment-timezone");
@@ -149,7 +150,7 @@ class Planning extends React.Component {
             })
             .catch(e => {
                 if (e.name !== "AbortError")
-                    toast.error("Erreur lors du rapatriement des données", {
+                    toast.error(this.props.t("container.toasts.fetchError"), {
                         autoClose: 3000,
                         position: toast.POSITION.BOTTOM_CENTER,
                     });
@@ -395,7 +396,7 @@ class Planning extends React.Component {
 
                 toast.success(
                     <div>
-                        <p>{"Les cours pour l'activité sont créés"}</p>
+                        <p>{this.props.t("container.toasts.coursesCreated")}</p>
                     </div>,
                     {position: toast.POSITION.BOTTOM_CENTER, autoClose: 3000}
                 );
@@ -436,7 +437,7 @@ class Planning extends React.Component {
 
         toast.success(
             <div>
-                <p>Les cours pour l'activité sont créés</p>
+                <p>{this.props.t("container.toasts.coursesCreated")}</p>
             </div>,
             {position: toast.POSITION.BOTTOM_CENTER, autoClose: 3000}
         );
@@ -579,7 +580,7 @@ class Planning extends React.Component {
                     this.closeDetailModal();
                     if (data.result) {
                         toast.success(
-                            ` Mise à jour de ${data.result.success} cours et création de ${data.result.conflicts.length} conflits`,
+                            this.props.t("container.toasts.bulkUpdateResult", {updated: data.result.success, conflicts: data.result.conflicts.length}),
                             {
                                 position: toast.POSITION.BOTTOM_CENTER,
                                 autoClose: 3000,
@@ -587,7 +588,7 @@ class Planning extends React.Component {
                         );
                     } else {
                         toast.success(
-                            `Le cours est mis à jour !`,
+                            this.props.t("container.toasts.courseUpdated"),
                             {
                                 position: toast.POSITION.BOTTOM_CENTER,
                                 autoClose: 3000,
@@ -637,7 +638,7 @@ class Planning extends React.Component {
                 },
                 () => {
                     return toast.success(
-                        `${results.success} succès - ${results.conflicts.length} conflits`,
+                        this.props.t("container.toasts.successConflicts", {success: results.success, conflicts: results.conflicts.length}),
                         {
                             position: toast.POSITION.BOTTOM_CENTER,
                             autoClose: 3000,
@@ -670,11 +671,13 @@ class Planning extends React.Component {
         const confirmationToast = ({closeToast}) => (
             <div>
                 <p>
-                    Mise à jour de {checkResults.success} cours et création de{" "}
-                    {checkResults.conflicts.length} conflits
+                    {this.props.t("container.toasts.bulkUpdateResult", {
+                        updated: checkResults.success,
+                        conflicts: checkResults.conflicts.length,
+                    })}
                 </p>
                 <button className="btn btn-primary m-r" onClick={closeToast}>
-                    <i className="fas fa-times m-r-sm"/> Annuler
+                    <i className="fas fa-times m-r-sm"/> {this.props.t("common:actions.cancel")}
                 </button>
                 <button
                     className="btn btn-primary"
@@ -682,7 +685,7 @@ class Planning extends React.Component {
                         this.handleUpdateAllActivityInstances(event.schedule)
                     }
                 >
-                    <i className="fas fa-check m-r-sm"/> Confirmer
+                    <i className="fas fa-check m-r-sm"/> {this.props.t("common:actions.confirm")}
                 </button>
             </div>
         );
@@ -737,10 +740,10 @@ class Planning extends React.Component {
                 <div>
                     <p>
                         {event.schedule.kind === "c"
-                            ? "Le cours est mis-à-jour!"
+                            ? this.props.t("container.toasts.courseUpdatedShort")
                             : event.schedule.kind === "p"
-                                ? "La pause est à jour"
-                                : "La disponibilité est à jour"}
+                                ? this.props.t("container.toasts.pauseUpdated")
+                                : this.props.t("container.toasts.availabilityUpdated")}
                     </p>
                     {event.schedule.kind === "c" && (
                         <button
@@ -749,7 +752,7 @@ class Planning extends React.Component {
                                 this.handleSimulateUpdateAllActivityInstances(event)
                             }
                         >
-                            Mettre à jour tous les cours suivants
+                            {this.props.t("container.toasts.updateAllFollowing")}
                         </button>
                     )}
                 </div>
@@ -758,7 +761,7 @@ class Planning extends React.Component {
 
             const conflictResolution = (
                 <div>
-                    <p>Conflit Résolu !</p>
+                    <p>{this.props.t("container.toasts.conflictResolved")}</p>
                     <button
                         className="btn btn-primary"
                         onClick={() =>
@@ -769,7 +772,7 @@ class Planning extends React.Component {
                             }`)
                         }
                     >
-                        Retour au planning
+                        {this.props.t("container.toasts.backToPlanning")}
                     </button>
                 </div>
             );
@@ -860,7 +863,7 @@ class Planning extends React.Component {
             .then(response => response.json())
             .then(() => {
                 toast.success(
-                    "L'activité et les cours associés sont supprimés",
+                    this.props.t("container.toasts.activityAndCoursesDeleted"),
                     {
                         position: toast.POSITION.BOTTOM_CENTER,
                         autoClose: 3000,
@@ -875,14 +878,14 @@ class Planning extends React.Component {
         // Delete activity instance (iff no student assigned)
         const toastDelete = (
             <div>
-                <p>Le cours est supprimé!</p>
+                <p>{this.props.t("container.toasts.courseDeleted")}</p>
                 <button
                     className="btn btn-primary"
                     onClick={() =>
                         this.handleDeleteAllActivityInstances(activityId)
                     }
                 >
-                    Supprimer tous les autres cours de cette activité
+                    {this.props.t("container.toasts.deleteAllOtherCourses")}
                 </button>
             </div>
         );
@@ -952,12 +955,12 @@ class Planning extends React.Component {
                         });
                     } else {
                         toast.error(
-                            "Erreur de la mise à jour (instance introuvable)"
+                            this.props.t("container.toasts.updateErrorInstanceNotFound")
                         );
                     }
                 }
             })
-            .catch(() => toast.error("Echec de la mise à jour"));
+            .catch(() => toast.error(this.props.t("container.toasts.updateFailed")));
     }
 
     handleUpdateAttendances(intervalId, attendances) {
@@ -990,13 +993,13 @@ class Planning extends React.Component {
                     });
                 } else {
                     toast.error(
-                        "Erreur de la mise à jour (instance introuvable)"
+                        this.props.t("container.toasts.updateErrorInstanceNotFound")
                     );
                 }
 
                 this.forceUpdate();
             })
-            .catch(() => toast.error("Echec de la mise à jour"))
+            .catch(() => toast.error(this.props.t("container.toasts.updateFailed")))
     }
 
     // =============================
@@ -1177,13 +1180,13 @@ class Planning extends React.Component {
         let typeLabel;
         switch (planningType) {
             case "room":
-                typeLabel = "salle";
+                typeLabel = this.props.t("container.entities.room");
                 break;
             case "user":
-                typeLabel = "professeur";
+                typeLabel = this.props.t("container.entities.teacher");
                 break;
             default:
-                typeLabel = "entité inconnue";
+                typeLabel = this.props.t("container.entities.unknown");
         }
 
         this.setState(
@@ -1198,7 +1201,7 @@ class Planning extends React.Component {
             },
             () =>
                 toast.success(
-                    `Changement de ${typeLabel} de ce cours effectué.`,
+                    this.props.t("container.toasts.entityChanged", {entity: typeLabel}),
                     {
                         position: toast.POSITION.BOTTOM_CENTER,
                         autoClose: 3000,
@@ -1359,15 +1362,15 @@ class Planning extends React.Component {
             <div>
                 {this.state.showAlert && (
                     <div className="alert alert-danger mt-4 mb-3" role="alert">
-                        Attention, les vacances scolaires n'ont pas été importées.&nbsp;
+                        {this.props.t("container.holidaysAlert")}&nbsp;
                         <a href={`/seasons/${this.props.season.id}/edit`}>
-                            Gérer dès maintenant les dates de vacances de votre école.
+                            {this.props.t("container.manageHolidaysLink")}
                         </a>
 
                         <button
                             type="button"
                             className="close"
-                            aria-label="Close"
+                            aria-label={this.props.t("common.close")}
                             onClick={this.closeAlert}
                         >
                             <span aria-hidden="true">&times;</span>
@@ -1396,9 +1399,9 @@ class Planning extends React.Component {
                             <div className="m-r">
                                 <h3>
                                     {this.state.type === "planning"
-                                        ? "Autres professeurs"
-                                        : "Autres salles"}
-                                    {" à afficher "}
+                                        ? this.props.t("container.otherTeachers")
+                                        : this.props.t("container.otherRooms")}
+                                    {" "}{this.props.t("container.toDisplay")}{" "}
 
                                     {this.props.room ? (
                                         <small>
@@ -1420,7 +1423,7 @@ class Planning extends React.Component {
                                                         )
                                                     }
                                                 />
-                                                {"Toutes les salles)"}
+                                                {this.props.t("container.allRooms")}{")"}
                                             </label>
                                         </small>
                                     ) : null}
@@ -1455,7 +1458,7 @@ class Planning extends React.Component {
                             <div className="flex flex-end-aligned">
                                 <button
                                     className="btn btn-primary m-r"
-                                    data-tippy-content="Réinitialiser les filtres"
+                                    data-tippy-content={this.props.t("container.resetFilters")}
                                     onClick={() => {
                                         if (this.props.room) {
                                             this.updateTargets([this.props.room.id]);
@@ -1472,7 +1475,7 @@ class Planning extends React.Component {
                                         className="btn btn-primary"
                                         data-toggle="modal"
                                         data-target="#room-activities-modal"
-                                        data-tippy-content="Activités de cette salle">
+                                        data-tippy-content={this.props.t("container.roomActivitiesTooltip")}>
                                         <i className="fas fa-list"/>
                                     </button>
                                 }
@@ -1589,7 +1592,7 @@ class Planning extends React.Component {
                     ariaHideApp={false}
                     className="test2"
                     style={{content: {overflow: "auto"}}}
-                    contentLabel="Detail d'un créneau"
+                    contentLabel={this.props.t("container.modals.slotDetail")}
                 >
                     <MultiViewModal
                         onClose={() => this.closeMultiViewModal()}
@@ -1623,7 +1626,7 @@ class Planning extends React.Component {
                     onAfterOpen={() => this.afterOpenCreationModal()}
                     onRequestClose={() => this.closeCreationModal()}
                     className="test"
-                    contentLabel="Creation d'un créneau"
+                    contentLabel={this.props.t("container.modals.slotCreation")}
                 >
                     <CreateIntervalModal
                         recurrenceActivated={this.props.recurrenceActivated}
@@ -1656,7 +1659,7 @@ class Planning extends React.Component {
                     ariaHideApp={false}
                     className="test2"
                     style={{content: {overflow: "auto"}}}
-                    contentLabel="Detail d'un créneau"
+                    contentLabel={this.props.t("container.modals.slotDetail")}
                 >
                     <ActivityDetailsModal
                         interval={
@@ -1769,7 +1772,7 @@ class Planning extends React.Component {
                     isOpen={this.state.isPauseDetailModalOpen && this.state.selectedPauseInterval}
                     onRequestClose={this.closePauseDetailModal.bind(this)}
                     className="test"
-                    contentLabel="Détail de la pause"
+                    contentLabel={this.props.t("pauseDetailModal.title")}
                 >
                     {this.state.selectedPauseInterval && (
                         <PauseDetailModal
@@ -1789,4 +1792,4 @@ class Planning extends React.Component {
 
 Planning.propTypes = propTypes;
 
-export default Planning;
+export default withTranslation("planning")(Planning);
