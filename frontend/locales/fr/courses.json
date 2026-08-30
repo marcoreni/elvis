@@ -23,10 +23,21 @@
         "stepName": "Choix du créneau"
     },
     "addTeacher": {
-        "stepName": "Choix du professeur"
+        "stepName": "Choix du professeur",
+        "teacherLabel": "Professeur",
+        "addTeacherTooltip": "Ajouter un professeur",
+        "noTeacherForActivity": "Aucun professeur n'enseigne l'activité choisie.",
+        "noAvailabilities": "Ce professeur n'a pas renseigné de disponibilités.",
+        "notAvailableWholeSlot": "Ce professeur n'est pas disponible sur l'ensemble du créneau choisi",
+        "availableInstead": "En revanche, il est disponible de {{start}} à {{end}} ce même jour",
+        "slotBusy": "Ce créneau est déjà occupé pour ce professeur: cours de {{activity}} de {{start}} à {{end}} - {{room}}."
     },
     "addLocation": {
-        "stepName": "Choix du lieu"
+        "stepName": "Choix du lieu",
+        "filterBySite": "Filtrer par site",
+        "addLocationTooltip": "Ajouter un lieu",
+        "room": "Salle",
+        "addRoomTooltip": "Ajouter une salle"
     },
     "summary": {
         "title": "Récapitulatif",

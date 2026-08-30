@@ -223,6 +223,7 @@ class AddCourse extends React.Component {
                 name: t("addTeacher.stepName"),
                 component: (
                     <AddTeacherForCourse
+                        t={t}
                         initialValues={{
                             activityRefId: activityRef ? activityRef.id : "",
                             teacherId: teacher ? teacher.id : undefined,
@@ -245,6 +246,7 @@ class AddCourse extends React.Component {
                 name: t("addLocation.stepName"),
                 component: (
                     <AddLocationForCourse
+                        t={t}
                         initialValues={{
                             activityRefId: activityRef ? activityRef.id : "",
                             roomId: room ? room.id : undefined,

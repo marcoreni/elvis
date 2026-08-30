@@ -448,6 +448,15 @@ admin CRUD) — preserved verbatim from the ERB/React sources:
 - `views.activity_ref.new.heading` = "Ajouter une **A**ctivité" while `views.activity_ref.index.add`
   = "Ajouter une **a**ctivité" — same phrase, inconsistent capital, both preserved verbatim
 
+`frontend/locales/fr/courses.json` (added by feature/i18n-06-extract-courses-lot2 —
+`AddTeacherForCourse.jsx`):
+- `addTeacher.slotBusy` — source template literal read
+  `Ce créneau est déjà occupé pour ce professeur:\n     cours de ${activity_ref} de ${start} à ${end}  - ${room}.`
+  The newline + indent run and the double space before `-` were whitespace artifacts of the JS
+  template literal and were collapsed to single spaces during extraction (no visible change —
+  HTML collapses them anyway). The string is otherwise preserved verbatim, including the missing
+  French space before the colon: `professeur:` → `professeur :` (still a typo, still pending).
+
 Also re-scan the whole `frontend/locales/fr/` + `config/locales/fr.yml` when doing this (grep for
 `Edition\b`, `Editer\b`, `Selectionn`, `réglement`, `Echéance`, `Echec`, `Emmeteur`, `Precedent`,
 `Creer\b`, `verouiller`, `Resolution\b`); the list above is only what was noticed in passing, not

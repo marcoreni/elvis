@@ -595,8 +595,17 @@ et à mesure de son intégration :
           (Vitest, pattern `i18n.changeLanguage`, fr + en), 10 tests.
     - [x] **Vérification** : `yarn test` → 36 fichiers / 129 tests, verts.
           `bin/i18n-tasks health` → 0 manquant / 0 inutilisé (aucun `.yml` touché ce lot).
-    - [ ] **Lot 2** — `AddLocationForCourse.jsx` + `AddTeacherForCourse.jsx` (étapes 3–4 de
-          l'assistant, mêmes classes StepZilla nues).
+    - [x] **Lot 2** — branche `feature/i18n-06-extract-courses-lot2`. Étapes « lieu » et
+          « professeur » de l'assistant : `AddLocationForCourse.jsx` + `AddTeacherForCourse.jsx`,
+          classes StepZilla nues, `t` passé en prop depuis `AddCourse`. +11 clés `courses`
+          (`addLocation.*` / `addTeacher.*`, 39 au total, parité fr/en). `addTeacher.slotBusy` /
+          `addTeacher.availableInstead` portent de l'interpolation
+          (`{{activity}}`/`{{start}}`/`{{end}}`/`{{room}}`). Réutilise `addLocation.stepName`,
+          `addTeacher.stepName`, `common:actions.validate`. Litéral template de `slotBusy` avait
+          un retour à la ligne + indentation parasites (normalisés) et `professeur:` sans espace
+          insécable (préservé verbatim, consigné dans `docs/KnownIssues.md`). Tests Vitest
+          (2 fichiers, gardes classe-nue + résolution des clés interpolées), 12 tests.
+          **Vérification** : `yarn test` → 38 fichiers / 141 tests, verts.
     - [ ] **Lot 3** — `AddSlotForCourse.jsx` (~42 chaînes) + `DeleteCourseModal.jsx` (~26 chaînes).
     - [ ] **Lot 4** — `LessonList.jsx` (1415 lignes).
   - [x] `formules` — branche `feature/i18n-06-extract-formules` *(dépend de 01+02)*

@@ -101,6 +101,8 @@ export default class AddLocationForCourse extends React.Component {
     }
 
     isValidated() {
+        // NB: when MESSAGES.* is eventually i18n'd, this non-render method will need its own
+        // `const { t } = this.props;` — it has none today because MESSAGES is still hardcoded.
         if (!this.state.roomId) {
             toast.error(MESSAGES.err_must_choose_room, { autoClose: 3000 });
             return false;
@@ -109,6 +111,7 @@ export default class AddLocationForCourse extends React.Component {
     }
 
     render() {
+        const { t } = this.props;
         const {
             roomId,
             locationId,
@@ -124,7 +127,7 @@ export default class AddLocationForCourse extends React.Component {
                     <div className="ibox">
                         <div className="ibox-title flex">
                             <i className="fa fa-map-marker m-sm"></i>
-                            <h3>Choix du lieu</h3>
+                            <h3>{t("addLocation.stepName")}</h3>
                         </div>
                         <div className="ibox-content">
                             <div className="row">
@@ -186,13 +189,13 @@ export default class AddLocationForCourse extends React.Component {
                                                 value: locationId,
                                             }}
                                             meta={{}}
-                                            label="Filtrer par site"
+                                            label={t("addLocation.filterBySite")}
                                             options={locationOptions}
                                             button={{
                                                 icon: "fa fa-plus-circle",
                                                 href_path: `${href_path}/locations/new`,
                                                 text: "",
-                                                tooltip: "Ajouter un lieu",
+                                                tooltip: t("addLocation.addLocationTooltip"),
                                             }}
                                         />
                                     )}
@@ -208,14 +211,14 @@ export default class AddLocationForCourse extends React.Component {
                                                 value: roomId,
                                             }}
                                             meta={{}}
-                                            label="Salle"
+                                            label={t("addLocation.room")}
                                             required={true}
                                             options={roomsOptions}
                                             button={{
                                                 icon: "fa fa-plus-circle",
                                                 href_path: `${href_path}/rooms/new`,
                                                 text: "",
-                                                tooltip: "Ajouter une salle",
+                                                tooltip: t("addLocation.addRoomTooltip"),
                                             }}
                                         />
                                     )}
@@ -231,7 +234,7 @@ export default class AddLocationForCourse extends React.Component {
                     />
                 </div>
                 <button className="btn btn-primary btn-md submit-activity">
-                    {"Valider"}
+                    {t("common:actions.validate")}
                 </button>
             </div>
         );
