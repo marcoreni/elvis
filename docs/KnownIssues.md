@@ -453,9 +453,9 @@ admin CRUD) — preserved verbatim from the ERB/React sources:
 - `addTeacher.slotBusy` — source template literal read
   `Ce créneau est déjà occupé pour ce professeur:\n     cours de ${activity_ref} de ${start} à ${end}  - ${room}.`
   The newline + indent run and the double space before `-` were whitespace artifacts of the JS
-  template literal and were normalized to single spaces during extraction. The missing space
-  before the colon (`professeur:` → `professeur :`) was **corrected inline** to match the repo's
-  French typography convention (space before `:`), not preserved. `professeur:` → `professeur :`
+  template literal and were collapsed to single spaces during extraction (no visible change —
+  HTML collapses them anyway). The string is otherwise preserved verbatim, including the missing
+  French space before the colon: `professeur:` → `professeur :` (still a typo, still pending).
 
 Also re-scan the whole `frontend/locales/fr/` + `config/locales/fr.yml` when doing this (grep for
 `Edition\b`, `Editer\b`, `Selectionn`, `réglement`, `Echéance`, `Echec`, `Emmeteur`, `Precedent`,

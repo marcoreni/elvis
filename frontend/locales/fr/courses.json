@@ -30,7 +30,7 @@
         "noAvailabilities": "Ce professeur n'a pas renseigné de disponibilités.",
         "notAvailableWholeSlot": "Ce professeur n'est pas disponible sur l'ensemble du créneau choisi",
         "availableInstead": "En revanche, il est disponible de {{start}} à {{end}} ce même jour",
-        "slotBusy": "Ce créneau est déjà occupé pour ce professeur : cours de {{activity}} de {{start}} à {{end}} - {{room}}."
+        "slotBusy": "Ce créneau est déjà occupé pour ce professeur: cours de {{activity}} de {{start}} à {{end}} - {{room}}."
     },
     "addLocation": {
         "stepName": "Choix du lieu",

@@ -125,3 +125,30 @@ describe("AddTeacherForCourse — no teacher teaches the activity", () => {
         await waitFor(() => expect(global.fetch).toHaveBeenCalled());
     });
 });
+
+// The two interpolated keys (slotBusy: 4 placeholders, availableInstead: 2) sit in render
+// branches driven by hard-to-fixture date math, but a placeholder rename in the JSON fails
+// silently (i18next substitutes "" for an unknown name, no throw). Guard them at the i18n layer
+// against the exact args the component passes at AddTeacherForCourse.jsx render().
+describe("interpolated keys resolve with the component's call-site args", () => {
+    const cases = [
+        ["addTeacher.slotBusy", {activity: "Piano", start: "10h00", end: "11h00", room: "Salle 1"}],
+        ["addTeacher.availableInstead", {start: "14h00", end: "16h00"}],
+    ];
+
+    for (const lng of ["fr", "en"]) {
+        for (const [key, args] of cases) {
+            test(`${lng} · ${key}`, async () => {
+                await i18n.changeLanguage(lng);
+                const t = i18n.getFixedT(lng, "courses");
+                const out = t(key, args);
+
+                expect(out).not.toMatch(/\{\{|\}\}/); // no unfilled placeholder
+                expect(out).not.toBe(key); // key actually resolved
+                for (const v of Object.values(args)) {
+                    expect(out).toContain(v); // every supplied value landed
+                }
+            });
+        }
+    }
+});
