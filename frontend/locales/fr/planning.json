@@ -178,6 +178,7 @@
         "otherTeacherLabel": "Autre professeur",
         "chooseTeacher": "Choisir un Professeur",
         "teacherBusy": "Le professeur \"{{name}}\" est déjà occupé durant ce créneau horaire ({{from}} - {{to}})",
+        "roomBusy": "La salle {{room}} est déjà occupée de {{from}} à {{to}}",
         "startLabel": "Début",
         "endLabel": "Fin",
         "activityLabel": "Activité",
@@ -214,5 +215,24 @@
         "noSubstitute": "PAS DE REMPLAÇANT",
         "hoursCountedForAbsent": "Heures comptées pour le professeur absent ?",
         "noMainTeacher": "Aucun professeur principal pour ce cours"
+    },
+    "practice": {
+        "today": "aujourd'hui",
+        "rooms": "Salles",
+        "slot": "Créneau",
+        "date": "Date:",
+        "startShort": "début:",
+        "endShort": "fin:",
+        "notImplemented": "non implémenté",
+        "invalidDate": "la date n'est pas valide",
+        "modals": {
+            "slotEdit": "Modification d'un créneau"
+        },
+        "handleSessions": {
+            "title": "Édition de réservation"
+        },
+        "multiView": {
+            "title": "Création d'une réservation"
+        }
     }
 }

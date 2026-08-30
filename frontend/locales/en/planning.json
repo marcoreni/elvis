@@ -178,6 +178,7 @@
         "otherTeacherLabel": "Other teacher",
         "chooseTeacher": "Choose a teacher",
         "teacherBusy": "Teacher \"{{name}}\" is already busy during this time slot ({{from}} - {{to}})",
+        "roomBusy": "Room {{room}} is already busy from {{from}} to {{to}}",
         "startLabel": "Start",
         "endLabel": "End",
         "activityLabel": "Activity",
@@ -214,5 +215,24 @@
         "noSubstitute": "NO SUBSTITUTE",
         "hoursCountedForAbsent": "Hours counted for the absent teacher?",
         "noMainTeacher": "No main teacher for this course"
+    },
+    "practice": {
+        "today": "today",
+        "rooms": "Rooms",
+        "slot": "Slot",
+        "date": "Date:",
+        "startShort": "start:",
+        "endShort": "end:",
+        "notImplemented": "not implemented",
+        "invalidDate": "the date is not valid",
+        "modals": {
+            "slotEdit": "Editing a slot"
+        },
+        "handleSessions": {
+            "title": "Editing a booking"
+        },
+        "multiView": {
+            "title": "Creating a booking"
+        }
     }
 }

@@ -481,7 +481,29 @@ et à mesure de son intégration :
           rendus/appelés) — extraits quand même, consignés. `TimeSelection`/`LocationSelection`/
           `RoomSelection`/`TeacherCoveringEditor` exportés pour le test (le modal ne monte pas en
           jsdom). Test : `ActivityDetailsModal.test.jsx` (agent `qa`).
-    - [ ] **Lot 6** : sous-arbres `activity_management/*` + `practice_planning/*`.
+    - [x] **Lot 6** : branche `feature/i18n-06-extract-planning-subtrees`.
+      - `practice_planning/` (le seul vivant) : `PracticePlanning.jsx` (monté par
+        `app/views/practice/planning/index.html.erb`) + ses 2 modales `PracticeHandleSessions` /
+        `PracticeMultiViewModel` → `withTranslation("planning")`, `t` lu dans `render()` (prop
+        pour les modales). Nouvelles clés `planning.practice.*` (11) ; réutilise
+        `activityModal.{roomLabel,startLabel,endLabel}`, `multiViewModal.group`,
+        `container.modals.slotDetail`, `common:actions.{cancel,save,delete}`. Données de démo
+        (`RESSOURCES`/`ROOMS`/`BANDS`/`INITIAL_EVENTS` — « Stax », « Rolling Stones »,
+        « All-day event »… référencées nulle part) NON traduites. `locale="fr"` de FullCalendar
+        laissé tel quel — mais inerte (aucune locale FullCalendar importée → repli sur l'anglais) :
+        consigné dans `docs/KnownIssues.md`. Traduction : agent `translator`. Test : agent `qa`
+        (dont un garde-fou `WrappedComponent` sur `PracticePlanning`). L'alerte « salle déjà
+        occupée » d'`ActivityDetailsModal.jsx` (ratée au lot 5) extraite au passage
+        (`activityModal.roomBusy`, parité 176/176).
+      - `activity_management/` : **tout le sous-arbre est mort sauf `withSave`** (le container
+        `ActivityManagement` n'est monté nulle part ; `ActivityDetailsModal.jsx` a ses propres
+        copies inline des composants). Non traduit, consigné dans `docs/KnownIssues.md`.
+    - **Domaine `planning` — extraction terminée**, sauf :
+      - **Lot 3c** (`TimeIntervalHelpers.jsx`) — toujours à faire : passe transverse dédiée
+        (« Evaluation »/« Dispo. Evaluation »/« Disponibilité » titres de créneaux, « NON INDIQUÉ »/
+        « À PRÉCISER » de `levelDisplay`) ; helper appelé depuis 4+ domaines.
+      - `ConflictDisplayItem` de `Calendar.jsx` (« Résolu »/« Voir le conflit ») — code mort,
+        déjà consigné dans `docs/KnownIssues.md`.
   - [ ] `activities`
   - [x] `evaluation` — branche `feature/i18n-06-extract-evaluation` *(dépend de 01+02)*
     - [x] `frontend/components/evaluation/` : `Evaluation.jsx`, `EvaluationForm.jsx`,

@@ -298,6 +298,43 @@ Surfaced 2026-08-30 during the i18n-06 planning lot 3b (`Calendar.jsx`) extracti
   outlives a locale change. Fix (if it ever matters) = destroy + recreate the tui-calendar
   instance on `languageChanged`.
 
+## `planning/practice_planning/PracticePlanning.jsx` — FullCalendar `locale="fr"` is inert
+
+Noted 2026-08-30 (i18n-06 lot 6). `PracticePlanning` passes `locale="fr"` to `<FullCalendar>`,
+but **no FullCalendar locale data is imported anywhere** (`@fullcalendar/core/locales/fr` /
+`locales-all` — grep is empty). So `queryLocale(["fr"])` falls back to the built-in English
+locale table: month/day names and the toolbar title still render French (those go through
+`Intl.DateTimeFormat`, locale-table-independent), but FullCalendar's own chrome — the
+`resourceTimelineDay` / `resourceTimelineWeek` view buttons, `allDayText`, `moreLinkText`,
+`noEventsText` — renders in **English** even in the French UI. That is almost certainly why
+`buttonText={{today: t("practice.today")}}` is patched in by hand. `locale="fr"` is also
+hardcoded, so it won't follow `i18n.changeLanguage` (same frozen-locale class as the
+`columns`/`daynames` notes here). Fix = `import frLocale from "@fullcalendar/core/locales/fr"`
+and drive `locale` from the active i18n language.
+
+## `planning/activity_management/` — the whole subtree is dead except `withSave`
+
+Confirmed 2026-08-30 during i18n-06 planning lot 6. `activity_management/index.jsx` exports two
+things:
+
+- `withSave` (named) — **live**, imported by `ActivityDetailsModal.jsx`.
+- `ActivityManagement` (default `class`, ~660 lines) — mounted **nowhere** (`react_component`
+  never names it; no `.jsx` imports the default). It is the only consumer of its siblings
+  `attendance_table.jsx`, `activity_edition.jsx`, `edit_group_name_input.jsx`,
+  `recurrences_editor.jsx`, `teacher_covering_editor.jsx`. `teachers_editor.jsx` is imported by
+  nothing at all.
+
+`ActivityDetailsModal.jsx` carries its own inline `AttendanceTable` / `ActivityEdition` /
+`EditGroupNameInput` / `TeacherCoveringEditor` / `TeachersEditor` — those are the live ones. This
+subtree is an abandoned extract-into-files refactor. i18n lot 6 left it **untranslated** (per the
+recover-don't-delete policy); when someone audits it, keep `withSave` and delete the rest.
+
+`withSave`'s `label = "Enregistrer"` default param is still a hardcoded string. There are 7
+`withSave(` call sites total; the 3 **live** ones (all in `ActivityDetailsModal.jsx` after lot 5,
+`:965`/`:1013`/`:1025`) each pass an explicit translated `label`, so the default is unreachable
+from live code. The other 4 are in the dead `activity_management/index.jsx` (2 of them pass no
+`label`). If the subtree is kept, change the default to `null`.
+
 ## `planning/ActivityDetailsModal.jsx` — dead `TeachersEditor` + `renderTeacherSelection`
 
 Surfaced 2026-08-30 during the i18n-06 planning lot 5 extraction. Both are defined but never
