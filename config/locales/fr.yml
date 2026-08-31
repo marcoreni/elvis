@@ -296,6 +296,10 @@ fr:
                 heading: Créer une formule
             edit:
                 heading: Modifier une formule
+        parameters:
+            index:
+                heading: Paramètres
+                edit: Editer
         payment_method:
             index:
                 heading: Moyens de paiement

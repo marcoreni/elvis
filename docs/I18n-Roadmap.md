@@ -519,9 +519,9 @@ et à mesure de son intégration :
           verbatim (`Editer` → `Éditer` ; `destroy_error_title` = « Error » en dur ;
           `Nom_de_l'instrument` ; « Ajouter une Activité »/« activité » casse incohérente) —
           consignées. `f.label` corrigé pour prendre `:attr, texte` (pas `texte` seul).
-          **NB** : `parameters/BaseDataTable.jsx` (classe de base des 2 tableaux) a son propre
-          chrome FR en dur (« Créer » + props react-table) alors que `common:reactTable.*` existe
-          déjà — à faire quand le domaine `parameters` sera traité, pas ici.
+          **NB** : `parameters/BaseDataTable.jsx` (classe de base des tableaux CRUD) avait son
+          propre chrome FR en dur (« Créer » + props react-table) — **fait dans `parameters` lot A**
+          (`common:actions.create` + `common:reactTable.*`, via le singleton `i18n`).
     - [x] **Lot 2 — `activityRef/` (formulaire édition/création d'activité)** — arbre React sous
           `frontend/components/activityRef/`, découpé en 3 sous-lots (PR #33/#34/#35). Namespace
           `activities` → 74 feuilles.
@@ -822,9 +822,58 @@ et à mesure de son intégration :
     - [ ] **Tests** : `Formules.test.jsx`, `EditFormule.test.jsx` (Vitest, pattern `i18n.changeLanguage`),
           `spec/requests/formules_pages_spec.rb` (index/new/edit fr+en, garde anti-`"translation missing"`).
     - [ ] **Vérification** : `bin/i18n-tasks health`, `bundle exec rspec`, `yarn test`, `/code-review`.
-  - [ ] `parameters` / `editParameters` restants — inclut aussi : `parameters/BaseDataTable.jsx`
-        (chrome FR en dur, cf. lot activities 1), `parameters/Practice/Instruments.jsx` (2e
-        tableau « Instruments » distinct, colonnes `#`/`Nom`/`Actif ?`/`Actions`, encore en FR).
+  - [~] `parameters` — **toute la zone de réglages admin** : ~40 composants React
+        (`frontend/components/parameters/**`, ~4100 lignes, 9 sous-dossiers) + ~20 vues ERB
+        (`app/views/parameters/**`). Bien plus gros que ne le disait l'ancienne note (« ~2 React +
+        ~7 ERB » était faux). **Nouveau namespace i18next `parameters`**, découpé en ~5 sous-lots
+        par sous-dossier, 1 PR revue chacun (même modèle que `activities` lot 3 / `payments` /
+        `planning`) :
+    - [x] **Lot A — chrome partagé** — branche `feature/i18n-06-parameters-lot-a`, commit `c1f1884`.
+          `BaseDataTable.jsx` (classe de base de ~15 tableaux CRUD → lit le singleton `i18n`, PAS
+          `withTranslation` sinon la chaîne `extends BaseDataTable` casse ; « Créer » →
+          `common:actions.create` nouveau, props ReactTable → `common:reactTable.*` existant) ; les
+          8 wrappers d'onglet `*Parameters.jsx` (5 classes
+          Community/Rooms/Evaluations/Payments/Practice → `withTranslation("parameters")`, `props.t`
+          dans le constructeur ; 3 fn Plannings/Activities/ActivityApplications →
+          `useTranslation("parameters")`) ; `app/views/parameters/index.html.erb` →
+          `views.parameters.index.{heading,edit}`. `BaseParameters.jsx` : rien à extraire (ses seules
+          chaînes viennent de `props.tabsNames`/`props.divObjects`). Namespace câblé dans
+          `frontend/i18n/index.js` + `index.test.js`. `frontend/locales/{fr,en}/parameters.json` =
+          28 feuilles. `ParametersChrome.test.jsx` (23 tests). Revue : 0 bug de correction ;
+          suivis consignés (voir ci-dessous).
+    - [ ] **Lot B — `Practice/*`** : BandsType, Features, FlatRate, Groups, Instruments (2e tableau
+          « Instruments » distinct de celui d'activities lot 1, colonnes `#`/`Nom`/`Actif ?`/
+          `Actions`), Materials, MusicGenres + `pratice_parameters/index.html.erb`. (PracticeParameters
+          fait en lot A.)
+    - [ ] **Lot C — `Payments/*`** (8 comp) : AdhesionSettings, AdhesionEditModal, Coupons,
+          CouponFormContent, CouponsActionButtons, EditPaymentScheduleOptions, PaymentsMethods,
+          PaymentsStatus + `payments_parameters/index.html.erb`. Clés sous
+          `parameters`, PAS sous le namespace `payments` (domaine distinct : réglages vs écrans).
+          (PaymentsParameters + les tab labels faits en lot A.)
+    - [ ] **Lot D — `ActivityApplications/*`** (5 comp) : ApplicationParameters,
+          ApplicationStatusTable, ApplicationStepParameters, ConsentDocumentModal,
+          ConsentDocumentsList + les 5 ERB
+          `activity_application_parameters/{index,edit,show,update,destroy}.html.erb`.
+          (ActivityApplicationsParameters + tab labels + `stepDesc.*` faits en lot A.)
+    - [ ] **Lot E — le reste** : `Plannings/*` (4 : SchoolAvailabilities, TeacherAvailabilities,
+          CancelActivityParameters, PlanningDisplayParameters), `Evaluations/*` (2 : EvaluationLevels,
+          EvaluationSlot), `Rooms/*` (1 : Localisations), `Localization/*` (1, a déjà un `.test.jsx`),
+          `Activities/*` (2 : PricingCategoriesEdit, PricingCategoryFormContent), `Community/*` (0 —
+          MergeUsers est sous `scripts/mergeUsers/`, hors périmètre) + les
+          ERB d'édition restants (`school_parameters_edit`, `teachers_parameters_edit`,
+          `rules_parameters_edit`, `mails_parameters_edit`, `csv_parameters_edit`,
+          `formules_parameters_edit`, `community_parameters`, `evaluation_parameters`,
+          `planning_parameters`, `rooms_parameters`, `localization_parameters`).
+          (Les 8 `*Parameters.jsx` wrappers faits en lot A.)
+    - [ ] **Lot F (à cadrer) — `ParametersController#set_base_parameters`** : la page `/parameters`
+          reste ~90 % en français APRÈS lot A, car tout ce qu'elle affiche vient du contrôleur —
+          `app/controllers/parameters_controller.rb` ~359-408 : ~6 titres de cartes (« Votre école »,
+          « Langues », « Emails », « Exports CSV », « Notifications », « Professeurs », « Formules »)
+          + leurs `text`, et les 2 en-têtes de section rendus par `index.html.erb:10` via
+          `key.to_s.humanize` sur les clés symboles `:général` / `:personnalisation`. Ces clés
+          symboles sont un **point d'extension plugin** (les plugins poussent dans
+          `@parameters[:général]`), donc pas renommables en ASCII sans décision de conception —
+          d'où un lot dédié.
   - [~] `payments` — **branche `feature/i18n-06-extract-payments` : 1er lot fait, reste à
         découper.** Le domaine `payments` est bien plus gros que les autres (~19 vues ERB, ~31
         composants React), donc découpé :
@@ -937,8 +986,10 @@ et à mesure de son intégration :
         Bug préexistant repéré (non corrigé, hors périmètre extraction) : `PayerPaymentTerms.jsx`
         utilise `_.uniq` dans `handleAddPayer` sans importer `lodash` → `ReferenceError` à l'ajout
         d'un payeur — à consigner / corriger séparément.
-    - [ ] **`parameters/Payments/*` (12 composants) + `app/views/parameters/payments_parameters/index.html.erb`**
-          rattachés au domaine `parameters`, pas `payments` — à faire dans la branche `parameters`.
+    - [~] **`parameters/Payments/*` + `app/views/parameters/payments_parameters/index.html.erb`**
+          rattachés au domaine `parameters`, pas `payments` — `PaymentsParameters` + les tab labels
+          faits en `parameters` lot A ; les 8 composants restants = `parameters` lot C (voir le
+          découpage lot A–F plus haut).
   - [ ] (compléter cette liste au fur et à mesure que d'autres domaines sont identifiés)
 
 Seules 01 et 02 bloquent les branches d'extraction ; à partir de 03 tout est mutuellement

@@ -1,4 +1,5 @@
 import React from "react";
+import {withTranslation} from "react-i18next";
 import PaymentsMethods from "./PaymentsMethods";
 import BaseParameters from "../BaseParameters";
 import AdhesionSettings from './AdhesionSettings';
@@ -6,17 +7,17 @@ import EditPaymentScheduleOptions from "./EditPaymentScheduleOptions";
 import Coupons from "./Coupons";
 import PricingCategoriesEdit from "../Activities/PricingCategoriesEdit";
 
-export default class PaymentsParameters extends BaseParameters {
+class PaymentsParameters extends BaseParameters {
     constructor(props) {
         super(props);
 
         this.state.tabsNames = [
-            'Adhésion',
+            props.t("payments.tabs.adhesion"),
             /*'Statuts de paiements',*/
-            'Moyens de paiements',
-            'Catégories de prix',
-            'Modalités de paiement',
-            'Taux de remise'
+            props.t("payments.tabs.paymentMethods"),
+            props.t("payments.tabs.pricingCategories"),
+            props.t("payments.tabs.paymentTerms"),
+            props.t("payments.tabs.discountRate")
         ];
 
         this.state.divObjects = [
@@ -36,3 +37,5 @@ export default class PaymentsParameters extends BaseParameters {
         ];
     }
 }
+
+export default withTranslation("parameters")(PaymentsParameters);

@@ -1,6 +1,6 @@
 <div class="row wrapper border-bottom white-bg page-heading m-b-md">
   <h2>
-    Paramètres
+    <%= t("views.parameters.index.heading") %>
   </h2>
 </div>
 
@@ -27,7 +27,7 @@
               <% end %>
             </p>
             <div class="w-100 text-right">
-              <a class="btn btn-primary" href="<%= parameter[:link] %>">Editer</a>
+              <a class="btn btn-primary" href="<%= parameter[:link] %>"><%= t("views.parameters.index.edit") %></a>
             </div>
           </div>
         </div>

@@ -380,6 +380,16 @@ Same pattern (added by i18n-06 activities lot 1): `activities/ActivityRefKind.js
 constructor. Harmless for the same reason (full-reload locale switch); `BaseDataTable` reads
 `this.state.columns` so moving the build needs the same care.
 
+Same pattern again (added by i18n-06 `parameters` lot A): the settings-area chrome resolves its
+strings once and never re-derives on `languageChanged` —
+- `parameters/BaseDataTable.jsx` reads the bare `i18n` singleton (`i18n.t("common:actions.create")`
+  + the 7 `common:reactTable.*` props) — it can't be `withTranslation`-wrapped because ~15 CRUD
+  tables `extends BaseDataTable`.
+- The 5 class tab-wrappers (`Community`/`Rooms`/`Evaluations`/`Payments`/`Practice` `*Parameters.jsx`)
+  build `this.state.tabsNames` from `props.t(...)` in the **constructor**; `BaseParameters.render()`
+  reads `this.state.tabsNames`.
+Harmless for the same full-reload reason. Fix alongside the rest of this section.
+
 ## French typos preserved verbatim during i18n extraction — clean up the locale files
 
 The i18n branches copy every French string **verbatim** into the locale files (no copy changes
@@ -886,3 +896,32 @@ still read three shared French-only constants that were left as-is:
 pass in its own right (a `common:` namespace + a `useTranslation`/prop for the class consumers),
 not something to fix piecemeal inside one domain lot. Left verbatim for now; logged here so a
 later "constants i18n" lot picks them all up together. Grep: `from "../../tools/constants"`.
+
+## `parameters` domain (i18n-06) — French source strings preserved verbatim
+
+`config/locales/fr.yml` (added by feature/i18n-06-parameters-lot-a — `parameters` lot A, the
+settings-index ERB) — preserved verbatim from `app/views/parameters/index.html.erb`:
+- `views.parameters.index.edit` — "Editer" → "Éditer" (missing accent on the leading "E"). Same
+  defect class as the activities lot-1 `views.activity_ref.edit.heading` = "Editer l'activité …"
+  entry above. Kept verbatim; the English side reads "Edit" (correct as-is).
+
+`frontend/locales/fr/parameters.json` (added by the same lot — new `parameters` namespace, the
+settings-screen tab labels; 28 leaves) — preserved verbatim from the `parameters/*Parameters.jsx`
+components:
+- `payments.tabs.paymentMethods` — "Moyens de paiements" → "Moyens de paiement" (number agreement:
+  the complement "de paiement" stays singular). The correct form already exists in this repo at
+  `config/locales/fr.yml` `views.payment_method.index.heading` = "Moyens de paiement". Kept
+  verbatim (different file / earlier lot, so the lot-internal unification rule does not apply);
+  the English side reads "Payment methods". Fold into the eventual cleanup pass.
+
+Noted, not logged as defects (acceptable French, kept as written): `practice.tabs.bandTypes` =
+"Type de groupes" and `practice.tabs.roomOptions` = "Option des salles" pair a singular head noun
+with a plural complement — idiomatic enough as "the type of groups" / "the [set of] room options",
+so preserved without change.
+
+Possible dead code (do not delete — "log, don't delete on looks-dead"): `parameters/Rooms/RoomsParameters.jsx`
+is not mounted by any core view (`parameters/rooms_parameters/index.html.erb` mounts
+`parameters/Rooms/Localisations` directly). Its only lot-A key, `parameters:rooms.tabs.siteList`,
+is therefore exercised only by the parity test, never rendered in-app. A plugin could still mount
+it via prepended routes. Candidate for the dead-code list alongside `planning/activity_management/`
+and `TeachersEditor`.

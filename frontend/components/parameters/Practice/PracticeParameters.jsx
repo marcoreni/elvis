@@ -1,5 +1,6 @@
 import BaseParameters from "../BaseParameters";
 import React from "react";
+import {withTranslation} from "react-i18next";
 import Groups from "./Groups";
 import BandsType from "./BandsType";
 import MusicGenres from "./MusicGenres";
@@ -8,13 +9,21 @@ import FlatRate from "./FlatRate";
 import Features from "./Features";
 import Instruments from "./Instruments";
 
-export default class PracticeParameters extends BaseParameters
+class PracticeParameters extends BaseParameters
 {
     constructor(props)
     {
         super(props);
 
-        this.state.tabsNames = ["Type de groupes", "Genre musical", "Gestion des groupes", "Matériels", "Forfaits", "Option des salles", "Instruments"];
+        this.state.tabsNames = [
+            props.t("practice.tabs.bandTypes"),
+            props.t("practice.tabs.musicGenre"),
+            props.t("practice.tabs.manageBands"),
+            props.t("practice.tabs.materials"),
+            props.t("practice.tabs.flatRates"),
+            props.t("practice.tabs.roomOptions"),
+            props.t("practice.tabs.instruments")
+        ];
         this.state.divObjects = [
             <BandsType
                 urlListData="/parameters/practice_parameters/list_band_types"
@@ -41,3 +50,5 @@ export default class PracticeParameters extends BaseParameters
                 urlNew="/instruments/new" />]
     }
 }
+
+export default withTranslation("parameters")(PracticeParameters);

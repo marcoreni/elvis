@@ -1,0 +1,64 @@
+{
+    "activities": {
+        "heading": "Paramétrage des catégories de prix",
+        "tabs": {
+            "pricingCategories": "Catégories de prix"
+        }
+    },
+    "activityApplications": {
+        "tabs": {
+            "statuses": "Statuts d'inscription",
+            "consentDocuments": "Documents de consentement à l'inscription",
+            "applicationSettings": "Paramètres d'inscription",
+            "applicationPath": "Parcours d'inscription"
+        },
+        "stepDesc": {
+            "pricing": "Message tarifs",
+            "availability": "Message disponibilités"
+        }
+    },
+    "community": {
+        "tabs": {
+            "mergeUsers": "Fusion d'utilisateurs"
+        }
+    },
+    "evaluations": {
+        "tabs": {
+            "levels": "Niveaux d'évaluation",
+            "slot": "Créneau d'évaluation"
+        }
+    },
+    "payments": {
+        "tabs": {
+            "adhesion": "Adhésion",
+            "paymentMethods": "Moyens de paiements",
+            "pricingCategories": "Catégories de prix",
+            "paymentTerms": "Modalités de paiement",
+            "discountRate": "Taux de remise"
+        }
+    },
+    "plannings": {
+        "tabs": {
+            "schoolAvailability": "Disponibilité de l'école",
+            "teachers": "Professeurs",
+            "cancelActivity": "Annulation des cours",
+            "displaySettings": "Paramètres d'affichage"
+        }
+    },
+    "practice": {
+        "tabs": {
+            "bandTypes": "Type de groupes",
+            "musicGenre": "Genre musical",
+            "manageBands": "Gestion des groupes",
+            "materials": "Matériels",
+            "flatRates": "Forfaits",
+            "roomOptions": "Option des salles",
+            "instruments": "Instruments"
+        }
+    },
+    "rooms": {
+        "tabs": {
+            "siteList": "Liste des sites"
+        }
+    }
+}

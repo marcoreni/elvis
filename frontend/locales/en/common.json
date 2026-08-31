@@ -6,7 +6,8 @@
     "validate": "Submit",
     "confirm": "Confirm",
     "send": "Send",
-    "add": "Add"
+    "add": "Add",
+    "create": "Create"
   },
   "loading": "Loading...",
   "confirm": {

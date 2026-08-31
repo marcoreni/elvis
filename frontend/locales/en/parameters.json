@@ -1,0 +1,64 @@
+{
+    "activities": {
+        "heading": "Configuring pricing categories",
+        "tabs": {
+            "pricingCategories": "Pricing categories"
+        }
+    },
+    "activityApplications": {
+        "tabs": {
+            "statuses": "Enrollment statuses",
+            "consentDocuments": "Enrollment consent documents",
+            "applicationSettings": "Enrollment settings",
+            "applicationPath": "Enrollment path"
+        },
+        "stepDesc": {
+            "pricing": "Pricing message",
+            "availability": "Availability message"
+        }
+    },
+    "community": {
+        "tabs": {
+            "mergeUsers": "Merge users"
+        }
+    },
+    "evaluations": {
+        "tabs": {
+            "levels": "Evaluation levels",
+            "slot": "Evaluation slot"
+        }
+    },
+    "payments": {
+        "tabs": {
+            "adhesion": "Membership",
+            "paymentMethods": "Payment methods",
+            "pricingCategories": "Pricing categories",
+            "paymentTerms": "Payment terms",
+            "discountRate": "Discount rate"
+        }
+    },
+    "plannings": {
+        "tabs": {
+            "schoolAvailability": "School availability",
+            "teachers": "Teachers",
+            "cancelActivity": "Course cancellation",
+            "displaySettings": "Display settings"
+        }
+    },
+    "practice": {
+        "tabs": {
+            "bandTypes": "Band types",
+            "musicGenre": "Music genre",
+            "manageBands": "Manage bands",
+            "materials": "Equipment",
+            "flatRates": "Flat rates",
+            "roomOptions": "Room options",
+            "instruments": "Instruments"
+        }
+    },
+    "rooms": {
+        "tabs": {
+            "siteList": "List of locations"
+        }
+    }
+}
