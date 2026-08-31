@@ -77,6 +77,32 @@
         "selectAmong_one": "Sélectionnez {{count}} activité parmi les suivantes:",
         "selectAmong_other": "Sélectionnez {{count}} activités parmi les suivantes:"
     },
+    "formulaChoice": {
+        "noDescription": "Aucune description",
+        "noActivitiesSelected": "Aucune activité sélectionnée",
+        "title": "Choix de la formule",
+        "price": "Prix",
+        "searchPlaceholder": "Rechercher",
+        "colPackage": "Formule",
+        "colEstimatedPrice": "Tarif estimé",
+        "noPackagesAvailable": "Aucune formule disponible",
+        "summary": "Récapitulatif",
+        "colDuration": "Durée",
+        "noPackagesSelected": "Aucune formule sélectionnée",
+        "estimatedTotal": "Total estimé:"
+    },
+    "activityChoice": {
+        "formulaPrefix": "Formule : {{name}}",
+        "title": "Choix de l'activité",
+        "duration": "Durée",
+        "searchPlaceholder": "Rechercher",
+        "colActivity": "Activité",
+        "colEstimatedPrice": "Tarif estimé",
+        "summary": "Récapitulatif",
+        "noActivitySelected": "aucune activité sélectionnée",
+        "estimatedTotal": "Total estimé",
+        "unpopularWarning": "Les inscriptions aux activités suivantes sont soumises à un nombre minimum d'élèves par cours:"
+    },
     "workGroupEditor": {
         "toAssign": "À assigner",
         "instrumentPlaceholder": "INSTRUMENT",

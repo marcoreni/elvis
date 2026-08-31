@@ -1,4 +1,5 @@
 import React, { Fragment, useState } from "react";
+import { useTranslation } from "react-i18next";
 import _ from "lodash";
 import WysiwygViewer from "../utils/WysiwygViewer";
 import { toast } from "react-toastify";
@@ -16,6 +17,7 @@ const FormulaChoice = ({
                            handleUpdateFormulaActivities,
                            allActivityRefs,
                        }) => {
+    const { t } = useTranslation("activityApplications");
     const [searchTerm, setSearchTerm] = useState("");
     const [priceOrder, setPriceOrder] = useState(null);
     const [activeFormula, setActiveFormula] = useState(null);
@@ -77,7 +79,7 @@ const FormulaChoice = ({
                 <td style={{ padding: "16px 12px" }}>
                     <div style={{ fontWeight: "bold", marginBottom: "10px" }}>{formula.name}</div>
                     <div style={{ fontSize: "1.1em", color: "#555" }}>
-                        {formula.description || "Aucune description"}
+                        {formula.description || t("formulaChoice.noDescription")}
                     </div>
                 </td>
                 <td style={{ position: "relative", textAlign: "center", verticalAlign: "middle" }}>
@@ -186,7 +188,7 @@ const FormulaChoice = ({
                 ) : (
                     <tr>
                         <td colSpan="4" className="text-center">
-                            Aucune activité sélectionnée
+                            {t("formulaChoice.noActivitiesSelected")}
                         </td>
                     </tr>
                 )}
@@ -242,7 +244,7 @@ const FormulaChoice = ({
             <div className="row">
                 <div className="col-xs-12 col-lg-6">
                     <h3 className="mb-4" style={{ color: "#8AA4B1" }}>
-                        Choix de la formule
+                        {t("formulaChoice.title")}
                     </h3>
                     <div className="d-inline-flex justify-content-between mt-1 mb-2 w-100">
                         <div>
@@ -256,7 +258,7 @@ const FormulaChoice = ({
                                 }}
                                 onClick={handlePriceOrderClick}
                             >
-                                Prix{" "}
+                                {t("formulaChoice.price")}{" "}
                                 <i
                                     className={`fas fa-caret-${
                                         priceOrder === "asc" ? "up" : "down"
@@ -277,7 +279,7 @@ const FormulaChoice = ({
                         >
                             <input
                                 type="text"
-                                placeholder="Rechercher"
+                                placeholder={t("formulaChoice.searchPlaceholder")}
                                 style={{
                                     border: "none",
                                     backgroundColor: "transparent",
@@ -299,7 +301,7 @@ const FormulaChoice = ({
                                 color: "white",
                             }}
                         >
-                            <th style={{ padding: "12px 16px" }}>Formule</th>
+                            <th style={{ padding: "12px 16px" }}>{t("formulaChoice.colPackage")}</th>
 
                             <th
                                 style={{
@@ -309,7 +311,7 @@ const FormulaChoice = ({
                                     padding: "12px 16px"
                                 }}
                             >
-                                Tarif estimé
+                                {t("formulaChoice.colEstimatedPrice")}
                             </th>
                         </tr>
                         </thead>
@@ -319,7 +321,7 @@ const FormulaChoice = ({
                         ) : (
                             <tr>
                                 <td colSpan="2" className="text-center">
-                                    Aucune formule disponible
+                                    {t("formulaChoice.noPackagesAvailable")}
                                 </td>
                             </tr>
                         )}
@@ -328,7 +330,7 @@ const FormulaChoice = ({
                 </div>
 
                 <div className="col-xs-12 col-lg-6">
-                    <h3 style={{ color: "#8AA4B1" }}>Récapitulatif</h3>
+                    <h3 style={{ color: "#8AA4B1" }}>{t("formulaChoice.summary")}</h3>
                     <table
                         className="table table-striped"
                         style={{ borderRadius: "12px", overflow: "hidden" }}
@@ -340,8 +342,8 @@ const FormulaChoice = ({
                                 color: "white",
                             }}
                         >
-                            <th style={{ padding: "12px 16px" }}>Formule</th>
-                            <th style={{ padding: "12px 16px" }}>Durée</th>
+                            <th style={{ padding: "12px 16px" }}>{t("formulaChoice.colPackage")}</th>
+                            <th style={{ padding: "12px 16px" }}>{t("formulaChoice.colDuration")}</th>
                             <th
                                 style={{
                                     position: "relative",
@@ -351,7 +353,7 @@ const FormulaChoice = ({
                                     padding: "12px 16px"
                                 }}
                             >
-                                Tarif estimé
+                                {t("formulaChoice.colEstimatedPrice")}
                             </th>
                             <th style={{ padding: "12px 16px" }}></th>
                         </tr>
@@ -360,7 +362,7 @@ const FormulaChoice = ({
                         {selectedRows.length === 0 ? (
                             <tr>
                                 <td colSpan="4" className="text-center">
-                                    Aucune formule sélectionnée
+                                    {t("formulaChoice.noPackagesSelected")}
                                 </td>
                             </tr>
                         ) : (
@@ -377,7 +379,7 @@ const FormulaChoice = ({
                                     fontWeight: "bold",
                                 }}
                             >
-                                Total estimé: {calculateTotalPrice().toFixed(2)}{" "}
+                                {t("formulaChoice.estimatedTotal")} {calculateTotalPrice().toFixed(2)}{" "}
                                 €
                             </div>
                         </div>

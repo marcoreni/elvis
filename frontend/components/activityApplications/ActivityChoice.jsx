@@ -1,5 +1,6 @@
 import React, {Fragment} from "react";
 import {useState} from "react";
+import {useTranslation} from "react-i18next";
 import _ from "lodash";
 
 import AdditionalStudentSelection from "./../AdditionalStudentSelection";
@@ -56,6 +57,7 @@ const ActivityChoice = ({
                             formulas,
                             selectedFormulaActivities,
                         }) => {
+    const {t} = useTranslation("activityApplications");
     const seasonStart = moment(season.start);
     const isInAgeRange = a => {
         if (a.activity_type === "child") {
@@ -315,7 +317,7 @@ const ActivityChoice = ({
         <Fragment key={`formula-${formula.id}`}>
             <tr style={{ color: "rgb(0, 51, 74)", backgroundColor: "#f5f5f5" }}>
                 <td style={{ fontWeight: "bold" }}>
-                    Formule : {formula.label}
+                    {t("activityChoice.formulaPrefix", {name: formula.label})}
                 </td>
                 <td className="text-center">-</td>
                 <td className="text-center">{formula.price}</td>
@@ -362,7 +364,7 @@ const ActivityChoice = ({
             <div className="row">
                 <div className="col-xs-12 col-lg-6">
                     <div>
-                        <h3 className="mb-4" style={{color: "#8AA4B1"}}>Choix de l'activité</h3>
+                        <h3 className="mb-4" style={{color: "#8AA4B1"}}>{t("activityChoice.title")}</h3>
                         <div className="d-inline-flex justify-content-between mt-1 mb-2 w-100">
                             <div>
                                 <button className="btn btn-xs" style={{
@@ -371,7 +373,7 @@ const ActivityChoice = ({
                                     color: '#00334A',
                                     padding: '4px 10px'
                                 }} onClick={handleDurationFilterClick}>
-                                    Durée <i
+                                    {t("activityChoice.duration")} <i
                                     className={`fas fa-caret-${durationFilter === 'asc' ? 'up' : 'down'}`}></i>
                                 </button>
                             </div>
@@ -386,7 +388,7 @@ const ActivityChoice = ({
                             }}>
                                 <input
                                     type="text"
-                                    placeholder="Rechercher"
+                                    placeholder={t("activityChoice.searchPlaceholder")}
                                     style={{border: 'none', backgroundColor: 'transparent'}}
                                     value={searchTerm}
                                     onChange={handleSearchChange}
@@ -399,9 +401,9 @@ const ActivityChoice = ({
                         <table className="table table-striped" style={{borderRadius: '12px', overflow: 'hidden'}}>
                             <thead>
                             <tr style={{backgroundColor: "#00334A", color: "white"}}>
-                                <th className="pl-4">Activité</th>
-                                <th>Durée</th>
-                                <th>Tarif estimé</th>
+                                <th className="pl-4">{t("activityChoice.colActivity")}</th>
+                                <th>{t("activityChoice.duration")}</th>
+                                <th>{t("activityChoice.colEstimatedPrice")}</th>
                                 <th></th>
                             </tr>
                             </thead>
@@ -416,15 +418,15 @@ const ActivityChoice = ({
                 <div className="col-xs-12 col-lg-6">
 
                     <div>
-                        <h3 style={{color: "#8AA4B1"}}>Récapitulatif</h3>
+                        <h3 style={{color: "#8AA4B1"}}>{t("activityChoice.summary")}</h3>
                     </div>
                     <div>
                         <table className="table table-striped" style={{borderRadius: '12px', overflow: 'hidden'}}>
                             <thead>
                             <tr style={{backgroundColor: "#00334A", color: "white"}}>
-                                <th className="pl-4">Activité</th>
-                                <th>Durée</th>
-                                <th>Tarif estimé</th>
+                                <th className="pl-4">{t("activityChoice.colActivity")}</th>
+                                <th>{t("activityChoice.duration")}</th>
+                                <th>{t("activityChoice.colEstimatedPrice")}</th>
                                 <th></th>
                             </tr>
                             </thead>
@@ -432,7 +434,7 @@ const ActivityChoice = ({
                             {selectedActivitiesAndPacksDisplay.length === 0 && selectedFormulasDisplay.length === 0 ? (
                                 <tbody>
                                 <tr>
-                                    <td colSpan="4" className="text-center">aucune activité sélectionnée</td>
+                                    <td colSpan="4" className="text-center">{t("activityChoice.noActivitySelected")}</td>
                                 </tr>
                                 </tbody>
                             ) : (
@@ -442,9 +444,7 @@ const ActivityChoice = ({
                                 {selectedActivitiesAndPacksDisplay}
 
                                 <tr>
-                                    <td colSpan="2" style={{fontWeight: "bold"}} className="text-right">Total
-                                        estimé
-                                    </td>
+                                    <td colSpan="2" style={{fontWeight: "bold"}} className="text-right">{t("activityChoice.estimatedTotal")}</td>
                                     <td colSpan="2"
                                         className="text-center">{isNaN(totalSelectedPrice) ? "--" : totalSelectedPrice} €
                                     </td>
@@ -458,8 +458,7 @@ const ActivityChoice = ({
                 {unpopularActivityChosen && (
                     <div className="alert alert-danger">
                         <div className="m-b-sm">
-                            Les inscriptions aux activités suivantes sont
-                            soumises à un nombre minimum d'élèves par cours:
+                            {t("activityChoice.unpopularWarning")}
                         </div>
                         <ul>
                             {unpopularActivitiesSelected.map(unpopularA => {
