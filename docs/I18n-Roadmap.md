@@ -581,12 +581,21 @@ et à mesure de son intégration :
             `activityApplications.json` (parité 18/18). Réutilise `common:actions.{confirm,cancel}`.
             5 typos préservés + consignés. Tests Vitest (9 fichiers, 74 tests, gardes classe
             StepZilla + résolution i18n). `bin/i18n-tasks health` OK. Revue : 0 bug.
-      - [ ] **Lot 3b — composants moyens** : `UserSearch` (~29), `TimeIntervalPreferencesEditor`
-            (~39), `summary/WorkGroupEditor` (~40), `FormulaActivitiesModal` (~52),
-            `WizardUserSelectMember` (~56). NB à traiter aussi ici : les français en dur qui
-            *surchargent* des clés lot 3a — `summary/Summary.jsx:1431`
-            `noIntervalMessage="Pas de créneau"`, `Summary.jsx:1428` `tooltip="Créneau d'évaluation"`,
-            les `<h3>` de `Validation.jsx:287/291/403/407/427`.
+      - [x] **Lot 3b — composants moyens** : branche `feature/i18n-06-extract-activities-lot3b`.
+            `UserSearch.jsx` + `WizardUserSelectMember.jsx` (étapes StepZilla → helper module
+            `const T = (k,o) => i18n.t(\`activityApplications:${k}\`, o)`, classes nues) ;
+            `TimeIntervalPreferencesEditor.jsx` (`PreferencesEditor` fn → `useTranslation` ;
+            classe imbriquée `Availability` → `i18n.t`) ; `FormulaActivitiesModal.jsx` (2 fn
+            components → `useTranslation` ; les 3 chaînes « N activité(s) » deviennent des clés
+            plurielles `_one`/`_other`) ; `summary/WorkGroupEditor.jsx`
+            (`withTranslation("activityApplications")` sur la classe ; `WorkGroupRow` fn →
+            `useTranslation` ; « Impossible d'ajouter plusieurs rôle et option… » utilisée 4× →
+            1 clé). Une ligne `<Trans>` dans `UserSearch` (`<em>` = enfant 1). +60 feuilles
+            (78 au total, parité fr/en). Réutilise `common:actions.{validate,cancel,save}`.
+            7 typos/défauts préservés + consignés. Tests Vitest (6 fichiers, 155 tests, gardes
+            classe StepZilla + pluriels + `<Trans>` + chemin swal). Revue : 0 bug ; notes
+            non-bloquantes consignées (helper `T` non-réactif, pluriels sans fallback, token
+            « min », `err_must_select_user`).
       - [ ] **Lot 3c** — `FormulaChoice.jsx` (~71) + `ActivityChoice.jsx` (~73).
       - [ ] **Lot 3d** — `Wizard.jsx` (1162 lignes, orchestrateur StepZilla — 2e wizard avec labels
             d'étape FR en dur vers ~ligne 1140).
