@@ -80,5 +80,51 @@
             "oneResourceTypeName": "un tarif",
             "thisResourceTypeName": "ce tarif"
         }
+    },
+    "activityRefApplication": {
+        "timeslot": {
+            "proposeSlots": "Proposer à l'élève des créneaux de cours",
+            "askAvailabilities": "Demander à l'élève de saisir ses disponibilités"
+        },
+        "reenrollment": {
+            "title": "Réinscription",
+            "label": "Activités proposées lors d'une réinscription (si aucune sélection, toutes les activités seront proposées)"
+        },
+        "help": {
+            "multiSelect": "Sélectionner plusieurs activités avec <1>CTRL</1>.",
+            "rangeSelect": "Sélectionner la totalité entre deux activités avec <1>MAJ/SHIFT</1>.",
+            "combine": "Vous pouvez combiner <1>CTRL</1> et <3>MAJ/SHIFT</3>."
+        },
+        "visibility": {
+            "title": "Visibilité",
+            "isLesson": "Ce cours peut être selectionné lors d'une inscription",
+            "isVisibleToAdmin": "Ce cours peut être selectionné lors d'une inscription, uniquement par les permanents",
+            "isUnpopular": "Ce cours est peu demandé, il risque de ne pas ouvrir dans une saison"
+        },
+        "familyChoice": {
+            "title": "Choix des activités",
+            "attach": "Rattacher cette activité à sa famille",
+            "detach": "Dissocier cette activité de sa famille"
+        },
+        "evaluation": {
+            "title": "Evaluation",
+            "isEvaluable": "Ce cours nécessite une évaluation pour les nouveaux élèves"
+        }
+    },
+    "workGroup": {
+        "templateTitle": "Modèle de groupe",
+        "instruments": "Instruments",
+        "roles": "Rôles",
+        "isWorkGroup": "Ce cours est un atelier",
+        "noInstruments": "Aucun instrument sauvegardé. Vous pouvez en créer en suivant ce <1>lien</1>."
+    },
+    "activityRefPricingModal": {
+        "pricingType": "Type de tarif :",
+        "chooseCategory": "Choisir une catégorie de tarif",
+        "placeholderCategory": "sélectionner une catégorie de tarif",
+        "price": "Prix",
+        "from": "à partir de :",
+        "placeholderSeason": "sélectionner une saison",
+        "to": "jusqu'à (optionnel) :"
     }
 }
