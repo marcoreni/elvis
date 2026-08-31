@@ -668,12 +668,17 @@ verbatim from the component:
   missing French space before the colon. Both kept verbatim; the English side reads
   "Phone {{label}}:" (the accent defect is FR-only; the no-space-before-colon is intentional in
   English).
-- `validation.noActivitySelected` — "Aucune activité sélectionnée" (capitalised leading "A").
-  This is the correct form, but it is **inconsistent** with the sibling key
-  `activityChoice.noActivitySelected` = "aucune activité sélectionnée" (lowercase, lot 3c) for the
-  same concept in the same file — two keys, two spellings. Both are standalone `<td>`/`<h3>`
-  contents. Kept as-is per the verbatim policy (this lot's source really is capitalised); logged
-  so a future dedup pass unifies the two. English side: "No activity selected" (both keys).
+- `validation.noActivitySelected` — "Aucune activité sélectionnée" (capitalised). The
+  "no activity selected" concept now has **three** keys in this one file, two spellings:
+  - `activityChoice.noActivitySelected` (lot 3c) — fr "aucune activité sélectionnée" (lowercase),
+    en "No activity selected"
+  - `formulaChoice.noActivitiesSelected` (lot 3c) — fr "Aucune activité sélectionnée", en
+    "No activit**ies** selected"
+  - `validation.noActivitySelected` (this lot) — fr "Aucune activité sélectionnée", en
+    "No activity selected"
+  `formulaChoice.noActivitiesSelected` is fr-identical to the new key but diverges in English —
+  that pair is the real duplicate for a future dedup pass; `activityChoice`'s is a casing variant.
+  Kept as-is per the verbatim policy (each lot's source spelling preserved).
 - `validation.levelEvaluation` — "**Evaluation** de niveau" → "**Évaluation** de niveau" (missing
   accent on the leading "E"). Inconsistent with `wizard.steps.levelEvaluation` (lot 3d) =
   "Évaluation de niveau", which is the correct form, for the same concept in the same file. Kept
@@ -684,6 +689,11 @@ verbatim from the component:
 Not a defect (keep note): `validation.totalEstimatedCost` = "Coût total estimé :" **does** carry
 the French space before the colon (rendered as `{totalEstimatedCost} {amount} €`), unlike the
 lot-3c `formulaChoice.estimatedTotal` / `activityChoice.unpopularWarning` which were missing it.
+
+Pre-existing, untouched by lot 3e (observation only): `Validation.jsx:~366` renders the
+packages-table subtotal as `{reduce(...)}€` — no `.toFixed(2)`, no space before `€` (e.g.
+"120€") — while the grand-total line 15 rows down is "0.00 €". Not i18n; flagged so it isn't
+mistaken for extraction fallout.
 Also `validation.colPackage` = "Formule" / `colEstimatedPrice` = "Tarif estimé" /
 `estimatedTotal` = "Total estimé" duplicate the same `formulaChoice.*` / `activityChoice.*` /
 `selectedActivitiesTable.*` values from lots 3a–3c — kept per-component for now, same as the

@@ -118,6 +118,92 @@ describe.each(["fr", "en"])("Validation always-rendered sections (%s)", (lng) =>
 });
 
 // --------------------------------------------------------------------------------------------
+// Conditional: telephones + contacts — the ONLY place validation.phone (the lot's one
+// interpolated key) renders, from inside an _.map closure. Guards `t` staying in scope there.
+// --------------------------------------------------------------------------------------------
+
+const CONTACTS_COPY = {
+    fr: {
+        // preserved typo: "Télephone" (no accent), no space before ":". {{label}} = "domicile".
+        phoneLabel: "Télephone domicile:",
+        contacts: "Contacts",
+        legalRep: "Représentant légal",
+        accompanying: "Accompagnant",
+        emergency: "Contact d'urgence",
+    },
+    en: {
+        phoneLabel: "Phone domicile:",
+        contacts: "Contacts",
+        legalRep: "Legal guardian",
+        accompanying: "Accompanying person",
+        emergency: "Emergency contact",
+    },
+};
+
+describe.each(["fr", "en"])("Validation telephones + contacts section (%s)", (lng) => {
+    test("renders the interpolated phone label and the contacts block", async () => {
+        await i18n.changeLanguage(lng);
+
+        const application = baseApplication();
+        application.infos.telephones = [{ label: "domicile", number: "0102030405" }];
+        application.infos.family_links_with_user = [
+            {
+                id: 2,
+                first_name: "Marie",
+                last_name: "Dupont",
+                is_legal_referent: true,
+                is_accompanying: true,
+                is_to_call: true,
+            },
+        ];
+
+        render(<Validation {...baseProps({ application })} />);
+        const c = CONTACTS_COPY[lng];
+
+        // validation.phone, interpolated with {{label}} = "home", inside `_.map(telephones, ...)`
+        expect(screen.getByText(c.phoneLabel)).toBeInTheDocument();
+        if (lng === "fr") {
+            expect(screen.queryByText("Téléphone domicile:")).not.toBeInTheDocument();
+        }
+
+        expect(screen.getByRole("heading", { name: c.contacts })).toBeInTheDocument();
+        expect(screen.getByText(c.legalRep)).toBeInTheDocument();
+        expect(screen.getByText(c.accompanying)).toBeInTheDocument();
+        expect(screen.getByText(c.emergency)).toBeInTheDocument();
+    });
+});
+
+// --------------------------------------------------------------------------------------------
+// Conditional: availabilities + level-evaluation headings + the grand-total cost line
+// --------------------------------------------------------------------------------------------
+
+describe.each(["fr", "en"])("Validation availabilities / evaluation / cost (%s)", (lng) => {
+    test("renders the availabilities + level-evaluation headings and the total cost line", async () => {
+        await i18n.changeLanguage(lng);
+
+        const application = baseApplication();
+        application.intervals = [{ id: 1, start: "2025-09-01T10:00:00", end: "2025-09-01T11:00:00" }];
+        application.selectedEvaluationIntervals = {
+            1: { id: 9, start: "2025-09-02T10:00:00", end: "2025-09-02T11:00:00" },
+        };
+
+        render(
+            <Validation {...baseProps({ application, allActivityRefs: [{ id: 1, kind: "Piano" }] })} />,
+        );
+
+        const avail = lng === "fr" ? "Disponibilités" : "Availabilities";
+        const evalH = lng === "fr" ? "Evaluation de niveau" : "Level evaluation";
+        expect(screen.getByRole("heading", { name: avail })).toBeInTheDocument();
+        expect(screen.getByRole("heading", { name: evalH })).toBeInTheDocument();
+
+        // validation.totalEstimatedCost — its own text node (the amount + " €" are a sibling
+        // JSX expression). fr keeps the French space before the colon.
+        const costPrefix = lng === "fr" ? /Coût total estimé :/ : /Total estimated cost:/;
+        expect(screen.getByText(costPrefix)).toBeInTheDocument();
+    });
+});
+
+// --------------------------------------------------------------------------------------------
 // Conditional: selected activities section
 // --------------------------------------------------------------------------------------------
 
