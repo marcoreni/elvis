@@ -589,6 +589,39 @@ Non-typo notes from the lot-3b review (behaviour / consistency, not blocking):
   maps by child position regardless of the keep-list; a literal `<em>`/`<a>` in a key value gets
   escaped instead of kept.
 
+`frontend/locales/fr/activityApplications.json` (added by feature/i18n-06-extract-activities-lot3c
+— `FormulaChoice.jsx`, `ActivityChoice.jsx`, the two enrolment-wizard "choose your package /
+choose your activities" panels) — preserved verbatim from the components:
+- `formulaChoice.estimatedTotal` — "Total estimé:" → "Total estimé :" (missing French space before
+  the colon; rendered as `{estimatedTotal} {price} €`).
+- `activityChoice.estimatedTotal` — "Total estimé" (no colon). The source JSX had "Total\n estimé"
+  split across two lines; the inter-line whitespace was collapsed to a single space during
+  extraction (no visible change — HTML collapses it). Note the sibling
+  `formulaChoice.estimatedTotal` for the same concept carries a trailing colon and this one does
+  not — kept as-is.
+- `activityChoice.noActivitySelected` — "aucune activité sélectionnée" (lowercase leading "a"),
+  inconsistent with `formulaChoice.noActivitiesSelected` = "Aucune activité sélectionnée"
+  (capitalised) for the same concept; both are standalone `<td>` cell contents, so the lowercase
+  is just a defect, not a mid-sentence context. Kept verbatim; the English side reads "No activity
+  selected" (capitalised, correct).
+- `activityChoice.unpopularWarning` — "…soumises à un nombre minimum d'élèves par cours:" →
+  "…par cours :" (missing French space before the colon). Was JSX text across two lines,
+  whitespace collapsed during extraction. Kept verbatim; the English side is clean.
+
+Dedup opportunity (not a defect): `formulaChoice.*` and `activityChoice.*` each redeclare
+`summary` = "Récapitulatif", `duration`/`colDuration` = "Durée", `colEstimatedPrice` = "Tarif
+estimé", `searchPlaceholder` = "Rechercher"; these also duplicate `selectedActivitiesTable.*` and
+`formulaActivitiesModal.col*` from lots 3a/3b — and `activityChoice.title` ("Choix de l'activité"
+/ "Activity choice") is EN-identical to lot-3b's `formulaActivitiesModal.activityChoice` ("Choix
+des activités" / "Activity choice"). Kept per-component for now (consistent with the earlier
+sub-lots). A shared `activityApplications` sub-block is a later cleanup — do not restructure ad hoc.
+
+Untranslated unit tokens in the two lot-3c files (same class as the `SelectedActivitiesTable` /
+`FormulaActivitiesModal` entry below — the `<th>`s are translated, the value formatters are not):
+`ActivityChoice.jsx:25,27` (`` `${hours}h${minutes}` `` / `` `${ref.duration} min` ``),
+`FormulaChoice.jsx:181` (`{duration !== "--" ? "min" : ""}`), and `"--"` placeholders at
+`ActivityChoice.jsx:15,17,21,297,449` / `FormulaChoice.jsx:96,131,171`.
+
 ## `activityApplications` — residual French from lot-3a's not-yet-processed siblings
 
 The i18n-06 activities lot-3a review surfaced hardcoded French in files that lot 3a did NOT touch

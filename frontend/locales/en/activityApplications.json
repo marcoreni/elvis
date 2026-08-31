@@ -77,6 +77,32 @@
         "selectAmong_one": "Select {{count}} activity from the following:",
         "selectAmong_other": "Select {{count}} activities from the following:"
     },
+    "formulaChoice": {
+        "noDescription": "No description",
+        "noActivitiesSelected": "No activities selected",
+        "title": "Package choice",
+        "price": "Price",
+        "searchPlaceholder": "Search",
+        "colPackage": "Package",
+        "colEstimatedPrice": "Estimated price",
+        "noPackagesAvailable": "No packages available",
+        "summary": "Summary",
+        "colDuration": "Duration",
+        "noPackagesSelected": "No packages selected",
+        "estimatedTotal": "Estimated total:"
+    },
+    "activityChoice": {
+        "formulaPrefix": "Package: {{name}}",
+        "title": "Activity choice",
+        "duration": "Duration",
+        "searchPlaceholder": "Search",
+        "colActivity": "Activity",
+        "colEstimatedPrice": "Estimated price",
+        "summary": "Summary",
+        "noActivitySelected": "No activity selected",
+        "estimatedTotal": "Estimated total",
+        "unpopularWarning": "Registration for the following activities is subject to a minimum number of students per course:"
+    },
     "workGroupEditor": {
         "toAssign": "To assign",
         "instrumentPlaceholder": "INSTRUMENT",
