@@ -565,6 +565,30 @@ Also re-scan the whole `frontend/locales/fr/` + `config/locales/fr.yml` when doi
 was noticed in passing, not an exhaustive audit. The English side of these keys is already spelled
 correctly.
 
+Non-typo notes from the lot-3b review (behaviour / consistency, not blocking):
+- **`const T` helper is non-reactive.** `UserSearch.jsx` and `WizardUserSelectMember.jsx` are
+  StepZilla steps (can't be `withTranslation`-wrapped), so their strings go through a module-level
+  `const T = (k, o) => i18n.t(\`activityApplications:${k}\`, o)`. `T` re-reads the singleton per
+  call (not frozen), but the components don't subscribe to `languageChanged`, so they don't
+  re-render on an in-page `i18n.changeLanguage()`. In `UserSearch` the one `<Trans>` line
+  ("Sinon …") *does* subscribe, so a live locale switch would render that line in the new language
+  while the surrounding `T(...)` sentences stay in the old one — a mixed-language panel. Same
+  non-reactivity in `TimeIntervalPreferencesEditor.jsx`'s nested `Availability` class (calls
+  `i18n.t` directly). Harmless while a locale switch is a full server reload; same class as the
+  other frozen-translation entries in this file. Fix (if ever): thread `t` in from `Wizard` once
+  that's translated, or split the `<Trans>` into `T(...)` fragments.
+- **Plural keys have no non-plural fallback.** `formulaActivitiesModal.{maxSelectable,
+  selectToValidate,selectAmong}` are `_one`/`_other` only. `t(key, {count: undefined})` renders the
+  raw key string to the user (verified). Not reachable now — `Formule` validates
+  `number_of_items` present + `>= 1` and the serializer emits it as an Integer — but if a future
+  `as_json only:` list drops the attribute, the old hand-rolled code degraded to
+  "Sélectionnez  activité …" whereas the new code prints a translation key. Keep `number_of_items`
+  in that serializer's output.
+- For future `<Trans>` keys: react-i18next 17's default `transKeepBasicHtmlNodesFor` is
+  `["br","strong","i","p"]` — `em`/`a` are NOT in it. Use the **indexed** form (`<1>…</1>`), which
+  maps by child position regardless of the keep-list; a literal `<em>`/`<a>` in a key value gets
+  escaped instead of kept.
+
 ## `activityApplications` — residual French from lot-3a's not-yet-processed siblings
 
 The i18n-06 activities lot-3a review surfaced hardcoded French in files that lot 3a did NOT touch
@@ -581,7 +605,8 @@ listed here so the flow isn't half-localised in the meantime and nothing gets mi
 - `frontend/components/activityApplications/SelectedActivitiesTable.jsx:10-12` — `displayDuration`
   emits `"5h30"` / `"45min"` with untranslated unit tokens (the `<th>`s themselves ARE translated
   as of lot 3a). Low priority; arguably acceptable in EN. → whenever `SelectedActivitiesTable` is
-  revisited.
+  revisited. **Same untranslated `"min"` / `"--"` tokens in
+  `FormulaActivitiesModal.jsx:~228,~250`** (lot 3b — `<th>`s translated, unit token left).
 - `frontend/components/activityApplications/EvaluationChoiceTable.jsx` — pre-existing (not i18n):
   its `data[].timeInterval.start/end` are passed straight to `toHourMin()` (`.getHours()`), so they
   must be `Date` objects, not ISO strings — unlike the sibling `TimePreferencesTable` which wraps
@@ -654,6 +679,8 @@ still read three shared French-only constants that were left as-is:
   — toasted from `AddCourse.jsx`.
 - `MESSAGES.err_must_choose_activity` ("Veuillez choisir une activité avant de continuer.") —
   toasted from `AddActivityForCourse.jsx#isValidated`.
+- `MESSAGES.err_must_select_user` ("Veuillez sélectionner un utilisateur avant de continuer.") —
+  toasted from `activityApplications/UserSearch.jsx#isValidated` (i18n-06 activities lot 3b).
 
 `tools/constants.js` is imported from many components across the app, so this is a cross-cutting
 pass in its own right (a `common:` namespace + a `useTranslation`/prop for the class consumers),
