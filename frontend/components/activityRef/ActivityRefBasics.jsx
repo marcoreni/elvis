@@ -17,7 +17,6 @@ import ActivityRefDataService from "./ActivityRefDataService";
 import NewActivityRefDataService from "./NewActivityRefDataService";
 
 const required = value => (value ? undefined : i18n.t('activities:activityRefBasics.validators.required'))
-const mustBeNumber = value => ((value!==undefined && isNaN(value)) ? i18n.t('activities:activityRefBasics.validators.mustBeNumber') : undefined)
 const mustBeInteger = value => (!Number.isInteger(Number(value)) ? i18n.t('activities:activityRefBasics.validators.mustBeInteger') : undefined)
 const mustBeIntegerOrUndefined = value => ((value!==undefined && !Number.isInteger(Number(value))) ? i18n.t('activities:activityRefBasics.validators.mustBeInteger') : undefined)
 const minValue = min => value =>

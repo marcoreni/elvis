@@ -492,6 +492,20 @@ side (`lessonList.help.body`) is a clean translation with these defects fixed, a
 - `activityRefBasics.fields.spotsOverbookingTooltip` — "vous pouvez ajouter des nouvelles places"
   → "…de nouvelles places" (partitive "de", not "des", before the preposed adjective "nouvelles").
   Kept verbatim.
+- `activityRefBasics.pricing.sectionHint` — extracted from JSX text split across two lines; the
+  inter-line whitespace was collapsed to a single space during extraction (no visible change —
+  HTML collapses it). Same normalization note as the lot-3 `courses.json` entries.
+
+`ActivityRefBasics.jsx` also has two non-i18n issues noticed during the lot-2b review, left as-is:
+- `fetchSeasonsAndPricings` runs from the **constructor**, so the `const { t } = this.props` its
+  `.error` swal closure captures is frozen at mount time (won't follow a later `changeLanguage`).
+  Materially benign — the request settles within ms of mount and a locale switch is a full server
+  reload — but same class as the other frozen-at-construct translations logged in this file.
+- `selectedSeasons` `Cell` (`ActivityRefBasics.jsx` ~line 158): `seasonEnd` is set to `null` in the
+  else branch then tested with `seasonEnd !== undefined`, which `null` passes → an open-ended
+  pricing row (no `to_season_id`) hits `null.label` and throws in the cell instead of rendering
+  the intended `"<start> > ..."`. Pre-existing (byte-identical before the i18n extraction),
+  needs its own fix — the test should be `to_season_id !== undefined` / `seasonEnd != null`.
 
 Also re-scan the whole `frontend/locales/fr/` + `config/locales/fr.yml` when doing this (grep for
 `Edition\b`, `Editer\b`, `Selectionn`, `réglement`, `Echéance`, `Echec`, `Emmeteur`, `Precedent`,

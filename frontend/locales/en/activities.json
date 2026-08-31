@@ -46,7 +46,6 @@
     "activityRefBasics": {
         "validators": {
             "required": "required",
-            "mustBeNumber": "must be a number",
             "mustBeInteger": "must be an integer",
             "minValue": "must be greater than {{min}}"
         },

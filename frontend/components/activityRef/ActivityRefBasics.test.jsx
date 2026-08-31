@@ -29,8 +29,9 @@ import {Form} from "react-final-form";
 import i18n from "../../i18n";
 import ActivityRefBasics from "./ActivityRefBasics";
 
-// `.success` callback captured here so a test can fire the api response by hand.
+// `.success` / `.error` callbacks captured here so a test can fire the api response by hand.
 let mockLastApiSuccess = null;
+let mockLastApiError = null;
 vi.mock("../../tools/api", () => ({
     set: () => {
         const c = {};
@@ -38,7 +39,10 @@ vi.mock("../../tools/api", () => ({
             mockLastApiSuccess = fn;
             return c;
         };
-        c.error = () => c;
+        c.error = fn => {
+            mockLastApiError = fn;
+            return c;
+        };
         c.get = () => c;
         c.post = () => c;
         c.put = () => c;
@@ -47,26 +51,46 @@ vi.mock("../../tools/api", () => ({
     },
 }));
 
-// Leaf children reduced to the copy ActivityRefBasics passes into them.
+// Leaf children reduced to the copy ActivityRefBasics passes into them. InputSelect also renders
+// `componentAdd` (the "+ add a family" icon) so the addKind path is reachable; BaseDataTable
+// renders `createButton` so `activityRefBasics.createPricing` gets exercised through the real
+// `this.CreateButton.bind(this)` path, not just as a locale key.
 vi.mock("../common/Input", () => ({default: props => <div>{props.label}</div>}));
-vi.mock("../common/InputSelect", () => ({default: props => <div>{props.label}</div>}));
+vi.mock("../common/InputSelect", () => ({
+    default: props => (
+        <div>
+            {props.label}
+            {props.componentAdd || null}
+        </div>
+    ),
+}));
 vi.mock("../common/InputColor", () => ({default: () => null}));
 vi.mock("../editParameters/DragAndDrop", () => ({
     default: props => <div>{props.textDisplayed}</div>,
 }));
 vi.mock("../common/baseDataTable/BaseDataTable", () => ({
-    default: props => (
-        <div>
-            {(props.columns || []).map((col, i) => (
-                <span key={i}>{typeof col.Header === "string" ? col.Header : ""}</span>
-            ))}
-            <span>{props.oneResourceTypeName}</span>
-            <span>{props.thisResourceTypeName}</span>
-        </div>
-    ),
+    default: props => {
+        const CreateButton = props.createButton;
+        return (
+            <div>
+                {(props.columns || []).map((col, i) => (
+                    <span key={i}>
+                        {typeof col.Header === "string" ? col.Header : ""}
+                    </span>
+                ))}
+                <span>{props.oneResourceTypeName}</span>
+                <span>{props.thisResourceTypeName}</span>
+                {CreateButton ? <CreateButton onCreate={() => {}} /> : null}
+            </div>
+        );
+    },
+}));
+vi.mock("../common/baseDataTable/DefaultCreateButton", () => ({
+    default: props => <button>{props.label}</button>,
 }));
 vi.mock("./ActivityRefPricingModal", () => ({default: () => null}));
-vi.mock("sweetalert2", () => ({default: vi.fn()}));
+const {swalMock} = vi.hoisted(() => ({swalMock: vi.fn()}));
+vi.mock("sweetalert2", () => ({default: swalMock}));
 
 const props = {
     activityRef: {id: 1},
@@ -95,6 +119,8 @@ function renderBasics() {
 
 beforeEach(() => {
     mockLastApiSuccess = null;
+    mockLastApiError = null;
+    swalMock.mockClear();
 });
 
 afterEach(async () => {
@@ -182,6 +208,38 @@ describe("ActivityRefBasics", () => {
             expect(screen.getByText("Price (€)")).toBeInTheDocument();
             expect(screen.getByText("Applicable seasons")).toBeInTheDocument();
         });
+
+        // exercises `createButton={this.CreateButton.bind(this)}` — the bound-method path, not
+        // just the locale key.
+        test("fr: renders the CreateButton label", async () => {
+            await i18n.changeLanguage("fr");
+            renderBasics();
+            act(() => mockLastApiSuccess(seasonsPayload));
+            expect(screen.getByText("Créer un tarif")).toBeInTheDocument();
+        });
+
+        test("en: renders the CreateButton label", async () => {
+            await i18n.changeLanguage("en");
+            renderBasics();
+            act(() => mockLastApiSuccess(seasonsPayload));
+            expect(screen.getByText("Create a pricing")).toBeInTheDocument();
+        });
+    });
+
+    describe("fetchSeasonsAndPricings error path", () => {
+        test("fires the translated fetchError swal", async () => {
+            await i18n.changeLanguage("fr");
+            renderBasics();
+            expect(mockLastApiError).toBeInstanceOf(Function);
+
+            act(() => mockLastApiError({error: "boom"}));
+
+            expect(swalMock).toHaveBeenCalledWith(
+                "Une erreur est survenue lors de la récupération des saisons ou des catégories de prix",
+                "boom",
+                "error",
+            );
+        });
     });
 });
 
@@ -190,7 +248,6 @@ describe("ActivityRefBasics", () => {
 describe("activities:activityRefBasics.{validators,fetchError,addKind} resolution", () => {
     const plainKeys = [
         "activityRefBasics.validators.required",
-        "activityRefBasics.validators.mustBeNumber",
         "activityRefBasics.validators.mustBeInteger",
         "activityRefBasics.fetchError",
         "activityRefBasics.addKind.title",
