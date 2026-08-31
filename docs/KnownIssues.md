@@ -886,3 +886,25 @@ still read three shared French-only constants that were left as-is:
 pass in its own right (a `common:` namespace + a `useTranslation`/prop for the class consumers),
 not something to fix piecemeal inside one domain lot. Left verbatim for now; logged here so a
 later "constants i18n" lot picks them all up together. Grep: `from "../../tools/constants"`.
+
+## `parameters` domain (i18n-06) — French source strings preserved verbatim
+
+`config/locales/fr.yml` (added by feature/i18n-06-payments-terms — `parameters` lot A, the
+settings-index ERB) — preserved verbatim from `app/views/parameters/index.html.erb`:
+- `views.parameters.index.edit` — "Editer" → "Éditer" (missing accent on the leading "E"). Same
+  defect class as the activities lot-1 `views.activity_ref.edit.heading` = "Editer l'activité …"
+  entry above. Kept verbatim; the English side reads "Edit" (correct as-is).
+
+`frontend/locales/fr/parameters.json` (added by the same lot — new `parameters` namespace, the
+settings-screen tab labels; 28 leaves) — preserved verbatim from the `parameters/*Parameters.jsx`
+components:
+- `payments.tabs.paymentMethods` — "Moyens de paiements" → "Moyens de paiement" (number agreement:
+  the complement "de paiement" stays singular). The correct form already exists in this repo at
+  `config/locales/fr.yml` `views.payment_method.index.heading` = "Moyens de paiement". Kept
+  verbatim (different file / earlier lot, so the lot-internal unification rule does not apply);
+  the English side reads "Payment methods". Fold into the eventual cleanup pass.
+
+Noted, not logged as defects (acceptable French, kept as written): `practice.tabs.bandTypes` =
+"Type de groupes" and `practice.tabs.roomOptions` = "Option des salles" pair a singular head noun
+with a plural complement — idiomatic enough as "the type of groups" / "the [set of] room options",
+so preserved without change.

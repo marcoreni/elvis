@@ -822,9 +822,34 @@ et à mesure de son intégration :
     - [ ] **Tests** : `Formules.test.jsx`, `EditFormule.test.jsx` (Vitest, pattern `i18n.changeLanguage`),
           `spec/requests/formules_pages_spec.rb` (index/new/edit fr+en, garde anti-`"translation missing"`).
     - [ ] **Vérification** : `bin/i18n-tasks health`, `bundle exec rspec`, `yarn test`, `/code-review`.
-  - [ ] `parameters` / `editParameters` restants — inclut aussi : `parameters/BaseDataTable.jsx`
-        (chrome FR en dur, cf. lot activities 1), `parameters/Practice/Instruments.jsx` (2e
-        tableau « Instruments » distinct, colonnes `#`/`Nom`/`Actif ?`/`Actions`, encore en FR).
+  - [ ] `parameters` — **toute la zone de réglages admin** : ~40 composants React
+        (`frontend/components/parameters/**`, ~4100 lignes, 9 sous-dossiers) + ~20 vues ERB
+        (`app/views/parameters/**`). Bien plus gros que ne le disait l'ancienne note (« ~2 React +
+        ~7 ERB » était faux). **Nouveau namespace i18next `parameters`**, découpé en ~5 sous-lots
+        par sous-dossier, 1 PR revue chacun (même modèle que `activities` lot 3 / `payments` /
+        `planning`) :
+    - [ ] **Lot A — chrome partagé** : `BaseParameters.jsx`, `BaseDataTable.jsx` (chrome FR en dur,
+          cf. lot activities 1), les petits wrappers d'onglet `*Parameters.jsx`
+          (Community/Plannings/Rooms/Evaluations/Activities/ActivityApplications/Payments/Practice)
+          + `app/views/parameters/index.html.erb`. Câble le namespace dans `frontend/i18n/index.js`
+          + `index.test.js`.
+    - [ ] **Lot B — `Practice/*`** : BandsType, Features, FlatRate, Groups, Instruments (2e tableau
+          « Instruments » distinct de celui d'activities lot 1, colonnes `#`/`Nom`/`Actif ?`/
+          `Actions`), Materials, MusicGenres, PracticeParameters + `pratice_parameters/index.html.erb`.
+    - [ ] **Lot C — `Payments/*`** (9 comp) : AdhesionSettings, AdhesionEditModal, Coupons,
+          CouponFormContent, CouponsActionButtons, EditPaymentScheduleOptions, PaymentsMethods,
+          PaymentsStatus, PaymentsParameters + `payments_parameters/index.html.erb`. Clés sous
+          `parameters`, PAS sous le namespace `payments` (domaine distinct : réglages vs écrans).
+    - [ ] **Lot D — `ActivityApplications/*`** (6 comp) : ApplicationParameters,
+          ApplicationStatusTable, ApplicationStepParameters, ConsentDocumentModal,
+          ConsentDocumentsList, ActivityApplicationsParameters + les 5 ERB
+          `activity_application_parameters/{index,edit,show,update,destroy}.html.erb`.
+    - [ ] **Lot E — le reste** : `Plannings/*` (5), `Evaluations/*` (3), `Rooms/*` (2),
+          `Localization/*` (1, a déjà un `.test.jsx`), `Activities/*` (3), `Community/*` (1) + les
+          ERB d'édition restants (`school_parameters_edit`, `teachers_parameters_edit`,
+          `rules_parameters_edit`, `mails_parameters_edit`, `csv_parameters_edit`,
+          `formules_parameters_edit`, `community_parameters`, `evaluation_parameters`,
+          `planning_parameters`, `rooms_parameters`, `localization_parameters`).
   - [~] `payments` — **branche `feature/i18n-06-extract-payments` : 1er lot fait, reste à
         découper.** Le domaine `payments` est bien plus gros que les autres (~19 vues ERB, ~31
         composants React), donc découpé :

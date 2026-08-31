@@ -293,6 +293,10 @@ en:
                 heading: Create a package
             edit:
                 heading: Edit a package
+        parameters:
+            index:
+                heading: Settings
+                edit: Edit
         payment_method:
             index:
                 heading: Payment methods

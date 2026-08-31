@@ -1,6 +1,11 @@
 import React, {Component, Fragment} from "react";
 import ReactTable from "react-table";
 import {csrfToken} from "../utils";
+import i18n from "../../i18n";
+
+// `BaseDataTable` is a base class extended by ~15 CRUD tables (`class X extends BaseDataTable`),
+// so it cannot be wrapped in `withTranslation()` without breaking that inheritance chain. It reads
+// the i18n singleton directly instead; the settings screens have no in-page language switch.
 
 /**
  * Il faut hériter de cette classe.
@@ -77,7 +82,7 @@ export default class BaseDataTable extends Component
         return <Fragment>
             <div className="row">
                 <div className="col">
-                    <a className="btn btn-success pull-right" href={this.props.urlNew}><i className="fas fa-plus"></i> Créer</a>
+                    <a className="btn btn-success pull-right" href={this.props.urlNew}><i className="fas fa-plus"></i> {i18n.t("common:actions.create")}</a>
                 </div>
             </div>
             <div className="row">
@@ -99,13 +104,13 @@ export default class BaseDataTable extends Component
                             }
                         }}
                         resizable={false}
-                        previousText="Précédent"
-                        nextText="Suivant"
-                        loadingText="Chargement..."
-                        noDataText="Aucune donnée"
-                        pageText="Page"
-                        ofText="sur"
-                        rowsText="résultats"
+                        previousText={i18n.t("common:reactTable.previousText")}
+                        nextText={i18n.t("common:reactTable.nextText")}
+                        loadingText={i18n.t("common:reactTable.loadingText")}
+                        noDataText={i18n.t("common:reactTable.noDataText")}
+                        pageText={i18n.t("common:reactTable.pageText")}
+                        ofText={i18n.t("common:reactTable.ofText")}
+                        rowsText={i18n.t("common:reactTable.rowsText")}
                         minRows={1}
                         SubComponent={this.state.subComponent}
                     />
