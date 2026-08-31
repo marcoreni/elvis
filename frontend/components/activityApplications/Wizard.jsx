@@ -1,4 +1,5 @@
 import React, {Fragment} from "react";
+import { withTranslation } from "react-i18next";
 import _ from "lodash";
 import moment from "moment";
 
@@ -411,6 +412,7 @@ class Wizard extends React.Component {
     }
 
     handleSubmit() {
+        const { t } = this.props;
         this.setState({ buttonDisabled: true });
 
         const state = { ...this.state };
@@ -439,24 +441,16 @@ class Wizard extends React.Component {
                 this.setState({ buttonDisabled: false });
 
                 const user = this.state.user;
-                const title = `<h5>Bonjour <b>${user.first_name} ${user.last_name}</b></h5>`;
+                const title = t("wizard.submit.greeting", { name: `${user.first_name} ${user.last_name}` });
                 let htmltext = '';
-                const confirmtext = 'Redirection';
+                const confirmtext = t("wizard.submit.redirect");
 
                 if (data.activity_application !== null) {
-                    htmltext += '<p>'
-                        + '<b>Votre demande d\'inscription a bien été prise en compte</b><br/>'
-                        + 'Le numéro d\'identification de votre demande d\'inscription est :<br/>'
-                        + `<b>${data.activity_application.id}</b><br/>`
-                        + 'Un email récapitulatif de votre inscription va vous être envoyé sur votre adresse mail<br/>'
-                        + 'Vous allez être automatiquement redirigé vers l\'accueil du site'
-                        + '</p>';
+                    htmltext += t("wizard.submit.applicationRegisteredHtml", { id: data.activity_application.id });
                 }
 
                 if (data.pack_created || data.pack_created !== false) {
-                    htmltext += '<p>'
-                        + '<b>Vos packs de séances vous ont bien été attribués</b><br/>'
-                        + '</p>';
+                    htmltext += t("wizard.submit.packsAttributedHtml");
                 }
 
                 Swal.fire({
@@ -478,8 +472,8 @@ class Wizard extends React.Component {
                 this.setState({buttonDisabled: false });
 
                 Swal({
-                    title: "Erreur",
-                    text: [...data].join(",") || "Une erreur est survenue lors de la création de votre demande d'inscription. Veuillez contacter l'administrateur.",
+                    title: t("wizard.submit.errorTitle"),
+                    text: [...data].join(",") || t("wizard.submit.errorText"),
                     type: "error",
                 });
 
@@ -764,18 +758,18 @@ class Wizard extends React.Component {
     }
 
     render() {
+        const { t } = this.props;
 
         if (!this.isApplicationAuthorized(this.state.season_id))
         {
             return <Fragment>
                 <div
                     className={`m-t m-b-sm h-auto img-rounded p-sm text-dark ${this.state.user.is_admin ? "bg-warning" : "bg-danger"}`}>
-                    Les inscriptions à la saison actuelle est fermée et celles de la saison suivante ne sont pas encore
-                    ouvertes.
+                    {t("wizard.seasonsClosed")}
                 </div>
 
                 {this.state.user.is_admin ?
-                    <a className="btn btn-primary" href={"/seasons/new"}>Créer une saison</a> : ""}
+                    <a className="btn btn-primary" href={"/seasons/new"}>{t("wizard.createSeason")}</a> : ""}
             </Fragment>
         }
 
@@ -812,7 +806,7 @@ class Wizard extends React.Component {
 
         const steps = [
             !this.props.preApplicationActivity && this.props.preSelectedUser && (this.props.preSelectedUser.id === this.props.user.id) && {
-                name: "Membre Concerné",
+                name: t("wizard.steps.member"),
                 component: (
                     this.props.currentUserIsAdmin ? <UserSearch
                             user={this.props.user}
@@ -827,7 +821,7 @@ class Wizard extends React.Component {
                 ),
             },
             {
-                name: "Coordonnées",
+                name: t("wizard.steps.contactDetails"),
                 component: (
 
                     <UserForm
@@ -845,7 +839,7 @@ class Wizard extends React.Component {
             },
             this.props.actionType === PRE_APPLICATION_ACTIONS.CHANGE &&
             this.state.isApplicationChange && {
-                name: "Voeux de changement",
+                name: t("wizard.steps.changeWishes"),
                 component: (
                     <ApplicationChangeQuestionnaire
                         referenceData={this.props.referenceData}
@@ -862,7 +856,7 @@ class Wizard extends React.Component {
 
             !this.state.skipFormulaChoice &&
             this.props.formulas && this.props.formulas.length > 0 && {
-                name: "Choix de la formule",
+                name: t("wizard.steps.packChoice"),
                 component: (
                     <WrappedFormulaChoice
                         schoolName={this.props.schoolName}
@@ -888,7 +882,7 @@ class Wizard extends React.Component {
 
             !this.state.skipActivityChoice &&
             activityChoiceActionTypes.includes(this.props.actionType) && {
-                name: "Choix de l'activité",
+                name: t("wizard.steps.activityChoice"),
                 component: (
                     <WrappedActivityChoice
                         schoolName={this.props.schoolName}
@@ -923,10 +917,10 @@ class Wizard extends React.Component {
                 ),
             },
             this.props.allActivityRefs.find(ar => ar.is_work_group && (this.state.selectedActivities.includes(ar.id) || Object.values(this.state.selectedFormulaActivities || {}).flat().includes(ar.id))) !== undefined && {
-                name: "Instruments",
+                name: t("wizard.steps.instruments"),
                 component: (
                     <div>
-                        <label>Instruments que vous souhaitez pratiquer dans l'activité</label>
+                        <label>{t("wizard.instrumentsLabel")}</label>
                         <Select
                             defaultValue={_.map(this.state.infos.instruments, ({id: value, label}) => ({label, value}))}
                             options={this.props.instruments.map(i => ({label: i.label, value: i.id}))}
@@ -938,7 +932,7 @@ class Wizard extends React.Component {
             //this.props.actionType !== PRE_APPLICATION_ACTIONS.RENEW &&
             (this.state.selectedActivities.length > 0 ||
                 Object.values(this.state.selectedFormulaActivities || {}).flat().length > 0) && {
-                name: "Disponibilités",
+                name: t("wizard.steps.availabilities"),
                 component: (
                     <TimePreferencesStep
                         selectionLabels={this.getLabelsFromSelectedActivities()}
@@ -974,7 +968,7 @@ class Wizard extends React.Component {
 
             this.props.actionType === PRE_APPLICATION_ACTIONS.NEW &&
             refsToEvaluate.length && {
-                name: "Évaluation de niveau",
+                name: t("wizard.steps.levelEvaluation"),
                 component: (
                     <Evaluation
                         questions={this.props.new_student_level_questions}
@@ -988,7 +982,7 @@ class Wizard extends React.Component {
             },
             this.props.actionType === PRE_APPLICATION_ACTIONS.NEW &&
             this.state.practicedInstruments.length && {
-                name: "Créneaux d'évaluation",
+                name: t("wizard.steps.evaluationSlots"),
                 component: (
                     <EvaluationIntervalChoice
                         handleUpdateSelectedEvaluationIntervals={interval =>
@@ -1006,7 +1000,7 @@ class Wizard extends React.Component {
             },
 
             (this.props.availPaymentScheduleOptions && this.props.availPaymentScheduleOptions.length > 0 || this.props.paymentStepDisplayText) && {
-                name: "Paiement",
+                name: t("wizard.steps.payment"),
                 component: (
                     <WrappedPayerPaymentTerms
                         informationalStepOnly={false}
@@ -1029,7 +1023,7 @@ class Wizard extends React.Component {
             },
 
             {
-                name: "Résumé",
+                name: t("wizard.steps.summary"),
                 component: (
                     <Validation
                         levels={this.props.levels}
@@ -1070,12 +1064,17 @@ class Wizard extends React.Component {
                     marginBottom: "35px",
                     marginTop: "45px",
                 }}>
-                    <h1 style={{ color: "#00334A" }}>Nouvelle demande d’inscription</h1>
-                    <h3 style={{ color: "#8AA4B1" }}>Demande d'inscription
-                        {!this.state.skipActivityChoice && activityChoiceActionTypes.includes(this.props.actionType) ?
-                            " aux activités"
-                            : " à l'activité " + this.props.allActivityRefs.find(ar => ar.id === this.state.selectedActivities[0]).display_name
-                        } pour la {this.state.season.label}
+                    <h1 style={{ color: "#00334A" }}>{t("wizard.newApplicationTitle")}</h1>
+                    <h3 style={{ color: "#8AA4B1" }}>
+                        {t("wizard.applicationSubtitle.full", {
+                            activityPart:
+                                !this.state.skipActivityChoice && activityChoiceActionTypes.includes(this.props.actionType)
+                                    ? t("wizard.applicationSubtitle.allActivities")
+                                    : t("wizard.applicationSubtitle.oneActivity", {
+                                        activity: this.props.allActivityRefs.find(ar => ar.id === this.state.selectedActivities[0]).display_name,
+                                    }),
+                            season: this.state.season.label,
+                        })}
                     </h3>
                     {this.props.currentUserIsAdmin ? (
                         <div className="flex flex-justified m-t-md m-b-sm">
@@ -1101,7 +1100,7 @@ class Wizard extends React.Component {
                                     className="m-r-sm my-auto"
                                     style={{ width: "100%" }}
                                 >
-                                    Date de début
+                                    {t("wizard.beginDate")}
                                 </label>
                                 <input
                                     type="date"
@@ -1141,8 +1140,8 @@ class Wizard extends React.Component {
                         steps={steps}
                         showSteps={true}
                         stepsNavigation={true}
-                        nextButtonText={"Suivant"}
-                        backButtonText={"Précédent"}
+                        nextButtonText={t("wizard.nextStep")}
+                        backButtonText={t("wizard.prevStep")}
                         nextButtonCls={
                             "btn btn-prev btn-primary btn-md pull-right font-weight-bold"
                         }
@@ -1159,4 +1158,4 @@ class Wizard extends React.Component {
     }
 }
 
-export default Wizard;
+export default withTranslation("activityApplications")(Wizard);
