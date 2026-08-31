@@ -1,4 +1,5 @@
 import React, { Component } from "react";
+import { withTranslation, useTranslation } from "react-i18next";
 import moment from "moment";
 
 import UserWithInfos from "../../common/UserWithInfos";
@@ -21,6 +22,7 @@ function WorkGroupRow({
                           onInvalidate,
                           isStudentAlreadyAssignedElsewhere,
                       }) {
+    const { t } = useTranslation("activityApplications");
     const { user } = activitiesInstrument;
 
     const disabledDeletion = activitiesInstrument.user_id !== null;
@@ -55,14 +57,14 @@ function WorkGroupRow({
                         {`${user.first_name} ${user.last_name}`}&nbsp;<i className="fas fa-info-circle"/>
                     </p>
                 </UserWithInfos>
-                : "À assigner"}
+                : t("workGroupEditor.toAssign")}
         </td>
         <td>
             <select
                 className="form-control"
                 onChange={e => onUpdate({ ...activitiesInstrument, instrument_id: parseInt(e.target.value) })}
                 value={activitiesInstrument.instrument_id || ""}>
-                <option disabled value="">INSTRUMENT</option>
+                <option disabled value="">{t("workGroupEditor.instrumentPlaceholder")}</option>
                 {instruments.map(optionMapper())}
             </select>
         </td>
@@ -81,7 +83,7 @@ function WorkGroupRow({
                 <button
                     disabled={disabledDeletion}
                     onClick={onDelete}
-                    data-tippy-content="Supprimer le rôle"
+                    data-tippy-content={t("workGroupEditor.deleteRole")}
                     className="btn btn-sm btn-primary m-r-sm">
                     <i className="fas fa-minus"/>
                 </button>
@@ -92,13 +94,13 @@ function WorkGroupRow({
                             <button
                                 disabled={disableOptions}
                                 onClick={() => isOption ? onRemoveOption() : onAddOption()}
-                                data-tippy-content={disableOptions ? "Impossible d'ajouter plusieurs rôle et option à un seul élève" : ""}
+                                data-tippy-content={disableOptions ? t("workGroupEditor.cannotAddMultiple") : ""}
                                 className="btn btn-sm m-r-sm"
                                 style={{
                                     color: "#FFF",
                                     backgroundColor: disableOptions ? "#cccccc" : "#9575CD",
                                 }}>
-                                Option
+                                {t("workGroupEditor.option")}
                             </button>
                         }
 
@@ -106,8 +108,8 @@ function WorkGroupRow({
                             <span {
                                       ...(isDesiredValidatedOnOtherActivity || disableOptions ?
                                           {["data-tippy-content"]: isDesiredValidatedOnOtherActivity ?
-                                                  "L'élève est déjà inscrit dans un autre atelier" :
-                                                  "Impossible d'ajouter plusieurs rôle et option à un seul élève"} :
+                                                  t("workGroupEditor.alreadyInAnotherWorkshop") :
+                                                  t("workGroupEditor.cannotAddMultiple")} :
                                           {})
                                   }>
                                 <button
@@ -115,8 +117,8 @@ function WorkGroupRow({
                                     onClick={() => isAssigned ? onInvalidate() : onValidate()}
                                     className="btn btn-sm btn-primary">
                                     {isAssigned ?
-                                        "Retirer du rôle" :
-                                        "Valider"}
+                                        t("workGroupEditor.removeFromRole") :
+                                        t("common:actions.validate")}
                                 </button>
                             </span>
                         }
@@ -127,7 +129,7 @@ function WorkGroupRow({
     </tr>;
 }
 
-export default class WorkGroupEditor extends Component {
+class WorkGroupEditor extends Component {
     constructor(props) {
         super(props);
 
@@ -232,14 +234,14 @@ export default class WorkGroupEditor extends Component {
         );
 
         if (isAlreadyAssigned) {
-            this.showErrorMessage("Impossible d'ajouter plusieurs rôle et option à un seul élève");
+            this.showErrorMessage(this.props.t("workGroupEditor.cannotAddMultiple"));
             return;
         }
 
         set()
             .success(this.props.onUpdateActivity)
             .error(error => {
-                this.showErrorMessage("Impossible d'ajouter plusieurs rôle et option à un seul élève");
+                this.showErrorMessage(this.props.t("workGroupEditor.cannotAddMultiple"));
             })
             .post(`/activities_instruments/${aiId}/option/${desiredActivity.id}`);
     }
@@ -250,7 +252,7 @@ export default class WorkGroupEditor extends Component {
         set()
             .success(this.props.onUpdateActivity)
             .error(error => {
-                this.showErrorMessage("Une erreur est survenue lors de la suppression de l'option");
+                this.showErrorMessage(this.props.t("workGroupEditor.removeOptionError"));
             })
             .del(`/activities_instruments/${aiId}/option/${desiredActivity.id}`);
     }
@@ -266,14 +268,14 @@ export default class WorkGroupEditor extends Component {
         );
 
         if (isAlreadyAssigned) {
-            this.showErrorMessage("Impossible d'ajouter plusieurs rôle et option à un seul élève");
+            this.showErrorMessage(this.props.t("workGroupEditor.cannotAddMultiple"));
             return;
         }
 
         set()
             .success(this.props.onUpdateActivity)
             .error(error => {
-                this.showErrorMessage("Impossible d'ajouter plusieurs rôle et option à un seul élève");
+                this.showErrorMessage(this.props.t("workGroupEditor.cannotAddMultiple"));
             })
             .post(`/activities_instruments/${aiId}/student/${desiredActivity.id}`);
     }
@@ -284,7 +286,7 @@ export default class WorkGroupEditor extends Component {
         set()
             .success(this.props.onUpdateActivity)
             .error(error => {
-                this.showErrorMessage("Une erreur est survenue lors du retrait de l'élève");
+                this.showErrorMessage(this.props.t("workGroupEditor.removeStudentError"));
             })
             .del(`/activities_instruments/${aiId}/student/${desiredActivity.id}`);
     }
@@ -304,6 +306,7 @@ export default class WorkGroupEditor extends Component {
     }
 
     render() {
+        const { t } = this.props;
         const { userId, activity, desiredActivity } = this.props;
         const { instruments, errorMessage, showError } = this.state;
 
@@ -314,7 +317,7 @@ export default class WorkGroupEditor extends Component {
                         type="button"
                         className="close"
                         data-dismiss="alert"
-                        aria-label="Close"
+                        aria-label={t("workGroupEditor.close")}
                         onClick={() => this.setState({ showError: false })}>
                         <span aria-hidden="true">&times;</span>
                     </button>
@@ -325,17 +328,17 @@ export default class WorkGroupEditor extends Component {
             <table className="table table-bordered" style={{margin: "0"}}>
                 <thead>
                 <tr>
-                    <th>Élève</th>
-                    <th>Instrument</th>
-                    <th>Essai le</th>
+                    <th>{t("workGroupEditor.student")}</th>
+                    <th>{t("workGroupEditor.instrument")}</th>
+                    <th>{t("workGroupEditor.attemptDate")}</th>
                     <th className="flex flex-space-between-justified">
                         <p>
-                            Actions
+                            {t("workGroupEditor.actions")}
                         </p>
                         <button
                             onClick={() => this.handleCreateRole()}
                             className="btn btn-xs btn-primary">
-                            <i className="fas fa-plus"/> Ajouter rôle
+                            <i className="fas fa-plus"/> {t("workGroupEditor.addRole")}
                         </button>
                     </th>
                 </tr>
@@ -361,3 +364,5 @@ export default class WorkGroupEditor extends Component {
         </div>
     }
 }
+
+export default withTranslation("activityApplications")(WorkGroupEditor);

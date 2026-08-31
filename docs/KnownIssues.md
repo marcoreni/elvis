@@ -537,6 +537,28 @@ preserved verbatim from the components:
   (odd internal capital, mid-sentence). Kept verbatim; the English side reads "Open
   pre-registration".
 
+`frontend/locales/fr/activityApplications.json` (added by feature/i18n-06-extract-activities-lot3b
+— `UserSearch.jsx`, `TimeIntervalPreferencesEditor.jsx`, `FormulaActivitiesModal.jsx`,
+`summary/WorkGroupEditor.jsx`, `WizardUserSelectMember.jsx`) — preserved verbatim from the
+components:
+- `formulaActivitiesModal.selectedCount` — "Activités sélectionnées:" → "Activités sélectionnées :"
+  (missing French space before the colon; a `<strong>` label followed by " N / M").
+- `formulaActivitiesModal.selectAmong_one` / `selectAmong_other` — "…parmi les suivantes:" →
+  "…parmi les suivantes :" (missing French space before the colon). Same defect in both plural
+  forms.
+- `workGroupEditor.cannotAddMultiple` — "Impossible d'ajouter plusieurs **rôle et option** à un
+  seul élève" → "…plusieurs **rôles et options**…" (plural agreement after "plusieurs"). Used 4×
+  in the component; one key. English side reads correctly ("multiple roles and options").
+- `workGroupEditor.close` — source literal is the English word "Close" (an `aria-label`); fr should
+  be "Fermer" (`Close` → `Fermer`). Kept verbatim; the English side is "Close" (correct as-is).
+- `workGroupEditor.addRole` — "Ajouter rôle" (no article), inconsistent with "Ajouter un membre" /
+  "Ajouter un contact" elsewhere in the same namespace; should be "Ajouter un rôle". Kept verbatim.
+- `wizardUserSelectMember.selectMember` — "**Veuilez** sélectionner un membre" → "**Veuillez**
+  sélectionner un membre" (typo). Kept verbatim; the English side reads "Please select a member".
+- `wizardUserSelectMember.ifMinorAddMember` — "Si la personne est **mineur**, ajouter un nouveau
+  membre" → "…est **mineure**…" ("la personne" is feminine). Masculine agreement for a person of
+  unknown gender; kept verbatim. English side: "If the person is a minor…".
+
 Also re-scan the whole `frontend/locales/fr/` + `config/locales/fr.yml` when doing this (grep for
 `Edition\b`, `Editer\b`, `Selectionn`, `réglement`, `Echéance`, `Echec`, `Emmeteur`, `Precedent`,
 `Creer\b`, `verouiller`, `Resolution\b`, `complêtement`, `remplis\b`); the list above is only what

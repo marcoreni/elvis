@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 
 const ModalCustom = ({ children, closeModal }) => {
+    const { t } = useTranslation("activityApplications");
     return (
         <div
             className="modal inmodal"
@@ -25,7 +27,7 @@ const ModalCustom = ({ children, closeModal }) => {
                         className="modal-header"
                         style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}
                     >
-                        <h2>Sélectionner les activités pour la formule</h2>
+                        <h2>{t("formulaActivitiesModal.modalTitle")}</h2>
                         <button
                             onClick={closeModal}
                             className="close"
@@ -52,6 +54,7 @@ const FormulaActivitiesModal = ({
                                     onSave,
                                     onRemoveFormula
                                 }) => {
+    const { t } = useTranslation("activityApplications");
     const [searchTerm, setSearchTerm] = useState("");
     const [tempSelectedActivities, setTempSelectedActivities] = useState([]);
     const [errorMessage, setErrorMessage] = useState("");
@@ -110,7 +113,7 @@ const FormulaActivitiesModal = ({
                 return prev.filter(id => id !== activityId);
             } else {
                 if (prev.length >= activeFormula.number_of_items) {
-                    setErrorMessage(`Vous ne pouvez sélectionner que ${activeFormula.number_of_items} activité${activeFormula.number_of_items > 1 ? "s" : ""} pour cette formule.`);
+                    setErrorMessage(t("formulaActivitiesModal.maxSelectable", { count: activeFormula.number_of_items }));
                     return prev;
                 }
                 return [...prev, activityId];
@@ -130,7 +133,7 @@ const FormulaActivitiesModal = ({
 
     const handleSaveActivities = () => {
         if (tempSelectedActivities.length < activeFormula.number_of_items) {
-            setErrorMessage(`Veuillez sélectionner ${activeFormula.number_of_items} activité${activeFormula.number_of_items > 1 ? "s" : ""} pour valider cette formule.`);
+            setErrorMessage(t("formulaActivitiesModal.selectToValidate", { count: activeFormula.number_of_items }));
             return;
         }
 
@@ -155,7 +158,7 @@ const FormulaActivitiesModal = ({
         } else {
             if (!acc['individual']) {
                 acc['individual'] = {
-                    familyName: 'Activités individuelles',
+                    familyName: t('formulaActivitiesModal.individualActivities'),
                     activities: []
                 };
             }
@@ -166,9 +169,9 @@ const FormulaActivitiesModal = ({
 
     return (
         <ModalCustom closeModal={handleCancelActivities}>
-            <h4>Activités dans la formule "{activeFormula.name}"</h4>
+            <h4>{t("formulaActivitiesModal.activitiesInPackage", { name: activeFormula.name })}</h4>
             <p>
-                Sélectionnez {activeFormula.number_of_items} activité{activeFormula.number_of_items > 1 ? 's' : ''} parmi les suivantes:
+                {t("formulaActivitiesModal.selectAmong", { count: activeFormula.number_of_items })}
             </p>
             <div className="d-inline-flex justify-content-between mt-1 mb-2 w-100">
                 <div></div>
@@ -185,7 +188,7 @@ const FormulaActivitiesModal = ({
                 >
                     <input
                         type="text"
-                        placeholder="Rechercher une activité"
+                        placeholder={t("formulaActivitiesModal.searchPlaceholder")}
                         style={{
                             border: "none",
                             backgroundColor: "transparent",
@@ -197,7 +200,7 @@ const FormulaActivitiesModal = ({
                 </div>
             </div>
             <div>
-                <h5 style={{ color: "#8AA4B1" }}>Choix des activités</h5>
+                <h5 style={{ color: "#8AA4B1" }}>{t("formulaActivitiesModal.activityChoice")}</h5>
                 {Object.keys(groupedActivities).length > 0 ? (
                     Object.entries(groupedActivities).map(([familyId, family]) => (
                         <div key={familyId} className="mb-4">
@@ -215,8 +218,8 @@ const FormulaActivitiesModal = ({
                                         color: "white",
                                     }}
                                 >
-                                    <th>Activité</th>
-                                    <th>Durée</th>
+                                    <th>{t("formulaActivitiesModal.colActivity")}</th>
+                                    <th>{t("formulaActivitiesModal.colDuration")}</th>
                                     <th></th>
                                 </tr>
                                 </thead>
@@ -263,14 +266,14 @@ const FormulaActivitiesModal = ({
                     ))
                 ) : (
                     <div className="alert alert-info">
-                        Aucune activité disponible dans cette formule
+                        {t("formulaActivitiesModal.noActivities")}
                     </div>
                 )}
             </div>
 
             <div className="mt-3">
                 <p>
-                    <strong>Activités sélectionnées:</strong> {tempSelectedActivities.length} / {activeFormula.number_of_items}
+                    <strong>{t("formulaActivitiesModal.selectedCount")}</strong> {tempSelectedActivities.length} / {activeFormula.number_of_items}
                 </p>
             </div>
 
@@ -282,10 +285,10 @@ const FormulaActivitiesModal = ({
             )}
             <div style={{ textAlign: "right", marginTop: "15px" }}>
                 <button className="btn btn-secondary" onClick={handleCancelActivities}>
-                    Annuler
+                    {t("common:actions.cancel")}
                 </button>
                 <button className="btn btn-primary" onClick={handleSaveActivities} style={{ marginLeft: "10px" }}>
-                    Enregistrer
+                    {t("common:actions.save")}
                 </button>
             </div>
         </ModalCustom>
