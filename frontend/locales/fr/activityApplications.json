@@ -169,5 +169,33 @@
             "allActivities": " aux activités",
             "oneActivity": " à l'activité {{activity}}"
         }
+    },
+    "validation": {
+        "title": "Récapitulatif de la demande",
+        "personalInfo": "Informations personnelles",
+        "birthDate": "Date de naissance",
+        "personalContactDetails": "Coordonnées personnelles",
+        "addresses": "Adresse(s)",
+        "phone": "Télephone {{label}}:",
+        "contacts": "Contacts",
+        "legalRepresentative": "Représentant légal",
+        "accompanyingPerson": "Accompagnant",
+        "emergencyContact": "Contact d'urgence",
+        "selectedActivities": "Activités sélectionnées",
+        "selectedPackages": "Formules sélectionnées",
+        "colPackage": "Formule",
+        "colIncludedActivities": "Activités incluses",
+        "colEstimatedPrice": "Tarif estimé",
+        "noActivitySelected": "Aucune activité sélectionnée",
+        "estimatedTotal": "Total estimé",
+        "totalEstimatedCost": "Coût total estimé :",
+        "availabilities": "Disponibilités",
+        "levelEvaluation": "Evaluation de niveau",
+        "paymentPreference": "Préférence de paiement",
+        "paymentSchedule": "Echéancier",
+        "paymentMethod": "Moyen de paiement",
+        "payers": "Payeur(s)",
+        "comment": "Commentaire",
+        "submitRequest": "Envoyer la demande"
     }
 }

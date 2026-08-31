@@ -169,5 +169,33 @@
             "allActivities": " for all activities",
             "oneActivity": " for the activity {{activity}}"
         }
+    },
+    "validation": {
+        "title": "Request summary",
+        "personalInfo": "Personal information",
+        "birthDate": "Date of birth",
+        "personalContactDetails": "Personal contact details",
+        "addresses": "Address(es)",
+        "phone": "Phone {{label}}:",
+        "contacts": "Contacts",
+        "legalRepresentative": "Legal guardian",
+        "accompanyingPerson": "Accompanying person",
+        "emergencyContact": "Emergency contact",
+        "selectedActivities": "Selected activities",
+        "selectedPackages": "Selected packages",
+        "colPackage": "Package",
+        "colIncludedActivities": "Included activities",
+        "colEstimatedPrice": "Estimated price",
+        "noActivitySelected": "No activity selected",
+        "estimatedTotal": "Estimated total",
+        "totalEstimatedCost": "Total estimated cost:",
+        "availabilities": "Availabilities",
+        "levelEvaluation": "Level evaluation",
+        "paymentPreference": "Payment preference",
+        "paymentSchedule": "Payment schedule",
+        "paymentMethod": "Payment method",
+        "payers": "Payer(s)",
+        "comment": "Comment",
+        "submitRequest": "Submit request"
     }
 }

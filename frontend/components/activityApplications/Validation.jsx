@@ -1,4 +1,5 @@
 import React, { Fragment } from "react";
+import { useTranslation } from "react-i18next";
 import _ from "lodash";
 import TimePreferencesTable from "./TimePreferencesTable";
 import SelectedActivitiesTable from "./SelectedActivitiesTable";
@@ -28,6 +29,7 @@ const Validation = ({
                         selectedFormulaActivities,
                         pricingInfo
                     }) => {
+    const { t } = useTranslation("activityApplications");
     const addStudents = [...additionalStudents];
 
 
@@ -191,7 +193,7 @@ const Validation = ({
 
             <div className="col-xl-7 col-md-12">
                 <h3 className="font-weight-bold mb-2" style={{color: "#8AA4B1"}}>
-                    Récapitulatif de la demande
+                    {t("validation.title")}
                 </h3>
 
                 <div className="p-5" style={{backgroundColor: "white", borderRadius: 12}}>
@@ -210,11 +212,11 @@ const Validation = ({
                     {/*Informations personnelles*/}
                     <div className="mb-5">
                         <h3 className="font-weight-bold mb-3" style={{color: "#8AA4B1"}}>
-                            Informations personnelles
+                            {t("validation.personalInfo")}
                         </h3>
                         <div className="row">
                             <div className="col-md-6">
-                                <p className="m-0 small">Date de naissance</p>
+                                <p className="m-0 small">{t("validation.birthDate")}</p>
                                 <p className="font-weight-bold" style={{color: "#00283B"}}>
                                     {moment(application.user.birthday).format(
                                         "DD/MM/YYYY",
@@ -227,12 +229,12 @@ const Validation = ({
                     {/*Coordonnées personnelles*/}
                     <div className="mb-5">
                         <h3 className="font-weight-bold" style={{color: "#8AA4B1"}}>
-                            Coordonnées personnelles
+                            {t("validation.personalContactDetails")}
                         </h3>
 
                         <div className="row">
                             <div className="col-md-6">
-                                <p className="m-0 small">Adresse(s)</p>
+                                <p className="m-0 small">{t("validation.addresses")}</p>
                                 {_.map(application.infos.addresses, (address, i) => (
                                     <div key={i}>
                                         <p className="font-weight-bold" style={{color: "#00283B"}}>
@@ -245,7 +247,7 @@ const Validation = ({
                             <div className="col">
                                 {_.map(_.filter(application.infos.telephones, p => p.label && p.number), (p, i) => (
                                     <div key={i}>
-                                        <p className="m-0 small">Télephone {p.label}:</p>
+                                        <p className="m-0 small">{t("validation.phone", { label: p.label })}</p>
                                         <p className="font-weight-bold" style={{color: "#00283B"}}>{p.number}</p>
                                     </div>
                                 ))}
@@ -257,25 +259,25 @@ const Validation = ({
                     {(hasContacts(legalReferents) || hasContacts(accompanying) || hasContacts(emergencyContacts)) && (
                         <div className="mb-5">
                             <h3 className="font-weight-bold" style={{color: "#8AA4B1"}}>
-                                Contacts
+                                {t("validation.contacts")}
                             </h3>
                             <div className="row">
                                 <div className="col-md-6">
                                     <div className="mb-3">
-                                        <p className="m-0 small">Représentant légal</p>
+                                        <p className="m-0 small">{t("validation.legalRepresentative")}</p>
                                         <p className="font-weight-bold" style={{color: "#00283B"}}>
                                             {legalReferents.map(p => p.name).join(", ")}
                                         </p>
                                     </div>
                                     <div>
-                                        <p className="m-0 small">Accompagnant</p>
+                                        <p className="m-0 small">{t("validation.accompanyingPerson")}</p>
                                         <p className="font-weight-bold" style={{color: "#00283B"}}>
                                             {accompanying.map(p => p.name).join(", ")}
                                         </p>
                                     </div>
                                 </div>
                                 <div className="col">
-                                    <p className="m-0 small">Contact d'urgence</p>
+                                    <p className="m-0 small">{t("validation.emergencyContact")}</p>
                                     <p className="font-weight-bold" style={{color: "#00283B"}}>
                                         {emergencyContacts.map(p => p.name).join(", ")}
                                     </p>
@@ -288,7 +290,7 @@ const Validation = ({
                     {((selectedActivities && selectedActivities.length > 0) || (selectedPacks && selectedPacks.length > 0)) && (
                         <div className="mb-5">
                             <h3 className="font-weight-bold" style={{ color: "#8AA4B1" }}>
-                                Activités sélectionnées
+                                {t("validation.selectedActivities")}
                             </h3>
                             <div>
                                 <SelectedActivitiesTable
@@ -306,15 +308,15 @@ const Validation = ({
                     {application.selectedFormulas && application.selectedFormulas.length > 0 && (
                         <div className="mb-5">
                             <h3 className="font-weight-bold" style={{ color: "#8AA4B1" }}>
-                                Formules sélectionnées
+                                {t("validation.selectedPackages")}
                             </h3>
                             <div>
                                 <table className="table table-striped" style={{ borderRadius: "12px", overflow: "hidden" }}>
                                     <thead>
                                     <tr style={{ backgroundColor: "#F7FBFC", color: "#8AA4B1" }}>
-                                        <th scope="col">Formule</th>
-                                        <th scope="col">Activités incluses</th>
-                                        <th scope="col">Tarif estimé</th>
+                                        <th scope="col">{t("validation.colPackage")}</th>
+                                        <th scope="col">{t("validation.colIncludedActivities")}</th>
+                                        <th scope="col">{t("validation.colEstimatedPrice")}</th>
                                     </tr>
                                     </thead>
                                     <tbody>
@@ -345,7 +347,7 @@ const Validation = ({
                                             <tr key={formulaId} style={{ backgroundColor: "#ffffff" }}>
                                                 <td className="font-weight-bold">{formula.name}</td>
                                                 <td className="text-left">
-                                                    {activitiesLabel.length > 0 ? activitiesLabel : "Aucune activité sélectionnée"}
+                                                    {activitiesLabel.length > 0 ? activitiesLabel : t("validation.noActivitySelected")}
                                                 </td>
                                                 <td className="text-left">
                                                     {formula.formule_pricings && formula.formule_pricings[0]
@@ -360,7 +362,7 @@ const Validation = ({
                                         <tfoot>
                                         <tr style={{ backgroundColor: "#F7FBFC", color: "#8AA4B1" }}>
                                             <td></td>
-                                            <td className="text-right font-weight-bold">Total estimé</td>
+                                            <td className="text-right font-weight-bold">{t("validation.estimatedTotal")}</td>
                                             <td className="font-weight-bold">
                                                 {application.selectedFormulas.reduce((total, formulaId) => {
                                                     const formula = (application.formulas || formulas || []).find(f => f.id === formulaId);
@@ -380,7 +382,7 @@ const Validation = ({
 
                     <div className="d-flex justify-content-end mt-2">
                         <div className="p-2 bg-light" style={{ borderRadius: "5px", fontWeight: "bold" }}>
-                            Coût total estimé : {totalEstimatedCost.toFixed(2)} €
+                            {t("validation.totalEstimatedCost")} {totalEstimatedCost.toFixed(2)} €
                         </div>
                     </div>
 
@@ -404,7 +406,7 @@ const Validation = ({
                     {showTimePreferences ? (
                         <div className="mb-5">
                             <h3 className="font-weight-bold" style={{color: "#8AA4B1"}}>
-                                Disponibilités
+                                {t("validation.availabilities")}
                             </h3>
                             {preferencesArray.map((pref, index) => (
                                 <TimePreferencesTable
@@ -421,7 +423,7 @@ const Validation = ({
                     {selectedEvaluations.length > 0 && _.size(application.selectedEvaluationIntervals) > 0 ? (
                         <div className="mb-5">
                             <h3 className="font-weight-bold" style={{color: "#8AA4B1"}}>
-                                Evaluation de niveau
+                                {t("validation.levelEvaluation")}
                             </h3>
                             <EvaluationChoiceTable
                                 activityRefs={allActivityRefs}
@@ -435,23 +437,23 @@ const Validation = ({
                     {paymentTerms.length > 0 ? (
                         <div className="mb-5">
                             <h3 className="font-weight-bold" style={{color: "#8AA4B1"}}>
-                                Préférence de paiement
+                                {t("validation.paymentPreference")}
                             </h3>
                             <div className="row">
                                 <div className="col-md-6">
                                     <div className="mb-3">
-                                        <p className="m-0 small">Echéancier</p>
+                                        <p className="m-0 small">{t("validation.paymentSchedule")}</p>
                                         <p className="font-weight-bold"
                                            style={{color: "#00283B"}}>{selectedPaymentScheduleOption}</p>
                                     </div>
                                     <div>
-                                        <p className="m-0 small">Moyen de paiement</p>
+                                        <p className="m-0 small">{t("validation.paymentMethod")}</p>
                                         <p className="font-weight-bold"
                                            style={{color: "#00283B"}}>{selectedPaymentMethod}</p>
                                     </div>
                                 </div>
                                 <div className="col">
-                                    <p className="m-0 small">Payeur(s)</p>
+                                    <p className="m-0 small">{t("validation.payers")}</p>
                                     <p className="font-weight-bold" style={{color: "#00283B"}}>
                                         {payersList.map(p => p.name).join(", ")}
                                     </p>
@@ -467,7 +469,7 @@ const Validation = ({
 
             <div className="col-md-5 col-xl-5">
                 <h3 className="font-weight-bold mb-2" style={{color: "#8AA4B1"}}>
-                    Commentaire
+                    {t("validation.comment")}
                 </h3>
                 <div>
                         <textarea name="comment" className="form-control" style={{borderRadius: 12, border: 0}}
@@ -484,7 +486,7 @@ const Validation = ({
             {buttonDisabled ? (
                 <Fragment><i className="fa fa-spinner fa-spin"/> &nbsp;</Fragment>
             ) : ""}
-            {"Envoyer la demande"}
+            {t("validation.submitRequest")}
         </button>
     </Fragment>;
 };
