@@ -134,5 +134,40 @@
         "personToContact": "Person to contact",
         "accompanyingPerson": "Accompanying person",
         "familyLinkCreation": "creating the family link from {{name}}'s point of view"
+    },
+    "wizard": {
+        "submit": {
+            "greeting": "<h5>Hello <b>{{name}}</b></h5>",
+            "redirect": "Redirect",
+            "applicationRegisteredHtml": "<p><b>Your enrollment request has been registered</b><br/>The identification number of your enrollment request is:<br/><b>{{id}}</b><br/>A summary email of your registration will be sent to your email address<br/>You will be automatically redirected to the site home page</p>",
+            "packsAttributedHtml": "<p><b>Your session packs have been allocated to you</b><br/></p>",
+            "errorTitle": "Error",
+            "errorText": "An error occurred while creating your enrollment request. Please contact the administrator."
+        },
+        "seasonsClosed": "Registration for the current season is closed, and registration for the next season is not open yet.",
+        "createSeason": "Create a season",
+        "instrumentsLabel": "Instruments you would like to play in the activity",
+        "beginDate": "Start date",
+        "nextStep": "Next",
+        "prevStep": "Previous",
+        "newApplicationTitle": "New enrollment request",
+        "steps": {
+            "member": "Member concerned",
+            "contactDetails": "Contact details",
+            "changeWishes": "Change requests",
+            "packChoice": "Package choice",
+            "activityChoice": "Activity choice",
+            "instruments": "Instruments",
+            "availabilities": "Availabilities",
+            "levelEvaluation": "Level evaluation",
+            "evaluationSlots": "Evaluation slots",
+            "payment": "Payment",
+            "summary": "Summary"
+        },
+        "applicationSubtitle": {
+            "full": "Enrollment request{{activityPart}} for {{season}}",
+            "allActivities": " for all activities",
+            "oneActivity": " for the activity {{activity}}"
+        }
     }
 }

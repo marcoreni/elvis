@@ -606,8 +606,20 @@ et à mesure de son intégration :
             + note de dédup pour les clés `summary`/`duration`/`colEstimatedPrice`. Tests Vitest
             (3 fichiers, 63 tests dont le rendu de `formulaPrefix` et de `unpopularWarning`).
             Revue : 0 bug ; tokens `min`/`--` non traduits consignés.
-      - [ ] **Lot 3d** — `Wizard.jsx` (1162 lignes, orchestrateur StepZilla — 2e wizard avec labels
-            d'étape FR en dur vers ~ligne 1140).
+      - [x] **Lot 3d** — branche `feature/i18n-06-extract-activities-lot3d`. `Wizard.jsx`
+            (orchestrateur StepZilla — pas une étape lui-même, donc
+            `withTranslation("activityApplications")`). `const { t } = this.props` dans
+            `handleSubmit` (dialogue sweetalert2 de succès/erreur) + `render`. +27 feuilles
+            sous `wizard.*` (127 au total, parité fr/en) : les 11 noms d'étapes StepZilla, les
+            corps HTML du swal de soumission (`greeting`/`applicationRegisteredHtml`/
+            `packsAttributedHtml` avec `{{name}}`/`{{id}}`), le garde « saisons fermées », les
+            boutons Suivant/Précédent, et le sous-titre `<h3>` sous-lexical reconstruit en
+            `applicationSubtitle.{full,allActivities,oneActivity}` (`{{activityPart}}`/`{{season}}`
+            /`{{activity}}`). `oneActivity` = espace de tête uniquement (le fragment source n'avait
+            pas d'espace de queue ; `full` fournit le « pour la ») — espaces simples partout, comme
+            le JSX d'origine. 4 défauts FR préservés + consignés. Tests Vitest (`Wizard.test.jsx`,
+            78 tests : garde `.WrappedComponent`, rendu du garde « saisons fermées », résolution
+            i18n de chaque clé + composition du sous-titre). Revue : 0 bug.
       - [ ] **Lot 3e** — `Validation.jsx` (~84).
       - [ ] **Lot 3f** — `summary/Activity.jsx` (~146).
       - [ ] **Lot 3g** — `summary/Summary.jsx` (~238).

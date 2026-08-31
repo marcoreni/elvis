@@ -622,6 +622,44 @@ Untranslated unit tokens in the two lot-3c files (same class as the `SelectedAct
 `FormulaChoice.jsx:181` (`{duration !== "--" ? "min" : ""}`), and `"--"` placeholders at
 `ActivityChoice.jsx:15,17,21,297,449` / `FormulaChoice.jsx:96,131,171`.
 
+`frontend/locales/fr/activityApplications.json` (added by feature/i18n-06-extract-activities-lot3d
+— `Wizard.jsx`, the StepZilla orchestrator of the enrolment flow) — preserved verbatim from the
+component:
+- `wizard.seasonsClosed` — "Les inscriptions à la saison actuelle **est fermée** et celles de la
+  saison suivante ne sont pas encore ouvertes." → "…**sont fermées**…" (number agreement: the
+  subject "Les inscriptions" is plural). Was JSX text across two lines, inter-line whitespace
+  collapsed to a single space during extraction. Kept verbatim; the English side is a clean,
+  grammatically correct translation.
+- `wizard.newApplicationTitle` — "Nouvelle demande **d’inscription**" uses a **typographic
+  apostrophe** `’` (U+2019), unlike every other value in this file, which uses the straight `'`
+  (`d'inscription`, `à l'activité`, `l'accueil`, …). Preserved verbatim; flagged as an
+  apostrophe-style inconsistency for the eventual cleanup pass (do not let a blanket
+  quote-normalisation silently "fix" only this one).
+- `wizard.steps.member` — "Membre **C**oncerné" has a mid-phrase capital "C" → "Membre concerné"
+  (cf. `wizardUserSelectMember.memberConcerned` = "Membre concerné", the correct form, in the same
+  file). Kept verbatim; the English side reads "Member concerned".
+- `wizard.steps.changeWishes` — "**Voeux** de changement" → "**Vœux** de changement" (missing the
+  œ ligature). Kept verbatim; the English side reads "Change requests".
+
+Intentional artifacts in the lot-3d block — a blanket "trim / normalize the locale files" pass
+must not touch these:
+- `wizard.applicationSubtitle.allActivities` (" aux activités") and
+  `wizard.applicationSubtitle.oneActivity` (" à l'activité {{activity}}") each carry a **leading
+  space only** — they are sub-lexical fragments concatenated into `applicationSubtitle.full`
+  ("Demande d'inscription{{activityPart}} pour la {{season}}"), which supplies the space before
+  "pour la". The leading spaces are load-bearing glue; do NOT add a trailing space (that would
+  double the space before "pour la" in the rendered `<h3>`). Same shape on the English side
+  (" for all activities" / " for the activity {{activity}}").
+- `wizard.submit.applicationRegisteredHtml` was assembled from 7 `+`-concatenated JS string
+  literals with no separator; the literal `<p>`/`<b>`/`<br/>` tags are intentional (rendered as
+  HTML by sweetalert2). The French text has no typo of its own; the English side is a clean
+  translation. Same class as the lot-4 `courses.json` `lessonList.help.body` entry.
+
+Not a defect (keep note): `wizard.nextStep` = "Suivant" and `wizard.prevStep` = "Précédent" are
+byte-identical to `common:reactTable.nextText` / a matching back label, but they are StepZilla
+next/back button labels in a different context and are kept local to the `wizard` block, per the
+lot brief.
+
 ## `activityApplications` — residual French from lot-3a's not-yet-processed siblings
 
 The i18n-06 activities lot-3a review surfaced hardcoded French in files that lot 3a did NOT touch
