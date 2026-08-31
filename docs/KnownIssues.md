@@ -643,15 +643,17 @@ component:
 
 Intentional artifacts in the lot-3d block — a blanket "trim / normalize the locale files" pass
 must not touch these:
-- `wizard.applicationSubtitle.allActivities` (" aux activités" — leading space) and
-  `wizard.applicationSubtitle.oneActivity` (" à l'activité {{activity}} " — leading **and**
-  trailing space) are sub-lexical fragments concatenated into `applicationSubtitle.full` at render
-  time; the surrounding spaces are load-bearing glue. Same treatment on the English side
-  (" for all activities" / " for the activity {{activity}} ").
-- `wizard.submit.applicationRegisteredHtml` was assembled from 6 concatenated JS string literals
-  with no separator; the literal `<p>`/`<b>`/`<br/>` tags are intentional (rendered as HTML by
-  sweetalert2). The French text has no typo of its own; the English side is a clean translation.
-  Same class as the lot-4 `courses.json` `lessonList.help.body` entry.
+- `wizard.applicationSubtitle.allActivities` (" aux activités") and
+  `wizard.applicationSubtitle.oneActivity` (" à l'activité {{activity}}") each carry a **leading
+  space only** — they are sub-lexical fragments concatenated into `applicationSubtitle.full`
+  ("Demande d'inscription{{activityPart}} pour la {{season}}"), which supplies the space before
+  "pour la". The leading spaces are load-bearing glue; do NOT add a trailing space (that would
+  double the space before "pour la" in the rendered `<h3>`). Same shape on the English side
+  (" for all activities" / " for the activity {{activity}}").
+- `wizard.submit.applicationRegisteredHtml` was assembled from 7 `+`-concatenated JS string
+  literals with no separator; the literal `<p>`/`<b>`/`<br/>` tags are intentional (rendered as
+  HTML by sweetalert2). The French text has no typo of its own; the English side is a clean
+  translation. Same class as the lot-4 `courses.json` `lessonList.help.body` entry.
 
 Not a defect (keep note): `wizard.nextStep` = "Suivant" and `wizard.prevStep` = "Précédent" are
 byte-identical to `common:reactTable.nextText` / a matching back label, but they are StepZilla
