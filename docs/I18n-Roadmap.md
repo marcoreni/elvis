@@ -596,7 +596,16 @@ et à mesure de son intégration :
             classe StepZilla + pluriels + `<Trans>` + chemin swal). Revue : 0 bug ; notes
             non-bloquantes consignées (helper `T` non-réactif, pluriels sans fallback, token
             « min », `err_must_select_user`).
-      - [ ] **Lot 3c** — `FormulaChoice.jsx` (~71) + `ActivityChoice.jsx` (~73).
+      - [x] **Lot 3c** — branche `feature/i18n-06-extract-activities-lot3c`. `FormulaChoice.jsx` +
+            `ActivityChoice.jsx` (panneaux « choix de la formule / choix des activités » ;
+            composants fn internes des étapes StepZilla `Wrapped*Choice` déjà traduites en 3a, donc
+            `useTranslation("activityApplications")` sans souci). +22 feuilles sous
+            `formulaChoice.*` / `activityChoice.*` (100 au total, parité fr/en).
+            `activityChoice.formulaPrefix` porte `{{name}}`. 4 typos/incohérences préservés +
+            consignés (`Total estimé:` sans espace, casse `aucune`/`Aucune`, `unpopularWarning`)
+            + note de dédup pour les clés `summary`/`duration`/`colEstimatedPrice`. Tests Vitest
+            (3 fichiers, 63 tests dont le rendu de `formulaPrefix` et de `unpopularWarning`).
+            Revue : 0 bug ; tokens `min`/`--` non traduits consignés.
       - [ ] **Lot 3d** — `Wizard.jsx` (1162 lignes, orchestrateur StepZilla — 2e wizard avec labels
             d'étape FR en dur vers ~ligne 1140).
       - [ ] **Lot 3e** — `Validation.jsx` (~84).
