@@ -74,7 +74,6 @@ class ActivityRefApplication extends React.Component {
                 </div>
 
                 <p className="row-sm text-muted">
-                    {/* eslint-disable-next-line react/jsx-child-element-spacing */}
                     <Trans ns="activities" i18nKey="activityRefApplication.help.multiSelect">Sélectionner plusieurs activités avec <strong>CTRL</strong>.</Trans>
                     <br/>
                     <Trans ns="activities" i18nKey="activityRefApplication.help.rangeSelect">Sélectionner la totalité entre deux activités avec <strong>MAJ/SHIFT</strong>.</Trans>

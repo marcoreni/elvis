@@ -9,19 +9,12 @@
 // `renderInstruments()` has two branches:
 //  - `instruments.length > 0` → real `<h2>` / `<h4>` headings (templateTitle / instruments /
 //    roles), asserted directly.
-//  - `instruments.length === 0` → a `<Trans i18nKey="workGroup.noInstruments"
-//    components={{ link: <a href="/instruments/new" /> }} />` inside `<p class="text-center">`.
-//    The test asserts the rendered sentence, that an `<a href="/instruments/new">` is emitted,
-//    and that no literal "<link>" leaks.
-//
-//    NOTE (flagged for the component author): with the *object* form of `components` and NO
-//    default children on `<Trans>`, react-i18next 17 renders the `<a>` EMPTY and drops the
-//    "lien" / "link" text next to it as a sibling text node, i.e.
-//        ...suivant ce <a href="/instruments/new"></a>lien.
-//    The visible sentence and the href are correct and nothing leaks, but the link label is not
-//    inside the anchor. Giving `<Trans>` matching default children (or using the numeric
-//    `<1>lien</1>` form) would nest the text into the `<a>`. The assertions below are written
-//    against the CURRENT output; the `<a>`-has-text check is intentionally soft.
+//  - `instruments.length === 0` → a `<Trans i18nKey="workGroup.noInstruments">Aucun instrument
+//    ... ce <a href="/instruments/new">lien</a>.</Trans>` inside `<p class="text-center">`
+//    (key `"... ce <1>lien</1>."`). The tests assert the rendered sentence, and that the link
+//    word ("lien" / "link") is the text OF the `<a href="/instruments/new">` — not a bare
+//    sibling. An earlier `components={{ link: <a/> }}` self-closing form rendered the anchor
+//    empty with the word dangling beside it; `link.textContent === "lien"` locks that fix in.
 //
 // `../common/Checkbox` is stubbed to render its `label` prop. Language via the frontend/i18n
 // singleton; `afterEach` restores "fr".
@@ -97,11 +90,11 @@ describe("WorkGroupTemplateEditor", () => {
 
             const link = p.querySelector('a[href="/instruments/new"]');
             expect(link).toBeTruthy();
-            // "lien" renders (somewhere in the <p>); see the NOTE above — under the current
-            // component it lands as a sibling of the empty <a>, not as its child.
-            expect(p.textContent).toContain("lien");
+            // the link word must be the anchor's own text, not a bare sibling of an empty <a>.
+            expect(link.textContent).toBe("lien");
 
             expect(p.textContent).not.toContain("<link>");
+            expect(p.textContent).not.toContain("<1>");
             expect(p.innerHTML).not.toContain("&lt;link&gt;");
         });
     });
@@ -134,10 +127,10 @@ describe("WorkGroupTemplateEditor", () => {
 
             const link = p.querySelector('a[href="/instruments/new"]');
             expect(link).toBeTruthy();
-            // See the NOTE above: "link" renders in the <p>, sibling to the empty <a>.
-            expect(p.textContent).toContain("link");
+            expect(link.textContent).toBe("link");
 
             expect(p.textContent).not.toContain("<link>");
+            expect(p.textContent).not.toContain("<1>");
             expect(p.innerHTML).not.toContain("&lt;link&gt;");
         });
     });
