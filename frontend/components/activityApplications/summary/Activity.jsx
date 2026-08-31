@@ -586,7 +586,7 @@ class Activity extends React.Component {
             {
                 Header: t("summaryActivity.colTeacher"),
                 id: "teacher",
-                accessor: ({ teacher: t }) => `${t.first_name} ${t.last_name}`,
+                accessor: ({ teacher }) => `${teacher.first_name} ${teacher.last_name}`,
                 filterMethod: (filter, { teacher }) =>
                     !filter ||
                     teacher.match(new RegExp(`.*${filter.value}.*`, "i")),

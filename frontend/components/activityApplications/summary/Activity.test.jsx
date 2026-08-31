@@ -31,6 +31,21 @@ global._ = _;
 
 // react-table@6 default export. Render the string Headers + the `common:reactTable.*` text props
 // so the translated copy is assertable without a real grid.
+// A row fixture the `SubComponent` (= `SubStudentList`) can render against.
+export const SUB_ROW = {
+    original: {
+        id: 10,
+        closest_lesson: "2025-09-01T00:00:00",
+        activity_ref: {is_work_group: false, id: 3},
+        activity_ref_id: 3,
+        time_interval: {id: 7, start: "2025-09-01T17:00:00"},
+        users: [{id: 99, first_name: "Jean", last_name: "Dupont", birthday: "2014-01-01"}],
+        inactive_users: [],
+        options: [],
+        activities_instruments: [],
+    },
+};
+
 vi.mock("react-table", () => ({
     default: props => (
         <div data-testid="react-table">
@@ -48,9 +63,20 @@ vi.mock("react-table", () => ({
             <span data-testid="rt-pageText">{props.pageText}</span>
             <span data-testid="rt-ofText">{props.ofText}</span>
             <span data-testid="rt-rowsText">{props.rowsText}</span>
+            {typeof props.SubComponent === "function" ? (
+                <div data-testid="rt-sub">{props.SubComponent(SUB_ROW)}</div>
+            ) : null}
         </div>
     ),
 }));
+
+// LevelCell fires api.set().get(...).then(...) on mount, and falls back to
+// TimeIntervalHelpers.levelDisplayForActivity. Keep the real helpers except level display, which
+// we force to the "NON INDIQUÉ" sentinel so the translated placeholder path is exercised.
+vi.mock("../../planning/TimeIntervalHelpers", async importOriginal => {
+    const actual = await importOriginal();
+    return {...actual, levelDisplayForActivity: () => "NON INDIQUÉ"};
+});
 
 // react-modal — render children unconditionally so the level-edit modal body is in the DOM.
 vi.mock("react-modal", () => ({
@@ -163,6 +189,12 @@ describe("Activity — rendered copy per locale", () => {
                 cancel: "Annuler",
                 save: "Enregistrer",
             },
+            sub: {
+                headcountAt: /Effectifs au :/,
+                cols: ["Nom", "Âge", "Niveau", "Début le", "Arrêt le"],
+                ageYears: /\d+ ans/,
+                levelCell: "NON INDIQUÉ", // LevelCell -> summaryActivity.notSpecified
+            },
         },
         en: {
             headers: {
@@ -186,6 +218,12 @@ describe("Activity — rendered copy per locale", () => {
                 notSpecified: "NOT SPECIFIED",
                 cancel: "Cancel",
                 save: "Save",
+            },
+            sub: {
+                headcountAt: /Headcount as of/,
+                cols: ["Name", "Age", "Level", "Start on", "Stop on"],
+                ageYears: /\d+ years old/,
+                levelCell: "NOT SPECIFIED",
             },
         },
     };
@@ -226,6 +264,19 @@ describe("Activity — rendered copy per locale", () => {
         expect(within(modal).getByText(expected.modal.notSpecified)).toBeInTheDocument();
         expect(within(modal).getByText(expected.modal.cancel)).toBeInTheDocument();
         expect(within(modal).getByText(expected.modal.save)).toBeInTheDocument();
+
+        // --- SubStudentList (the <ReactTable> SubComponent) + its nested <LevelCell> ---
+        const sub = screen.getByTestId("rt-sub");
+        expect(within(sub).getByText(expected.sub.headcountAt)).toBeInTheDocument();
+        for (const col of expected.sub.cols) {
+            expect(within(sub).getByText(col)).toBeInTheDocument();
+        }
+        expect(within(sub).getByText(expected.sub.ageYears)).toBeInTheDocument();
+        // LevelCell resolves its useEffect async; the fallback path (levelDisplayForActivity
+        // mocked to "NON INDIQUÉ") renders summaryActivity.notSpecified.
+        await waitFor(() =>
+            expect(within(sub).getByText(expected.sub.levelCell)).toBeInTheDocument(),
+        );
     });
 });
 
