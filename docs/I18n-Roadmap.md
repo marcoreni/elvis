@@ -522,8 +522,24 @@ et à mesure de son intégration :
           **NB** : `parameters/BaseDataTable.jsx` (classe de base des 2 tableaux) a son propre
           chrome FR en dur (« Créer » + props react-table) alors que `common:reactTable.*` existe
           déjà — à faire quand le domaine `parameters` sera traité, pas ici.
-    - [ ] **Lot 2 — `activityRef/ActivityRefContainer`** (formulaire édition/création d'activité,
-          gros arbre React sous `frontend/components/activityRef/`).
+    - [~] **Lot 2 — `activityRef/` (formulaire édition/création d'activité)** — arbre React sous
+          `frontend/components/activityRef/`, découpé en 3 sous-lots.
+      - [x] **Lot 2a — coque du formulaire** : branche `feature/i18n-06-extract-activities-lot2`.
+            `ActivityRefContainer.jsx` (`withTranslation("activities")` ; `const { t } = this.props`
+            dans `sendImage` / `onSubmit` / `onValidate` / `render` ; en-têtes d'onglets, titres
+            swal succès/erreur, erreurs de champ react-final-form, boutons Annuler/Valider),
+            `ActivityRefTeachers.jsx` (wrappé ; `title` de `SelectMultiple`), `ActivityRefDataService.jsx`
+            (classe non-composant : `i18n.t("activities:activityRef.pricing.inUseError")` sur le
+            reject de `deleteData`). Lambdas `t =>` renommées `teacher =>`. +11 clés sous
+            `activityRef.*` (20 au total dans `activities.json`, parité fr/en). Réutilise
+            `common:actions.{cancel,validate}`. `ActivityRefImageUpload.jsx` /
+            `NewActivityRefDataService.jsx` : aucune chaîne visible, non touchés. Tests Vitest
+            (3 fichiers, gardes HOC + résolution i18n des fragments d'erreur), 15 tests.
+            Revue : 0 bug ; 2 notes pré-existantes consignées dans `docs/KnownIssues.md`
+            (tooltip FR en dur dans `utils/ui/tabs.jsx` + typos ; `this.teachersError` à sens unique).
+      - [ ] **Lot 2b — `ActivityRefBasics.jsx`** (~79 chaînes — l'onglet « Activité »).
+      - [ ] **Lot 2c** — `ActivityRefApplication.jsx` (+ `AllowsTimeslotSelectionButtonGroup`) +
+            `WorkGroupTemplateEditor.jsx` + `ActivityRefPricingModal.jsx`.
     - [ ] **Lot 3** — `app/views/{activity,activity_instance,my_activities,activities_applications}/*`
           + `frontend/components/activityApplications/*` (flux d'inscription côté élève — gros).
   - [x] `evaluation` — branche `feature/i18n-06-extract-evaluation` *(dépend de 01+02)*

@@ -1,4 +1,5 @@
 import React from "react";
+import {withTranslation} from "react-i18next";
 import {csrfToken} from "../utils";
 import swal from "sweetalert2";
 import ActivityRefBasics from "./ActivityRefBasics";
@@ -12,7 +13,7 @@ import ActivityRefTeachers from "./ActivityRefTeachers";
 import arrayMutators from "final-form-arrays";
 
 
-export default class ActivityRefContainer extends React.Component {
+class ActivityRefContainer extends React.Component {
     constructor(props) {
         super(props);
         const applicationOptions = this.buildApplicationOptions(this.props.activityRef);
@@ -29,7 +30,7 @@ export default class ActivityRefContainer extends React.Component {
                     "false" :
                     this.props.activityRef.allows_timeslot_selection.toString(),
             nextCycles: this.props.nextCycles,
-            teachers: this.props.teachers.map(t => t.id),
+            teachers: this.props.teachers.map(teacher => teacher.id),
         };
 
         this.instruments = _(props.activityInstruments)
@@ -100,6 +101,7 @@ export default class ActivityRefContainer extends React.Component {
     }
 
     sendImage(activityRefId) {
+        const {t} = this.props;
         let formData = new FormData();
         formData.append("picture", this.image);
 
@@ -116,13 +118,13 @@ export default class ActivityRefContainer extends React.Component {
                     redirectTo("/activity_ref");
                     swal({
                         type: "success",
-                        title: "Enregistrement effectué",
+                        title: t("activityRef.container.saved"),
                     });
                 });
             } else {
                 swal({
                     type: "error",
-                    title: "Une erreur est survenue",
+                    title: t("activityRef.container.genericError"),
                 });
             }
         });
@@ -130,6 +132,7 @@ export default class ActivityRefContainer extends React.Component {
     }
 
     onSubmit(values) {
+        const {t} = this.props;
 
         // on prépare les valeurs pour envoi à l'API
         var activityRef = {
@@ -173,7 +176,7 @@ export default class ActivityRefContainer extends React.Component {
                     redirectTo("/activity_ref");
                     swal({
                         type: "success",
-                        title: "Enregistrement effectué",
+                        title: t("activityRef.container.saved"),
                     });
                 }
 
@@ -182,7 +185,7 @@ export default class ActivityRefContainer extends React.Component {
                 console.log("error updating activity ref : ", msg);
                 swal({
                     type: "error",
-                    title: "Une erreur est survenue",
+                    title: t("activityRef.container.genericError"),
                 });
 
             })
@@ -191,17 +194,18 @@ export default class ActivityRefContainer extends React.Component {
     }
 
     onValidate(values) {
+        const {t} = this.props;
 
         const errors = {};
 
         if (isIntStrInf(values.activityRef.occupation_hard_limit, values.activityRef.occupation_limit)) {
             errors.activityRef = errors.activityRef || {};
-            errors.activityRef.occupation_hard_limit = "doit être supérieur au nombre de places";
+            errors.activityRef.occupation_hard_limit = t("activityRef.container.errors.hardLimitTooLow");
         }
 
         if (isIntStrInf(values.activityRef.to_age, values.activityRef.from_age)) {
             errors.activityRef = errors.activityRef || {};
-            errors.activityRef.to_age = "doit être supérieur à l'âge min";
+            errors.activityRef.to_age = t("activityRef.container.errors.toAgeTooLow");
         }
 
         if (!values.teachers || values.teachers.length === 0)
@@ -209,7 +213,7 @@ export default class ActivityRefContainer extends React.Component {
             // errors.teachers = "doit être renseigné";
 
             // on n'enregistre pas l'erreur dans les erreurs pour ne pas bloquer le formulaire, mais on garde l'information pour l'affiché
-            this.teachersError = "doit être renseigné";
+            this.teachersError = t("activityRef.container.errors.required");
         }
 
         return errors;
@@ -221,6 +225,7 @@ export default class ActivityRefContainer extends React.Component {
     }
 
     render() {
+        const {t} = this.props;
         return (
             <div className="col-lg-12 page-reglement">
                 <Form
@@ -238,7 +243,7 @@ export default class ActivityRefContainer extends React.Component {
                                 // les caractéristiques principales de l'activité
                                 {
                                     id: "activity_ref_basics",
-                                    header: "Activité",
+                                    header: t("activityRef.container.tabs.basics"),
                                     isInError: !!errors.activityRef,
                                     body: <ActivityRefBasics
                                         activityRef={this.props.activityRef}
@@ -256,7 +261,7 @@ export default class ActivityRefContainer extends React.Component {
                                 // ce qui est en rapport avec l'inscription
                                 {
                                     id: "activity_ref_application",
-                                    header: "Inscription",
+                                    header: t("activityRef.container.tabs.application"),
                                     body: <ActivityRefApplication
                                         activityRefs={this.props.activityRefs}
                                         substitutable={this.initialValues.substitutable}
@@ -266,7 +271,7 @@ export default class ActivityRefContainer extends React.Component {
                                 // les instruments éventuellement liés à l'atelier
                                 {
                                     id: "activity_ref_workgroup",
-                                    header: "Atelier",
+                                    header: t("activityRef.container.tabs.workgroup"),
                                     body: <WorkGroupTemplateEditor
                                         activityRefId={this.props.activityRef.id}
                                         activityInstruments={this.props.activityInstruments}
@@ -276,7 +281,7 @@ export default class ActivityRefContainer extends React.Component {
                                 },
                                 {
                                     id: "activity_ref_teachers",
-                                    header: "Professeurs",
+                                    header: t("activityRef.container.tabs.teachers"),
                                     isInError: !!this.teachersError,
                                     body: <ActivityRefTeachers
                                         teachers={values.teachers}
@@ -291,10 +296,10 @@ export default class ActivityRefContainer extends React.Component {
 
                             <div style={{padding: 20, display: "flex", justifyContent: "flex-end", gap: "20px"}}>
                                 <div>
-                                    <button type="reset" className="btn btn-block">Annuler</button>
+                                    <button type="reset" className="btn btn-block">{t("common:actions.cancel")}</button>
                                 </div>
                                 <div>
-                                    <button type="submit" className="btn btn-primary btn-block">Valider</button>
+                                    <button type="submit" className="btn btn-primary btn-block">{t("common:actions.validate")}</button>
                                 </div>
                             </div>
                         </form>
@@ -305,6 +310,8 @@ export default class ActivityRefContainer extends React.Component {
         );
     }
 }
+
+export default withTranslation("activities")(ActivityRefContainer);
 
 function isIntStrInf(str1, str2) {
     return (intOrUndefined(str1) || str1) < (intOrUndefined(str2) || str2);

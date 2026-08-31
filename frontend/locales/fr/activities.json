@@ -19,5 +19,28 @@
         "yes": "oui",
         "no": "non",
         "errorTitle": "Erreur"
+    },
+    "activityRef": {
+        "container": {
+            "saved": "Enregistrement effectué",
+            "genericError": "Une erreur est survenue",
+            "tabs": {
+                "basics": "Activité",
+                "application": "Inscription",
+                "workgroup": "Atelier",
+                "teachers": "Professeurs"
+            },
+            "errors": {
+                "hardLimitTooLow": "doit être supérieur au nombre de places",
+                "toAgeTooLow": "doit être supérieur à l'âge min",
+                "required": "doit être renseigné"
+            }
+        },
+        "pricing": {
+            "inUseError": "Cette tarification est utilisée par un ou plusieurs élève(s). Vous ne pouvez pas la supprimer."
+        },
+        "teachers": {
+            "title": "Professeurs"
+        }
     }
 }
