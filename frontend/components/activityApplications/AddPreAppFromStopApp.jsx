@@ -2,8 +2,9 @@ import React from "react";
 import Swal from 'sweetalert2';
 import * as api from "../../tools/api.js";
 import { csrfToken } from "../utils";
+import { withTranslation } from "react-i18next";
 
-export default class AddPreAppFromStopApp extends React.Component {
+class AddPreAppFromStopApp extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
@@ -59,11 +60,12 @@ export default class AddPreAppFromStopApp extends React.Component {
     }
     
     onClick(res) {
+        const { t } = this.props;
         const {user, next_season} = this.props;
-        let title = '<h5>Cette action permet à <b>'+user.first_name+' '+user.last_name+'</b> de se préinscrire à l \'activité pour la <b>'+next_season.label+'</b></h5>';
+        let title = t("addPreApp.confirmHtml", { firstName: user.first_name, lastName: user.last_name, season: next_season.label });
         let htmltext = '';
-        let confirmtext= 'Confirmer';
-        let cancelText= 'Annuler';
+        let confirmtext = t("common:actions.confirm");
+        let cancelText = t("common:actions.cancel");
         Swal.fire({
             title: title,
             html: htmltext,
@@ -77,14 +79,17 @@ export default class AddPreAppFromStopApp extends React.Component {
     }
 
     render() {
+        const { t } = this.props;
         let { fetching, exist} = this.state;
         let disabled = fetching || exist;  
         return <button
             onClick={(res) => this.onClick(res)}
             disabled = {disabled}
-            title = {disabled ? "Cette action a déjà été effectuée" : ""}
+            title = {disabled ? t("addPreApp.alreadyDone") : ""}
             className="btn btn-warning m-l-sm">
-            Ouvrir la PréInscription
+            {t("addPreApp.openButton")}
         </button>
     }
 }
+
+export default withTranslation("activityApplications")(AddPreAppFromStopApp);

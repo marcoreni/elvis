@@ -1,0 +1,42 @@
+{
+    "wrappedActivityChoice": {
+        "noActivityError": "Vous devez choisir au moins une activité si vous n'avez pas sélectionné de formule"
+    },
+    "applicationChangeQuestionnaire": {
+        "requiredQuestionsError": "Vous devez répondre aux questions obligatoires de ce questionnaire"
+    },
+    "evaluation": {
+        "answerQuestionnairesError": "Veuillez répondre au.x questionnaire.s"
+    },
+    "intervalPreferencesEditor": {
+        "title": "Préférences horaires pour l'activité ({{label}})"
+    },
+    "timePreferences": {
+        "title": "Préferences horaires des activités (hors Eveil)"
+    },
+    "evaluationChoice": {
+        "noIntervalMessage": "Aucun créneau d'évaluation disponible actuellement, nous reviendrons vers vous très vite pour vous en proposer un.",
+        "forKind": "Pour {{kind}}",
+        "selectedSlots": "Créneaux d'évaluation sélectionnés"
+    },
+    "evaluationChoiceTable": {
+        "selectedSlotsForKind": "Créneaux d'évaluation sélectionnés pour {{kind}}"
+    },
+    "choices": {
+        "choiceN": "Choix n°{{n}}"
+    },
+    "timePreferencesTable": {
+        "myChoicesFor": "Mes choix de créneaux pour {{label}}"
+    },
+    "selectedActivitiesTable": {
+        "activity": "Activité",
+        "duration": "Durée",
+        "estimatedPrice": "Tarif estimé",
+        "estimatedTotal": "Total estimé"
+    },
+    "addPreApp": {
+        "confirmHtml": "<h5>Cette action permet à <b>{{firstName}} {{lastName}}</b> de se préinscrire à l 'activité pour la <b>{{season}}</b></h5>",
+        "alreadyDone": "Cette action a déjà été effectuée",
+        "openButton": "Ouvrir la PréInscription"
+    }
+}

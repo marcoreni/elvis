@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import _ from "lodash";
 
 import Planning from "../planning/Planning";
@@ -10,12 +11,13 @@ const TimePreferences = ({
     season,
     seasons
 }) => {
+    const { t } = useTranslation("activityApplications");
     return (
         <div className="row">
             <div className="col-lg-12">
                 <div className="ibox">
                     <div className="ibox-title">
-                        <h3>{"Préferences horaires des activités (hors Eveil)"}</h3>
+                        <h3>{t("timePreferences.title")}</h3>
                     </div>
                     <div className="ibox-content">
                         <Planning

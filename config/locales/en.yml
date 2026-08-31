@@ -231,6 +231,14 @@ en:
                 error_title: Error
             upload_csv:
                 heading: Import your community
+        activity:
+            index:
+                title: Course list
+                add_course: Add a course
+        activities_applications:
+            index:
+                title: Enrollment requests
+                create: Create an enrollment
         activity_ref:
             index:
                 heading: Activities reference list

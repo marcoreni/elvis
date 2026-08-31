@@ -521,11 +521,53 @@ preserved verbatim from the components:
   the intended `"<start> > ..."`. Pre-existing (byte-identical before the i18n extraction),
   needs its own fix — the test should be `to_season_id !== undefined` / `seasonEnd != null`.
 
+`frontend/locales/fr/activityApplications.json` (added by feature/i18n-06-extract-activities-lot3a
+— new `activityApplications` namespace; `Evaluation.jsx`, `TimePreferences.jsx`,
+`AddPreAppFromStopApp.jsx`) — preserved verbatim from the components:
+- `evaluation.answerQuestionnairesError` — "Veuillez répondre **au.x questionnaire.s**":
+  `au.x questionnaire.s` → `au(x) questionnaire(s)` (sloppy dotted "au(x)/(s)" contraction in the
+  source). Kept verbatim; the English side reads "Please answer the questionnaire(s)" (clean).
+- `timePreferences.title` — "**Préferences** horaires des activités (hors **Eveil**)": two typos in
+  one string — `Préferences` → `Préférences` (missing accent) and `Eveil` → `Éveil` (missing accent
+  on the proper activity name). Both kept verbatim.
+- `addPreApp.confirmHtml` — "…de se préinscrire **à l 'activité** pour la…": stray space in
+  `à l 'activité` → `à l'activité`. Kept verbatim (sweetalert2 `title` rendered as HTML, so the
+  literal `<h5>`/`<b>` tags are intentional).
+- `addPreApp.openButton` — "Ouvrir la **PréInscription**": `PréInscription` → `préinscription`
+  (odd internal capital, mid-sentence). Kept verbatim; the English side reads "Open
+  pre-registration".
+
 Also re-scan the whole `frontend/locales/fr/` + `config/locales/fr.yml` when doing this (grep for
 `Edition\b`, `Editer\b`, `Selectionn`, `réglement`, `Echéance`, `Echec`, `Emmeteur`, `Precedent`,
 `Creer\b`, `verouiller`, `Resolution\b`, `complêtement`, `remplis\b`); the list above is only what
 was noticed in passing, not an exhaustive audit. The English side of these keys is already spelled
 correctly.
+
+## `activityApplications` — residual French from lot-3a's not-yet-processed siblings
+
+The i18n-06 activities lot-3a review surfaced hardcoded French in files that lot 3a did NOT touch
+but that sit right next to (or override) the keys it added. Deferred to the later 3.x sub-lots;
+listed here so the flow isn't half-localised in the meantime and nothing gets missed:
+
+- `frontend/components/activityApplications/summary/Summary.jsx:1431` — passes
+  `noIntervalMessage="Pas de créneau"` into `EvaluationChoiceTable`, which **overrides** the new
+  `activityApplications:evaluationChoice.noIntervalMessage` key at the only call site that supplies
+  the prop → that modal still shows French in English mode. Also `Summary.jsx:1428`
+  `tooltip="Créneau d'évaluation"`. → lot 3g.
+- `frontend/components/activityApplications/Validation.jsx:287, 291, 403, 407, 427` — hardcoded
+  French `<h3>` section headings. → lot 3e.
+- `frontend/components/activityApplications/SelectedActivitiesTable.jsx:10-12` — `displayDuration`
+  emits `"5h30"` / `"45min"` with untranslated unit tokens (the `<th>`s themselves ARE translated
+  as of lot 3a). Low priority; arguably acceptable in EN. → whenever `SelectedActivitiesTable` is
+  revisited.
+- `frontend/components/activityApplications/EvaluationChoiceTable.jsx` — pre-existing (not i18n):
+  its `data[].timeInterval.start/end` are passed straight to `toHourMin()` (`.getHours()`), so they
+  must be `Date` objects, not ISO strings — unlike the sibling `TimePreferencesTable` which wraps
+  with `toDate()`. An ISO string silently renders `NaN:NaN`. Fix when that file is next touched.
+- Behaviour note (not a bug): lot 3a replaced `noIntervalMessage = DEFAULT` (fires on `undefined`
+  only) with `noIntervalMessage ?? t(...)` (fires on `undefined` AND `null`) in `EvaluationChoice`
+  / `EvaluationChoiceTable`. No call site passes `null`; `""` is unchanged. Flagged only so a
+  future caller passing `null` to mean "render nothing" isn't a surprise.
 
 ## `components/utils/ui/tabs.jsx` — hardcoded French tab-error tooltip (+ 2 typos)
 

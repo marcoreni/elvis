@@ -564,8 +564,35 @@ et à mesure de son intégration :
             de résolution i18n des clés `<Trans>`, sortie DOM des `<Trans>` vérifiée), 32 tests.
             Revue : 0 bug (comparaison DOM ancien/nouveau à l'identique sur 10 branches) ; qa avait
             détecté le `<a>` vide de la forme `components={{link}}` auto-fermante — corrigé.
-    - [ ] **Lot 3** — `app/views/{activity,activity_instance,my_activities,activities_applications}/*`
-          + `frontend/components/activityApplications/*` (flux d'inscription côté élève — gros).
+    - [~] **Lot 3 — flux d'inscription côté élève** — `frontend/components/activityApplications/*`
+          (~8000 lignes / 27 composants) + 2 `<h2>` d'`app/views/{activity,activities_applications}/`.
+          **Nouveau namespace i18next `activityApplications`** (pas dans `activities` — trop gros).
+          Découpé en ~7 sous-lots par taille.
+      - [x] **Lot 3a — composants feuilles + ERB** : branche `feature/i18n-06-extract-activities-lot3a`.
+            12 petits composants : `WrappedActivityChoice` / `ApplicationChangeQuestionnaire` /
+            `Evaluation` (étapes StepZilla → `i18n.t` singleton dans `isValidated()`, classes nues) ;
+            `IntervalPreferencesEditor` / `AddPreAppFromStopApp` (`withTranslation`) ;
+            `EvaluationChoice` / `EvaluationChoiceTable` / `TimePreferencesTable` /
+            `SelectedActivitiesTable` / `TimePreferences` (`useTranslation`). Le const module-level
+            `DEFAULT_NO_INTERVAL_MESSAGE` de la paire `EvaluationChoice*` devient un fallback
+            `?? t(...)`. `createTimeRow` (module-level, `TimePreferencesTable`) utilise `i18n.t` —
+            `useMemo` re-déclenché sur `i18n.language` (revue). 2 `<h2>` ERB →
+            `views.activity.index` / `views.activities_applications.index` (fr + en). 18 clés dans
+            `activityApplications.json` (parité 18/18). Réutilise `common:actions.{confirm,cancel}`.
+            5 typos préservés + consignés. Tests Vitest (9 fichiers, 74 tests, gardes classe
+            StepZilla + résolution i18n). `bin/i18n-tasks health` OK. Revue : 0 bug.
+      - [ ] **Lot 3b — composants moyens** : `UserSearch` (~29), `TimeIntervalPreferencesEditor`
+            (~39), `summary/WorkGroupEditor` (~40), `FormulaActivitiesModal` (~52),
+            `WizardUserSelectMember` (~56). NB à traiter aussi ici : les français en dur qui
+            *surchargent* des clés lot 3a — `summary/Summary.jsx:1431`
+            `noIntervalMessage="Pas de créneau"`, `Summary.jsx:1428` `tooltip="Créneau d'évaluation"`,
+            les `<h3>` de `Validation.jsx:287/291/403/407/427`.
+      - [ ] **Lot 3c** — `FormulaChoice.jsx` (~71) + `ActivityChoice.jsx` (~73).
+      - [ ] **Lot 3d** — `Wizard.jsx` (1162 lignes, orchestrateur StepZilla — 2e wizard avec labels
+            d'étape FR en dur vers ~ligne 1140).
+      - [ ] **Lot 3e** — `Validation.jsx` (~84).
+      - [ ] **Lot 3f** — `summary/Activity.jsx` (~146).
+      - [ ] **Lot 3g** — `summary/Summary.jsx` (~238).
   - [x] `evaluation` — branche `feature/i18n-06-extract-evaluation` *(dépend de 01+02)*
     - [x] `frontend/components/evaluation/` : `Evaluation.jsx`, `EvaluationForm.jsx`,
           `StudentEvaluationsStats.jsx` passés en `withTranslation("evaluation")` (nouveau

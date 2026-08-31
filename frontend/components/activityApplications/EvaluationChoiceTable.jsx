@@ -1,16 +1,17 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import {toDate, toHourMin} from "../../tools/format";
 import {WEEKDAYS} from "../../tools/constants";
 import _ from 'lodash';
 
-const DEFAULT_NO_INTERVAL_MESSAGE = "Aucun créneau d'évaluation disponible actuellement, nous reviendrons vers vous très vite pour vous en proposer un.";
-
 export default function EvaluationChoiceTable({
                                                   data,
                                                   activityRefs,
-                                                  noIntervalMessage = DEFAULT_NO_INTERVAL_MESSAGE,
+                                                  noIntervalMessage,
                                                   ...prefsProps
                                               }) {
+    const { t } = useTranslation("activityApplications");
+    const noInterval = noIntervalMessage ?? t("evaluationChoice.noIntervalMessage");
 
     let ref = activityRefs[0];
 
@@ -29,14 +30,14 @@ export default function EvaluationChoiceTable({
                     <td style={{textAlign: "right"}}>
                     <span className="badge badge-pill badge-primary p-3"
                           style={{borderRadius: 40, backgroundColor: "#0079BF"}}>
-                        {`Choix n°${i + 1}`}
+                        {t("choices.choiceN", { n: i + 1 })}
                     </span>
                     </td>
                 </tr> :
                 <tr>
                     <td>
                     <span className="text-danger font-bold">
-                        {noIntervalMessage}
+                        {noInterval}
                     </span>
                     </td>
                 </tr>
@@ -46,7 +47,7 @@ export default function EvaluationChoiceTable({
     return <table className="table m-0">
         <thead>
         <tr style={{backgroundColor: "#F7FBFC", color: "#8AA4B1"}}>
-            <th scope="col">{`Créneaux d'évaluation sélectionnés pour ${ref.kind}`}</th>
+            <th scope="col">{t("evaluationChoiceTable.selectedSlotsForKind", { kind: ref.kind })}</th>
         </tr>
         </thead>
         <tbody>

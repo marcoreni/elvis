@@ -1,8 +1,8 @@
 <div class="row wrapper border-bottom white-bg page-heading m-b-md">
   <h2>
-      Demandes d'inscription
+      <%= t("views.activities_applications.index.title") %>
       <%= link_to new_activities_application_path, class: "btn btn-sm btn-primary pull-right" do %>
-          <i class="fas fa-plus"></i> Créer une inscription
+          <i class="fas fa-plus"></i> <%= t("views.activities_applications.index.create") %>
       <% end if current_user&.is_admin %>
   </h2>
 </div>
