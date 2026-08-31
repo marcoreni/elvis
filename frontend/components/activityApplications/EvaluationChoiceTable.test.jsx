@@ -64,4 +64,16 @@ describe("EvaluationChoiceTable", () => {
             screen.getByText(/Aucun créneau d'évaluation disponible actuellement/)
         ).toBeInTheDocument();
     });
+
+    test("an explicit noIntervalMessage prop overrides the translated fallback (?? branch)", async () => {
+        await i18n.changeLanguage("fr");
+        render(
+            <EvaluationChoiceTable {...noSlot} noIntervalMessage="Message sur mesure" />
+        );
+
+        expect(screen.getByText("Message sur mesure")).toBeInTheDocument();
+        expect(
+            screen.queryByText(/Aucun créneau d'évaluation disponible actuellement/)
+        ).not.toBeInTheDocument();
+    });
 });

@@ -43,8 +43,10 @@ function createIntervalRow(intervals) {
 }
 
 export default function TimePreferencesTable({ preferences = [], intervals = [], activityRef = {} }) {
-    const { t } = useTranslation("activityApplications");
-    const timeRow = useMemo(() => preferences.length > 0 ? preferences.map(createTimeRow) : null, [preferences]);
+    const { t, i18n } = useTranslation("activityApplications");
+    // createTimeRow reads the i18n singleton directly (it's module-level, no hook), so re-run the
+    // memo on a language change too — otherwise the "Choix n°" badges freeze at mount-time locale.
+    const timeRow = useMemo(() => preferences.length > 0 ? preferences.map(createTimeRow) : null, [preferences, i18n.language]);
     const intervalRow = useMemo(() => createIntervalRow(intervals), [intervals]);
 
     return (
