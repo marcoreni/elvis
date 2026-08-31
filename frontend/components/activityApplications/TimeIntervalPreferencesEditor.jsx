@@ -1,4 +1,6 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
+import i18n from "../../i18n";
 import { toHourMin, toDate } from "../../tools/format";
 import ItemPreferences from "./ItemPreferences";
 
@@ -61,7 +63,7 @@ class Availability extends React.PureComponent {
                     <div style={{width: "60%"}} className="d-flex align-items-center">
                         <div>
                             {data.avatar_url ?
-                                <img src={data.avatar_url} className="img-circle no-margin no-padding" alt="image professeur"
+                                <img src={data.avatar_url} className="img-circle no-margin no-padding" alt={i18n.t("activityApplications:timeIntervalPreferences.teacherPhotoAlt")}
                                      style={{width: "32px", height: "32px"}}
                                 />
                                 :
@@ -80,7 +82,7 @@ class Availability extends React.PureComponent {
 
                         </div>
                         <div className="ml-3">
-                            <div>Avec</div>
+                            <div>{i18n.t("activityApplications:timeIntervalPreferences.with")}</div>
                             <div className="font-weight-bold">{teacher.first_name} {teacher.last_name}</div>
                         </div>
                     </div>
@@ -143,10 +145,11 @@ export default function PreferencesEditor({
     handleUp,
     handleDown,
 }) {
+    const { t } = useTranslation("activityApplications");
     return (
         <div className="row">
             <div className="col-md-7 border-right m-b-sm">
-                <h4>{"Créneaux disponibles"}</h4>
+                <h4>{t("timeIntervalPreferences.availableSlots")}</h4>
                 {Object.keys(intervals).map(group => (
                     <IntervalsGroup
                         group={group}
@@ -164,8 +167,8 @@ export default function PreferencesEditor({
             <div className="col-md-5">
                 <h4>
                     {maxIntervals === 1
-                        ? "Créneau choisi"
-                        : "Ordre de préférences"}
+                        ? t("timeIntervalPreferences.chosenSlot")
+                        : t("timeIntervalPreferences.preferenceOrder")}
                 </h4>
                 {selectedIntervals.length > 0 ? (
                     <ItemPreferences
@@ -176,7 +179,7 @@ export default function PreferencesEditor({
                         onDown={handleDown}
                     />
                 ) : (
-                    <p>{"Aucun créneau ne me convient."}</p>
+                    <p>{t("timeIntervalPreferences.noSlotSuitable")}</p>
                 )}
             </div>
         </div>

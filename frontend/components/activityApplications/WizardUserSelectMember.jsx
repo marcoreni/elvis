@@ -14,6 +14,8 @@ import arrayMutators from "final-form-arrays";
 import UserAvatar from "../UserAvatar";
 import WizardContactForm from "../userForm/WizardContactForm";
 import { userIsMinor } from "../../tools/utils";
+import i18n from "../../i18n";
+const T = (k, o) => i18n.t(`activityApplications:${k}`, o);
 
 /**
  * Class used because stepzilla doesn't support functional components for validation
@@ -45,10 +47,10 @@ export default class WizardUserSelectMember extends React.Component {
                 console.error(error);
 
                 swal({
-                    title: "Erreur",
-                    text: "Une erreur est survenue lors de la récupération des membres",
+                    title: T("wizardUserSelectMember.errorTitle"),
+                    text: T("wizardUserSelectMember.fetchMembersError"),
                     type: "error",
-                    confirmButtonText: "Fermer",
+                    confirmButtonText: T("wizardUserSelectMember.close"),
                 });
             })
             .get(`/users/${this.props.user.id}/family`, {season: this.props.season.id});
@@ -108,7 +110,7 @@ export default class WizardUserSelectMember extends React.Component {
 
         if (this.state.members.length === 0 || this.state.selected === undefined || this.state.members[this.state.selected] === undefined)
         {
-            error.members = "Veuilez sélectionner un membre";
+            error.members = T("wizardUserSelectMember.selectMember");
 
             // if no member selected, no need to check the rest
             return error;
@@ -120,9 +122,9 @@ export default class WizardUserSelectMember extends React.Component {
         if (userIsMinor(memberSelected))
         {
             if(familyMemberUserForSelection.filter(fl => fl.is_legal_referent).length === 0)
-                error.legal_referent = "Veuillez sélectionner un représentant légal";
+                error.legal_referent = T("wizardUserSelectMember.selectLegalRepresentative");
             else if(familyMemberUserForSelection.filter(fl => fl.is_legal_referent && !userIsMinor(fl)).length === 0)
-                error.legal_referent = "Le représentant légal doit être majeur";
+                error.legal_referent = T("wizardUserSelectMember.legalRepresentativeMustBeAdult");
         }
 
 
@@ -215,7 +217,7 @@ export default class WizardUserSelectMember extends React.Component {
                 <div className="row">
                     <div className="d-inline-flex justify-content-between align-items-end w-100 mb-5">
                         <div>
-                            <h3 style={{color: "#8AA4B1"}}>Membre concerné</h3>
+                            <h3 style={{color: "#8AA4B1"}}>{T("wizardUserSelectMember.memberConcerned")}</h3>
                         </div>
 
                         <div className="text-right">
@@ -225,7 +227,7 @@ export default class WizardUserSelectMember extends React.Component {
                                 style={{backgroundColor: "#00334A", borderRadius: "8px"}}
                                 onClick={() => this.setState({isModalOpen: true})}
                             >
-                                <i className="fa fa-plus mr-2"/> Ajouter un membre
+                                <i className="fa fa-plus mr-2"/> {T("wizardUserSelectMember.addMember")}
                             </button>
                         </div>
                     </div>
@@ -238,7 +240,7 @@ export default class WizardUserSelectMember extends React.Component {
                             <i className="fas fa-info-circle"></i>
                         </div>
                         <div className="col pl-0 h5">
-                            Si la personne est mineur, ajouter un nouveau membre
+                            {T("wizardUserSelectMember.ifMinorAddMember")}
                         </div>
                     </div>
                 </div> : null}
@@ -277,7 +279,7 @@ export default class WizardUserSelectMember extends React.Component {
 
                             <div className="mb-4">
                                 <label style={{ color: "#003E5C" }}>
-                                    Représentant légal
+                                    {T("wizardUserSelectMember.legalRepresentative")}
                                     {userIsMinor(members[this.state.selected]) ? <span className="text-danger">*</span> : ""}
                                 </label>
                                 <FamilyLinkSelector
@@ -292,7 +294,7 @@ export default class WizardUserSelectMember extends React.Component {
                             </div>
 
                             <div className="mb-4">
-                                <label style={{color: "#003E5C"}}>Personne à contacter</label>
+                                <label style={{color: "#003E5C"}}>{T("wizardUserSelectMember.personToContact")}</label>
                                 <FamilyLinkSelector
                                     familyLinks={virtualFamilyLinks}
                                     fieldForSelection="is_to_call"
@@ -304,7 +306,7 @@ export default class WizardUserSelectMember extends React.Component {
                             </div>
 
                             <div className="mb-5">
-                                <label style={{color: "#003E5C"}}>Accompagnant</label>
+                                <label style={{color: "#003E5C"}}>{T("wizardUserSelectMember.accompanyingPerson")}</label>
                                 <FamilyLinkSelector
                                     familyLinks={virtualFamilyLinks}
                                     fieldForSelection="is_accompanying"
@@ -332,8 +334,8 @@ export default class WizardUserSelectMember extends React.Component {
                     },
                 }}
             >
-                <h2 className="mt-0">Ajouter un membre</h2>
-                <h4>création du lien familial du point de vue de {user.first_name} {user.last_name}</h4>
+                <h2 className="mt-0">{T("wizardUserSelectMember.addMember")}</h2>
+                <h4>{T("wizardUserSelectMember.familyLinkCreation", { name: `${user.first_name} ${user.last_name}` })}</h4>
                 <WizardContactForm
                     user_linked={user}
                     current_user={user}

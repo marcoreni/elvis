@@ -1,4 +1,5 @@
 import React from "react";
+import { Trans } from "react-i18next";
 import Input from "../common/Input";
 import {
     isEmpty,
@@ -19,6 +20,8 @@ import { MESSAGES } from "../../tools/constants";
 import NewStudentForm from "../userForm/NewStudentForm";
 import Modal from "react-modal";
 import swal from "sweetalert2";
+import i18n from "../../i18n";
+const T = (k, o) => i18n.t(`activityApplications:${k}`, o);
 
 class UserSearch extends React.PureComponent {
     constructor(props) {
@@ -128,7 +131,7 @@ class UserSearch extends React.PureComponent {
             .success(res => {
                 swal({
                     type: "success",
-                    title: "Enregistrement effectué",
+                    title: T("userSearch.saved"),
                 }).then(() => {
                     this.toggleModal();
                     api.set()
@@ -182,14 +185,14 @@ class UserSearch extends React.PureComponent {
         return (
             <div className="application-form" style={{margin: 0}}>
                 <div>
-                    <h3 style={{color: "#8AA4B1"}}>{"Chercher un utilisateur"}</h3>
+                    <h3 style={{color: "#8AA4B1"}}>{T("userSearch.title")}</h3>
                 </div>
 
                 <div>
                     <div className="row">
                         <div className="col-sm-6">
                             <Input
-                                label="Nom"
+                                label={T("userSearch.lastName")}
                                 input={{
                                     type: "text",
                                     name: "last_name",
@@ -202,7 +205,7 @@ class UserSearch extends React.PureComponent {
 
                         <div className="col-sm-6">
                             <Input
-                                label="Prénom"
+                                label={T("userSearch.firstName")}
                                 input={{
                                     type: "text",
                                     name: "first_name",
@@ -216,7 +219,7 @@ class UserSearch extends React.PureComponent {
 
                     {possibleMatches.length > 0 ? (
                         <div>
-                            <h4>{"Résultats"}</h4>
+                            <h4>{T("userSearch.results")}</h4>
                             <div className="list-group">
                                 {_.map(possibleMatches, (m, i) => {
                                     return (
@@ -231,9 +234,7 @@ class UserSearch extends React.PureComponent {
                                             }
                                         >
                                             <b>{fullname(m)}</b>
-                                            {` né(e) le ${toLocaleDate(
-                                                toDate(m.birthday)
-                                            )}, Adhérent #${m.adherent_number}`}
+                                            {T("userSearch.bornOn", { date: toLocaleDate(toDate(m.birthday)), number: m.adherent_number })}
                                         </button>
                                     );
                                 })}
@@ -243,23 +244,18 @@ class UserSearch extends React.PureComponent {
                         !usernotSearched && (
                             <div className="row">
                                 <div className="alert alert-warning m-b-sm">
-                                    <strong>
-                                        Aucun profil existant retrouvé selon ces
-                                        coordonnées.
-                                    </strong>
+                                    <strong>{T("userSearch.noProfileFound")}</strong>
                                     <br />
-                                    Si l'utilisateur est déjà enregistré,
-                                    vérifiez que les bonnes coordonnées soient
-                                    saisies.
+                                    {T("userSearch.checkCoordinates")}
                                     <br />
-                                    Sinon <em>créez un nouveau profil</em>.
+                                    <Trans ns="activityApplications" i18nKey="userSearch.otherwiseCreate">Sinon <em>créez un nouveau profil</em>.</Trans>
                                 </div>
                                 <button
                                     type="button"
                                     className="btn btn-primary pull-right"
                                     onClick={() => this.toggleModal()}
                                 >
-                                    Créer un nouveau profil
+                                    {T("userSearch.createNewProfile")}
                                 </button>
                             </div>
                         )
@@ -269,7 +265,7 @@ class UserSearch extends React.PureComponent {
                         <Modal
                             isOpen={isModalOpen}
                             ariaHideApp={false}
-                            contentLabel="Ajouter un contact"
+                            contentLabel={T("userSearch.addContactModalLabel")}
                             onRequestClose={this.toggleModal}
                             style={{
                                 content: {
