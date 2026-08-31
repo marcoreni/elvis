@@ -80,5 +80,51 @@
             "oneResourceTypeName": "a pricing",
             "thisResourceTypeName": "this pricing"
         }
+    },
+    "activityRefApplication": {
+        "timeslot": {
+            "proposeSlots": "Propose course slots to the student",
+            "askAvailabilities": "Ask the student to enter their availabilities"
+        },
+        "reenrollment": {
+            "title": "Re-enrollment",
+            "label": "Activities offered upon re-enrollment (if nothing is selected, all activities will be offered)"
+        },
+        "help": {
+            "multiSelect": "Select multiple activities with <1>CTRL</1>.",
+            "rangeSelect": "Select everything between two activities with <1>SHIFT</1>.",
+            "combine": "You can combine <1>CTRL</1> and <3>SHIFT</3>."
+        },
+        "visibility": {
+            "title": "Visibility",
+            "isLesson": "This course can be selected during a registration",
+            "isVisibleToAdmin": "This course can be selected during a registration, by staff members only",
+            "isUnpopular": "This course is in low demand, it may not open in a season"
+        },
+        "familyChoice": {
+            "title": "Choice of activities",
+            "attach": "Attach this activity to its family",
+            "detach": "Detach this activity from its family"
+        },
+        "evaluation": {
+            "title": "Evaluation",
+            "isEvaluable": "This course requires an evaluation for new students"
+        }
+    },
+    "workGroup": {
+        "templateTitle": "Group template",
+        "instruments": "Instruments",
+        "roles": "Roles",
+        "isWorkGroup": "This course is a workshop",
+        "noInstruments": "No instrument saved. You can create one by following this <1>link</1>."
+    },
+    "activityRefPricingModal": {
+        "pricingType": "Pricing type:",
+        "chooseCategory": "Choose a pricing category",
+        "placeholderCategory": "select a pricing category",
+        "price": "Price",
+        "from": "from:",
+        "placeholderSeason": "select a season",
+        "to": "until (optional):"
     }
 }

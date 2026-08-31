@@ -522,8 +522,9 @@ et à mesure de son intégration :
           **NB** : `parameters/BaseDataTable.jsx` (classe de base des 2 tableaux) a son propre
           chrome FR en dur (« Créer » + props react-table) alors que `common:reactTable.*` existe
           déjà — à faire quand le domaine `parameters` sera traité, pas ici.
-    - [~] **Lot 2 — `activityRef/` (formulaire édition/création d'activité)** — arbre React sous
-          `frontend/components/activityRef/`, découpé en 3 sous-lots.
+    - [x] **Lot 2 — `activityRef/` (formulaire édition/création d'activité)** — arbre React sous
+          `frontend/components/activityRef/`, découpé en 3 sous-lots (PR #33/#34/#35). Namespace
+          `activities` → 74 feuilles.
       - [x] **Lot 2a — coque du formulaire** : branche `feature/i18n-06-extract-activities-lot2`.
             `ActivityRefContainer.jsx` (`withTranslation("activities")` ; `const { t } = this.props`
             dans `sendImage` / `onSubmit` / `onValidate` / `render` ; en-têtes d'onglets, titres
@@ -550,8 +551,19 @@ et à mesure de son intégration :
             `<Form>` + enfants mockés, chemin `createButton`/`fetchError`, résolution i18n des
             validateurs), 19 tests. Revue : 0 bug ; notes pré-existantes consignées (t figé au
             constructeur dans `fetchError`, bug `null`/`undefined` du Cell `selectedSeasons`).
-      - [ ] **Lot 2c** — `ActivityRefApplication.jsx` (+ `AllowsTimeslotSelectionButtonGroup`) +
-            `WorkGroupTemplateEditor.jsx` + `ActivityRefPricingModal.jsx`.
+      - [x] **Lot 2c** — branche `feature/i18n-06-extract-activities-lot2c`.
+            `ActivityRefApplication.jsx` (`withTranslation("activities")` ; le composant fonction
+            module-level `AllowsTimeslotSelectionButtonGroup` en `useTranslation("activities")`),
+            `WorkGroupTemplateEditor.jsx`, `ActivityRefPricingModal.jsx` (retour de chargement
+            `isUpdate` → `common:loading`). Les 3 lignes d'aide CTRL/MAJ-SHIFT et le lien
+            « suivant ce lien » passent par `<Trans>` (indices numériques `<1>`/`<3>` pour les
+            `<strong>`, `<a>` enfant inline pour `noInstruments`). +28 clés sous
+            `activityRefApplication.*` / `workGroup.*` / `activityRefPricingModal.*` (74 au total,
+            parité fr/en). Réutilise `common:loading`. 3 typos d'accent (`selectionné` ×2,
+            `Evaluation`) préservés + consignés. Tests Vitest (1 fichier par composant + un check
+            de résolution i18n des clés `<Trans>`, sortie DOM des `<Trans>` vérifiée), 32 tests.
+            Revue : 0 bug (comparaison DOM ancien/nouveau à l'identique sur 10 branches) ; qa avait
+            détecté le `<a>` vide de la forme `components={{link}}` auto-fermante — corrigé.
     - [ ] **Lot 3** — `app/views/{activity,activity_instance,my_activities,activities_applications}/*`
           + `frontend/components/activityApplications/*` (flux d'inscription côté élève — gros).
   - [x] `evaluation` — branche `feature/i18n-06-extract-evaluation` *(dépend de 01+02)*

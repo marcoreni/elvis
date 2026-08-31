@@ -1,9 +1,10 @@
 import React from "react";
 import _ from "lodash";
+import { withTranslation, Trans } from "react-i18next";
 import { Field, FormSpy } from "react-final-form";
 import Checkbox from "../common/Checkbox";
 
-export default class WorkGroupEditor2 extends React.Component {
+class WorkGroupEditor2 extends React.Component {
     constructor(props) {
         super(props);
 
@@ -58,17 +59,20 @@ export default class WorkGroupEditor2 extends React.Component {
 */
 
     renderInstruments() {
+        const { t } = this.props;
         const { values } = this.state;
         const { instruments } = this.props;
 
         if (instruments.length == 0) {
-            return <p className="text-center">Aucun instrument sauvegardé. Vous pouvez en créer en suivant ce <a href="/instruments/new" >lien</a>.</p>;
+            return <p className="text-center">
+                <Trans ns="activities" i18nKey="workGroup.noInstruments">Aucun instrument sauvegardé. Vous pouvez en créer en suivant ce <a href="/instruments/new">lien</a>.</Trans>
+            </p>;
         }
         else {
             return (
                 <div>
 
-                    <h2>Modèle de groupe</h2>
+                    <h2>{t("workGroup.templateTitle")}</h2>
 
 
                     <div className="row">
@@ -76,7 +80,7 @@ export default class WorkGroupEditor2 extends React.Component {
                             className="col-lg-6"
                             style={{ borderRight: "solid 1px #eaeaea" }}
                         >
-                            <h4>Instruments</h4>
+                            <h4>{t("workGroup.instruments")}</h4>
                             {instruments.map(i => (
                                 <div
                                     key={i.id}
@@ -98,7 +102,7 @@ export default class WorkGroupEditor2 extends React.Component {
                             ))}
                         </div>
                         <div className="col-lg-6">
-                            <h4>Rôles</h4>
+                            <h4>{t("workGroup.roles")}</h4>
                             {Object.entries(values).map(([instrumentId, count]) => {
                                 const instrument = instruments.find(
                                     i => i.id === parseInt(instrumentId)
@@ -137,6 +141,7 @@ export default class WorkGroupEditor2 extends React.Component {
     }
 
     render() {
+        const { t } = this.props;
 
         const { loading } = this.state;
         return (
@@ -146,7 +151,7 @@ export default class WorkGroupEditor2 extends React.Component {
                     <div className="col-lg-6">
                         <Field
                             id="is_work_group"
-                            label="Ce cours est un atelier"
+                            label={t("workGroup.isWorkGroup")}
                             name="activityRef.is_work_group"
                             type="checkbox"
                             render={Checkbox}
@@ -166,3 +171,5 @@ export default class WorkGroupEditor2 extends React.Component {
         );
     }
 }
+
+export default withTranslation("activities")(WorkGroupEditor2);

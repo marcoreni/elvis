@@ -496,6 +496,20 @@ side (`lessonList.help.body`) is a clean translation with these defects fixed, a
   inter-line whitespace was collapsed to a single space during extraction (no visible change —
   HTML collapses it). Same normalization note as the lot-3 `courses.json` entries.
 
+`frontend/locales/fr/activities.json` (added by feature/i18n-06-extract-activities-lot2c —
+`ActivityRefApplication.jsx`, `WorkGroupTemplateEditor.jsx`, `ActivityRefPricingModal.jsx`) —
+preserved verbatim from the components:
+- `activityRefApplication.visibility.isLesson` — "Ce cours peut être **selectionné** lors d'une
+  inscription": "selectionné" → "sélectionné" (missing accent).
+- `activityRefApplication.visibility.isVisibleToAdmin` — same "selectionné" → "sélectionné"
+  (missing accent).
+- `activityRefApplication.evaluation.title` — "Evaluation" → "Évaluation" (missing accent; this is
+  the `<h3>` above the `is_evaluable` checkbox, distinct from the `activityRefKind` "type"
+  wording). The English side reads "Evaluation" (correct as-is in English).
+- `activityRefApplication.reenrollment.label` — extracted from `<label>` JSX text split across two
+  lines; the inter-line whitespace was collapsed to a single space during extraction (no visible
+  change — HTML collapses it). Same normalization note as the lot-2b `sectionHint` entry.
+
 `ActivityRefBasics.jsx` also has two non-i18n issues noticed during the lot-2b review, left as-is:
 - `fetchSeasonsAndPricings` runs from the **constructor**, so the `const { t } = this.props` its
   `.error` swal closure captures is frozen at mount time (won't follow a later `changeLanguage`).
