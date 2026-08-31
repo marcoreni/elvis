@@ -1,4 +1,6 @@
 import React, { useMemo } from 'react';
+import { useTranslation } from "react-i18next";
+import i18n from "../../i18n";
 import {toDate, toHourMin} from "../../tools/format";
 import {WEEKDAYS} from "../../tools/constants";
 import _ from 'lodash';
@@ -17,7 +19,7 @@ function createTimeRow(item, i) {
             </td>
             <td style={{textAlign: "right"}}>
                 <span className="badge badge-pill badge-primary p-3" style={{borderRadius: 40, backgroundColor: "#0079BF"}}>
-                    {`Choix n°${i + 1}`}
+                    {i18n.t("activityApplications:choices.choiceN", { n: i + 1 })}
                 </span>
             </td>
         </tr>
@@ -41,6 +43,7 @@ function createIntervalRow(intervals) {
 }
 
 export default function TimePreferencesTable({ preferences = [], intervals = [], activityRef = {} }) {
+    const { t } = useTranslation("activityApplications");
     const timeRow = useMemo(() => preferences.length > 0 ? preferences.map(createTimeRow) : null, [preferences]);
     const intervalRow = useMemo(() => createIntervalRow(intervals), [intervals]);
 
@@ -49,7 +52,7 @@ export default function TimePreferencesTable({ preferences = [], intervals = [],
             {preferences.length > 0 && (
                 <thead>
                 <tr style={{backgroundColor: "#F7FBFC", color: "#8AA4B1"}}>
-                    <th scope="col">{`Mes choix de créneaux pour ${activityRef.label}`}</th>
+                    <th scope="col">{t("timePreferencesTable.myChoicesFor", { label: activityRef.label })}</th>
                 </tr>
                 </thead>
             )}

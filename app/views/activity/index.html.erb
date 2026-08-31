@@ -1,9 +1,9 @@
 <div class="row wrapper border-bottom white-bg page-heading m-b-md">
     <h2>
-        Liste des cours
+        <%= t("views.activity.index.title") %>
         <% unless @current_user.is_teacher && !@current_user.is_admin %>
             <%= link_to addCourse_path, class: "btn btn-sm btn-primary pull-right" do %>
-                <i class="fas fa-plus"></i> Ajouter un cours
+                <i class="fas fa-plus"></i> <%= t("views.activity.index.add_course") %>
             <% end %>
         <% end %>
     </h2>

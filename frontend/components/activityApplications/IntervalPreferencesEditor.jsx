@@ -1,4 +1,5 @@
 import React from "react";
+import { withTranslation } from "react-i18next";
 import * as api from "../../tools/api";
 import PreferencesEditor from "./TimeIntervalPreferencesEditor";
 import { WEEKDAYS } from "../../tools/constants";
@@ -92,6 +93,7 @@ class IntervalPreferencesEditor extends React.PureComponent {
     }
 
     render() {
+        const { t } = this.props;
         const { intervals, selectedIntervals } = this.state;
 
         return (
@@ -100,7 +102,7 @@ class IntervalPreferencesEditor extends React.PureComponent {
                     {this.props.activityRefs.map(ref => intervals[ref.id] &&
                         <div className="ibox" key={ref.id}>
                             <div className="ibox-title bg-primary">
-                                <h3>{`Préférences horaires pour l'activité (${ref.label})`}</h3>
+                                <h3>{t("intervalPreferencesEditor.title", { label: ref.label })}</h3>
                             </div>
                             <div className="ibox-content">
                                 <PreferencesEditor
@@ -119,4 +121,4 @@ class IntervalPreferencesEditor extends React.PureComponent {
     }
 }
 
-export default IntervalPreferencesEditor;
+export default withTranslation("activityApplications")(IntervalPreferencesEditor);

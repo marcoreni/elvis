@@ -521,6 +521,22 @@ preserved verbatim from the components:
   the intended `"<start> > ..."`. Pre-existing (byte-identical before the i18n extraction),
   needs its own fix — the test should be `to_season_id !== undefined` / `seasonEnd != null`.
 
+`frontend/locales/fr/activityApplications.json` (added by feature/i18n-06-extract-activities-lot3a
+— new `activityApplications` namespace; `Evaluation.jsx`, `TimePreferences.jsx`,
+`AddPreAppFromStopApp.jsx`) — preserved verbatim from the components:
+- `evaluation.answerQuestionnairesError` — "Veuillez répondre **au.x questionnaire.s**":
+  `au.x questionnaire.s` → `au(x) questionnaire(s)` (sloppy dotted "au(x)/(s)" contraction in the
+  source). Kept verbatim; the English side reads "Please answer the questionnaire(s)" (clean).
+- `timePreferences.title` — "**Préferences** horaires des activités (hors **Eveil**)": two typos in
+  one string — `Préferences` → `Préférences` (missing accent) and `Eveil` → `Éveil` (missing accent
+  on the proper activity name). Both kept verbatim.
+- `addPreApp.confirmHtml` — "…de se préinscrire **à l 'activité** pour la…": stray space in
+  `à l 'activité` → `à l'activité`. Kept verbatim (sweetalert2 `title` rendered as HTML, so the
+  literal `<h5>`/`<b>` tags are intentional).
+- `addPreApp.openButton` — "Ouvrir la **PréInscription**": `PréInscription` → `préinscription`
+  (odd internal capital, mid-sentence). Kept verbatim; the English side reads "Open
+  pre-registration".
+
 Also re-scan the whole `frontend/locales/fr/` + `config/locales/fr.yml` when doing this (grep for
 `Edition\b`, `Editer\b`, `Selectionn`, `réglement`, `Echéance`, `Echec`, `Emmeteur`, `Precedent`,
 `Creer\b`, `verouiller`, `Resolution\b`, `complêtement`, `remplis\b`); the list above is only what

@@ -1,6 +1,7 @@
 import React, { Component } from "react";
 import EvaluationForm, { validateQuestions } from "../evaluation/EvaluationForm";
 import { toast } from "react-toastify";
+import i18n from "../../i18n";
 
 export default class ApplicationChangeQuestionnaire extends Component {
     constructor(props) {
@@ -16,7 +17,7 @@ export default class ApplicationChangeQuestionnaire extends Component {
         const isValidated = validateQuestions(questions, answers);
 
         if(!isValidated)
-            toast.error("Vous devez répondre aux questions obligatoires de ce questionnaire", {
+            toast.error(i18n.t("activityApplications:applicationChangeQuestionnaire.requiredQuestionsError"), {
                 autoClose: 3000,
             });
 

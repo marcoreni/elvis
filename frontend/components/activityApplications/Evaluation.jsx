@@ -2,6 +2,7 @@ import React from "react";
 import _ from "lodash";
 import EvaluationForm, { validateQuestions } from "../evaluation/EvaluationForm";
 import { toast } from "react-toastify";
+import i18n from "../../i18n";
 
 class Evaluation extends React.Component {
     constructor(props) {
@@ -32,7 +33,7 @@ class Evaluation extends React.Component {
                 ), true);
 
         if (!areAllQuestionsAnswered)
-            toast("Veuillez répondre au.x questionnaire.s", {
+            toast(i18n.t("activityApplications:evaluation.answerQuestionnairesError"), {
                 autoClose: 3000,
                 type: "error",
             });

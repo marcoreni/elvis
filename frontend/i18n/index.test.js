@@ -37,7 +37,7 @@ describe("frontend/i18n", () => {
         const { default: i18n } = await import("./index");
 
         expect(i18n.options.defaultNS).toBe("common");
-        expect(i18n.options.ns).toEqual(["common", "users", "evaluation", "payments", "formules", "planning", "activities", "courses"]);
+        expect(i18n.options.ns).toEqual(["common", "users", "evaluation", "payments", "formules", "planning", "activities", "courses", "activityApplications"]);
     });
 
     // fr and en must define exactly the same key set in every loaded namespace. `fallbackLng`

@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import { useTranslation } from "react-i18next";
 import _ from "lodash";
 
 function displayDuration(duration) {
@@ -52,6 +53,7 @@ function getSelectedPacks({packs, selectedPacks}) {
     });
 }
 export default function SelectedActivitiesTable(props) {
+    const { t } = useTranslation("activityApplications");
     // regroup activities by display name
     const groupedActivities = useMemo(() => groupByDisplayName(props.selectedActivities), [props.selectedActivities]);
     const groupedPacks = useMemo(() => groupByDisplayName(getSelectedPacks({packs: props.packs, selectedPacks: props.selectedPacks})), [props.packs, props.selectedPacks]);
@@ -65,9 +67,9 @@ export default function SelectedActivitiesTable(props) {
         <table className="table">
             <thead>
             <tr style={{backgroundColor: "#F7FBFC", color: "#8AA4B1"}}>
-                <th scope="col">Activité</th>
-                <th scope="col">Durée</th>
-                <th scope="col">Tarif estimé</th>
+                <th scope="col">{t("selectedActivitiesTable.activity")}</th>
+                <th scope="col">{t("selectedActivitiesTable.duration")}</th>
+                <th scope="col">{t("selectedActivitiesTable.estimatedPrice")}</th>
             </tr>
             </thead>
             <tbody>
@@ -83,7 +85,7 @@ export default function SelectedActivitiesTable(props) {
             <tfoot>
             <tr style={{backgroundColor: "#F7FBFC", color: "#8AA4B1"}}>
                 <td></td>
-                <td className="text-right font-weight-bold">Total estimé</td>
+                <td className="text-right font-weight-bold">{t("selectedActivitiesTable.estimatedTotal")}</td>
                 <td className="font-weight-bold">{displayActivitiesAndPacks.reduce((total, activity) => total + activity.display_price, 0)}€</td>
             </tr>
             </tfoot>

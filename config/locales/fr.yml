@@ -234,6 +234,14 @@ fr:
                 error_title: Erreur
             upload_csv:
                 heading: Import de votre communauté
+        activity:
+            index:
+                title: Liste des cours
+                add_course: Ajouter un cours
+        activities_applications:
+            index:
+                title: Demandes d'inscription
+                create: Créer une inscription
         activity_ref:
             index:
                 heading: Référentiel des activités
