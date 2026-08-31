@@ -249,7 +249,6 @@ class Summary extends React.Component
 
     handleAddSuggestions(id, suggestions)
     {
-        const { t } = this.props;
         return new Promise(res =>
         {
             const suggs = this.state.suggestions;
@@ -259,6 +258,7 @@ class Summary extends React.Component
     }
 
     async handleSelectSuggestion(activityId, desiredActivityId, activityRefId) {
+        const { t } = this.props;
         const suggestions = this.state.suggestions[activityRefId];
         const desiredActivities = this.state.desiredActivities;
 
@@ -1214,21 +1214,21 @@ class Summary extends React.Component
                         <div className="flex flex-center-aligned">
                             <a
                                 href={"/users/" + application.user.id}
-data-tippy-content={t("summary.tooltips.viewProfile")}
+                                data-tippy-content={t("summary.tooltips.viewProfile")}
                                 className="btn btn-primary m-r-sm">
                                 <i className="fas fa-user" />
                             </a>
                             {Boolean(this.props.payer) && this.props.isAdmin &&
                                 <a
                                     href={paymentLink}
-data-tippy-content={t("summary.tooltips.payments")}
+                                    data-tippy-content={t("summary.tooltips.payments")}
                                     className="btn btn-primary m-r-sm">
                                     <i className="fas fa-euro-sign" />{" "}
                                 </a>}
                             <button
                                 onClick={() => this.sendConfirmationMail()}
                                 className="btn btn-primary"
-data-tippy-content={t("summary.tooltips.sendConfirmMail")}
+                                data-tippy-content={t("summary.tooltips.sendConfirmMail")}
                                 disabled={this.state.sendingMail || !_.reduce(this.state.desiredActivities, (acc, des) => acc || des.is_validated, false)}>
                                 <i className="fas fa-envelope" />
 
@@ -1301,13 +1301,13 @@ data-tippy-content={t("summary.tooltips.sendConfirmMail")}
                             <ButtonModal
                                 modalProps={{ style: { content: { position: "static" } } }}
                                 className="btn btn-primary m-r-sm count-button"
-tooltip={t("summary.tooltips.changeQuestionnaire")}
+                                tooltip={t("summary.tooltips.changeQuestionnaire")}
                                 label={<i className="fas fa-question-circle" />}
                                 count={this.props.application_change_questionnaires.forms.length}
                                 disabled={this.props.application_change_questionnaires.forms.length === 0}>
                                 <div className="ibox">
                                     <div className="ibox-title">
-<h4>{t("summary.changeQuestionnaireTitle")}</h4>
+                                        <h4>{t("summary.changeQuestionnaireTitle")}</h4>
                                         <select
                                             className="form-control"
                                             onChange={e => this.handleSelectApplicationChangeQuestionnaire(e.target.value)}
@@ -1343,11 +1343,11 @@ tooltip={t("summary.tooltips.changeQuestionnaire")}
                                 disabled={this.props.new_student_level_questionnaires.length === 0}
                                 count={this.props.new_student_level_questionnaires.length}
                                 className="btn btn-primary count-button m-r-sm"
-tooltip={t("summary.tooltips.selfEvaluation")}
+                                tooltip={t("summary.tooltips.selfEvaluation")}
                                 label={<i className="fas fa-user-check" />}>
                                 <div className="ibox">
                                     <div className="ibox-title">
-<h4>{t("summary.selfEvaluationTitle")}</h4>
+                                        <h4>{t("summary.selfEvaluationTitle")}</h4>
                                         <select
                                             className="form-control"
                                             onChange={e => this.handleSelectNewStudentLevelQuestionnaire(e.target.value)}
@@ -1384,7 +1384,7 @@ tooltip={t("summary.tooltips.selfEvaluation")}
 
                             {/* EVALUATIONS */}
                             <ButtonModal
-tooltip={t("summary.tooltips.evaluation")}
+                                tooltip={t("summary.tooltips.evaluation")}
                                 className="btn count-button btn-primary"
                                 count={this.props.student_evaluations.forms.length}
                                 disabled={this.props.student_evaluations.forms.length === 0}
@@ -1395,7 +1395,7 @@ tooltip={t("summary.tooltips.evaluation")}
                                 </span>}>
                                 <div className="ibox">
                                     <div className="ibox-title">
-<h4>{t("summary.studentEvaluationsTitle")}</h4>
+                                        <h4>{t("summary.studentEvaluationsTitle")}</h4>
                                         <select
                                             className="form-control"
                                             onChange={e => this.handleSelectEvaluation(e.target.value)}
@@ -1432,10 +1432,10 @@ tooltip={t("summary.tooltips.evaluation")}
                                 modalProps={{ style: { content: { position: "static" } } }}
                                 label={<i className="fas fa-calendar-check" />}
                                 className="btn btn-primary count-button m-r-sm"
-tooltip={t("summary.tooltips.evaluationSlot")}
+                                tooltip={t("summary.tooltips.evaluationSlot")}
                                 disabled={_.size(application.evaluation_appointments) === 0}>
                                 <EvaluationChoice
-noIntervalMessage={t("summary.noEvaluationSlot")}
+                                    noIntervalMessage={t("summary.noEvaluationSlot")}
                                     showChoiceNumber={false}
                                     activityRefs={this.props.activityRefs}
                                     data={evaluationAppointments} />
@@ -1447,10 +1447,10 @@ noIntervalMessage={t("summary.noEvaluationSlot")}
                                 count={availabilities.length}
                                 label={<i className="fas fa-clock" />}
                                 className="btn btn-primary count-button m-r-sm"
-tooltip={t("summary.tooltips.availabilities")}>
+                                tooltip={t("summary.tooltips.availabilities")}>
                                 <div className="ibox">
                                     <div className="ibox-title">
-<h4>{t("summary.availabilitiesTitle")}</h4>
+                                        <h4>{t("summary.availabilitiesTitle")}</h4>
                                     </div>
                                     <div className="ibox-content">
                                         {this.props.canEditAvailabilities ?
@@ -1481,10 +1481,10 @@ tooltip={t("summary.tooltips.availabilities")}>
                                 count={application.user
                                     .handicap_description ? 1 : 0}
                                 className="btn btn-primary count-button m-r-sm"
-tooltip={t("summary.tooltips.additionalInfo")}>
+                                tooltip={t("summary.tooltips.additionalInfo")}>
                                 <div className="ibox">
                                     <div className="ibox-title">
-<h4>{t("summary.additionalInfoTitle")}</h4>
+                                        <h4>{t("summary.additionalInfoTitle")}</h4>
                                     </div>
                                     <div className="ibox-content">
                                         {application.user.handicap_description != undefined && application.user
@@ -1504,7 +1504,7 @@ tooltip={t("summary.tooltips.additionalInfo")}>
                                 count={this.state.comments.length}
                                 label={<i className="fas fa-comment" />}
                                 className="btn btn-primary count-button m-r-sm"
-tooltip={t("summary.tooltips.comments")}>
+                                tooltip={t("summary.tooltips.comments")}>
                                 <CommentSection
                                     comments={this.state.comments}
                                     userId={this.props.user_id}
@@ -1523,7 +1523,7 @@ tooltip={t("summary.tooltips.comments")}>
                             <button
                                 type="button"
                                 className="btn btn-md btn-warning"
-data-tippy-content={t("summary.tooltips.deletePermanently")}
+                                data-tippy-content={t("summary.tooltips.deletePermanently")}
                                 onClick={e =>
                                     this.handleRemoveActivityApplication(e)
                                 }>
@@ -1541,7 +1541,7 @@ data-tippy-content={t("summary.tooltips.deletePermanently")}
                             <div className="modal-dialog">
                                 <div className="modal-content animated">
                                     <div className="modal-header">
-<p>{t("summary.applicationStatus")}</p>
+                                        <p>{t("summary.applicationStatus")}</p>
                                     </div>
                                     <div className="modal-body">
                                         {generateStatusSelection}
@@ -1549,7 +1549,7 @@ data-tippy-content={t("summary.tooltips.deletePermanently")}
                                         {isStopping ?
                                             (
                                                 <div className="form-group">
-<label>{t("summary.activityStopDate")}</label>
+                                                    <label>{t("summary.activityStopDate")}</label>
                                                     <input
                                                         className={`form-control ${!this.state.stoppedAt ? "invalid" : ""}`}
                                                         type="date"

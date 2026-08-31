@@ -23,9 +23,12 @@
 import React from "react";
 import {render, screen, waitFor, within} from "@testing-library/react";
 import _ from "lodash";
+import swal from "sweetalert2";
+import {toast} from "react-toastify";
 import i18n from "../../../i18n";
 import fr from "../../../locales/fr/activityApplications.json";
 import en from "../../../locales/en/activityApplications.json";
+import {CANCELED_ID} from "../../utils/ActivityApplicationsStatuses";
 import Summary from "./Summary";
 
 // Some transitive lodash-chain helpers in this tree read the global `_` without importing it.
@@ -36,6 +39,13 @@ global._ = _;
 vi.mock("react-modal", () => ({
     default: ({children}) => <div data-testid="react-modal">{children}</div>,
 }));
+
+// swal / toast are only reached from the handler methods (section E). Mocking them here is inert
+// for the render-path sections B/C, which never call them.
+vi.mock("sweetalert2", () => ({
+    default: Object.assign(vi.fn(() => Promise.resolve({})), {fire: vi.fn(() => Promise.resolve({}))}),
+}));
+vi.mock("react-toastify", () => ({toast: vi.fn()}));
 
 vi.mock("@fullcalendar/react", () => ({
     isValidDate: d => !Number.isNaN(new Date(d).getTime()),
@@ -394,5 +404,105 @@ describe("Summary — summary.* i18n layer", () => {
                 expect(v).not.toBe(`summary.tooltips.${key}`);
             }
         }
+    });
+});
+
+// ==============================================================================================
+// E. Handler methods — the swal/toast paths this lot newly made `t`-dependent
+//
+// Regression guard for the review finding: `const { t }` had been placed in `handleAddSuggestions`
+// instead of `handleSelectSuggestion`, so the error branch of the latter threw
+// `ReferenceError: t is not defined`. These tests instantiate the unwrapped class with an injected
+// `t` and drive each handler directly.
+// ==============================================================================================
+
+describe("Summary — handler i18n (swal / toast)", () => {
+    const mountInstance = (lng, extraProps = {}) => {
+        let inst;
+        render(
+            <Summary.WrappedComponent
+                ref={r => {
+                    inst = r;
+                }}
+                {...baseProps()}
+                {...extraProps}
+                t={i18n.getFixedT(lng, "activityApplications")}
+                i18n={i18n}
+                tReady
+            />,
+        );
+        return inst;
+    };
+
+    test.each(["fr", "en"])(
+        "handleSelectSuggestion error branch calls swal with the resolved title, no ReferenceError (%s)",
+        async lng => {
+            global.fetch = vi.fn().mockResolvedValue({
+                json: () => Promise.resolve({activity: {id: 5}, error: "Cours complet"}),
+            });
+            const inst = mountInstance(lng);
+            inst.state.suggestions = {7: [{id: 5, options: []}]};
+            inst.state.desiredActivities = [{id: 3, options: []}];
+
+            await expect(
+                inst.handleSelectSuggestion(99, 3, 7),
+            ).resolves.not.toThrow();
+
+            expect(swal).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    title: i18n.getFixedT(lng, "activityApplications")("summary.errorTitle"),
+                    text: "Cours complet",
+                }),
+            );
+        },
+    );
+
+    test("handleSaveStatus toasts the resolved stop-date-required message (fr)", () => {
+        const inst = mountInstance("fr", {statuses: [{id: 1, is_stopping: true}]});
+        inst.state.status_id = 1;
+        inst.stopDateInput.current = {value: ""};
+
+        inst.handleSaveStatus();
+
+        expect(toast).toHaveBeenCalledWith(
+            "Pour arrêter une inscription, veuillez renseigner une date d'arrêt.",
+            expect.objectContaining({type: "error"}),
+        );
+    });
+
+    test("handleSaveStatus adhesion-delete branch fires swal.fire with the resolved title (fr)", () => {
+        const inst = mountInstance("fr");
+        inst.state.status_id = CANCELED_ID;
+
+        inst.handleSaveStatus();
+
+        expect(swal.fire).toHaveBeenCalledWith(
+            expect.objectContaining({title: "Attention !"}),
+        );
+    });
+
+    test("handleRemoveActivityApplication toasts the resolved must-remove message when an activity is validated (fr)", () => {
+        const inst = mountInstance("fr");
+        inst.state.desiredActivities = [{is_validated: true}];
+
+        inst.handleRemoveActivityApplication({});
+
+        expect(toast).toHaveBeenCalledWith(
+            "Les activités doivent toutes être retirées pour pouvoir supprimer cette demande",
+            expect.objectContaining({type: "warning"}),
+        );
+    });
+
+    test("sendConfirmationMail asks for confirmation with resolved title + reused common:confirm.sure (fr)", () => {
+        const inst = mountInstance("fr");
+
+        inst.sendConfirmationMail();
+
+        expect(swal).toHaveBeenCalledWith(
+            expect.objectContaining({
+                title: "Envoi mail confirmation",
+                text: "Êtes-vous sûr ?",
+            }),
+        );
     });
 });
