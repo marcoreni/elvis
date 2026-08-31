@@ -123,6 +123,44 @@ describe.each(["fr", "en"])("ActivityChoice — rendered copy (%s)", lng => {
         // Empty-state row is gone once something is selected.
         expect(screen.queryByText(x.noActivitySelected)).not.toBeInTheDocument();
     });
+
+    // formulaPrefix is the lot's ONLY interpolated key — render the summary formula row so a
+    // call-site arg rename ({name} -> {label}) would break this, not just the i18n-layer check.
+    test("a selected formula: the summary row renders 'Formule : <name>' interpolated", () => {
+        renderActivityChoice({
+            formulas: [{id: 7, name: "Trio", formule_pricings: [{price: "150"}], formule_items: []}],
+            selectedFormulas: [7],
+            selectedFormulaActivities: {7: []},
+        });
+
+        const expected = lng === "fr" ? "Formule : Trio" : "Package: Trio";
+        expect(screen.getByText(expected)).toBeInTheDocument();
+        // no unfilled placeholder leaked
+        expect(screen.queryByText(/\{\{name\}\}/)).not.toBeInTheDocument();
+    });
+
+    // unpopularWarning renders only when an is_unpopular activity is selected.
+    test("selecting an unpopular activity shows the minimum-headcount warning", () => {
+        const unpopularRef = {
+            id: 9,
+            display_name: "Tuba",
+            duration: 30,
+            display_prices_by_season: {},
+            display_price: "80",
+            is_unpopular: true,
+        };
+        renderActivityChoice({
+            selectedActivities: [9],
+            activityRefs: [unpopularRef],
+            allActivityRefs: [unpopularRef],
+        });
+
+        const expected =
+            lng === "fr"
+                ? /Les inscriptions aux activités suivantes sont soumises/
+                : /Registration for the following activities is subject/;
+        expect(screen.getByText(expected)).toBeInTheDocument();
+    });
 });
 
 describe("ActivityChoice — fr specifics", () => {

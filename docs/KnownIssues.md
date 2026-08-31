@@ -611,9 +611,16 @@ choose your activities" panels) — preserved verbatim from the components:
 Dedup opportunity (not a defect): `formulaChoice.*` and `activityChoice.*` each redeclare
 `summary` = "Récapitulatif", `duration`/`colDuration` = "Durée", `colEstimatedPrice` = "Tarif
 estimé", `searchPlaceholder` = "Rechercher"; these also duplicate `selectedActivitiesTable.*` and
-`formulaActivitiesModal.col*` from lots 3a/3b. Kept per-component for now (consistent with the
-earlier sub-lots). A shared `activityApplications` sub-block is a later cleanup — do not
-restructure ad hoc.
+`formulaActivitiesModal.col*` from lots 3a/3b — and `activityChoice.title` ("Choix de l'activité"
+/ "Activity choice") is EN-identical to lot-3b's `formulaActivitiesModal.activityChoice` ("Choix
+des activités" / "Activity choice"). Kept per-component for now (consistent with the earlier
+sub-lots). A shared `activityApplications` sub-block is a later cleanup — do not restructure ad hoc.
+
+Untranslated unit tokens in the two lot-3c files (same class as the `SelectedActivitiesTable` /
+`FormulaActivitiesModal` entry below — the `<th>`s are translated, the value formatters are not):
+`ActivityChoice.jsx:25,27` (`` `${hours}h${minutes}` `` / `` `${ref.duration} min` ``),
+`FormulaChoice.jsx:181` (`{duration !== "--" ? "min" : ""}`), and `"--"` placeholders at
+`ActivityChoice.jsx:15,17,21,297,449` / `FormulaChoice.jsx:96,131,171`.
 
 ## `activityApplications` — residual French from lot-3a's not-yet-processed siblings
 
