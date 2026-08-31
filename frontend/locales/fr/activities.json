@@ -42,5 +42,43 @@
         "teachers": {
             "title": "Professeurs"
         }
+    },
+    "activityRefBasics": {
+        "validators": {
+            "required": "requis",
+            "mustBeInteger": "doit être un entier",
+            "minValue": "doit être supérieur à {{min}}"
+        },
+        "addKind": {
+            "title": "Ajouter une famille d'activité"
+        },
+        "fetchError": "Une erreur est survenue lors de la récupération des saisons ou des catégories de prix",
+        "createPricing": "Créer un tarif",
+        "pricingColumns": {
+            "name": "Nom",
+            "lessonCount": "Nombre de cours",
+            "price": "Tarif en €",
+            "seasons": "Saisons concernées"
+        },
+        "imageDropText": "Pour ajouter une image, déposez un fichier ici ou",
+        "fields": {
+            "name": "Nom",
+            "family": "Famille",
+            "spots": "Nombre de places",
+            "spotsOverbooking": "Places (avec surbooking)",
+            "spotsOverbookingTooltip": "En remplissant ce champ, vous pouvez ajouter des nouvelles places sur cette activité. Les nouvelles places seront disponibles à l'inscription.",
+            "ageMin": "Âge minimum (inclus)",
+            "ageMax": "Âge maximum (exclu)",
+            "activityType": "Type d'activité",
+            "duration": "Durée (en minutes)",
+            "colorLabel": "Couleur du créneau dans le planning",
+            "colorHint": "Choisissez une couleur pour identifier facilement cette activité sur le planning"
+        },
+        "pricing": {
+            "sectionLabel": "Nombre de cours et tarifs",
+            "sectionHint": "Vous pouvez paramétrer un nombre de séances et un tarif pour votre activité",
+            "oneResourceTypeName": "un tarif",
+            "thisResourceTypeName": "ce tarif"
+        }
     }
 }

@@ -537,7 +537,19 @@ et à mesure de son intégration :
             (3 fichiers, gardes HOC + résolution i18n des fragments d'erreur), 15 tests.
             Revue : 0 bug ; 2 notes pré-existantes consignées dans `docs/KnownIssues.md`
             (tooltip FR en dur dans `utils/ui/tabs.jsx` + typos ; `this.teachersError` à sens unique).
-      - [ ] **Lot 2b — `ActivityRefBasics.jsx`** (~79 chaînes — l'onglet « Activité »).
+      - [x] **Lot 2b — `ActivityRefBasics.jsx`** (l'onglet « Activité ») : branche
+            `feature/i18n-06-extract-activities-lot2b`. `withTranslation("activities")` ;
+            `const { t } = this.props` dans `addKind` / `fetchSeasonsAndPricings` / `CreateButton`
+            / `render`. Les validateurs react-final-form au niveau module (`required`,
+            `mustBeInteger`, `minValue` avec `{{min}}`) passent par le singleton `i18n.t`. +26 clés
+            sous `activityRefBasics.*` (`validators.*`, `fields.*`, `pricingColumns.*`, `pricing.*`,
+            `addKind.title`, `fetchError`, `createPricing`, `imageDropText` ; 46 au total, parité
+            fr/en). Réutilise `common:actions.add` + `common:loading`. Validateur mort `mustBeNumber`
+            supprimé (revue). `surbooking` / `des nouvelles places` consignés dans `KnownIssues`.
+            Tests Vitest (`ActivityRefBasics.test.jsx`, fr + en, corps du formulaire via wrapper
+            `<Form>` + enfants mockés, chemin `createButton`/`fetchError`, résolution i18n des
+            validateurs), 19 tests. Revue : 0 bug ; notes pré-existantes consignées (t figé au
+            constructeur dans `fetchError`, bug `null`/`undefined` du Cell `selectedSeasons`).
       - [ ] **Lot 2c** — `ActivityRefApplication.jsx` (+ `AllowsTimeslotSelectionButtonGroup`) +
             `WorkGroupTemplateEditor.jsx` + `ActivityRefPricingModal.jsx`.
     - [ ] **Lot 3** — `app/views/{activity,activity_instance,my_activities,activities_applications}/*`
