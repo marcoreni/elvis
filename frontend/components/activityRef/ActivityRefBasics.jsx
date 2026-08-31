@@ -1,4 +1,6 @@
 import React from "react";
+import { withTranslation } from "react-i18next";
+import i18n from "../../i18n";
 import { csrfToken } from "../utils";
 import swal from "sweetalert2";
 import { Form, Field, FormSpy } from "react-final-form";
@@ -14,17 +16,17 @@ import * as api from "../../tools/api";
 import ActivityRefDataService from "./ActivityRefDataService";
 import NewActivityRefDataService from "./NewActivityRefDataService";
 
-const required = value => (value ? undefined : 'requis')
-const mustBeNumber = value => ((value!==undefined && isNaN(value)) ? 'doit être un nombre' : undefined)
-const mustBeInteger = value => (!Number.isInteger(Number(value)) ? 'doit être un entier' : undefined)
-const mustBeIntegerOrUndefined = value => ((value!==undefined && !Number.isInteger(Number(value))) ? 'doit être un entier' : undefined)
+const required = value => (value ? undefined : i18n.t('activities:activityRefBasics.validators.required'))
+const mustBeNumber = value => ((value!==undefined && isNaN(value)) ? i18n.t('activities:activityRefBasics.validators.mustBeNumber') : undefined)
+const mustBeInteger = value => (!Number.isInteger(Number(value)) ? i18n.t('activities:activityRefBasics.validators.mustBeInteger') : undefined)
+const mustBeIntegerOrUndefined = value => ((value!==undefined && !Number.isInteger(Number(value))) ? i18n.t('activities:activityRefBasics.validators.mustBeInteger') : undefined)
 const minValue = min => value =>
-    isNaN(value) || value >= min ? undefined : `doit être supérieur à ${min}`
+    isNaN(value) || value >= min ? undefined : i18n.t('activities:activityRefBasics.validators.minValue', {min})
 const composeValidators = (...validators) => value =>
     validators.reduce((error, validator) => error || validator(value), undefined)
 
 
-export default class ActivityRefBasics extends React.Component {
+class ActivityRefBasics extends React.Component {
 
     constructor(props) {
         super(props);
@@ -47,11 +49,12 @@ export default class ActivityRefBasics extends React.Component {
 
     addKind()
     {
+        const {t} = this.props;
         swal({
-            title: 'Ajouter une famille d\'activité',
+            title: t('activityRefBasics.addKind.title'),
             input: 'text',
             showCancelButton: true,
-            confirmButtonText: 'Ajouter',
+            confirmButtonText: t('common:actions.add'),
             showLoaderOnConfirm: true,
             preConfirm: async (text) =>
             {
@@ -87,6 +90,7 @@ export default class ActivityRefBasics extends React.Component {
     }
 
     fetchSeasonsAndPricings = () => {
+        const {t} = this.props;
         api.set()
             .success(res => {
                 this.setState({
@@ -97,7 +101,7 @@ export default class ActivityRefBasics extends React.Component {
                 })
             })
             .error(res => {
-                swal("Une erreur est survenue lors de la récupération des saisons ou des catégories de prix", res.error, "error");
+                swal(t('activityRefBasics.fetchError'), res.error, "error");
             })
             .get("/activity_ref_pricings/get_seasons_and_pricing_categories", {});
     }
@@ -115,39 +119,41 @@ export default class ActivityRefBasics extends React.Component {
     }
 
     CreateButton({onCreate}) {
+        const {t} = this.props;
         return (
             <DefaultCreateButton
-                label={"Créer un tarif"}
+                label={t("activityRefBasics.createPricing")}
                 onCreate={onCreate}
             />
         );
     }
 
     render() {
+        const {t} = this.props;
         if (this.state.seasons.length === 0) {
             return <div className="spinner-border text-primary" role="status">
-                <span className="sr-only">Loading...</span>
+                <span className="sr-only">{t("common:loading")}</span>
             </div>
         } else {
             const columns = [
                 {
                     id: "pricing_name",
-                    Header: "Nom",
+                    Header: t("activityRefBasics.pricingColumns.name"),
                     accessor: "pricing_category.name",
                 },
                 {
                     id: "activity_quantity",
-                    Header: "Nombre de cours",
+                    Header: t("activityRefBasics.pricingColumns.lessonCount"),
                     accessor: "pricing_category.number_lessons",
                 },
                 {
                     id: "amount",
-                    Header: "Tarif en €",
+                    Header: t("activityRefBasics.pricingColumns.price"),
                     accessor: "price",
                 },
                 {
                     id: "selectedSeasons",
-                    Header: "Saisons concernées",
+                    Header: t("activityRefBasics.pricingColumns.seasons"),
                     Cell: row => {
                         const seasonStart = this.state.seasons.find(s => s.id === row.original.from_season_id);
                         const seasonEnd = row.original.to_season_id !== undefined ? this.state.seasons.find(s => s.id === row.original.to_season_id) : null;
@@ -174,14 +180,14 @@ export default class ActivityRefBasics extends React.Component {
                             file_url={this.props.activityRefImage}
                             setFile={f => this.props.onImageChange ? this.props.onImageChange(f) : ""}
                             acceptedTypes={"image/jpeg, image/png, image/jpg"}
-                            textDisplayed={"Pour ajouter une image, déposez un fichier ici ou"}/>
+                            textDisplayed={t("activityRefBasics.imageDropText")}/>
                     </div>
 
                     <div className="row">
 
                         <div className="col-sm-6">
                             <Field
-                                label="Nom"
+                                label={t("activityRefBasics.fields.name")}
                                 name="activityRef.label"
                                 type="text"
                                 required
@@ -192,7 +198,7 @@ export default class ActivityRefBasics extends React.Component {
 
                         <div className="col-sm-6">
                             <Field
-                                label="Famille"
+                                label={t("activityRefBasics.fields.family")}
                                 name="activityRef.activity_ref_kind_id"
                                 type="select"
                                 required
@@ -208,7 +214,7 @@ export default class ActivityRefBasics extends React.Component {
                     <div className="row">
                         <div className="col-sm-6">
                             <Field
-                                label="Nombre de places"
+                                label={t("activityRefBasics.fields.spots")}
                                 name="activityRef.occupation_limit"
                                 type="number"
                                 required
@@ -219,11 +225,11 @@ export default class ActivityRefBasics extends React.Component {
 
                         <div className="col-sm-6">
                             <Field
-                                label={"Places (avec surbooking)"}
+                                label={t("activityRefBasics.fields.spotsOverbooking")}
                                 name="activityRef.occupation_hard_limit"
                                 type="number"
                                 required
-                                tooltip="En remplissant ce champ, vous pouvez ajouter des nouvelles places sur cette activité. Les nouvelles places seront disponibles à l'inscription."
+                                tooltip={t("activityRefBasics.fields.spotsOverbookingTooltip")}
                                 validate={composeValidators(required, mustBeInteger, minValue(0))}
                                 render={Input}
                             />
@@ -233,7 +239,7 @@ export default class ActivityRefBasics extends React.Component {
                     <div className="row">
                         <div className="col-sm-6">
                             <Field
-                                label="Âge minimum (inclus)"
+                                label={t("activityRefBasics.fields.ageMin")}
                                 name="activityRef.from_age"
                                 type="number"
                                 required
@@ -244,7 +250,7 @@ export default class ActivityRefBasics extends React.Component {
 
                         <div className="col-sm-6">
                             <Field
-                                label="Âge maximum (exclu)"
+                                label={t("activityRefBasics.fields.ageMax")}
                                 name="activityRef.to_age"
                                 type="number"
                                 required
@@ -257,7 +263,7 @@ export default class ActivityRefBasics extends React.Component {
                     <div className="row">
                         <div className="col-sm-6">
                             <Field
-                                label="Type d'activité"
+                                label={t("activityRefBasics.fields.activityType")}
                                 name="activityRef.activity_type"
                                 type="select"
                                 render={InputSelect}
@@ -266,7 +272,7 @@ export default class ActivityRefBasics extends React.Component {
                         </div>
                         <div className="col-sm-6">
                             <Field
-                                label="Durée (en minutes)"
+                                label={t("activityRefBasics.fields.duration")}
                                 name="activityRef.duration"
                                 type="number"
                                 required
@@ -280,11 +286,11 @@ export default class ActivityRefBasics extends React.Component {
                         <div className="col-sm-6">
                             <div className="form-group">
                                 <label className="small d-block mb-1" style={{ color: "#003E5C" }}>
-                                    Couleur du créneau dans le planning
+                                    {t("activityRefBasics.fields.colorLabel")}
                                 </label>
 
                                 <p className="text-muted small mb-2">
-                                    Choisissez une couleur pour identifier facilement cette activité sur le planning
+                                    {t("activityRefBasics.fields.colorHint")}
                                 </p>
 
                                 <Field
@@ -301,9 +307,8 @@ export default class ActivityRefBasics extends React.Component {
 
                     <div className="row">
                         <div className="col-sm-6">
-                            <label>Nombre de cours et tarifs</label>
-                            <p className="mt-3">Vous pouvez paramétrer un nombre de séances et un tarif pour votre
-                                activité</p>
+                            <label>{t("activityRefBasics.pricing.sectionLabel")}</label>
+                            <p className="mt-3">{t("activityRefBasics.pricing.sectionHint")}</p>
                         </div>
 
                         <div className="col-sm-12 mt-4 mb-5">
@@ -320,8 +325,8 @@ export default class ActivityRefBasics extends React.Component {
                                     />
                                 }
                                 showFullScreenButton={false}
-                                oneResourceTypeName="un tarif"
-                                thisResourceTypeName="ce tarif"
+                                oneResourceTypeName={t("activityRefBasics.pricing.oneResourceTypeName")}
+                                thisResourceTypeName={t("activityRefBasics.pricing.thisResourceTypeName")}
                                 defaultSorted={[{id: "to_season_id", desc: true}, {id: "pricing_category_id", asc: true}]}
                             />
                         </div>
@@ -343,3 +348,5 @@ export default class ActivityRefBasics extends React.Component {
         }
     }
 }
+
+export default withTranslation("activities")(ActivityRefBasics);

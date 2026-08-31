@@ -484,6 +484,15 @@ before the final `</p>` inside `lessonList.help.body` are intentional source art
 verbatim — a blanket "trim / normalize the locale files" pass must not touch them. The English
 side (`lessonList.help.body`) is a clean translation with these defects fixed, as expected.
 
+`frontend/locales/fr/activities.json` (added by feature/i18n-06-extract-activities-lot2b —
+`ActivityRefBasics.jsx`) — preserved verbatim from the component:
+- `activityRefBasics.fields.spotsOverbooking` — "Places (avec surbooking)": "surbooking" is
+  franglais → "surréservation" (or "overbooking"). Kept verbatim; the English side reads
+  "Spots (with overbooking)".
+- `activityRefBasics.fields.spotsOverbookingTooltip` — "vous pouvez ajouter des nouvelles places"
+  → "…de nouvelles places" (partitive "de", not "des", before the preposed adjective "nouvelles").
+  Kept verbatim.
+
 Also re-scan the whole `frontend/locales/fr/` + `config/locales/fr.yml` when doing this (grep for
 `Edition\b`, `Editer\b`, `Selectionn`, `réglement`, `Echéance`, `Echec`, `Emmeteur`, `Precedent`,
 `Creer\b`, `verouiller`, `Resolution\b`, `complêtement`, `remplis\b`); the list above is only what

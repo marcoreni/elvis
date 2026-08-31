@@ -42,5 +42,44 @@
         "teachers": {
             "title": "Teachers"
         }
+    },
+    "activityRefBasics": {
+        "validators": {
+            "required": "required",
+            "mustBeNumber": "must be a number",
+            "mustBeInteger": "must be an integer",
+            "minValue": "must be greater than {{min}}"
+        },
+        "addKind": {
+            "title": "Add an activity family"
+        },
+        "fetchError": "An error occurred while fetching the seasons or the price categories",
+        "createPricing": "Create a pricing",
+        "pricingColumns": {
+            "name": "Name",
+            "lessonCount": "Number of courses",
+            "price": "Price (€)",
+            "seasons": "Applicable seasons"
+        },
+        "imageDropText": "To add an image, drop a file here or",
+        "fields": {
+            "name": "Name",
+            "family": "Family",
+            "spots": "Number of spots",
+            "spotsOverbooking": "Spots (with overbooking)",
+            "spotsOverbookingTooltip": "By filling in this field, you can add new spots to this activity. The new spots will be available for registration.",
+            "ageMin": "Minimum age (included)",
+            "ageMax": "Maximum age (excluded)",
+            "activityType": "Activity type",
+            "duration": "Duration (in minutes)",
+            "colorLabel": "Slot color in the schedule",
+            "colorHint": "Choose a color to easily identify this activity on the schedule"
+        },
+        "pricing": {
+            "sectionLabel": "Number of courses and pricing",
+            "sectionHint": "You can configure a number of sessions and a pricing for your activity",
+            "oneResourceTypeName": "a pricing",
+            "thisResourceTypeName": "this pricing"
+        }
     }
 }
