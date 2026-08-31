@@ -699,6 +699,57 @@ Also `validation.colPackage` = "Formule" / `colEstimatedPrice` = "Tarif estimé"
 `selectedActivitiesTable.*` values from lots 3a–3c — kept per-component for now, same as the
 earlier sub-lots (a shared `activityApplications` sub-block is a later cleanup).
 
+`frontend/locales/fr/activityApplications.json` (added by feature/i18n-06-extract-activities-lot3f
+— `summary/Activity.jsx`, the per-activity admin panel of the application summary; new
+`summaryActivity.*` block) — preserved verbatim from the component:
+- `summaryActivity.editLevelTitle` — "**Edition** du niveau de {{label}}" → "**Édition** du niveau
+  de {{label}}" (missing accent on the leading "E"). Same defect class as the payments
+  `userPayments.paymentsList.bulkEdit*` / activities lot-1 `views.activity_ref.edit.heading`
+  entries. Kept verbatim; the English side reads "Edit {{label}}'s level" (clean).
+
+Incidental fix (noted, not a pending typo): the source `previousText` prop passed to this file's
+suggestions `<ReactTable>` was `"Précedent"` (missing accent). Lot 3f routes it through the shared
+`common:reactTable.previousText` = `"Précédent"`, which **corrects** it — same acceptable
+incidental fix as the `formules` `rowsText` reuse. No new locale-file defect to clean up.
+
+Not a defect (keep note): `summaryActivity.headcountAt` = "Effectifs au : {{date}}" and
+`summaryActivity.suggestionCriteria` (lowercase-initial, renders after an `<i class="fas
+fa-info-circle"/>`) both correctly carry the French space before the colon — like the lot-3e
+`validation.totalEstimatedCost` note, and unlike several earlier `activityApplications` strings
+that were missing it. Also `summaryActivity.notSpecified` = "NON INDIQUÉ" (all-caps) is an
+intentional level sentinel value, distinct from `summaryActivity.notIndicated` = "Non indiqué"
+(sentence case, the student's displayed level when none is set) — not an inconsistency.
+
+Non-reactive note (behaviour, not blocking): `LevelCell` and `SubStudentList` take `t` from
+`useTranslation("activityApplications")` (reactive), but the level sentinel comparison
+`studentLevel === 'NON INDIQUÉ'` in `LevelCell` matches the **raw** string from the API / from
+`TimeIntervalHelpers.levelDisplayForActivity` — not the translated `summaryActivity.notSpecified`
+value — so the sentinel stays French-literal in code while only its *display* goes through i18n.
+Correct as-is (the key mirrors the literal); noted so a future refactor doesn't translate the
+sentinel and break the `=== 'NON INDIQUÉ'` check.
+
+Residual French in / reached from `summary/Activity.jsx` that lot 3f did NOT extract (out of the
+"translate this file's own copy" scope — pulled from helpers/constants or `Intl`):
+- `Activity.jsx:~165, ~170` — the `SubStudentList` "Début le" / "Arrêt le" cells format dates with
+  `Intl.DateTimeFormat('fr')`, so under the now-translated `Start on` / `Stop on` headers an
+  English user still sees `DD/MM/YYYY`. Same class as the logged `LessonList.jsx ~1418,1423` entry.
+- `PRE_APPLICATION_ACTION_LABELS` (`tools/constants.js:28`) — feeds `actionLabel` → a
+  `<span class="badge badge-warning">` at `Activity.jsx:~948` whenever `application.pre_application_activity`
+  exists. French-only constant (`Nouvelle inscription` / `Renouvellement` / `Changement` / `Arrêt`
+  / `Poursuite enfance` / `Inscription CHAM`); the `newRequest` fallback beside it IS translated.
+  Same class as the `WEEKDAYS`/`MONTHS`/`MESSAGES` constants entry below — fold in when that pass
+  happens.
+- `TimeIntervalHelpers.averageAgeDisplay` (`:~313`) returns `` `${age} ans` `` — the `Cell` of the
+  `average_age` column (`Activity.jsx:~617`). So the average-age column renders "11 ans" in English
+  under an `Age` header, while the per-student age cell in the same table IS translated
+  (`summaryActivity.ageYears` = "11 years old"). Fix when `TimeIntervalHelpers` is extracted
+  (planning lot 3c).
+- `tools/format.jsx:~219` — `data-tippy-content="Aucun rôle n'a été ajouté"`, reached via
+  `formatActivityHeadcount` (the `Occupied` column `Cell`). French tooltip under an English header.
+- `Activity.jsx:~486/~495` — the "Jour" column `Cell` uses `moment(...).format("dddd")` (follows
+  the i18n-maintained moment locale) but its `Filter` `<option>`s come from the French `WEEKDAYS`
+  constant → rows say "MONDAY", the dropdown says "Lundi". Covered by the `constants.js` entry.
+
 ## `activityApplications` — residual French from lot-3a's not-yet-processed siblings
 
 The i18n-06 activities lot-3a review surfaced hardcoded French in files that lot 3a did NOT touch

@@ -632,7 +632,23 @@ et à mesure de son intégration :
             (`Validation.test.jsx`, rendu complet avec les 3 tableaux enfants mockés, sections
             toujours affichées + conditionnelles fr/en, résolution i18n de chaque clé), 67 tests.
             Revue : 0 bug ; lacune de couverture des clés conditionnelles comblée.
-      - [ ] **Lot 3f** — `summary/Activity.jsx` (~146).
+      - [x] **Lot 3f** — branche `feature/i18n-06-extract-activities-lot3f`. `summary/Activity.jsx`
+            (~1215 lignes, le panneau par-activité de la page récapitulative). Classe `Activity` →
+            `withTranslation("activityApplications")` (`const { t } = this.props` dans `render`, où
+            tout est construit) ; sous-composants fn module-level `LevelCell` + `SubStudentList` →
+            `useTranslation`. +39 feuilles sous `summaryActivity.*` (192 au total, parité fr/en) :
+            en-têtes de colonnes react-table, tooltips replier/déplier, boutons de la cellule
+            actions (`removeOption`/`option`/`removeFromSlot`/`select`), en-tête suggestions +
+            boutons bascule + labels `<i>` + `suggestionCriteria`, la sous-liste d'élèves
+            (`headcountAt` + `<th>` + `ageYears`), et la modale d'édition de niveau.
+            `headcountAt`/`ageYears`/`allCoursesOf`/`editLevelTitle` portent de l'interpolation.
+            Réutilise `common:loading`, `common:reactTable.*` (corrige au passage la coquille
+            source « Précedent » → « Précédent »), `common:actions.{cancel,save}`. Typo `Edition`
+            préservée ; sentinel `NON INDIQUÉ` de `LevelCell` reste un littéral (comparaison), seul
+            l'affichage passe par `t()`. Tests Vitest (`Activity.test.jsx`, garde HOC, montage
+            shallow fr/en avec react-table/react-modal mockés + rendu du `SubComponent`, résolution
+            i18n des 39 clés), 12 tests. Revue : 0 bug ; shadow `t` corrigé ; résidus FR hors
+            périmètre (Intl fr, `PRE_APPLICATION_ACTION_LABELS`, `averageAgeDisplay`) consignés.
       - [ ] **Lot 3g** — `summary/Summary.jsx` (~238).
   - [x] `evaluation` — branche `feature/i18n-06-extract-evaluation` *(dépend de 01+02)*
     - [x] `frontend/components/evaluation/` : `Evaluation.jsx`, `EvaluationForm.jsx`,

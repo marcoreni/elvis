@@ -1,4 +1,5 @@
 import React from "react";
+import { withTranslation, useTranslation } from "react-i18next";
 import _ from "lodash";
 
 const moment = require("moment");
@@ -25,6 +26,7 @@ const LevelCell = ({
                        activityRef,
                        initialLevel = null
                    }) => {
+    const { t } = useTranslation("activityApplications");
     const [studentLevel, setStudentLevel] = React.useState(initialLevel);
     const [isLoading, setIsLoading] = React.useState(!initialLevel);
 
@@ -84,11 +86,11 @@ const LevelCell = ({
     }, [user.id, activityId, initialLevel, activityRefId, timeInterval, activityRef, seasons, timeInterval.id]);
 
     if (isLoading) {
-        return <>Chargement...</>;
+        return <>{t("common:loading")}</>;
     }
 
     if (studentLevel === 'NON INDIQUÉ') {
-        return <>NON INDIQUÉ</>;
+        return <>{t("summaryActivity.notSpecified")}</>;
     }
 
     return <>{studentLevel}</>;
@@ -96,6 +98,7 @@ const LevelCell = ({
 
 
 const SubStudentList = ({ row, seasons }) => {
+    const { t } = useTranslation("activityApplications");
     const activeStudents = row.original.users.map(u => ({ ...u, type: 'active' }));
 
     const inactiveStudents = row.original.inactive_users
@@ -128,18 +131,18 @@ const SubStudentList = ({ row, seasons }) => {
         <div className="flex-column">
             <div className="flex" style={{ padding: '15px' }}>
                 <h3 className="m-r">
-                    Effectifs au : {moment(row.original.closest_lesson).format('DD/MM/YYYY')}
+                    {t("summaryActivity.headcountAt", { date: moment(row.original.closest_lesson).format('DD/MM/YYYY') })}
                 </h3>
             </div>
             <table className="table table-bordered">
                 <thead>
                 <tr>
-                    <th>Nom</th>
-                    <th>Âge</th>
-                    <th>Niveau</th>
-                    {isWorkGroup && <th>Instrument</th>}
-                    <th>Début le</th>
-                    <th>Arrêt le</th>
+                    <th>{t("summaryActivity.colName")}</th>
+                    <th>{t("summaryActivity.colAge")}</th>
+                    <th>{t("summaryActivity.colLevel")}</th>
+                    {isWorkGroup && <th>{t("summaryActivity.colInstrument")}</th>}
+                    <th>{t("summaryActivity.colStartDate")}</th>
+                    <th>{t("summaryActivity.colStopDate")}</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -152,7 +155,7 @@ const SubStudentList = ({ row, seasons }) => {
                         ? row.original.activities_instruments
                         .filter(ai => ai.user_id === u.id)
                         .map(ai => _.get(ai, 'instrument.label'))
-                        .join(', ') || 'NON ASSIGNÉ'
+                        .join(', ') || t("summaryActivity.notAssigned")
                         : null;
 
                     const app = u.application || u.activity_applications?.find(a =>
@@ -177,7 +180,7 @@ const SubStudentList = ({ row, seasons }) => {
                                     {u.first_name} {u.last_name}
                                 </a>
                             </td>
-                            <td>{TimeIntervalHelpers.age(u.birthday)} ans</td>
+                            <td>{t("summaryActivity.ageYears", { age: TimeIntervalHelpers.age(u.birthday) })}</td>
                             <td>
                                 <LevelCell
                                     user={u}
@@ -410,6 +413,7 @@ class Activity extends React.Component {
     }
 
     render() {
+        const { t } = this.props;
         const self = this;
         const {suggestionsMode} = this.state;
         const desiredActivityInAnyActivity = self.isDesiredActivityInAnyActivity();
@@ -421,13 +425,13 @@ class Activity extends React.Component {
                 filterable: true,
                 Filter: () => <div className="table-expanders">
                     <button
-                        data-tippy-content="Tout replier"
+                        data-tippy-content={t("summaryActivity.collapseAll")}
                         data-tippy-placement="right"
                         onClick={() => this.setState({tableState: {...this.state.tableState, expanded: {}}})}>
                         <i className="fas fa-caret-up" data-fa-transform="grow-8"/>
                     </button>
                     <button
-                        data-tippy-content="Tout déplier"
+                        data-tippy-content={t("summaryActivity.expandAll")}
                         data-tippy-placement="right"
                         onClick={() => this.setState({
                             tableState: {
@@ -458,7 +462,7 @@ class Activity extends React.Component {
         if (_.get(this.props.desiredActivity, "activity_ref.allows_timeslot_selection")) {
             suggestionsColumns.push(
                 {
-                    Header: "Choix",
+                    Header: t("summaryActivity.colRank"),
                     id: "rank",
                     accessor: "rank",
                     maxWidth: 40,
@@ -469,13 +473,13 @@ class Activity extends React.Component {
         suggestionsColumns = [
             ...suggestionsColumns,
             {
-                Header: "Groupe",
+                Header: t("summaryActivity.colGroup"),
                 accessor: "group_name",
                 maxWidth: 60,
             },
 
             {
-                Header: "Jour",
+                Header: t("summaryActivity.colDay"),
                 id: "day",
                 maxWidth: 150,
                 accessor: s => moment(s.closest_lesson || s.time_interval.start).isoWeekday(),
@@ -498,7 +502,7 @@ class Activity extends React.Component {
                     !filter || row.day === filter.value,
             },
             {
-                Header: "Famille de cours",
+                Header: t("summaryActivity.colCourseFamily"),
                 id: "type_cour",
                 maxWidth: 150,
                 accessor: "activity_ref.label",
@@ -524,7 +528,7 @@ class Activity extends React.Component {
                     !filter || row.type_cour === filter.value,
             },
             {
-                Header: "Horaires",
+                Header: t("summaryActivity.colSchedule"),
                 id: "time",
                 Filter: ({ filter, onChange }) => {
                     filter = (filter && filter.value) || {};
@@ -580,21 +584,21 @@ class Activity extends React.Component {
                     ).format("HH:mm")}`,
             },
             {
-                Header: "Professeur",
+                Header: t("summaryActivity.colTeacher"),
                 id: "teacher",
-                accessor: ({ teacher: t }) => `${t.first_name} ${t.last_name}`,
+                accessor: ({ teacher }) => `${teacher.first_name} ${teacher.last_name}`,
                 filterMethod: (filter, { teacher }) =>
                     !filter ||
                     teacher.match(new RegExp(`.*${filter.value}.*`, "i")),
             },
             {
-                Header: "Lieu",
+                Header: t("summaryActivity.colLocation"),
                 id: "location",
                 maxWidth: 100,
                 accessor: s => s.location.label,
             },
             {
-                Header: "Niveau",
+                Header: t("summaryActivity.colLevel"),
                 id: "level",
                 maxWidth: 150,
                 accessor: s => {
@@ -602,11 +606,11 @@ class Activity extends React.Component {
                         s,
                         this.props.seasons
                     );
-                    return level || "Pas de niveau";
+                    return level || t("summaryActivity.noLevel");
                 },
             },
             {
-                Header: "Âge",
+                Header: t("summaryActivity.colAge"),
                 id: "average_age",
                 maxWidth: 50,
                 accessor: s => TimeIntervalHelpers.averageAge(s.users),
@@ -614,7 +618,7 @@ class Activity extends React.Component {
                     TimeIntervalHelpers.averageAgeDisplay(props.value),
             },
             {
-                Header: "Occupées",
+                Header: t("summaryActivity.colOccupied"),
                 id: "occupation",
                 maxWidth: 100,
                 accessor: s => {
@@ -628,7 +632,7 @@ class Activity extends React.Component {
                 Cell: props => formatActivityHeadcount(props.original),
             },
             {
-                Header: "Actions",
+                Header: t("summaryActivity.colActions"),
                 id: "actions",
                 style: { textAlign: "right" },
                 filterable: false,
@@ -662,7 +666,7 @@ class Activity extends React.Component {
                                         );
                                 }}
                             >
-                                Retirer de ce créneau &nbsp;
+                                {t("summaryActivity.removeFromSlot")} &nbsp;
                                 {this.state.submittingId === act.id ? (
                                     <i className="fas fa-circle-notch fa-spin"></i>
                                 ) : (
@@ -706,7 +710,7 @@ class Activity extends React.Component {
                                         });
                                 }}
                             >
-                                Sélectionner &nbsp;
+                                {t("summaryActivity.select")} &nbsp;
                                 {this.state.submittingId === act.id ? (
                                     <i className="fas fa-circle-notch fa-spin"></i>
                                 ) : (
@@ -744,8 +748,8 @@ class Activity extends React.Component {
                                 }}
                             >
                                 {this.isSuggestionInDesiredActivityOptions(act)
-                                    ? "Retirer l'option"
-                                    : "Option"}
+                                    ? t("summaryActivity.removeOption")
+                                    : t("summaryActivity.option")}
                                 &nbsp;
                                 {this.state.submittingOptionId === act.id ? (
                                     <i className="fas fa-circle-notch fa-spin"></i>
@@ -762,7 +766,7 @@ class Activity extends React.Component {
 
         const suggestions = this.sortSuggestions(this.props.suggestions);
 
-        let actionLabel = "Nouvelle demande";
+        let actionLabel = t("summaryActivity.newRequest");
         if (this.props.application.pre_application_activity) {
             actionLabel =
                 PRE_APPLICATION_ACTION_LABELS[
@@ -800,7 +804,7 @@ class Activity extends React.Component {
                     previousActivity = (
                         <div className="col-xs-6">
                             <p>
-                                <i>Ancienne activité</i>
+                                <i>{t("summaryActivity.previousActivity")}</i>
                             </p>
                             <p>
                                 <b>
@@ -824,7 +828,7 @@ class Activity extends React.Component {
                                             ).format("HH:mm")}
                                         </React.Fragment>
                                     ) : (
-                                        "Créneau introuvable"
+                                        t("summaryActivity.slotNotFound")
                                     )}
                                     ,{" "}
                                     {`${applicationActivity.teacher.first_name} ${applicationActivity.teacher.last_name}`}{" "}
@@ -840,7 +844,7 @@ class Activity extends React.Component {
                 previousActivity = (
                     <div className="col-xs-6">
                         <p>
-                            <i>Ancienne activité</i>
+                            <i>{t("summaryActivity.previousActivity")}</i>
                         </p>
                         <p>
                             <b>
@@ -861,7 +865,7 @@ class Activity extends React.Component {
                                         )}
                                     </React.Fragment>
                                 ) : (
-                                    "Créneau introuvable"
+                                    t("summaryActivity.slotNotFound")
                                 )}
                                 ,{" "}
                                 {`${act.teacher.first_name} ${act.teacher.last_name}`}{" "}
@@ -883,7 +887,7 @@ class Activity extends React.Component {
         level =
             levelSeason !== undefined && levelSeason.evaluation_level_ref !== undefined
                 ? _.capitalize(levelSeason.evaluation_level_ref.label)
-                : "Non indiqué";
+                : t("summaryActivity.notIndicated");
 
         const desiredActivities = Array.isArray(this.props.desiredActivities)
             ? this.props.desiredActivities : Object.values(this.props.desiredActivities);
@@ -913,7 +917,7 @@ class Activity extends React.Component {
                     "value"
                 ),
             ) :
-            "Non précisé";
+            t("summaryActivity.notSpecifiedShort");
 
         return (
             <React.Fragment>
@@ -925,13 +929,13 @@ class Activity extends React.Component {
                                     type="button"
                                     className={`btn btn-primary btn-outline ${suggestionsMode === "CUSTOM" ? "active" : ""}`}
                                     onClick={e => this.handleChangeSuggestionsMode("CUSTOM")}>
-                                    Cours suggérés
+                                    {t("summaryActivity.suggestedCourses")}
                                 </button>
                                 <button
                                     type="button"
                                     className={`btn btn-primary btn-outline ${suggestionsMode === "ALL" ? "active" : ""}`}
                                     onClick={e => this.handleChangeSuggestionsMode("ALL")}>
-                                    Tous les cours de {displayActivityRef(this.props.activityRef)}
+                                    {t("summaryActivity.allCoursesOf", { name: displayActivityRef(this.props.activityRef) })}
                                 </button>
                             </div>
                             <select
@@ -951,7 +955,7 @@ class Activity extends React.Component {
                         <div className="row m-b-md">
                             <div className="col-xs-2">
                                 <p>
-                                    <i>Niveau de l'élève</i>
+                                    <i>{t("summaryActivity.studentLevel")}</i>
                                 </p>
                                 <p>
                                     <b>{level}</b>
@@ -963,7 +967,7 @@ class Activity extends React.Component {
                             </div>
                             <div className="col-xs-2">
                                 <p>
-                                    <i>Changement de groupe</i>
+                                    <i>{t("summaryActivity.groupChange")}</i>
                                 </p>
                                 <p>
                                     <b>{shouldChangeActivityAnswer}</b>
@@ -972,7 +976,7 @@ class Activity extends React.Component {
                             {this.props.desiredActivity.user ? (
                                 <div className="col-xs-2">
                                     <p>
-                                        <i>Accompagnant</i>
+                                        <i>{t("summaryActivity.accompanyingPerson")}</i>
                                     </p>
                                     <p>
                                         <b>
@@ -991,7 +995,7 @@ class Activity extends React.Component {
                             {!this.props.instruments.length == 0 ? (
                                 <div className="col-xs-2">
                                     <p>
-                                        <i>Instruments</i>
+                                        <i>{t("summaryActivity.instruments")}</i>
                                     </p>
                                     <p>
                                         <b>
@@ -1005,8 +1009,7 @@ class Activity extends React.Component {
 
                             <div className="col-xs-12 img-rounded p-xs">
                                 <p>
-                                    <i className="fas fa-info-circle"/> critères pour les cours suggérés :
-                                    disponibilités de l'élève, type et créneau de l'ancienne activité
+                                    <i className="fas fa-info-circle"/> {t("summaryActivity.suggestionCriteria")}
                                 </p>
                             </div>
                         </div>
@@ -1018,13 +1021,13 @@ class Activity extends React.Component {
                             loading={this.state.loading}
                             resizable={false}
                             filterable
-                            previousText="Précedent"
-                            nextText="Suivant"
-                            loadingText="Chargement..."
-                            noDataText="Aucune donnée"
-                            pageText="Page"
-                            ofText="sur"
-                            rowsText="résultats"
+                            previousText={t("common:reactTable.previousText")}
+                            nextText={t("common:reactTable.nextText")}
+                            loadingText={t("common:reactTable.loadingText")}
+                            noDataText={t("common:reactTable.noDataText")}
+                            pageText={t("common:reactTable.pageText")}
+                            ofText={t("common:reactTable.ofText")}
+                            rowsText={t("common:reactTable.rowsText")}
                             minRows={1}
                             expanded={this.state.tableState.expanded}
                             pageSize={this.state.tableState.pageSize}
@@ -1158,16 +1161,16 @@ class Activity extends React.Component {
                     }}>
                     <div className="ibox">
                         <div className="ibox-title">
-                            <h3>Edition du niveau de {this.props.activityRef.label}</h3>
+                            <h3>{t("summaryActivity.editLevelTitle", { label: this.props.activityRef.label })}</h3>
                         </div>
                         <div className="ibox-content">
                             <div className="form-group">
-                                <label>Niveau</label>
+                                <label>{t("summaryActivity.colLevel")}</label>
                                 <select
                                     className="form-control"
                                     defaultValue={levelSeason && levelSeason.evaluation_level_ref_id || ""}
                                     onChange={e => this.handleStudentLevelChange(e.target.value)}>
-                                    <option value="">NON INDIQUÉ</option>
+                                    <option value="">{t("summaryActivity.notSpecified")}</option>
                                     {this.props.evaluationLevelRefs.map(optionMapper())}
                                 </select>
                             </div>
@@ -1176,11 +1179,11 @@ class Activity extends React.Component {
                             <button className="btn" style={{marginRight: "auto"}} type="button"
                                     onClick={() => this.handleCloseLevelEditModal()}>
                                 <i className="fas fa-times m-r-sm"/>
-                                Annuler
+                                {t("common:actions.cancel")}
                             </button>
                             <button type="button" onClick={() => this.handleSubmitStudentLevel()}
                                     className="btn btn-primary pull-right">
-                                <i className="fas fa-save m-r-sm"/>Enregistrer
+                                <i className="fas fa-save m-r-sm"/>{t("common:actions.save")}
                             </button>
                         </div>
                     </div>
@@ -1212,4 +1215,4 @@ class Activity extends React.Component {
     }
 }
 
-export default Activity;
+export default withTranslation("activityApplications")(Activity);
