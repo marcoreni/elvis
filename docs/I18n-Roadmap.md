@@ -649,7 +649,30 @@ et à mesure de son intégration :
             shallow fr/en avec react-table/react-modal mockés + rendu du `SubComponent`, résolution
             i18n des 39 clés), 12 tests. Revue : 0 bug ; shadow `t` corrigé ; résidus FR hors
             périmètre (Intl fr, `PRE_APPLICATION_ACTION_LABELS`, `averageAgeDisplay`) consignés.
-      - [ ] **Lot 3g** — `summary/Summary.jsx` (~238).
+      - [x] **Lot 3g** — branche `feature/i18n-06-extract-activities-lot3g`. `summary/Summary.jsx`
+            (~1630 lignes, le panneau admin haut de la page récapitulative de demande d'inscription).
+            Classe `Summary` → `withTranslation("activityApplications")` ; `const { t } = this.props`
+            dans chaque handler à swal/toast (`handleSaveStatus`, `handleUpdateBeginAt`,
+            `handleSelectSuggestion`, `handleRemoveActivityApplication`, `sendConfirmationMail`,
+            `handleChangeDesiredActivity`, `handleAlertProposal`) et `render`. Fn module-level
+            `renderEvaluationForm` → `i18n.t("activityApplications:summary.evaluationRenderError")`.
+            +60 feuilles sous `summary.*` (252 au total, parité fr/en) : titres/textes/boutons des
+            swal de confirmation (arrêt d'adhésion, changement de date, suppression de demande, mail
+            de confirmation, refus/acceptation de proposition), labels d'en-tête (statut, référent,
+            sélecteur de référent), ligne adhérent (`ageYears`/`memberNumber` interpolés), tooltips
+            de la barre d'actions, placeholders `<option>` et titres des modales
+            questionnaire/auto-évaluation/évaluation, labels de dates, `courseOption`/`activityOption`/
+            `evaluationOption` interpolés. Réutilise `common:actions.{cancel,validate}`,
+            `common:confirm.sure`. Verbatim FR : 6 coquilles préservées et consignées dans
+            `docs/KnownIssues.md` (supprimé/supprimée, « Êtes vous »/« sûr.e », « Proposition
+            Acceptée », « Echec », « SELECTIONNER UN REFERENT » sans accents, « Infos: » sans
+            espace) ; bug de code pré-existant `activity_reéf_id` noté (hors périmètre i18n).
+            Tests Vitest (`Summary.test.jsx`, 20 tests) : garde HOC, montage shallow fr/en, bascule
+            de langue, résolution i18n des 60 clés + interpolation, et invocation directe des
+            handlers swal/toast (garde de non-régression pour le binding `t`). Revue : 1 bug réel
+            corrigé (`const { t }` placé dans `handleAddSuggestions` au lieu de
+            `handleSelectSuggestion` → `ReferenceError` sur la branche d'erreur), + réindentation de
+            19 lignes JSX aplaties par l'extraction. **Domaine `activityApplications` terminé.**
   - [x] `evaluation` — branche `feature/i18n-06-extract-evaluation` *(dépend de 01+02)*
     - [x] `frontend/components/evaluation/` : `Evaluation.jsx`, `EvaluationForm.jsx`,
           `StudentEvaluationsStats.jsx` passés en `withTranslation("evaluation")` (nouveau

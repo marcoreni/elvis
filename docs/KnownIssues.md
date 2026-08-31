@@ -750,6 +750,44 @@ Residual French in / reached from `summary/Activity.jsx` that lot 3f did NOT ext
   the i18n-maintained moment locale) but its `Filter` `<option>`s come from the French `WEEKDAYS`
   constant → rows say "MONDAY", the dropdown says "Lundi". Covered by the `constants.js` entry.
 
+`frontend/locales/fr/activityApplications.json` (added by feature/i18n-06-activities-lot3g —
+`summary/Summary.jsx`, the top-level application-summary panel; new `summary.*` block, 60 leaves) —
+preserved verbatim from the component:
+- `summary.confirmDeleteApplication.body` — "<p>La demande de {{name}} sera définitivement
+  **supprimé**</p>" → **supprimée** ("demande" is feminine, so the past participle needs the `e`).
+  Kept verbatim; the English side reads "{{name}}'s request will be permanently deleted" (clean).
+- `summary.genericConfirm` — "**Êtes vous** **sûr.e** de vouloir faire cela ?": two defects —
+  missing hyphen ("Êtes-vous"), and the informal `.e` inclusive-gender contraction where the rest
+  of the repo writes "Êtes-vous sûr ?" (see `common:confirm.sure`). Kept verbatim; the English
+  side reads "Are you sure you want to do this?" (clean).
+- `summary.proposalAccepted` — "Proposition **A**cceptée": stray mid-phrase capital on the second
+  word (cf. `summary.proposalRefused` = "Proposition refusée", correct). Kept verbatim; the
+  English side reads "Proposal accepted" (clean).
+- `summary.evaluationRenderError` — "**Echec** du rendu : cette évaluation n'existe pas" →
+  **Échec** (missing accent on the leading "E"). Same defect class as the payments `"Echec"` entry
+  and activities lot-3e `validation.levelEvaluation` = "Evaluation de niveau". Kept verbatim; the
+  English side reads "Rendering failed: this evaluation does not exist" (clean).
+- `summary.selectReferent` — "**SELECTIONNER UN REFERENT**" → "SÉLECTIONNER UN RÉFÉRENT" (missing
+  accents; all-caps is an intentional placeholder style, only the accents are the defect). Kept
+  verbatim; the English side reads "SELECT A REFERENT" (accent-free anyway).
+- `summary.infoLabel` — "**Infos:**" → "Infos :" (missing the French space before the colon —
+  same class as the lot-2 `courses.json` / `activityModal` colon-spacing entries). Kept verbatim;
+  the English side reads "Info:" (correct as-is in English).
+
+Not a defect (keep note): `summary.reasonForRefusal` = "Raison du refus : " and
+`summary.memberNumber` = " - Adhérent n°{{number}}" carry **intentional** leading/trailing spaces
+(each is concatenated inline next to a value at the call site) — a blanket "trim the locale files"
+pass must not touch them. The English side (`"Reason for refusal: "`, `" - Member no. {{number}}"`)
+keeps the same padding. `summary.adhesionDeleteConfirm.text` uses the `sûr·e` middle-dot
+inclusive form (U+00B7) while `summary.genericConfirm` uses `sûr.e` — both preserved as written;
+not unified (different keys, verbatim policy).
+
+Pre-existing CODE bug (out of i18n scope, noted only — not a locale-file defect): the
+`summary.courseOption` call site in `Summary.jsx` reads `e.activity.activity_reéf_id` (stray
+accented `é` in the identifier) where it means `activity_ref_id`. The i18n change only wraps the
+surrounding display string; the typo'd property access is untouched and should be fixed by
+whoever next works that component.
+
 ## `activityApplications` — residual French from lot-3a's not-yet-processed siblings
 
 The i18n-06 activities lot-3a review surfaced hardcoded French in files that lot 3a did NOT touch
@@ -760,7 +798,8 @@ listed here so the flow isn't half-localised in the meantime and nothing gets mi
   `noIntervalMessage="Pas de créneau"` into `EvaluationChoiceTable`, which **overrides** the new
   `activityApplications:evaluationChoice.noIntervalMessage` key at the only call site that supplies
   the prop → that modal still shows French in English mode. Also `Summary.jsx:1428`
-  `tooltip="Créneau d'évaluation"`. → lot 3g.
+  `tooltip="Créneau d'évaluation"`. → **DONE in lot 3g** (`summary.noEvaluationSlot` /
+  `summary.tooltips.evaluationSlot`).
 - `frontend/components/activityApplications/Validation.jsx:287, 291, 403, 407, 427` — hardcoded
   French `<h3>` section headings. → lot 3e.
 - `frontend/components/activityApplications/SelectedActivitiesTable.jsx:10-12` — `displayDuration`
