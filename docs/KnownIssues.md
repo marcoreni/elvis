@@ -486,8 +486,28 @@ side (`lessonList.help.body`) is a clean translation with these defects fixed, a
 
 Also re-scan the whole `frontend/locales/fr/` + `config/locales/fr.yml` when doing this (grep for
 `Edition\b`, `Editer\b`, `Selectionn`, `réglement`, `Echéance`, `Echec`, `Emmeteur`, `Precedent`,
-`Creer\b`, `verouiller`, `Resolution\b`); the list above is only what was noticed in passing, not
-an exhaustive audit. The English side of these keys is already spelled correctly.
+`Creer\b`, `verouiller`, `Resolution\b`, `complêtement`, `remplis\b`); the list above is only what
+was noticed in passing, not an exhaustive audit. The English side of these keys is already spelled
+correctly.
+
+## `components/utils/ui/tabs.jsx` — hardcoded French tab-error tooltip (+ 2 typos)
+
+`frontend/components/utils/ui/tabs.jsx:41` sets `title: "Cet onglet n'est pas complêtement remplis"`
+on any tab whose `isInError` is true. Surfaced during i18n-06 `activities` lot 2a:
+`ActivityRefContainer` passes `isInError` for the "Activité"/"Professeurs" tabs, so in English mode
+the header renders "Activity" but its hover tooltip is French. `tabs.jsx` is a shared UI util —
+extract it whenever the `parameters` domain (or whichever lot owns `components/utils/`) is done,
+not piecemeal from `activities`. Typos to fix on the way: `complêtement` → `complètement`,
+`remplis` → `rempli` (subject is "onglet", singular).
+
+## `activityRef/ActivityRefContainer.jsx` — `this.teachersError` is a one-way side-channel
+
+`onValidate` sets `this.teachersError` (instance field, not form state) when `values.teachers` is
+empty and never clears it; `render` reads it as `isInError: !!this.teachersError`. Once tripped,
+the Teachers tab keeps its error icon + tooltip for the component's life even after a teacher is
+selected, and the icon lags one render (instance mutation inside final-form `validate`, read in
+`render`). Pre-existing — i18n-06 lot 2a only swapped the literal `"doit être renseigné"` for
+`t(...)`, behaviour unchanged. Noted here so it isn't mistaken for extraction damage.
 
 ## `courses/LessonList.jsx` — residual French after the lot-4 i18n extraction
 

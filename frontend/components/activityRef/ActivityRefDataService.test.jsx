@@ -32,9 +32,12 @@ describe("ActivityRefDataService#deleteData", () => {
         await i18n.changeLanguage("fr");
         const service = new ActivityRefDataService(1, [{activity_ref_pricing_id: 9}]);
 
+        // Assert the literal fr string, not i18n.t(sameKey) — a typo shared by component and
+        // key would make a self-comparison pass.
         await expect(service.deleteData({id: 9})).rejects.toEqual({
             status: 400,
-            message: i18n.t("activities:activityRef.pricing.inUseError"),
+            message:
+                "Cette tarification est utilisée par un ou plusieurs élève(s). Vous ne pouvez pas la supprimer.",
         });
     });
 });
