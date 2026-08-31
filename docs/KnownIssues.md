@@ -660,6 +660,45 @@ byte-identical to `common:reactTable.nextText` / a matching back label, but they
 next/back button labels in a different context and are kept local to the `wizard` block, per the
 lot brief.
 
+`frontend/locales/fr/activityApplications.json` (added by feature/i18n-06-extract-activities-lot3e
+— `Validation.jsx`, the final "review your enrolment request" step of the wizard) — preserved
+verbatim from the component:
+- `validation.phone` — "**Télephone** {{label}}**:**" → "**Téléphone** {{label}} **:**" — two
+  defects in one string: `Télephone` → `Téléphone` (missing accent on the second "e") and a
+  missing French space before the colon. Both kept verbatim; the English side reads
+  "Phone {{label}}:" (the accent defect is FR-only; the no-space-before-colon is intentional in
+  English).
+- `validation.noActivitySelected` — "Aucune activité sélectionnée" (capitalised). The
+  "no activity selected" concept now has **three** keys in this one file, two spellings:
+  - `activityChoice.noActivitySelected` (lot 3c) — fr "aucune activité sélectionnée" (lowercase),
+    en "No activity selected"
+  - `formulaChoice.noActivitiesSelected` (lot 3c) — fr "Aucune activité sélectionnée", en
+    "No activit**ies** selected"
+  - `validation.noActivitySelected` (this lot) — fr "Aucune activité sélectionnée", en
+    "No activity selected"
+  `formulaChoice.noActivitiesSelected` is fr-identical to the new key but diverges in English —
+  that pair is the real duplicate for a future dedup pass; `activityChoice`'s is a casing variant.
+  Kept as-is per the verbatim policy (each lot's source spelling preserved).
+- `validation.levelEvaluation` — "**Evaluation** de niveau" → "**Évaluation** de niveau" (missing
+  accent on the leading "E"). Inconsistent with `wizard.steps.levelEvaluation` (lot 3d) =
+  "Évaluation de niveau", which is the correct form, for the same concept in the same file. Kept
+  verbatim; the English side reads "Level evaluation" (matches `wizard.steps.levelEvaluation`).
+- `validation.paymentSchedule` — "**Echéancier**" → "**Échéancier**" (missing accent on the
+  leading "E"). Kept verbatim; the English side reads "Payment schedule".
+
+Not a defect (keep note): `validation.totalEstimatedCost` = "Coût total estimé :" **does** carry
+the French space before the colon (rendered as `{totalEstimatedCost} {amount} €`), unlike the
+lot-3c `formulaChoice.estimatedTotal` / `activityChoice.unpopularWarning` which were missing it.
+
+Pre-existing, untouched by lot 3e (observation only): `Validation.jsx:~366` renders the
+packages-table subtotal as `{reduce(...)}€` — no `.toFixed(2)`, no space before `€` (e.g.
+"120€") — while the grand-total line 15 rows down is "0.00 €". Not i18n; flagged so it isn't
+mistaken for extraction fallout.
+Also `validation.colPackage` = "Formule" / `colEstimatedPrice` = "Tarif estimé" /
+`estimatedTotal` = "Total estimé" duplicate the same `formulaChoice.*` / `activityChoice.*` /
+`selectedActivitiesTable.*` values from lots 3a–3c — kept per-component for now, same as the
+earlier sub-lots (a shared `activityApplications` sub-block is a later cleanup).
+
 ## `activityApplications` — residual French from lot-3a's not-yet-processed siblings
 
 The i18n-06 activities lot-3a review surfaced hardcoded French in files that lot 3a did NOT touch

@@ -620,7 +620,18 @@ et à mesure de son intégration :
             le JSX d'origine. 4 défauts FR préservés + consignés. Tests Vitest (`Wizard.test.jsx`,
             78 tests : garde `.WrappedComponent`, rendu du garde « saisons fermées », résolution
             i18n de chaque clé + composition du sous-titre). Revue : 0 bug.
-      - [ ] **Lot 3e** — `Validation.jsx` (~84).
+      - [x] **Lot 3e** — branche `feature/i18n-06-extract-activities-lot3e`. `Validation.jsx`
+            (dernière étape « récapitulatif de la demande » de l'assistant ; composant fn, pas une
+            étape StepZilla → `useTranslation("activityApplications")`). +26 feuilles sous
+            `validation.*` (153 au total, parité fr/en) : les en-têtes de sections, les `<th>` du
+            tableau de formules, les lignes de coût, le bouton d'envoi. `validation.phone` porte
+            `{{label}}`. 3 typos d'accent + 1 incohérence de casse préservés + consignés
+            (`Télephone`/`Téléphone` + espace avant `:` ; `Evaluation`/`Évaluation` vs
+            `wizard.steps.levelEvaluation` ; `Echéancier`/`Échéancier` ;
+            `noActivitySelected` — 3 clés, 2 orthographes dans le même fichier). Tests Vitest
+            (`Validation.test.jsx`, rendu complet avec les 3 tableaux enfants mockés, sections
+            toujours affichées + conditionnelles fr/en, résolution i18n de chaque clé), 67 tests.
+            Revue : 0 bug ; lacune de couverture des clés conditionnelles comblée.
       - [ ] **Lot 3f** — `summary/Activity.jsx` (~146).
       - [ ] **Lot 3g** — `summary/Summary.jsx` (~238).
   - [x] `evaluation` — branche `feature/i18n-06-extract-evaluation` *(dépend de 01+02)*
