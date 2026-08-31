@@ -9,7 +9,9 @@
 //     `i18n.t("common:reactTable.*")`.
 //   - the tab-list wrappers over `BaseParameters` whose `tabsNames` are now built from `t(...)`:
 //       * class wrappers, `withTranslation("parameters")(X)`, `props.t` read in the constructor:
-//         Practice/Community/Rooms/Evaluations/Payments
+//         Practice + Payments are rendered in section C (the `props.t`-in-constructor regression
+//         guard — a missing HOC wrap throws there); Community/Rooms/Evaluations share the exact
+//         same one-line shape and are covered at the i18n-layer + fr/en-parity level.
 //       * fn wrappers, `useTranslation("parameters")`:
 //         Plannings / Activities / ActivityApplications
 //     `ActivitiesParameters` also renders an `<h2>{t("activities.heading")}</h2>`.
@@ -74,8 +76,14 @@ vi.mock("./ActivityApplications/ApplicationStepParameters", () => stub("step-par
 
 vi.mock("./Activities/PricingCategoriesEdit", () => stub("pricing-categories"));
 
+vi.mock("./Payments/AdhesionSettings", () => stub("adhesion-settings"));
+vi.mock("./Payments/PaymentsMethods", () => stub("payments-methods"));
+vi.mock("./Payments/EditPaymentScheduleOptions", () => stub("payment-schedule-options"));
+vi.mock("./Payments/Coupons", () => stub("coupons"));
+
 import BaseDataTable from "./BaseDataTable";
 import PracticeParameters from "./Practice/PracticeParameters";
+import PaymentsParameters from "./Payments/PaymentsParameters";
 import PlanningsParameters from "./Plannings/PlanningsParameters";
 import ActivityApplicationsParameters from "./ActivityApplications/ActivityApplicationsParameters";
 import ActivitiesParameters from "./Activities/ActivitiesParameters";
@@ -192,6 +200,16 @@ describe("parameters tab wrappers — translated tab links", () => {
                 "practice.tabs.bandTypes", "practice.tabs.musicGenre", "practice.tabs.manageBands",
                 "practice.tabs.materials", "practice.tabs.flatRates", "practice.tabs.roomOptions",
                 "practice.tabs.instruments",
+            ],
+        },
+        {
+            name: "PaymentsParameters (class wrapper, props.t in constructor)",
+            Component: PaymentsParameters,
+            props: {},
+            keys: [
+                "payments.tabs.adhesion", "payments.tabs.paymentMethods",
+                "payments.tabs.pricingCategories", "payments.tabs.paymentTerms",
+                "payments.tabs.discountRate",
             ],
         },
         {

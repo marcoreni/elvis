@@ -5,7 +5,10 @@ import i18n from "../../i18n";
 
 // `BaseDataTable` is a base class extended by ~15 CRUD tables (`class X extends BaseDataTable`),
 // so it cannot be wrapped in `withTranslation()` without breaking that inheritance chain. It reads
-// the i18n singleton directly instead; the settings screens have no in-page language switch.
+// the i18n singleton directly instead. Consequence: these strings are resolved once at render and
+// do not re-derive on `languageChanged` — currently harmless (nothing calls `i18n.changeLanguage`
+// in-page; locale changes go through a server PATCH + reload), same caveat as the generalPayments
+// tables noted in docs/KnownIssues.md.
 
 /**
  * Il faut hériter de cette classe.
