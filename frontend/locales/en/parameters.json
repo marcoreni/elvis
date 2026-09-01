@@ -35,6 +35,81 @@
             "pricingCategories": "Pricing categories",
             "paymentTerms": "Payment terms",
             "discountRate": "Discount rate"
+        },
+        "cols": {
+            "label": "Label"
+        },
+        "methods": {
+            "cols": {
+                "showToUser": "Show to customer?",
+                "isSpecial": "Is special?",
+                "isCreditNote": "Is credit note?"
+            },
+            "deleteConfirm": "Do you really want to delete the payment method '{{name}}'?"
+        },
+        "status": {
+            "cols": {
+                "color": "Color"
+            },
+            "deleteConfirm": "Do you really want to delete the status '{{name}}'?"
+        },
+        "adhesion": {
+            "enableLabel": "Enable membership fees",
+            "deleteConfirm": "Do you want to delete the membership price \"{{label}}\"?",
+            "deleteImpossibleTitle": "Deletion not possible",
+            "deleteImpossibleText": "the membership price \"{{label}}\" cannot be deleted because it is already used in a payment.",
+            "cols": {
+                "labels": "Labels",
+                "prices": "Prices (€)",
+                "defaultForSeason": "Default for the season"
+            },
+            "modal": {
+                "editTitle": "Edit membership",
+                "newTitle": "New membership",
+                "defaultLabel": "Default price",
+                "nameLabel": "Name",
+                "priceLabel": "Price",
+                "seasonLabel": "Default for the season:"
+            }
+        },
+        "scheduleOptions": {
+            "errors": {
+                "fetch": "An error occurred while fetching the payment schedule options",
+                "updateConditions": "An error occurred while updating the payment terms",
+                "delete": "An error occurred while deleting the payment schedule option",
+                "updateDisplayText": "An error occurred while updating the additional information",
+                "fetchData": "Error while fetching data"
+            },
+            "delete": {
+                "text": "Deleting this payment schedule option is permanent.",
+                "confirm": "Yes, delete",
+                "cancel": "No, cancel"
+            },
+            "displayTextSaved": "The additional information has been saved.",
+            "headings": {
+                "visibility": "Visibility",
+                "addTerms": "Enter and add your payment terms",
+                "additionalInfo": "Enter additional information about the payment terms."
+            },
+            "showInEnrolmentLabel": "Show payment terms in the enrolment flow",
+            "addOption": "Add a payment schedule option",
+            "saveAdditionalInfo": "Save the additional information."
+        },
+        "coupons": {
+            "createButton": "Create a discount rate",
+            "cols": {
+                "id": "Id",
+                "label": "Discount rate name",
+                "percentOff": "Discount rate (%)",
+                "enabled": "Active"
+            },
+            "oneResourceTypeName": "a discount rate",
+            "thisResourceTypeName": "this discount rate",
+            "form": {
+                "label": "Discount rate name",
+                "percentOff": "Discount rate (%)",
+                "enabled": "Enabled"
+            }
         }
     },
     "plannings": {
@@ -87,5 +162,14 @@
         "tabs": {
             "siteList": "List of locations"
         }
+    },
+    "shared": {
+        "actions": "Actions",
+        "yes": "Yes",
+        "no": "No",
+        "errorTitle": "Error",
+        "deleteConfirmYes": "yes",
+        "deleteConfirmNo": "no",
+        "genericError": "An error occurred. Contact an administrator"
     }
 }

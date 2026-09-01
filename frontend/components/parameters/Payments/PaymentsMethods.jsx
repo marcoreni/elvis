@@ -4,10 +4,12 @@ import {csrfToken} from "../../utils";
 import {makeDebounce} from "../../../tools/inputs";
 import ReactTable from "react-table";
 import BaseDataTable from "../BaseDataTable";
+import {withTranslation} from "react-i18next";
 
-export default class PaymentsMethods extends BaseDataTable {
+class PaymentsMethods extends BaseDataTable {
     constructor(props) {
         super(props);
+        const {t} = props;
 
         this.state.columns = [
             {
@@ -17,30 +19,30 @@ export default class PaymentsMethods extends BaseDataTable {
             },
             {
                 id: "label",
-                Header: "Libellé",
+                Header: t("payments.cols.label"),
                 accessor: d => d.label,
             },
             {
                 id: "show_payment_method_to_user",
-                Header: "Afficher au client ?",
+                Header: t("payments.methods.cols.showToUser"),
                 accessor: d => d.show_payment_method_to_user,
-                Cell: props => <div>{props.original.show_payment_method_to_user ? "Oui" : "Non"}</div>
+                Cell: props => <div>{props.original.show_payment_method_to_user ? t("shared.yes") : t("shared.no")}</div>
             },
             {
                 id: "is_special",
-                Header: "Est spécial ?",
+                Header: t("payments.methods.cols.isSpecial"),
                 accessor: d => d.is_special,
-                Cell: props => <div>{props.original.is_special ? "Oui" : "Non"}</div>
+                Cell: props => <div>{props.original.is_special ? t("shared.yes") : t("shared.no")}</div>
             },
             {
                 id: "is_credit_note",
-                Header: "Est à crédit ?",
+                Header: t("payments.methods.cols.isCreditNote"),
                 accessor: d => d.is_credit_note,
-                Cell: props => <div>{props.original.is_credit_note ? "Oui" : "Non"}</div>
+                Cell: props => <div>{props.original.is_credit_note ? t("shared.yes") : t("shared.no")}</div>
             },
             {
                 id: "actions",
-                Header: "Actions",
+                Header: t("shared.actions"),
                 Cell: props => {
                     return <div className="btn-wrapper">
                         <a className="btn-sm btn-primary m-r-sm"
@@ -65,12 +67,13 @@ export default class PaymentsMethods extends BaseDataTable {
     }
 
     deleteStatus(status) {
+        const {t} = this.props;
         swal({
-            title: "Voulez-vous vraiment supprimer la méthode de paiement '" + status.label + "' ?",
+            title: t("payments.methods.deleteConfirm", {name: status.label}),
             type: "warning",
             showCancelButton: true,
-            cancelButtonText: "non",
-            confirmButtonText: 'oui'
+            cancelButtonText: t("shared.deleteConfirmNo"),
+            confirmButtonText: t("shared.deleteConfirmYes")
         }).then(res => {
             if (res.value) {
                 fetch(`/payment_method/${status.id}`,
@@ -89,7 +92,7 @@ export default class PaymentsMethods extends BaseDataTable {
                         } else {
                             result.text().then(text => {
                                 swal({
-                                    title: "Erreur",
+                                    title: t("shared.errorTitle"),
                                     type: "error",
                                     text: text
                                 })
@@ -100,3 +103,5 @@ export default class PaymentsMethods extends BaseDataTable {
         });
     }
 }
+
+export default withTranslation("parameters")(PaymentsMethods);

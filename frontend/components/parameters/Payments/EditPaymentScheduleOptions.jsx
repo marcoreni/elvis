@@ -2,11 +2,13 @@ import React, {Fragment, useEffect, useState} from "react";
 import * as api from "../../../tools/api";
 import swal from "sweetalert2";
 import {toast} from "react-toastify";
+import {useTranslation} from "react-i18next";
 import { EditorState, convertToRaw, convertFromRaw, ContentState } from 'draft-js';
 import { Editor } from 'react-draft-wysiwyg';
 
 export default function EditPaymentScheduleOptions()
 {
+    const {t} = useTranslation("parameters");
     const [paymentScheduleOptions, setPaymentScheduleOptions] = useState([]);
     const [indexValues, setIndexValues] = useState([]);
     const [paymentScheduleOptionsActivated, setPaymentScheduleOptionsActivated] = useState(false);
@@ -40,7 +42,7 @@ export default function EditPaymentScheduleOptions()
            })
            .error(res =>
            {
-               swal("Une erreur est survenue lors de la récupération des options d'échéancier de paiement", res.error, "error");
+               swal(t("payments.scheduleOptions.errors.fetch"), res.error, "error");
            })
            .get("/payment_schedule_options", {});
     }, []);
@@ -52,7 +54,7 @@ export default function EditPaymentScheduleOptions()
             api.set()
                 .error(res =>
                 {
-                    swal("Une erreur est survenue lors de la mise à jour des conditions de paiement", res.error, "error");
+                    swal(t("payments.scheduleOptions.errors.updateConditions"), res.error, "error");
                 })
                 .post("/payment_schedule_options/activated", {activated: paymentScheduleOptionsActivated});
         }
@@ -62,12 +64,12 @@ export default function EditPaymentScheduleOptions()
     const onItemDelete = (paymentScheduleOption) =>
     {
         swal({
-            title: "Êtes-vous sûr ?",
-            text: "La suppression de cette option d'échéancier de paiement est définitive.",
+            title: t("common:confirm.sure"),
+            text: t("payments.scheduleOptions.delete.text"),
             type: "warning",
             showCancelButton: true,
-            confirmButtonText: "Oui, supprimer",
-            cancelButtonText: "Non, annuler",
+            confirmButtonText: t("payments.scheduleOptions.delete.confirm"),
+            cancelButtonText: t("payments.scheduleOptions.delete.cancel"),
         }).then((result) =>
         {
             if (result.value)
@@ -79,7 +81,7 @@ export default function EditPaymentScheduleOptions()
                     })
                     .error(res =>
                     {
-                        swal("Une erreur est survenue lors de la suppression de l'option d'échéancier de paiement", res.error, "error");
+                        swal(t("payments.scheduleOptions.errors.delete"), res.error, "error");
                     })
                     .del(`/payment_schedule_options/${paymentScheduleOption.id}`, {});
             }
@@ -90,9 +92,9 @@ export default function EditPaymentScheduleOptions()
     {
         api.set()
             .success(res => {
-                toast.success("Les informations complémentaires ont été enregistrées.");
+                toast.success(t("payments.scheduleOptions.displayTextSaved"));
             }).error(res => {
-                swal("Une erreur est survenue lors de la mise à jour des informations complémentaires", res.error, "error");
+                swal(t("payments.scheduleOptions.errors.updateDisplayText"), res.error, "error");
             })
             .post("/payment_schedule_options/display_text", {display_text: JSON.stringify(convertToRaw(editorState.getCurrentContent()))});
     };
@@ -104,7 +106,7 @@ export default function EditPaymentScheduleOptions()
             })
             .error(() => {
                 swal({
-                    title: "Erreur lors de la récupération des données",
+                    title: t("payments.scheduleOptions.errors.fetchData"),
                     type: "error",
                 });
             })
@@ -120,7 +122,7 @@ export default function EditPaymentScheduleOptions()
             })
             .error(() => {
                 swal({
-                    title: "Erreur lors de la récupération des données",
+                    title: t("payments.scheduleOptions.errors.fetchData"),
                     type: "error",
                 });
             })
@@ -145,7 +147,7 @@ export default function EditPaymentScheduleOptions()
     return <Fragment>
         <div className="row">
             <div className="col-sm-12">
-                <h4>Visibilité</h4>
+                <h4>{t("payments.scheduleOptions.headings.visibility")}</h4>
 
                 <div className="checkbox checkbox-primary">
                     <input
@@ -155,19 +157,19 @@ export default function EditPaymentScheduleOptions()
                         checked={paymentScheduleOptionsActivated}
                         onChange={e => setPaymentScheduleOptionsActivated(e.target.checked)}
                     />
-                    <label htmlFor={"paymentScheduleOptionsActivated"}>Afficher les modalités de paiement dans le parcours d'inscription</label>
+                    <label htmlFor={"paymentScheduleOptionsActivated"}>{t("payments.scheduleOptions.showInEnrolmentLabel")}</label>
                 </div>
             </div>
         </div>
 
         <div className="row mt-5">
             <div className="col-sm-12">
-                <h4>Renseigner et ajouter vos modalités de paiement</h4>
+                <h4>{t("payments.scheduleOptions.headings.addTerms")}</h4>
             </div>
 
             <div className="col-sm-12 text-right">
                 <a className={"btn btn-primary"} href={`/payment_schedule_options/new?returnUrl=${encodeURIComponent(window.location)}`}>
-                    <i className="fas fa-plus"></i> Ajouter une option d'échéancier de paiement
+                    <i className="fas fa-plus"></i> {t("payments.scheduleOptions.addOption")}
                 </a>
             </div>
         </div>
@@ -193,7 +195,7 @@ export default function EditPaymentScheduleOptions()
 
         <div className={"row mt-5"}>
             <div className="col-sm-12">
-                <h4>Renseigner des informations complémentaires sur les modalités de paiement.</h4>
+                <h4>{t("payments.scheduleOptions.headings.additionalInfo")}</h4>
             </div>
 
             <form onSubmit={e => {e.preventDefault(); onSaveDisplayText()}}>
@@ -226,7 +228,7 @@ export default function EditPaymentScheduleOptions()
 
                 <div className={"col-sm-12"}>
                     <button type="submit" className={"btn btn-primary mt-3 animated fadeInLeft pull-right"}>
-                        Enregistrer les informations complémentaires.
+                        {t("payments.scheduleOptions.saveAdditionalInfo")}
                     </button>
                 </div>
             </form>

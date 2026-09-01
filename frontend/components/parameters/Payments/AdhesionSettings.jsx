@@ -5,9 +5,11 @@ import ReactTable from "react-table";
 import AdhesionEditModal from "./AdhesionEditModal";
 import * as api from "../../../tools/api";
 import _ from "lodash";
+import {useTranslation} from "react-i18next";
 
 export default function AdhesionSettings()
 {
+    const {t} = useTranslation("parameters");
     const [adhesionEnabled, setAdhesionEnabled] = useState(false);
     const [adhesionPrices, setAdhesionPrices] = useState([]);
     const [seasons, setSeasons] = useState([]);
@@ -41,8 +43,8 @@ export default function AdhesionSettings()
                 console.error(data);
 
                 swal({
-                    title: 'Erreur',
-                    text: 'Une erreur est survenue. Contactez un administrateur',
+                    title: t("shared.errorTitle"),
+                    text: t("shared.genericError"),
                     type: 'error'
                 });
             })
@@ -70,8 +72,8 @@ export default function AdhesionSettings()
                 if (!response.ok)
                 {
                     swal({
-                        title: 'Erreur',
-                        text: 'Une erreur est survenue. Contactez un administrateur',
+                        title: t("shared.errorTitle"),
+                        text: t("shared.genericError"),
                         icon: 'error'
                     });
                 }
@@ -80,7 +82,7 @@ export default function AdhesionSettings()
             }).then(data => {
                 if (!_.isEmpty(data)) {
                     swal({
-                        title: 'Erreur',
+                        title: t("shared.errorTitle"),
                         text: data.errors.adhesionFee,
                         type: 'error'
                     });
@@ -92,11 +94,11 @@ export default function AdhesionSettings()
     function deleteStatus(adh)
     {
         swal({
-            title: `Souhaitez-vous supprimer le prix d'adhésion "${adh.label}" ?`,
+            title: t("payments.adhesion.deleteConfirm", {label: adh.label}),
             type: 'warning',
             showCancelButton: true,
-            cancelButtonText: 'Annuler',
-            confirmButtonText: 'Supprimer',
+            cancelButtonText: t("common:actions.cancel"),
+            confirmButtonText: t("common:actions.delete"),
             cancelButtonClass: 'order-1',
             confirmButtonClass: 'order-2',
         }).then((result) =>
@@ -113,8 +115,8 @@ export default function AdhesionSettings()
                         console.error(data.errors);
 
                         swal({
-                            title: 'Suppression impossible',
-                            text: `le prix d'adhésion "${adh.label}" ne peux être supprimé car déjà utilisé dans un réglement.`,
+                            title: t("payments.adhesion.deleteImpossibleTitle"),
+                            text: t("payments.adhesion.deleteImpossibleText", {label: adh.label}),
                             type: 'error'
                         });
                     })
@@ -135,7 +137,7 @@ export default function AdhesionSettings()
                             checked={adhesionEnabled}
                             onChange={e => setAdhesionEnabled(e.target.checked)}
                         />
-                        <label className="control-label" htmlFor="adhesionEnabled">Activer les frais d'adhésion</label>
+                        <label className="control-label" htmlFor="adhesionEnabled">{t("payments.adhesion.enableLabel")}</label>
                     </div>
                 </div>
             </div>
@@ -147,7 +149,7 @@ export default function AdhesionSettings()
                     seasons={seasons}
                     onAdd={adh => setAdhesionPrices([...adhesionPrices, adh])}
                 >
-                    <i className="fas fa-plus"/> Ajouter
+                    <i className="fas fa-plus"/> {t("common:actions.add")}
                 </AdhesionEditModal>
             </div>
         </div>}
@@ -165,22 +167,22 @@ export default function AdhesionSettings()
                         },
                         {
                             id: "label",
-                            Header: "Libellés",
+                            Header: t("payments.adhesion.cols.labels"),
                             accessor: "label"
                         },
                         {
                             id: "price",
-                            Header: "Tarifs (€)",
+                            Header: t("payments.adhesion.cols.prices"),
                             accessor: "price"
                         },
                         {
                             id: "season_id",
-                            Header: "Par défaut pour la saison",
+                            Header: t("payments.adhesion.cols.defaultForSeason"),
                             Cell: props => <div>{(props.original.season || {}).label}</div>
                         },
                         {
                             id: "actions",
-                            Header: "Actions",
+                            Header: t("shared.actions"),
                             Cell: props => <Fragment>
                                 <AdhesionEditModal
                                     adhesion={props.original}

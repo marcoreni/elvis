@@ -2,12 +2,14 @@ import React from "react";
 import {csrfToken} from "../../utils";
 import swal from "sweetalert2";
 import BaseDataTable from "../BaseDataTable";
+import {withTranslation} from "react-i18next";
 
-export default class PaymentsStatus extends BaseDataTable
+class PaymentsStatus extends BaseDataTable
 {
     constructor(props)
     {
         super(props);
+        const {t} = props;
 
         this.state.columns = [
             {
@@ -17,12 +19,12 @@ export default class PaymentsStatus extends BaseDataTable
             },
             {
                 id: "label",
-                Header: "Libellé",
+                Header: t("payments.cols.label"),
                 accessor: d => d.label,
             },
             {
                 id: "color",
-                Header: "Couleur",
+                Header: t("payments.status.cols.color"),
                 accessor: d => d.color,
                 Cell: props =>
                 {
@@ -31,7 +33,7 @@ export default class PaymentsStatus extends BaseDataTable
             },
             {
                 id: "actions",
-                Header: "Actions",
+                Header: t("shared.actions"),
                 Cell: props => {
                     return (
                         props.original.built_in ?
@@ -58,12 +60,13 @@ export default class PaymentsStatus extends BaseDataTable
 
     deleteStatus(status)
     {
+        const {t} = this.props;
         swal({
-            title: "Voulez-vous vraiment supprimer le status '" + status.label + "' ?",
+            title: t("payments.status.deleteConfirm", {name: status.label}),
             type: "warning",
             showCancelButton: true,
-            cancelButtonText: "non",
-            confirmButtonText: 'oui'
+            cancelButtonText: t("shared.deleteConfirmNo"),
+            confirmButtonText: t("shared.deleteConfirmYes")
         }).then(res =>
         {
             if(res.value)
@@ -89,7 +92,7 @@ export default class PaymentsStatus extends BaseDataTable
                             result.text().then(text =>
                             {
                                 swal({
-                                    title: "Erreur",
+                                    title: t("shared.errorTitle"),
                                     type: "error",
                                     text: text
                                 })
@@ -100,3 +103,5 @@ export default class PaymentsStatus extends BaseDataTable
         });
     }
 }
+
+export default withTranslation("parameters")(PaymentsStatus);

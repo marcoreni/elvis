@@ -399,6 +399,11 @@ Extra wrinkle unique to lot B: `deleteStatus()` reads `this.props.t` (live), so 
 English delete-confirm dialog. Still harmless today (full-reload locale switch), logged for the
 same cleanup pass.
 
+Same pattern again (added by i18n-06 `parameters` lot C): `parameters/Payments/PaymentsMethods.jsx`
+and `parameters/Payments/PaymentsStatus.jsx` — two more `extends BaseDataTable` tables that build
+`this.state.columns` with the constructor's `t` and capture it in their boolean `Cell` closures,
+with the same live-`this.props.t`-in-`deleteStatus` mixed-language wrinkle as lot B.
+
 ## French typos preserved verbatim during i18n extraction — clean up the locale files
 
 The i18n branches copy every French string **verbatim** into the locale files (no copy changes
@@ -952,3 +957,86 @@ CODE bug, note only (out of i18n scope): `Materials.jsx` "Est Actif ?" column ha
 `accessor: d => d.name` where it means `d => d.active`. The `Cell` renderer reads
 `props.original.active` so the displayed value is correct, but sorting/filtering that column
 operates on the name field and is broken. Pre-existing — not introduced by lot B.
+
+`frontend/locales/fr/parameters.json` (added by feature/i18n-06-parameters-lot-c — `parameters`
+lot C, the `Payments/*` components: `PaymentsMethods`, `PaymentsStatus`, `Coupons`,
+`CouponFormContent`, `AdhesionSettings`, `AdhesionEditModal`, `EditPaymentScheduleOptions`) —
+preserved verbatim from `frontend/components/parameters/Payments/*.jsx`:
+- `payments.status.deleteConfirm` — "Voulez-vous vraiment supprimer le **status** '…' ?" →
+  "le **statut**" (anglicism; French is "statut"). Preserved verbatim from `PaymentsStatus.jsx`;
+  the English side reads "status" (correct as-is).
+- `payments.adhesion.deleteImpossibleText` — two defects in one string, from `AdhesionSettings.jsx`:
+  "ne **peux** être supprimé" → "ne **peut**" (wrong conjugation), and "un **réglement**" →
+  "un **règlement**" (missing accent / wrong accent). Preserved verbatim; the English side
+  ("… cannot be deleted because it is already used in a payment.") is clean.
+- `payments.adhesion.cols.labels` = "Libellés" (plural, `AdhesionSettings.jsx` ReactTable header)
+  vs `payments.cols.label` = "Libellé" (singular, `PaymentsMethods`/`PaymentsStatus` header) —
+  same concept, two different columns in two different components, each kept verbatim. English
+  unifies to "Labels" / "Label". Flag for the cleanup pass.
+
+Not a defect, noted: `payments.adhesion.modal.seasonLabel` = "Par défaut pour la saison :" (form
+`<label>`, trailing " :") vs `payments.adhesion.cols.defaultForSeason` = "Par défaut pour la
+saison" (ReactTable column header, no colon) — different UI elements, both verbatim.
+
+CODE bug, note only (out of i18n scope): `AdhesionSettings.jsx` second `useEffect` — the
+`!response.ok` branch calls `swal({ …, icon: 'error' })` while every other swal in the file uses
+`type: 'error'`. This app's sweetalert2 is pinned at `^7.26.11` (`icon:` replaced `type:` only in
+sweetalert2 v9), so v7 ignores `icon:` and that one error dialog renders without its error
+styling. Pre-existing — not introduced by lot C.
+
+Not i18n, but touched next to the lot-C `columns` prop: `AdhesionSettings.jsx`'s `<ReactTable>`
+(the inline one, not via `parameters/BaseDataTable`) passes no `previousText`/`nextText`/
+`loadingText`/`noDataText`/`pageText`/`ofText`/`rowsText`, so react-table's English defaults ("No
+rows found", "Page", "of", "rows") render inside the otherwise-French UI. `parameters/BaseDataTable.jsx`
+and `userPayments/PaymentsSummary.jsx` both pass the `common:reactTable.*` set — this table is the
+odd one out. A one-line fix when the persisted-default question below is settled.
+
+Persisted data default is now locale-dependent (added by lot C): `AdhesionSettings` /
+`AdhesionEditModal.jsx` — `initialValues.label = (adhesion || {}).label || t("payments.adhesion.modal.defaultLabel")`.
+If the admin leaves the Name field untouched, that value is POSTed to `/adhesion-prices` and
+stored, so an EN-locale admin creates a row literally labelled "Default price" (FR: "Prix par
+défaut") that every user then sees. No backend code matches the literal `"Prix par défaut"` (grep
+of `app/ lib/ db/ config/`), so nothing breaks — but this is a UI-string-as-data decision that
+should be an explicit default on the server, not a client i18n key. Flag for the cleanup.
+
+## `frontend/components/common/baseDataTable/BaseDataTable.jsx` — hardcoded French chrome leaks into English
+
+The **functional** shared data-table (`frontend/components/common/baseDataTable/`, distinct from
+the older class-based `frontend/components/parameters/BaseDataTable.jsx`) builds its modal
+titles from hardcoded French templates and passes hardcoded react-table pagination strings:
+
+- `` `Mettre à jour ${oneResourceTypeName}` `` / `` `Créer ${oneResourceTypeName}` `` /
+  `` `Supprimer ${oneResourceTypeName}` `` / `` `Voulez-vous vraiment supprimer ${thisResourceTypeName || "cet élément"} : ${…} ?` `` (around `BaseDataTable.jsx:287-298`)
+- `previousText="Précédent"` / `nextText="Suivant"` / `ofText="sur"` / `rowsText="résultats"` /
+  `noDataText="Aucune donnée"` (`BaseDataTable.jsx:270-274`) — `common:reactTable.*` already exists.
+
+Call sites that pass a (now-translated, as of the respective i18n lot) `oneResourceTypeName` /
+`thisResourceTypeName` into it, producing **mixed-language** modal headers in English mode
+("Créer a discount rate", "Supprimer a discount rate"):
+- `parameters/Payments/Coupons.jsx:59-60` (i18n-06 parameters lot C)
+- `activityRef/ActivityRefBasics.jsx:~327` (i18n-06 activities lot 2)
+- `formules/EditFormule.jsx:~510` (i18n-06 formules)
+
+Latent, same file: `const tableName = "table-" + oneResourceTypeName` (`BaseDataTable.jsx:~109`)
+feeds a `reactTableFullscreen${tableName}Change` custom-event name (`ReactTableFullScreen.jsx`),
+so a previously-constant event name is now locale-derived. Dispatcher and listener stay consistent
+within one page load, and `Coupons` passes `showFullScreenButton={false}`, so impact today is nil.
+
+This whole component wants its own extraction pass (a `common:` namespace + `useTranslation` for
+the fn body); it was out of scope for every lot that fed it a translated resource name.
+
+Cross-lot duplication (flag for the eventual cleanup pass): lot C added a top-level `shared.*`
+block — `shared.{actions,yes,no,errorTitle,deleteConfirmYes,deleteConfirmNo,genericError}` — for
+the cross-section atoms in `Payments/*`. These duplicate lot B's `practice.{cols.actions,yes,no,
+errorTitle,delete.confirmYes,delete.confirmNo}`, which were scoped under `practice.*` before a
+shared block existed. The lot-B keys should migrate to `shared.*` in the cleanup so both lots
+resolve the same atoms from one place.
+
+Not a preserved typo — recorded for traceability: the lot-C extraction commit initially dropped
+the five `payments.tabs.*` keys (lot A) from `frontend/locales/fr/parameters.json` when it
+replaced the `payments` block; `PaymentsParameters.jsx` still calls `t("payments.tabs.*")` for its
+tab labels and `en/parameters.json` still carried them, so this was a parity break. Restored
+verbatim from lot A during the lot-C translation audit ("Adhésion" / "Moyens de paiements" /
+"Catégories de prix" / "Modalités de paiement" / "Taux de remise"). The pre-existing
+`payments.tabs.paymentMethods` = "Moyens de paiements" number-agreement defect (logged under lot A
+above) is carried through unchanged.
