@@ -390,6 +390,15 @@ strings once and never re-derives on `languageChanged` —
   reads `this.state.tabsNames`.
 Harmless for the same full-reload reason. Fix alongside the rest of this section.
 
+Same pattern again (added by i18n-06 `parameters` lot B): the 7 `parameters/Practice/*.jsx` CRUD
+tables (`BandsType`/`Features`/`FlatRate`/`Groups`/`Instruments`/`Materials`/`MusicGenres`) build
+`this.state.columns` with the constructor's `t` (`Header: t("practice.cols.*")`), and their boolean
+`Cell` closures capture that same construct-time `t` for the `t("practice.yes"/"no")` render.
+Extra wrinkle unique to lot B: `deleteStatus()` reads `this.props.t` (live), so an in-page
+`changeLanguage` would give a **mixed-language** table — frozen French column headers next to an
+English delete-confirm dialog. Still harmless today (full-reload locale switch), logged for the
+same cleanup pass.
+
 ## French typos preserved verbatim during i18n extraction — clean up the locale files
 
 The i18n branches copy every French string **verbatim** into the locale files (no copy changes

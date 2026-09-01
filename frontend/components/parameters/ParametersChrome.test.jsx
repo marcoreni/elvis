@@ -107,7 +107,8 @@ describe("parameters namespace — i18n layer", () => {
 
     test("fr and en expose exactly the same parameters.* key set", () => {
         expect(new Set(EN_KEYS)).toEqual(new Set(FR_KEYS));
-        expect(FR_KEYS.length).toBeGreaterThanOrEqual(28);
+        // pin the exact total — bump per parameters lot (A: 28, B: +23 = 51)
+        expect(FR_KEYS).toHaveLength(51);
     });
 
     test.each(["fr", "en"])("every parameters.* key resolves to real, non-empty copy in %s", (lng) => {

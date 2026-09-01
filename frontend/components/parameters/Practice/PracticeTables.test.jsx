@@ -150,7 +150,8 @@ describe("parameters practice.* — i18n layer", () => {
 
     test("fr and en expose exactly the same practice.* key set", () => {
         expect(new Set(EN_KEYS)).toEqual(new Set(FR_KEYS));
-        expect(FR_KEYS.length).toBeGreaterThanOrEqual(30);
+        // pin the exact count — bump per lot so a lot adding fewer keys than intended trips here
+        expect(FR_KEYS).toHaveLength(30);
     });
 
     test.each(["fr", "en"])(
@@ -304,9 +305,10 @@ describe("Practice tables — deleteStatus swal i18n", () => {
         return inst;
     }
 
-    const DELETE_CASES = TABLES.filter((tbl) =>
-        ["BandsType", "Groups", "Instruments", "Materials"].includes(tbl.name),
-    );
+    // All 7 — MusicGenres included: it is the only table without an explicit
+    // `this.deleteStatus = this.deleteStatus.bind(this)` in its constructor, so it must stay
+    // covered here and in the `Cell` onClick test below.
+    const DELETE_CASES = TABLES;
 
     for (const {name, Component, deleteKey, nameField} of DELETE_CASES) {
         describe(name, () => {
@@ -359,6 +361,49 @@ describe("Practice tables — deleteStatus swal i18n", () => {
         const opts = swal.mock.calls[0][0];
         expect(opts.title).toContain("Guitare");
         expect(opts.title).not.toContain("WRONG");
+    });
+
+    // The actions-column `Cell` wires `onClick={() => this.deleteStatus(props.original)}`.
+    // MusicGenres relies on that arrow for `this` (no `.bind` in its constructor), so drive the
+    // real Cell for every table and confirm the click reaches a translated swal.
+    for (const {name, Component, deleteKey, nameField} of TABLES) {
+        test(`${name}: actions-column Cell onClick reaches deleteStatus (this bound)`, async () => {
+            await i18n.changeLanguage("fr");
+            const t = i18n.getFixedT("fr", "parameters");
+            const inst = mountInstance(Component, "fr");
+
+            const actionsCol = inst.state.columns.find((c) => c.id === "actions");
+            const original = {id: 7, name: "Jazz", label: "Piano"};
+            const {container} = render(<div>{actionsCol.Cell({original})}</div>);
+            container.querySelector("a.btn-warning").click();
+
+            expect(swal).toHaveBeenCalledTimes(1);
+            const expectedName = nameField === "label" ? "Piano" : "Jazz";
+            expect(swal.mock.calls[0][0].title).toBe(t(deleteKey, {name: expectedName}));
+        });
+    }
+
+    // Error branch: user confirms, the DELETE comes back non-200 -> a second swal titled
+    // `practice.errorTitle`. `t` must still be in scope inside the nested `.then` closures.
+    test.each(["fr", "en"])("deleteStatus error branch titles the swal with errorTitle (%s)", async (lng) => {
+        await i18n.changeLanguage(lng);
+        const t = i18n.getFixedT(lng, "parameters");
+        swal.mockImplementation(() => Promise.resolve({value: true}));
+        global.fetch = vi.fn().mockResolvedValue({
+            status: 422,
+            text: () => Promise.resolve("boom"),
+        });
+
+        const inst = mountInstance(Materials, lng);
+        await inst.deleteStatus({id: 1, name: "Amp"});
+        await new Promise((r) => setTimeout(r, 0));
+
+        const errCall = swal.mock.calls.find((c) => c[0].type === "error");
+        expect(errCall).toBeTruthy();
+        expect(errCall[0].title).toBe(t("practice.errorTitle"));
+        expect(errCall[0].text).toBe("boom");
+
+        delete global.fetch;
     });
 });
 
