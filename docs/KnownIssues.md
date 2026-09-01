@@ -390,6 +390,15 @@ strings once and never re-derives on `languageChanged` —
   reads `this.state.tabsNames`.
 Harmless for the same full-reload reason. Fix alongside the rest of this section.
 
+Same pattern again (added by i18n-06 `parameters` lot B): the 7 `parameters/Practice/*.jsx` CRUD
+tables (`BandsType`/`Features`/`FlatRate`/`Groups`/`Instruments`/`Materials`/`MusicGenres`) build
+`this.state.columns` with the constructor's `t` (`Header: t("practice.cols.*")`), and their boolean
+`Cell` closures capture that same construct-time `t` for the `t("practice.yes"/"no")` render.
+Extra wrinkle unique to lot B: `deleteStatus()` reads `this.props.t` (live), so an in-page
+`changeLanguage` would give a **mixed-language** table — frozen French column headers next to an
+English delete-confirm dialog. Still harmless today (full-reload locale switch), logged for the
+same cleanup pass.
+
 ## French typos preserved verbatim during i18n extraction — clean up the locale files
 
 The i18n branches copy every French string **verbatim** into the locale files (no copy changes
@@ -925,3 +934,21 @@ is not mounted by any core view (`parameters/rooms_parameters/index.html.erb` mo
 is therefore exercised only by the parity test, never rendered in-app. A plugin could still mount
 it via prepended routes. Candidate for the dead-code list alongside `planning/activity_management/`
 and `TeachersEditor`.
+
+`frontend/locales/fr/parameters.json` (added by feature/i18n-06-parameters-lot-b — `parameters`
+lot B, the `Practice/*` CRUD tables: `BandsType`, `Features`, `FlatRate`, `Groups`, `Instruments`,
+`Materials`, `MusicGenres`) — preserved verbatim from `frontend/components/parameters/Practice/*.jsx`:
+- `practice.cols.active` = "Actif ?" vs `practice.cols.activeMaterials` = "Est Actif ?" — the same
+  boolean column is headed two different ways (`Materials.jsx` = "Est Actif ?", the other three
+  tables = "Actif ?"). Both kept verbatim; the English side unifies both to "Active?". Flag for
+  the cleanup pass — pick one FR form for all four.
+- `practice.cols.hoursCount` = "Nombre d'heure" (`FlatRate.jsx`) → should be "Nombre d'heures"
+  (plural). Preserved verbatim; English reads "Number of hours".
+- Not a defect, noted: the delete-confirm swal buttons are lowercase "oui"/"non"
+  (`practice.delete.confirmYes`/`confirmNo`) while the table cells are capitalised "Oui"/"Non"
+  (`practice.yes`/`practice.no`). Kept as two separate key pairs, each verbatim.
+
+CODE bug, note only (out of i18n scope): `Materials.jsx` "Est Actif ?" column has
+`accessor: d => d.name` where it means `d => d.active`. The `Cell` renderer reads
+`props.original.active` so the displayed value is correct, but sorting/filtering that column
+operates on the name field and is broken. Pre-existing — not introduced by lot B.

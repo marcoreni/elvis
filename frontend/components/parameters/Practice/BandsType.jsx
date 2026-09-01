@@ -1,13 +1,15 @@
 import BaseDataTable from "../BaseDataTable";
 import React from "react";
+import {withTranslation} from "react-i18next";
 import swal from "sweetalert2";
 import {csrfToken} from "../../utils";
 
-export default class BandsType extends BaseDataTable
+class BandsType extends BaseDataTable
 {
     constructor(props)
     {
         super(props);
+        const {t} = props;
 
         this.state.columns = [
             {
@@ -17,12 +19,12 @@ export default class BandsType extends BaseDataTable
             },
             {
                 id: "name",
-                Header: "Nom",
+                Header: t("practice.cols.name"),
                 accessor: d => d.name,
             },
             {
                 id: "actions",
-                Header: "Actions",
+                Header: t("practice.cols.actions"),
                 Cell: props => {
                     return (
                         <div className="btn-wrapper">
@@ -46,12 +48,13 @@ export default class BandsType extends BaseDataTable
 
     deleteStatus(status)
     {
+        const {t} = this.props;
         swal({
-            title: "Voulez-vous vraiment supprimer le type de groupe '" + status.name + "' ?",
+            title: t("practice.delete.bandType", {name: status.name}),
             type: "warning",
             showCancelButton: true,
-            cancelButtonText: "non",
-            confirmButtonText: 'oui'
+            cancelButtonText: t("practice.delete.confirmNo"),
+            confirmButtonText: t("practice.delete.confirmYes")
         }).then(res =>
         {
             if(res.value)
@@ -77,7 +80,7 @@ export default class BandsType extends BaseDataTable
                             result.text().then(text =>
                             {
                                 swal({
-                                    title: "Erreur",
+                                    title: t("practice.errorTitle"),
                                     type: "error",
                                     text: text
                                 })
@@ -88,3 +91,5 @@ export default class BandsType extends BaseDataTable
         });
     }
 }
+
+export default withTranslation("parameters")(BandsType);

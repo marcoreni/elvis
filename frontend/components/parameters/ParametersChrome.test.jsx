@@ -105,15 +105,17 @@ describe("parameters namespace — i18n layer", () => {
     const FR_KEYS = flatten(fr);
     const EN_KEYS = flatten(en);
 
-    test("fr and en expose exactly the same parameters.* key set (28 leaves)", () => {
+    test("fr and en expose exactly the same parameters.* key set", () => {
         expect(new Set(EN_KEYS)).toEqual(new Set(FR_KEYS));
-        expect(FR_KEYS).toHaveLength(28);
+        // pin the exact total — bump per parameters lot (A: 28, B: +23 = 51)
+        expect(FR_KEYS).toHaveLength(51);
     });
 
     test.each(["fr", "en"])("every parameters.* key resolves to real, non-empty copy in %s", (lng) => {
         const t = i18n.getFixedT(lng, "parameters");
         for (const key of FR_KEYS) {
-            const v = t(key);
+            // pass every interpolation var any parameters.* string uses, so `{{...}}` resolves
+            const v = t(key, {name: "X"});
             expect(typeof v).toBe("string");
             expect(v.length).toBeGreaterThan(0);
             expect(v).not.toBe(key);
