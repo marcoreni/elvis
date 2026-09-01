@@ -952,3 +952,44 @@ CODE bug, note only (out of i18n scope): `Materials.jsx` "Est Actif ?" column ha
 `accessor: d => d.name` where it means `d => d.active`. The `Cell` renderer reads
 `props.original.active` so the displayed value is correct, but sorting/filtering that column
 operates on the name field and is broken. Pre-existing — not introduced by lot B.
+
+`frontend/locales/fr/parameters.json` (added by feature/i18n-06-parameters-lot-c — `parameters`
+lot C, the `Payments/*` components: `PaymentsMethods`, `PaymentsStatus`, `Coupons`,
+`CouponFormContent`, `AdhesionSettings`, `AdhesionEditModal`, `EditPaymentScheduleOptions`) —
+preserved verbatim from `frontend/components/parameters/Payments/*.jsx`:
+- `payments.status.deleteConfirm` — "Voulez-vous vraiment supprimer le **status** '…' ?" →
+  "le **statut**" (anglicism; French is "statut"). Preserved verbatim from `PaymentsStatus.jsx`;
+  the English side reads "status" (correct as-is).
+- `payments.adhesion.deleteImpossibleText` — two defects in one string, from `AdhesionSettings.jsx`:
+  "ne **peux** être supprimé" → "ne **peut**" (wrong conjugation), and "un **réglement**" →
+  "un **règlement**" (missing accent / wrong accent). Preserved verbatim; the English side
+  ("… cannot be deleted because it is already used in a payment.") is clean.
+- `payments.adhesion.cols.labels` = "Libellés" (plural, `AdhesionSettings.jsx` ReactTable header)
+  vs `payments.cols.label` = "Libellé" (singular, `PaymentsMethods`/`PaymentsStatus` header) —
+  same concept, two different columns in two different components, each kept verbatim. English
+  unifies to "Labels" / "Label". Flag for the cleanup pass.
+
+Not a defect, noted: `payments.adhesion.modal.seasonLabel` = "Par défaut pour la saison :" (form
+`<label>`, trailing " :") vs `payments.adhesion.cols.defaultForSeason` = "Par défaut pour la
+saison" (ReactTable column header, no colon) — different UI elements, both verbatim.
+
+CODE bug, note only (out of i18n scope): `AdhesionSettings.jsx` second `useEffect` — the
+`!response.ok` branch calls `swal({ …, icon: 'error' })` while every other swal in the file uses
+`type: 'error'`. This app's sweetalert2 is v1-era and keys off `type:`, ignoring `icon:`, so that
+one error dialog renders without its error styling. Pre-existing — not introduced by lot C.
+
+Cross-lot duplication (flag for the eventual cleanup pass): lot C added a top-level `shared.*`
+block — `shared.{actions,yes,no,errorTitle,deleteConfirmYes,deleteConfirmNo,genericError}` — for
+the cross-section atoms in `Payments/*`. These duplicate lot B's `practice.{cols.actions,yes,no,
+errorTitle,delete.confirmYes,delete.confirmNo}`, which were scoped under `practice.*` before a
+shared block existed. The lot-B keys should migrate to `shared.*` in the cleanup so both lots
+resolve the same atoms from one place.
+
+Not a preserved typo — recorded for traceability: the lot-C extraction commit initially dropped
+the five `payments.tabs.*` keys (lot A) from `frontend/locales/fr/parameters.json` when it
+replaced the `payments` block; `PaymentsParameters.jsx` still calls `t("payments.tabs.*")` for its
+tab labels and `en/parameters.json` still carried them, so this was a parity break. Restored
+verbatim from lot A during the lot-C translation audit ("Adhésion" / "Moyens de paiements" /
+"Catégories de prix" / "Modalités de paiement" / "Taux de remise"). The pre-existing
+`payments.tabs.paymentMethods` = "Moyens de paiements" number-agreement defect (logged under lot A
+above) is carried through unchanged.

@@ -1,10 +1,12 @@
 import React, {Fragment, useState} from "react";
+import {useTranslation} from "react-i18next";
 import Modal from "react-modal";
 import {Form, Field} from 'react-final-form';
 import * as api from "../../../tools/api";
 import swal from "sweetalert2";
 
 export default function AdhesionEditModal({children, adhesion, seasons, onAdd, onEdit}) {
+    const {t} = useTranslation("parameters");
     const [showModal, setShowModal] = useState(false);
 
     function onSubmit(formData) {
@@ -20,10 +22,10 @@ export default function AdhesionEditModal({children, adhesion, seasons, onAdd, o
             .error(data => {
                 console.error(data);
 
-                const message = Array.isArray(data) ? data.join(" - ") : 'Une erreur est survenue. Contactez un administrateur';
+                const message = Array.isArray(data) ? data.join(" - ") : t("shared.genericError");
 
                 swal({
-                    title: 'Erreur',
+                    title: t("shared.errorTitle"),
                     text: message,
                     type: 'error'
                 });
@@ -51,7 +53,7 @@ export default function AdhesionEditModal({children, adhesion, seasons, onAdd, o
             <div className="row">
                 <div className="col-sm-12">
                     <h2>
-                        {(adhesion || {}).label ? `Modifier l'adhésion` : "Nouvelle adhésion"}
+                        {(adhesion || {}).label ? t("payments.adhesion.modal.editTitle") : t("payments.adhesion.modal.newTitle")}
                     </h2>
                 </div>
             </div>
@@ -60,7 +62,7 @@ export default function AdhesionEditModal({children, adhesion, seasons, onAdd, o
             <Form
 
                 initialValues={{
-                    label: (adhesion || {}).label || "Prix par défaut",
+                    label: (adhesion || {}).label || t("payments.adhesion.modal.defaultLabel"),
                     price: (adhesion || {}).price,
                     season_id: (adhesion || {}).season_id
                 }}
@@ -70,7 +72,7 @@ export default function AdhesionEditModal({children, adhesion, seasons, onAdd, o
                     <form onSubmit={handleSubmit}>
                         <div className="row">
                             <div className="col-sm-6">
-                                <label>Nom <span className={"text-danger"}>*</span></label>
+                                <label>{t("payments.adhesion.modal.nameLabel")} <span className={"text-danger"}>*</span></label>
                                 <Field name="label"
                                        component="input"
                                        type="text"
@@ -82,7 +84,7 @@ export default function AdhesionEditModal({children, adhesion, seasons, onAdd, o
 
                         <div className="row mt-5">
                             <div className="col-sm-6">
-                                <label>Prix <span className={"text-danger"}>*</span></label>
+                                <label>{t("payments.adhesion.modal.priceLabel")} <span className={"text-danger"}>*</span></label>
                                 <Field
                                     name="price"
                                     component="input"
@@ -94,7 +96,7 @@ export default function AdhesionEditModal({children, adhesion, seasons, onAdd, o
 
                         <div className="row mt-5">
                             <div className="col-sm-6">
-                                <label>Par défaut pour la saison :</label>
+                                <label>{t("payments.adhesion.modal.seasonLabel")}</label>
                                 <Field
                                     name="season_id"
                                     component="select"
@@ -113,7 +115,7 @@ export default function AdhesionEditModal({children, adhesion, seasons, onAdd, o
                                         className="btn btn-secondary"
                                         onClick={() => setShowModal(false)}>
 
-                                    Annuler
+                                    {t("common:actions.cancel")}
                                 </button>
                             </div>
 
@@ -123,7 +125,7 @@ export default function AdhesionEditModal({children, adhesion, seasons, onAdd, o
                                     className="btn btn-primary"
                                     disabled={submitting || pristine}>
 
-                                    Enregistrer
+                                    {t("common:actions.save")}
                                 </button>
                             </div>
                         </div>

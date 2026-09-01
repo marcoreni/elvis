@@ -35,6 +35,81 @@
             "pricingCategories": "Catégories de prix",
             "paymentTerms": "Modalités de paiement",
             "discountRate": "Taux de remise"
+        },
+        "cols": {
+            "label": "Libellé"
+        },
+        "methods": {
+            "cols": {
+                "showToUser": "Afficher au client ?",
+                "isSpecial": "Est spécial ?",
+                "isCreditNote": "Est à crédit ?"
+            },
+            "deleteConfirm": "Voulez-vous vraiment supprimer la méthode de paiement '{{name}}' ?"
+        },
+        "status": {
+            "cols": {
+                "color": "Couleur"
+            },
+            "deleteConfirm": "Voulez-vous vraiment supprimer le status '{{name}}' ?"
+        },
+        "adhesion": {
+            "enableLabel": "Activer les frais d'adhésion",
+            "deleteConfirm": "Souhaitez-vous supprimer le prix d'adhésion \"{{label}}\" ?",
+            "deleteImpossibleTitle": "Suppression impossible",
+            "deleteImpossibleText": "le prix d'adhésion \"{{label}}\" ne peux être supprimé car déjà utilisé dans un réglement.",
+            "cols": {
+                "labels": "Libellés",
+                "prices": "Tarifs (€)",
+                "defaultForSeason": "Par défaut pour la saison"
+            },
+            "modal": {
+                "editTitle": "Modifier l'adhésion",
+                "newTitle": "Nouvelle adhésion",
+                "defaultLabel": "Prix par défaut",
+                "nameLabel": "Nom",
+                "priceLabel": "Prix",
+                "seasonLabel": "Par défaut pour la saison :"
+            }
+        },
+        "scheduleOptions": {
+            "errors": {
+                "fetch": "Une erreur est survenue lors de la récupération des options d'échéancier de paiement",
+                "updateConditions": "Une erreur est survenue lors de la mise à jour des conditions de paiement",
+                "delete": "Une erreur est survenue lors de la suppression de l'option d'échéancier de paiement",
+                "updateDisplayText": "Une erreur est survenue lors de la mise à jour des informations complémentaires",
+                "fetchData": "Erreur lors de la récupération des données"
+            },
+            "delete": {
+                "text": "La suppression de cette option d'échéancier de paiement est définitive.",
+                "confirm": "Oui, supprimer",
+                "cancel": "Non, annuler"
+            },
+            "displayTextSaved": "Les informations complémentaires ont été enregistrées.",
+            "headings": {
+                "visibility": "Visibilité",
+                "addTerms": "Renseigner et ajouter vos modalités de paiement",
+                "additionalInfo": "Renseigner des informations complémentaires sur les modalités de paiement."
+            },
+            "showInEnrolmentLabel": "Afficher les modalités de paiement dans le parcours d'inscription",
+            "addOption": "Ajouter une option d'échéancier de paiement",
+            "saveAdditionalInfo": "Enregistrer les informations complémentaires."
+        },
+        "coupons": {
+            "createButton": "Créer un taux de remise",
+            "cols": {
+                "id": "Id",
+                "label": "Nom du taux de remise",
+                "percentOff": "Taux de remise (%)",
+                "enabled": "Actif"
+            },
+            "oneResourceTypeName": "un taux de remise",
+            "thisResourceTypeName": "ce taux de remise",
+            "form": {
+                "label": "Nom du taux de remise",
+                "percentOff": "Taux de remise (%)",
+                "enabled": "Activé"
+            }
         }
     },
     "plannings": {
@@ -87,5 +162,14 @@
         "tabs": {
             "siteList": "Liste des sites"
         }
+    },
+    "shared": {
+        "actions": "Actions",
+        "yes": "Oui",
+        "no": "Non",
+        "errorTitle": "Erreur",
+        "deleteConfirmYes": "oui",
+        "deleteConfirmNo": "non",
+        "genericError": "Une erreur est survenue. Contactez un administrateur"
     }
 }
