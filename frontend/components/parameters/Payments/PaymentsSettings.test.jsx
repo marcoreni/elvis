@@ -531,6 +531,22 @@ describe("AdhesionSettings", () => {
             expect(opts.confirmButtonText).toBe(tC(lng)("actions.delete"));
         },
     );
+
+    // The mount `api.set()....error(...)` closure builds `swal({title: t("shared.errorTitle"),
+    // text: t("shared.genericError"), type: 'error'})`. Guards `t` scope on that branch.
+    test.each(["fr", "en"])("mount adhesion-prices error fires the shared error swal in %s", async (lng) => {
+        await i18n.changeLanguage(lng);
+        mockFetchEnabled();
+        render(<AdhesionSettings />);
+        await waitFor(() => expect(typeof apiState.lastError).toBe("function"));
+
+        act(() => { apiState.lastError({message: "nope"}); });
+
+        expect(swal).toHaveBeenCalledTimes(1);
+        const opts = swal.mock.calls[0][0];
+        expect(opts.title).toBe(tP(lng)("shared.errorTitle"));
+        expect(opts.text).toBe(tP(lng)("shared.genericError"));
+    });
 });
 
 // ============================================================================================
@@ -665,6 +681,19 @@ describe("EditPaymentScheduleOptions", () => {
             expect(opts.cancelButtonText).toBe(tP(lng)("payments.scheduleOptions.delete.cancel"));
         },
     );
+
+    // The mount GET's `.error(...)` closure builds `swal(t("...errors.fetch"), res.error, "error")`
+    // — positional-arg form, `t` captured from the hook scope. Guards that path.
+    test.each(["fr", "en"])("mount fetch error fires swal titled errors.fetch in %s", async (lng) => {
+        await i18n.changeLanguage(lng);
+        render(<EditPaymentScheduleOptions />);
+        expect(typeof apiState.lastError).toBe("function");
+        act(() => { apiState.lastError({error: "backend detail"}); });
+
+        expect(swal).toHaveBeenCalledTimes(1);
+        expect(swal.mock.calls[0][0]).toBe(tP(lng)("payments.scheduleOptions.errors.fetch"));
+        expect(swal.mock.calls[0][1]).toBe("backend detail");
+    });
 });
 
 // ============================================================================================

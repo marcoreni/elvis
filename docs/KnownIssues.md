@@ -399,6 +399,11 @@ Extra wrinkle unique to lot B: `deleteStatus()` reads `this.props.t` (live), so 
 English delete-confirm dialog. Still harmless today (full-reload locale switch), logged for the
 same cleanup pass.
 
+Same pattern again (added by i18n-06 `parameters` lot C): `parameters/Payments/PaymentsMethods.jsx`
+and `parameters/Payments/PaymentsStatus.jsx` — two more `extends BaseDataTable` tables that build
+`this.state.columns` with the constructor's `t` and capture it in their boolean `Cell` closures,
+with the same live-`this.props.t`-in-`deleteStatus` mixed-language wrinkle as lot B.
+
 ## French typos preserved verbatim during i18n extraction — clean up the locale files
 
 The i18n branches copy every French string **verbatim** into the locale files (no copy changes
@@ -975,8 +980,50 @@ saison" (ReactTable column header, no colon) — different UI elements, both ver
 
 CODE bug, note only (out of i18n scope): `AdhesionSettings.jsx` second `useEffect` — the
 `!response.ok` branch calls `swal({ …, icon: 'error' })` while every other swal in the file uses
-`type: 'error'`. This app's sweetalert2 is v1-era and keys off `type:`, ignoring `icon:`, so that
-one error dialog renders without its error styling. Pre-existing — not introduced by lot C.
+`type: 'error'`. This app's sweetalert2 is pinned at `^7.26.11` (`icon:` replaced `type:` only in
+sweetalert2 v9), so v7 ignores `icon:` and that one error dialog renders without its error
+styling. Pre-existing — not introduced by lot C.
+
+Not i18n, but touched next to the lot-C `columns` prop: `AdhesionSettings.jsx`'s `<ReactTable>`
+(the inline one, not via `parameters/BaseDataTable`) passes no `previousText`/`nextText`/
+`loadingText`/`noDataText`/`pageText`/`ofText`/`rowsText`, so react-table's English defaults ("No
+rows found", "Page", "of", "rows") render inside the otherwise-French UI. `parameters/BaseDataTable.jsx`
+and `userPayments/PaymentsSummary.jsx` both pass the `common:reactTable.*` set — this table is the
+odd one out. A one-line fix when the persisted-default question below is settled.
+
+Persisted data default is now locale-dependent (added by lot C): `AdhesionSettings` /
+`AdhesionEditModal.jsx` — `initialValues.label = (adhesion || {}).label || t("payments.adhesion.modal.defaultLabel")`.
+If the admin leaves the Name field untouched, that value is POSTed to `/adhesion-prices` and
+stored, so an EN-locale admin creates a row literally labelled "Default price" (FR: "Prix par
+défaut") that every user then sees. No backend code matches the literal `"Prix par défaut"` (grep
+of `app/ lib/ db/ config/`), so nothing breaks — but this is a UI-string-as-data decision that
+should be an explicit default on the server, not a client i18n key. Flag for the cleanup.
+
+## `frontend/components/common/baseDataTable/BaseDataTable.jsx` — hardcoded French chrome leaks into English
+
+The **functional** shared data-table (`frontend/components/common/baseDataTable/`, distinct from
+the older class-based `frontend/components/parameters/BaseDataTable.jsx`) builds its modal
+titles from hardcoded French templates and passes hardcoded react-table pagination strings:
+
+- `` `Mettre à jour ${oneResourceTypeName}` `` / `` `Créer ${oneResourceTypeName}` `` /
+  `` `Supprimer ${oneResourceTypeName}` `` / `` `Voulez-vous vraiment supprimer ${thisResourceTypeName || "cet élément"} : ${…} ?` `` (around `BaseDataTable.jsx:287-298`)
+- `previousText="Précédent"` / `nextText="Suivant"` / `ofText="sur"` / `rowsText="résultats"` /
+  `noDataText="Aucune donnée"` (`BaseDataTable.jsx:270-274`) — `common:reactTable.*` already exists.
+
+Call sites that pass a (now-translated, as of the respective i18n lot) `oneResourceTypeName` /
+`thisResourceTypeName` into it, producing **mixed-language** modal headers in English mode
+("Créer a discount rate", "Supprimer a discount rate"):
+- `parameters/Payments/Coupons.jsx:59-60` (i18n-06 parameters lot C)
+- `activityRef/ActivityRefBasics.jsx:~327` (i18n-06 activities lot 2)
+- `formules/EditFormule.jsx:~510` (i18n-06 formules)
+
+Latent, same file: `const tableName = "table-" + oneResourceTypeName` (`BaseDataTable.jsx:~109`)
+feeds a `reactTableFullscreen${tableName}Change` custom-event name (`ReactTableFullScreen.jsx`),
+so a previously-constant event name is now locale-derived. Dispatcher and listener stay consistent
+within one page load, and `Coupons` passes `showFullScreenButton={false}`, so impact today is nil.
+
+This whole component wants its own extraction pass (a `common:` namespace + `useTranslation` for
+the fn body); it was out of scope for every lot that fed it a translated resource name.
 
 Cross-lot duplication (flag for the eventual cleanup pass): lot C added a top-level `shared.*`
 block — `shared.{actions,yes,no,errorTitle,deleteConfirmYes,deleteConfirmNo,genericError}` — for
