@@ -2,12 +2,14 @@ import BaseDataTable from "../BaseDataTable";
 import swal from "sweetalert2";
 import {csrfToken} from "../../utils";
 import React from "react";
+import {withTranslation} from "react-i18next";
 
-export default class MusicGenres extends BaseDataTable
+class MusicGenres extends BaseDataTable
 {
     constructor(props)
     {
         super(props);
+        const {t} = props;
 
         this.state.columns = [
             {
@@ -17,12 +19,12 @@ export default class MusicGenres extends BaseDataTable
             },
             {
                 id: "name",
-                Header: "Nom",
+                Header: t("practice.cols.name"),
                 accessor: d => d.name,
             },
             {
                 id: "actions",
-                Header: "Actions",
+                Header: t("practice.cols.actions"),
                 Cell: props => {
                     return (
                         <div className="btn-wrapper">
@@ -44,12 +46,13 @@ export default class MusicGenres extends BaseDataTable
 
     deleteStatus(status)
     {
+        const {t} = this.props;
         swal({
-            title: "Voulez-vous vraiment supprimer le genre '" + status.name + "' ?",
+            title: t("practice.delete.musicGenre", {name: status.name}),
             type: "warning",
             showCancelButton: true,
-            cancelButtonText: "non",
-            confirmButtonText: 'oui'
+            cancelButtonText: t("practice.delete.confirmNo"),
+            confirmButtonText: t("practice.delete.confirmYes")
         }).then(res =>
         {
             if(res.value)
@@ -75,7 +78,7 @@ export default class MusicGenres extends BaseDataTable
                             result.text().then(text =>
                             {
                                 swal({
-                                    title: "Erreur",
+                                    title: t("practice.errorTitle"),
                                     type: "error",
                                     text: text
                                 })
@@ -86,3 +89,5 @@ export default class MusicGenres extends BaseDataTable
         });
     }
 }
+
+export default withTranslation("parameters")(MusicGenres);

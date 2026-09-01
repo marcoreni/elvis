@@ -54,6 +54,33 @@
             "flatRates": "Forfaits",
             "roomOptions": "Option des salles",
             "instruments": "Instruments"
+        },
+        "cols": {
+            "name": "Nom",
+            "actions": "Actions",
+            "active": "Actif ?",
+            "activeMaterials": "Est Actif ?",
+            "groupName": "Nom du groupe",
+            "type": "Type",
+            "musicGenre": "Genre musical",
+            "hoursCount": "Nombre d'heure",
+            "soloDuoRate": "Tarif solo/duo",
+            "groupRate": "Tarif de groupe",
+            "pricePerHour": "Prix /h"
+        },
+        "yes": "Oui",
+        "no": "Non",
+        "errorTitle": "Erreur",
+        "delete": {
+            "confirmYes": "oui",
+            "confirmNo": "non",
+            "bandType": "Voulez-vous vraiment supprimer le type de groupe '{{name}}' ?",
+            "feature": "Voulez-vous vraiment supprimer la feature '{{name}}' ?",
+            "flatRate": "Voulez-vous vraiment supprimer le forfait '{{name}}' ?",
+            "band": "Voulez-vous vraiment supprimer le groupe '{{name}}' ?",
+            "instrument": "Voulez-vous vraiment supprimer l'instrument '{{name}}' ?",
+            "material": "Voulez-vous vraiment supprimer le matériel '{{name}}' ?",
+            "musicGenre": "Voulez-vous vraiment supprimer le genre '{{name}}' ?"
         }
     },
     "rooms": {

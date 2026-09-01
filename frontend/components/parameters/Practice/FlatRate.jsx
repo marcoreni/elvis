@@ -1,13 +1,15 @@
 import BaseDataTable from "../BaseDataTable";
 import React from "react";
+import {withTranslation} from "react-i18next";
 import swal from "sweetalert2";
 import {csrfToken} from "../../utils";
 
-export default class FlatRate extends BaseDataTable
+class FlatRate extends BaseDataTable
 {
     constructor(props)
     {
         super(props);
+        const {t} = props;
 
         this.state.columns = [
             {
@@ -17,33 +19,33 @@ export default class FlatRate extends BaseDataTable
             },
             {
                 id: "name",
-                Header: "Nom",
+                Header: t("practice.cols.name"),
                 accessor: d => d.name,
             },
             {
                 id: "enable",
-                Header: "Actif ?",
+                Header: t("practice.cols.active"),
                 accessor: d => d.enable,
-                Cell: props => <p>{props.original.enable ? "Oui" : "Non"}</p>
+                Cell: props => <p>{props.original.enable ? t("practice.yes") : t("practice.no")}</p>
             },
             {
                 id: "nb_hour",
-                Header: "Nombre d'heure",
+                Header: t("practice.cols.hoursCount"),
                 accessor: d => d.nb_hour,
             },
             {
                 id: "solo_duo_rate",
-                Header: "Tarif solo/duo",
+                Header: t("practice.cols.soloDuoRate"),
                 accessor: d => d.solo_duo_rate,
             },
             {
                 id: "group_rate",
-                Header: "Tarif de groupe",
+                Header: t("practice.cols.groupRate"),
                 accessor: d => d.group_rate,
             },
             {
                 id: "actions",
-                Header: "Actions",
+                Header: t("practice.cols.actions"),
                 Cell: props => {
                     return (
                         <div className="btn-wrapper">
@@ -67,12 +69,13 @@ export default class FlatRate extends BaseDataTable
 
     deleteStatus(status)
     {
+        const {t} = this.props;
         swal({
-            title: "Voulez-vous vraiment supprimer le forfait '" + status.name + "' ?",
+            title: t("practice.delete.flatRate", {name: status.name}),
             type: "warning",
             showCancelButton: true,
-            cancelButtonText: "non",
-            confirmButtonText: 'oui'
+            cancelButtonText: t("practice.delete.confirmNo"),
+            confirmButtonText: t("practice.delete.confirmYes")
         }).then(res =>
         {
             if(res.value)
@@ -98,7 +101,7 @@ export default class FlatRate extends BaseDataTable
                             result.text().then(text =>
                             {
                                 swal({
-                                    title: "Erreur",
+                                    title: t("practice.errorTitle"),
                                     type: "error",
                                     text: text
                                 })
@@ -109,3 +112,5 @@ export default class FlatRate extends BaseDataTable
         });
     }
 }
+
+export default withTranslation("parameters")(FlatRate);

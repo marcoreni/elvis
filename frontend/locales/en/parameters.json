@@ -54,6 +54,33 @@
             "flatRates": "Flat rates",
             "roomOptions": "Room options",
             "instruments": "Instruments"
+        },
+        "cols": {
+            "name": "Name",
+            "actions": "Actions",
+            "active": "Active?",
+            "activeMaterials": "Active?",
+            "groupName": "Band name",
+            "type": "Type",
+            "musicGenre": "Music genre",
+            "hoursCount": "Number of hours",
+            "soloDuoRate": "Solo/duo rate",
+            "groupRate": "Group rate",
+            "pricePerHour": "Price /h"
+        },
+        "yes": "Yes",
+        "no": "No",
+        "errorTitle": "Error",
+        "delete": {
+            "confirmYes": "yes",
+            "confirmNo": "no",
+            "bandType": "Do you really want to delete the band type '{{name}}'?",
+            "feature": "Do you really want to delete the feature '{{name}}'?",
+            "flatRate": "Do you really want to delete the flat rate '{{name}}'?",
+            "band": "Do you really want to delete the band '{{name}}'?",
+            "instrument": "Do you really want to delete the instrument '{{name}}'?",
+            "material": "Do you really want to delete the equipment '{{name}}'?",
+            "musicGenre": "Do you really want to delete the music genre '{{name}}'?"
         }
     },
     "rooms": {

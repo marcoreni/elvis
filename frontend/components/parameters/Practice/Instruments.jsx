@@ -1,13 +1,15 @@
 import BaseDataTable from "../BaseDataTable";
 import React from "react";
+import {withTranslation} from "react-i18next";
 import swal from "sweetalert2";
 import {csrfToken} from "../../utils";
 
-export default class Instruments extends BaseDataTable
+class Instruments extends BaseDataTable
 {
     constructor(props)
     {
         super(props);
+        const {t} = props;
 
         this.state.columns = [
             {
@@ -17,18 +19,18 @@ export default class Instruments extends BaseDataTable
             },
             {
                 id: "name",
-                Header: "Nom",
+                Header: t("practice.cols.name"),
                 accessor: d => d.label,
             },
             {
                 id: "active",
-                Header: "Actif ?",
+                Header: t("practice.cols.active"),
                 accessor: d => d.active,
-                Cell: props => <p>{props.original.active ? "Oui" : "Non"}</p>
+                Cell: props => <p>{props.original.active ? t("practice.yes") : t("practice.no")}</p>
             },
             {
                 id: "actions",
-                Header: "Actions",
+                Header: t("practice.cols.actions"),
                 Cell: props => {
                     return (
                         <div className="btn-wrapper">
@@ -52,12 +54,13 @@ export default class Instruments extends BaseDataTable
 
     deleteStatus(status)
     {
+        const {t} = this.props;
         swal({
-            title: "Voulez-vous vraiment supprimer l'instrument '" + status.label + "' ?",
+            title: t("practice.delete.instrument", {name: status.label}),
             type: "warning",
             showCancelButton: true,
-            cancelButtonText: "non",
-            confirmButtonText: 'oui'
+            cancelButtonText: t("practice.delete.confirmNo"),
+            confirmButtonText: t("practice.delete.confirmYes")
         }).then(res =>
         {
             if(res.value)
@@ -83,7 +86,7 @@ export default class Instruments extends BaseDataTable
                             result.text().then(text =>
                             {
                                 swal({
-                                    title: "Erreur",
+                                    title: t("practice.errorTitle"),
                                     type: "error",
                                     text: text
                                 })
@@ -94,3 +97,5 @@ export default class Instruments extends BaseDataTable
         });
     }
 }
+
+export default withTranslation("parameters")(Instruments);

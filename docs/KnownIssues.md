@@ -925,3 +925,21 @@ is not mounted by any core view (`parameters/rooms_parameters/index.html.erb` mo
 is therefore exercised only by the parity test, never rendered in-app. A plugin could still mount
 it via prepended routes. Candidate for the dead-code list alongside `planning/activity_management/`
 and `TeachersEditor`.
+
+`frontend/locales/fr/parameters.json` (added by feature/i18n-06-parameters-lot-b — `parameters`
+lot B, the `Practice/*` CRUD tables: `BandsType`, `Features`, `FlatRate`, `Groups`, `Instruments`,
+`Materials`, `MusicGenres`) — preserved verbatim from `frontend/components/parameters/Practice/*.jsx`:
+- `practice.cols.active` = "Actif ?" vs `practice.cols.activeMaterials` = "Est Actif ?" — the same
+  boolean column is headed two different ways (`Materials.jsx` = "Est Actif ?", the other three
+  tables = "Actif ?"). Both kept verbatim; the English side unifies both to "Active?". Flag for
+  the cleanup pass — pick one FR form for all four.
+- `practice.cols.hoursCount` = "Nombre d'heure" (`FlatRate.jsx`) → should be "Nombre d'heures"
+  (plural). Preserved verbatim; English reads "Number of hours".
+- Not a defect, noted: the delete-confirm swal buttons are lowercase "oui"/"non"
+  (`practice.delete.confirmYes`/`confirmNo`) while the table cells are capitalised "Oui"/"Non"
+  (`practice.yes`/`practice.no`). Kept as two separate key pairs, each verbatim.
+
+CODE bug, note only (out of i18n scope): `Materials.jsx` "Est Actif ?" column has
+`accessor: d => d.name` where it means `d => d.active`. The `Cell` renderer reads
+`props.original.active` so the displayed value is correct, but sorting/filtering that column
+operates on the name field and is broken. Pre-existing — not introduced by lot B.

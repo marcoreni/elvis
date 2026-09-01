@@ -1,13 +1,15 @@
 import BaseDataTable from "../BaseDataTable";
 import React from "react";
+import {withTranslation} from "react-i18next";
 import swal from "sweetalert2";
 import {csrfToken} from "../../utils";
 
-export default class Groups extends BaseDataTable
+class Groups extends BaseDataTable
 {
     constructor(props)
     {
         super(props);
+        const {t} = props;
 
         this.state.columns = [
             {
@@ -17,24 +19,24 @@ export default class Groups extends BaseDataTable
             },
             {
                 id: "name",
-                Header: "Nom du groupe",
+                Header: t("practice.cols.groupName"),
                 accessor: d => d.name,
             },
             {
                 id: "type",
-                Header: "Type",
+                Header: t("practice.cols.type"),
                 accessor: d => d.band_type.name,
                 sortable: false
             },
             {
                 id: "genre",
-                Header: "Genre musical",
+                Header: t("practice.cols.musicGenre"),
                 accessor: d => d.music_genre.name,
                 sortable: false
             },
             {
                 id: "actions",
-                Header: "Actions",
+                Header: t("practice.cols.actions"),
                 Cell: props => {
                     return (
                         <div className="btn-wrapper">
@@ -58,12 +60,13 @@ export default class Groups extends BaseDataTable
 
     deleteStatus(status)
     {
+        const {t} = this.props;
         swal({
-            title: "Voulez-vous vraiment supprimer le groupe '" + status.name + "' ?",
+            title: t("practice.delete.band", {name: status.name}),
             type: "warning",
             showCancelButton: true,
-            cancelButtonText: "non",
-            confirmButtonText: 'oui'
+            cancelButtonText: t("practice.delete.confirmNo"),
+            confirmButtonText: t("practice.delete.confirmYes")
         }).then(res =>
         {
             if(res.value)
@@ -89,7 +92,7 @@ export default class Groups extends BaseDataTable
                             result.text().then(text =>
                             {
                                 swal({
-                                    title: "Erreur",
+                                    title: t("practice.errorTitle"),
                                     type: "error",
                                     text: text
                                 })
@@ -100,3 +103,5 @@ export default class Groups extends BaseDataTable
         });
     }
 }
+
+export default withTranslation("parameters")(Groups);
