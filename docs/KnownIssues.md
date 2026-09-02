@@ -1240,6 +1240,65 @@ Duplicate title keys for the cleanup pass: `editParameters.csv.saveSuccessTitle`
 string). Add `shared.saveSuccessTitle` and collapse both (plus align `editParameters.mail.saveSuccessTitle`
 from the preserved English "Success" at the same time).
 
+`frontend/locales/fr/parameters.json` (added by feature/i18n-06-parameters-lot-e3 — `parameters`
+lot E3, `frontend/components/editParameters/SchoolParameters.jsx` alone: the school legal/fiscal
+identity form — name/email/phone, address + holiday zones, SIRET / RCS / VAT). New
+`parameters:editParameters.school.*` subtree (+34 leaves → `parameters.json` 255/255). No `.yml`
+touched (frontend-only lot). Preserved verbatim:
+
+- `editParameters.school.schoolInfoHeading` = "Informations de l'école " — **trailing space**
+  kept from the source `<h3 …>Informations de l'école </h3>`. EN "School information " carries the
+  same trailing space. Trim/normalise in the cleanup pass.
+- `editParameters.school.postalCodeLabel` = " Code Postal" — **leading space** AND "Postal"
+  capitalised mid-phrase, from `<label> Code Postal <span…`. EN " Postal code" keeps the leading
+  space (EN casing normalised to "Postal code"). This is the only "Code Postal" in the file, so
+  no unification trigger — normalise in the cleanup pass.
+- `editParameters.school.schoolHolidaysZoneLabel` = " Zone de vacances scolaires : " —
+  **leading AND trailing spaces**, from `<label> Zone de vacances scolaires : </label>`. EN
+  " School holidays zone: " mirrors both. Trim in the cleanup pass.
+- `editParameters.school.{loadingTitle,saveSuccess,genericError}` = "chargement..." /
+  "Enregistrement effectué" / "Une erreur est survenue" — the **3rd** verbatim copy of this
+  recurring sweetalert2 loader/result trio (also `editParameters.rules.*` from lot E2 and
+  `evaluations.slot.*` from lot E). "chargement..." keeps the lowercase `c` / missing accent /
+  trailing `...` defect already logged twice. Byte-identical to both prior copies on both locale
+  sides (EN "loading..." / "Save completed" / "An error occurred"). Three lots, three copies each
+  — strong candidates for `shared.{loadingTitle,saveCompleted,genericErrorShort}` in the cleanup
+  pass.
+
+Not a defect — recorded as an improvement: `editParameters.school.siretRnaError` collapses a
+sentence the source duplicated **inline twice** — a template literal in the `validate` return
+`` `…pays (${getValues("countryCode")})` `` and the same text in a `<p className="text-danger">` —
+into one interpolated key `t("editParameters.school.siretRnaError", {country: getValues("countryCode")})`
+at both call sites. `{{country}}` is a plain value (a country code string), no plural forms. FR
+value ends with " ({{country}})"; EN "The input matches neither an RNA nor your country's SIRET
+({{country}})".
+
+`editParameters.school.activitiesNotVatLabel` = "Les activités musicales <1>ne sont pas
+assujetties</1> à la TVA" is a `<Trans>` key: the source wraps "ne sont pas assujetties" in an
+inline `<u>`, and `u` is **not** in react-i18next's default `transKeepBasicHtmlNodesFor`
+(br/strong/i/p), so it serialises to the indexed `<1>…</1>` form — `<1>` must stay `<1>` in both
+locales (EN "Music activities <1>are not subject</1> to VAT"). Same pattern as the `activityRef`
+lot-2 `<Trans>` keys.
+
+Reuse confirmed (no new key added): `common:actions.save` = "Enregistrer" / "Save" for the submit
+`<input type="submit" value="Enregistrer">`.
+
+Dead code left as-is: the commented-out "Recaptcha" `<div>` block (`SchoolParameters.jsx`
+~250-258) still contains French ("Score minimum requis (optionnel)") — not extracted, not a live
+string.
+
+Pre-existing code bug, note only (surfaced by the lot-E3 test's email mock, NOT introduced here):
+`SchoolParameters.jsx` `register("email", {required: true, pattern: validateEmail})` passes a
+*function* (`tools/format.jsx` `validateEmail` is a matcher, not a RegExp) where react-hook-form's
+`pattern:` requires a RegExp — RHF's `x instanceof RegExp` guard rejects it, so the email
+format rule is a silent no-op. `required` still fires; a malformed address like `"not-an-email"`
+submits cleanly. The `emailRequired` key extraction is faithful; fixing the validation itself is
+out of i18n scope.
+
+This closes the `editParameters/*` React tree (lots E2 + E3). Remaining `parameters` work is
+lot F (`parameters_controller#set_base_parameters`), which needs a design decision on the
+`:général` / `:personnalisation` plugin symbol keys.
+
 ## `frontend/components/common/baseDataTable/BaseDataTable.jsx` — hardcoded French chrome leaks into English
 
 The **functional** shared data-table (`frontend/components/common/baseDataTable/`, distinct from

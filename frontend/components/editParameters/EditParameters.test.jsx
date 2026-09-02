@@ -130,15 +130,19 @@ describe("editParameters.* — i18n layer", () => {
     const FR_KEYS = flatten(fr).filter((k) => k.startsWith("editParameters."));
     const EN_KEYS = flatten(en).filter((k) => k.startsWith("editParameters."));
 
-    test("fr and en expose exactly the same editParameters.* key set (49 leaves)", () => {
+    test("fr and en expose exactly the same editParameters.* key set", () => {
         expect(new Set(EN_KEYS)).toEqual(new Set(FR_KEYS));
-        expect(FR_KEYS).toHaveLength(49);
+        // grows across sub-lots (E2: 49, E3: +34 school.* = 83). Exact total pinned in
+        // ParametersChrome.test.jsx; here just guard the floor + fr/en lock-step.
+        expect(FR_KEYS.length).toBe(EN_KEYS.length);
+        expect(FR_KEYS.length).toBeGreaterThanOrEqual(49);
     });
 
     test.each(["fr", "en"])("every editParameters.* key resolves to real, non-empty copy in %s", (lng) => {
         const t = tP(lng);
         for (const key of FR_KEYS) {
-            const v = t(key);
+            // pass every interpolation var any editParameters.* string uses
+            const v = t(key, {country: "FR", academy: "Paris"});
             expect(typeof v).toBe("string");
             expect(v.length).toBeGreaterThan(0);
             expect(v).not.toBe(key);
