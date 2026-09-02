@@ -67,12 +67,12 @@ function DragAndDrop(props) {
         let div = document.getElementById("error");
         if (fileRejections[0].errors[0].code === "file-invalid-type") {
             div.classList.remove("d-none");
-            div.innerHTML = t("editParameters.dragAndDrop.invalidType");
+            div.textContent = t("editParameters.dragAndDrop.invalidType");
         }
 
         if (fileRejections[0].errors[0].code === "too-many-files") {
             div.classList.remove("d-none");
-            div.innerHTML = t("editParameters.dragAndDrop.tooManyFiles");
+            div.textContent = t("editParameters.dragAndDrop.tooManyFiles");
         }
     }
 

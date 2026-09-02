@@ -91,10 +91,10 @@ import DragAndDrop from "./DragAndDrop";
 const tP = (lng) => i18n.getFixedT(lng, "parameters");
 const tC = (lng) => i18n.getFixedT(lng, "common");
 
-// Several label strings carry trailing / awkward whitespace ("Activer SSL/TLS: ",
-// "Authentification:", …). This @testing-library/dom's default normalizer collapses internal
-// whitespace but does NOT trim, so an exact `getByText` on the raw i18n value misses. Trim the
-// needle — the rendered node still matches.
+// Several label strings carry a trailing space ("Activer SSL/TLS: "). @testing-library/dom's
+// default text normalizer trims the *rendered* text (and collapses internal whitespace), so an
+// exact `getByText` on the raw i18n value — which still has its trailing space — misses. Trim the
+// needle too and the rendered (already-trimmed) node matches.
 const byText = (str) => screen.getByText(str.trim());
 
 // TeachersParameters' success branch calls window.location.reload() — jsdom would throw
@@ -186,14 +186,36 @@ describe("editParameters.* — i18n layer", () => {
         expect(tP(lng)("editParameters.csv.encodingRequired")).not.toBe("editParameters.csv.encodingRequired");
     });
 
-    // --- DragAndDrop.handleDropRejected writes t(...) straight into `div.innerHTML`; reaching it
-    //     needs react-dropzone's own reject path. Assert the two keys resolve. ------------------
-    test.each(["fr", "en"])("dragAndDrop.{invalidType,tooManyFiles,imageAlt,currentDocument,none} keys resolve in %s", (lng) => {
-        for (const k of ["invalidType", "tooManyFiles", "imageAlt", "currentDocument", "none"]) {
+    // --- DragAndDrop.handleDropRejected writes t(...) into `div.textContent`; reaching it needs
+    //     react-dropzone's own reject path. Assert those two keys resolve. --------------------
+    test.each(["fr", "en"])("dragAndDrop.{invalidType,tooManyFiles,imageAlt} keys resolve in %s", (lng) => {
+        for (const k of ["invalidType", "tooManyFiles", "imageAlt"]) {
             const v = tP(lng)(`editParameters.dragAndDrop.${k}`);
             expect(v.length).toBeGreaterThan(0);
             expect(v).not.toBe(`editParameters.dragAndDrop.${k}`);
         }
+    });
+
+    // Dropzone branch (no file / no url yet) — the "Select" button.
+    test.each(["fr", "en"])("Dropzone branch renders the translated select button in %s", async (lng) => {
+        await i18n.changeLanguage(lng);
+        render(<DragAndDrop acceptedTypes="application/pdf" setFile={() => {}} textDisplayed="drop here" />);
+        expect(
+            screen.getByRole("button", {name: tP(lng)("editParameters.dragAndDrop.selectButton")}),
+        ).toBeInTheDocument();
+    });
+
+    // else branch with an empty (falsy but defined) url — the "Document actuel : aucun" fallback,
+    // both keys plus the JSX-boundary space, verified against the real render.
+    test.each([
+        ["fr", "Document actuel : aucun"],
+        ["en", "Current document: none"],
+    ])("no-file fallback renders currentDocument + none in %s", async (lng, expected) => {
+        await i18n.changeLanguage(lng);
+        const {container} = render(
+            <DragAndDrop acceptedTypes="application/pdf" setFile={() => {}} textDisplayed="x" file_url="" />,
+        );
+        expect(container.querySelector("p.ml-5").textContent).toBe(expected);
     });
 });
 

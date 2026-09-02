@@ -1222,6 +1222,24 @@ dead route or a plugin-provided component (`copy_react` mirrors plugin component
 route/view was left untouched; the ERB `<h2>` heading was still extracted, the (missing) component
 was not.
 
+`frontend/components/editParameters/DragAndDrop.jsx` is a **shared** component and lot E2 makes it
+depend on the `parameters` namespace (`useTranslation("parameters")` for its own literals —
+"Sélectionner", the `handleDropRejected` messages, the "Document actuel : aucun" fallback, the img
+`alt`). It has **four** call sites across three i18n domains: `editParameters/RulesSettings.jsx`,
+`editParameters/SchoolParameters.jsx` (both `parameters`), `parameters/ActivityApplications/ConsentDocumentModal.jsx`
+(`parameters`), and `activityRef/ActivityRefBasics.jsx` (`activities` domain). Harmless today —
+`frontend/i18n/index.js` bundles every namespace eagerly — but the natural home for these strings
+is `common:`; a future lazy-namespace split would break the `activityRef` caller silently. Move to
+`common:dragAndDrop.*` in the cleanup pass. (The two `handleDropRejected` writes were also switched
+from `div.innerHTML =` to `div.textContent =` while the lines were being touched — identical output
+for these developer-authored strings, no behaviour change.)
+
+Duplicate title keys for the cleanup pass: `editParameters.csv.saveSuccessTitle` and
+`editParameters.teachers.saveSuccessTitle` are both "Succès" / "Success" — there is no
+`shared.saveSuccessTitle` yet (`shared.saveSuccess` = "Sauvegarde effectuée" is a different
+string). Add `shared.saveSuccessTitle` and collapse both (plus align `editParameters.mail.saveSuccessTitle`
+from the preserved English "Success" at the same time).
+
 ## `frontend/components/common/baseDataTable/BaseDataTable.jsx` — hardcoded French chrome leaks into English
 
 The **functional** shared data-table (`frontend/components/common/baseDataTable/`, distinct from
