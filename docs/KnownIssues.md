@@ -1287,6 +1287,14 @@ Dead code left as-is: the commented-out "Recaptcha" `<div>` block (`SchoolParame
 ~250-258) still contains French ("Score minimum requis (optionnel)") — not extracted, not a live
 string.
 
+Pre-existing code bug, note only (surfaced by the lot-E3 test's email mock, NOT introduced here):
+`SchoolParameters.jsx` `register("email", {required: true, pattern: validateEmail})` passes a
+*function* (`tools/format.jsx` `validateEmail` is a matcher, not a RegExp) where react-hook-form's
+`pattern:` requires a RegExp — RHF's `x instanceof RegExp` guard rejects it, so the email
+format rule is a silent no-op. `required` still fires; a malformed address like `"not-an-email"`
+submits cleanly. The `emailRequired` key extraction is faithful; fixing the validation itself is
+out of i18n scope.
+
 This closes the `editParameters/*` React tree (lots E2 + E3). Remaining `parameters` work is
 lot F (`parameters_controller#set_base_parameters`), which needs a design decision on the
 `:général` / `:personnalisation` plugin symbol keys.

@@ -61,12 +61,10 @@ vi.mock("../../tools/api", () => ({
     },
 }));
 
-// --- tools/format: the real `validateEmail` export is a matcher *function*; react-hook-form's
-//     `pattern:` option expects a RegExp, so stub it as one so the submit tests' email field
-//     validates and `onSubmit` fires. -----------------------------------------------------------
-vi.mock("../../tools/format", () => ({
-    validateEmail: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-}));
+// `../../tools/format` is NOT mocked: `validateEmail` is a matcher *function*, and RHF's
+// `pattern:` guard (`x instanceof RegExp`) rejects it, so the email pattern rule is a
+// production no-op (see docs/KnownIssues.md). `required` still fires, which is all the submit
+// tests below rely on.
 
 // --- components/utils: only `csrfToken` is imported by SchoolParameters. --------------------
 vi.mock("../utils", () => ({csrfToken: "test-csrf-token"}));
@@ -220,12 +218,23 @@ describe("SchoolParameters — translated render", () => {
             "postalCodeLabel",
             "countryLabel",
             "bankHolidaysZoneLabel",
+            "schoolHolidaysZoneLabel", // leading + trailing space — the one most likely to regress under a trim
             "siretRnaLabel",
             "rcsLabel",
             "vatLabel",
         ]) {
             expect(hasLabel(container, tP(lng)(`editParameters.school.${key}`))).toBe(true);
         }
+    });
+
+    test.each(["fr", "en"])("a blank required field renders its translated error <p> in %s", async (lng) => {
+        await i18n.changeLanguage(lng);
+        const {container} = render(<SchoolParameters {...baseProps} school={{...baseProps.school, name: ""}} />);
+
+        fireEvent.submit(container.querySelector("form"));
+
+        // the <p className="text-danger"> for `name` is `t("editParameters.school.nameRequired")`
+        await screen.findByText(tP(lng)("editParameters.school.nameRequired"));
     });
 
     test.each(["fr", "en"])(
