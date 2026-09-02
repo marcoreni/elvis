@@ -404,6 +404,30 @@ and `parameters/Payments/PaymentsStatus.jsx` — two more `extends BaseDataTable
 `this.state.columns` with the constructor's `t` and capture it in their boolean `Cell` closures,
 with the same live-`this.props.t`-in-`deleteStatus` mixed-language wrinkle as lot B.
 
+Same pattern again (added by i18n-06 `parameters` lot E):
+- `parameters/Evaluations/EvaluationLevels.jsx` (`extends BaseDataTable`) and
+  `parameters/Rooms/Localisations.jsx` (`extends React.Component`, own `<ReactTable>`) build
+  `this.state.columns` with the constructor's `t` and capture it in the boolean `Cell` closures;
+  both also read a live `this.props.t` in `deleteStatus` — same mixed-language wrinkle.
+- **New variant:** `Localisations.jsx` `render()` reads live `this.props.t` for the 7
+  `common:reactTable.*` pagination props while `state.columns` stays frozen from the constructor.
+  So an in-page `changeLanguage` on that table would show three states at once — frozen French
+  column headers, live-translated pagination chrome, live-translated delete dialog. First lot with
+  a live `render()` reader sitting next to frozen `state.columns`.
+- Mount-time `t` captured in api callbacks (same class as the lot-D entry further down): the
+  `useTranslation` `t` closed over by the mount `useEffect` `.error` handlers in
+  `Plannings/SchoolAvailabilities.jsx`, `Plannings/CancelActivityParameters.jsx`,
+  `Plannings/PlanningDisplayParameters.jsx`, and `Localization/LocalizationParameters.jsx`.
+All harmless today (locale switch = full server reload); logged for the same cleanup pass.
+
+`parameters/Evaluations/EvaluationSlot.jsx` — the `evaluations.slot.requiredError` key
+("Le créneau est requis" / "The slot is required") is **unreachable copy**: it is gated on
+`errors.name` while the field is registered as `sessionHour` (`register('sessionHour', …)`), so
+the react-hook-form error object never has a `name` entry and the message never renders.
+Pre-existing (identical `{errors.name && "Le créneau est requis"}` at the pre-lot-E revision);
+lot E only swapped the literal for `t(…)`. Fix is `errors.sessionHour` — do it in the cleanup
+pass, not mid-extraction. Covered by an inline comment in `PlanningsSettings.test.jsx`.
+
 ## French typos preserved verbatim during i18n extraction — clean up the locale files
 
 The i18n branches copy every French string **verbatim** into the locale files (no copy changes

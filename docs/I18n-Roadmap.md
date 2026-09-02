@@ -872,7 +872,7 @@ et à mesure de son intégration :
           `ActivityApplications/ActivityApplicationsSettings.test.jsx` (44 tests). Revue : 0 bug de
           correction ; bug pré-existant corrigé (`res` non lié dans un callback `.error` de
           `ApplicationStepParameters`).
-    - [x] **Lot E — composants feuilles restants** — branche `feature/i18n-06-parameters-lot-e` (`2a3eecb`), PR #46. 10 comp : `Plannings/*` (SchoolAvailabilities, TeacherAvailabilities,
+    - [x] **Lot E — composants feuilles restants** — branche `feature/i18n-06-parameters-lot-e` (`582a060`), PR #46. 10 comp : `Plannings/*` (SchoolAvailabilities, TeacherAvailabilities,
           CancelActivityParameters, PlanningDisplayParameters — tous `useTranslation`),
           `Evaluations/*` (EvaluationLevels `class extends BaseDataTable` → `withTranslation` ;
           EvaluationSlot `useTranslation`), `Rooms/Localisations` (`class extends React.Component`,
