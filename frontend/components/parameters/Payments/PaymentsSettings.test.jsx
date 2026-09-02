@@ -190,12 +190,18 @@ describe("parameters shared.* + payments.* — i18n layer", () => {
 
     test("fr and en expose exactly the same shared.* + payments.* key set", () => {
         expect(new Set(EN_KEYS)).toEqual(new Set(FR_KEYS));
-        // shared (7) + payments.tabs (5, lot A) + payments non-tabs (45, lot C) = 57
-        expect(FR_KEYS).toHaveLength(57);
+        // shared grows across lots (C: 7, D: +colLabel = 8, …); payments is stable at 50
+        // (tabs 5 lot A + non-tabs 45 lot C). Guard the payments count exactly, shared loosely.
+        expect(flatten({payments: fr.payments})).toHaveLength(50);
+        expect(flatten({x: fr.shared}).length).toBeGreaterThanOrEqual(7);
     });
 
-    test("the lot-C additions are present: 7 shared.* + 45 non-tab payments.*", () => {
-        expect(flatten({x: fr.shared})).toHaveLength(7);
+    test("the lot-C additions are present: shared.* atoms + 45 non-tab payments.*", () => {
+        for (const k of [
+            "actions", "yes", "no", "errorTitle", "deleteConfirmYes", "deleteConfirmNo", "genericError",
+        ]) {
+            expect(fr.shared).toHaveProperty(k);
+        }
         const paymentsNonTabs = flatten({payments: fr.payments}).filter(
             (k) => !k.startsWith("payments.tabs."),
         );

@@ -15,6 +15,45 @@
         "stepDesc": {
             "pricing": "Message tarifs",
             "availability": "Message disponibilités"
+        },
+        "settings": {
+            "loadError": "Erreur lors du chargement des paramètres",
+            "saveSuccess": "Sauvegarde effectuée",
+            "saveError": "Erreur lors de la sauvegarde",
+            "defaultStatusHeading": "Statut d'inscription par défaut",
+            "defaultStatusHint": "Le statut sélectionné sera le statut par défaut pour les nouvelles inscriptions.",
+            "autoAssignHeading": "Attribution automatique du statut cours attribué",
+            "enableLabel": "Activer"
+        },
+        "stepParams": {
+            "loadError": "Une erreur est survenue lors du chargement des paramètres du parcours d'inscription",
+            "saveError": "Une erreur est survenue lors de la sauvegarde des paramètres du parcours d'inscription",
+            "saveSuccess": "Les paramètres du parcours d'inscription ont été sauvegardés avec succès.",
+            "showTextLabel": "Afficher le texte"
+        },
+        "consentModal": {
+            "requiredError": "requis",
+            "title": "Edition d'un document de consentement",
+            "titleLabel": "Titre du document",
+            "titlePlaceholder": "Titre",
+            "contentLabel": "Renseignez votre texte",
+            "contentPlaceholder": "Texte à faire valider par vos élèves",
+            "schoolNameHint": "Le texte {schoolName} sera remplacé par le nom de votre établissement.",
+            "attachedFileLabel": "Fichier joint : ",
+            "dropPdfText": "Pour ajouter un PDF, déposez un fichier ici",
+            "consentCheckboxLabel": "Pour passer à l'étape suivante, l'élève doit donner son consentement",
+            "consentExtraTitle": "Le consentement est-il nécessaire ?"
+        },
+        "consentList": {
+            "fetchError": "Erreur lors de la récupération des données",
+            "deleteError": "Erreur lors de la suppresion",
+            "intro": "Ajoutez des documents à faire valider à vos élèves avant leur inscription. Renseignez les documents ci-dessous.",
+            "addButton": "Ajouter un document"
+        },
+        "statusTable": {
+            "colStopping": "Arrêt ?",
+            "colActive": "Actif ?",
+            "deleteConfirm": "Voulez-vous vraiment supprimer le status '{{name}}' ?"
         }
     },
     "community": {
@@ -170,6 +209,7 @@
         "errorTitle": "Erreur",
         "deleteConfirmYes": "oui",
         "deleteConfirmNo": "non",
-        "genericError": "Une erreur est survenue. Contactez un administrateur"
+        "genericError": "Une erreur est survenue. Contactez un administrateur",
+        "colLabel": "Libellé"
     }
 }

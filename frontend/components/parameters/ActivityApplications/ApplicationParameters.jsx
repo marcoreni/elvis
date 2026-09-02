@@ -2,8 +2,10 @@ import React, { Fragment, useEffect } from "react";
 import { useState } from "react";
 import * as api from "../../../tools/api";
 import swal from "sweetalert2";
+import {useTranslation} from "react-i18next";
 
 export default function ApplicationParameters() {
+    const {t} = useTranslation("parameters");
     const [isLoading, setIsLoading] = useState(true);
     const [parameters, setParameters] = useState([]);
     const [selectedParameter, setSelectedParameter] = useState(0);
@@ -19,7 +21,7 @@ export default function ApplicationParameters() {
             })
             .error(() => {
                 swal({
-                    title: "Erreur lors du chargement des paramètres",
+                    title: t("activityApplications.settings.loadError"),
                     type: "error",
                 });
             })
@@ -30,10 +32,10 @@ export default function ApplicationParameters() {
         api.set()
             .useLoading()
             .success(() => {
-                swal({ title: "Sauvegarde effectuée", type: "success" });
+                swal({ title: t("activityApplications.settings.saveSuccess"), type: "success" });
             })
             .error(() => {
-                swal({ title: "Erreur lors de la sauvegarde", type: "error" });
+                swal({ title: t("activityApplications.settings.saveError"), type: "error" });
             })
             .post(
                 "/set_activity_application_parameters",
@@ -54,14 +56,14 @@ export default function ApplicationParameters() {
     };
 
     if (isLoading) {
-        return <div>Loading...</div>;
+        return <div>{t("common:loading")}</div>;
     }
 
     return (
         <Fragment>
             <div className="row">
                 <div className="col-md-5">
-                    <h3>Statut d'inscription par défaut</h3>
+                    <h3>{t("activityApplications.settings.defaultStatusHeading")}</h3>
                     <div className="form-group mb-3">
                         <select
                             className="form-control"
@@ -75,8 +77,7 @@ export default function ApplicationParameters() {
                             ))}
                         </select>
                         <p className="mt-3">
-                            Le statut sélectionné sera le statut par défaut pour les nouvelles
-                            inscriptions.
+                            {t("activityApplications.settings.defaultStatusHint")}
                         </p>
                     </div>
                 </div>
@@ -85,7 +86,7 @@ export default function ApplicationParameters() {
             {/* Section auto attribution placée au-dessus du bouton */}
             <div className="row mt-3">
                 <div className="col-md-5">
-                    <h3>Attribution automatique du statut cours attribué</h3>
+                    <h3>{t("activityApplications.settings.autoAssignHeading")}</h3>
                     <div className="form-group form-check mb-3">
                         <input
                             type="checkbox"
@@ -96,7 +97,7 @@ export default function ApplicationParameters() {
                             style={{ marginRight: "1rem" }}
                         />
                         <label className="form-check-label" htmlFor="autoAssignCheck">
-                             Activer
+                            {t("activityApplications.settings.enableLabel")}
                         </label>
                     </div>
                 </div>
@@ -108,7 +109,7 @@ export default function ApplicationParameters() {
                         className="btn btn-success pull-right mt-5"
                         onClick={onSubmit}
                     >
-                        Valider
+                        {t("common:actions.validate")}
                     </button>
                 </div>
             </div>

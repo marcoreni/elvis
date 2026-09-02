@@ -4,6 +4,7 @@ import { makeDebounce } from "../../../tools/inputs";
 import moment from "moment";
 import ReactTable from "react-table";
 import swal from "sweetalert2";
+import {withTranslation} from "react-i18next";
 
 const requestData = (pageSize, page, sorted, filtered, format) => {
     return fetch(
@@ -36,7 +37,7 @@ const debounce = makeDebounce();
             <i class="fas fa-plus"></i> Créer un nouveau statut
         <%# end %>
  */
-export default class ApplicationStatusTable extends Component {
+class ApplicationStatusTable extends Component {
     constructor(props) {
         super(props);
 
@@ -80,6 +81,7 @@ export default class ApplicationStatusTable extends Component {
     }
 
     render() {
+        const {t} = this.props;
         const { data, pages, loading } = this.state;
 
         const columns = [
@@ -90,28 +92,28 @@ export default class ApplicationStatusTable extends Component {
             },
             {
                 id: "label",
-                Header: "Libellé",
+                Header: t("shared.colLabel"),
                 accessor: d => d.label,
             },
             {
                 id: "is_stopping",
-                Header: "Arrêt ?",
+                Header: t("activityApplications.statusTable.colStopping"),
                 accessor: d => d.is_stopping,
                 Cell: props => (
-                    <p>{props.original.is_stopping ? "Oui" : "Non"}</p>
+                    <p>{props.original.is_stopping ? t("shared.yes") : t("shared.no")}</p>
                 ),
             },
             {
                 id: "is_active",
-                Header: "Actif ?",
+                Header: t("activityApplications.statusTable.colActive"),
                 accessor: d => d.is_active,
                 Cell: props => (
-                    <p>{props.original.is_active ? "Oui" : "Non"}</p>
+                    <p>{props.original.is_active ? t("shared.yes") : t("shared.no")}</p>
                 ),
             },
             {
                 id: "actions",
-                Header: "Actions",
+                Header: t("shared.actions"),
                 Cell: props => {
                     return props.original.built_in ? "" :
                         <div className="btn-wrapper">
@@ -160,13 +162,13 @@ export default class ApplicationStatusTable extends Component {
                         }
                     }}
                     resizable={false}
-                    previousText="Précédent"
-                    nextText="Suivant"
-                    loadingText="Chargement..."
-                    noDataText="Aucune donnée"
-                    pageText="Page"
-                    ofText="sur"
-                    rowsText="résultats"
+                    previousText={t("common:reactTable.previousText")}
+                    nextText={t("common:reactTable.nextText")}
+                    loadingText={t("common:reactTable.loadingText")}
+                    noDataText={t("common:reactTable.noDataText")}
+                    pageText={t("common:reactTable.pageText")}
+                    ofText={t("common:reactTable.ofText")}
+                    rowsText={t("common:reactTable.rowsText")}
                     minRows={1}
                 />
             </Fragment>
@@ -174,15 +176,13 @@ export default class ApplicationStatusTable extends Component {
     }
 
     deleteStatus(status) {
+        const {t} = this.props;
         swal({
-            title:
-                "Voulez-vous vraiment supprimer le status '" +
-                status.label +
-                "' ?",
+            title: t("activityApplications.statusTable.deleteConfirm", {name: status.label}),
             type: "warning",
             showCancelButton: true,
-            cancelButtonText: "non",
-            confirmButtonText: "oui",
+            cancelButtonText: t("shared.deleteConfirmNo"),
+            confirmButtonText: t("shared.deleteConfirmYes"),
         }).then(res => {
             if (res.value) {
                 fetch(`/activity_application_statuses/${status.id}`, {
@@ -199,7 +199,7 @@ export default class ApplicationStatusTable extends Component {
                     } else {
                         result.text().then(text => {
                             swal({
-                                title: "Erreur",
+                                title: t("shared.errorTitle"),
                                 type: "error",
                                 text: text,
                             });
@@ -210,3 +210,5 @@ export default class ApplicationStatusTable extends Component {
         });
     }
 }
+
+export default withTranslation("parameters")(ApplicationStatusTable);

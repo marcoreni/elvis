@@ -4,8 +4,10 @@ import swal from "sweetalert2";
 import {toast} from "react-toastify";
 import {EditorState, convertToRaw, convertFromRaw, ContentState} from 'draft-js';
 import {Editor} from 'react-draft-wysiwyg';
+import {useTranslation} from "react-i18next";
 
 export default function ApplicationStepParameters({parameter_label, desc}) {
+    const {t} = useTranslation("parameters");
     const [editorState, setEditorState] = useState(() => EditorState.createEmpty());
     const [visibilityActivated, setVisibilityActivated] = useState(false);
     const [init, setInit] = useState(true);
@@ -29,7 +31,7 @@ export default function ApplicationStepParameters({parameter_label, desc}) {
                 }
             })
             .error(err => {
-                swal("Une erreur est survenue lors du chargement des paramètres du parcours d'inscription", res.error, "error");
+                swal(t("activityApplications.stepParams.loadError"), err.error, "error");
             })
             .get(`activity_application_parameters/get_application_step_parameters/${parameter_label}`, {});
     }, []);
@@ -38,7 +40,7 @@ export default function ApplicationStepParameters({parameter_label, desc}) {
         if (!init) {
             api.set()
                 .error(res => {
-                    swal("Une erreur est survenue lors de la sauvegarde des paramètres du parcours d'inscription", res.error, "error");
+                    swal(t("activityApplications.stepParams.saveError"), res.error, "error");
                 })
                 .post("activity_application_parameters/change_activated_param", {parameter_label: parameter_label, activated: visibilityActivated});
         }
@@ -47,10 +49,10 @@ export default function ApplicationStepParameters({parameter_label, desc}) {
     const onSaveDisplayText = () => {
         api.set()
             .success(res => {
-                toast.success("Les paramètres du parcours d'inscription ont été sauvegardés avec succès.");
+                toast.success(t("activityApplications.stepParams.saveSuccess"));
             })
             .error(res => {
-                swal("Une erreur est survenue lors de la sauvegarde des paramètres du parcours d'inscription", res.error, "error");
+                swal(t("activityApplications.stepParams.saveError"), res.error, "error");
             })
             .post("activity_application_parameters/change_display_text_param", {parameter_label: parameter_label, display_text: JSON.stringify(convertToRaw(editorState.getCurrentContent()))});
     }
@@ -67,7 +69,7 @@ export default function ApplicationStepParameters({parameter_label, desc}) {
                     checked={visibilityActivated}
                     onChange={(e) => setVisibilityActivated(e.target.checked)}
                 />
-                <label htmlFor={`${parameter_label}.paymentScheduleOptionsActivated`}>Afficher le texte</label>
+                <label htmlFor={`${parameter_label}.paymentScheduleOptionsActivated`}>{t("activityApplications.stepParams.showTextLabel")}</label>
             </div>
         </div>
 
@@ -95,7 +97,7 @@ export default function ApplicationStepParameters({parameter_label, desc}) {
                 </div>
 
                 <div className="text-right">
-                    <button className="btn btn-primary" type="submit">Enregistrer</button>
+                    <button className="btn btn-primary" type="submit">{t("common:actions.save")}</button>
                 </div>
             </form>
         </div>
