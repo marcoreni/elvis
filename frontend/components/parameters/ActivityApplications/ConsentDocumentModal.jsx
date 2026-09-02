@@ -25,12 +25,13 @@ export default function ConsentDocumentModal({document, isOpen, isFetching, onRe
         <Modal
             isOpen={isOpen}
             onRequestClose={onRequestClose}
+            contentLabel={t("activityApplications.consentModal.title")}
         >
             <div className="modal-header">
                 <h3 className="modal-title">{t("activityApplications.consentModal.title")}</h3>
                 <button type="button"
                         className="close"
-                        aria-label="Close"
+                        aria-label={t("common:actions.close")}
                         onClick={onRequestClose}>
                     <span aria-hidden="true">&times;</span>
                 </button>

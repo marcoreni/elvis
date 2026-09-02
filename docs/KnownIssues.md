@@ -1044,6 +1044,20 @@ The 4 scaffold ERBs `app/views/parameters/activity_application_parameters/{edit,
 are Rails-generated English placeholders ("Find me in app/views/…") and are deliberately left
 unextracted, like the payments lot-1 scaffold error blocks.
 
+Frozen-at-mount `t` (same class as the `ActivityRefBasics.fetchSeasonsAndPricings` entry above,
+equally benign — locale switch is a full server reload): the `useTranslation` `t` captured by the
+mount-time api callbacks in `ApplicationParameters.jsx` (`useEffect` `.error`),
+`ApplicationStepParameters.jsx`, and `ConsentDocumentsList.jsx` (`fetchDocuments` / `handleMoveUp`
+/ `handleMoveDown` `.error` closures) won't follow a later in-page `changeLanguage`. Note the
+contrast: `ApplicationStatusTable.jsx` rebuilds its `columns` (and their `Header`/`Cell` `t(…)`)
+inside `render()`, so it is **not** affected.
+
+`ConsentDocumentModal.jsx` had `aria-label="Close"` hardcoded (English, in an otherwise-French
+modal) and no react-modal `contentLabel` (runtime warning). Lot D extracted the `aria-label` to a
+new `common:actions.close` ("Fermer" / "Close") and set `contentLabel` to the modal's own title
+key. Recorded because it is a behaviour change (accessible name now localised) beyond a plain
+string swap.
+
 ## `frontend/components/common/baseDataTable/BaseDataTable.jsx` — hardcoded French chrome leaks into English
 
 The **functional** shared data-table (`frontend/components/common/baseDataTable/`, distinct from

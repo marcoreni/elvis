@@ -841,20 +841,37 @@ et à mesure de son intégration :
           `frontend/i18n/index.js` + `index.test.js`. `frontend/locales/{fr,en}/parameters.json` =
           28 feuilles. `ParametersChrome.test.jsx` (23 tests). Revue : 0 bug de correction ;
           suivis consignés (voir ci-dessous).
-    - [ ] **Lot B — `Practice/*`** : BandsType, Features, FlatRate, Groups, Instruments (2e tableau
-          « Instruments » distinct de celui d'activities lot 1, colonnes `#`/`Nom`/`Actif ?`/
-          `Actions`), Materials, MusicGenres + `pratice_parameters/index.html.erb`. (PracticeParameters
-          fait en lot A.)
-    - [ ] **Lot C — `Payments/*`** (8 comp) : AdhesionSettings, AdhesionEditModal, Coupons,
-          CouponFormContent, CouponsActionButtons, EditPaymentScheduleOptions, PaymentsMethods,
-          PaymentsStatus + `payments_parameters/index.html.erb`. Clés sous
-          `parameters`, PAS sous le namespace `payments` (domaine distinct : réglages vs écrans).
-          (PaymentsParameters + les tab labels faits en lot A.)
-    - [ ] **Lot D — `ActivityApplications/*`** (5 comp) : ApplicationParameters,
-          ApplicationStatusTable, ApplicationStepParameters, ConsentDocumentModal,
-          ConsentDocumentsList + les 5 ERB
-          `activity_application_parameters/{index,edit,show,update,destroy}.html.erb`.
-          (ActivityApplicationsParameters + tab labels + `stepDesc.*` faits en lot A.)
+    - [x] **Lot B — `Practice/*`** — branche `feature/i18n-06-parameters-lot-b` (`6399bba` +
+          `52e30f5`), PR #43. Les 7 tableaux CRUD (BandsType, Features, FlatRate, Groups,
+          Instruments — 2e « Instruments » distinct d'activities lot 1 —, Materials, MusicGenres),
+          tous `class extends BaseDataTable` → `withTranslation("parameters")`, `props.t` pour les
+          `Header` + cellules Oui/Non, `const {t} = this.props` dans `deleteStatus`. `#` laissé
+          littéral. +23 feuilles `parameters:practice.{cols,delete,yes,no,errorTitle}` → 51.
+          `Practice/PracticeTables.test.jsx`. Pas de chaîne dans `pratice_parameters/index.html.erb`
+          (juste `react_component`). Revue : 0 bug ; suivis consignés.
+    - [x] **Lot C — `Payments/*`** — branche `feature/i18n-06-parameters-lot-c` (`80b393b` +
+          `12de21a`), PR #44. 8 comp : PaymentsMethods/PaymentsStatus (`class extends BaseDataTable`
+          → `withTranslation`), CouponFormContent (`class extends React.Component` → `withTranslation`),
+          Coupons/AdhesionSettings/AdhesionEditModal/EditPaymentScheduleOptions (`useTranslation`),
+          CouponsActionButtons (aucune chaîne). Nouveau bloc racine `parameters:shared.*` (atomes
+          transverses) + `parameters:payments.*` → 103 feuilles. Réutilise
+          `common:actions.{cancel,save,add,delete}` + `common:confirm.sure`. Pas de chaîne dans
+          `payments_parameters/index.html.erb`. `Payments/PaymentsSettings.test.jsx`. Revue : 0 bug ;
+          nouvelle entrée KnownIssues pour le `common/baseDataTable/BaseDataTable.jsx` fonctionnel
+          (chrome FR en dur, 3 sites d'appel).
+    - [x] **Lot D — `ActivityApplications/*`** — branche `feature/i18n-06-parameters-lot-d`
+          (`23a24e3`), PR #45. 5 comp : ApplicationStatusTable (`class extends Component`, sa propre
+          `<ReactTable>` → `withTranslation`, props pagination → `common:reactTable.*`),
+          ApplicationParameters/ApplicationStepParameters/ConsentDocumentModal/ConsentDocumentsList
+          (`useTranslation`). +30 feuilles `parameters:activityApplications.{settings,stepParams,
+          consentModal,consentList,statusTable}.*` + `shared.colLabel` → 133. Réutilise
+          `common:loading` (correctif incident d'un « Loading... » en dur), `common:actions.{validate,
+          save,cancel,close}` (nouveau `close`). **Seul `activity_application_parameters/index.html.erb`
+          extrait** (`views.parameters.activity_application_parameters.index.heading`) — les 4 autres
+          ERB du dossier sont des placeholders scaffold Rails (« Find me in… »), laissés tels quels.
+          `ActivityApplications/ActivityApplicationsSettings.test.jsx` (44 tests). Revue : 0 bug de
+          correction ; bug pré-existant corrigé (`res` non lié dans un callback `.error` de
+          `ApplicationStepParameters`).
     - [ ] **Lot E — le reste** : `Plannings/*` (4 : SchoolAvailabilities, TeacherAvailabilities,
           CancelActivityParameters, PlanningDisplayParameters), `Evaluations/*` (2 : EvaluationLevels,
           EvaluationSlot), `Rooms/*` (1 : Localisations), `Localization/*` (1, a déjà un `.test.jsx`),
