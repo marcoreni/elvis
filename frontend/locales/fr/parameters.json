@@ -3,6 +3,14 @@
         "heading": "Paramétrage des catégories de prix",
         "tabs": {
             "pricingCategories": "Catégories de prix"
+        },
+        "pricing": {
+            "createButton": "Créer une catégorie de prix",
+            "categoryName": "Nom de la catégorie de prix",
+            "lessonsCount": "Nombre de leçons",
+            "isPack": "Est un pack ?",
+            "oneResourceTypeName": "une catégorie de prix",
+            "thisResourceTypeName": "cette catégorie de prix"
         }
     },
     "activityApplications": {
@@ -65,6 +73,18 @@
         "tabs": {
             "levels": "Niveaux d'évaluation",
             "slot": "Créneau d'évaluation"
+        },
+        "levels": {
+            "colValue": "Valeur",
+            "colCanContinue": "Peut continue ?",
+            "deleteConfirm": "Voulez-vous vraiment supprimer l'instrument '{{name}}' ?"
+        },
+        "slot": {
+            "loadingTitle": "chargement...",
+            "saveSuccess": "Enregistrement effectué",
+            "genericError": "Une erreur est survenue",
+            "durationLabel": "Durée d'un créneau d'évaluation (en minutes) * :",
+            "requiredError": "Le créneau est requis"
         }
     },
     "payments": {
@@ -157,6 +177,27 @@
             "teachers": "Professeurs",
             "cancelActivity": "Annulation des cours",
             "displaySettings": "Paramètres d'affichage"
+        },
+        "schoolAvailabilities": {
+            "fetchError": "Erreur lors de la récupération des disponibilités",
+            "heading": "Gestion des horaires de votre école",
+            "hint": "(si il y en a, ceux-ci seront proposés par défaut aux élèves lors de leur inscription)"
+        },
+        "teacherAvailabilities": {
+            "heading": "Disponibilité",
+            "checkboxLabel": "Créer un créneau de disponibilité avant la création d'un cours"
+        },
+        "cancelActivity": {
+            "heading": "Nombre d'heures",
+            "hint": "En dessous de ce nombre d'heures il sera impossible pour l'élève d'annuler son cours."
+        },
+        "displayParams": {
+            "heading": "Paramètres d'affichage des plannings",
+            "showActivityCodeLabel": "Afficher le code de l'activité",
+            "recurrenceLabel": "Permettre la récurrence des disponibilités",
+            "availabilityMessageLabel": "Message de disponibilités affiché aux élèves",
+            "saveSuccess": "Paramètres modifiés",
+            "saveError": "Erreur lors de la modification des paramètres"
         }
     },
     "practice": {
@@ -200,6 +241,10 @@
     "rooms": {
         "tabs": {
             "siteList": "Liste des sites"
+        },
+        "localisations": {
+            "colSite": "Site",
+            "deleteConfirm": "Voulez-vous vraiment supprimer la localisation '{{name}}' ?"
         }
     },
     "shared": {
@@ -210,6 +255,18 @@
         "deleteConfirmYes": "oui",
         "deleteConfirmNo": "non",
         "genericError": "Une erreur est survenue. Contactez un administrateur",
-        "colLabel": "Libellé"
+        "colLabel": "Libellé",
+        "colName": "Nom",
+        "loadParamsError": "Erreur lors du chargement des paramètres",
+        "saveSuccess": "Sauvegarde effectuée",
+        "saveError": "Erreur lors de la sauvegarde",
+        "saveButton": "Sauvegarder"
+    },
+    "localization": {
+        "defaultMustBeAvailable": "La langue par défaut doit faire partie des langues disponibles",
+        "availableHeading": "Langues disponibles",
+        "availableHint": "Les langues proposées aux utilisateurs de cette installation.",
+        "defaultHeading": "Langue par défaut",
+        "defaultHint": "Langue utilisée par défaut pour les invités et les nouveaux comptes."
     }
 }

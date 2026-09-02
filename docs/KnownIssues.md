@@ -1058,6 +1058,80 @@ new `common:actions.close` ("Fermer" / "Close") and set `contentLabel` to the mo
 key. Recorded because it is a behaviour change (accessible name now localised) beyond a plain
 string swap.
 
+`frontend/locales/fr/parameters.json` + `config/locales/{fr,en}.yml` (added by
+feature/i18n-06-parameters-lot-e — `parameters` lot E, the leaf components under `Plannings/`,
+`Evaluations/`, `Rooms/`, `Localization/`, `Activities/`: `SchoolAvailabilities`,
+`TeacherAvailabilities`, `CancelActivityParameters`, `PlanningDisplayParameters`,
+`EvaluationLevels`, `EvaluationSlot`, `Localisations`, `LocalizationParameters`,
+`PricingCategoriesEdit`, `PricingCategoryFormContent` + 3 tab/index ERBs). Preserved verbatim:
+
+- **`evaluations.levels.deleteConfirm` — user-facing WRONG NOUN, higher priority than a typo.**
+  "Voulez-vous vraiment supprimer **l'instrument** '{{name}}' ?" in the evaluation-levels delete
+  dialog (`EvaluationLevels.jsx`) — this table manages evaluation levels, not instruments; the
+  string is a copy-paste from the instruments table (`practice.delete.instrument` is the same
+  sentence). Preserved verbatim in FR **and mirrored in EN** ("Do you really want to delete the
+  instrument '{{name}}'?") so the two locales stay in step. This one should be **corrected**
+  (FR → "…supprimer le niveau d'évaluation '…' ?", EN → "…delete the evaluation level '…'?") in
+  the cleanup pass, not merely normalised.
+- `evaluations.levels.colCanContinue` — "Peut **continue** ?" → "Peut **continuer** ?" (missing
+  final `r`). ReactTable header from `EvaluationLevels.jsx`. Preserved verbatim; EN side
+  ("Can continue?") is clean.
+- `evaluations.slot.loadingTitle` — "**chargement...**" (lowercase `c`, no accent, trailing
+  `...`). A sweetalert2 loading-title from `EvaluationSlot.jsx`. Preserved verbatim; note the
+  inconsistency with the sentence-case swal titles elsewhere in the same file
+  ("Enregistrement effectué", "Une erreur est survenue"). EN "loading...".
+- `plannings.schoolAvailabilities.hint` — "(**si il** y en a, …)" → "(**s'il** y en a, …)"
+  (elision). Preserved verbatim from `SchoolAvailabilities.jsx`; EN side is clean.
+
+Three "save" verbs now coexist in this namespace, all verbatim from different components — a
+consolidation candidate for the cleanup pass:
+- `common:actions.save` = "Enregistrer" (`EvaluationSlot.jsx` submit, `LocalizationParameters.jsx`
+  submit).
+- `common:actions.validate` = "Valider" (used as a **save** button in `CancelActivityParameters.jsx`
+  and `PlanningDisplayParameters.jsx`).
+- `shared.saveButton` = "Sauvegarder" (`TeacherAvailabilities.jsx` submit) — kept as its own key
+  because the source really uses a third verb here.
+
+Duplicate keys promoted / to be folded in the cleanup pass:
+- `shared.colName` = "Nom" (lot E) duplicates `practice.cols.name` (lot B) — both "Nom" / "Name".
+- `shared.loadParamsError` / `shared.saveSuccess` / `shared.saveError` (lot E) are the same
+  strings as `activityApplications.settings.{loadError,saveSuccess,saveError}` (lot D) —
+  "Erreur lors du chargement des paramètres" / "Sauvegarde effectuée" / "Erreur lors de la
+  sauvegarde". Lot E promotes them to `shared.*`; the lot-D copies are left in place until the
+  cleanup pass migrates lot B's `practice.cols.name` and lot D's `settings.*` onto `shared.*`.
+
+Incidental fix, recorded not as a defect: `LocalizationParameters.jsx` previously returned a
+hardcoded English `<div>Loading...</div>` in its loading branch (showed literally "Loading..."
+even in FR mode). Lot E swaps it for `t("common:loading")` → "Chargement..." (FR) / "Loading..."
+(EN). Same class as the lot-D `ApplicationParameters.jsx` incidental fix.
+
+Not a defect, noted so a later reader does not "fix" it: `LOCALE_LABELS = {fr: "Français",
+en: "English"}` in `LocalizationParameters.jsx` is left hardcoded — these are language endonyms
+(each language's name for itself), not translatable UI copy.
+
+`config/locales/{fr,en}.yml` — 3 new `views.parameters.*` index blocks, verbatim from the ERB
+headings: `planning_parameters.index.heading` "Paramétrage du planning" / "Schedule settings";
+`rooms_parameters.index.heading` "Liste des sites" / "List of locations" +
+`rooms_parameters.index.new_site` "Créer un nouveau site" / "Create a new location";
+`localization_parameters.index.heading` "Langues" / "Languages". All clean, no defects.
+
+Traceability — extraction-script bug caught in review: the lot-E commit's `parameters.json` edit
+`replace`d the whole `plannings` and `evaluations` objects (same class of bug as lot C's
+`payments` replacement), dropping lot A's `plannings.tabs.*` (4) and `evaluations.tabs.*` (2).
+`PlanningsParameters.jsx` / `EvaluationsParameters.jsx` (lot A, merged) still call
+`t("plannings.tabs.*")` / `t("evaluations.tabs.*")` for their tab labels. Restored verbatim from
+lot A in **both** locales during the lot-E translation pass (fr: "Disponibilité de l'école" /
+"Professeurs" / "Annulation des cours" / "Paramètres d'affichage" / "Niveaux d'évaluation" /
+"Créneau d'évaluation"). Final leaf count 172, not 166. **Do not use `d["<section>"] = OrderedDict(...)`
+to add keys to an existing namespace section — merge into it.**
+
+The scaffold-style standalone `*_parameters_edit.html.erb` (`school`, `teachers`, `rules`, `mails`,
+`csv`, `formules`) and the `frontend/components/editParameters/*` React subtree they mount were
+scoped OUT of lot E — they are a distinct area (advanced-settings screens), deferred to a
+follow-up "parameters lot E2 / editParameters" pass. Their `<h2>`/`<h1>` page headings
+("Paramétrage des droits des professeurs", "Règlement intérieur", "Paramètres avancés : Mails",
+"Paramètres avancés : Exports CSV", "Paramètres : Formules", "Pas de nom" fallback) remain in FR.
+
 ## `frontend/components/common/baseDataTable/BaseDataTable.jsx` — hardcoded French chrome leaks into English
 
 The **functional** shared data-table (`frontend/components/common/baseDataTable/`, distinct from

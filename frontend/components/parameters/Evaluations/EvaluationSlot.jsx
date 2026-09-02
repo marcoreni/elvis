@@ -3,8 +3,10 @@ import { useForm } from "react-hook-form";
 import swal from "sweetalert2";
 import { csrfToken } from "../../utils";
 import * as api from "../../../tools/api";
+import {useTranslation} from "react-i18next";
 
 export default function EvaluationSlot(props) {
+    const {t} = useTranslation("parameters");
 
     const { register, formState: { errors }, handleSubmit } = useForm();
     const [sessionHour,setSessionHour] = useState(null)
@@ -31,7 +33,7 @@ export default function EvaluationSlot(props) {
 
 
         swal({
-            title: "chargement...",
+            title: t("evaluations.slot.loadingTitle"),
             onOpen: () => swal.showLoading()
         });
 
@@ -47,13 +49,13 @@ export default function EvaluationSlot(props) {
                 res.json().then(json => {
                     swal({
                         type: "success",
-                        title: "Enregistrement effectué"
+                        title: t("evaluations.slot.saveSuccess")
                     });
                 });
             } else {
                 swal({
                     type: "error",
-                    title: "Une erreur est survenue"
+                    title: t("evaluations.slot.genericError")
                 })
             }
         });
@@ -68,17 +70,17 @@ export default function EvaluationSlot(props) {
                 <div className="col-sm-12">
                     <div className="form-group">
                         <div className="col-sm-8">
-                            <label>Durée d'un créneau d'évaluation (en minutes) * :</label>
+                            <label>{t("evaluations.slot.durationLabel")}</label>
                             <input className="form-control" type="text" name="sessionHour"  {...register('sessionHour', { required: true })}
                                 defaultValue={sessionHour} />
-                            <p className="text-danger">{errors.name && "Le créneau est requis"}</p>
+                            <p className="text-danger">{errors.name && t("evaluations.slot.requiredError")}</p>
                         </div>
                     </div>
                 </div>
             </div>
             <div className="row">
                 <div className="col-sm-12">
-                    <input type="submit" value="Enregistrer" className="btn text-white black-bg" />
+                    <input type="submit" value={t("common:actions.save")} className="btn text-white black-bg" />
                 </div>
             </div>
             </div>

@@ -1,13 +1,15 @@
 import BaseDataTable from "../BaseDataTable";
 import React from "react";
+import {withTranslation} from "react-i18next";
 import swal from "sweetalert2";
 import {csrfToken} from "../../utils";
 
-export default class EvaluationLevels extends BaseDataTable
+class EvaluationLevels extends BaseDataTable
 {
     constructor(props)
     {
         super(props);
+        const {t} = props;
 
         this.state.columns = [
             {
@@ -17,23 +19,23 @@ export default class EvaluationLevels extends BaseDataTable
             },
             {
                 id: "label",
-                Header: "Nom",
+                Header: t("shared.colName"),
                 accessor: d => d.label,
             },
             {
                 id: "value",
-                Header: "Valeur",
+                Header: t("evaluations.levels.colValue"),
                 accessor: d => d.value,
             },
             {
                 id: "can_continue",
-                Header: "Peut continue ?",
+                Header: t("evaluations.levels.colCanContinue"),
                 accessor: d => d.active,
-                Cell: props => <p>{props.original.can_continue ? "Oui" : "Non"}</p>
+                Cell: props => <p>{props.original.can_continue ? t("shared.yes") : t("shared.no")}</p>
             },
             {
                 id: "actions",
-                Header: "Actions",
+                Header: t("shared.actions"),
                 Cell: props => {
                     return (
                         <div className="btn-wrapper">
@@ -57,12 +59,13 @@ export default class EvaluationLevels extends BaseDataTable
 
     deleteStatus(status)
     {
+        const {t} = this.props;
         swal({
-            title: "Voulez-vous vraiment supprimer l'instrument '" + status.label + "' ?",
+            title: t("evaluations.levels.deleteConfirm", {name: status.label}),
             type: "warning",
             showCancelButton: true,
-            cancelButtonText: "non",
-            confirmButtonText: 'oui'
+            cancelButtonText: t("shared.deleteConfirmNo"),
+            confirmButtonText: t("shared.deleteConfirmYes")
         }).then(res =>
         {
             if(res.value)
@@ -88,7 +91,7 @@ export default class EvaluationLevels extends BaseDataTable
                             result.text().then(text =>
                             {
                                 swal({
-                                    title: "Erreur",
+                                    title: t("shared.errorTitle"),
                                     type: "error",
                                     text: text
                                 })
@@ -99,3 +102,5 @@ export default class EvaluationLevels extends BaseDataTable
         });
     }
 }
+
+export default withTranslation("parameters")(EvaluationLevels);

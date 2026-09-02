@@ -300,6 +300,16 @@ en:
             activity_application_parameters:
                 index:
                     heading: Enrollment settings
+            planning_parameters:
+                index:
+                    heading: Schedule settings
+            rooms_parameters:
+                index:
+                    heading: List of locations
+                    new_site: Create a new location
+            localization_parameters:
+                index:
+                    heading: Languages
         payment_method:
             index:
                 heading: Payment methods

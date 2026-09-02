@@ -1,9 +1,11 @@
 import React, {Component, Fragment, useEffect} from "react";
 import * as api from "../../../tools/api";
 import swal from "sweetalert2";
+import {useTranslation} from "react-i18next";
 
 export default function CancelActivityParameters()
 {
+    const {t} = useTranslation("parameters");
     const [hours, setHours] = React.useState(0);
 
     useEffect(() => {
@@ -13,7 +15,7 @@ export default function CancelActivityParameters()
             })
             .error(() => {
                 swal({
-                    title: "Erreur lors du chargement des paramètres",
+                    title: t("shared.loadParamsError"),
                     type: "error",
                 });
             })
@@ -24,13 +26,13 @@ export default function CancelActivityParameters()
         api.set()
             .success(() => {
                 swal({
-                    title: "Sauvegarde effectuée",
+                    title: t("shared.saveSuccess"),
                     type: "success",
                 });
             })
             .error(() => {
                 swal({
-                    title: "Erreur lors de la sauvegarde",
+                    title: t("shared.saveError"),
                     type: "error",
                 });
             })
@@ -46,13 +48,13 @@ export default function CancelActivityParameters()
     return <Fragment>
         <div className="row">
             <div className="col-md-5">
-                <h3>Nombre d'heures</h3>
+                <h3>{t("plannings.cancelActivity.heading")}</h3>
                 <div className="form-group mb-3">
                     <input type="text" className="form-control" id="hours" value={hours} onChange={hoursEdit}/>
-                    <p className="mt-3">En dessous de ce nombre d'heures il sera impossible pour l'élève d'annuler son cours.</p>
+                    <p className="mt-3">{t("plannings.cancelActivity.hint")}</p>
                 </div>
 
-                <button className="btn btn-success pull-right mt-5" onClick={onSubmit}>Valider</button>
+                <button className="btn btn-success pull-right mt-5" onClick={onSubmit}>{t("common:actions.validate")}</button>
             </div>
         </div>
     </Fragment>

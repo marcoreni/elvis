@@ -1,4 +1,5 @@
 import React, {Fragment} from "react";
+import {useTranslation} from "react-i18next";
 import BaseDataTable from "../../common/baseDataTable/BaseDataTable";
 import DataService from "../../common/baseDataTable/DataService";
 import DefaultCreateButton from "../../common/baseDataTable/DefaultCreateButton";
@@ -6,9 +7,10 @@ import DefaultActionButtons from "../../common/baseDataTable/DefaultActionButton
 import PricingCategoryFormContent from "./PricingCategoryFormContent";
 
 function CreateButton({onCreate}) {
+    const {t} = useTranslation("parameters");
     return (
         <DefaultCreateButton
-            label={"Créer une catégorie de prix"}
+            label={t("activities.pricing.createButton")}
             onCreate={onCreate}
         />
     );
@@ -16,22 +18,23 @@ function CreateButton({onCreate}) {
 
 export default function PricingCategoriesEdit()
 {
+    const {t} = useTranslation("parameters");
     const columns = [
         {
             id: "name",
-            Header: "Nom de la catégorie de prix",
+            Header: t("activities.pricing.categoryName"),
             accessor: "name",
         },
         {
             id: "number_lesson",
-            Header: "Nombre de leçons",
+            Header: t("activities.pricing.lessonsCount"),
             accessor: "number_lessons",
         },
         {
             id: "is_pack",
-            Header: "Est un pack ?",
+            Header: t("activities.pricing.isPack"),
             accessor: "is_a_pack",
-            Cell: ({value}) => value ? "Oui" : "Non"
+            Cell: ({value}) => value ? t("shared.yes") : t("shared.no")
         }
     ];
 
@@ -48,8 +51,8 @@ export default function PricingCategoriesEdit()
                                 createButton={CreateButton}
                                 formContentComponent={PricingCategoryFormContent}
                                 showFullScreenButton={false}
-                                oneResourceTypeName="une catégorie de prix"
-                                thisResourceTypeName="cette catégorie de prix"
+                                oneResourceTypeName={t("activities.pricing.oneResourceTypeName")}
+                                thisResourceTypeName={t("activities.pricing.thisResourceTypeName")}
                                 defaultSorted={[{id: "name", asc: true}]}
                             />
                         </div>

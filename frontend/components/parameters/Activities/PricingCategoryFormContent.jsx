@@ -1,22 +1,24 @@
 import React, {Fragment} from "react";
+import {withTranslation} from "react-i18next";
 import {Field} from "react-final-form";
 import Input from "../../common/Input";
 import {required, minLength, minValue, maxValue, composeValidators} from "../../../tools/validators";
 import checkbox from "../../common/Checkbox";
 
-export default class PricingCategoryFormContent extends React.Component {
+class PricingCategoryFormContent extends React.Component {
 
     constructor(props) {
         super(props);
     }
 
     render() {
+        const {t} = this.props;
         return (
             <Fragment>
                 <div className="row">
                     <div className="col">
                         <Field
-                            label="Nom de la catégorie de prix"
+                            label={t("activities.pricing.categoryName")}
                             name="name"
                             type="text"
                             required
@@ -29,7 +31,7 @@ export default class PricingCategoryFormContent extends React.Component {
                 <div className="row">
                     <div className="col">
                         <Field
-                            label="Nombre de leçons"
+                            label={t("activities.pricing.lessonsCount")}
                             name="number_lessons"
                             type="number"
                             required
@@ -43,7 +45,7 @@ export default class PricingCategoryFormContent extends React.Component {
                     <div className="col">
                         <Field
                             id="enabled"
-                            label="Est un pack ?"
+                            label={t("activities.pricing.isPack")}
                             name="is_a_pack"
                             type="checkbox"
                             required
@@ -55,3 +57,5 @@ export default class PricingCategoryFormContent extends React.Component {
         );
     }
 }
+
+export default withTranslation("parameters")(PricingCategoryFormContent);

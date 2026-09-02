@@ -3,11 +3,13 @@ import swal from "sweetalert2";
 import { csrfToken } from "../../utils";
 import _ from "lodash";
 import ReactTable from "react-table";
+import {withTranslation} from "react-i18next";
 
 
-export default class Localisations extends React.Component {
+class Localisations extends React.Component {
     constructor(props) {
         super(props);
+        const {t} = props;
 
         this.state = {
             data: [],
@@ -26,14 +28,14 @@ export default class Localisations extends React.Component {
             },
             {
                 id: "label",
-                Header: "Site",
+                Header: t("rooms.localisations.colSite"),
                 accessor: props => (
                     <a href={"/rooms?location=" + props.id}>{props.label}</a>
                 ),
             },
             {
                 id: "actions",
-                Header: "Actions",
+                Header: t("shared.actions"),
                 Cell: props => {
                     return (
                         <div className="btn-wrapper">
@@ -142,15 +144,13 @@ export default class Localisations extends React.Component {
     }
 
     deleteStatus(status) {
+        const {t} = this.props;
         swal({
-            title:
-                "Voulez-vous vraiment supprimer la localisation '" +
-                status.label +
-                "' ?",
+            title: t("rooms.localisations.deleteConfirm", {name: status.label}),
             type: "warning",
             showCancelButton: true,
-            cancelButtonText: "non",
-            confirmButtonText: "oui",
+            cancelButtonText: t("shared.deleteConfirmNo"),
+            confirmButtonText: t("shared.deleteConfirmYes"),
         }).then(res => {
             if (res.value) {
                 fetch(`/locations/${status.id}`, {
@@ -167,7 +167,7 @@ export default class Localisations extends React.Component {
                     } else {
                         result.text().then(text => {
                             swal({
-                                title: "Erreur",
+                                title: t("shared.errorTitle"),
                                 type: "error",
                                 text: text,
                             });
@@ -179,6 +179,7 @@ export default class Localisations extends React.Component {
     }
 
     render() {
+        const {t} = this.props;
         const { data, pages, loading } = this.state;
 
         return (
@@ -201,16 +202,18 @@ export default class Localisations extends React.Component {
                     }
                 }}
                 resizable={false}
-                previousText="Précédent"
-                nextText="Suivant"
-                loadingText="Chargement..."
-                noDataText="Aucune donnée"
-                pageText="Page"
-                ofText="sur"
-                rowsText="résultats"
+                previousText={t("common:reactTable.previousText")}
+                nextText={t("common:reactTable.nextText")}
+                loadingText={t("common:reactTable.loadingText")}
+                noDataText={t("common:reactTable.noDataText")}
+                pageText={t("common:reactTable.pageText")}
+                ofText={t("common:reactTable.ofText")}
+                rowsText={t("common:reactTable.rowsText")}
                 minRows={1}
                 SubComponent={this.state.subComponent}
             />
         );
     }
 }
+
+export default withTranslation("parameters")(Localisations);

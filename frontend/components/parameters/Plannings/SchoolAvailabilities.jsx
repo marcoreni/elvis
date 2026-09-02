@@ -3,8 +3,10 @@ import AvailabilityManager from "../../availability/AvailabilityManager";
 import PropTypes from "prop-types";
 import * as api from "../../../tools/api";
 import swal from "sweetalert2";
+import {useTranslation} from "react-i18next";
 
 export default function SchoolAvailabilities({planningId, authToken, seasons}) {
+    const {t} = useTranslation("parameters");
     const [intervals, setIntervals] = useState([]);
     const [season, setSeason] = useState(seasons.find(s => s.is_current) || seasons[0] || {});
     const availabilityRef = useRef();
@@ -45,7 +47,7 @@ export default function SchoolAvailabilities({planningId, authToken, seasons}) {
             })
             .error(() => {
                 swal({
-                    title: "Erreur lors de la récupération des disponibilités",
+                    title: t("plannings.schoolAvailabilities.fetchError"),
                     type: "error",
                 });
             })
@@ -53,8 +55,8 @@ export default function SchoolAvailabilities({planningId, authToken, seasons}) {
     }, [season]);
 
     return <Fragment>
-        <h4>Gestion des horaires de votre école</h4>
-        <p className="mb-5">(si il y en a, ceux-ci seront proposés par défaut aux élèves lors de leur inscription)</p>
+        <h4>{t("plannings.schoolAvailabilities.heading")}</h4>
+        <p className="mb-5">{t("plannings.schoolAvailabilities.hint")}</p>
 
         <div style={{margin: "-30px"}}>
             <AvailabilityManager
