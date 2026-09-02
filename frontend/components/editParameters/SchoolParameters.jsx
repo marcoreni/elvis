@@ -5,8 +5,10 @@ import swal from "sweetalert2";
 import {csrfToken} from "../utils";
 import DragAndDrop from "./DragAndDrop";
 import * as api from "../../tools/api";
+import {useTranslation, Trans} from "react-i18next";
 
 export default function SchoolParameters(props) {
+    const {t} = useTranslation("parameters");
     const [academy, setAcademy] = useState((props.school || {}).academy)
     const [zone, setZone] = useState((props.school || {}).zone)
     const [imageUrl, setPicture] = useState(props.picture_url)
@@ -34,7 +36,7 @@ export default function SchoolParameters(props) {
         formData.append("academy", academy);
         formData.append("zone", zone || data.zone);
         swal({
-            title: "chargement...",
+            title: t("editParameters.school.loadingTitle"),
             onOpen: () => swal.showLoading()
         });
 
@@ -54,13 +56,13 @@ export default function SchoolParameters(props) {
 
                     swal({
                         type: "success",
-                        title: "Enregistrement effectué"
+                        title: t("editParameters.school.saveSuccess")
                     });
                 });
             } else {
                 swal({
                     type: "error",
-                    title: "Une erreur est survenue"
+                    title: t("editParameters.school.genericError")
                 })
             }
         });
@@ -125,7 +127,7 @@ export default function SchoolParameters(props) {
         if (pattern.test(value.replace(/\s/g, ""))) {
             return true;
         } else {
-            return `La saisie ne correspond ni à un RNA ni au siret de votre pays (${getValues("countryCode")})`;
+            return t("editParameters.school.siretRnaError", {country: getValues("countryCode")});
         }
     }
 
@@ -134,44 +136,44 @@ export default function SchoolParameters(props) {
 
             {/*Informations de l'école*/}
             <div className="param">
-                <h3 className="mb-4" style={{color: "black"}}>Informations de l'école </h3>
+                <h3 className="mb-4" style={{color: "black"}}>{t("editParameters.school.schoolInfoHeading")}</h3>
                 <div className="form-group">
-                    <label>Logo</label>
+                    <label>{t("editParameters.school.logoLabel")}</label>
                     <DragAndDrop
                         file_url={imageUrl}
                         setFile={f => file = f}
                         acceptedTypes={"image/jpeg, image/png, image/jpg"}
-                        textDisplayed={"Pour ajouter une image, déposez un fichier ici ou"}/>
+                        textDisplayed={t("editParameters.school.logoDropText")}/>
                 </div>
                 <div className="form-group">
-                    <label>Nom <span className="text-danger">*</span> :</label>
+                    <label>{t("editParameters.school.nameLabel")} <span className="text-danger">*</span> :</label>
                     <input className="form-control" type="text" name="name"  {...register('name', {required: true})}
                            defaultValue={props.school.name}/>
-                    <p className="text-danger">{errors.name && "Le nom est requis"}</p>
+                    <p className="text-danger">{errors.name && t("editParameters.school.nameRequired")}</p>
                 </div>
                 <div className="form-group">
-                    <label>Email de contact <span className="text-danger">*</span> :</label>
+                    <label>{t("editParameters.school.emailLabel")} <span className="text-danger">*</span> :</label>
                     <input type="email" name="email" {...register("email", {
                         required: true,
                         pattern: validateEmail
                     })} defaultValue={props.school.email} className="form-control"/>
-                    <p className="text-danger">{errors.email && "L'email est requis"}</p>
+                    <p className="text-danger">{errors.email && t("editParameters.school.emailRequired")}</p>
                 </div>
                 <div className="form-group">
-                    <label>Téléphone de contact <span className="text-danger">*</span> :</label>
+                    <label>{t("editParameters.school.phoneLabel")} <span className="text-danger">*</span> :</label>
                     <input type="tel" name="contactPhone" {...register("contactPhone", {
                         required: true,
                         pattern: /^(?:0|\(?\+[1-9]?[0-9]{2}?\)?\s?|0033\s?)[1-79](?:[\.\-\s]?\d\d){4}$/
                     })} defaultValue={props.school.phone_number} className="form-control"/>
-                    <p className="text-danger">{errors.contactPhone && "Le numéro de téléphone est requis"}</p>
+                    <p className="text-danger">{errors.contactPhone && t("editParameters.school.phoneRequired")}</p>
                 </div>
             </div>
 
             {/*Coordonnées*/}
             <div className="param">
-                <h3 className="mb-4" style={{color: "black"}}>Coordonnées</h3>
+                <h3 className="mb-4" style={{color: "black"}}>{t("editParameters.school.contactsHeading")}</h3>
                 <div className="form-group">
-                    <label>Numéro et nom de voie <span className="text-danger">*</span> :</label>
+                    <label>{t("editParameters.school.streetLabel")} <span className="text-danger">*</span> :</label>
                     <input
                         type="text"
                         name="street"
@@ -180,24 +182,24 @@ export default function SchoolParameters(props) {
                         className="form-control"
                         onChange={addressChange}
                     />
-                    <p className="text-danger">{errors.street && "Le numéro et le nom de la voie sont requis"}</p>
+                    <p className="text-danger">{errors.street && t("editParameters.school.streetRequired")}</p>
                 </div>
                 <div className="form-group">
-                    <label>Ville <span className="text-danger">*</span> :</label>
+                    <label>{t("editParameters.school.cityLabel")} <span className="text-danger">*</span> :</label>
                     <input className="form-control" type="text" name="city" {...register("city", {required: true})}
                            defaultValue={props.schoolAddress.city} onChange={addressChange}/>
-                    <p className="text-danger">{errors.city && "La ville est requise"}</p>
+                    <p className="text-danger">{errors.city && t("editParameters.school.cityRequired")}</p>
                 </div>
                 <div className="form-group">
-                    <label> Code Postal <span className="text-danger">*</span> :</label>
+                    <label>{t("editParameters.school.postalCodeLabel")} <span className="text-danger">*</span> :</label>
                     <input type="text" name="postalCode" {...register("postalCode", {
                         required: true,
                         pattern: /^\d+$/
                     })} defaultValue={props.schoolAddress.postcode} className="form-control" onChange={addressChange}/>
-                    <p className="text-danger">{errors.postalCode && "Code postal requis / mauvais format de code postal"}</p>
+                    <p className="text-danger">{errors.postalCode && t("editParameters.school.postalCodeError")}</p>
                 </div>
                 <div className="form-group">
-                    <label>Pays <span className="text-danger">*</span> :</label>
+                    <label>{t("editParameters.school.countryLabel")} <span className="text-danger">*</span> :</label>
                     <select className="form-control" name="countryCode" {...register("countryCode", {required: true})}
                             defaultValue={props.schoolAddress.country || "FR"} onChange={addressChange}
                     >
@@ -205,16 +207,16 @@ export default function SchoolParameters(props) {
                             <option value={country[1]} key={country[1]}>{country[0]}</option>
                         )}
                     </select>
-                    <p className="text-danger">{errors.country && "Le pays est requis"}</p>
+                    <p className="text-danger">{errors.country && t("editParameters.school.countryRequired")}</p>
                 </div>
             </div>
 
             {/*Vacances et jours fériés*/}
             <div className="param">
-                <h3 className="mb-4" style={{color: "black"}}>Vacances et jours fériés</h3>
+                <h3 className="mb-4" style={{color: "black"}}>{t("editParameters.school.holidaysHeading")}</h3>
                 <div className="form-group">
                     <label>
-                        Zone de jours fériés <small>(optionnel)</small> :
+                        {t("editParameters.school.bankHolidaysZoneLabel")} <small>{t("editParameters.school.optional")}</small> :
                     </label>
                     <select className="form-control" {...register("bankHolidaysZone")}
                             defaultValue={props.bankHolidaysZone}>
@@ -224,7 +226,7 @@ export default function SchoolParameters(props) {
                     </select>
                 </div>
                 <div className="form-group"> {/*Zone de vacances scolaires*/}
-                    <label> Zone de vacances scolaires : </label>
+                    <label>{t("editParameters.school.schoolHolidaysZoneLabel")}</label>
                     {props.zone_set_by_user === true || getValues("zone_set_by_user") === "true" || zone === "" ?
                         <Fragment>
                             <select className="form-control" name="zone" {...register("zone")} defaultValue={zone}
@@ -237,7 +239,7 @@ export default function SchoolParameters(props) {
                             <i className="fas fa-umbrella-beach h3 color-black m-r-sm"/>
                             <span className="nav-label">
                                 <strong>{zone} </strong>
-                                (Académie : {academy})
+                                {t("editParameters.school.academyLine", {academy})}
                             </span>
                         </div>}
                 </div>
@@ -257,24 +259,24 @@ export default function SchoolParameters(props) {
 
             {/*Informations de facturation*/}
             <div className="param">
-                <h3 className="mb-4" style={{color: "black"}}>Informations de facturation</h3>
+                <h3 className="mb-4" style={{color: "black"}}>{t("editParameters.school.billingHeading")}</h3>
                 <div className="form-group">
-                    <label>Numéro de SIRET ou RNA <span className="text-danger">*</span> :</label>
+                    <label>{t("editParameters.school.siretRnaLabel")} <span className="text-danger">*</span> :</label>
                     <input type="text" name="siret" {...register("siretRna", {
                         required: true,
                         validate: validateSiretRna
                     })} defaultValue={props.school.siret_rna} className="form-control"/>
-                    <p className="text-danger">{errors.siretRna && `La saisie ne correspond ni à un RNA ni au siret de votre pays (${getValues("countryCode")})`}</p>
+                    <p className="text-danger">{errors.siretRna && t("editParameters.school.siretRnaError", {country: getValues("countryCode")})}</p>
                 </div>
                 <div className="form-group">
-                    <label>Numéro RCS :</label>
+                    <label>{t("editParameters.school.rcsLabel")}</label>
                     <input type="text" name="rcs" {...register("rcs", {
                         required: false,
                         pattern: /^[AB][0-9]{9}$/
                     })} defaultValue={props.school.rcs} className="form-control"/>
                 </div>
                 <div className="form-group">
-                    <label htmlFor={"entitySubjectToVAT"}>L'établissement est assujetti à la TVA</label>
+                    <label htmlFor={"entitySubjectToVAT"}>{t("editParameters.school.vatLabel")}</label>
                     {/*<input type={"checkbox"} name={"entitySubjectToVAT"} id={"entitySubjectToVAT"} {...register("entitySubjectToVAT")} defaultChecked={props.school.entity_subject_to_vat} />*/}
                     <select
                         name={"entitySubjectToVAT"} id={"entitySubjectToVAT"}
@@ -282,24 +284,22 @@ export default function SchoolParameters(props) {
                         defaultValue={props.school.entity_subject_to_vat}
                         className={"form-control"}
                     >
-                        <option value={"true"}>Imposable</option>
-                        <option value={"false"}>Exonéré</option>
+                        <option value={"true"}>{t("editParameters.school.vatTaxable")}</option>
+                        <option value={"false"}>{t("editParameters.school.vatExempt")}</option>
                     </select>
                 </div>
                 <div className="mt-5">
                     <input type={"checkbox"} name={"activitiesNotSubjectToVat"}
                            id={"activitiesNotSubjectToVat"} {...register("activitiesNotSubjectToVat")}
                            defaultChecked={props.school.activities_not_subject_to_vat}/>
-                    <label className="m-l-sm" htmlFor={"activitiesNotSubjectToVat"}>Les activités musicales <u>ne
-                        sont
-                        pas assujetties</u> à la TVA</label>
+                    <label className="m-l-sm" htmlFor={"activitiesNotSubjectToVat"}><Trans i18nKey="editParameters.school.activitiesNotVatLabel" ns="parameters">Les activités musicales <u>ne sont pas assujetties</u> à la TVA</Trans></label>
                 </div>
 
             </div>
 
             {/*submit*/}
             <div className=" text-right mb-5">
-                <input type="submit" value="Enregistrer" className="btn text-white btn-primary"/>
+                <input type="submit" value={t("common:actions.save")} className="btn text-white btn-primary"/>
             </div>
         </div>
 
