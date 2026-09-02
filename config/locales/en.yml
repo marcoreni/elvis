@@ -297,6 +297,9 @@ en:
             index:
                 heading: Settings
                 edit: Edit
+            activity_application_parameters:
+                index:
+                    heading: Enrollment settings
         payment_method:
             index:
                 heading: Payment methods

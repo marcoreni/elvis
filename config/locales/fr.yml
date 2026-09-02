@@ -300,6 +300,9 @@ fr:
             index:
                 heading: Paramètres
                 edit: Editer
+            activity_application_parameters:
+                index:
+                    heading: Paramétrage des inscriptions
         payment_method:
             index:
                 heading: Moyens de paiement

@@ -15,6 +15,45 @@
         "stepDesc": {
             "pricing": "Pricing message",
             "availability": "Availability message"
+        },
+        "settings": {
+            "loadError": "Error while loading the settings",
+            "saveSuccess": "Save successful",
+            "saveError": "Error while saving",
+            "defaultStatusHeading": "Default enrollment status",
+            "defaultStatusHint": "The selected status will be the default status for new enrollments.",
+            "autoAssignHeading": "Automatic assignment of the 'course assigned' status",
+            "enableLabel": "Enable"
+        },
+        "stepParams": {
+            "loadError": "An error occurred while loading the enrollment flow settings",
+            "saveError": "An error occurred while saving the enrollment flow settings",
+            "saveSuccess": "The enrollment flow settings were saved successfully.",
+            "showTextLabel": "Show the text"
+        },
+        "consentModal": {
+            "requiredError": "required",
+            "title": "Editing a consent document",
+            "titleLabel": "Document title",
+            "titlePlaceholder": "Title",
+            "contentLabel": "Enter your text",
+            "contentPlaceholder": "Text for your students to approve",
+            "schoolNameHint": "The text {schoolName} will be replaced by your school's name.",
+            "attachedFileLabel": "Attached file: ",
+            "dropPdfText": "To add a PDF, drop a file here",
+            "consentCheckboxLabel": "To move to the next step, the student must give their consent",
+            "consentExtraTitle": "Is consent required?"
+        },
+        "consentList": {
+            "fetchError": "Error while fetching the data",
+            "deleteError": "Error while deleting",
+            "intro": "Add documents for your students to approve before enrolling. Enter the documents below.",
+            "addButton": "Add a document"
+        },
+        "statusTable": {
+            "colStopping": "Stopping?",
+            "colActive": "Active?",
+            "deleteConfirm": "Do you really want to delete the status '{{name}}'?"
         }
     },
     "community": {
@@ -170,6 +209,7 @@
         "errorTitle": "Error",
         "deleteConfirmYes": "yes",
         "deleteConfirmNo": "no",
-        "genericError": "An error occurred. Contact an administrator"
+        "genericError": "An error occurred. Contact an administrator",
+        "colLabel": "Label"
     }
 }

@@ -4,8 +4,10 @@ import swal from "sweetalert2";
 import ConsentDocumentModal from "./ConsentDocumentModal";
 import {csrfToken} from "../../utils";
 import Modal from "react-modal";
+import {useTranslation} from "react-i18next";
 
 export default function ConsentDocumentsList() {
+    const {t} = useTranslation("parameters");
 
     const [isFetching, setIsFetching] = useState(false);
     const [documents, setDocuments] = useState([]);
@@ -27,7 +29,7 @@ export default function ConsentDocumentsList() {
             .error(() => {
                 setIsFetching(false);
                 swal({
-                    title: "Erreur lors de la récupération des données",
+                    title: t("activityApplications.consentList.fetchError"),
                     type: "error",
                 });
             })
@@ -50,7 +52,7 @@ export default function ConsentDocumentsList() {
             .error(() => {
                 setIsFetching(false);
                 swal({
-                    title: "Erreur lors de la suppresion",
+                    title: t("activityApplications.consentList.deleteError"),
                     type: "error",
                 });
             })
@@ -161,7 +163,7 @@ export default function ConsentDocumentsList() {
             .error(() => {
                 setIsFetching(false);
                 swal({
-                    title: "Erreur lors de la récupération des données",
+                    title: t("activityApplications.consentList.fetchError"),
                     type: "error",
                 });
             })
@@ -180,7 +182,7 @@ export default function ConsentDocumentsList() {
             .error(() => {
                 setIsFetching(false);
                 swal({
-                    title: "Erreur lors de la récupération des données",
+                    title: t("activityApplications.consentList.fetchError"),
                     type: "error",
                 });
             })
@@ -199,14 +201,13 @@ export default function ConsentDocumentsList() {
 
     return <Fragment>
         <p className="mb-5">
-            Ajoutez des documents à faire valider à vos élèves avant leur inscription. Renseignez les documents
-            ci-dessous.
+            {t("activityApplications.consentList.intro")}
         </p>
 
         <div className="text-right mb-5">
             <button className="btn btn-primary m-t" onClick={handleAdd}>
                 <i className="fas fa-plus"></i>
-                Ajouter un document
+                {t("activityApplications.consentList.addButton")}
             </button>
         </div>
 

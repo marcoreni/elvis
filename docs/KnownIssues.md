@@ -999,6 +999,51 @@ défaut") that every user then sees. No backend code matches the literal `"Prix 
 of `app/ lib/ db/ config/`), so nothing breaks — but this is a UI-string-as-data decision that
 should be an explicit default on the server, not a client i18n key. Flag for the cleanup.
 
+`frontend/locales/fr/parameters.json` (added by feature/i18n-06-parameters-lot-d — `parameters`
+lot D, the `ActivityApplications/*` components: `ApplicationParameters`,
+`ApplicationStepParameters`, `ConsentDocumentModal`, `ConsentDocumentsList`,
+`ApplicationStatusTable` + 1 ERB) — preserved verbatim from
+`frontend/components/parameters/ActivityApplications/*.jsx`:
+- `activityApplications.consentModal.title` — "**Edition** d'un document de consentement" →
+  "**Édition**" (missing accent). Preserved verbatim from `ConsentDocumentModal.jsx`; the English
+  side ("Editing a consent document") is clean.
+- `activityApplications.consentList.deleteError` — "Erreur lors de la **suppresion**" →
+  "**suppression**" (missing an `s`). Preserved verbatim from `ConsentDocumentsList.jsx`; the
+  English side ("Error while deleting") is clean.
+- `activityApplications.statusTable.deleteConfirm` — "Voulez-vous vraiment supprimer le
+  **status** '{{name}}' ?" → "le **statut**" (anglicism; French is "statut"). Preserved verbatim
+  from `ApplicationStatusTable.jsx`; the English side ("… delete the status '{{name}}'?") is
+  correct as-is. This string is **identical** to `payments.status.deleteConfirm` (lot C) — two
+  copies of the same sentence under two different sections, kept separate rather than
+  cross-referencing a `payments.*` key from an `activityApplications` component. Fold both into
+  `shared.*` in the cleanup pass.
+- `activityApplications.consentModal.requiredError` = "requis" (lowercase, bare) — a
+  react-final-form `validate` return value from `ConsentDocumentModal.jsx`, not a sentence.
+  Verbatim; English "required".
+- `shared.colLabel` (lot D, ReactTable header "Libellé" in `ApplicationStatusTable.jsx`)
+  duplicates `payments.cols.label` (lot C) — both "Libellé" / "Label". Same cleanup note as the
+  lot-C `cols.label` / `adhesion.cols.labels` entry: consolidate in the cleanup pass.
+
+Not a defect, noted: `activityApplications.settings.enableLabel` — the source JSX in
+`ApplicationParameters.jsx` renders " Activer" with a leading space from indentation; stored as
+"Activer" (insignificant whitespace dropped). English "Enable".
+
+Incidental fix, recorded not as a defect: `ApplicationParameters.jsx` previously returned a
+hardcoded English `<div>Loading...</div>` in its loading branch, which showed literally
+"Loading..." even in FR mode. Lot D swaps it for `t("common:loading")` → "Chargement..." (FR) /
+"Loading..." (EN). Same class as the earlier `reactTable` "Précedent" → "Précédent" incidental
+fix — an English string corrected in FR mode, not a regression.
+
+Pre-existing code bug **fixed in lot D**: `ApplicationStepParameters.jsx` first `useEffect`
+`.error(err => { swal("…", res.error, "error") })` referenced an unbound `res` (the parameter is
+named `err`), so a real load error threw `ReferenceError` instead of showing the swal. The qa
+pass surfaced it while covering the now-translated string; `res.error` → `err.error` on that one
+line (the sibling `.error(res => …)` callbacks already name their param `res`).
+
+The 4 scaffold ERBs `app/views/parameters/activity_application_parameters/{edit,show,update,destroy}.html.erb`
+are Rails-generated English placeholders ("Find me in app/views/…") and are deliberately left
+unextracted, like the payments lot-1 scaffold error blocks.
+
 ## `frontend/components/common/baseDataTable/BaseDataTable.jsx` — hardcoded French chrome leaks into English
 
 The **functional** shared data-table (`frontend/components/common/baseDataTable/`, distinct from

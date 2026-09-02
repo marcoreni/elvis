@@ -5,9 +5,11 @@ import Input from "../../common/Input";
 import InputSelect from "../../common/InputSelect";
 import Checkbox from "../../common/Checkbox";
 import DragAndDrop from "../../editParameters/DragAndDrop";
+import {useTranslation} from "react-i18next";
 
 export default function ConsentDocumentModal({document, isOpen, isFetching, onRequestClose, onSubmit}) {
-    const required = value => (value ? undefined : 'requis')
+    const {t} = useTranslation("parameters");
+    const required = value => (value ? undefined : t("activityApplications.consentModal.requiredError"))
     const [file, setFile] = useState(undefined);
     const [fileHasChanged, setFileHasChanged] = useState(false);
 
@@ -25,7 +27,7 @@ export default function ConsentDocumentModal({document, isOpen, isFetching, onRe
             onRequestClose={onRequestClose}
         >
             <div className="modal-header">
-                <h3 className="modal-title">Edition d'un document de consentement</h3>
+                <h3 className="modal-title">{t("activityApplications.consentModal.title")}</h3>
                 <button type="button"
                         className="close"
                         aria-label="Close"
@@ -44,9 +46,9 @@ export default function ConsentDocumentModal({document, isOpen, isFetching, onRe
                         <form onSubmit={handleSubmit}>
                             <Field
                                 id="title"
-                                label="Titre du document"
+                                label={t("activityApplications.consentModal.titleLabel")}
                                 htmlOptions={{
-                                    placeholder: "Titre",
+                                    placeholder: t("activityApplications.consentModal.titlePlaceholder"),
                                 }}
                                 name="title"
                                 type="text"
@@ -57,9 +59,9 @@ export default function ConsentDocumentModal({document, isOpen, isFetching, onRe
 
                             <Field
                                 id="content"
-                                label="Renseignez votre texte"
+                                label={t("activityApplications.consentModal.contentLabel")}
                                 htmlOptions={{
-                                    placeholder: "Texte à faire valider par vos élèves",
+                                    placeholder: t("activityApplications.consentModal.contentPlaceholder"),
                                 }}
                                 name="content"
                                 isArea={true}
@@ -68,7 +70,7 @@ export default function ConsentDocumentModal({document, isOpen, isFetching, onRe
                                 render={Input}
                             />
                             <span style={{top: "-15px", position: "relative"}} className="small" >
-                                Le texte {"{schoolName}"} sera remplacé par le nom de votre établissement.
+                                {t("activityApplications.consentModal.schoolNameHint")}
                             </span>
 
                             <Field
@@ -76,26 +78,26 @@ export default function ConsentDocumentModal({document, isOpen, isFetching, onRe
                                 name="attached_file"
                                 render={(props) => <DragAndDrop
                                     file_url={values.attached_file_url}
-                                    fileLabel="Fichier joint : "
+                                    fileLabel={t("activityApplications.consentModal.attachedFileLabel")}
                                     fileTitle={values.title}
                                     setFile={f => {
                                         setFile(f);
                                         setFileHasChanged(true);
                                     }}
                                     acceptedTypes={"application/pdf"}
-                                    textDisplayed={"Pour ajouter un PDF, déposez un fichier ici"}
+                                    textDisplayed={t("activityApplications.consentModal.dropPdfText")}
                                 />}
                             />
 
 
                             <Field
                                 id="expected_answer"
-                                label="Pour passer à l'étape suivante, l'élève doit donner son consentement"
+                                label={t("activityApplications.consentModal.consentCheckboxLabel")}
                                 name="expected_answer"
                                 checked="expected_answer"
                                 type="checkbox"
                                 render={Checkbox}
-                                extraTitle="Le consentement est-il nécessaire ?"
+                                extraTitle={t("activityApplications.consentModal.consentExtraTitle")}
                             />
 
                             <div style={{padding: 20, display: "flex", justifyContent: "flex-end", gap: "20px"}}>
@@ -103,13 +105,13 @@ export default function ConsentDocumentModal({document, isOpen, isFetching, onRe
                                 <button type="reset"
                                         className="btn btn-secondary"
                                         onClick={onRequestClose}>
-                                    Annuler
+                                    {t("common:actions.cancel")}
                                 </button>
 
                                 <button
                                     type="submit"
                                     className="btn btn-primary">
-                                    Enregistrer
+                                    {t("common:actions.save")}
                                     {isFetching &&
                                         <span>&nbsp;<i className="fas fa-circle-notch fa-spin"></i></span>
                                     }
