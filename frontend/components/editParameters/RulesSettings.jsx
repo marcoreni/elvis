@@ -3,8 +3,10 @@ import DragAndDrop from "./DragAndDrop";
 import {useForm} from "react-hook-form";
 import {csrfToken} from "../utils";
 import swal from "sweetalert2";
+import {useTranslation} from "react-i18next";
 
 export default function RulesSettings(props) {
+    const {t} = useTranslation("parameters");
     //const [documentName, setPicture] = useState(props.document_url);
     const [documentCleared, setDocumentCleared] = useState(false);
     const {register, handleSubmit} = useForm();
@@ -14,7 +16,7 @@ export default function RulesSettings(props) {
         let formData = new FormData();
 
         swal({
-            title: "chargement...",
+            title: t("editParameters.rules.loadingTitle"),
             onOpen: () => swal.showLoading()
         });
 
@@ -39,13 +41,13 @@ export default function RulesSettings(props) {
                 res.json().then(json => {
                     swal({
                         type: "success",
-                        title: "Enregistrement effectué"
+                        title: t("editParameters.rules.saveSuccess")
                     });
                 });
             } else {
                 swal({
                     type: "error",
-                    title: "Une erreur est survenue"
+                    title: t("editParameters.rules.genericError")
                 })
             }
         });
@@ -77,10 +79,10 @@ export default function RulesSettings(props) {
 
         <div className="row mb-5">
             <div className="col-xs-5 col-sm-4 col-md-3 col-xl-2">
-                <label>Sélectionner le format du fichier</label>
+                <label>{t("editParameters.rules.formatLabel")}</label>
                 <select id="format" className="form-control" {...register("select")}
                         onChange={event => showCorrectDiv()} defaultValue={props.method}>
-                    <option value="NIL">Aucun</option>
+                    <option value="NIL">{t("editParameters.rules.formatNone")}</option>
                     <option value="URL">URL</option>
                     <option value="PDF">PDF</option>
                 </select>
@@ -89,14 +91,14 @@ export default function RulesSettings(props) {
 
         <div id="urlDiv" className="row mb-5">
             <div className="col-xs-12 col-md-9 col-xl-6">
-                <label>Renseigner l'url</label>
+                <label>{t("editParameters.rules.urlLabel")}</label>
                 <input className="form-control" type="text" defaultValue={props.rulesUrl} {...register("url")} />
             </div>
         </div>
 
         <div id="pdfDiv" className="row" style={{display: 'none'}}>
             <div className="col-xs-12 col-md-9 col-xl-6">
-                <label>Ajouter un pdf</label>
+                <label>{t("editParameters.rules.pdfLabel")}</label>
                 <DragAndDrop
                     documentUrl={props.rulesPdf}
                     file_url={props.file_url}
@@ -105,7 +107,7 @@ export default function RulesSettings(props) {
                         setDocumentCleared(false);
                     }}
                     acceptedTypes={"application/pdf"}
-                    textDisplayed={"Pour ajouter un PDF, déposez un fichier ici ou"}
+                    textDisplayed={t("editParameters.rules.dropPdfText")}
                     onClearedFile={onClearedFile}
                 />
             </div>
@@ -114,7 +116,7 @@ export default function RulesSettings(props) {
 
         <div className="row">
             <div className="col-xs-12 col-md-9 col-xl-6 text-right mt-3">
-                <input type="submit" value="Enregistrer" className="btn btn-primary"/>
+                <input type="submit" value={t("common:actions.save")} className="btn btn-primary"/>
             </div>
         </div>
     </form>

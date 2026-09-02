@@ -268,5 +268,66 @@
         "availableHint": "The languages offered to users of this installation.",
         "defaultHeading": "Default language",
         "defaultHint": "Language used by default for guests and new accounts."
+    },
+    "editParameters": {
+        "settingsApplied": "The settings have been applied",
+        "csv": {
+            "saveSuccessTitle": "Success",
+            "sepLabel": "Column separator",
+            "sepRequired": "The column separator is required",
+            "encodingLabel": "Character encoding",
+            "encodingRequired": "The character encoding is required"
+        },
+        "mail": {
+            "saveSuccessTitle": "Success",
+            "errorTitle": "Error",
+            "genericError": "An error occurred, contact an administrator",
+            "smtpAddressLabel": "SMTP address:",
+            "smtpAddressRequired": "The SMTP address is required",
+            "smtpPortLabel": "SMTP port:",
+            "portRequired": "The port is required",
+            "domainLabel": "Domain",
+            "sslTlsLabel": "Enable SSL/TLS: ",
+            "authLabel": "Authentication:",
+            "authRequired": "The authentication type is required",
+            "usernameLabel": "Username:",
+            "usernameRequired": "The username is required",
+            "passwordLabel": "Password (it will only be changed if the field is filled in):",
+            "passwordRequired": "The password is required",
+            "redirectLabel": "Redirect all emails to the following addresses (separate with line breaks):",
+            "redirectHint": "Leave empty to not redirect",
+            "fromLabel": "Default sender address"
+        },
+        "rules": {
+            "loadingTitle": "loading...",
+            "saveSuccess": "Save completed",
+            "genericError": "An error occurred",
+            "formatLabel": "Select the file format",
+            "formatNone": "None",
+            "urlLabel": "Enter the URL",
+            "pdfLabel": "Add a PDF",
+            "dropPdfText": "To add a PDF, drop a file here or"
+        },
+        "teachers": {
+            "saveSuccessTitle": "Success",
+            "saveSuccessText": "The settings have been saved",
+            "saveErrorText": "An error occurred while saving the settings",
+            "planningHeading": "Schedule permission",
+            "planningLabel": "The teacher can edit their schedule",
+            "applicationsHeading": "Enrollment requests permission",
+            "applicationsLabel": "Allow teachers to manage the enrollment requests linked to them",
+            "contactsHeading": "Contact details",
+            "contactsLabel": "Show the teacher's contact details on the student's page",
+            "coursesHeading": "Course list",
+            "coursesLabel": "The teacher can manage their course list"
+        },
+        "dragAndDrop": {
+            "invalidType": "File type not allowed",
+            "tooManyFiles": "only one file allowed",
+            "selectButton": "Select",
+            "currentDocument": "Current document:",
+            "none": "none",
+            "imageAlt": "unable to load image"
+        }
     }
 }

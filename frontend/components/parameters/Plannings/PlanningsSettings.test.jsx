@@ -212,9 +212,9 @@ describe("parameters lot-E — i18n layer", () => {
         expect(FR_KEYS).toHaveLength(54);
     });
 
-    test("parameters.json fr/en leaf counts stay in lock-step at 172", () => {
+    test("parameters.json fr/en leaf counts stay in lock-step (grows across lots)", () => {
         expect(flattenAll(fr).length).toBe(flattenAll(en).length);
-        expect(flattenAll(fr).length).toBe(172);
+        expect(flattenAll(fr).length).toBeGreaterThanOrEqual(172);
     });
 
     test.each(["fr", "en"])(

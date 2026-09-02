@@ -1,6 +1,7 @@
 import React, {useCallback, useState} from 'react';
 import Dropzone, {DropEvent, FileRejection} from "react-dropzone";
 import PropTypes from "prop-types";
+import {useTranslation} from "react-i18next";
 
 
 const baseStyle = {
@@ -36,6 +37,7 @@ const rejectStyle = {
 };
 
 function DragAndDrop(props) {
+    const {t} = useTranslation("parameters");
     const [file, setFile] = useState(undefined);
     const [url, setUrl] = useState(props.file_url);
 
@@ -65,12 +67,12 @@ function DragAndDrop(props) {
         let div = document.getElementById("error");
         if (fileRejections[0].errors[0].code === "file-invalid-type") {
             div.classList.remove("d-none");
-            div.innerHTML = "Type de fichier non autorisé";
+            div.innerHTML = t("editParameters.dragAndDrop.invalidType");
         }
 
         if (fileRejections[0].errors[0].code === "too-many-files") {
             div.classList.remove("d-none");
-            div.innerHTML = "un seul fichier autorisé";
+            div.innerHTML = t("editParameters.dragAndDrop.tooManyFiles");
         }
     }
 
@@ -103,7 +105,7 @@ function DragAndDrop(props) {
                                     className="btn btn-primary"
                                     type="button"
                                 >
-                                    Sélectionner
+                                    {t("editParameters.dragAndDrop.selectButton")}
                                 </button>
                             </div>
                         </div>
@@ -127,7 +129,7 @@ function DragAndDrop(props) {
                             <img className="img-responsive img-rounded"
                                  id="output"
                                  src={url == "" ? "" : url}
-                                 alt="image impossible à charger"
+                                 alt={t("editParameters.dragAndDrop.imageAlt")}
                                  style={{maxHeight: "300px"}}
                             />
                         )
@@ -146,7 +148,7 @@ function DragAndDrop(props) {
                                 </div>
                             </div>
 
-                            : <p className={"ml-5"}>Document actuel : <strong>aucun</strong></p>;
+                            : <p className={"ml-5"}>{t("editParameters.dragAndDrop.currentDocument")} <strong>{t("editParameters.dragAndDrop.none")}</strong></p>;
                     }
                 })()}
             </div>

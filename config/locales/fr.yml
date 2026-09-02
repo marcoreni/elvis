@@ -313,6 +313,24 @@ fr:
             localization_parameters:
                 index:
                     heading: Langues
+            school_parameters:
+                edit:
+                    no_name: Pas de nom
+            teachers_parameters:
+                edit:
+                    heading: Paramétrage des droits des professeurs
+            rules_parameters:
+                edit:
+                    heading: Règlement intérieur
+            mails_parameters:
+                edit:
+                    heading: "Paramètres avancés : Mails"
+            csv_parameters:
+                edit:
+                    heading: "Paramètres avancés : Exports CSV"
+            formules_parameters:
+                edit:
+                    heading: "Paramètres : Formules"
         payment_method:
             index:
                 heading: Moyens de paiement

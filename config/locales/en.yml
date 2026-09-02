@@ -310,6 +310,24 @@ en:
             localization_parameters:
                 index:
                     heading: Languages
+            school_parameters:
+                edit:
+                    no_name: No name
+            teachers_parameters:
+                edit:
+                    heading: Teacher rights settings
+            rules_parameters:
+                edit:
+                    heading: Internal rules
+            mails_parameters:
+                edit:
+                    heading: "Advanced settings: Emails"
+            csv_parameters:
+                edit:
+                    heading: "Advanced settings: CSV exports"
+            formules_parameters:
+                edit:
+                    heading: "Settings: Packages"
         payment_method:
             index:
                 heading: Payment methods

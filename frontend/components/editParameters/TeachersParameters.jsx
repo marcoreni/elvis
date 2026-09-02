@@ -2,6 +2,7 @@ import React, { Fragment, useState } from "react";
 import PropTypes from "prop-types";
 import * as api from "../../tools/api";
 import swal from "sweetalert2";
+import {useTranslation} from "react-i18next";
 
 /**
  * Component for teachers parameters
@@ -13,6 +14,7 @@ import swal from "sweetalert2";
  * @constructor
  */
 export default function TeachersParameters({ teacher_can_edit_planning, authorize_teachers, show_teacher_contacts, teacher_can_manage_courses }) {
+    const {t} = useTranslation("parameters");
     const [planningChecked, setPlanningChecked] = useState(teacher_can_edit_planning);
     const [permitTeacherActivities, setPermitTeacherActivities] = useState(authorize_teachers);
     const [showTeacherContacts, setShowTeacherContacts] = useState(show_teacher_contacts);
@@ -25,8 +27,8 @@ export default function TeachersParameters({ teacher_can_edit_planning, authoriz
             .success((data) => {
                 if (data.success) {
                     swal({
-                        title: "Succès",
-                        text: "Les paramètres ont été sauvegardés",
+                        title: t("editParameters.teachers.saveSuccessTitle"),
+                        text: t("editParameters.teachers.saveSuccessText"),
                         type: "success"
                     });
 
@@ -34,16 +36,16 @@ export default function TeachersParameters({ teacher_can_edit_planning, authoriz
                 }
                 else {
                     swal({
-                        title: "Erreur",
-                        text: "Une erreur est survenue lors de la sauvegarde des paramètres",
+                        title: t("shared.errorTitle"),
+                        text: t("editParameters.teachers.saveErrorText"),
                         type: "error"
                     });
                 }
             })
             .error(() => {
                 swal({
-                    title: "Erreur",
-                    text: "Une erreur est survenue lors de la sauvegarde des paramètres",
+                    title: t("shared.errorTitle"),
+                    text: t("editParameters.teachers.saveErrorText"),
                     type: "error"
                 });
             })
@@ -57,7 +59,7 @@ export default function TeachersParameters({ teacher_can_edit_planning, authoriz
 
     return (
         <Fragment>
-            <h3 className="mt-5">Droit sur le planning</h3>
+            <h3 className="mt-5">{t("editParameters.teachers.planningHeading")}</h3>
             <div className="mb-sm-3 mt-3">
                 <input
                     type="checkbox"
@@ -67,11 +69,11 @@ export default function TeachersParameters({ teacher_can_edit_planning, authoriz
                 />
                 &nbsp;
                 <label className="ml-2 font-normal" htmlFor="planningCheck">
-                    Le professeur peut modifier son planning
+                    {t("editParameters.teachers.planningLabel")}
                 </label>
             </div>
 
-            <h3>Droit sur les demandes d'inscriptions</h3>
+            <h3>{t("editParameters.teachers.applicationsHeading")}</h3>
             <div className="row">
                 <div className="col-md-5">
                     <input
@@ -82,12 +84,12 @@ export default function TeachersParameters({ teacher_can_edit_planning, authoriz
                     />
                     &nbsp;
                     <label className="ml-2 font-normal" htmlFor="check">
-                        Permettre aux professeurs de gérer les demandes d'inscriptions qui leur sont liées
+                        {t("editParameters.teachers.applicationsLabel")}
                     </label>
                 </div>
             </div>
 
-            <h3>Coordonnées</h3>
+            <h3>{t("editParameters.teachers.contactsHeading")}</h3>
             <div className="mb-sm-3 mt-3">
                 <input
                     type="checkbox"
@@ -97,11 +99,11 @@ export default function TeachersParameters({ teacher_can_edit_planning, authoriz
                 />
                 &nbsp;
                 <label className="ml-2 font-normal" htmlFor="showTeacherContactsCheck">
-                    Afficher les coordonnées du professeur sur la page de l'élève
+                    {t("editParameters.teachers.contactsLabel")}
                 </label>
             </div>
 
-            <h3>Liste des cours</h3>
+            <h3>{t("editParameters.teachers.coursesHeading")}</h3>
             <div className="mb-sm-3 mt-3">
                 <input
                     type="checkbox"
@@ -111,12 +113,12 @@ export default function TeachersParameters({ teacher_can_edit_planning, authoriz
                 />
                 &nbsp;
                 <label className="ml-2 font-normal" htmlFor="teacherCanManageCoursesCheck">
-                    Le professeur peut gérer la liste de ses cours
+                    {t("editParameters.teachers.coursesLabel")}
                 </label>
             </div>
 
             <button className="btn btn-success no-margin pull-right" onClick={onSubmit}>
-                Sauvegarder
+                {t("shared.saveButton")}
             </button>
         </Fragment>
     );
