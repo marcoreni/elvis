@@ -7,7 +7,12 @@
 import React from "react";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import i18n from "../../../i18n";
 import LocalizationParameters from "./LocalizationParameters";
+
+// The loading placeholder is now `t("common:loading")` (i18n-06 parameters lot E — was a
+// hardcoded English "Loading..."). Tests run in the default locale (fr) -> "Chargement...".
+const LOADING = i18n.t("common:loading");
 
 function mockFetchOnce(response) {
     global.fetch = vi.fn().mockResolvedValue({
@@ -35,7 +40,7 @@ describe("LocalizationParameters", () => {
 
         render(<LocalizationParameters />);
 
-        await waitFor(() => expect(screen.queryByText("Loading...")).not.toBeInTheDocument());
+        await waitFor(() => expect(screen.queryByText(LOADING)).not.toBeInTheDocument());
 
         const select = screen.getByRole("combobox");
         const options = Array.from(select.querySelectorAll("option")).map((o) => o.value);
@@ -51,7 +56,7 @@ describe("LocalizationParameters", () => {
         });
 
         render(<LocalizationParameters />);
-        await waitFor(() => expect(screen.queryByText("Loading...")).not.toBeInTheDocument());
+        await waitFor(() => expect(screen.queryByText(LOADING)).not.toBeInTheDocument());
 
         const select = screen.getByRole("combobox");
         expect(select).toHaveValue("fr");
@@ -69,8 +74,8 @@ describe("LocalizationParameters", () => {
 
         render(<LocalizationParameters />);
 
-        expect(screen.getByText("Loading...")).toBeInTheDocument();
+        expect(screen.getByText(LOADING)).toBeInTheDocument();
 
-        await waitFor(() => expect(screen.queryByText("Loading...")).not.toBeInTheDocument());
+        await waitFor(() => expect(screen.queryByText(LOADING)).not.toBeInTheDocument());
     });
 });

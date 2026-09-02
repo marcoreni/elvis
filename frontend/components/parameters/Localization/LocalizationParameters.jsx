@@ -1,6 +1,7 @@
 import React, {Fragment, useEffect, useState} from "react";
 import * as api from "../../../tools/api";
 import swal from "sweetalert2";
+import {useTranslation} from "react-i18next";
 
 const LOCALE_LABELS = {
     fr: "Français",
@@ -8,6 +9,7 @@ const LOCALE_LABELS = {
 };
 
 export default function LocalizationParameters() {
+    const {t} = useTranslation("parameters");
     const [isLoading, setIsLoading] = useState(true);
     const [supportedLocales, setSupportedLocales] = useState([]);
     const [defaultLanguage, setDefaultLanguage] = useState("fr");
@@ -24,7 +26,7 @@ export default function LocalizationParameters() {
             .error(() => {
                 setIsLoading(false);
                 swal({
-                    title: "Erreur lors du chargement des paramètres",
+                    title: t("shared.loadParamsError"),
                     type: "error",
                 });
             })
@@ -50,7 +52,7 @@ export default function LocalizationParameters() {
     const onSubmit = () => {
         if (!availableLanguages.includes(defaultLanguage)) {
             swal({
-                title: "La langue par défaut doit faire partie des langues disponibles",
+                title: t("localization.defaultMustBeAvailable"),
                 type: "error",
             });
             return;
@@ -59,10 +61,10 @@ export default function LocalizationParameters() {
         api.set()
             .useLoading()
             .success(() => {
-                swal({title: "Sauvegarde effectuée", type: "success"});
+                swal({title: t("shared.saveSuccess"), type: "success"});
             })
             .error(() => {
-                swal({title: "Erreur lors de la sauvegarde", type: "error"});
+                swal({title: t("shared.saveError"), type: "error"});
             })
             .post(
                 "/parameters/localization_parameters/update",
@@ -72,15 +74,15 @@ export default function LocalizationParameters() {
     };
 
     if (isLoading) {
-        return <div>Loading...</div>;
+        return <div>{t("common:loading")}</div>;
     }
 
     return (
         <Fragment>
             <div className="row">
                 <div className="col-md-5">
-                    <h3>Langues disponibles</h3>
-                    <p>Les langues proposées aux utilisateurs de cette installation.</p>
+                    <h3>{t("localization.availableHeading")}</h3>
+                    <p>{t("localization.availableHint")}</p>
                     {supportedLocales.map((locale) => (
                         <div className="form-group form-check" key={locale}>
                             <input
@@ -103,7 +105,7 @@ export default function LocalizationParameters() {
 
             <div className="row mt-3">
                 <div className="col-md-5">
-                    <h3>Langue par défaut</h3>
+                    <h3>{t("localization.defaultHeading")}</h3>
                     <div className="form-group mb-3">
                         <select
                             className="form-control"
@@ -117,7 +119,7 @@ export default function LocalizationParameters() {
                             ))}
                         </select>
                         <p className="mt-3">
-                            Langue utilisée par défaut pour les invités et les nouveaux comptes.
+                            {t("localization.defaultHint")}
                         </p>
                     </div>
                 </div>
@@ -126,7 +128,7 @@ export default function LocalizationParameters() {
             <div className="row mt-3">
                 <div className="col-md-5 text-right">
                     <button className="btn btn-primary" onClick={onSubmit}>
-                        Enregistrer
+                        {t("common:actions.save")}
                     </button>
                 </div>
             </div>

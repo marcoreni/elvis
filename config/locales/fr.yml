@@ -303,6 +303,16 @@ fr:
             activity_application_parameters:
                 index:
                     heading: Paramétrage des inscriptions
+            planning_parameters:
+                index:
+                    heading: Paramétrage du planning
+            rooms_parameters:
+                index:
+                    heading: Liste des sites
+                    new_site: Créer un nouveau site
+            localization_parameters:
+                index:
+                    heading: Langues
         payment_method:
             index:
                 heading: Moyens de paiement

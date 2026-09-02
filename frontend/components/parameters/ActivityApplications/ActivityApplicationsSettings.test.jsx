@@ -193,9 +193,9 @@ describe("parameters activityApplications.* (lot D) — i18n layer", () => {
         expect(FR_KEYS.filter((k) => k.startsWith("activityApplications."))).toHaveLength(29);
     });
 
-    test("parameters.json is 133 leaves in both locales", () => {
-        expect(flattenAll(fr)).toHaveLength(133);
-        expect(flattenAll(en)).toHaveLength(133);
+    test("parameters.json fr/en leaf counts stay in lock-step (grows across lots)", () => {
+        expect(flattenAll(fr).length).toBe(flattenAll(en).length);
+        expect(flattenAll(fr).length).toBeGreaterThanOrEqual(133);
     });
 
     test.each(["fr", "en"])(

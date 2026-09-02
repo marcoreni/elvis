@@ -872,16 +872,33 @@ et à mesure de son intégration :
           `ActivityApplications/ActivityApplicationsSettings.test.jsx` (44 tests). Revue : 0 bug de
           correction ; bug pré-existant corrigé (`res` non lié dans un callback `.error` de
           `ApplicationStepParameters`).
-    - [ ] **Lot E — le reste** : `Plannings/*` (4 : SchoolAvailabilities, TeacherAvailabilities,
-          CancelActivityParameters, PlanningDisplayParameters), `Evaluations/*` (2 : EvaluationLevels,
-          EvaluationSlot), `Rooms/*` (1 : Localisations), `Localization/*` (1, a déjà un `.test.jsx`),
-          `Activities/*` (2 : PricingCategoriesEdit, PricingCategoryFormContent), `Community/*` (0 —
-          MergeUsers est sous `scripts/mergeUsers/`, hors périmètre) + les
-          ERB d'édition restants (`school_parameters_edit`, `teachers_parameters_edit`,
-          `rules_parameters_edit`, `mails_parameters_edit`, `csv_parameters_edit`,
-          `formules_parameters_edit`, `community_parameters`, `evaluation_parameters`,
-          `planning_parameters`, `rooms_parameters`, `localization_parameters`).
-          (Les 8 `*Parameters.jsx` wrappers faits en lot A.)
+    - [x] **Lot E — composants feuilles restants** — branche `feature/i18n-06-parameters-lot-e` (`582a060`), PR #46. 10 comp : `Plannings/*` (SchoolAvailabilities, TeacherAvailabilities,
+          CancelActivityParameters, PlanningDisplayParameters — tous `useTranslation`),
+          `Evaluations/*` (EvaluationLevels `class extends BaseDataTable` → `withTranslation` ;
+          EvaluationSlot `useTranslation`), `Rooms/Localisations` (`class extends React.Component`,
+          colonnes + `subComponent` + `deleteStatus` construits au constructeur → `withTranslation`,
+          `props.t` au constructeur ; props pagination → `common:reactTable.*`),
+          `Localization/LocalizationParameters` (`useTranslation` ; `Loading...` en dur →
+          `common:loading` — correctif incident), `Activities/*` (PricingCategoriesEdit +
+          `CreateButton` `useTranslation` ; PricingCategoryFormContent `class` → `withTranslation`).
+          +33 feuilles `parameters:{shared,plannings,evaluations,rooms,localization}.*` +
+          `activities.pricing.*` → 172 (dont 6 `plannings.tabs.*`/`evaluations.tabs.*` de lot A
+          restaurés après un bug de script). 3 ERB d'onglet extraites →
+          `views.parameters.{planning_parameters,rooms_parameters,localization_parameters}.index.*`.
+          Réutilise `common:actions.{save,validate}`, `common:loading`, `shared.*`. Nouveau
+          `shared.{colName,loadParamsError,saveSuccess,saveError,saveButton}`.
+          `Plannings/PlanningsSettings.test.jsx` + mise à jour `LocalizationParameters.test.jsx`.
+          Revue : 0 bug de correction. **`Community/*` = 0 comp** (MergeUsers est sous
+          `scripts/mergeUsers/`, hors périmètre) ; `evaluation_parameters`/`community_parameters`
+          index ERB sans chaîne (juste `react_component`).
+    - [ ] **Lot E2 — `editParameters/*` + ERB d'édition avancée** : la sous-arbre
+          `frontend/components/editParameters/*` (SchoolParameters, TeachersParameters, RulesSettings,
+          MailSettings, CsvSettings, FormulesParameters) et les 6 ERB qui les montent
+          (`school_parameters_edit`, `teachers_parameters_edit`, `rules_parameters_edit`,
+          `mails_parameters_edit`, `csv_parameters_edit`, `formules_parameters_edit`). Zone
+          distincte (« Paramètres avancés »), sortie du périmètre de lot E. En-têtes ERB encore FR :
+          « Paramétrage des droits des professeurs », « Règlement intérieur », « Paramètres
+          avancés : Mails / Exports CSV », « Paramètres : Formules », fallback « Pas de nom ».
     - [ ] **Lot F (à cadrer) — `ParametersController#set_base_parameters`** : la page `/parameters`
           reste ~90 % en français APRÈS lot A, car tout ce qu'elle affiche vient du contrôleur —
           `app/controllers/parameters_controller.rb` ~359-408 : ~6 titres de cartes (« Votre école »,

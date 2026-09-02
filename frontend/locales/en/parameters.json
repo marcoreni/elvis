@@ -3,6 +3,14 @@
         "heading": "Configuring pricing categories",
         "tabs": {
             "pricingCategories": "Pricing categories"
+        },
+        "pricing": {
+            "createButton": "Create a pricing category",
+            "categoryName": "Pricing category name",
+            "lessonsCount": "Number of lessons",
+            "isPack": "Is a pack?",
+            "oneResourceTypeName": "a pricing category",
+            "thisResourceTypeName": "this pricing category"
         }
     },
     "activityApplications": {
@@ -65,6 +73,18 @@
         "tabs": {
             "levels": "Evaluation levels",
             "slot": "Evaluation slot"
+        },
+        "levels": {
+            "colValue": "Value",
+            "colCanContinue": "Can continue?",
+            "deleteConfirm": "Do you really want to delete the instrument '{{name}}'?"
+        },
+        "slot": {
+            "loadingTitle": "loading...",
+            "saveSuccess": "Save completed",
+            "genericError": "An error occurred",
+            "durationLabel": "Evaluation slot duration (in minutes) * :",
+            "requiredError": "The slot is required"
         }
     },
     "payments": {
@@ -157,6 +177,27 @@
             "teachers": "Teachers",
             "cancelActivity": "Course cancellation",
             "displaySettings": "Display settings"
+        },
+        "schoolAvailabilities": {
+            "fetchError": "Error while fetching the availabilities",
+            "heading": "Managing your school's hours",
+            "hint": "(if any, these will be offered to students by default when they enroll)"
+        },
+        "teacherAvailabilities": {
+            "heading": "Availability",
+            "checkboxLabel": "Create an availability slot before creating a course"
+        },
+        "cancelActivity": {
+            "heading": "Number of hours",
+            "hint": "Below this number of hours the student will not be able to cancel their course."
+        },
+        "displayParams": {
+            "heading": "Schedule display settings",
+            "showActivityCodeLabel": "Show the activity code",
+            "recurrenceLabel": "Allow recurrence of availabilities",
+            "availabilityMessageLabel": "Availability message shown to students",
+            "saveSuccess": "Settings updated",
+            "saveError": "Error while updating the settings"
         }
     },
     "practice": {
@@ -200,6 +241,10 @@
     "rooms": {
         "tabs": {
             "siteList": "List of locations"
+        },
+        "localisations": {
+            "colSite": "Site",
+            "deleteConfirm": "Do you really want to delete the location '{{name}}'?"
         }
     },
     "shared": {
@@ -210,6 +255,18 @@
         "deleteConfirmYes": "yes",
         "deleteConfirmNo": "no",
         "genericError": "An error occurred. Contact an administrator",
-        "colLabel": "Label"
+        "colLabel": "Label",
+        "colName": "Name",
+        "loadParamsError": "Error while loading the settings",
+        "saveSuccess": "Save successful",
+        "saveError": "Error while saving",
+        "saveButton": "Save"
+    },
+    "localization": {
+        "defaultMustBeAvailable": "The default language must be one of the available languages",
+        "availableHeading": "Available languages",
+        "availableHint": "The languages offered to users of this installation.",
+        "defaultHeading": "Default language",
+        "defaultHint": "Language used by default for guests and new accounts."
     }
 }

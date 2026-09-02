@@ -1,8 +1,10 @@
 import React, { useEffect } from "react";
 import * as api from "../../../tools/api";
 import swal from "sweetalert2";
+import {useTranslation} from "react-i18next";
 
 export default function PlanningDisplayParameters() {
+    const {t} = useTranslation("parameters");
     const [showActivityCode, setShowActivityCode] = React.useState(false);
     const [recurrenceActivated, setRecurrenceActivated] = React.useState(false);
     const [availabilityMessage, setAvailabilityMessage] = React.useState("");
@@ -16,7 +18,7 @@ export default function PlanningDisplayParameters() {
             })
             .error(() => {
                 swal({
-                    title: "Erreur lors du chargement des paramètres",
+                    title: t("shared.loadParamsError"),
                     type: "error",
                 });
             })
@@ -27,13 +29,13 @@ export default function PlanningDisplayParameters() {
         api.set()
             .success(() => {
                 swal({
-                    title: "Paramètres modifiés",
+                    title: t("plannings.displayParams.saveSuccess"),
                     type: "success",
                 });
             })
             .error(() => {
                 swal({
-                    title: "Erreur lors de la modification des paramètres",
+                    title: t("plannings.displayParams.saveError"),
                     type: "error",
                 });
             })
@@ -47,7 +49,7 @@ export default function PlanningDisplayParameters() {
     return (
         <div className="row">
             <div className="col-md-5">
-                <h3>Paramètres d'affichage des plannings</h3>
+                <h3>{t("plannings.displayParams.heading")}</h3>
 
                 <div className="form-group mb-3">
                     <input
@@ -57,7 +59,7 @@ export default function PlanningDisplayParameters() {
                         onChange={() => setShowActivityCode(!showActivityCode)}
                     />
                     <label htmlFor="show_activity_code" className="ml-2 font-normal">
-                        Afficher le code de l'activité
+                        {t("plannings.displayParams.showActivityCodeLabel")}
                     </label>
                 </div>
 
@@ -69,13 +71,13 @@ export default function PlanningDisplayParameters() {
                         onChange={() => setRecurrenceActivated(!recurrenceActivated)}
                     />
                     <label htmlFor="recurrence_activated" className="ml-2 font-normal">
-                        Permettre la récurrence des disponibilités
+                        {t("plannings.displayParams.recurrenceLabel")}
                     </label>
                 </div>
 
                 <div className="form-group mb-3">
                     <label htmlFor="availability_message" className="font-normal">
-                        Message de disponibilités affiché aux élèves
+                        {t("plannings.displayParams.availabilityMessageLabel")}
                     </label>
                     <input
                         id="availability_message"
@@ -87,7 +89,7 @@ export default function PlanningDisplayParameters() {
                 </div>
 
                 <button className="btn btn-success pull-right mt-5" onClick={onSubmit}>
-                    Valider
+                    {t("common:actions.validate")}
                 </button>
             </div>
         </div>
