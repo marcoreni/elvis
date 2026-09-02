@@ -300,6 +300,31 @@ fr:
             index:
                 heading: Paramètres
                 edit: Editer
+                sections:
+                    général: Général
+                    personnalisation: Personnalisation
+                cards:
+                    school:
+                        title: Votre école
+                        text: "Définissez les informations générales de votre école: nom, adresse postale, etc."
+                    languages:
+                        title: Langues
+                        text: Choisissez la langue par défaut de l'installation et les langues proposées aux utilisateurs.
+                    emails:
+                        title: Emails
+                        text: Paramétrez votre serveur d'envoi de mails, l'adresse de l'expéditeur et vos destinataires.
+                    csv:
+                        title: Exports CSV
+                        text: Paramétrez vos exports CSV.
+                    notifications:
+                        title: Notifications
+                        text: Paramétrez et modifiez vos templates emails.
+                    teachers:
+                        title: Professeurs
+                        text: Gérez les permissions au planning et les informations affichées à l'élève.
+                    packages:
+                        title: Formules
+                        text: Activez ou désactivez l'affichage des formules.
             activity_application_parameters:
                 index:
                     heading: Paramétrage des inscriptions

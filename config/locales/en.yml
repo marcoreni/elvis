@@ -297,6 +297,31 @@ en:
             index:
                 heading: Settings
                 edit: Edit
+                sections:
+                    général: General
+                    personnalisation: Customization
+                cards:
+                    school:
+                        title: Your school
+                        text: "Set your school's general information: name, postal address, etc."
+                    languages:
+                        title: Languages
+                        text: Choose the installation's default language and the languages offered to users.
+                    emails:
+                        title: Emails
+                        text: Configure your outgoing mail server, the sender address and your recipients.
+                    csv:
+                        title: CSV exports
+                        text: Configure your CSV exports.
+                    notifications:
+                        title: Notifications
+                        text: Configure and edit your email templates.
+                    teachers:
+                        title: Teachers
+                        text: Manage schedule permissions and the information shown to the student.
+                    packages:
+                        title: Packages
+                        text: Enable or disable the display of packages.
             activity_application_parameters:
                 index:
                     heading: Enrollment settings

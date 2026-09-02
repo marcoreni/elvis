@@ -822,7 +822,7 @@ et à mesure de son intégration :
     - [ ] **Tests** : `Formules.test.jsx`, `EditFormule.test.jsx` (Vitest, pattern `i18n.changeLanguage`),
           `spec/requests/formules_pages_spec.rb` (index/new/edit fr+en, garde anti-`"translation missing"`).
     - [ ] **Vérification** : `bin/i18n-tasks health`, `bundle exec rspec`, `yarn test`, `/code-review`.
-  - [~] `parameters` — **toute la zone de réglages admin** : ~40 composants React
+  - [x] `parameters` — **toute la zone de réglages admin** : ~40 composants React
         (`frontend/components/parameters/**`, ~4100 lignes, 9 sous-dossiers) + ~20 vues ERB
         (`app/views/parameters/**`). Bien plus gros que ne le disait l'ancienne note (« ~2 React +
         ~7 ERB » était faux). **Nouveau namespace i18next `parameters`**, découpé en ~5 sous-lots
@@ -891,23 +891,33 @@ et à mesure de son intégration :
           Revue : 0 bug de correction. **`Community/*` = 0 comp** (MergeUsers est sous
           `scripts/mergeUsers/`, hors périmètre) ; `evaluation_parameters`/`community_parameters`
           index ERB sans chaîne (juste `react_component`).
-    - [ ] **Lot E2 — `editParameters/*` + ERB d'édition avancée** : la sous-arbre
-          `frontend/components/editParameters/*` (SchoolParameters, TeachersParameters, RulesSettings,
-          MailSettings, CsvSettings, FormulesParameters) et les 6 ERB qui les montent
-          (`school_parameters_edit`, `teachers_parameters_edit`, `rules_parameters_edit`,
-          `mails_parameters_edit`, `csv_parameters_edit`, `formules_parameters_edit`). Zone
-          distincte (« Paramètres avancés »), sortie du périmètre de lot E. En-têtes ERB encore FR :
-          « Paramétrage des droits des professeurs », « Règlement intérieur », « Paramètres
-          avancés : Mails / Exports CSV », « Paramètres : Formules », fallback « Pas de nom ».
-    - [ ] **Lot F (à cadrer) — `ParametersController#set_base_parameters`** : la page `/parameters`
-          reste ~90 % en français APRÈS lot A, car tout ce qu'elle affiche vient du contrôleur —
-          `app/controllers/parameters_controller.rb` ~359-408 : ~6 titres de cartes (« Votre école »,
-          « Langues », « Emails », « Exports CSV », « Notifications », « Professeurs », « Formules »)
-          + leurs `text`, et les 2 en-têtes de section rendus par `index.html.erb:10` via
-          `key.to_s.humanize` sur les clés symboles `:général` / `:personnalisation`. Ces clés
-          symboles sont un **point d'extension plugin** (les plugins poussent dans
-          `@parameters[:général]`), donc pas renommables en ASCII sans décision de conception —
-          d'où un lot dédié.
+    - [x] **Lot E2 — `editParameters/*` + ERB d'édition avancée** — branches
+          `feature/i18n-06-parameters-lot-e2` (`47bfc40` + `e3f9936`) et
+          `feature/i18n-06-parameters-lot-e3` (`6ca6f8f` + `05f64f5`), toutes deux mergées dans
+          `develop`. Lot E2 : `CsvSettings`, `MailSettings`, `RulesSettings`, `TeachersParameters`,
+          `DragAndDrop` + les 6 en-têtes ERB `*_parameters_edit.html.erb` → nouveau sous-arbre
+          `parameters:editParameters.*` (+49 feuilles → `parameters.json` 221/221). Lot E3 :
+          `SchoolParameters.jsx` seul (identité légale/fiscale — SIRET / RCS / TVA), sorti en passe
+          dédiée → `parameters:editParameters.school.*` (+34 feuilles → 255/255). En-têtes ERB
+          extraites vers `views.parameters.{school,teachers,rules,mails,csv,formules}_parameters.edit.*`.
+          `FormulesParameters` : composant inexistant sous `editParameters/` (route/vue morte ou
+          fournie par plugin), laissé tel quel ; seul son `<h2>` ERB a été extrait.
+    - [x] **Lot F — `ParametersController#set_base_parameters`** — branche
+          `feature/i18n-06-parameters-lot-f`. Les 7 cartes de la page `/parameters` (« Votre
+          école », « Langues », « Emails », « Exports CSV », « Notifications », « Professeurs »,
+          « Formules ») + leurs `text` → `views.parameters.index.cards.<slug>.{title,text}` (slugs :
+          school, languages, emails, csv, notifications, teachers, packages) ; les 2 en-têtes de
+          section rendus par `index.html.erb:10` → `views.parameters.index.sections.#{key}` avec
+          `default: key.to_s.humanize`. Les symboles Ruby `:général` / `:personnalisation` sont
+          **conservés** (pas renommés en ASCII) : le fallback `default:` garde le rendu identique en
+          FR et couvre toute future section `@parameters[:<autre>]`. La note « point d'extension
+          plugin » ci-dessus était spéculative — grep confirme que `set_base_parameters` est le
+          seul peupleur de `@parameters` (aucun plugin/hook/listener in-repo n'y écrit). +16
+          feuilles par locale ; `bin/i18n-tasks health` = `0 missing / 0 unused / 0 inconsistent`
+          (la clé dynamique `sections.#{key}` est créditée « in use » par le wildcard du scanner,
+          aucune entrée `config/i18n-tasks.yml` requise). Fautes FR préservées verbatim : voir
+          `docs/KnownIssues.md` (bloc `feature/i18n-06-parameters-lot-f`). **Domaine `parameters`
+          terminé (lots A–F).**
   - [~] `payments` — **branche `feature/i18n-06-extract-payments` : 1er lot fait, reste à
         découper.** Le domaine `payments` est bien plus gros que les autres (~19 vues ERB, ~31
         composants React), donc découpé :

@@ -363,45 +363,45 @@ class ParametersController < ApplicationController
     @parameters[:personnalisation] ||= []
 
     @parameters[:général].prepend({
-                                    title: "Votre école",
-                                    text: "Définissez les informations générales de votre école: nom, adresse postale, etc.",
+                                    title: t("views.parameters.index.cards.school.title"),
+                                    text: t("views.parameters.index.cards.school.text"),
                                     link: url_for(action: :school_parameters_edit, only_path: true)
                                   })
 
     @parameters[:général] << {
-      title: "Langues",
-      text: "Choisissez la langue par défaut de l'installation et les langues proposées aux utilisateurs.",
+      title: t("views.parameters.index.cards.languages.title"),
+      text: t("views.parameters.index.cards.languages.text"),
       link: url_for(controller: "parameters/localization_parameters", action: :index, only_path: true)
     }
 
     @parameters[:personnalisation] << {
-      title: "Emails",
-      text: "Paramétrez votre serveur d'envoi de mails, l'adresse de l'expéditeur et vos destinataires.",
+      title: t("views.parameters.index.cards.emails.title"),
+      text: t("views.parameters.index.cards.emails.text"),
       link: url_for(action: :mails_parameters_edit, only_path: true)
     }
 
     @parameters[:personnalisation] << {
-      title: "Exports CSV",
-      text: "Paramétrez vos exports CSV.",
+      title: t("views.parameters.index.cards.csv.title"),
+      text: t("views.parameters.index.cards.csv.text"),
       link: url_for(action: :csv_parameters_edit, only_path: true)
     }
 
     @parameters[:personnalisation] << {
-      title: "Notifications",
-      text: "Paramétrez et modifiez vos templates emails.",
+      title: t("views.parameters.index.cards.notifications.title"),
+      text: t("views.parameters.index.cards.notifications.text"),
       link: url_for(controller: 'notification_templates', action: 'index', only_path: true)
     }
 
 
     @parameters[:personnalisation] << {
-      title: "Professeurs",
-      text: "Gérez les permissions au planning et les informations affichées à l'élève.",
+      title: t("views.parameters.index.cards.teachers.title"),
+      text: t("views.parameters.index.cards.teachers.text"),
       link: url_for(action: :teachers_parameters_edit, only_path: true)
     }
 
     @parameters[:personnalisation] << {
-      title: "Formules",
-      text: "Activez ou désactivez l'affichage des formules.",
+      title: t("views.parameters.index.cards.packages.title"),
+      text: t("views.parameters.index.cards.packages.text"),
       link: url_for(action: :formules_parameters_edit, only_path: true)
     }
 
