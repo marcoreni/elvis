@@ -268,5 +268,66 @@
         "availableHint": "Les langues proposées aux utilisateurs de cette installation.",
         "defaultHeading": "Langue par défaut",
         "defaultHint": "Langue utilisée par défaut pour les invités et les nouveaux comptes."
+    },
+    "editParameters": {
+        "settingsApplied": "Les paramètres ont bien été pris en compte",
+        "csv": {
+            "saveSuccessTitle": "Succès",
+            "sepLabel": "Séparateur de colonnes",
+            "sepRequired": "Le séparateur de colonnes est requis",
+            "encodingLabel": "Encodage de caractères",
+            "encodingRequired": "L'encodage de caractères est requis"
+        },
+        "mail": {
+            "saveSuccessTitle": "Success",
+            "errorTitle": "Error",
+            "genericError": "Une erreur est survenue, contactez un administrateur",
+            "smtpAddressLabel": "Adresse SMTP:",
+            "smtpAddressRequired": "L'adresse smtp est requise",
+            "smtpPortLabel": "Port SMTP:",
+            "portRequired": "Le port est requis",
+            "domainLabel": "Domaine",
+            "sslTlsLabel": "Activer SSL/TLS: ",
+            "authLabel": "Authentification:",
+            "authRequired": "Le type d'authentification est requis",
+            "usernameLabel": "Identifiant:",
+            "usernameRequired": "L'identifiant est requis",
+            "passwordLabel": "Mot de passe (il ne sera changé que si le champ est rempli):",
+            "passwordRequired": "Le mot de passe est requis",
+            "redirectLabel": "Rediriger tous les mails vers les adresses suivantes (séparer par des retours à la ligne):",
+            "redirectHint": "Ne rien mettre pour ne pas rediriger",
+            "fromLabel": "Adresse d'envoi par défaut"
+        },
+        "rules": {
+            "loadingTitle": "chargement...",
+            "saveSuccess": "Enregistrement effectué",
+            "genericError": "Une erreur est survenue",
+            "formatLabel": "Sélectionner le format du fichier",
+            "formatNone": "Aucun",
+            "urlLabel": "Renseigner l'url",
+            "pdfLabel": "Ajouter un pdf",
+            "dropPdfText": "Pour ajouter un PDF, déposez un fichier ici ou"
+        },
+        "teachers": {
+            "saveSuccessTitle": "Succès",
+            "saveSuccessText": "Les paramètres ont été sauvegardés",
+            "saveErrorText": "Une erreur est survenue lors de la sauvegarde des paramètres",
+            "planningHeading": "Droit sur le planning",
+            "planningLabel": "Le professeur peut modifier son planning",
+            "applicationsHeading": "Droit sur les demandes d'inscriptions",
+            "applicationsLabel": "Permettre aux professeurs de gérer les demandes d'inscriptions qui leur sont liées",
+            "contactsHeading": "Coordonnées",
+            "contactsLabel": "Afficher les coordonnées du professeur sur la page de l'élève",
+            "coursesHeading": "Liste des cours",
+            "coursesLabel": "Le professeur peut gérer la liste de ses cours"
+        },
+        "dragAndDrop": {
+            "invalidType": "Type de fichier non autorisé",
+            "tooManyFiles": "un seul fichier autorisé",
+            "selectButton": "Sélectionner",
+            "currentDocument": "Document actuel :",
+            "none": "aucun",
+            "imageAlt": "image impossible à charger"
+        }
     }
 }

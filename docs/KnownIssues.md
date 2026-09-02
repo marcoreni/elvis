@@ -1156,6 +1156,90 @@ follow-up "parameters lot E2 / editParameters" pass. Their `<h2>`/`<h1>` page he
 ("Paramétrage des droits des professeurs", "Règlement intérieur", "Paramètres avancés : Mails",
 "Paramètres avancés : Exports CSV", "Paramètres : Formules", "Pas de nom" fallback) remain in FR.
 
+`frontend/locales/fr/parameters.json` + `config/locales/{fr,en}.yml` (added by
+feature/i18n-06-parameters-lot-e2 — `parameters` lot E2, the advanced-settings screens under
+`frontend/components/editParameters/`: `CsvSettings`, `MailSettings`, `RulesSettings`,
+`TeachersParameters`, `DragAndDrop` + the 6 `*_parameters_edit.html.erb` page headings). New
+`parameters:editParameters.*` subtree (+49 leaves → `parameters.json` 221/221). Preserved verbatim:
+
+- `editParameters.mail.saveSuccessTitle` = "**Success**" and `editParameters.mail.errorTitle` =
+  "**Error**" — the sweetalert2 titles in `MailSettings.jsx` are written in **English in the
+  French source**, while the sibling `CsvSettings.jsx` right next to it uses "Succès" / "Erreur"
+  for the exact same success/error dialogs. Preserved verbatim; the EN values are identically
+  "Success" / "Error", so no visible EN effect, but the FR side shows English words. Cleanup
+  candidate: align `MailSettings` on "Succès" / reuse `shared.errorTitle` ("Erreur").
+- `editParameters.mail.smtpAddressRequired` = "L'adresse **smtp** est requise" — lowercase "smtp"
+  in the validation message while the field label (`smtpAddressLabel`) writes "Adresse **SMTP**:".
+  Preserved verbatim; EN side ("The SMTP address is required") is clean. → right: "L'adresse SMTP
+  est requise".
+- `editParameters.mail.genericError` = "Une erreur est survenue**,** **contactez** un
+  administrateur" (comma + lowercase c) is a near-duplicate of `shared.genericError` = "Une erreur
+  est survenue**.** **Contactez** un administrateur" (period + capital C), which `CsvSettings.jsx`
+  reuses for the same error dialog. `MailSettings.jsx` got its own `editParameters.mail.genericError`
+  key **only because the punctuation/casing differs** in the source. Preserved verbatim on both
+  sides; consolidate onto `shared.genericError` in the cleanup pass.
+- `editParameters.rules.loadingTitle` = "**chargement...**" (lowercase c, no accent, trailing
+  `...`) — sweetalert2 loading-title in `RulesSettings.jsx`. Same defect already logged for
+  `evaluations.slot.loadingTitle` (lot E); this is a recurring pattern across the codebase's swal
+  loaders. Preserved verbatim; EN "loading...".
+- `editParameters.dragAndDrop.tooManyFiles` = "**un** seul fichier autorisé" (lowercase start, no
+  final period) vs the sibling `editParameters.dragAndDrop.invalidType` = "**T**ype de fichier non
+  autorisé" (capitalised) — both are `div.innerHTML =` assignments in the same
+  `handleDropRejected` in `DragAndDrop.jsx`. Preserved verbatim; EN side ("only one file allowed"
+  / "File type not allowed") mirrors the casing split. → right: "Un seul fichier autorisé".
+
+Not logged as typos, noted for the cleanup pass: the `MailSettings.jsx` field labels omit the
+French space before `:` ("Adresse SMTP:", "Port SMTP:", "Authentification:", "Identifiant:", …) —
+preserved verbatim; the repo standard is a space before `:`. `editParameters.rules.urlLabel` =
+"Renseigner l'url" and `editParameters.rules.pdfLabel` = "Ajouter un pdf" keep the source's
+lowercase "url" / "pdf" (EN side normalises to "URL" / "PDF").
+
+Reuse confirmed (no new key added): `shared.errorTitle` ("Erreur") by `CsvSettings` +
+`TeachersParameters`; `shared.genericError` by `CsvSettings`; `shared.saveButton` ("Sauvegarder")
+by `TeachersParameters`; `common:actions.save` ("Enregistrer") by the 3 submit `<input value>`s
+in `CsvSettings` / `MailSettings` / `RulesSettings`.
+
+ERB headings — 6 new `views.parameters.*` keys, verbatim from the `<h1>`/`<h2>` in the
+`*_parameters_edit.html.erb` scaffolds (fr / en):
+`school_parameters.edit.no_name` "Pas de nom" / "No name" (the `@school_informations&.name ||`
+fallback); `teachers_parameters.edit.heading` "Paramétrage des droits des professeurs" /
+"Teacher rights settings"; `rules_parameters.edit.heading` "Règlement intérieur" /
+"Internal rules"; `mails_parameters.edit.heading` "Paramètres avancés : Mails" /
+"Advanced settings: Emails"; `csv_parameters.edit.heading` "Paramètres avancés : Exports CSV" /
+"Advanced settings: CSV exports"; `formules_parameters.edit.heading` "Paramètres : Formules" /
+"Settings: Packages". The `rules` source is `<h1>  Règlement intérieur  </h1>` with surrounding
+whitespace — stored trimmed (whitespace-only normalisation, not a content change).
+
+Scoped OUT of lot E2, deferred to lot E3: `frontend/components/editParameters/SchoolParameters.jsx`
+(306 loc — legal/fiscal identity fields, SIRET / RCS / VAT — warrants its own focused pass). Only
+its ERB fallback heading ("Pas de nom") was extracted here.
+
+`frontend/components/editParameters/FormulesParameters` is referenced by
+`app/views/parameters/formules_parameters_edit.html.erb` (`react_component "editParameters/FormulesParameters"`)
+but **the component file does not exist** under `frontend/components/editParameters/` — likely a
+dead route or a plugin-provided component (`copy_react` mirrors plugin components into
+`frontend/components/plugins/`, not here). Per the "don't delete on 500 / looks dead" rule the
+route/view was left untouched; the ERB `<h2>` heading was still extracted, the (missing) component
+was not.
+
+`frontend/components/editParameters/DragAndDrop.jsx` is a **shared** component and lot E2 makes it
+depend on the `parameters` namespace (`useTranslation("parameters")` for its own literals —
+"Sélectionner", the `handleDropRejected` messages, the "Document actuel : aucun" fallback, the img
+`alt`). It has **four** call sites across three i18n domains: `editParameters/RulesSettings.jsx`,
+`editParameters/SchoolParameters.jsx` (both `parameters`), `parameters/ActivityApplications/ConsentDocumentModal.jsx`
+(`parameters`), and `activityRef/ActivityRefBasics.jsx` (`activities` domain). Harmless today —
+`frontend/i18n/index.js` bundles every namespace eagerly — but the natural home for these strings
+is `common:`; a future lazy-namespace split would break the `activityRef` caller silently. Move to
+`common:dragAndDrop.*` in the cleanup pass. (The two `handleDropRejected` writes were also switched
+from `div.innerHTML =` to `div.textContent =` while the lines were being touched — identical output
+for these developer-authored strings, no behaviour change.)
+
+Duplicate title keys for the cleanup pass: `editParameters.csv.saveSuccessTitle` and
+`editParameters.teachers.saveSuccessTitle` are both "Succès" / "Success" — there is no
+`shared.saveSuccessTitle` yet (`shared.saveSuccess` = "Sauvegarde effectuée" is a different
+string). Add `shared.saveSuccessTitle` and collapse both (plus align `editParameters.mail.saveSuccessTitle`
+from the preserved English "Success" at the same time).
+
 ## `frontend/components/common/baseDataTable/BaseDataTable.jsx` — hardcoded French chrome leaks into English
 
 The **functional** shared data-table (`frontend/components/common/baseDataTable/`, distinct from
