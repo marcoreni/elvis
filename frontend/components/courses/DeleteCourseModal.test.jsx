@@ -65,7 +65,7 @@ describe("DeleteCourseModal — i18n", () => {
         expect(
             screen.getByRole("heading", {name: "Supprimer un cours"})
         ).toBeInTheDocument();
-        expect(screen.getByText("Souhaitez-vous:")).toBeInTheDocument();
+        expect(screen.getByText("Souhaitez-vous :")).toBeInTheDocument();
         expect(
             screen.getByText("Supprimer toutes les récurrences de ce cours.")
         ).toBeInTheDocument();

@@ -2,8 +2,8 @@
 //
 // TimePreferences is a function component using `useTranslation("activityApplications")`. Its
 // only extracted string is the <h3> title; the heavy `<Planning>` child it renders is mocked out
-// so this file only exercises the title. Note the two typos in the French source
-// ("Préferences", "Eveil") are intentional / verbatim-preserved.
+// so this file only exercises the title. The former French typos ("Préferences", "Eveil") have
+// since been corrected to "Préférences" / "Éveil".
 
 import React from "react";
 import {render, screen} from "@testing-library/react";
@@ -29,7 +29,7 @@ describe("TimePreferences", () => {
         render(<TimePreferences {...props} />);
 
         expect(
-            screen.getByText("Préferences horaires des activités (hors Eveil)")
+            screen.getByText("Préférences horaires des activités (hors Éveil)")
         ).toBeInTheDocument();
     });
 

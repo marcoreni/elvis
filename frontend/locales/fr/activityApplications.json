@@ -6,13 +6,13 @@
         "requiredQuestionsError": "Vous devez répondre aux questions obligatoires de ce questionnaire"
     },
     "evaluation": {
-        "answerQuestionnairesError": "Veuillez répondre au.x questionnaire.s"
+        "answerQuestionnairesError": "Veuillez répondre au(x) questionnaire(s)"
     },
     "intervalPreferencesEditor": {
         "title": "Préférences horaires pour l'activité ({{label}})"
     },
     "timePreferences": {
-        "title": "Préferences horaires des activités (hors Eveil)"
+        "title": "Préférences horaires des activités (hors Éveil)"
     },
     "evaluationChoice": {
         "noIntervalMessage": "Aucun créneau d'évaluation disponible actuellement, nous reviendrons vers vous très vite pour vous en proposer un.",
@@ -35,9 +35,9 @@
         "estimatedTotal": "Total estimé"
     },
     "addPreApp": {
-        "confirmHtml": "<h5>Cette action permet à <b>{{firstName}} {{lastName}}</b> de se préinscrire à l 'activité pour la <b>{{season}}</b></h5>",
+        "confirmHtml": "<h5>Cette action permet à <b>{{firstName}} {{lastName}}</b> de se préinscrire à l'activité pour la <b>{{season}}</b></h5>",
         "alreadyDone": "Cette action a déjà été effectuée",
-        "openButton": "Ouvrir la PréInscription"
+        "openButton": "Ouvrir la préinscription"
     },
     "userSearch": {
         "title": "Chercher un utilisateur",
@@ -69,13 +69,13 @@
         "colActivity": "Activité",
         "colDuration": "Durée",
         "noActivities": "Aucune activité disponible dans cette formule",
-        "selectedCount": "Activités sélectionnées:",
+        "selectedCount": "Activités sélectionnées :",
         "maxSelectable_one": "Vous ne pouvez sélectionner que {{count}} activité pour cette formule.",
         "maxSelectable_other": "Vous ne pouvez sélectionner que {{count}} activités pour cette formule.",
         "selectToValidate_one": "Veuillez sélectionner {{count}} activité pour valider cette formule.",
         "selectToValidate_other": "Veuillez sélectionner {{count}} activités pour valider cette formule.",
-        "selectAmong_one": "Sélectionnez {{count}} activité parmi les suivantes:",
-        "selectAmong_other": "Sélectionnez {{count}} activités parmi les suivantes:"
+        "selectAmong_one": "Sélectionnez {{count}} activité parmi les suivantes :",
+        "selectAmong_other": "Sélectionnez {{count}} activités parmi les suivantes :"
     },
     "formulaChoice": {
         "noDescription": "Aucune description",
@@ -89,7 +89,7 @@
         "summary": "Récapitulatif",
         "colDuration": "Durée",
         "noPackagesSelected": "Aucune formule sélectionnée",
-        "estimatedTotal": "Total estimé:"
+        "estimatedTotal": "Total estimé :"
     },
     "activityChoice": {
         "formulaPrefix": "Formule : {{name}}",
@@ -99,15 +99,15 @@
         "colActivity": "Activité",
         "colEstimatedPrice": "Tarif estimé",
         "summary": "Récapitulatif",
-        "noActivitySelected": "aucune activité sélectionnée",
+        "noActivitySelected": "Aucune activité sélectionnée",
         "estimatedTotal": "Total estimé",
-        "unpopularWarning": "Les inscriptions aux activités suivantes sont soumises à un nombre minimum d'élèves par cours:"
+        "unpopularWarning": "Les inscriptions aux activités suivantes sont soumises à un nombre minimum d'élèves par cours :"
     },
     "workGroupEditor": {
         "toAssign": "À assigner",
         "instrumentPlaceholder": "INSTRUMENT",
         "deleteRole": "Supprimer le rôle",
-        "cannotAddMultiple": "Impossible d'ajouter plusieurs rôle et option à un seul élève",
+        "cannotAddMultiple": "Impossible d'ajouter plusieurs rôles et options à un seul élève",
         "option": "Option",
         "alreadyInAnotherWorkshop": "L'élève est déjà inscrit dans un autre atelier",
         "removeFromRole": "Retirer du rôle",
@@ -117,19 +117,19 @@
         "instrument": "Instrument",
         "attemptDate": "Essai le",
         "actions": "Actions",
-        "addRole": "Ajouter rôle",
-        "close": "Close"
+        "addRole": "Ajouter un rôle",
+        "close": "Fermer"
     },
     "wizardUserSelectMember": {
         "errorTitle": "Erreur",
         "fetchMembersError": "Une erreur est survenue lors de la récupération des membres",
         "close": "Fermer",
-        "selectMember": "Veuilez sélectionner un membre",
+        "selectMember": "Veuillez sélectionner un membre",
         "selectLegalRepresentative": "Veuillez sélectionner un représentant légal",
         "legalRepresentativeMustBeAdult": "Le représentant légal doit être majeur",
         "memberConcerned": "Membre concerné",
         "addMember": "Ajouter un membre",
-        "ifMinorAddMember": "Si la personne est mineur, ajouter un nouveau membre",
+        "ifMinorAddMember": "Si la personne est mineure, ajouter un nouveau membre",
         "legalRepresentative": "Représentant légal",
         "personToContact": "Personne à contacter",
         "accompanyingPerson": "Accompagnant",
@@ -144,17 +144,17 @@
             "errorTitle": "Erreur",
             "errorText": "Une erreur est survenue lors de la création de votre demande d'inscription. Veuillez contacter l'administrateur."
         },
-        "seasonsClosed": "Les inscriptions à la saison actuelle est fermée et celles de la saison suivante ne sont pas encore ouvertes.",
+        "seasonsClosed": "Les inscriptions à la saison actuelle sont fermées et celles de la saison suivante ne sont pas encore ouvertes.",
         "createSeason": "Créer une saison",
         "instrumentsLabel": "Instruments que vous souhaitez pratiquer dans l'activité",
         "beginDate": "Date de début",
         "nextStep": "Suivant",
         "prevStep": "Précédent",
-        "newApplicationTitle": "Nouvelle demande d’inscription",
+        "newApplicationTitle": "Nouvelle demande d'inscription",
         "steps": {
-            "member": "Membre Concerné",
+            "member": "Membre concerné",
             "contactDetails": "Coordonnées",
-            "changeWishes": "Voeux de changement",
+            "changeWishes": "Vœux de changement",
             "packChoice": "Choix de la formule",
             "activityChoice": "Choix de l'activité",
             "instruments": "Instruments",
@@ -176,7 +176,7 @@
         "birthDate": "Date de naissance",
         "personalContactDetails": "Coordonnées personnelles",
         "addresses": "Adresse(s)",
-        "phone": "Télephone {{label}}:",
+        "phone": "Téléphone {{label}} :",
         "contacts": "Contacts",
         "legalRepresentative": "Représentant légal",
         "accompanyingPerson": "Accompagnant",
@@ -190,9 +190,9 @@
         "estimatedTotal": "Total estimé",
         "totalEstimatedCost": "Coût total estimé :",
         "availabilities": "Disponibilités",
-        "levelEvaluation": "Evaluation de niveau",
+        "levelEvaluation": "Évaluation de niveau",
         "paymentPreference": "Préférence de paiement",
-        "paymentSchedule": "Echéancier",
+        "paymentSchedule": "Échéancier",
         "paymentMethod": "Moyen de paiement",
         "payers": "Payeur(s)",
         "comment": "Commentaire",
@@ -220,7 +220,7 @@
         "accompanyingPerson": "Accompagnant",
         "instruments": "Instruments",
         "suggestionCriteria": "critères pour les cours suggérés : disponibilités de l'élève, type et créneau de l'ancienne activité",
-        "editLevelTitle": "Edition du niveau de {{label}}",
+        "editLevelTitle": "Édition du niveau de {{label}}",
         "colName": "Nom",
         "colAge": "Âge",
         "colLevel": "Niveau",
@@ -256,16 +256,16 @@
         "mustRemoveActivities": "Les activités doivent toutes être retirées pour pouvoir supprimer cette demande",
         "confirmDeleteApplication": {
             "title": "<h5>Voulez-vous supprimer cette demande d'inscription ?</h5>",
-            "body": "<p>La demande de {{name}} sera définitivement supprimé</p>",
+            "body": "<p>La demande de {{name}} sera définitivement supprimée</p>",
             "confirm": "<i class=\"fas fa-trash\"></i> Supprimer la demande"
         },
         "confirmMailTitle": "Envoi mail confirmation",
         "confirmationTitle": "Confirmation",
-        "genericConfirm": "Êtes vous sûr.e de vouloir faire cela ?",
+        "genericConfirm": "Êtes-vous sûr de vouloir faire cela ?",
         "proposalRefused": "Proposition refusée",
         "reasonForRefusal": "Raison du refus : ",
-        "proposalAccepted": "Proposition Acceptée",
-        "evaluationRenderError": "Echec du rendu : cette évaluation n'existe pas",
+        "proposalAccepted": "Proposition acceptée",
+        "evaluationRenderError": "Échec du rendu : cette évaluation n'existe pas",
         "noOtherApplications": "Aucune autre demande en cours pour cet utilisateur",
         "newRequest": "Nouvelle demande",
         "status": "Statut",
@@ -274,7 +274,7 @@
         "ageYears": "{{age}} ans",
         "memberNumber": " - Adhérent n°{{number}}",
         "referent": "Référent.e",
-        "selectReferent": "SELECTIONNER UN REFERENT",
+        "selectReferent": "SÉLECTIONNER UN RÉFÉRENT",
         "modifiedAt": "Modifié {{when}}",
         "tooltips": {
             "viewProfile": "Voir la fiche",
@@ -305,7 +305,7 @@
         "noEvaluationSlot": "Pas de créneau",
         "availabilitiesTitle": "Disponibilités horaires",
         "additionalInfoTitle": "Infos complémentaires",
-        "infoLabel": "Infos:",
+        "infoLabel": "Infos :",
         "applicationStatus": "Statut de la demande",
         "activityStopDate": "Date d'arrêt de l'activité"
     }

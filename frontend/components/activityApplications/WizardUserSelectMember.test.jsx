@@ -99,12 +99,11 @@ describe("WizardUserSelectMember — fetch-error branch fires swal with resolved
 });
 
 describe("WizardUserSelectMember — i18n layer", () => {
-    test("selectMember keeps the 'Veuilez' typo in fr (not 'Veuillez')", () => {
+    test("selectMember uses the corrected 'Veuillez' spelling in fr", () => {
         const v = i18n.getFixedT("fr", "activityApplications")(
             "wizardUserSelectMember.selectMember"
         );
-        expect(v).toContain("Veuilez");
-        expect(v).not.toContain("Veuillez");
+        expect(v).toBe("Veuillez sélectionner un membre");
     });
 
     test.each(["fr", "en"])(

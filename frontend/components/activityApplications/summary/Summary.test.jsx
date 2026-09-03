@@ -166,7 +166,7 @@ describe("Summary — rendered copy per locale", () => {
         fr: {
             status: "Statut",
             referent: "Référent.e",
-            selectReferent: "SELECTIONNER UN REFERENT",
+            selectReferent: "SÉLECTIONNER UN RÉFÉRENT",
             newRequest: "Nouvelle demande",
             otherApplications: "Autres demandes",
             ageYears: /\d+ ans/,
@@ -350,9 +350,9 @@ describe("Summary — summary.* i18n layer", () => {
         ).toBe(" - Member no. 42");
     });
 
-    test("selectReferent keeps the source's missing accents (fr)", () => {
+    test("selectReferent has its accents restored (fr typo fixed)", () => {
         expect(i18n.getFixedT("fr", "activityApplications")("summary.selectReferent")).toBe(
-            "SELECTIONNER UN REFERENT",
+            "SÉLECTIONNER UN RÉFÉRENT",
         );
     });
 
@@ -382,7 +382,7 @@ describe("Summary — summary.* i18n layer", () => {
 
     test("evaluationRenderError (the renderEvaluationForm singleton branch) resolves", () => {
         expect(i18n.t("activityApplications:summary.evaluationRenderError")).toBe(
-            "Echec du rendu : cette évaluation n'existe pas",
+            "Échec du rendu : cette évaluation n'existe pas",
         );
     });
 

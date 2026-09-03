@@ -66,7 +66,7 @@
         "statusEdit": {
             "title": "Édition du statut"
         },
-        "statusEditFailed": "Echec",
+        "statusEditFailed": "Échec",
         "bulkDeleteTitle": "Confirmation",
         "csvExport": {
             "prefix": "Exporter en CSV ",
@@ -94,11 +94,11 @@
         },
         "subPayments": {
             "columns": {
-                "method": "Mode de réglement",
+                "method": "Mode de règlement",
                 "reception": "Réception",
                 "cashing": "Encaissement",
                 "checkNumber": "N° du Chèque",
-                "checkIssuer": "Emmeteur du Chèque",
+                "checkIssuer": "Émetteur du chèque",
                 "amount": "Montant"
             },
             "unspecified": "Non précisé",
@@ -123,8 +123,8 @@
                 "checkNumber": "N° de chèque",
                 "status": "Statut"
             },
-            "paymentDateLabel": "Date de réglement :",
-            "paymentDateTooltip": "Date de réglement",
+            "paymentDateLabel": "Date de règlement :",
+            "paymentDateTooltip": "Date de règlement",
             "allChecks": "Tous les chèques",
             "clearedChecks": "Chèques pointés",
             "unclearedChecks": "Chèques non pointés",
@@ -238,30 +238,30 @@
             "heading": "Règlements",
             "actionsDropdown": "Actions règlements",
             "newPayment": "Nouveau règlement",
-            "bulkEdit": "Edition de masse",
+            "bulkEdit": "Édition de masse",
             "bulkDelete": "Suppression de masse",
-            "editPaymentTitle": "Edition Règlement",
+            "editPaymentTitle": "Édition du règlement",
             "newPaymentTitle": "Nouveau Règlement",
             "paymentMethodLabel": "Mode de Paiement",
-            "selectPaymentMethod": "Selectionnez un mode de paiement",
+            "selectPaymentMethod": "Sélectionnez un mode de paiement",
             "dueChoiceLabel": "Choix de l'échéance",
-            "selectDue": "Selectionnez une échéance",
+            "selectDue": "Sélectionnez une échéance",
             "membership": "Adhésion",
-            "dueNumber": "Echéance N°{{n}}",
+            "dueNumber": "Échéance n° {{n}}",
             "amountLabel": "Montant (€)",
             "amountPlaceholder": "XX €",
             "statusLabel": "Statut",
             "noStatus": "Pas de statut",
             "receptionDateLabel": "Date de réception",
             "checkNumberLabel": "N° du Chèque",
-            "checkIssuerLabel": "Emmeteur du Chèque",
+            "checkIssuerLabel": "Émetteur du chèque",
             "cashingDateLabel": "Date d'encaissement",
             "createButton": "Créer",
-            "bulkEditTitle": "Edition de règlements",
+            "bulkEditTitle": "Édition de règlements",
             "amountShortLabel": "Montant",
             "checkIssuerBulkLabel": "Émetteur du chèque",
-            "firstCheckNumberLabel": "Numéro du premier chèque (les numéros suivants seront incrémenté automatiquement)",
-            "editButton": "Editer"
+            "firstCheckNumberLabel": "Numéro du premier chèque (les numéros suivants seront incrémentés automatiquement)",
+            "editButton": "Éditer"
         },
         "duePaymentsList": {
             "columns": {

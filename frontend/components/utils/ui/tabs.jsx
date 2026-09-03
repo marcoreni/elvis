@@ -41,7 +41,7 @@ export default function TabbedComponent({ tabs: tabsProps , mode: modeProps, def
                             style={{ height: "auto" }}
                             className={`${mode === "classic" ? "" : "btn btn-primary btn_slider"} ${active === i ? "active" : ""}`}
                             onClick={t.headerHandler || (() => {})}
-                            { ...(tabErrorState[t.id] || t.isInError ? { ["title"]: "Cet onglet n'est pas complêtement remplis" } : {})}
+                            { ...(tabErrorState[t.id] || t.isInError ? { ["title"]: "Cet onglet n'est pas complètement rempli" } : {})}
                         >
                             <a
                                 className={`${mode === "classic" ? "nav-link " : "text-"} ${active === i ? "active" : ""}`}

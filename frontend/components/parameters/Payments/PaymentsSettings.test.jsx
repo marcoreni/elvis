@@ -372,7 +372,7 @@ describe("PaymentsMethods / PaymentsStatus — class tables extending BaseDataTa
         await i18n.changeLanguage("fr");
         mountInstance(PaymentsStatus, "fr").deleteStatus({id: 1, label: "Réglé"});
         let opts = swal.mock.calls[0][0];
-        expect(opts.title).toBe("Voulez-vous vraiment supprimer le status 'Réglé' ?");
+        expect(opts.title).toBe("Voulez-vous vraiment supprimer le statut 'Réglé' ?");
         expect(opts.cancelButtonText).toBe("non");
         expect(opts.confirmButtonText).toBe("oui");
 

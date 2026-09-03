@@ -164,18 +164,19 @@ describe("editParameters.* — i18n layer", () => {
         expect(tC("en")("actions.save")).toBe("Save");
     });
 
-    test("mail swal titles are deliberately English in BOTH locales", () => {
-        expect(tP("fr")("editParameters.mail.saveSuccessTitle")).toBe("Success");
+    test("mail swal titles are now localised in fr (English kept in en)", () => {
+        expect(tP("fr")("editParameters.mail.saveSuccessTitle")).toBe("Succès");
         expect(tP("en")("editParameters.mail.saveSuccessTitle")).toBe("Success");
-        expect(tP("fr")("editParameters.mail.errorTitle")).toBe("Error");
+        expect(tP("fr")("editParameters.mail.errorTitle")).toBe("Erreur");
         expect(tP("en")("editParameters.mail.errorTitle")).toBe("Error");
     });
 
-    test("editParameters.mail.genericError is a distinct string from shared.genericError (punctuation split kept)", () => {
+    test("editParameters.mail.genericError is now consolidated with shared.genericError (fr + en)", () => {
         for (const lng of ["fr", "en"]) {
-            expect(tP(lng)("editParameters.mail.genericError")).not.toBe(tP(lng)("shared.genericError"));
+            expect(tP(lng)("editParameters.mail.genericError")).toBe(tP(lng)("shared.genericError"));
         }
-        expect(tP("fr")("editParameters.mail.genericError")).toBe("Une erreur est survenue, contactez un administrateur");
+        expect(tP("fr")("editParameters.mail.genericError")).toBe("Une erreur est survenue. Contactez un administrateur");
+        expect(tP("en")("editParameters.mail.genericError")).toBe("An error occurred. Contact an administrator");
     });
 
     // --- CsvSettings dead-gate: `{errors.col_sep && t("editParameters.csv.sepRequired")}` is

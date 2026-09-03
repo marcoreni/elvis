@@ -41,7 +41,7 @@ RSpec.describe "Planning pages", type: :request do
       expect(response).to have_http_status(:ok)
       expect(unescaped_body)
         .to include("Plannings des Salles de Cours")
-        .and include("Creer une nouvelle salle")
+        .and include("Créer une nouvelle salle")
         .and include("Aucune salle de cours n'est enregistrée.")
     end
 

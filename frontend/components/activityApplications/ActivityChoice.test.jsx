@@ -63,7 +63,7 @@ const COPY = {
         colActivity: "Activité",
         colEstimatedPrice: "Tarif estimé",
         summary: "Récapitulatif",
-        noActivitySelected: "aucune activité sélectionnée",
+        noActivitySelected: "Aucune activité sélectionnée",
         estimatedTotal: "Total estimé",
     },
     en: {
@@ -164,12 +164,12 @@ describe.each(["fr", "en"])("ActivityChoice — rendered copy (%s)", lng => {
 });
 
 describe("ActivityChoice — fr specifics", () => {
-    test("the empty-state copy is the lowercase 'aucune…' variant", async () => {
+    test("the empty-state copy is the capitalised 'Aucune…' variant (typo fixed)", async () => {
         await i18n.changeLanguage("fr");
         renderActivityChoice();
 
-        expect(screen.getByText("aucune activité sélectionnée")).toBeInTheDocument();
-        expect(screen.queryByText("Aucune activité sélectionnée")).not.toBeInTheDocument();
+        expect(screen.getByText("Aucune activité sélectionnée")).toBeInTheDocument();
+        expect(screen.queryByText("aucune activité sélectionnée")).not.toBeInTheDocument();
     });
 
     test("the estimated-total label has no trailing colon", async () => {

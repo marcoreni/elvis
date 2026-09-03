@@ -181,14 +181,14 @@ one existing yet:
 - `common.actions.edit` — `"Éditer"` / `"Edit"` (added in i18n-06 for
   `evaluation_level_ref/index.html.erb`)
 - `views.users._family.edit_action` — `"Éditer"` / `"Edit"` (i18n-05)
-- `views.users.show.edit_link` — `"Editer"` / `"Edit"` (i18n-05) — note the French value is
-  **missing its accent**, so it also silently diverges in copy from the other two.
+- `views.users.show.edit_link` — `"Éditer"` / `"Edit"` (i18n-05) — the missing-accent value
+  (`"Editer"`) was fixed in `feature/i18n-typo-cleanup`, so all three now agree on copy.
 
-`common.actions.edit` is the intended canonical key going forward. The two `views.users.*` keys
-should be pointed at it (and the missing-accent value dropped) in a cleanup pass — not done in
-i18n-06 because retrofitting the users views was out of that branch's scope. Same applies to any
-other verbatim action-label duplication that predates `common.actions.*` (check `common.actions`
-against the `views.*` trees when doing the pass).
+`common.actions.edit` is still the intended canonical key: the two `views.users.*` keys should be
+pointed at it and dropped in a cleanup pass — **not done** (retrofitting the users views is a
+structural change, out of the typo pass's scope). Same applies to any other verbatim action-label
+duplication that predates `common.actions.*` (check `common.actions` against the `views.*` trees
+when doing the pass).
 
 ## Scaffold views suspected dead — recovery log + removal candidates
 
@@ -430,11 +430,29 @@ pass, not mid-extraction. Covered by an inline comment in `PlanningsSettings.tes
 
 ## French typos preserved verbatim during i18n extraction — clean up the locale files
 
-The i18n branches copy every French string **verbatim** into the locale files (no copy changes
-during extraction — see the `common.confirm.sure` episode). Several source strings had typos, now
-sitting in `frontend/locales/fr/payments.json` (and a few in `config/locales/fr.yml`). Once the
-payments i18n lots are all merged, do one pass over the locale files to fix these — it's a pure
-value edit, no component or key changes:
+**STATUS (branch `feature/i18n-typo-cleanup`): the value fixes below are DONE.** Every `"…" → "…"`
+correction listed in this section and in the per-domain `parameters` / `planning lot 3c` sections
+further down was applied to `frontend/locales/fr/*.json` + `config/locales/fr.yml` (keys and the
+EN side unchanged; fr/en parity + `bin/i18n-tasks health` verified; the ~26 test files that pinned
+the old spellings were realigned). Including the ~15 "missing French space before `:`" cases and
+the `editParameters.mail.*` English-in-French swal titles.
+
+**What is still live in this section** and must NOT be lost to a future blanket pass:
+- the **load-bearing whitespace** warnings (leading/trailing spaces that are concatenation glue —
+  `activityModal.createCoursesButton`/`createCourseButton`, `summary.reasonForRefusal`,
+  `summary.memberNumber`, `wizard.applicationSubtitle.{allActivities,oneActivity}`, …). Those
+  values were left exactly as-is;
+- the **non-typo behaviour / consistency notes** (`const T` non-reactivity, plural-key fallback,
+  `<Trans>` keep-list, `ActivityRefBasics` `seasonEnd` bug, the various pre-existing **CODE bugs**
+  noted "out of i18n scope");
+- the dedup / `shared.*` consolidation opportunities (deliberately not done here — structural).
+
+The historical `"old" → "new"` bullet lists are kept below only as the record of what changed and
+for the interleaved notes above; the corrections themselves need no further action.
+
+---
+
+Original catalogue (corrections applied, notes retained):
 
 `frontend/locales/fr/payments.json`:
 - `general.statusEditFailed` — "Echec" → "Échec"
@@ -607,11 +625,12 @@ components:
   membre" → "…est **mineure**…" ("la personne" is feminine). Masculine agreement for a person of
   unknown gender; kept verbatim. English side: "If the person is a minor…".
 
-Also re-scan the whole `frontend/locales/fr/` + `config/locales/fr.yml` when doing this (grep for
-`Edition\b`, `Editer\b`, `Selectionn`, `réglement`, `Echéance`, `Echec`, `Emmeteur`, `Precedent`,
-`Creer\b`, `verouiller`, `Resolution\b`, `complêtement`, `remplis\b`); the list above is only what
-was noticed in passing, not an exhaustive audit. The English side of these keys is already spelled
-correctly.
+The `feature/i18n-typo-cleanup` pass also re-scanned the whole `frontend/locales/fr/` +
+`config/locales/fr.yml` (`Edition\b`, `Editer\b`, `Selectionn`, `réglement`, `Echéance`, `Echec`,
+`Emmeteur`, `Precedent`, `Creer\b`, `verouiller`, `Resolution\b`, `complêtement`, `remplis\b`,
+`smtp\b`, `<-space>:`); nothing beyond this catalogue turned up. `components/utils/ui/tabs.jsx`'s
+hardcoded French tooltip ("Cet onglet n'est pas complêtement remplis") is a separate entry below —
+it is a *component* string, not a locale-file value, so it was out of this pass's scope.
 
 Non-typo notes from the lot-3b review (behaviour / consistency, not blocking):
 - **`const T` helper is non-reactive.** `UserSearch.jsx` and `WizardUserSelectMember.jsx` are
@@ -866,13 +885,14 @@ listed here so the flow isn't half-localised in the meantime and nothing gets mi
 
 ## `components/utils/ui/tabs.jsx` — hardcoded French tab-error tooltip (+ 2 typos)
 
-`frontend/components/utils/ui/tabs.jsx:41` sets `title: "Cet onglet n'est pas complêtement remplis"`
+`frontend/components/utils/ui/tabs.jsx:~44` sets `title: "Cet onglet n'est pas complètement rempli"`
 on any tab whose `isInError` is true. Surfaced during i18n-06 `activities` lot 2a:
 `ActivityRefContainer` passes `isInError` for the "Activité"/"Professeurs" tabs, so in English mode
-the header renders "Activity" but its hover tooltip is French. `tabs.jsx` is a shared UI util —
-extract it whenever the `parameters` domain (or whichever lot owns `components/utils/`) is done,
-not piecemeal from `activities`. Typos to fix on the way: `complêtement` → `complètement`,
-`remplis` → `rempli` (subject is "onglet", singular).
+the header renders "Activity" but its hover tooltip is still **French** — the string is a component
+literal, not a locale key. The two typos (`complêtement` → `complètement`, `remplis` → `rempli`)
+were fixed in-place in `feature/i18n-typo-cleanup`; the string itself is still not i18n'd. `tabs.jsx`
+is a shared UI util — extract it whenever a lot owns `components/utils/` (a `common:` namespace +
+a `t` prop, since it's a fn component with no `useTranslation`), not piecemeal from `activities`.
 
 ## `activityRef/ActivityRefContainer.jsx` — `this.teachersError` is a one-way side-channel
 

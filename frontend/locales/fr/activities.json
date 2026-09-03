@@ -65,8 +65,8 @@
             "name": "Nom",
             "family": "Famille",
             "spots": "Nombre de places",
-            "spotsOverbooking": "Places (avec surbooking)",
-            "spotsOverbookingTooltip": "En remplissant ce champ, vous pouvez ajouter des nouvelles places sur cette activité. Les nouvelles places seront disponibles à l'inscription.",
+            "spotsOverbooking": "Places (avec surréservation)",
+            "spotsOverbookingTooltip": "En remplissant ce champ, vous pouvez ajouter de nouvelles places sur cette activité. Les nouvelles places seront disponibles à l'inscription.",
             "ageMin": "Âge minimum (inclus)",
             "ageMax": "Âge maximum (exclu)",
             "activityType": "Type d'activité",
@@ -97,8 +97,8 @@
         },
         "visibility": {
             "title": "Visibilité",
-            "isLesson": "Ce cours peut être selectionné lors d'une inscription",
-            "isVisibleToAdmin": "Ce cours peut être selectionné lors d'une inscription, uniquement par les permanents",
+            "isLesson": "Ce cours peut être sélectionné lors d'une inscription",
+            "isVisibleToAdmin": "Ce cours peut être sélectionné lors d'une inscription, uniquement par les permanents",
             "isUnpopular": "Ce cours est peu demandé, il risque de ne pas ouvrir dans une saison"
         },
         "familyChoice": {
@@ -107,7 +107,7 @@
             "detach": "Dissocier cette activité de sa famille"
         },
         "evaluation": {
-            "title": "Evaluation",
+            "title": "Évaluation",
             "isEvaluable": "Ce cours nécessite une évaluation pour les nouveaux élèves"
         }
     },

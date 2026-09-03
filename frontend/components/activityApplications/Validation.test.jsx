@@ -124,8 +124,8 @@ describe.each(["fr", "en"])("Validation always-rendered sections (%s)", (lng) =>
 
 const CONTACTS_COPY = {
     fr: {
-        // preserved typo: "Télephone" (no accent), no space before ":". {{label}} = "domicile".
-        phoneLabel: "Télephone domicile:",
+        // typo fixed: "Téléphone" (accented), French space before ":". {{label}} = "domicile".
+        phoneLabel: "Téléphone domicile :",
         contacts: "Contacts",
         legalRep: "Représentant légal",
         accompanying: "Accompagnant",
@@ -163,7 +163,7 @@ describe.each(["fr", "en"])("Validation telephones + contacts section (%s)", (ln
         // validation.phone, interpolated with {{label}} = "home", inside `_.map(telephones, ...)`
         expect(screen.getByText(c.phoneLabel)).toBeInTheDocument();
         if (lng === "fr") {
-            expect(screen.queryByText("Téléphone domicile:")).not.toBeInTheDocument();
+            expect(screen.queryByText("Télephone domicile:")).not.toBeInTheDocument();
         }
 
         expect(screen.getByRole("heading", { name: c.contacts })).toBeInTheDocument();
@@ -192,7 +192,7 @@ describe.each(["fr", "en"])("Validation availabilities / evaluation / cost (%s)"
         );
 
         const avail = lng === "fr" ? "Disponibilités" : "Availabilities";
-        const evalH = lng === "fr" ? "Evaluation de niveau" : "Level evaluation";
+        const evalH = lng === "fr" ? "Évaluation de niveau" : "Level evaluation";
         expect(screen.getByRole("heading", { name: avail })).toBeInTheDocument();
         expect(screen.getByRole("heading", { name: evalH })).toBeInTheDocument();
 
@@ -287,7 +287,7 @@ describe.each(["fr", "en"])("Validation selected-packages section (%s)", (lng) =
 const PAYMENT_COPY = {
     fr: {
         heading: "Préférence de paiement",
-        schedule: "Echéancier",
+        schedule: "Échéancier",
         method: "Moyen de paiement",
         payers: "Payeur(s)",
     },
@@ -373,10 +373,9 @@ describe("lot-3e copy specifics", () => {
     const fr = i18n.getFixedT("fr", NS);
     const en = i18n.getFixedT("en", NS);
 
-    test("validation.phone — fr keeps the preserved 'Télephone' typo (no accent on the second e) and interpolates the label", () => {
+    test("validation.phone — fr now uses the accented 'Téléphone' (typo fixed) and interpolates the label", () => {
         const value = fr("validation.phone", { label: "domicile" });
-        expect(value).toContain("Télephone");
-        expect(value).not.toContain("Téléphone");
+        expect(value).toContain("Téléphone");
         expect(value).toContain("domicile");
         expect(value).not.toMatch(/\{\{/);
     });

@@ -18,11 +18,11 @@ describe("SubPaymentList", () => {
         await i18n.changeLanguage("fr");
         render(<SubPaymentList {...props} />);
 
-        expect(screen.getByText("Mode de réglement")).toBeInTheDocument();
+        expect(screen.getByText("Mode de règlement")).toBeInTheDocument();
         expect(screen.getByText("Réception")).toBeInTheDocument();
         expect(screen.getByText("Encaissement")).toBeInTheDocument();
         expect(screen.getByText("N° du Chèque")).toBeInTheDocument();
-        expect(screen.getByText("Emmeteur du Chèque")).toBeInTheDocument();
+        expect(screen.getByText("Émetteur du chèque")).toBeInTheDocument();
         expect(screen.getByText("Montant")).toBeInTheDocument();
     });
 

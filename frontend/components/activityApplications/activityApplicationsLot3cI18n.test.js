@@ -55,7 +55,7 @@ describe("lot-3c copy specifics", () => {
     const en = i18n.getFixedT("en", NS);
 
     test("formulaChoice.estimatedTotal keeps its trailing colon in both locales", () => {
-        expect(fr("formulaChoice.estimatedTotal")).toBe("Total estimé:");
+        expect(fr("formulaChoice.estimatedTotal")).toBe("Total estimé :");
         expect(en("formulaChoice.estimatedTotal")).toBe("Estimated total:");
     });
 
@@ -64,8 +64,8 @@ describe("lot-3c copy specifics", () => {
         expect(en("activityChoice.estimatedTotal")).toBe("Estimated total");
     });
 
-    test("activityChoice.noActivitySelected: fr is lowercase, en is capitalised", () => {
-        expect(fr("activityChoice.noActivitySelected")).toBe("aucune activité sélectionnée");
+    test("activityChoice.noActivitySelected: both locales capitalised (fr typo fixed)", () => {
+        expect(fr("activityChoice.noActivitySelected")).toBe("Aucune activité sélectionnée");
         expect(en("activityChoice.noActivitySelected")).toBe("No activity selected");
     });
 

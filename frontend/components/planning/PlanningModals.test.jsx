@@ -59,7 +59,7 @@ describe("StudentModal", () => {
     test("French by default", async () => {
         await i18n.changeLanguage("fr");
         render(<StudentModal onSave={() => {}} onRemove={() => {}} />);
-        expect(screen.getByRole("heading", {name: "Selection"})).toBeInTheDocument();
+        expect(screen.getByRole("heading", {name: "Sélection"})).toBeInTheDocument();
         expect(screen.getByText("Cours")).toBeInTheDocument();
         expect(screen.getByText("Option")).toBeInTheDocument();
         expect(screen.getByText("Enregistrer")).toBeInTheDocument();
