@@ -362,7 +362,7 @@ et à mesure de son intégration :
       garde-fou / une locale explicite plutôt qu'un simple `import`.
 - [ ] **`feature/i18n-06-extract-<domaine>`** *(répétable, mutuellement indépendantes, ~15-30
       fichiers chacune)* — une branche par domaine, dans n'importe quel ordre :
-  - [~] `planning` — **le plus gros domaine du chantier** (~10 vues ERB + ~10 000 lignes de React,
+  - [x] `planning` — **le plus gros domaine du chantier** (~10 vues ERB + ~10 000 lignes de React,
         dont `Planning.jsx` 1792 l. et `ActivityDetailsModal.jsx` 2053 l.). Découpé en lots
         empilés, un PR par lot (même approche que `payments`) :
     - [x] **Lot 1 — vues ERB** : branche `feature/i18n-06-extract-planning`. Tous les
@@ -445,13 +445,30 @@ et à mesure de son intégration :
           lit `this.props.t` (titres de créneaux suivent la langue au re-render) ;
           `scheduleTitles.private` corrigé en « Privé » ; couverture branche non-mois ajoutée.
           Résidu consigné (KnownIssues) : `daynames` + templates `function` figés au mount.
-    - [ ] **Lot 3c** : `TimeIntervalHelpers.jsx` — module de helpers **purs** partagés
-          (`formatIntervalsForSchedule` titres « Disponibilité »/« Dispo. Evaluation »/« Evaluation » ;
-          `levelDisplay` « NON INDIQUÉ » / « À PRÉCISER » ; `averageAgeDisplay`). Appelé depuis
-          `Planning.jsx` (lot 4), `courses/LessonList.jsx`, `activityApplications/summary/Activity.jsx`,
-          `RawPlanning`, `TimeInterval`, `SimplePlanning` — donc `t` à faire descendre dans **4+
-          domaines**. À traiter comme une passe transverse dédiée (comme `feature/i18n-common-react-table-keys`),
-          pas dans un lot planning.
+    - [x] **Lot 3c** : branche `feature/i18n-06-planning-lot3c`. `TimeIntervalHelpers.jsx` —
+          module de helpers **purs** partagés (pas un composant → lit le singleton
+          `import i18n from "../../i18n"` + `i18n.t("planning:…")`). `formatIntervalsForSchedule` :
+          titre créneau « Evaluation » (validé) → **nouvelle** clé `planning:scheduleTitles.evaluation`
+          (verbatim sans accent — voisine de `planning:kinds.evaluation` « Évaluation », littéraux
+          distincts, non unifiés), « Dispo. Evaluation »/« Disponibilité » → clés
+          `scheduleTitles.{availabilityEvaluation,availability}` **réutilisées**. `averageAgeDisplay` :
+          `` `${age} ans` `` → `planning:ageYears` (`{{age}}`, pas `{{count}}`). `levelDisplay` /
+          `levelDisplayForActivity` **continuent de renvoyer** les sentinelles FR brutes
+          « NON INDIQUÉ » / « À PRÉCISER », désormais exportées comme constantes
+          `LEVEL_NOT_INDICATED` / `LEVEL_TO_SPECIFY` (les ~6 comparaisons `=== "NON INDIQUÉ"` des
+          call-sites basculent sur la constante) ; nouveau helper `levelDisplayLabel(value)` qui
+          localise **au rendu seulement** via `planning:levelDisplay.{notIndicated,toSpecify}`.
+          Call-sites répartis « comparer » (constante) vs « afficher » (`levelDisplayLabel(...)`) :
+          `activityApplications/summary/Activity.jsx`, `courses/LessonList.jsx`,
+          `ActivitiesApplicationsList.jsx`, `planning/{Calendar,SimplePlanning,RawPlanning}.jsx`.
+          Côté EN, `levelDisplay.*` alignés en capitales (« NOT SPECIFIED » / « TO BE SPECIFIED »)
+          sur les rendus établis du même concept dans `courses` / `activityApplications`. Parité
+          `planning.json` 180/180 (fr/en), test générique `frontend/i18n/index.test.js` OK ;
+          pas de `.yml`. `planning/TimeInterval.jsx` laissé tel quel (méthode `levelDisplay()`
+          stub `return "Banana";`, composant legacy cassé) ; `tools/constants.js` `KINDS_LABEL`
+          relève de la passe « constantes i18n » séparée. 1 typo préservée verbatim
+          (`scheduleTitles.evaluation` « Evaluation ») + la note de design, consignées dans
+          `docs/KnownIssues.md`.
     - [x] **Lot 4** : branche `feature/i18n-06-extract-planning-container`. `Planning.jsx`
           (1792 l., conteneur) → `withTranslation("planning")`. Toutes les chaînes vivent dans ses
           propres méthodes/`render()` (toasts — dont plusieurs JSX + interpolés, bandeau vacances,
@@ -498,13 +515,15 @@ et à mesure de son intégration :
       - `activity_management/` : **tout le sous-arbre est mort sauf `withSave`** (le container
         `ActivityManagement` n'est monté nulle part ; `ActivityDetailsModal.jsx` a ses propres
         copies inline des composants). Non traduit, consigné dans `docs/KnownIssues.md`.
-    - **Domaine `planning` — extraction terminée**, sauf :
-      - **Lot 3c** (`TimeIntervalHelpers.jsx`) — toujours à faire : passe transverse dédiée
-        (« Evaluation »/« Dispo. Evaluation »/« Disponibilité » titres de créneaux, « NON INDIQUÉ »/
-        « À PRÉCISER » de `levelDisplay`) ; helper appelé depuis 4+ domaines.
+    - **Domaine `planning` — extraction terminée** (lots 1 → 6 + lot 3c), sauf :
       - `ConflictDisplayItem` de `Calendar.jsx` (« Résolu »/« Voir le conflit ») — code mort,
         déjà consigné dans `docs/KnownIssues.md`.
-  - [~] `activities` — domaine plus large que prévu (catalogue d'activités). Découpé :
+      - `planning/TimeInterval.jsx` — composant legacy cassé (`levelDisplay()` = stub
+        `return "Banana";`, `` `${averageAge} ans` `` en dur ~l. 111) — consigné, passe future.
+
+    **Lot 3c est le dernier lot i18n-06 : la vague d'extraction i18n-06 est fonctionnellement
+    terminée.**
+  - [x] `activities` — domaine plus large que prévu (catalogue d'activités). Découpé :
     - [x] **Lot 1 — CRUD admin catalogue** : branche `feature/i18n-06-extract-activities`.
           `frontend/components/activities/{ActivityRefKind,Instruments}.jsx` (classes ext.
           `BaseDataTable` → `withTranslation("activities")`, nouveau namespace i18next `activities`).
@@ -564,7 +583,7 @@ et à mesure de son intégration :
             de résolution i18n des clés `<Trans>`, sortie DOM des `<Trans>` vérifiée), 32 tests.
             Revue : 0 bug (comparaison DOM ancien/nouveau à l'identique sur 10 branches) ; qa avait
             détecté le `<a>` vide de la forme `components={{link}}` auto-fermante — corrigé.
-    - [~] **Lot 3 — flux d'inscription côté élève** — `frontend/components/activityApplications/*`
+    - [x] **Lot 3 — flux d'inscription côté élève** — `frontend/components/activityApplications/*`
           (~8000 lignes / 27 composants) + 2 `<h2>` d'`app/views/{activity,activities_applications}/`.
           **Nouveau namespace i18next `activityApplications`** (pas dans `activities` — trop gros).
           Découpé en ~7 sous-lots par taille.
@@ -819,9 +838,9 @@ et à mesure de son intégration :
           `EditFormule`.
     - [x] Pas de composant `formules/*` rendu en SSR (`prerender`) — la dette
           `server_rendering.js` (ligne ~355) ne bloque donc pas cette branche.
-    - [ ] **Tests** : `Formules.test.jsx`, `EditFormule.test.jsx` (Vitest, pattern `i18n.changeLanguage`),
+    - [x] **Tests** : `Formules.test.jsx`, `EditFormule.test.jsx` (Vitest, pattern `i18n.changeLanguage`),
           `spec/requests/formules_pages_spec.rb` (index/new/edit fr+en, garde anti-`"translation missing"`).
-    - [ ] **Vérification** : `bin/i18n-tasks health`, `bundle exec rspec`, `yarn test`, `/code-review`.
+    - [x] **Vérification** : `bin/i18n-tasks health`, `bundle exec rspec`, `yarn test`, `/code-review`.
   - [x] `parameters` — **toute la zone de réglages admin** : ~40 composants React
         (`frontend/components/parameters/**`, ~4100 lignes, 9 sous-dossiers) + ~20 vues ERB
         (`app/views/parameters/**`). Bien plus gros que ne le disait l'ancienne note (« ~2 React +
@@ -918,7 +937,7 @@ et à mesure de son intégration :
           aucune entrée `config/i18n-tasks.yml` requise). Fautes FR préservées verbatim : voir
           `docs/KnownIssues.md` (bloc `feature/i18n-06-parameters-lot-f`). **Domaine `parameters`
           terminé (lots A–F).**
-  - [~] `payments` — **branche `feature/i18n-06-extract-payments` : 1er lot fait, reste à
+  - [x] `payments` — **branche `feature/i18n-06-extract-payments` : 1er lot fait, reste à
         découper.** Le domaine `payments` est bien plus gros que les autres (~19 vues ERB, ~31
         composants React), donc découpé :
     - [x] **Lot 1 (cette branche) — écrans d'admin CRUD + imports ratés** :
@@ -970,7 +989,7 @@ et à mesure de son intégration :
           (`t("common:reactTable.previousText")`), les 7 clés retirées de `users.json`. Doc :
           `docs/I18n.md` § « Convention de nommage des clés (frontend) ». Les futures branches de
           domaine réutilisent ces clés au lieu d'en redéclarer.
-    - [~] **Lot 2 — tableaux de bord React** : bien plus gros que l'estimation initiale
+    - [x] **Lot 2 — tableaux de bord React** : bien plus gros que l'estimation initiale
           (~330 chaînes, 20 fichiers dont plusieurs > 1000 lignes) → découpé en plusieurs
           branches :
       - [x] **Lot 2a — `generalPayments/*` coque + feuilles** : branche
@@ -1030,7 +1049,7 @@ et à mesure de son intégration :
         Bug préexistant repéré (non corrigé, hors périmètre extraction) : `PayerPaymentTerms.jsx`
         utilise `_.uniq` dans `handleAddPayer` sans importer `lodash` → `ReferenceError` à l'ajout
         d'un payeur — à consigner / corriger séparément.
-    - [~] **`parameters/Payments/*` + `app/views/parameters/payments_parameters/index.html.erb`**
+    - [x] **`parameters/Payments/*` + `app/views/parameters/payments_parameters/index.html.erb`**
           rattachés au domaine `parameters`, pas `payments` — `PaymentsParameters` + les tab labels
           faits en `parameters` lot A ; les 8 composants restants = `parameters` lot C (voir le
           découpage lot A–F plus haut).

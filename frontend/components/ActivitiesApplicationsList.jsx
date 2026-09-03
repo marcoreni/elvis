@@ -5,7 +5,7 @@ import Select from "react-select";
 import Loader from "react-loader-spinner";
 import swal from "sweetalert2";
 
-import {age, levelDisplay} from "./planning/TimeIntervalHelpers";
+import {age, levelDisplay, levelDisplayLabel} from "./planning/TimeIntervalHelpers";
 import {csrfToken, optionMapper, USER_OPTIONS_SHORT} from "./utils";
 import {makeDebounce} from "../tools/inputs";
 import {PRE_APPLICATION_ACTION_LABELS, PRE_APPLICATION_ACTIONS} from "../tools/constants";
@@ -634,7 +634,7 @@ class ActivitiesApplicationsList extends React.Component {
                         </option>)}
                     </select>
                 ),
-                accessor: d => d.user && d.activity_refs[0] && levelDisplay([d.user], d.activity_refs[0].id, d.season_id) || "?",
+                accessor: d => d.user && d.activity_refs[0] && levelDisplayLabel(levelDisplay([d.user], d.activity_refs[0].id, d.season_id)) || "?",
             },
             {
                 id: "activity_ref_id",

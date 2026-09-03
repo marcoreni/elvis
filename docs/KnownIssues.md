@@ -1331,6 +1331,88 @@ needed. Post-lot health: `569` keys, `0 missing / 0 unused / 0 inconsistent inte
 
 **This completes the `parameters` domain (lots A–F).**
 
+`frontend/locales/fr/planning.json` (added by feature/i18n-06-planning-lot3c —
+`planning` domain, lot 3c, `frontend/components/planning/TimeIntervalHelpers.jsx`, a pure helper
+module that is not a component and so reads the `i18n` singleton directly:
+`import i18n from "../../i18n"` + `i18n.t("planning:…")`). Preserved verbatim:
+
+- `scheduleTitles.evaluation` — "Evaluation" — missing accent (right: "Évaluation"). Preserved
+  verbatim from the `formatIntervalsForSchedule` title literal
+  `int.is_validated ? "Evaluation" : "Dispo. Evaluation"`. Note `planning:kinds.evaluation`, a
+  different string used elsewhere, sits right next to it in the same file and *is* accented
+  ("Évaluation") — the two are not unified because they are distinct source literals from
+  distinct call paths (this policy's "two spellings in one extraction lot" clause does not apply:
+  only one of them was extracted in this lot). The sibling reused key
+  `scheduleTitles.availabilityEvaluation` = "Dispo. Evaluation" carries the same missing accent,
+  logged under lot 2b / lot 5 already. Same defect class as the `parameters`
+  `evaluations.slot.*` missing-accent copies (lots C / E).
+- `levelDisplay.notIndicated` — "NON INDIQUÉ" — all-caps, verbatim from `levelDisplay`'s
+  `return "NON INDIQUÉ"` / `|| "NON INDIQUÉ"` statements. Correctly accented; not a defect, logged
+  only because it is a raw French UI sentinel now living in the locale file. EN aligned to
+  "NOT SPECIFIED" (all-caps) to match the established renderings of the same concept in sibling
+  namespaces — `courses:lessonList.userRow.notSpecified`, `activityApplications:summaryActivity.notSpecified`
+  (both "NOT SPECIFIED"), and `planning:activityModal.toBeSpecified` ("TO BE SPECIFIED") within
+  planning's own namespace — which the very call-sites this helper feeds also render. (Initial
+  extraction wrote sentence-case "Not specified" / "To be specified"; corrected during the lot's
+  translation audit for cross-namespace consistency.)
+- `levelDisplay.toSpecify` — "À PRÉCISER" — all-caps, verbatim from `levelDisplay`'s
+  `uniqueLevels.length > 1 ? "À PRÉCISER" : …`. Correctly accented; same note as above. EN aligned
+  to "TO BE SPECIFIED". Note `planning:activityModal.toBeSpecified` (lot 5) holds the *unaccented*
+  variant "A PRECISER" from a different source literal — not unified, distinct call paths.
+- `ageYears` — fr "{{age}} ans" — was the template literal `` `${age} ans` `` in
+  `averageAgeDisplay(age)` (leading interpolation, single space, "ans"). Plain interpolated value,
+  no plural forms, so `{{age}}` (not `{{count}}`). EN "{{age}} years old" matches the established
+  `activityApplications:summaryActivity.ageYears` / `courses:lessonList.userRow.ageYears`.
+
+Design note (so a later reader does not "simplify" it): `TimeIntervalHelpers.jsx` now
+`export`s two raw-string constants — `LEVEL_NOT_INDICATED = "NON INDIQUÉ"` and
+`LEVEL_TO_SPECIFY = "À PRÉCISER"`. `levelDisplay` / `levelDisplayForActivity` keep **returning
+these raw French sentinels unchanged** so the ~6 call-site `=== "NON INDIQUÉ"` comparisons stay
+stable across locales (they were switched to `=== TimeIntervalHelpers.LEVEL_NOT_INDICATED`).
+A new `export const levelDisplayLabel(value)` maps the two sentinels to
+`i18n.t("planning:levelDisplay.{notIndicated,toSpecify}")` and passes any real level label
+through unchanged; the localization happens **only at render**. Every call-site was split into
+"compare" (use the exported constant) vs "display" (wrap the helper output in
+`levelDisplayLabel(...)`). Touched files:
+
+- `frontend/components/planning/TimeIntervalHelpers.jsx` — the two title literals + `averageAgeDisplay`
+  + the new `LEVEL_*` constants + `levelDisplayLabel`.
+- `frontend/components/activityApplications/summary/Activity.jsx` — `LevelCell`: the 2
+  `|| 'NON INDIQUÉ'` seeds, the `=== 'NON INDIQUÉ'` check, the `<>{studentLevel}</>` fallthrough
+  (now `levelDisplayLabel(studentLevel)`), and the react-table `level` accessor.
+- `frontend/components/courses/LessonList.jsx` — `displayLevel()`'s `===` guards and the
+  react-table `level` Cell.
+- `frontend/components/ActivitiesApplicationsList.jsx`, `frontend/components/planning/Calendar.jsx`,
+  `frontend/components/planning/SimplePlanning.jsx`, `frontend/components/planning/RawPlanning.jsx`
+  — import-path / call-site follow-through.
+
+`frontend/components/planning/TimeInterval.jsx` was **left untouched**: its `levelDisplay()`
+method is a stub (`return "Banana";`, the rest commented out) and it carries its own separate
+hardcoded `` `${averageAge} ans` `` (~line 111). Broken legacy component — flagged for a future
+pass, not extracted here (don't-delete / don't-touch-on-looks-dead).
+
+`frontend/tools/constants.js` `KINDS_LABEL` (`"Disponibilité"` / `"Evaluation"` / `"Cours"` /
+`"Option"`, consumed by `KindLegend.jsx` / `AvailabilityInput.jsx`) still duplicates these
+strings — that belongs to the separate "constants i18n" pass already logged, not to this lot.
+**Newly-visible consequence** of lot 3c: `SimplePlanning.jsx` renders `<KindLegend>` right below
+the level line this lot localized (`SimplePlanning.jsx:127`), so in EN that screen now shows
+"NOT SPECIFIED" above a legend still reading "Evaluation / Cours / Option". Same for
+`ActivitiesApplicationsList.jsx` — its level cell is localized here but its column headers
+("Niveau", "Âge", "Activité") are still hardcoded French. Both are for the constants / that
+component's own extraction pass, but the mixed-language render is a lot-3c side effect.
+
+Pre-existing dead guard, note only (lot 3c edited the exact lines but did not introduce the bug):
+`courses/LessonList.jsx` `UserRow` seeds `studentLevel` from
+`data.evaluation_level_ref.label`, but `desired_activity_controller.rb:92` renders
+`evaluation_level_ref` as a bare **string** (`level&.evaluation_level_ref&.label`), so `.label`
+on it is `undefined` and `studentLevel` is only ever `null`/`undefined` — the
+`studentLevel === LEVEL_NOT_INDICATED` guard and the `if (studentLevel) return studentLevel`
+branch are both unreachable, and every row falls through to the `levelDisplayForActivity`
+recompute. `Activity.jsx:44` handles the same endpoint correctly (`response?.data?.evaluation_level_ref`
+with no `.label`). Fix `LessonList` to match; out of scope for a `TimeIntervalHelpers` lot.
+
+**This is the last i18n-06 lot — the i18n-06 rollout is functionally complete.**
+
 ## `frontend/components/common/baseDataTable/BaseDataTable.jsx` — hardcoded French chrome leaks into English
 
 The **functional** shared data-table (`frontend/components/common/baseDataTable/`, distinct from

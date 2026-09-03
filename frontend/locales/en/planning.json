@@ -13,7 +13,8 @@
         "availabilityOption": "Avail. Option",
         "availabilityCourse": "Avail. Course",
         "availabilityEvaluation": "Avail. Evaluation",
-        "private": "Private"
+        "private": "Private",
+        "evaluation": "Evaluation"
     },
     "calendar": {
         "daynamesShort": ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
@@ -234,5 +235,10 @@
         "multiView": {
             "title": "Creating a booking"
         }
-    }
+    },
+    "levelDisplay": {
+        "notIndicated": "NOT SPECIFIED",
+        "toSpecify": "TO BE SPECIFIED"
+    },
+    "ageYears": "{{age}} years old"
 }

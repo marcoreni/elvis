@@ -53,7 +53,7 @@ const LevelCell = ({
                             },
                             seasons
                         );
-                        setStudentLevel(computedLevel || 'NON INDIQUÉ');
+                        setStudentLevel(computedLevel || TimeIntervalHelpers.LEVEL_NOT_INDICATED);
                     } else {
                         setStudentLevel(apiLevel);
                     }
@@ -71,7 +71,7 @@ const LevelCell = ({
                         },
                         seasons
                     );
-                    setStudentLevel(computedLevel || 'NON INDIQUÉ');
+                    setStudentLevel(computedLevel || TimeIntervalHelpers.LEVEL_NOT_INDICATED);
                 }
             })
             .finally(() => {
@@ -89,11 +89,14 @@ const LevelCell = ({
         return <>{t("common:loading")}</>;
     }
 
-    if (studentLevel === 'NON INDIQUÉ') {
+    // Two placeholders, two namespaces: "NON INDIQUÉ" via activityApplications:summaryActivity.notSpecified,
+    // "À PRÉCISER" via planning:levelDisplay.toSpecify (inside levelDisplayLabel). They resolve to the
+    // same copy today (both all-caps in fr and en) — keep them in sync if either is edited.
+    if (studentLevel === TimeIntervalHelpers.LEVEL_NOT_INDICATED) {
         return <>{t("summaryActivity.notSpecified")}</>;
     }
 
-    return <>{studentLevel}</>;
+    return <>{TimeIntervalHelpers.levelDisplayLabel(studentLevel)}</>;
 };
 
 
@@ -606,7 +609,7 @@ class Activity extends React.Component {
                         s,
                         this.props.seasons
                     );
-                    return level || t("summaryActivity.noLevel");
+                    return TimeIntervalHelpers.levelDisplayLabel(level) || t("summaryActivity.noLevel");
                 },
             },
             {
