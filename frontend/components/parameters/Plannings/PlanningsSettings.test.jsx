@@ -208,8 +208,10 @@ describe("parameters lot-E — i18n layer", () => {
     test("fr and en expose exactly the same lot-E subtree key set", () => {
         expect(new Set(EN_KEYS)).toEqual(new Set(FR_KEYS));
         expect(FR_KEYS.length).toBe(EN_KEYS.length);
-        // 54 = shared(12) + plannings(15) + evaluations(11) + rooms(3) + localization(5) + activities.pricing(8)
-        expect(FR_KEYS).toHaveLength(54);
+        // 55 = shared(17) + plannings(17) + evaluations(7) + rooms(3) + localization(5) + activities.pricing(6).
+        // Net +1 vs the pre-consolidation 54: evaluations.slot lost {loadingTitle,saveSuccess,genericError}
+        // (-3) while shared.* gained {saveCompleted,genericErrorShort,saveSuccessTitle,deleteStatusConfirm} (+4).
+        expect(FR_KEYS).toHaveLength(55);
     });
 
     test("parameters.json fr/en leaf counts stay in lock-step (grows across lots)", () => {
@@ -632,8 +634,8 @@ describe("EvaluationSlot", () => {
             fireEvent.submit(container.querySelector("form"));
 
             await waitFor(() => expect(swal).toHaveBeenCalledTimes(2));
-            expect(swal.mock.calls[0][0].title).toBe(tP(lng)("evaluations.slot.loadingTitle"));
-            expect(swal.mock.calls[1][0].title).toBe(tP(lng)("evaluations.slot.saveSuccess"));
+            expect(swal.mock.calls[0][0].title).toBe(tC(lng)("loading"));
+            expect(swal.mock.calls[1][0].title).toBe(tP(lng)("shared.saveCompleted"));
         },
     );
 
@@ -650,8 +652,8 @@ describe("EvaluationSlot", () => {
             fireEvent.submit(container.querySelector("form"));
 
             await waitFor(() => expect(swal).toHaveBeenCalledTimes(2));
-            expect(swal.mock.calls[0][0].title).toBe(tP(lng)("evaluations.slot.loadingTitle"));
-            expect(swal.mock.calls[1][0].title).toBe(tP(lng)("evaluations.slot.genericError"));
+            expect(swal.mock.calls[0][0].title).toBe(tC(lng)("loading"));
+            expect(swal.mock.calls[1][0].title).toBe(tP(lng)("shared.genericErrorShort"));
         },
     );
 });

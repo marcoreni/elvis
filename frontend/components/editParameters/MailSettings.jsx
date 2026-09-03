@@ -32,14 +32,14 @@ export default function MailSettings(props) {
         }).then(response => {
             if (response.ok) {
                 swal({
-                    title: t("editParameters.mail.saveSuccessTitle"),
+                    title: t("shared.saveSuccessTitle"),
                     text: t("editParameters.settingsApplied"),
                     icon: 'success'
                 });
             } else {
                 swal({
                     title: t("editParameters.mail.errorTitle"),
-                    text: t("editParameters.mail.genericError"),
+                    text: t("shared.genericError"),
                     icon: 'error'
                 });
             }

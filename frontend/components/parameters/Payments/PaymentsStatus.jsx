@@ -19,7 +19,7 @@ class PaymentsStatus extends BaseDataTable
             },
             {
                 id: "label",
-                Header: t("payments.cols.label"),
+                Header: t("shared.colLabel"),
                 accessor: d => d.label,
             },
             {
@@ -62,7 +62,7 @@ class PaymentsStatus extends BaseDataTable
     {
         const {t} = this.props;
         swal({
-            title: t("payments.status.deleteConfirm", {name: status.label}),
+            title: t("shared.deleteStatusConfirm", {name: status.label}),
             type: "warning",
             showCancelButton: true,
             cancelButtonText: t("shared.deleteConfirmNo"),

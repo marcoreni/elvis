@@ -16,7 +16,7 @@ export default function RulesSettings(props) {
         let formData = new FormData();
 
         swal({
-            title: t("editParameters.rules.loadingTitle"),
+            title: t("common:loading"),
             onOpen: () => swal.showLoading()
         });
 
@@ -41,13 +41,13 @@ export default function RulesSettings(props) {
                 res.json().then(json => {
                     swal({
                         type: "success",
-                        title: t("editParameters.rules.saveSuccess")
+                        title: t("shared.saveCompleted")
                     });
                 });
             } else {
                 swal({
                     type: "error",
-                    title: t("editParameters.rules.genericError")
+                    title: t("shared.genericErrorShort")
                 })
             }
         });

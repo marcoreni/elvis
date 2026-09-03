@@ -25,9 +25,6 @@
             "availability": "Availability message"
         },
         "settings": {
-            "loadError": "Error while loading the settings",
-            "saveSuccess": "Save successful",
-            "saveError": "Error while saving",
             "defaultStatusHeading": "Default enrollment status",
             "defaultStatusHint": "The selected status will be the default status for new enrollments.",
             "autoAssignHeading": "Automatic assignment of the 'course assigned' status",
@@ -60,8 +57,7 @@
         },
         "statusTable": {
             "colStopping": "Stopping?",
-            "colActive": "Active?",
-            "deleteConfirm": "Do you really want to delete the status '{{name}}'?"
+            "colActive": "Active?"
         }
     },
     "community": {
@@ -80,9 +76,6 @@
             "deleteConfirm": "Do you really want to delete the instrument '{{name}}'?"
         },
         "slot": {
-            "loadingTitle": "loading...",
-            "saveSuccess": "Save completed",
-            "genericError": "An error occurred",
             "durationLabel": "Evaluation slot duration (in minutes) * :",
             "requiredError": "The slot is required"
         }
@@ -95,9 +88,6 @@
             "paymentTerms": "Payment terms",
             "discountRate": "Discount rate"
         },
-        "cols": {
-            "label": "Label"
-        },
         "methods": {
             "cols": {
                 "showToUser": "Show to customer?",
@@ -109,8 +99,7 @@
         "status": {
             "cols": {
                 "color": "Color"
-            },
-            "deleteConfirm": "Do you really want to delete the status '{{name}}'?"
+            }
         },
         "adhesion": {
             "enableLabel": "Enable membership fees",
@@ -211,8 +200,6 @@
             "instruments": "Instruments"
         },
         "cols": {
-            "name": "Name",
-            "actions": "Actions",
             "active": "Active?",
             "activeMaterials": "Active?",
             "groupName": "Band name",
@@ -223,12 +210,7 @@
             "groupRate": "Group rate",
             "pricePerHour": "Price /h"
         },
-        "yes": "Yes",
-        "no": "No",
-        "errorTitle": "Error",
         "delete": {
-            "confirmYes": "yes",
-            "confirmNo": "no",
             "bandType": "Do you really want to delete the band type '{{name}}'?",
             "feature": "Do you really want to delete the feature '{{name}}'?",
             "flatRate": "Do you really want to delete the flat rate '{{name}}'?",
@@ -260,7 +242,11 @@
         "loadParamsError": "Error while loading the settings",
         "saveSuccess": "Save successful",
         "saveError": "Error while saving",
-        "saveButton": "Save"
+        "saveButton": "Save",
+        "saveCompleted": "Save completed",
+        "genericErrorShort": "An error occurred",
+        "saveSuccessTitle": "Success",
+        "deleteStatusConfirm": "Do you really want to delete the status '{{name}}'?"
     },
     "localization": {
         "defaultMustBeAvailable": "The default language must be one of the available languages",
@@ -272,16 +258,13 @@
     "editParameters": {
         "settingsApplied": "The settings have been applied",
         "csv": {
-            "saveSuccessTitle": "Success",
             "sepLabel": "Column separator",
             "sepRequired": "The column separator is required",
             "encodingLabel": "Character encoding",
             "encodingRequired": "The character encoding is required"
         },
         "mail": {
-            "saveSuccessTitle": "Success",
             "errorTitle": "Error",
-            "genericError": "An error occurred. Contact an administrator",
             "smtpAddressLabel": "SMTP address:",
             "smtpAddressRequired": "The SMTP address is required",
             "smtpPortLabel": "SMTP port:",
@@ -299,9 +282,6 @@
             "fromLabel": "Default sender address"
         },
         "rules": {
-            "loadingTitle": "loading...",
-            "saveSuccess": "Save completed",
-            "genericError": "An error occurred",
             "formatLabel": "Select the file format",
             "formatNone": "None",
             "urlLabel": "Enter the URL",
@@ -309,7 +289,6 @@
             "dropPdfText": "To add a PDF, drop a file here or"
         },
         "teachers": {
-            "saveSuccessTitle": "Success",
             "saveSuccessText": "The settings have been saved",
             "saveErrorText": "An error occurred while saving the settings",
             "planningHeading": "Schedule permission",
@@ -330,9 +309,6 @@
             "imageAlt": "unable to load image"
         },
         "school": {
-            "loadingTitle": "loading...",
-            "saveSuccess": "Save completed",
-            "genericError": "An error occurred",
             "siretRnaError": "The input matches neither an RNA nor your country's SIRET ({{country}})",
             "schoolInfoHeading": "School information",
             "contactsHeading": "Contact details",

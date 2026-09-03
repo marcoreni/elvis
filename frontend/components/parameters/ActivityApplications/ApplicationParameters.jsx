@@ -21,7 +21,7 @@ export default function ApplicationParameters() {
             })
             .error(() => {
                 swal({
-                    title: t("activityApplications.settings.loadError"),
+                    title: t("shared.loadParamsError"),
                     type: "error",
                 });
             })
@@ -32,10 +32,10 @@ export default function ApplicationParameters() {
         api.set()
             .useLoading()
             .success(() => {
-                swal({ title: t("activityApplications.settings.saveSuccess"), type: "success" });
+                swal({ title: t("shared.saveSuccess"), type: "success" });
             })
             .error(() => {
-                swal({ title: t("activityApplications.settings.saveError"), type: "error" });
+                swal({ title: t("shared.saveError"), type: "error" });
             })
             .post(
                 "/set_activity_application_parameters",

@@ -19,12 +19,12 @@ class BandsType extends BaseDataTable
             },
             {
                 id: "name",
-                Header: t("practice.cols.name"),
+                Header: t("shared.colName"),
                 accessor: d => d.name,
             },
             {
                 id: "actions",
-                Header: t("practice.cols.actions"),
+                Header: t("shared.actions"),
                 Cell: props => {
                     return (
                         <div className="btn-wrapper">
@@ -53,8 +53,8 @@ class BandsType extends BaseDataTable
             title: t("practice.delete.bandType", {name: status.name}),
             type: "warning",
             showCancelButton: true,
-            cancelButtonText: t("practice.delete.confirmNo"),
-            confirmButtonText: t("practice.delete.confirmYes")
+            cancelButtonText: t("shared.deleteConfirmNo"),
+            confirmButtonText: t("shared.deleteConfirmYes")
         }).then(res =>
         {
             if(res.value)
@@ -80,7 +80,7 @@ class BandsType extends BaseDataTable
                             result.text().then(text =>
                             {
                                 swal({
-                                    title: t("practice.errorTitle"),
+                                    title: t("shared.errorTitle"),
                                     type: "error",
                                     text: text
                                 })

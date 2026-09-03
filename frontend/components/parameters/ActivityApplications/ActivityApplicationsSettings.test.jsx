@@ -186,11 +186,13 @@ describe("parameters activityApplications.* (lot D) — i18n layer", () => {
     const FR_KEYS = keysFor(fr);
     const EN_KEYS = keysFor(en);
 
-    test("fr and en expose exactly the same lot-D key set (29 activityApplications.* + shared.colLabel)", () => {
+    test("fr and en expose exactly the same lot-D key set (25 activityApplications.* + shared.colLabel)", () => {
+        // shared.* consolidation removed 4 lot-D keys:
+        //  settings.{loadError,saveSuccess,saveError} -> shared.{loadParamsError,saveSuccess,saveError}
+        //  statusTable.deleteConfirm -> shared.deleteStatusConfirm  (29 - 4 = 25)
         expect(new Set(EN_KEYS)).toEqual(new Set(FR_KEYS));
-        expect(FR_KEYS).toHaveLength(30);
-        // the five sub-groups alone account for 29 keys
-        expect(FR_KEYS.filter((k) => k.startsWith("activityApplications."))).toHaveLength(29);
+        expect(FR_KEYS).toHaveLength(26);
+        expect(FR_KEYS.filter((k) => k.startsWith("activityApplications."))).toHaveLength(25);
     });
 
     test("parameters.json fr/en leaf counts stay in lock-step (grows across lots)", () => {
@@ -216,7 +218,7 @@ describe("parameters activityApplications.* (lot D) — i18n layer", () => {
     test.each(["fr", "en"])(
         "statusTable.deleteConfirm interpolates {{name}} — value embedded, no leftover braces (%s)",
         (lng) => {
-            const v = tP(lng)("activityApplications.statusTable.deleteConfirm", {name: "Traitée"});
+            const v = tP(lng)("shared.deleteStatusConfirm", {name: "Traitée"});
             expect(v).toContain("Traitée");
             expect(v).not.toContain("{");
         },
@@ -299,18 +301,18 @@ describe("ApplicationParameters", () => {
         },
     );
 
-    test.each(["fr", "en"])("mount load-error fires swal titled settings.loadError in %s", async (lng) => {
+    test.each(["fr", "en"])("mount load-error fires swal titled shared.loadParamsError in %s", async (lng) => {
         await i18n.changeLanguage(lng);
         render(<ApplicationParameters />);
         act(() => { apiState.lastError(); });
 
         expect(swal).toHaveBeenCalledTimes(1);
         expect(swal.mock.calls[0][0].title).toBe(
-            tP(lng)("activityApplications.settings.loadError"),
+            tP(lng)("shared.loadParamsError"),
         );
     });
 
-    test.each(["fr", "en"])("onSubmit success fires swal titled settings.saveSuccess in %s", async (lng) => {
+    test.each(["fr", "en"])("onSubmit success fires swal titled shared.saveSuccess in %s", async (lng) => {
         await i18n.changeLanguage(lng);
         render(<ApplicationParameters />);
         fireLoaded();
@@ -320,11 +322,11 @@ describe("ApplicationParameters", () => {
 
         expect(swal).toHaveBeenCalledTimes(1);
         expect(swal.mock.calls[0][0].title).toBe(
-            tP(lng)("activityApplications.settings.saveSuccess"),
+            tP(lng)("shared.saveSuccess"),
         );
     });
 
-    test.each(["fr", "en"])("onSubmit error fires swal titled settings.saveError in %s", async (lng) => {
+    test.each(["fr", "en"])("onSubmit error fires swal titled shared.saveError in %s", async (lng) => {
         await i18n.changeLanguage(lng);
         render(<ApplicationParameters />);
         fireLoaded();
@@ -334,7 +336,7 @@ describe("ApplicationParameters", () => {
 
         expect(swal).toHaveBeenCalledTimes(1);
         expect(swal.mock.calls[0][0].title).toBe(
-            tP(lng)("activityApplications.settings.saveError"),
+            tP(lng)("shared.saveError"),
         );
     });
 });
@@ -547,7 +549,7 @@ describe("ApplicationStatusTable", () => {
             expect(swal).toHaveBeenCalledTimes(1);
             const opts = swal.mock.calls[0][0];
             expect(opts.title).toBe(
-                t("activityApplications.statusTable.deleteConfirm", {name: "Traitée"}),
+                t("shared.deleteStatusConfirm", {name: "Traitée"}),
             );
             expect(opts.title).toContain("Traitée");
             expect(opts.title).not.toContain("{");

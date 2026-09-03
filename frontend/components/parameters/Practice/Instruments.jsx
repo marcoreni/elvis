@@ -19,18 +19,18 @@ class Instruments extends BaseDataTable
             },
             {
                 id: "name",
-                Header: t("practice.cols.name"),
+                Header: t("shared.colName"),
                 accessor: d => d.label,
             },
             {
                 id: "active",
                 Header: t("practice.cols.active"),
                 accessor: d => d.active,
-                Cell: props => <p>{props.original.active ? t("practice.yes") : t("practice.no")}</p>
+                Cell: props => <p>{props.original.active ? t("shared.yes") : t("shared.no")}</p>
             },
             {
                 id: "actions",
-                Header: t("practice.cols.actions"),
+                Header: t("shared.actions"),
                 Cell: props => {
                     return (
                         <div className="btn-wrapper">
@@ -59,8 +59,8 @@ class Instruments extends BaseDataTable
             title: t("practice.delete.instrument", {name: status.label}),
             type: "warning",
             showCancelButton: true,
-            cancelButtonText: t("practice.delete.confirmNo"),
-            confirmButtonText: t("practice.delete.confirmYes")
+            cancelButtonText: t("shared.deleteConfirmNo"),
+            confirmButtonText: t("shared.deleteConfirmYes")
         }).then(res =>
         {
             if(res.value)
@@ -86,7 +86,7 @@ class Instruments extends BaseDataTable
                             result.text().then(text =>
                             {
                                 swal({
-                                    title: t("practice.errorTitle"),
+                                    title: t("shared.errorTitle"),
                                     type: "error",
                                     text: text
                                 })

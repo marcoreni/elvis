@@ -5,11 +5,11 @@
 // Each is `class X extends BaseDataTable`, now `export default withTranslation("parameters")(X)`:
 //   - constructor: `const {t} = props;` then `this.state.columns` built with
 //     `Header: t("practice.cols.*")`, and the boolean columns render their `Cell` as
-//     `t("practice.yes") / t("practice.no")` (Features / FlatRate / Instruments / Materials).
+//     `t("shared.yes") / t("shared.no")` (Features / FlatRate / Instruments / Materials).
 //   - `deleteStatus(status)`: `const {t} = this.props;` then a `swal({ title:
-//     t("practice.delete.<entity>", {name}), cancelButtonText: t("practice.delete.confirmNo"),
-//     confirmButtonText: t("practice.delete.confirmYes") })`; the error branch uses
-//     `t("practice.errorTitle")`. Instruments interpolates `status.label`, the rest `status.name`.
+//     t("practice.delete.<entity>", {name}), cancelButtonText: t("shared.deleteConfirmNo"),
+//     confirmButtonText: t("shared.deleteConfirmYes") })`; the error branch uses
+//     `t("shared.errorTitle")`. Instruments interpolates `status.label`, the rest `status.name`.
 //
 // New keys live in `frontend/locales/{fr,en}/parameters.json` under
 // `practice.{cols,delete,yes,no,errorTitle}` (`practice.*` == 30 leaves).
@@ -150,8 +150,9 @@ describe("parameters practice.* — i18n layer", () => {
 
     test("fr and en expose exactly the same practice.* key set", () => {
         expect(new Set(EN_KEYS)).toEqual(new Set(FR_KEYS));
-        // pin the exact count — bump per lot so a lot adding fewer keys than intended trips here
-        expect(FR_KEYS).toHaveLength(30);
+        // pin the exact count — bump per lot so a lot adding fewer keys than intended trips here.
+        // shared-consolidation moved practice.cols.name onto shared.colName -> 30 - 1 = 29.
+        expect(FR_KEYS).toHaveLength(23);
     });
 
     test.each(["fr", "en"])(
@@ -195,11 +196,11 @@ describe("parameters practice.* — i18n layer", () => {
         },
     );
 
-    test.each(["fr", "en"])("practice.delete.confirm* + yes/no + errorTitle resolve in %s", (lng) => {
+    test.each(["fr", "en"])("shared delete-confirm + yes/no + errorTitle atoms resolve in %s", (lng) => {
         const t = i18n.getFixedT(lng, "parameters");
         for (const key of [
-            "practice.delete.confirmYes", "practice.delete.confirmNo",
-            "practice.yes", "practice.no", "practice.errorTitle",
+            "shared.deleteConfirmYes", "shared.deleteConfirmNo",
+            "shared.yes", "shared.no", "shared.errorTitle",
         ]) {
             expect(t(key)).not.toBe(key);
             expect(t(key).length).toBeGreaterThan(0);
@@ -330,8 +331,8 @@ describe("Practice tables — deleteStatus swal i18n", () => {
                     expect(opts.title).not.toBe(deleteKey);
                     expect(opts.title).not.toMatch(/\{\{/);
 
-                    expect(opts.cancelButtonText).toBe(t("practice.delete.confirmNo"));
-                    expect(opts.confirmButtonText).toBe(t("practice.delete.confirmYes"));
+                    expect(opts.cancelButtonText).toBe(t("shared.deleteConfirmNo"));
+                    expect(opts.confirmButtonText).toBe(t("shared.deleteConfirmYes"));
                 },
             );
         });
@@ -384,7 +385,7 @@ describe("Practice tables — deleteStatus swal i18n", () => {
     }
 
     // Error branch: user confirms, the DELETE comes back non-200 -> a second swal titled
-    // `practice.errorTitle`. `t` must still be in scope inside the nested `.then` closures.
+    // `shared.errorTitle`. `t` must still be in scope inside the nested `.then` closures.
     test.each(["fr", "en"])("deleteStatus error branch titles the swal with errorTitle (%s)", async (lng) => {
         await i18n.changeLanguage(lng);
         const t = i18n.getFixedT(lng, "parameters");
@@ -400,7 +401,7 @@ describe("Practice tables — deleteStatus swal i18n", () => {
 
         const errCall = swal.mock.calls.find((c) => c[0].type === "error");
         expect(errCall).toBeTruthy();
-        expect(errCall[0].title).toBe(t("practice.errorTitle"));
+        expect(errCall[0].title).toBe(t("shared.errorTitle"));
         expect(errCall[0].text).toBe("boom");
 
         delete global.fetch;

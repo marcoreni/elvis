@@ -19,7 +19,7 @@ class PaymentsMethods extends BaseDataTable {
             },
             {
                 id: "label",
-                Header: t("payments.cols.label"),
+                Header: t("shared.colLabel"),
                 accessor: d => d.label,
             },
             {
