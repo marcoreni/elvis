@@ -17,15 +17,7 @@
         "evaluation": "Evaluation"
     },
     "calendar": {
-        "daynamesShort": [
-            "Sun",
-            "Mon",
-            "Tue",
-            "Wed",
-            "Thu",
-            "Fri",
-            "Sat"
-        ],
+        "daynamesShort": ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
         "moreSchedules": "{{n}} more",
         "presences": "Attendance",
         "substituteFor": "Substitute for",

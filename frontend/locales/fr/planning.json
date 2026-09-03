@@ -17,15 +17,7 @@
         "evaluation": "Evaluation"
     },
     "calendar": {
-        "daynamesShort": [
-            "Dim",
-            "Lun",
-            "Mar",
-            "Mer",
-            "Jeu",
-            "Ven",
-            "Sam"
-        ],
+        "daynamesShort": ["Dim", "Lun", "Mar", "Mer", "Jeu", "Ven", "Sam"],
         "moreSchedules": "{{n}} autres",
         "presences": "Présences",
         "substituteFor": "Remplaçant de",

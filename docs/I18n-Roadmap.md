@@ -523,7 +523,7 @@ et à mesure de son intégration :
 
     **Lot 3c est le dernier lot i18n-06 : la vague d'extraction i18n-06 est fonctionnellement
     terminée.**
-  - [~] `activities` — domaine plus large que prévu (catalogue d'activités). Découpé :
+  - [x] `activities` — domaine plus large que prévu (catalogue d'activités). Découpé :
     - [x] **Lot 1 — CRUD admin catalogue** : branche `feature/i18n-06-extract-activities`.
           `frontend/components/activities/{ActivityRefKind,Instruments}.jsx` (classes ext.
           `BaseDataTable` → `withTranslation("activities")`, nouveau namespace i18next `activities`).
@@ -583,7 +583,7 @@ et à mesure de son intégration :
             de résolution i18n des clés `<Trans>`, sortie DOM des `<Trans>` vérifiée), 32 tests.
             Revue : 0 bug (comparaison DOM ancien/nouveau à l'identique sur 10 branches) ; qa avait
             détecté le `<a>` vide de la forme `components={{link}}` auto-fermante — corrigé.
-    - [~] **Lot 3 — flux d'inscription côté élève** — `frontend/components/activityApplications/*`
+    - [x] **Lot 3 — flux d'inscription côté élève** — `frontend/components/activityApplications/*`
           (~8000 lignes / 27 composants) + 2 `<h2>` d'`app/views/{activity,activities_applications}/`.
           **Nouveau namespace i18next `activityApplications`** (pas dans `activities` — trop gros).
           Découpé en ~7 sous-lots par taille.
@@ -838,9 +838,9 @@ et à mesure de son intégration :
           `EditFormule`.
     - [x] Pas de composant `formules/*` rendu en SSR (`prerender`) — la dette
           `server_rendering.js` (ligne ~355) ne bloque donc pas cette branche.
-    - [ ] **Tests** : `Formules.test.jsx`, `EditFormule.test.jsx` (Vitest, pattern `i18n.changeLanguage`),
+    - [x] **Tests** : `Formules.test.jsx`, `EditFormule.test.jsx` (Vitest, pattern `i18n.changeLanguage`),
           `spec/requests/formules_pages_spec.rb` (index/new/edit fr+en, garde anti-`"translation missing"`).
-    - [ ] **Vérification** : `bin/i18n-tasks health`, `bundle exec rspec`, `yarn test`, `/code-review`.
+    - [x] **Vérification** : `bin/i18n-tasks health`, `bundle exec rspec`, `yarn test`, `/code-review`.
   - [x] `parameters` — **toute la zone de réglages admin** : ~40 composants React
         (`frontend/components/parameters/**`, ~4100 lignes, 9 sous-dossiers) + ~20 vues ERB
         (`app/views/parameters/**`). Bien plus gros que ne le disait l'ancienne note (« ~2 React +
@@ -937,7 +937,7 @@ et à mesure de son intégration :
           aucune entrée `config/i18n-tasks.yml` requise). Fautes FR préservées verbatim : voir
           `docs/KnownIssues.md` (bloc `feature/i18n-06-parameters-lot-f`). **Domaine `parameters`
           terminé (lots A–F).**
-  - [~] `payments` — **branche `feature/i18n-06-extract-payments` : 1er lot fait, reste à
+  - [x] `payments` — **branche `feature/i18n-06-extract-payments` : 1er lot fait, reste à
         découper.** Le domaine `payments` est bien plus gros que les autres (~19 vues ERB, ~31
         composants React), donc découpé :
     - [x] **Lot 1 (cette branche) — écrans d'admin CRUD + imports ratés** :
@@ -989,7 +989,7 @@ et à mesure de son intégration :
           (`t("common:reactTable.previousText")`), les 7 clés retirées de `users.json`. Doc :
           `docs/I18n.md` § « Convention de nommage des clés (frontend) ». Les futures branches de
           domaine réutilisent ces clés au lieu d'en redéclarer.
-    - [~] **Lot 2 — tableaux de bord React** : bien plus gros que l'estimation initiale
+    - [x] **Lot 2 — tableaux de bord React** : bien plus gros que l'estimation initiale
           (~330 chaînes, 20 fichiers dont plusieurs > 1000 lignes) → découpé en plusieurs
           branches :
       - [x] **Lot 2a — `generalPayments/*` coque + feuilles** : branche
@@ -1049,7 +1049,7 @@ et à mesure de son intégration :
         Bug préexistant repéré (non corrigé, hors périmètre extraction) : `PayerPaymentTerms.jsx`
         utilise `_.uniq` dans `handleAddPayer` sans importer `lodash` → `ReferenceError` à l'ajout
         d'un payeur — à consigner / corriger séparément.
-    - [~] **`parameters/Payments/*` + `app/views/parameters/payments_parameters/index.html.erb`**
+    - [x] **`parameters/Payments/*` + `app/views/parameters/payments_parameters/index.html.erb`**
           rattachés au domaine `parameters`, pas `payments` — `PaymentsParameters` + les tab labels
           faits en `parameters` lot A ; les 8 composants restants = `parameters` lot C (voir le
           découpage lot A–F plus haut).

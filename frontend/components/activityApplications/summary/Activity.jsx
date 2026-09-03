@@ -89,6 +89,9 @@ const LevelCell = ({
         return <>{t("common:loading")}</>;
     }
 
+    // Two placeholders, two namespaces: "NON INDIQUÉ" via activityApplications:summaryActivity.notSpecified,
+    // "À PRÉCISER" via planning:levelDisplay.toSpecify (inside levelDisplayLabel). They resolve to the
+    // same copy today (both all-caps in fr and en) — keep them in sync if either is edited.
     if (studentLevel === TimeIntervalHelpers.LEVEL_NOT_INDICATED) {
         return <>{t("summaryActivity.notSpecified")}</>;
     }

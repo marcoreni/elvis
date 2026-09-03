@@ -1394,6 +1394,22 @@ pass, not extracted here (don't-delete / don't-touch-on-looks-dead).
 `frontend/tools/constants.js` `KINDS_LABEL` (`"Disponibilité"` / `"Evaluation"` / `"Cours"` /
 `"Option"`, consumed by `KindLegend.jsx` / `AvailabilityInput.jsx`) still duplicates these
 strings — that belongs to the separate "constants i18n" pass already logged, not to this lot.
+**Newly-visible consequence** of lot 3c: `SimplePlanning.jsx` renders `<KindLegend>` right below
+the level line this lot localized (`SimplePlanning.jsx:127`), so in EN that screen now shows
+"NOT SPECIFIED" above a legend still reading "Evaluation / Cours / Option". Same for
+`ActivitiesApplicationsList.jsx` — its level cell is localized here but its column headers
+("Niveau", "Âge", "Activité") are still hardcoded French. Both are for the constants / that
+component's own extraction pass, but the mixed-language render is a lot-3c side effect.
+
+Pre-existing dead guard, note only (lot 3c edited the exact lines but did not introduce the bug):
+`courses/LessonList.jsx` `UserRow` seeds `studentLevel` from
+`data.evaluation_level_ref.label`, but `desired_activity_controller.rb:92` renders
+`evaluation_level_ref` as a bare **string** (`level&.evaluation_level_ref&.label`), so `.label`
+on it is `undefined` and `studentLevel` is only ever `null`/`undefined` — the
+`studentLevel === LEVEL_NOT_INDICATED` guard and the `if (studentLevel) return studentLevel`
+branch are both unreachable, and every row falls through to the `levelDisplayForActivity`
+recompute. `Activity.jsx:44` handles the same endpoint correctly (`response?.data?.evaluation_level_ref`
+with no `.label`). Fix `LessonList` to match; out of scope for a `TimeIntervalHelpers` lot.
 
 **This is the last i18n-06 lot — the i18n-06 rollout is functionally complete.**
 
