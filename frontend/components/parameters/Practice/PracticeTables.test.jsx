@@ -85,7 +85,7 @@ const TABLES = [
         deleteKey: "practice.delete.flatRate",
         nameField: "name",
         headers: {
-            fr: ["Nom", "Actif ?", "Nombre d'heure", "Tarif solo/duo", "Tarif de groupe", "Actions"],
+            fr: ["Nom", "Actif ?", "Nombre d'heures", "Tarif solo/duo", "Tarif de groupe", "Actions"],
             en: ["Name", "Active?", "Number of hours", "Solo/duo rate", "Group rate", "Actions"],
         },
     },
@@ -115,7 +115,7 @@ const TABLES = [
         deleteKey: "practice.delete.material",
         nameField: "name",
         headers: {
-            fr: ["Nom", "Prix /h", "Est Actif ?", "Actions"],
+            fr: ["Nom", "Prix /h", "Actif ?", "Actions"],
             en: ["Name", "Price /h", "Active?", "Actions"],
         },
     },
@@ -260,7 +260,7 @@ describe("Practice tables — translated column headers", () => {
     });
 
     test.each([
-        ["fr", ["Nombre d'heure", "Tarif solo/duo", "Tarif de groupe"]],
+        ["fr", ["Nombre d'heures", "Tarif solo/duo", "Tarif de groupe"]],
         ["en", ["Number of hours", "Solo/duo rate", "Group rate"]],
     ])("FlatRate table-specific headers in %s", async (lng, cols) => {
         await i18n.changeLanguage(lng);
@@ -270,7 +270,7 @@ describe("Practice tables — translated column headers", () => {
     });
 
     test.each([
-        ["fr", ["Est Actif ?", "Prix /h"]],
+        ["fr", ["Actif ?", "Prix /h"]],
         ["en", ["Active?", "Price /h"]],
     ])("Materials table-specific headers in %s", async (lng, cols) => {
         await i18n.changeLanguage(lng);

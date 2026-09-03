@@ -49,7 +49,7 @@ const COPY = {
         noPackagesSelected: "Aucune formule sélectionnée",
         noActivitiesSelected: "Aucune activité sélectionnée",
         noDescription: "Aucune description",
-        estimatedTotal: /Total estimé:/,
+        estimatedTotal: /Total estimé :/,
     },
     en: {
         title: "Package choice",
@@ -138,8 +138,8 @@ describe("FormulaChoice — fr estimated-total keeps its colon", () => {
             selectedFormulaActivities: {1: []},
         });
 
-        const totalEl = screen.getByText(/Total estimé:/);
-        expect(totalEl.textContent).toContain("Total estimé:");
+        const totalEl = screen.getByText(/Total estimé :/);
+        expect(totalEl.textContent).toContain("Total estimé :");
         expect(totalEl.textContent).toContain("120.00");
         expect(totalEl.textContent).toContain("€");
     });

@@ -49,7 +49,7 @@
         "noAvailabilities": "Ce professeur n'a pas renseigné de disponibilités.",
         "notAvailableWholeSlot": "Ce professeur n'est pas disponible sur l'ensemble du créneau choisi",
         "availableInstead": "En revanche, il est disponible de {{start}} à {{end}} ce même jour",
-        "slotBusy": "Ce créneau est déjà occupé pour ce professeur: cours de {{activity}} de {{start}} à {{end}} - {{room}}."
+        "slotBusy": "Ce créneau est déjà occupé pour ce professeur : cours de {{activity}} de {{start}} à {{end}} - {{room}}."
     },
     "addLocation": {
         "stepName": "Choix du lieu",
@@ -75,7 +75,7 @@
         "noneSelected": "Aucun cours n'a été sélectionné.",
         "pastWithStudents": "Vous ne pouvez pas supprimer un cours qui est déjà passé et qui a des élèves inscrits.",
         "title": "Supprimer un cours",
-        "prompt": "Souhaitez-vous:",
+        "prompt": "Souhaitez-vous :",
         "deleteAll": "Supprimer toutes les récurrences de ce cours.",
         "deleteSelected": "Sélectionner les récurrences à supprimer.",
         "legendExisting": "Cours existant",
@@ -145,7 +145,7 @@
         },
         "help": {
             "title": "Aide sur la date de référence",
-            "body": "<p class='text-justify'><u>Ce n'est <strong>pas</strong> un filtre sur les cours</u>. tous les cours sont toujours affichés. C'est un filtre qui ne change que les nombres la colonne \"Occupation\" du tableau.<br />Il est possible pour des élèves d'être inscrit ou désinscrit d'un cours pendant la saison...\nCe filtre est donc ici afin d'avoir l'effectif des cours en fonction d'une date précise. Cela pour avoir une sorte \"d'historique\" de l'effectif des cours. Par défaut la date sélectionnée est celle du jour précédant le jour actuel pour avoir l'effectif actuel des élèves.</p><p class='text-left'>Par exemple, imaginons le cas suivant: <br />il y a 3 élèves à un cours le 10/04/2022 et un des élèves quitte le cours le 11/04/2022. <br />Si le filtre se situe au 12/04/2022 ou après, l'occupation de ce cours sera de 2, alors que si ce filtre se situe au 11/04/2022 ou avant, l'occupation seras de 3. </p>"
+            "body": "<p class='text-justify'><u>Ce n'est <strong>pas</strong> un filtre sur les cours</u>. Tous les cours sont toujours affichés. C'est un filtre qui ne change que les nombres de la colonne \"Occupation\" du tableau.<br />Il est possible pour des élèves d'être inscrit ou désinscrit d'un cours pendant la saison...\nCe filtre est donc ici afin d'avoir l'effectif des cours en fonction d'une date précise. Cela pour avoir une sorte \"d'historique\" de l'effectif des cours. Par défaut la date sélectionnée est celle du jour précédant le jour actuel pour avoir l'effectif actuel des élèves.</p><p class='text-left'>Par exemple, imaginons le cas suivant : <br />il y a 3 élèves à un cours le 10/04/2022 et un des élèves quitte le cours le 11/04/2022. <br />Si le filtre se situe au 12/04/2022 ou après, l'occupation de ce cours sera de 2, alors que si ce filtre se situe au 11/04/2022 ou avant, l'occupation sera de 3. </p>"
         },
         "userList": {
             "evaluationsFilled": "{{done}}/{{total}} évaluations remplies",

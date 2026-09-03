@@ -56,7 +56,7 @@ RSpec.describe "Parameters index page", type: :request do
       expect(unescaped_body)
         .to include("Paramètres")
         .and include("Votre école")
-        .and include("Définissez les informations générales de votre école: nom, adresse postale, etc.")
+        .and include("Définissez les informations générales de votre école : nom, adresse postale, etc.")
         .and include("Formules")
         .and include("Activez ou désactivez l'affichage des formules.")
     end
@@ -73,7 +73,7 @@ RSpec.describe "Parameters index page", type: :request do
 
     it "renders all 7 setting-card texts verbatim" do
       [
-        "Définissez les informations générales de votre école: nom, adresse postale, etc.",
+        "Définissez les informations générales de votre école : nom, adresse postale, etc.",
         "Choisissez la langue par défaut de l'installation et les langues proposées aux utilisateurs.",
         "Paramétrez votre serveur d'envoi de mails, l'adresse de l'expéditeur et vos destinataires.",
         "Paramétrez vos exports CSV.",

@@ -87,7 +87,7 @@ describe("getTimeTemplate — week/day view (non-month branch)", () => {
 
     test("availability title in French / English", async () => {
         await i18n.changeLanguage("fr");
-        expect(getTimeTemplate(base, false, false, { t: planningT() })).toContain("Dispo. Evaluation");
+        expect(getTimeTemplate(base, false, false, { t: planningT() })).toContain("Dispo. Évaluation");
 
         await i18n.changeLanguage("en");
         expect(getTimeTemplate(base, false, false, { t: planningT() })).toContain("Avail. Evaluation");

@@ -59,7 +59,7 @@ describe("CheckList (cheques)", () => {
         await i18n.changeLanguage("fr");
         render(<CheckList />);
 
-        expect(screen.getByText("Date de réglement :")).toBeInTheDocument();
+        expect(screen.getByText("Date de règlement :")).toBeInTheDocument();
         expect(screen.getByText("Tous les chèques")).toBeInTheDocument();
         expect(screen.getByText("Chèques pointés")).toBeInTheDocument();
         expect(screen.getByText("Payeur")).toBeInTheDocument();

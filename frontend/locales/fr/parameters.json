@@ -41,7 +41,7 @@
         },
         "consentModal": {
             "requiredError": "requis",
-            "title": "Edition d'un document de consentement",
+            "title": "Édition d'un document de consentement",
             "titleLabel": "Titre du document",
             "titlePlaceholder": "Titre",
             "contentLabel": "Renseignez votre texte",
@@ -54,14 +54,14 @@
         },
         "consentList": {
             "fetchError": "Erreur lors de la récupération des données",
-            "deleteError": "Erreur lors de la suppresion",
+            "deleteError": "Erreur lors de la suppression",
             "intro": "Ajoutez des documents à faire valider à vos élèves avant leur inscription. Renseignez les documents ci-dessous.",
             "addButton": "Ajouter un document"
         },
         "statusTable": {
             "colStopping": "Arrêt ?",
             "colActive": "Actif ?",
-            "deleteConfirm": "Voulez-vous vraiment supprimer le status '{{name}}' ?"
+            "deleteConfirm": "Voulez-vous vraiment supprimer le statut '{{name}}' ?"
         }
     },
     "community": {
@@ -80,7 +80,7 @@
             "deleteConfirm": "Voulez-vous vraiment supprimer l'instrument '{{name}}' ?"
         },
         "slot": {
-            "loadingTitle": "chargement...",
+            "loadingTitle": "Chargement...",
             "saveSuccess": "Enregistrement effectué",
             "genericError": "Une erreur est survenue",
             "durationLabel": "Durée d'un créneau d'évaluation (en minutes) * :",
@@ -90,7 +90,7 @@
     "payments": {
         "tabs": {
             "adhesion": "Adhésion",
-            "paymentMethods": "Moyens de paiements",
+            "paymentMethods": "Moyens de paiement",
             "pricingCategories": "Catégories de prix",
             "paymentTerms": "Modalités de paiement",
             "discountRate": "Taux de remise"
@@ -110,13 +110,13 @@
             "cols": {
                 "color": "Couleur"
             },
-            "deleteConfirm": "Voulez-vous vraiment supprimer le status '{{name}}' ?"
+            "deleteConfirm": "Voulez-vous vraiment supprimer le statut '{{name}}' ?"
         },
         "adhesion": {
             "enableLabel": "Activer les frais d'adhésion",
             "deleteConfirm": "Souhaitez-vous supprimer le prix d'adhésion \"{{label}}\" ?",
             "deleteImpossibleTitle": "Suppression impossible",
-            "deleteImpossibleText": "le prix d'adhésion \"{{label}}\" ne peux être supprimé car déjà utilisé dans un réglement.",
+            "deleteImpossibleText": "le prix d'adhésion \"{{label}}\" ne peut être supprimé car déjà utilisé dans un règlement.",
             "cols": {
                 "labels": "Libellés",
                 "prices": "Tarifs (€)",
@@ -214,11 +214,11 @@
             "name": "Nom",
             "actions": "Actions",
             "active": "Actif ?",
-            "activeMaterials": "Est Actif ?",
+            "activeMaterials": "Actif ?",
             "groupName": "Nom du groupe",
             "type": "Type",
             "musicGenre": "Genre musical",
-            "hoursCount": "Nombre d'heure",
+            "hoursCount": "Nombre d'heures",
             "soloDuoRate": "Tarif solo/duo",
             "groupRate": "Tarif de groupe",
             "pricePerHour": "Prix /h"
@@ -279,33 +279,33 @@
             "encodingRequired": "L'encodage de caractères est requis"
         },
         "mail": {
-            "saveSuccessTitle": "Success",
-            "errorTitle": "Error",
-            "genericError": "Une erreur est survenue, contactez un administrateur",
-            "smtpAddressLabel": "Adresse SMTP:",
-            "smtpAddressRequired": "L'adresse smtp est requise",
-            "smtpPortLabel": "Port SMTP:",
+            "saveSuccessTitle": "Succès",
+            "errorTitle": "Erreur",
+            "genericError": "Une erreur est survenue. Contactez un administrateur",
+            "smtpAddressLabel": "Adresse SMTP :",
+            "smtpAddressRequired": "L'adresse SMTP est requise",
+            "smtpPortLabel": "Port SMTP :",
             "portRequired": "Le port est requis",
             "domainLabel": "Domaine",
             "sslTlsLabel": "Activer SSL/TLS: ",
-            "authLabel": "Authentification:",
+            "authLabel": "Authentification :",
             "authRequired": "Le type d'authentification est requis",
-            "usernameLabel": "Identifiant:",
+            "usernameLabel": "Identifiant :",
             "usernameRequired": "L'identifiant est requis",
-            "passwordLabel": "Mot de passe (il ne sera changé que si le champ est rempli):",
+            "passwordLabel": "Mot de passe (il ne sera changé que si le champ est rempli) :",
             "passwordRequired": "Le mot de passe est requis",
             "redirectLabel": "Rediriger tous les mails vers les adresses suivantes (séparer par des retours à la ligne):",
             "redirectHint": "Ne rien mettre pour ne pas rediriger",
             "fromLabel": "Adresse d'envoi par défaut"
         },
         "rules": {
-            "loadingTitle": "chargement...",
+            "loadingTitle": "Chargement...",
             "saveSuccess": "Enregistrement effectué",
             "genericError": "Une erreur est survenue",
             "formatLabel": "Sélectionner le format du fichier",
             "formatNone": "Aucun",
-            "urlLabel": "Renseigner l'url",
-            "pdfLabel": "Ajouter un pdf",
+            "urlLabel": "Renseigner l'URL",
+            "pdfLabel": "Ajouter un PDF",
             "dropPdfText": "Pour ajouter un PDF, déposez un fichier ici ou"
         },
         "teachers": {
@@ -323,18 +323,18 @@
         },
         "dragAndDrop": {
             "invalidType": "Type de fichier non autorisé",
-            "tooManyFiles": "un seul fichier autorisé",
+            "tooManyFiles": "Un seul fichier autorisé",
             "selectButton": "Sélectionner",
             "currentDocument": "Document actuel :",
             "none": "aucun",
             "imageAlt": "image impossible à charger"
         },
         "school": {
-            "loadingTitle": "chargement...",
+            "loadingTitle": "Chargement...",
             "saveSuccess": "Enregistrement effectué",
             "genericError": "Une erreur est survenue",
             "siretRnaError": "La saisie ne correspond ni à un RNA ni au siret de votre pays ({{country}})",
-            "schoolInfoHeading": "Informations de l'école ",
+            "schoolInfoHeading": "Informations de l'école",
             "contactsHeading": "Coordonnées",
             "holidaysHeading": "Vacances et jours fériés",
             "billingHeading": "Informations de facturation",
@@ -350,13 +350,13 @@
             "streetRequired": "Le numéro et le nom de la voie sont requis",
             "cityLabel": "Ville",
             "cityRequired": "La ville est requise",
-            "postalCodeLabel": " Code Postal",
+            "postalCodeLabel": "Code postal",
             "postalCodeError": "Code postal requis / mauvais format de code postal",
             "countryLabel": "Pays",
             "countryRequired": "Le pays est requis",
             "bankHolidaysZoneLabel": "Zone de jours fériés",
             "optional": "(optionnel)",
-            "schoolHolidaysZoneLabel": " Zone de vacances scolaires : ",
+            "schoolHolidaysZoneLabel": "Zone de vacances scolaires :",
             "academyLine": "(Académie : {{academy}})",
             "siretRnaLabel": "Numéro de SIRET ou RNA",
             "rcsLabel": "Numéro RCS :",

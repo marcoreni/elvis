@@ -106,7 +106,7 @@ describe("closed-seasons guard branch renders without throwing", () => {
 
         expect(
             screen.getByText(
-                "Les inscriptions à la saison actuelle est fermée et celles de la saison suivante ne sont pas encore ouvertes."
+                "Les inscriptions à la saison actuelle sont fermées et celles de la saison suivante ne sont pas encore ouvertes."
             )
         ).toBeInTheDocument();
         expect(screen.getByRole("link", {name: "Créer une saison"})).toHaveAttribute(
@@ -201,9 +201,9 @@ describe("wizard.steps.* — the exact French / English source copy", () => {
     const en = i18n.getFixedT("en", NS);
 
     test.each([
-        ["member", "Membre Concerné", "Member concerned"],
+        ["member", "Membre concerné", "Member concerned"],
         ["contactDetails", "Coordonnées", "Contact details"],
-        ["changeWishes", "Voeux de changement", "Change requests"],
+        ["changeWishes", "Vœux de changement", "Change requests"],
         ["packChoice", "Choix de la formule", "Package choice"],
         ["activityChoice", "Choix de l'activité", "Activity choice"],
         ["instruments", "Instruments", "Instruments"],
@@ -229,11 +229,11 @@ describe("wizard chrome — the exact source copy", () => {
         expect(en("wizard.prevStep")).toBe("Previous");
     });
 
-    test("seasonsClosed keeps its preserved grammar defect (fr) and reads naturally (en)", () => {
-        // The fr source has a subject/verb agreement defect ("Les inscriptions … est fermée")
-        // that the verbatim-extraction policy keeps as-is.
+    test("seasonsClosed reads naturally in both locales (fr grammar defect fixed)", () => {
+        // The fr source used to have a subject/verb agreement defect ("Les inscriptions … est
+        // fermée"); it now agrees ("… sont fermées").
         expect(fr("wizard.seasonsClosed")).toBe(
-            "Les inscriptions à la saison actuelle est fermée et celles de la saison suivante ne sont pas encore ouvertes."
+            "Les inscriptions à la saison actuelle sont fermées et celles de la saison suivante ne sont pas encore ouvertes."
         );
         expect(en("wizard.seasonsClosed")).toBe(
             "Registration for the current season is closed, and registration for the next season is not open yet."
@@ -243,7 +243,7 @@ describe("wizard chrome — the exact source copy", () => {
     test("createSeason / newApplicationTitle", () => {
         expect(fr("wizard.createSeason")).toBe("Créer une saison");
         expect(en("wizard.createSeason")).toBe("Create a season");
-        expect(fr("wizard.newApplicationTitle")).toBe("Nouvelle demande d’inscription");
+        expect(fr("wizard.newApplicationTitle")).toBe("Nouvelle demande d'inscription");
         expect(en("wizard.newApplicationTitle")).toBe("New enrollment request");
     });
 });

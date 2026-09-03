@@ -31,7 +31,7 @@ describe("userPayments/PaymentsList", () => {
         expect(screen.getByText("Actions règlements")).toBeInTheDocument();
         expect(screen.getByText("Suppression de masse")).toBeInTheDocument();
         expect(screen.getByText("Choix de l'échéance")).toBeInTheDocument();
-        expect(screen.getByText("Edition de règlements")).toBeInTheDocument();
+        expect(screen.getByText("Édition de règlements")).toBeInTheDocument();
     });
 
     test("English when active language is en", async () => {

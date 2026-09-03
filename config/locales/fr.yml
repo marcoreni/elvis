@@ -227,7 +227,7 @@ fr:
                 tab_activities: Activités
                 tab_family: Liens familiaux
                 tab_absences: Absences
-                edit_link: Editer
+                edit_link: Éditer
                 no_activity: Aucune activité
                 unknown_schedule: Horaire inconnu
                 stopped_on: Arrêt le
@@ -251,12 +251,12 @@ fr:
                 places: "Places possibles: %{limit} (max: %{hard_limit})"
                 duration_hours: "Durée: %{hours}h%{minutes}"
                 duration_minutes: "Durée: %{minutes} minutes"
-                destroy_error_title: Error
+                destroy_error_title: Erreur
                 destroy_error: Vous ne pouvez pas supprimer l'activité car elle est liée à d'autres données.
             edit:
-                heading: "Editer l'activité \"%{label}\""
+                heading: "Éditer l'activité \"%{label}\""
             new:
-                heading: Ajouter une Activité
+                heading: Ajouter une activité
         activity_ref_kind:
             index:
                 heading: Familles d'activités
@@ -271,7 +271,7 @@ fr:
             new:
                 heading: Ajouter un instrument
             form:
-                label_field: Nom_de_l'instrument
+                label_field: Nom de l'instrument
         evaluation_appointments:
             incomplete:
                 heading: Liste des nouveaux élèves sans créneau d'évaluation
@@ -299,14 +299,14 @@ fr:
         parameters:
             index:
                 heading: Paramètres
-                edit: Editer
+                edit: Éditer
                 sections:
                     général: Général
                     personnalisation: Personnalisation
                 cards:
                     school:
                         title: Votre école
-                        text: "Définissez les informations générales de votre école: nom, adresse postale, etc."
+                        text: "Définissez les informations générales de votre école : nom, adresse postale, etc."
                     languages:
                         title: Langues
                         text: Choisissez la langue par défaut de l'installation et les langues proposées aux utilisateurs.
@@ -388,7 +388,7 @@ fr:
                 admin: "Les professeurs ont jusqu'au %{date} pour valider leur planning. Ils en sont informés."
             index_for_rooms:
                 heading: Plannings des Salles de Cours
-                new_room: Creer une nouvelle salle
+                new_room: Créer une nouvelle salle
                 empty: "Aucune salle de cours n'est enregistrée."
             index_for_teachers:
                 heading: Plannings des professeurs
@@ -410,8 +410,8 @@ fr:
                 eval_range: "Evaluations du %{from} au %{to}"
                 copy_link_label: Copier le planning de la saison en cours
                 copy_link_message: "Voulez-vous vraiment importer le planning de la saison en cours ? Cela supprimera toutes les modifications pour la saison prochaine."
-                lock_link_message: "Voulez-vous vraiment verouiller le planning ? Vous devrez vous adresser à un.e permanent.e pour tout changement."
+                lock_link_message: "Voulez-vous vraiment verrouiller le planning ? Vous devrez vous adresser à un.e permanent.e pour tout changement."
             show_for_conflict:
-                heading: Resolution du conflit
+                heading: Résolution du conflit
             show_for_room:
                 heading: Planning de la salle

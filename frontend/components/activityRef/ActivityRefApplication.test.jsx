@@ -56,7 +56,7 @@ describe("ActivityRefApplication", () => {
             expect(screen.getByText("Réinscription")).toBeInTheDocument();
             expect(screen.getByText("Visibilité")).toBeInTheDocument();
             expect(screen.getByText("Choix des activités")).toBeInTheDocument();
-            expect(screen.getByText("Evaluation")).toBeInTheDocument();
+            expect(screen.getByText("Évaluation")).toBeInTheDocument();
         });
 
         test("checkbox / radio labels (via stubs)", async () => {
@@ -64,7 +64,7 @@ describe("ActivityRefApplication", () => {
             renderApplication();
 
             expect(
-                screen.getByText("Ce cours peut être selectionné lors d'une inscription"),
+                screen.getByText("Ce cours peut être sélectionné lors d'une inscription"),
             ).toBeInTheDocument();
             expect(
                 screen.getByText("Rattacher cette activité à sa famille"),

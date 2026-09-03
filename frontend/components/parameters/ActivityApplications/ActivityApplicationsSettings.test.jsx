@@ -582,7 +582,7 @@ describe("ApplicationStatusTable", () => {
         await i18n.changeLanguage("fr");
         mountInstance("fr").deleteStatus({id: 1, label: "Traitée"});
         let opts = swal.mock.calls[0][0];
-        expect(opts.title).toBe("Voulez-vous vraiment supprimer le status 'Traitée' ?");
+        expect(opts.title).toBe("Voulez-vous vraiment supprimer le statut 'Traitée' ?");
         expect(opts.cancelButtonText).toBe("non");
         expect(opts.confirmButtonText).toBe("oui");
 

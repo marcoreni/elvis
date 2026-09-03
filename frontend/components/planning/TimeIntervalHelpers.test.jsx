@@ -52,8 +52,8 @@ describe.each([
             age12: "12 ans",
             notIndicated: "NON INDIQUÉ",
             toSpecify: "À PRÉCISER",
-            evaluation: "Evaluation",
-            availabilityEvaluation: "Dispo. Evaluation",
+            evaluation: "Évaluation",
+            availabilityEvaluation: "Dispo. Évaluation",
             availability: "Disponibilité",
         },
     ],
@@ -257,7 +257,7 @@ describe("reactivity to i18n.changeLanguage", () => {
 
         await i18n.changeLanguage("fr");
         let byId = run();
-        expect(byId["u-e"].title).toBe("Dispo. Evaluation");
+        expect(byId["u-e"].title).toBe("Dispo. Évaluation");
         expect(byId["bare"].title).toBe("Disponibilité");
 
         await i18n.changeLanguage("en");
@@ -317,8 +317,8 @@ describe("planning.json i18n layer", () => {
 
     test("the new scheduleTitles.evaluation key is distinct from availabilityEvaluation (fr)", () => {
         const t = i18n.getFixedT("fr", "planning");
-        expect(t("scheduleTitles.evaluation")).toBe("Evaluation");
-        expect(t("scheduleTitles.availabilityEvaluation")).toBe("Dispo. Evaluation");
+        expect(t("scheduleTitles.evaluation")).toBe("Évaluation");
+        expect(t("scheduleTitles.availabilityEvaluation")).toBe("Dispo. Évaluation");
         expect(t("scheduleTitles.evaluation")).not.toBe(t("scheduleTitles.availabilityEvaluation"));
     });
 });

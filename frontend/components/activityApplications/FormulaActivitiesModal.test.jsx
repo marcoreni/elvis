@@ -40,7 +40,7 @@ describe("FormulaActivitiesModal — rendered copy", () => {
                 modalTitle: "Sélectionner les activités pour la formule",
                 activitiesInPackage: 'Activités dans la formule "Trio"',
                 activityChoice: "Choix des activités",
-                selectAmong: "Sélectionnez 2 activités parmi les suivantes:",
+                selectAmong: "Sélectionnez 2 activités parmi les suivantes :",
                 noActivities: "Aucune activité disponible dans cette formule",
                 cancel: "Annuler",
                 save: "Enregistrer",
@@ -112,11 +112,11 @@ describe("FormulaActivitiesModal — plural keys (i18n layer)", () => {
         expect(enOther).toContain("2 activities");
     });
 
-    test("selectAmong keeps its trailing colon (missing-space typo preserved)", () => {
+    test("selectAmong has its trailing colon spaced (fr typo fixed)", () => {
         const fr = i18n.getFixedT("fr", "activityApplications");
         const en = i18n.getFixedT("en", "activityApplications");
         expect(fr("formulaActivitiesModal.selectAmong", {count: 2})).toBe(
-            "Sélectionnez 2 activités parmi les suivantes:"
+            "Sélectionnez 2 activités parmi les suivantes :"
         );
         expect(en("formulaActivitiesModal.selectAmong", {count: 2})).toBe(
             "Select 2 activities from the following:"

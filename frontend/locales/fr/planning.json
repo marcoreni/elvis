@@ -12,9 +12,9 @@
         "availability": "Disponibilité",
         "availabilityOption": "Dispo. Option",
         "availabilityCourse": "Dispo. Cours",
-        "availabilityEvaluation": "Dispo. Evaluation",
+        "availabilityEvaluation": "Dispo. Évaluation",
         "private": "Privé",
-        "evaluation": "Evaluation"
+        "evaluation": "Évaluation"
     },
     "calendar": {
         "daynamesShort": ["Dim", "Lun", "Mar", "Mer", "Jeu", "Ven", "Sam"],
@@ -87,7 +87,7 @@
         "deletePause": "Supprimer la pause"
     },
     "studentModal": {
-        "title": "Selection"
+        "title": "Sélection"
     },
     "simplePlanning": {
         "evalBadge": "EVAL"
@@ -122,8 +122,8 @@
         "resetFilters": "Réinitialiser les filtres",
         "roomActivitiesTooltip": "Activités de cette salle",
         "modals": {
-            "slotDetail": "Detail d'un créneau",
-            "slotCreation": "Creation d'un créneau"
+            "slotDetail": "Détail d'un créneau",
+            "slotCreation": "Création d'un créneau"
         },
         "entities": {
             "room": "salle",
@@ -135,7 +135,7 @@
             "coursesCreated": "Les cours pour l'activité sont créés",
             "bulkUpdateResult": "Mise à jour de {{updated}} cours et création de {{conflicts}} conflits",
             "courseUpdated": "Le cours est mis à jour !",
-            "courseUpdatedShort": "Le cours est mis-à-jour!",
+            "courseUpdatedShort": "Le cours est mis à jour !",
             "pauseUpdated": "La pause est à jour",
             "availabilityUpdated": "La disponibilité est à jour",
             "updateAllFollowing": "Mettre à jour tous les cours suivants",
@@ -146,7 +146,7 @@
             "courseDeleted": "Le cours est supprimé!",
             "deleteAllOtherCourses": "Supprimer tous les autres cours de cette activité",
             "updateErrorInstanceNotFound": "Erreur de la mise à jour (instance introuvable)",
-            "updateFailed": "Echec de la mise à jour",
+            "updateFailed": "Échec de la mise à jour",
             "entityChanged": "Changement de {{entity}} de ce cours effectué."
         }
     },
@@ -167,7 +167,7 @@
         "deleteCourse": "Supprimer ce cours",
         "deleteSlot": "Supprimer le créneau",
         "groupToDefine": "Groupe à définir",
-        "editGroupNameTitle": "Editer le nom du groupe de cette activité",
+        "editGroupNameTitle": "Éditer le nom du groupe de cette activité",
         "teacherComment": "Commentaire du professeur",
         "createActivityTitle": "Création d'une activité",
         "slotInvalid": "Le créneau horaire est invalide.",
@@ -191,7 +191,7 @@
         "noSuitableRooms": "Aucune salle adaptée disponible pour ce cours, autres salles:",
         "dateLabel": "Date",
         "globalLevel": "Niveau global",
-        "toBeSpecified": "A PRECISER",
+        "toBeSpecified": "À PRÉCISER",
         "scope": {
             "single": "N'affecter que cette séance",
             "following": "Affecter cette séance et les suivantes",
@@ -203,7 +203,7 @@
         "groupNameHelp": "Changer le nom du groupe pour cette instance le modifiera pour toutes les occurences de cette activité.",
         "attendanceTable": {
             "adherentNumber": "N° Adh",
-            "student": "Elève",
+            "student": "Élève",
             "present": "Présent"
         },
         "teachersEditor": {

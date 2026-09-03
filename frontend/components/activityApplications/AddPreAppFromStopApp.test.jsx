@@ -61,7 +61,7 @@ describe("AddPreAppFromStopApp", () => {
         await i18n.changeLanguage("fr");
         render(<AddPreAppFromStopApp {...props} />);
 
-        expect(screen.getByRole("button")).toHaveTextContent("Ouvrir la PréInscription");
+        expect(screen.getByRole("button")).toHaveTextContent("Ouvrir la préinscription");
     });
 
     test("renders the English button label after switching to en", async () => {

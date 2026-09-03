@@ -101,6 +101,6 @@ describe("isValidated() toasts resolve through the activityApplications namespac
             i18n.t("activityApplications:evaluation.answerQuestionnairesError"),
             expect.objectContaining({type: "error"})
         );
-        expect(toast.mock.calls[0][0]).toBe("Veuillez répondre au.x questionnaire.s");
+        expect(toast.mock.calls[0][0]).toBe("Veuillez répondre au(x) questionnaire(s)");
     });
 });

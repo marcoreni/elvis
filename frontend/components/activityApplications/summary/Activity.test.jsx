@@ -184,7 +184,7 @@ describe("Activity — rendered copy per locale", () => {
             instruments: "Instruments",
             suggestionCriteria: /critères pour les cours suggérés/,
             modal: {
-                title: /Edition du niveau de Piano/,
+                title: /Édition du niveau de Piano/,
                 notSpecified: "NON INDIQUÉ",
                 cancel: "Annuler",
                 save: "Enregistrer",
@@ -380,12 +380,11 @@ describe("Activity — summaryActivity.* i18n layer", () => {
         }
     });
 
-    test("editLevelTitle interpolates {{label}} and preserves the 'Edition' typo (fr)", () => {
+    test("editLevelTitle interpolates {{label}} and uses the accented 'Édition' (fr typo fixed)", () => {
         const fr = i18n.getFixedT("fr", "activityApplications")("summaryActivity.editLevelTitle", {
             label: "Piano",
         });
-        expect(fr).toContain("Edition");
-        expect(fr).not.toContain("Édition");
+        expect(fr).toContain("Édition");
         expect(fr).toContain("Piano");
 
         const en = i18n.getFixedT("en", "activityApplications")("summaryActivity.editLevelTitle", {

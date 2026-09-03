@@ -52,7 +52,7 @@ describe("WorkGroupEditor — HOC shape", () => {
 
 describe("WorkGroupEditor — table headers + add-role button", () => {
     test.each([
-        ["fr", ["Élève", "Instrument", "Essai le", "Actions"], "Ajouter rôle"],
+        ["fr", ["Élève", "Instrument", "Essai le", "Actions"], "Ajouter un rôle"],
         ["en", ["Student", "Instrument", "Trial on", "Actions"], "Add role"],
     ])("%s", async (lng, headers, addRole) => {
         await i18n.changeLanguage(lng);

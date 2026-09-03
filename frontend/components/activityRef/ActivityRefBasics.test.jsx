@@ -159,7 +159,7 @@ describe("ActivityRefBasics", () => {
             expect(screen.getAllByText("Nom").length).toBeGreaterThanOrEqual(2);
             expect(screen.getByText("Famille")).toBeInTheDocument();
             expect(screen.getByText("Nombre de places")).toBeInTheDocument();
-            expect(screen.getByText("Places (avec surbooking)")).toBeInTheDocument();
+            expect(screen.getByText("Places (avec surréservation)")).toBeInTheDocument();
             expect(screen.getByText("Âge minimum (inclus)")).toBeInTheDocument();
             expect(screen.getByText("Durée (en minutes)")).toBeInTheDocument();
             expect(
