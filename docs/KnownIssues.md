@@ -1299,6 +1299,38 @@ This closes the `editParameters/*` React tree (lots E2 + E3). Remaining `paramet
 lot F (`parameters_controller#set_base_parameters`), which needs a design decision on the
 `:général` / `:personnalisation` plugin symbol keys.
 
+`config/locales/{fr,en}.yml` (added by feature/i18n-06-parameters-lot-f — `parameters` lot F,
+`parameters_controller#set_base_parameters` + `app/views/parameters/index.html.erb:10`: the
+`/parameters` landing page, its 7 setting-cards and 2 section headings, all previously hardcoded
+French in the controller). New `views.parameters.index.sections.*` (2 keys) and
+`views.parameters.index.cards.<slug>.{title,text}` (7×2 keys) blocks. Preserved verbatim:
+
+- `views.parameters.index.cards.school.text` — "Définissez les informations générales de votre
+  **école:** nom, adresse postale, etc." — missing the French space before the colon;
+  right: "…de votre **école :** nom…". Preserved verbatim from `set_base_parameters`. The EN side
+  ("Set your school's general information: name, postal address, etc.") is correct as-is (no space
+  before `:` in English). Same defect class as the lot-2 `courses.json` `professeur:` /
+  `Souhaitez-vous:` entries.
+
+Not a defect — design decision recorded so a later reader does not "fix" it: the controller keeps
+the accented Ruby symbols `@parameters[:général]` / `@parameters[:personnalisation]` (not renamed
+to ASCII). `index.html.erb:10` looks them up as `t("views.parameters.index.sections.#{key}",
+default: key.to_s.humanize)` — the `default:` fallback (`"général".humanize` → "Général",
+`"personnalisation".humanize` → "Personnalisation", byte-identical to the previous bare
+`key.to_s.humanize` render, so FR output is unchanged) means any future `@parameters[:<other>]`
+section still renders even without a locale entry. Grep-confirmed that no in-repo
+plugin / hook / listener writes `@parameters`: `set_base_parameters` is its sole populator and the
+`||=` guards are defensive idiom, not a live extension point — the roadmap's earlier
+"plugin extension point" note was speculative.
+
+i18n-tasks: the `sections.#{key}` lookup is dynamic, but `bin/i18n-tasks health` still reports
+"Every translation is in use" with **no** `config/i18n-tasks.yml` change — its static scanner
+turns the `#{key}` interpolation in the scanned key into a wildcard segment and credits every key
+under `views.parameters.index.sections.*` as used. No `ignore_unused` / `ignore_missing` entry was
+needed. Post-lot health: `569` keys, `0 missing / 0 unused / 0 inconsistent interpolations`.
+
+**This completes the `parameters` domain (lots A–F).**
+
 ## `frontend/components/common/baseDataTable/BaseDataTable.jsx` — hardcoded French chrome leaks into English
 
 The **functional** shared data-table (`frontend/components/common/baseDataTable/`, distinct from

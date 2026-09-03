@@ -7,7 +7,7 @@
 <% @parameters.each_key do |key| %>
   <div class="row">
     <div class="col-sm-12">
-      <h3 class="font-bold text-dark"><%= key.to_s.humanize %></h3>
+      <h3 class="font-bold text-dark"><%= t("views.parameters.index.sections.#{key}", default: key.to_s.humanize) %></h3>
     </div>
   </div>
 
