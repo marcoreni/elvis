@@ -113,11 +113,11 @@ export function getTimeTemplate(schedule, isMultiView, show_activity_code, {isAl
                     "/" +
                     schedule.activity.activity_ref.occupation_limit +
                     " - " +
-                    TimeIntervalHelpers.levelDisplay(
+                    TimeIntervalHelpers.levelDisplayLabel(TimeIntervalHelpers.levelDisplay(
                         students,
                         schedule.activity.activity_ref.id,
                         seasonForLevel ? seasonForLevel.id : 0
-                    )) +
+                    ))) +
                 " - " +
                 TimeIntervalHelpers.averageAgeDisplay(TimeIntervalHelpers.averageAge(students));
         }

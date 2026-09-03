@@ -18,11 +18,11 @@ const levelDisplay = (users, activityRefId, timeInterval, seasons) => {
         seasons
     );
 
-    return TimeIntervalHelpers.levelDisplay(
+    return TimeIntervalHelpers.levelDisplayLabel(TimeIntervalHelpers.levelDisplay(
         users,
         activityRefId,
         season ? season.id : 0
-    );
+    ));
 };
 
 const StudendItems = ({students}) => {

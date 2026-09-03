@@ -2,6 +2,7 @@ import _ from "lodash";
 import { ISO_DATE_FORMAT } from "../utils";
 import { getActivityColor } from "../../tools/utils";
 import { capitalFirstLetters } from "../../tools/format";
+import i18n from "../../i18n";
 const moment = require("moment-timezone");
 
 //returns hsl color for planning intervals 
@@ -26,6 +27,19 @@ export const getColors = (resources) => {
     });
 
     return colors;
+};
+
+// Level sentinels: `levelDisplay` / `levelDisplayForActivity` return one of these RAW French
+// strings (unchanged historical values) so existing `=== LEVEL_NOT_INDICATED` call-site
+// comparisons keep working. `levelDisplayLabel` maps them to the localized copy at the point of
+// display — never compare against a `levelDisplayLabel(...)` result.
+export const LEVEL_NOT_INDICATED = "NON INDIQUÉ";
+export const LEVEL_TO_SPECIFY = "À PRÉCISER";
+
+export const levelDisplayLabel = value => {
+    if (value === LEVEL_NOT_INDICATED) return i18n.t("planning:levelDisplay.notIndicated");
+    if (value === LEVEL_TO_SPECIFY) return i18n.t("planning:levelDisplay.toSpecify");
+    return value;
 };
 
 export const omitInactiveStudents = (users, inactiveStudents) => _.differenceBy(users, inactiveStudents, 'id');
@@ -176,9 +190,9 @@ export const formatIntervalsForSchedule = (rawIntervals, conflict, user, resourc
         if (activity) {
             title = activity.activity_ref.label;
         } else if (int.kind === "e") {
-            title = int.is_validated ? "Evaluation" : "Dispo. Evaluation";
+            title = int.is_validated ? i18n.t("planning:scheduleTitles.evaluation") : i18n.t("planning:scheduleTitles.availabilityEvaluation");
         } else {
-            title = "Disponibilité";
+            title = i18n.t("planning:scheduleTitles.availability");
         }
         const locationIndicator = `<b>${capitalFirstLetters(_.get(activity, "location.label", ""))}</b> - `;
 
@@ -261,14 +275,14 @@ export const levelDisplay = (users, activityRef, seasonId) => {
     const levelsToConsider = exactLevels;
 
     if (levelsToConsider.length === 0) {
-        return "NON INDIQUÉ";
+        return LEVEL_NOT_INDICATED;
     }
 
     const uniqueLevels = _.uniqBy(levelsToConsider, "evaluation_level_ref_id");
 
     return uniqueLevels.length > 1
-        ? "À PRÉCISER"
-        : _.get(uniqueLevels, "[0].evaluation_level_ref.label") || "NON INDIQUÉ";
+        ? LEVEL_TO_SPECIFY
+        : _.get(uniqueLevels, "[0].evaluation_level_ref.label") || LEVEL_NOT_INDICATED;
 };
 
 export const levelDisplayForActivity = (activity, seasons) => {
@@ -311,7 +325,7 @@ export const averageAge = users => {
 };
 
 export const averageAgeDisplay = age => {
-    return isNaN(age) ? "" : `${age} ans`
+    return isNaN(age) ? "" : i18n.t("planning:ageYears", { age })
 };
 
 // TODO Include availabilityInterval somehow

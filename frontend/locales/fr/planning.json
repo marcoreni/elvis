@@ -13,10 +13,19 @@
         "availabilityOption": "Dispo. Option",
         "availabilityCourse": "Dispo. Cours",
         "availabilityEvaluation": "Dispo. Evaluation",
-        "private": "Privé"
+        "private": "Privé",
+        "evaluation": "Evaluation"
     },
     "calendar": {
-        "daynamesShort": ["Dim", "Lun", "Mar", "Mer", "Jeu", "Ven", "Sam"],
+        "daynamesShort": [
+            "Dim",
+            "Lun",
+            "Mar",
+            "Mer",
+            "Jeu",
+            "Ven",
+            "Sam"
+        ],
         "moreSchedules": "{{n}} autres",
         "presences": "Présences",
         "substituteFor": "Remplaçant de",
@@ -234,5 +243,10 @@
         "multiView": {
             "title": "Création d'une réservation"
         }
-    }
+    },
+    "levelDisplay": {
+        "notIndicated": "NON INDIQUÉ",
+        "toSpecify": "À PRÉCISER"
+    },
+    "ageYears": "{{age}} ans"
 }

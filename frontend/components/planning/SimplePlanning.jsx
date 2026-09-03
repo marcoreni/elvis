@@ -124,7 +124,7 @@ const SimpleActivity = ({ timeInterval, seasons, selectedPlanning, currentPlanni
                     <p className="font-bold font-italic">
                         {t("rawPlanning.occupancy", {n: students.length + options.length, limit: activity.activity_ref.occupation_limit})}
                         {" "}
-                        {TimeIntervalHelpers.levelDisplayForActivity({ ...activity, users: students, time_interval: timeInterval }, seasons)}
+                        {TimeIntervalHelpers.levelDisplayLabel(TimeIntervalHelpers.levelDisplayForActivity({ ...activity, users: students, time_interval: timeInterval }, seasons))}
                     </p>
 
                     <ul className="list-group">

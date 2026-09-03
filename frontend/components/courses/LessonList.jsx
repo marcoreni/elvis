@@ -970,9 +970,11 @@ class LessonList extends React.Component {
                     </select>
                 ),
                 Cell: c =>
-                    TimeIntervalHelpers.levelDisplayForActivity(
-                        c.value,
-                        this.props.seasons || [],
+                    TimeIntervalHelpers.levelDisplayLabel(
+                        TimeIntervalHelpers.levelDisplayForActivity(
+                            c.value,
+                            this.props.seasons || [],
+                        ),
                     ),
             },
             {
@@ -1381,7 +1383,7 @@ const UserRow = ({
 
     // Modification principale : priorité à studentLevel, puis vérification explicite
     const displayLevel = () => {
-        if (studentLevel === "NON INDIQUÉ") {
+        if (studentLevel === TimeIntervalHelpers.LEVEL_NOT_INDICATED) {
             return t("lessonList.userRow.notSpecified");
         }
         if (studentLevel) {
@@ -1398,12 +1400,12 @@ const UserRow = ({
             seasons
         );
 
-        // levelDisplayForActivity returns the French sentinels "À PRÉCISER" / "NON INDIQUÉ"
-        // (from TimeIntervalHelpers, not yet i18n'd) for the no-level case — map both to the
-        // translated placeholder so an English row doesn't show a lone French cell.
+        // levelDisplayForActivity returns the TimeIntervalHelpers.LEVEL_* sentinels for the
+        // no-level case — map both to the translated placeholder so an English row doesn't
+        // show a lone French cell.
         return computedLevel &&
-            computedLevel !== "À PRÉCISER" &&
-            computedLevel !== "NON INDIQUÉ"
+            computedLevel !== TimeIntervalHelpers.LEVEL_TO_SPECIFY &&
+            computedLevel !== TimeIntervalHelpers.LEVEL_NOT_INDICATED
             ? computedLevel
             : t("lessonList.userRow.notSpecified");
     };
