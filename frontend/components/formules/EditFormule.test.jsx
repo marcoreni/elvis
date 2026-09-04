@@ -63,6 +63,42 @@ describe("EditFormule", () => {
         await waitFor(() => expect(global.fetch).toHaveBeenCalled(), {timeout: 2000});
     });
 
+    test("selectedSeasons pricing column renders an open-ended row without throwing", async () => {
+        // Regression for the seasonEnd !== undefined / null.label crash fixed alongside the
+        // identical ActivityRefBasics.jsx bug (see docs/KnownIssues.md). Every real producer of a
+        // pricing row sends to_season_id: null for an open-ended price, never omits the key — this
+        // pins that shape against the real (unmocked) BaseDataTable + FormulePricingDataService.
+        global.fetch = vi.fn(url => {
+            const u = String(url);
+            const body = u.includes("get_seasons_and_pricing_categories")
+                ? {seasons: [{id: 1, label: "2025-26"}], pricing_categories: []}
+                : u.includes("/formule_pricings")
+                ? {
+                      data: [
+                          {
+                              id: 1,
+                              pricing_category: {name: "Tarif standard"},
+                              price: 50,
+                              from_season_id: 1,
+                              to_season_id: null,
+                          },
+                      ],
+                      pages: 1,
+                  }
+                : [];
+            return Promise.resolve({
+                ok: true,
+                headers: {get: h => (h === "Content-type" ? "application/json" : null)},
+                json: () => Promise.resolve(body),
+            });
+        });
+
+        await i18n.changeLanguage("fr");
+        render(<EditFormule formule={formule}/>);
+
+        expect(await screen.findByText("2025-26 > ...")).toBeInTheDocument();
+    });
+
     test("renders the English strings when the active language is en", async () => {
         await i18n.changeLanguage("en");
         render(<EditFormule formule={formule}/>);

@@ -68,8 +68,13 @@ vi.mock("../common/InputColor", () => ({default: () => null}));
 vi.mock("../editParameters/DragAndDrop", () => ({
     default: props => <div>{props.textDisplayed}</div>,
 }));
+// Captured so a test can pull out the `selectedSeasons` column's `Cell` and call it directly with
+// a fabricated row, exercising the seasonEnd null/undefined branch without needing BaseDataTable's
+// real (unmockable-in-jsdom) rendering.
+let mockLastColumns = null;
 vi.mock("../common/baseDataTable/BaseDataTable", () => ({
     default: props => {
+        mockLastColumns = props.columns;
         const CreateButton = props.createButton;
         return (
             <div>
@@ -120,6 +125,7 @@ function renderBasics() {
 beforeEach(() => {
     mockLastApiSuccess = null;
     mockLastApiError = null;
+    mockLastColumns = null;
     swalMock.mockClear();
 });
 
@@ -223,6 +229,76 @@ describe("ActivityRefBasics", () => {
             renderBasics();
             act(() => mockLastApiSuccess(seasonsPayload));
             expect(screen.getByText("Create a pricing")).toBeInTheDocument();
+        });
+    });
+
+    describe("selectedSeasons pricing column (Cell) — seasonEnd null/undefined regression", () => {
+        const twoSeasonsPayload = {
+            seasons: [
+                {id: 1, label: "2025-26"},
+                {id: 2, label: "2026-27"},
+            ],
+            pricing_categories: [],
+            activity_ref_pricings: [],
+            packs: [],
+        };
+
+        function getSelectedSeasonsCell() {
+            const col = (mockLastColumns || []).find(c => c.id === "selectedSeasons");
+            expect(col).toBeDefined();
+            return col.Cell;
+        }
+
+        test("open-ended row (to_season_id: null, the shape every real producer sends) renders '<start> > ...'", async () => {
+            // Every producer of this row (ActivityRefPricingController#as_json, both
+            // {New,}ActivityRefDataService) sets to_season_id to null, never omits the key, for an
+            // open-ended price. This is the shape that actually reaches the Cell in production.
+            await i18n.changeLanguage("fr");
+            renderBasics();
+            act(() => mockLastApiSuccess(twoSeasonsPayload));
+
+            const Cell = getSelectedSeasonsCell();
+            const result = Cell({original: {from_season_id: 1, to_season_id: null}});
+            expect(result).toBe("2025-26 > ...");
+        });
+
+        test("row with to_season_id key absent renders '<start> > ...' without throwing", async () => {
+            // Defensive: no known call site produces this shape today, but the pre-fix code
+            // (`seasonEnd !== undefined`) crashed on `null.label` here specifically, not on the
+            // to_season_id: null case above (which already rendered correctly before the fix).
+            await i18n.changeLanguage("fr");
+            renderBasics();
+            act(() => mockLastApiSuccess(twoSeasonsPayload));
+
+            const Cell = getSelectedSeasonsCell();
+            let result;
+            expect(() => {
+                result = Cell({original: {from_season_id: 1, to_season_id: undefined}});
+            }).not.toThrow();
+            expect(result).toBe("2025-26 > ...");
+        });
+
+        test("to_season_id set but not found among fetched seasons still falls back to '...'", async () => {
+            await i18n.changeLanguage("fr");
+            renderBasics();
+            act(() => mockLastApiSuccess(twoSeasonsPayload));
+
+            const Cell = getSelectedSeasonsCell();
+            let result;
+            expect(() => {
+                result = Cell({original: {from_season_id: 1, to_season_id: 999}});
+            }).not.toThrow();
+            expect(result).toBe("2025-26 > ...");
+        });
+
+        test("matching to_season_id renders '<start> > <end>'", async () => {
+            await i18n.changeLanguage("fr");
+            renderBasics();
+            act(() => mockLastApiSuccess(twoSeasonsPayload));
+
+            const Cell = getSelectedSeasonsCell();
+            const result = Cell({original: {from_season_id: 1, to_season_id: 2}});
+            expect(result).toBe("2025-26 > 2026-27");
         });
     });
 

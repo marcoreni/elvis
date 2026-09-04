@@ -156,7 +156,7 @@ class ActivityRefBasics extends React.Component {
                     Cell: row => {
                         const seasonStart = this.state.seasons.find(s => s.id === row.original.from_season_id);
                         const seasonEnd = row.original.to_season_id !== undefined ? this.state.seasons.find(s => s.id === row.original.to_season_id) : null;
-                        return seasonEnd !== undefined ? seasonStart.label + " > " + seasonEnd.label : seasonStart.label + " > ...";
+                        return seasonEnd != null ? seasonStart.label + " > " + seasonEnd.label : seasonStart.label + " > ...";
                     }
                 },
             ];

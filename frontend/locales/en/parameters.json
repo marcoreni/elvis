@@ -73,7 +73,7 @@
         "levels": {
             "colValue": "Value",
             "colCanContinue": "Can continue?",
-            "deleteConfirm": "Do you really want to delete the instrument '{{name}}'?"
+            "deleteConfirm": "Do you really want to delete the evaluation level '{{name}}'?"
         },
         "slot": {
             "durationLabel": "Evaluation slot duration (in minutes) * :",

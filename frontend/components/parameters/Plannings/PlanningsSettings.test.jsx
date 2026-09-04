@@ -270,10 +270,11 @@ describe("parameters lot-E — i18n layer", () => {
         },
     );
 
-    test("preserved verbatim: evaluations.levels.deleteConfirm keeps the wrong French word 'l'instrument'", () => {
-        // The FR source string is a copy-paste slip (it is a *level*, not an instrument). The
-        // extraction is verbatim — this asserts the typo was carried through, not silently fixed.
-        expect(tP("fr")("evaluations.levels.deleteConfirm", {name: "X"})).toContain("l'instrument");
+    test("evaluations.levels.deleteConfirm names the right noun (fixed copy-paste slip)", () => {
+        // The FR source used to read "l'instrument" (a copy-paste slip from the instruments
+        // table — this dialog deletes an evaluation *level*). Fixed in fix/known-issues-easy-batch.
+        expect(tP("fr")("evaluations.levels.deleteConfirm", {name: "X"})).toContain("le niveau d'évaluation");
+        expect(tP("fr")("evaluations.levels.deleteConfirm", {name: "X"})).not.toContain("instrument");
     });
 
     test.each(["fr", "en"])(
@@ -485,7 +486,7 @@ describe("PlanningDisplayParameters", () => {
 // ============================================================================================
 describe("EvaluationLevels", () => {
     const HEADERS = {
-        fr: ["#", "Nom", "Valeur", "Peut continue ?", "Actions"],
+        fr: ["#", "Nom", "Valeur", "Peut continuer ?", "Actions"],
         en: ["#", "Name", "Value", "Can continue?", "Actions"],
     };
 
@@ -553,7 +554,7 @@ describe("EvaluationLevels", () => {
         await i18n.changeLanguage("fr");
         mountInstance("fr").deleteStatus({id: 1, label: "Zephyr"});
         let opts = swal.mock.calls[0][0];
-        expect(opts.title).toBe("Voulez-vous vraiment supprimer l'instrument 'Zephyr' ?");
+        expect(opts.title).toBe("Voulez-vous vraiment supprimer le niveau d'évaluation 'Zephyr' ?");
         expect(opts.cancelButtonText).toBe("non");
         expect(opts.confirmButtonText).toBe("oui");
 
@@ -562,7 +563,7 @@ describe("EvaluationLevels", () => {
         await i18n.changeLanguage("en");
         mountInstance("en").deleteStatus({id: 1, label: "Zephyr"});
         opts = swal.mock.calls[0][0];
-        expect(opts.title).toBe("Do you really want to delete the instrument 'Zephyr'?");
+        expect(opts.title).toBe("Do you really want to delete the evaluation level 'Zephyr'?");
         expect(opts.cancelButtonText).toBe("no");
         expect(opts.confirmButtonText).toBe("yes");
     });
