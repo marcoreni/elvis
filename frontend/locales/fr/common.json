@@ -14,6 +14,14 @@
   "tabs": {
     "incomplete": "Cet onglet n'est pas complètement rempli"
   },
+  "dragAndDrop": {
+    "invalidType": "Type de fichier non autorisé",
+    "tooManyFiles": "Un seul fichier autorisé",
+    "selectButton": "Sélectionner",
+    "currentDocument": "Document actuel :",
+    "none": "aucun",
+    "imageAlt": "image impossible à charger"
+  },
   "confirm": {
     "sure": "Êtes-vous sûr ?"
   },

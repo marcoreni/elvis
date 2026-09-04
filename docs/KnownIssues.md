@@ -541,13 +541,6 @@ What's still open in this domain:
   has three separate keys, one per namespace — `activityApplications:summaryActivity.notSpecified`,
   `courses:lessonList.userRow.notSpecified`, `planning:levelDisplay.notIndicated` (all "NOT
   SPECIFIED" in EN). `shared.*` lives inside `parameters.json`, so it can't reach across namespaces.
-- **`editParameters/DragAndDrop.jsx` is a shared component locked to the `parameters` namespace** —
-  `useTranslation("parameters")` for a component with 4 call sites across *three* i18n domains
-  (`editParameters/{RulesSettings,SchoolParameters}.jsx`,
-  `parameters/ActivityApplications/ConsentDocumentModal.jsx`, and `activityRef/ActivityRefBasics.jsx`
-  — the last one is the `activities` domain). Harmless today (every namespace loads eagerly), but
-  a future lazy-namespace split would break the `activityRef` caller silently. Move its strings to
-  `common:dragAndDrop.*`.
 - **Possible dead code** (do not delete — recover-don't-delete policy): `parameters/Rooms/
   RoomsParameters.jsx` isn't mounted by any core view (`rooms_parameters/index.html.erb` mounts
   `Rooms/Localisations` directly); its only key is exercised solely by the parity test.
@@ -561,12 +554,6 @@ What's still open in this domain:
   that particular mismatch is gone. Still open: `ActivitiesApplicationsList.jsx`'s column headers
   ("Niveau", "Âge", "Activité" and 10 more) are still hardcoded French next to its now-localized
   level cell and Action column.
-- **Pre-existing dead guard** in `courses/LessonList.jsx`: `UserRow` seeds `studentLevel` from
-  `data.evaluation_level_ref.label`, but `desired_activity_controller.rb:92` renders
-  `evaluation_level_ref` as a bare **string**, so `.label` on it is always `undefined` and the
-  `studentLevel === LEVEL_NOT_INDICATED` fast path never fires — every row falls through to the
-  `levelDisplayForActivity` recompute. `Activity.jsx:44` handles the same endpoint correctly
-  (no `.label`). Fix `LessonList` to match.
 
 Design note (`planning/TimeIntervalHelpers.jsx`, lot 3c — so a later reader doesn't "simplify" it):
 `levelDisplay()` / `levelDisplayForActivity()` keep returning the raw French sentinels

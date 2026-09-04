@@ -27,7 +27,7 @@
 // interpolated + plural keys are guarded at the i18n layer instead (see the last describe block).
 
 import React from "react";
-import {render, screen, waitFor} from "@testing-library/react";
+import {act, render, screen, waitFor} from "@testing-library/react";
 import i18n from "../../i18n";
 import LessonList from "./LessonList";
 
@@ -55,11 +55,17 @@ vi.mock("react-table", () => ({
 
 // UserRow fires api.set().error().success().get(...) in a useEffect. Chainable no-op stub whose
 // .get never invokes the success callback, so `studentLevel` stays null and displayLevel() falls
-// through to the levelDisplayForActivity branch — the one the lot-4 review flagged.
+// through to the levelDisplayForActivity branch — the one the lot-4 review flagged. The success
+// callback itself is stashed so a test can invoke it directly with fixture data (see the
+// studentLevel describe block below), without any test relying on it firing spontaneously.
+let lastApiSuccess = null;
 vi.mock("../../tools/api", () => {
     const chain = {};
     chain.set = () => chain;
-    chain.success = () => chain;
+    chain.success = cb => {
+        lastApiSuccess = cb;
+        return chain;
+    };
     chain.error = () => chain;
     chain.get = () => chain;
     chain.post = () => chain;
@@ -355,6 +361,25 @@ describe("row expander (UserList / UserRow) — i18n", () => {
         expect(enSub.getByText("6/15/2030")).toBeInTheDocument();
         enSub.unmount();
         enList.unmount();
+    });
+
+    // Regression: UserRow used to read `data.evaluation_level_ref.label` from the API response,
+    // but desired_activity_controller.rb renders evaluation_level_ref as a bare string, not an
+    // object -- `.label` on a string is always undefined, so studentLevel never got set and the
+    // component always fell through to the levelDisplayForActivity recompute, regardless of what
+    // the API actually returned.
+    test("studentLevel is set straight from the API's evaluation_level_ref string, no .label", async () => {
+        await i18n.changeLanguage("fr");
+        render(<LessonList {...makeProps()} />);
+        await waitFor(() => expect(lastReactTableProps).not.toBeNull());
+        render(lastReactTableProps.SubComponent({original: activityFixture()}));
+
+        expect(lastApiSuccess).not.toBeNull();
+        act(() => {
+            lastApiSuccess({id: 1, evaluation_level_ref: "Débutant", activity_application_id: 5});
+        });
+
+        expect(screen.getByText("Débutant")).toBeInTheDocument();
     });
 });
 

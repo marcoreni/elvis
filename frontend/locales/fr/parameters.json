@@ -300,14 +300,6 @@
             "coursesHeading": "Liste des cours",
             "coursesLabel": "Le professeur peut gérer la liste de ses cours"
         },
-        "dragAndDrop": {
-            "invalidType": "Type de fichier non autorisé",
-            "tooManyFiles": "Un seul fichier autorisé",
-            "selectButton": "Sélectionner",
-            "currentDocument": "Document actuel :",
-            "none": "aucun",
-            "imageAlt": "image impossible à charger"
-        },
         "school": {
             "siretRnaError": "La saisie ne correspond ni à un RNA ni au siret de votre pays ({{country}})",
             "schoolInfoHeading": "Informations de l'école",

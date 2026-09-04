@@ -1368,7 +1368,11 @@ const UserRow = ({
             .success((data) => {
                 setDesiredActivityId(data.id);
                 if (data && data.evaluation_level_ref) {
-                    setStudentLevel(data.evaluation_level_ref.label);
+                    // desired_activity_controller.rb renders evaluation_level_ref as a bare string,
+                    // not an object -- Activity.jsx (activityApplications/summary) handles the same
+                    // endpoint this way already. `.label` on a string is always undefined, which
+                    // used to make the LEVEL_NOT_INDICATED fast path above never fire.
+                    setStudentLevel(data.evaluation_level_ref);
                 }
 
                 setActivityApplicationId(data.activity_application_id);

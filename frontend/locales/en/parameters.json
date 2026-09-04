@@ -300,14 +300,6 @@
             "coursesHeading": "Course list",
             "coursesLabel": "The teacher can manage their course list"
         },
-        "dragAndDrop": {
-            "invalidType": "File type not allowed",
-            "tooManyFiles": "only one file allowed",
-            "selectButton": "Select",
-            "currentDocument": "Current document:",
-            "none": "none",
-            "imageAlt": "unable to load image"
-        },
         "school": {
             "siretRnaError": "The input matches neither an RNA nor your country's SIRET ({{country}})",
             "schoolInfoHeading": "School information",
