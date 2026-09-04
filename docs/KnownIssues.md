@@ -415,7 +415,7 @@ Pre-existing (identical `{errors.name && "Le créneau est requis"}` at the pre-l
 lot E only swapped the literal for `t(…)`. Fix is `errors.sessionHour` — do it in the cleanup
 pass, not mid-extraction. Covered by an inline comment in `PlanningsSettings.test.jsx`.
 
-## Locale-file verbatim typos — RESOLVED, three items still open
+## Locale-file verbatim typos — RESOLVED
 
 **STATUS: DONE.** The full extraction-era catalogue of preserved-verbatim French defects across
 `frontend/locales/fr/*.json` and `config/locales/fr.yml` — missing accents, colon-spacing,
@@ -424,19 +424,9 @@ apostrophe style, the œ ligature, and the `MailSettings`/`RulesSettings`/`DragA
 defects — was corrected across `feature/i18n-typo-cleanup` (PR #51) and
 `feature/i18n-parameters-shared-consolidation` (PR #52). Verified 2026-09-04 by reading every
 flagged key back out of the current locale files: all of it landed. fr/en parity and
-`bin/i18n-tasks health` are clean.
-
-Three items were deliberately left because they need more than a mechanical string edit:
-
-- **`parameters:evaluations.levels.deleteConfirm` — wrong noun, user-facing, highest priority of
-  the three.** Still reads "Voulez-vous vraiment supprimer **l'instrument** '{{name}}' ?" in the
-  evaluation-levels delete dialog (`EvaluationLevels.jsx`) — copy-pasted from the instruments
-  table's identical string. Should be "…supprimer **le niveau d'évaluation** '…' ?" (EN mirror
-  needs the matching fix, currently "Do you really want to delete the instrument '{{name}}'?").
-- `parameters:evaluations.levels.colCanContinue` — still "Peut continue ?" → "Peut continuer ?"
-  (missing verb ending; `EvaluationLevels.jsx` ReactTable header).
-- `parameters:plannings.schoolAvailabilities.hint` — still "(si il y en a, …)" → "(s'il y en a, …)"
-  (elision; `SchoolAvailabilities.jsx`).
+`bin/i18n-tasks health` are clean. The three stragglers this section used to list —
+`evaluations.levels.deleteConfirm` (wrong noun), `evaluations.levels.colCanContinue`, and
+`plannings.schoolAvailabilities.hint` — were fixed in `fix/known-issues-easy-batch`.
 
 **Load-bearing whitespace — do not let a future normalize/trim pass touch these.** Each carries a
 leading and/or trailing space that is concatenation glue at its call site, or wraps intentional
@@ -474,11 +464,8 @@ inline HTML:
   `["br","strong","i","p"]` — `em`/`a`/`u` are not in it. Use the indexed `<1>…</1>` form.
 
 Non-i18n code bugs surfaced while extracting these files (all still open, none are locale-file
-defects):
-- `activityRef/ActivityRefBasics.jsx` `selectedSeasons` `Cell` (~line 158): `seasonEnd` is set to
-  `null` in the else branch then tested with `seasonEnd !== undefined`, which `null` passes → an
-  open-ended pricing row throws on `null.label` instead of rendering `"<start> > ..."`. Fix:
-  `to_season_id !== undefined` / `seasonEnd != null`.
+defects; the `ActivityRefBasics.jsx` `seasonEnd` crash listed here previously was fixed in
+`fix/known-issues-easy-batch`):
 - `activityApplications/summary/Summary.jsx:~1322` reads `e.activity.activity_reéf_id` (stray
   accented `é`) where it means `activity_ref_id` — a silent lookup failure in the `courseOption`
   label, not a crash.
@@ -622,8 +609,7 @@ assert only the weekday token of `toFullDateFr` output so as not to pin the bug.
 
 The i18n-06 `parameters` domain (lots A–F, `feature/i18n-06-parameters-lot-*`) is functionally
 complete, and its own verbatim-typo catalogue was folded into the "Locale-file verbatim typos"
-section above (`evaluations.levels.deleteConfirm`/`colCanContinue`,
-`plannings.schoolAvailabilities.hint` are the three still open). `feature/i18n-parameters-shared-
+section above — fully resolved as of `fix/known-issues-easy-batch`. `feature/i18n-parameters-shared-
 consolidation` additionally folded every byte-identical `parameters:*` duplicate flagged across
 lots A–E3 into a `shared.*` block (`parameters.json` 255 → 233 leaves) — `shared.colName`,
 `shared.colLabel`, `shared.deleteStatusConfirm`, `shared.saveCompleted`, `shared.genericErrorShort`,

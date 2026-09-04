@@ -72,8 +72,8 @@
         },
         "levels": {
             "colValue": "Valeur",
-            "colCanContinue": "Peut continue ?",
-            "deleteConfirm": "Voulez-vous vraiment supprimer l'instrument '{{name}}' ?"
+            "colCanContinue": "Peut continuer ?",
+            "deleteConfirm": "Voulez-vous vraiment supprimer le niveau d'évaluation '{{name}}' ?"
         },
         "slot": {
             "durationLabel": "Durée d'un créneau d'évaluation (en minutes) * :",
@@ -170,7 +170,7 @@
         "schoolAvailabilities": {
             "fetchError": "Erreur lors de la récupération des disponibilités",
             "heading": "Gestion des horaires de votre école",
-            "hint": "(si il y en a, ceux-ci seront proposés par défaut aux élèves lors de leur inscription)"
+            "hint": "(s'il y en a, ceux-ci seront proposés par défaut aux élèves lors de leur inscription)"
         },
         "teacherAvailabilities": {
             "heading": "Disponibilité",
