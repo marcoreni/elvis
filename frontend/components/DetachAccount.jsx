@@ -7,7 +7,6 @@ import { required } from "../tools/validators";
 import _ from "lodash";
 import InlineYesNoRadio from "./common/InlineYesNoRadio";
 import Input from "./common/Input";
-import { MESSAGES } from "../tools/constants";
 import swal from "sweetalert2";
 
 export default function DetachAccount({user, user_id, reload_data})

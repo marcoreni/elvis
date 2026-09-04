@@ -1,5 +1,4 @@
 import React, {useState} from "react";
-import {MESSAGES} from "../../tools/constants";
 import Select, {createFilter} from "react-select";
 
 const InputSelectReact = props => {

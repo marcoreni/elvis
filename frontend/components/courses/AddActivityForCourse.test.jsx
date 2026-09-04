@@ -15,11 +15,16 @@
 
 import React from "react";
 import {render, screen, waitFor} from "@testing-library/react";
+import {toast} from "react-toastify";
 import i18n from "../../i18n";
 import AddActivityForCourse from "./AddActivityForCourse";
 
 vi.mock("./AddCourseSummary", () => ({
     default: () => <div data-testid="add-course-summary-stub" />,
+}));
+
+vi.mock("react-toastify", () => ({
+    toast: Object.assign(vi.fn(), {error: vi.fn()}),
 }));
 
 const okJson = body =>
@@ -77,6 +82,41 @@ describe("AddActivityForCourse — activities available", () => {
         expect(screen.getByText("Activity")).toBeInTheDocument();
 
         await waitFor(() => expect(global.fetch).toHaveBeenCalled());
+    });
+});
+
+describe("AddActivityForCourse — isValidated() toasts the localized MESSAGES.err_must_choose_activity", () => {
+    // Direct `MESSAGES.err_must_choose_activity` toast call (constants-i18n lot 2). fetch resolves
+    // with an empty activity list, so `state.activityRefId` stays unset and isValidated() takes
+    // its failing branch.
+    beforeEach(() => {
+        global.fetch = okJson([]);
+    });
+
+    test("French: toasts the French copy when no activity is chosen", async () => {
+        await i18n.changeLanguage("fr");
+        const ref = React.createRef();
+        render(<AddActivityForCourse ref={ref} {...makeProps()} />);
+        await waitFor(() => expect(global.fetch).toHaveBeenCalled());
+
+        expect(ref.current.isValidated()).toBe(false);
+        expect(toast.error).toHaveBeenCalledWith(
+            "Veuillez choisir une activité avant de continuer.",
+            {autoClose: 3000}
+        );
+    });
+
+    test("English: toasts the English copy when no activity is chosen", async () => {
+        await i18n.changeLanguage("en");
+        const ref = React.createRef();
+        render(<AddActivityForCourse ref={ref} {...makeProps()} />);
+        await waitFor(() => expect(global.fetch).toHaveBeenCalled());
+
+        expect(ref.current.isValidated()).toBe(false);
+        expect(toast.error).toHaveBeenCalledWith(
+            "Please choose an activity before continuing.",
+            {autoClose: 3000}
+        );
     });
 });
 

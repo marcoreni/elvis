@@ -55,8 +55,6 @@ export default class AddSlotForCourse extends React.Component {
     }
 
     isValidated() {
-        // NB: when MESSAGES.* is eventually i18n'd, this non-render method will need its own
-        // `const { t } = this.props;` — it has none today because MESSAGES is still hardcoded.
         const { dayOfWeek, startTime, endTime, fromDate, toDate } = this.state;
 
         if (!startTime || !endTime || !dayOfWeek) {
