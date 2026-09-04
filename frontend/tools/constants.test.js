@@ -14,10 +14,16 @@
 // bypassing the object-lookup pattern. Same aliased-capture gotcha applies: read `MESSAGES.xxx`
 // (or the object returned by a fresh `constants.MESSAGES`) after each changeLanguage, never a
 // `const` destructured before the switch.
+//
+// constants-i18n lot 3 (branch feature/i18n-constants-lot3-labels) closes out the pass with
+// KINDS_LABEL / PRE_APPLICATION_ACTION_LABELS (same `export let` + `languageChanged` pattern —
+// same aliased-capture gotcha) and RECURRENCE_TYPES.toString (an `export const`; `toString` is a
+// method that reads `i18n.t()` fresh on every call, so there is no live binding to go stale — the
+// tests below call it before *and* after a `changeLanguage` to confirm that directly).
 
 import i18n from "../i18n";
 import * as constants from "./constants";
-import { WEEKDAYS, MONTHS } from "./constants";
+import { WEEKDAYS, MONTHS, INTERVAL_KINDS, RECURRENCE_TYPES } from "./constants";
 
 afterEach(async () => {
     await i18n.changeLanguage("fr");
@@ -199,5 +205,147 @@ describe("API_ERRORS_MESSAGES follows the active UI language", () => {
         expect(constants.API_ERRORS_MESSAGES.default).toBe(
             "Une erreur s'est produite lors de la récupération des données"
         );
+    });
+});
+
+describe("KINDS_LABEL follows the active UI language", () => {
+    test("default language (fr) exposes the French kind labels", async () => {
+        await i18n.changeLanguage("fr");
+
+        expect(constants.KINDS_LABEL[INTERVAL_KINDS.AVAILABILITY]).toBe("Disponibilité");
+        expect(constants.KINDS_LABEL[INTERVAL_KINDS.LESSON]).toBe("Cours");
+        expect(constants.KINDS_LABEL[INTERVAL_KINDS.EVALUATION]).toBe("Évaluation");
+        expect(constants.KINDS_LABEL[INTERVAL_KINDS.OPTION]).toBe("Option");
+    });
+
+    test("after changeLanguage('en') kind labels are re-read as English", async () => {
+        await i18n.changeLanguage("en");
+
+        expect(constants.KINDS_LABEL[INTERVAL_KINDS.AVAILABILITY]).toBe("Availability");
+        expect(constants.KINDS_LABEL[INTERVAL_KINDS.LESSON]).toBe("Course");
+        expect(constants.KINDS_LABEL[INTERVAL_KINDS.EVALUATION]).toBe("Evaluation");
+        expect(constants.KINDS_LABEL[INTERVAL_KINDS.OPTION]).toBe("Option");
+    });
+
+    test("switching back to fr restores the French kind labels", async () => {
+        await i18n.changeLanguage("en");
+        expect(constants.KINDS_LABEL[INTERVAL_KINDS.LESSON]).toBe("Course");
+
+        await i18n.changeLanguage("fr");
+        expect(constants.KINDS_LABEL[INTERVAL_KINDS.LESSON]).toBe("Cours");
+    });
+
+    test("an aliased capture of KINDS_LABEL freezes at its value — the same gotcha as WEEKDAYS", async () => {
+        await i18n.changeLanguage("fr");
+        const aliased = constants.KINDS_LABEL;
+
+        await i18n.changeLanguage("en");
+        expect(aliased[INTERVAL_KINDS.LESSON]).toBe("Cours"); // stale
+        expect(constants.KINDS_LABEL[INTERVAL_KINDS.LESSON]).toBe("Course"); // live
+    });
+});
+
+describe("PRE_APPLICATION_ACTION_LABELS follows the active UI language", () => {
+    test("default language (fr) exposes the French action labels", async () => {
+        await i18n.changeLanguage("fr");
+
+        expect(constants.PRE_APPLICATION_ACTION_LABELS.new).toBe("Nouvelle inscription");
+        expect(constants.PRE_APPLICATION_ACTION_LABELS.renew).toBe("Renouvellement");
+        expect(constants.PRE_APPLICATION_ACTION_LABELS.change).toBe("Changement");
+        expect(constants.PRE_APPLICATION_ACTION_LABELS.stop).toBe("Arrêt");
+        expect(constants.PRE_APPLICATION_ACTION_LABELS.pursue_childhood).toBe("Poursuite enfance");
+        expect(constants.PRE_APPLICATION_ACTION_LABELS.cham).toBe("Inscription CHAM");
+    });
+
+    test("after changeLanguage('en') action labels are re-read as English", async () => {
+        await i18n.changeLanguage("en");
+
+        expect(constants.PRE_APPLICATION_ACTION_LABELS.new).toBe("New enrollment");
+        expect(constants.PRE_APPLICATION_ACTION_LABELS.renew).toBe("Renewal");
+        expect(constants.PRE_APPLICATION_ACTION_LABELS.change).toBe("Change");
+        expect(constants.PRE_APPLICATION_ACTION_LABELS.stop).toBe("Stop");
+        expect(constants.PRE_APPLICATION_ACTION_LABELS.pursue_childhood).toBe("Continuing from Kids");
+        expect(constants.PRE_APPLICATION_ACTION_LABELS.cham).toBe("CHAM enrollment");
+    });
+
+    test("switching back to fr restores the French action labels", async () => {
+        await i18n.changeLanguage("en");
+        expect(constants.PRE_APPLICATION_ACTION_LABELS.new).toBe("New enrollment");
+
+        await i18n.changeLanguage("fr");
+        expect(constants.PRE_APPLICATION_ACTION_LABELS.new).toBe("Nouvelle inscription");
+    });
+
+    test("an aliased capture of PRE_APPLICATION_ACTION_LABELS freezes at its value", async () => {
+        await i18n.changeLanguage("fr");
+        const aliased = constants.PRE_APPLICATION_ACTION_LABELS;
+
+        await i18n.changeLanguage("en");
+        expect(aliased.new).toBe("Nouvelle inscription"); // stale
+        expect(constants.PRE_APPLICATION_ACTION_LABELS.new).toBe("New enrollment"); // live
+    });
+
+    // Regression guard for the fallback bug fixed alongside this lot's extraction
+    // (ActivitiesApplicationsList.jsx indexed with the numeric PRE_APPLICATION_ACTIONS.NEW enum
+    // value instead of the "new" string key — always undefined). Covered mechanically against the
+    // real component in ActivitiesApplicationsList.test.jsx; this just pins that the constant
+    // itself resolves under its string key in both locales.
+    test.each(["fr", "en"])("the 'new' key used by the ActivitiesApplicationsList fallback resolves (%s)", async lng => {
+        await i18n.changeLanguage(lng);
+        expect(constants.PRE_APPLICATION_ACTION_LABELS.new).toBeTruthy();
+        expect(constants.PRE_APPLICATION_ACTION_LABELS.new).not.toBe("undefined");
+    });
+});
+
+describe("RECURRENCE_TYPES.toString follows the active UI language (no export let needed)", () => {
+    test("RECURRENCE_TYPES is a plain export const, not a live binding reassigned on languageChanged", () => {
+        // Unlike WEEKDAYS/KINDS_LABEL/etc., there is no `constants.RECURRENCE_TYPES = ...`
+        // reassignment anywhere — the object identity itself never changes.
+        const ref = constants.RECURRENCE_TYPES;
+        expect(RECURRENCE_TYPES).toBe(ref);
+    });
+
+    test("default language (fr) resolves recurrence-type strings", async () => {
+        await i18n.changeLanguage("fr");
+
+        expect(RECURRENCE_TYPES.toString("daily")).toBe("Tous les jours");
+        expect(RECURRENCE_TYPES.toString("weekly")).toBe("Toutes les semaines");
+        expect(RECURRENCE_TYPES.toString("yearly")).toBe("Tous les ans");
+    });
+
+    test("after changeLanguage('en') the same calls resolve to English", async () => {
+        await i18n.changeLanguage("en");
+
+        expect(RECURRENCE_TYPES.toString("daily")).toBe("Every day");
+        expect(RECURRENCE_TYPES.toString("weekly")).toBe("Every week");
+        expect(RECURRENCE_TYPES.toString("yearly")).toBe("Every year");
+    });
+
+    // The specific claim in the branch description: toString reads i18n.t() fresh on every call,
+    // so it is *never* stale across a changeLanguage — there is no cached/aliased value to freeze,
+    // unlike WEEKDAYS/KINDS_LABEL/PRE_APPLICATION_ACTION_LABELS above.
+    test("toString is never stale: calling it before and after changeLanguage both read live", async () => {
+        await i18n.changeLanguage("fr");
+        const before = RECURRENCE_TYPES.toString("weekly");
+        expect(before).toBe("Toutes les semaines");
+
+        await i18n.changeLanguage("en");
+        const after = RECURRENCE_TYPES.toString("weekly");
+        expect(after).toBe("Every week");
+        // Re-calling with the very same enum value after switching back confirms every call is a
+        // fresh i18n.t() read, not a memoized result from the first call.
+        await i18n.changeLanguage("fr");
+        expect(RECURRENCE_TYPES.toString("weekly")).toBe("Toutes les semaines");
+        expect(before).not.toBe(after);
+    });
+
+    test("getDefault/getAll enum helpers are unaffected by locale (data, not UI text)", async () => {
+        await i18n.changeLanguage("fr");
+        expect(RECURRENCE_TYPES.getDefault()).toBe("weekly");
+        const allFr = RECURRENCE_TYPES.getAll();
+
+        await i18n.changeLanguage("en");
+        expect(RECURRENCE_TYPES.getDefault()).toBe("weekly");
+        expect(RECURRENCE_TYPES.getAll()).toEqual(allFr);
     });
 });

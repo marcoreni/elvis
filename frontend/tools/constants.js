@@ -9,28 +9,26 @@ export const PRE_APPLICATION_ACTIONS = {
     CHAM: 5
 };
 
-export const PRE_APPLICATION_ACTION_LABELS = {
-    new: "Nouvelle inscription",
-    renew: "Renouvellement",
-    change: "Changement",
-    stop: "Arrêt",
-    pursue_childhood: "Poursuite enfance",
-    cham: "Inscription CHAM"
+export const INTERVAL_KINDS = {
+    AVAILABILITY: "p",
+    LESSON: "c",
+    EVALUATION: "e",
+    OPTION: "o",
 };
 
 // --- Constants sourced from the `common` i18n namespace, so they follow the active UI language
-// (constants-i18n lots 1-2; KINDS_LABEL / PRE_APPLICATION_ACTION_LABELS / RECURRENCE_TYPES above
-// and below are still pending, see docs/KnownIssues.md). `import i18n from "../i18n"` runs
-// i18next's synchronous init (inline resources), so `t()` returns real values immediately at
-// module load, not just after the first render. Every export below is an `export let` binding
-// that the single `languageChanged` subscription at the bottom of this block re-reads on an
-// in-page locale switch — the *binding* every `import { X }` reads is updated (ES live bindings);
-// a consumer still only repaints if it (or an ancestor) re-renders. WEEKDAYS/MONTHS fall back to
-// a hardcoded French array if their `common:` key ever goes missing (botched merge) — `t()` would
-// otherwise return the key string, and indexing/iterating that string would be silent garbage.
-// MESSAGES/API_ERRORS_MESSAGES have no such fallback: a missing key there just renders as the raw
-// i18next key string in that one message, not a whole-object failure, so it isn't worth doubling
-// every string as a hardcoded duplicate.
+// (constants-i18n lots 1-3; RECURRENCE_TYPES below is handled differently — see its own comment —
+// so this lot closes out the "constants-i18n" pass, see docs/KnownIssues.md). `import i18n from
+// "../i18n"` runs i18next's synchronous init (inline resources), so `t()` returns real values
+// immediately at module load, not just after the first render. Every export below is an
+// `export let` binding that the single `languageChanged` subscription at the bottom of this block
+// re-reads on an in-page locale switch — the *binding* every `import { X }` reads is updated (ES
+// live bindings); a consumer still only repaints if it (or an ancestor) re-renders. WEEKDAYS/MONTHS
+// fall back to a hardcoded French array if their `common:` key ever goes missing (botched merge) —
+// `t()` would otherwise return the key string, and indexing/iterating that string would be silent
+// garbage. MESSAGES/API_ERRORS_MESSAGES/KINDS_LABEL/PRE_APPLICATION_ACTION_LABELS have no such
+// fallback: a missing key there just renders as the raw i18next key string in that one message,
+// not a whole-object failure, so it isn't worth doubling every string as a hardcoded duplicate.
 
 const _WEEKDAYS_FR = ["Dimanche", "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"];
 const _MONTHS_FR = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août",
@@ -113,28 +111,43 @@ const _loadMessages = () => ({
 
 export let MESSAGES = _loadMessages();
 
+// KINDS_LABEL: interval-kind code (INTERVAL_KINDS values, e.g. "p"/"c"/"e"/"o") -> display text.
+// Keys stay the raw codes since KindLegend.jsx/AvailabilityInput.jsx index into it with a kind
+// code read from data, not a UI string.
+const _loadKindsLabel = () => ({
+    [INTERVAL_KINDS.AVAILABILITY]: i18n.t("common:kindsLabel.availability"),
+    [INTERVAL_KINDS.LESSON]: i18n.t("common:kindsLabel.lesson"),
+    [INTERVAL_KINDS.EVALUATION]: i18n.t("common:kindsLabel.evaluation"),
+    [INTERVAL_KINDS.OPTION]: i18n.t("common:kindsLabel.option"),
+});
+
+export let KINDS_LABEL = _loadKindsLabel();
+
+// PRE_APPLICATION_ACTION_LABELS: pre-application action code -> display text. Keys stay the
+// original snake_case-ish identifiers (`pursue_childhood`, not `pursueChildhood`) since
+// ActivitiesApplicationsList.jsx / summary/{Activity,Summary}.jsx index into it with the action
+// string read from application data, not a UI string.
+const _loadPreApplicationActionLabels = () => ({
+    new: i18n.t("common:preApplicationActionLabels.new"),
+    renew: i18n.t("common:preApplicationActionLabels.renew"),
+    change: i18n.t("common:preApplicationActionLabels.change"),
+    stop: i18n.t("common:preApplicationActionLabels.stop"),
+    pursue_childhood: i18n.t("common:preApplicationActionLabels.pursueChildhood"),
+    cham: i18n.t("common:preApplicationActionLabels.cham"),
+});
+
+export let PRE_APPLICATION_ACTION_LABELS = _loadPreApplicationActionLabels();
+
 i18n.on("languageChanged", () => {
     WEEKDAYS = _loadWeekdays();
     MONTHS = _loadMonths();
     API_ERRORS_MESSAGES = _loadApiErrorsMessages();
     MESSAGES = _loadMessages();
+    KINDS_LABEL = _loadKindsLabel();
+    PRE_APPLICATION_ACTION_LABELS = _loadPreApplicationActionLabels();
 });
 
 // --- End of constants sourced from the `common` i18n namespace.
-
-export const INTERVAL_KINDS = {
-    AVAILABILITY: "p",
-    LESSON: "c",
-    EVALUATION: "e",
-    OPTION: "o",
-};
-
-export const KINDS_LABEL = {
-    [INTERVAL_KINDS.AVAILABILITY]: "Disponibilité",
-    [INTERVAL_KINDS.LESSON]: "Cours",
-    [INTERVAL_KINDS.EVALUATION]: "Evaluation",
-    [INTERVAL_KINDS.OPTION]: "Option",
-};
 
 export const TIME_STEPS = [
     { label: "1h", value: 1 },
@@ -143,6 +156,10 @@ export const TIME_STEPS = [
     { label: "15min", value: 0.25 },
 ];
 
+// RECURRENCE_TYPES: unlike the exports above, this doesn't need an `export let` + `languageChanged`
+// pair — `toString` is a method, so every call already reads `i18n.t()` fresh; there is no
+// stand-alone value to go stale between locale switches. The DAILY/WEEKLY/etc. enum values
+// themselves are data (persisted recurrence-type strings), not UI text, and are unchanged.
 export const RECURRENCE_TYPES = {
     DAILY: "daily",
     WEEKLY: "weekly",
@@ -152,12 +169,12 @@ export const RECURRENCE_TYPES = {
     YEARLY: "yearly",
     toString: function (type) {
         return {
-            [this.DAILY]: "Tous les jours",
-            [this.WEEKLY]: "Toutes les semaines",
-            [this.BIWEEKLY]: "Toutes les deux semaines",
-            [this.MONTHLY]: "Tous les mois",
-            [this.BIMONTHLY]: "Tous les deux mois",
-            [this.YEARLY]: "Tous les ans",
+            [this.DAILY]: i18n.t("common:recurrenceTypes.daily"),
+            [this.WEEKLY]: i18n.t("common:recurrenceTypes.weekly"),
+            [this.BIWEEKLY]: i18n.t("common:recurrenceTypes.biweekly"),
+            [this.MONTHLY]: i18n.t("common:recurrenceTypes.monthly"),
+            [this.BIMONTHLY]: i18n.t("common:recurrenceTypes.bimonthly"),
+            [this.YEARLY]: i18n.t("common:recurrenceTypes.yearly"),
         }[type];
     },
     getDefault: function () {return this.WEEKLY},

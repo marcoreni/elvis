@@ -433,6 +433,8 @@ leading and/or trailing space that is concatenation glue at its call site, or wr
 inline HTML:
 - `planning:activityModal.createCoursesButton` / `createCourseButton` (trailing space before the
   next inline element) and `activityModal.teacherChangeWarningLabel` (trailing space, `<b>` prefix).
+- `common:messages.errIsInvalidId` (trailing space before the `<button>` rendered right after it
+  in `UserForm.jsx`'s redirect toast).
 - `activityApplications:summary.reasonForRefusal` / `summary.memberNumber` (leading/trailing space,
   concatenated next to a value at the call site).
 - `activityApplications:wizard.applicationSubtitle.{allActivities,oneActivity}` — leading-space-only
@@ -569,11 +571,13 @@ the **constructor**, so it's frozen at construct time and won't follow a later `
 generalPayments/`planning/Calendar.jsx` frozen-header notes above). The 12 react-table column
 headers are fine — they're rebuilt inside `render()`.
 
-## `frontend/tools/constants.js` — hardcoded French constants leak into English mode (`WEEKDAYS`/`MONTHS`/`MESSAGES`/`API_ERRORS_MESSAGES` resolved)
+## `frontend/tools/constants.js` — hardcoded French constants leak into English mode — RESOLVED
 
 Surfaced during the i18n-06 `courses` lot 1 extraction (`AddCourse.jsx`, `AddCourseSummary.jsx`,
 `AddActivityForCourse.jsx`). These modules were switched to `t()` for their own copy, but they
-still read shared French-only constants that were left as-is:
+still read shared French-only constants that were left as-is. `tools/constants.js` is imported
+from many components across the app, so this was a cross-cutting pass in its own right, done as
+constants-i18n lots 1–3, not piecemeal inside one domain lot:
 
 - ~~`WEEKDAYS` / `MONTHS`~~ **Resolved — constants-i18n lot 1** (`feature/i18n-constants-lot1-dates`):
   moved to `common:weekdays` / `common:months`, re-exported as `export let` live bindings that
@@ -589,12 +593,17 @@ still read shared French-only constants that were left as-is:
   `tools/api.js` indexes `API_ERRORS_MESSAGES` with a server-supplied error code — only the
   *values* changed. 4 dead `MESSAGES` imports removed in the same pass
   (`DetachAccount.jsx`, `ActivityRefTeachers.jsx`, `ReplicateAct.jsx`, `InputSelectReact.jsx`).
+- ~~`KINDS_LABEL` / `PRE_APPLICATION_ACTION_LABELS` / `RECURRENCE_TYPES`~~ **Resolved —
+  constants-i18n lot 3** (`feature/i18n-constants-lot3-labels`), closing out the constants-i18n
+  pass: `KINDS_LABEL` (4 entries, keyed by `INTERVAL_KINDS` codes) and
+  `PRE_APPLICATION_ACTION_LABELS` (6 entries, keyed by action strings) moved to
+  `common:kindsLabel` / `common:preApplicationActionLabels`, same `export let` pattern as lots 1–2.
+  `RECURRENCE_TYPES` needed a different shape: it's an enum object with a `toString(type)` method,
+  not a plain value dictionary, so only the object literal *inside* `toString` moved to
+  `common:recurrenceTypes` (6 entries) — no `export let`/`languageChanged` needed there, since
+  `toString` is a method and already reads `i18n.t()` fresh on every call.
 
-`tools/constants.js` is imported from many components across the app, so this is a cross-cutting
-pass in its own right, not something to fix piecemeal inside one domain lot. `WEEKDAYS`/`MONTHS`
-(lot 1) and `MESSAGES`/`API_ERRORS_MESSAGES` (lot 2) are done. `KINDS_LABEL`,
-`PRE_APPLICATION_ACTION_LABELS`, and `RECURRENCE_TYPES` are left for constants-i18n lot 3. Grep:
-`from "../../tools/constants"`.
+Grep: `from "../../tools/constants"`.
 
 Two bugs found while extracting `MESSAGES` (preserved verbatim in the new locale keys per the
 extraction policy, not fixed here):
@@ -616,16 +625,6 @@ extraction policy, not fixed here):
   global `window` — e.g. reached from `packs/server_rendering.js`. No import of `startsWith` from
   `tools/validators.js` was found anywhere in `frontend/`, so it is dead code today; noted here
   rather than fixed, since fixing dead code risks masking that it's unreachable.
-
-Verbatim typos preserved in the new `common:messages` / `common:apiErrors` keys (same policy as
-every other lot — corrected only on request):
-- `messages.errIsInvalidId` — "…votre espace **personel** " → "…personnel" (missing an `n`).
-  Trailing space is intentional glue (kept), same class as the other load-bearing-whitespace
-  entries above.
-- `messages.errMustSelectPaymentTerms` — source is lowercase-initial ("veuillez sélectionner…"),
-  inconsistent with every sibling `err_must_*` message (capitalised "Veuillez…"). Kept verbatim;
-  EN mirror is properly capitalised ("Please select…"), same as every other lot's clean-EN
-  convention for an FR-only casing defect.
 
 Adjacent bug found by the constants-i18n lot 2 review, pre-existing and untouched by this lot
 (same class as the two above, more severe, not yet fixed): `userForm/ContactForm.jsx:202` and
