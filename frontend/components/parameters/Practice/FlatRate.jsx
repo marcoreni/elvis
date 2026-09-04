@@ -19,14 +19,14 @@ class FlatRate extends BaseDataTable
             },
             {
                 id: "name",
-                Header: t("practice.cols.name"),
+                Header: t("shared.colName"),
                 accessor: d => d.name,
             },
             {
                 id: "enable",
                 Header: t("practice.cols.active"),
                 accessor: d => d.enable,
-                Cell: props => <p>{props.original.enable ? t("practice.yes") : t("practice.no")}</p>
+                Cell: props => <p>{props.original.enable ? t("shared.yes") : t("shared.no")}</p>
             },
             {
                 id: "nb_hour",
@@ -45,7 +45,7 @@ class FlatRate extends BaseDataTable
             },
             {
                 id: "actions",
-                Header: t("practice.cols.actions"),
+                Header: t("shared.actions"),
                 Cell: props => {
                     return (
                         <div className="btn-wrapper">
@@ -74,8 +74,8 @@ class FlatRate extends BaseDataTable
             title: t("practice.delete.flatRate", {name: status.name}),
             type: "warning",
             showCancelButton: true,
-            cancelButtonText: t("practice.delete.confirmNo"),
-            confirmButtonText: t("practice.delete.confirmYes")
+            cancelButtonText: t("shared.deleteConfirmNo"),
+            confirmButtonText: t("shared.deleteConfirmYes")
         }).then(res =>
         {
             if(res.value)
@@ -101,7 +101,7 @@ class FlatRate extends BaseDataTable
                             result.text().then(text =>
                             {
                                 swal({
-                                    title: t("practice.errorTitle"),
+                                    title: t("shared.errorTitle"),
                                     type: "error",
                                     text: text
                                 })

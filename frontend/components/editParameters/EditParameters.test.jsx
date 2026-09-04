@@ -132,7 +132,8 @@ describe("editParameters.* — i18n layer", () => {
 
     test("fr and en expose exactly the same editParameters.* key set", () => {
         expect(new Set(EN_KEYS)).toEqual(new Set(FR_KEYS));
-        // grows across sub-lots (E2: 49, E3: +34 school.* = 83). Exact total pinned in
+        // grows across sub-lots (E2: 49, E3: +34 school.* = 83; shared-consolidation moved
+        // ~9 swal-title/status keys onto shared.*/common: -> ~74). Exact total pinned in
         // ParametersChrome.test.jsx; here just guard the floor + fr/en lock-step.
         expect(FR_KEYS.length).toBe(EN_KEYS.length);
         expect(FR_KEYS.length).toBeGreaterThanOrEqual(49);
@@ -165,18 +166,17 @@ describe("editParameters.* — i18n layer", () => {
     });
 
     test("mail swal titles are now localised in fr (English kept in en)", () => {
-        expect(tP("fr")("editParameters.mail.saveSuccessTitle")).toBe("Succès");
-        expect(tP("en")("editParameters.mail.saveSuccessTitle")).toBe("Success");
+        // saveSuccessTitle was consolidated onto shared.saveSuccessTitle; mail.errorTitle stays.
+        expect(tP("fr")("shared.saveSuccessTitle")).toBe("Succès");
+        expect(tP("en")("shared.saveSuccessTitle")).toBe("Success");
         expect(tP("fr")("editParameters.mail.errorTitle")).toBe("Erreur");
         expect(tP("en")("editParameters.mail.errorTitle")).toBe("Error");
     });
 
     test("editParameters.mail.genericError is now consolidated with shared.genericError (fr + en)", () => {
-        for (const lng of ["fr", "en"]) {
-            expect(tP(lng)("editParameters.mail.genericError")).toBe(tP(lng)("shared.genericError"));
-        }
-        expect(tP("fr")("editParameters.mail.genericError")).toBe("Une erreur est survenue. Contactez un administrateur");
-        expect(tP("en")("editParameters.mail.genericError")).toBe("An error occurred. Contact an administrator");
+        // The callsite now points straight at shared.genericError in both locales.
+        expect(tP("fr")("shared.genericError")).toBe("Une erreur est survenue. Contactez un administrateur");
+        expect(tP("en")("shared.genericError")).toBe("An error occurred. Contact an administrator");
     });
 
     // --- CsvSettings dead-gate: `{errors.col_sep && t("editParameters.csv.sepRequired")}` is
@@ -247,7 +247,7 @@ describe("CsvSettings", () => {
 
         await waitFor(() => expect(swal).toHaveBeenCalled());
         expect(swal.mock.calls[0][0]).toMatchObject({
-            title: tP(lng)("editParameters.csv.saveSuccessTitle"),
+            title: tP(lng)("shared.saveSuccessTitle"),
             text: tP(lng)("editParameters.settingsApplied"),
         });
     });
@@ -307,7 +307,7 @@ describe("MailSettings", () => {
 
         await waitFor(() => expect(swal).toHaveBeenCalled());
         expect(swal.mock.calls[0][0]).toMatchObject({
-            title: tP(lng)("editParameters.mail.saveSuccessTitle"),
+            title: tP(lng)("shared.saveSuccessTitle"),
             text: tP(lng)("editParameters.settingsApplied"),
         });
     });
@@ -322,7 +322,7 @@ describe("MailSettings", () => {
         await waitFor(() => expect(swal).toHaveBeenCalled());
         expect(swal.mock.calls[0][0]).toMatchObject({
             title: tP(lng)("editParameters.mail.errorTitle"),
-            text: tP(lng)("editParameters.mail.genericError"),
+            text: tP(lng)("shared.genericError"),
         });
     });
 });
@@ -353,8 +353,8 @@ describe("RulesSettings", () => {
         fireEvent.submit(container.querySelector("form"));
 
         await waitFor(() => expect(swal).toHaveBeenCalledTimes(2));
-        expect(swal.mock.calls[0][0].title).toBe(tP(lng)("editParameters.rules.loadingTitle"));
-        expect(swal.mock.calls[1][0].title).toBe(tP(lng)("editParameters.rules.saveSuccess"));
+        expect(swal.mock.calls[0][0].title).toBe(tC(lng)("loading"));
+        expect(swal.mock.calls[1][0].title).toBe(tP(lng)("shared.saveCompleted"));
     });
 
     test.each(["fr", "en"])("onSubmit fires swal(genericError) on fetch !ok in %s", async (lng) => {
@@ -365,7 +365,7 @@ describe("RulesSettings", () => {
         fireEvent.submit(container.querySelector("form"));
 
         await waitFor(() => expect(swal).toHaveBeenCalledTimes(2));
-        expect(swal.mock.calls[1][0].title).toBe(tP(lng)("editParameters.rules.genericError"));
+        expect(swal.mock.calls[1][0].title).toBe(tP(lng)("shared.genericErrorShort"));
     });
 });
 
@@ -403,7 +403,7 @@ describe("TeachersParameters", () => {
         apiState.lastSuccess({success: true});
 
         expect(swal).toHaveBeenLastCalledWith(expect.objectContaining({
-            title: tP(lng)("editParameters.teachers.saveSuccessTitle"),
+            title: tP(lng)("shared.saveSuccessTitle"),
             text: tP(lng)("editParameters.teachers.saveSuccessText"),
         }));
         expect(reload).toHaveBeenCalled();

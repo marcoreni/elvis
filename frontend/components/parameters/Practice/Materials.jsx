@@ -19,7 +19,7 @@ class Materials extends BaseDataTable
             },
             {
                 id: "name",
-                Header: t("practice.cols.name"),
+                Header: t("shared.colName"),
                 accessor: d => d.name,
             },
             {
@@ -31,11 +31,11 @@ class Materials extends BaseDataTable
                 id: "active",
                 Header: t("practice.cols.activeMaterials"),
                 accessor: d => d.name,
-                Cell: props => <p>{props.original.active ? t("practice.yes") : t("practice.no")}</p>
+                Cell: props => <p>{props.original.active ? t("shared.yes") : t("shared.no")}</p>
             },
             {
                 id: "actions",
-                Header: t("practice.cols.actions"),
+                Header: t("shared.actions"),
                 Cell: props => {
                     return (
                         <div className="btn-wrapper">
@@ -64,8 +64,8 @@ class Materials extends BaseDataTable
             title: t("practice.delete.material", {name: status.name}),
             type: "warning",
             showCancelButton: true,
-            cancelButtonText: t("practice.delete.confirmNo"),
-            confirmButtonText: t("practice.delete.confirmYes")
+            cancelButtonText: t("shared.deleteConfirmNo"),
+            confirmButtonText: t("shared.deleteConfirmYes")
         }).then(res =>
         {
             if(res.value)
@@ -91,7 +91,7 @@ class Materials extends BaseDataTable
                             result.text().then(text =>
                             {
                                 swal({
-                                    title: t("practice.errorTitle"),
+                                    title: t("shared.errorTitle"),
                                     type: "error",
                                     text: text
                                 })

@@ -36,7 +36,7 @@ export default function SchoolParameters(props) {
         formData.append("academy", academy);
         formData.append("zone", zone || data.zone);
         swal({
-            title: t("editParameters.school.loadingTitle"),
+            title: t("common:loading"),
             onOpen: () => swal.showLoading()
         });
 
@@ -56,13 +56,13 @@ export default function SchoolParameters(props) {
 
                     swal({
                         type: "success",
-                        title: t("editParameters.school.saveSuccess")
+                        title: t("shared.saveCompleted")
                     });
                 });
             } else {
                 swal({
                     type: "error",
-                    title: t("editParameters.school.genericError")
+                    title: t("shared.genericErrorShort")
                 })
             }
         });

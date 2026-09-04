@@ -957,6 +957,33 @@ later "constants i18n" lot picks them all up together. Grep: `from "../../tools/
 
 ## `parameters` domain (i18n-06) — French source strings preserved verbatim
 
+**`shared.*` consolidation DONE** (branch `feature/i18n-parameters-shared-consolidation`): every
+byte-identical `parameters:*` duplicate flagged in the lot-A…E3 bullets below is resolved.
+`parameters.json` 255 → 233 leaves. Removed key → canonical target:
+- `practice.cols.name` → `shared.colName`; `payments.cols.label` → `shared.colLabel`
+- `practice.{yes,no,errorTitle}` → `shared.{yes,no,errorTitle}`;
+  `practice.cols.actions` → `shared.actions`;
+  `practice.delete.{confirmYes,confirmNo}` → `shared.{deleteConfirmYes,deleteConfirmNo}`
+- `payments.status.deleteConfirm` + `activityApplications.statusTable.deleteConfirm` → new `shared.deleteStatusConfirm`
+- `activityApplications.settings.{loadError,saveSuccess,saveError}` → `shared.{loadParamsError,saveSuccess,saveError}`
+- `editParameters.{csv,teachers,mail}.saveSuccessTitle` → new `shared.saveSuccessTitle`
+- `editParameters.mail.genericError` → `shared.genericError` (already byte-equal after the typo pass)
+- `editParameters.{rules,school}.loadingTitle` + `evaluations.slot.loadingTitle` → `common:loading`
+- `editParameters.{rules,school}.saveSuccess` + `evaluations.slot.saveSuccess` → new `shared.saveCompleted`
+- `editParameters.{rules,school}.genericError` + `evaluations.slot.genericError` → new `shared.genericErrorShort`
+
+`shared.saveSuccess` ("Sauvegarde effectuée") and `shared.saveCompleted` ("Enregistrement
+effectué") are **kept separate** — different source strings, verbatim policy.
+
+Incidental EN copy fix from the `common:loading` fold (recorded, not a defect — same as the lot-D /
+lot-E `Loading...` notes): the three swal loading-title callsites now render EN "Loading..." where
+the removed `editParameters.rules.loadingTitle` etc. rendered "loading..." (lowercase — itself a
+logged verbatim artifact). FR "Chargement..." unchanged.
+
+Still NOT consolidated (cross-namespace, can't share a `parameters:` key): the "no level set"
+concept has `activityApplications:summaryActivity.notSpecified`, `courses:lessonList.userRow.notSpecified`,
+`planning:levelDisplay.notIndicated` — three namespaces, three keys (all "NOT SPECIFIED" in EN).
+
 `config/locales/fr.yml` (added by feature/i18n-06-parameters-lot-a — `parameters` lot A, the
 settings-index ERB) — preserved verbatim from `app/views/parameters/index.html.erb`:
 - `views.parameters.index.edit` — "Editer" → "Éditer" (missing accent on the leading "E"). Same

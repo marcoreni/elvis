@@ -19,18 +19,18 @@ class Features extends BaseDataTable
             },
             {
                 id: "name",
-                Header: t("practice.cols.name"),
+                Header: t("shared.colName"),
                 accessor: d => d.name,
             },
             {
                 id: "active",
                 Header: t("practice.cols.active"),
                 accessor: d => d.active,
-                Cell: props => <p>{props.original.active ? t("practice.yes") : t("practice.no")}</p>
+                Cell: props => <p>{props.original.active ? t("shared.yes") : t("shared.no")}</p>
             },
             {
                 id: "actions",
-                Header: t("practice.cols.actions"),
+                Header: t("shared.actions"),
                 Cell: props => {
                     return (
                         <div className="btn-wrapper">
@@ -59,8 +59,8 @@ class Features extends BaseDataTable
             title: t("practice.delete.feature", {name: status.name}),
             type: "warning",
             showCancelButton: true,
-            cancelButtonText: t("practice.delete.confirmNo"),
-            confirmButtonText: t("practice.delete.confirmYes")
+            cancelButtonText: t("shared.deleteConfirmNo"),
+            confirmButtonText: t("shared.deleteConfirmYes")
         }).then(res =>
         {
             if(res.value)
@@ -86,7 +86,7 @@ class Features extends BaseDataTable
                             result.text().then(text =>
                             {
                                 swal({
-                                    title: t("practice.errorTitle"),
+                                    title: t("shared.errorTitle"),
                                     type: "error",
                                     text: text
                                 })

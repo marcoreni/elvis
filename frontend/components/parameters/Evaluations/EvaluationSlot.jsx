@@ -33,7 +33,7 @@ export default function EvaluationSlot(props) {
 
 
         swal({
-            title: t("evaluations.slot.loadingTitle"),
+            title: t("common:loading"),
             onOpen: () => swal.showLoading()
         });
 
@@ -49,13 +49,13 @@ export default function EvaluationSlot(props) {
                 res.json().then(json => {
                     swal({
                         type: "success",
-                        title: t("evaluations.slot.saveSuccess")
+                        title: t("shared.saveCompleted")
                     });
                 });
             } else {
                 swal({
                     type: "error",
-                    title: t("evaluations.slot.genericError")
+                    title: t("shared.genericErrorShort")
                 })
             }
         });

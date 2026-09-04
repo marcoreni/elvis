@@ -25,7 +25,7 @@ export default function CsvSettings(props) {
         }).then(response => {
             if (response.ok) {
                 swal({
-                    title: t("editParameters.csv.saveSuccessTitle"),
+                    title: t("shared.saveSuccessTitle"),
                     text: t("editParameters.settingsApplied"),
                     icon: 'success'
                 });

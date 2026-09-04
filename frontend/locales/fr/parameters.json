@@ -25,9 +25,6 @@
             "availability": "Message disponibilités"
         },
         "settings": {
-            "loadError": "Erreur lors du chargement des paramètres",
-            "saveSuccess": "Sauvegarde effectuée",
-            "saveError": "Erreur lors de la sauvegarde",
             "defaultStatusHeading": "Statut d'inscription par défaut",
             "defaultStatusHint": "Le statut sélectionné sera le statut par défaut pour les nouvelles inscriptions.",
             "autoAssignHeading": "Attribution automatique du statut cours attribué",
@@ -60,8 +57,7 @@
         },
         "statusTable": {
             "colStopping": "Arrêt ?",
-            "colActive": "Actif ?",
-            "deleteConfirm": "Voulez-vous vraiment supprimer le statut '{{name}}' ?"
+            "colActive": "Actif ?"
         }
     },
     "community": {
@@ -80,9 +76,6 @@
             "deleteConfirm": "Voulez-vous vraiment supprimer l'instrument '{{name}}' ?"
         },
         "slot": {
-            "loadingTitle": "Chargement...",
-            "saveSuccess": "Enregistrement effectué",
-            "genericError": "Une erreur est survenue",
             "durationLabel": "Durée d'un créneau d'évaluation (en minutes) * :",
             "requiredError": "Le créneau est requis"
         }
@@ -95,9 +88,6 @@
             "paymentTerms": "Modalités de paiement",
             "discountRate": "Taux de remise"
         },
-        "cols": {
-            "label": "Libellé"
-        },
         "methods": {
             "cols": {
                 "showToUser": "Afficher au client ?",
@@ -109,8 +99,7 @@
         "status": {
             "cols": {
                 "color": "Couleur"
-            },
-            "deleteConfirm": "Voulez-vous vraiment supprimer le statut '{{name}}' ?"
+            }
         },
         "adhesion": {
             "enableLabel": "Activer les frais d'adhésion",
@@ -211,8 +200,6 @@
             "instruments": "Instruments"
         },
         "cols": {
-            "name": "Nom",
-            "actions": "Actions",
             "active": "Actif ?",
             "activeMaterials": "Actif ?",
             "groupName": "Nom du groupe",
@@ -223,12 +210,7 @@
             "groupRate": "Tarif de groupe",
             "pricePerHour": "Prix /h"
         },
-        "yes": "Oui",
-        "no": "Non",
-        "errorTitle": "Erreur",
         "delete": {
-            "confirmYes": "oui",
-            "confirmNo": "non",
             "bandType": "Voulez-vous vraiment supprimer le type de groupe '{{name}}' ?",
             "feature": "Voulez-vous vraiment supprimer la feature '{{name}}' ?",
             "flatRate": "Voulez-vous vraiment supprimer le forfait '{{name}}' ?",
@@ -260,7 +242,11 @@
         "loadParamsError": "Erreur lors du chargement des paramètres",
         "saveSuccess": "Sauvegarde effectuée",
         "saveError": "Erreur lors de la sauvegarde",
-        "saveButton": "Sauvegarder"
+        "saveButton": "Sauvegarder",
+        "saveCompleted": "Enregistrement effectué",
+        "genericErrorShort": "Une erreur est survenue",
+        "saveSuccessTitle": "Succès",
+        "deleteStatusConfirm": "Voulez-vous vraiment supprimer le statut '{{name}}' ?"
     },
     "localization": {
         "defaultMustBeAvailable": "La langue par défaut doit faire partie des langues disponibles",
@@ -272,16 +258,13 @@
     "editParameters": {
         "settingsApplied": "Les paramètres ont bien été pris en compte",
         "csv": {
-            "saveSuccessTitle": "Succès",
             "sepLabel": "Séparateur de colonnes",
             "sepRequired": "Le séparateur de colonnes est requis",
             "encodingLabel": "Encodage de caractères",
             "encodingRequired": "L'encodage de caractères est requis"
         },
         "mail": {
-            "saveSuccessTitle": "Succès",
             "errorTitle": "Erreur",
-            "genericError": "Une erreur est survenue. Contactez un administrateur",
             "smtpAddressLabel": "Adresse SMTP :",
             "smtpAddressRequired": "L'adresse SMTP est requise",
             "smtpPortLabel": "Port SMTP :",
@@ -299,9 +282,6 @@
             "fromLabel": "Adresse d'envoi par défaut"
         },
         "rules": {
-            "loadingTitle": "Chargement...",
-            "saveSuccess": "Enregistrement effectué",
-            "genericError": "Une erreur est survenue",
             "formatLabel": "Sélectionner le format du fichier",
             "formatNone": "Aucun",
             "urlLabel": "Renseigner l'URL",
@@ -309,7 +289,6 @@
             "dropPdfText": "Pour ajouter un PDF, déposez un fichier ici ou"
         },
         "teachers": {
-            "saveSuccessTitle": "Succès",
             "saveSuccessText": "Les paramètres ont été sauvegardés",
             "saveErrorText": "Une erreur est survenue lors de la sauvegarde des paramètres",
             "planningHeading": "Droit sur le planning",
@@ -330,9 +309,6 @@
             "imageAlt": "image impossible à charger"
         },
         "school": {
-            "loadingTitle": "Chargement...",
-            "saveSuccess": "Enregistrement effectué",
-            "genericError": "Une erreur est survenue",
             "siretRnaError": "La saisie ne correspond ni à un RNA ni au siret de votre pays ({{country}})",
             "schoolInfoHeading": "Informations de l'école",
             "contactsHeading": "Coordonnées",

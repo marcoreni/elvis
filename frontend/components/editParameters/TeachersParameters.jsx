@@ -27,7 +27,7 @@ export default function TeachersParameters({ teacher_can_edit_planning, authoriz
             .success((data) => {
                 if (data.success) {
                     swal({
-                        title: t("editParameters.teachers.saveSuccessTitle"),
+                        title: t("shared.saveSuccessTitle"),
                         text: t("editParameters.teachers.saveSuccessText"),
                         type: "success"
                     });

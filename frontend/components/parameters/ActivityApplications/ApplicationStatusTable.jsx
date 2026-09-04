@@ -178,7 +178,7 @@ class ApplicationStatusTable extends Component {
     deleteStatus(status) {
         const {t} = this.props;
         swal({
-            title: t("activityApplications.statusTable.deleteConfirm", {name: status.label}),
+            title: t("shared.deleteStatusConfirm", {name: status.label}),
             type: "warning",
             showCancelButton: true,
             cancelButtonText: t("shared.deleteConfirmNo"),

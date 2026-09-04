@@ -190,22 +190,25 @@ describe("parameters shared.* + payments.* — i18n layer", () => {
 
     test("fr and en expose exactly the same shared.* + payments.* key set", () => {
         expect(new Set(EN_KEYS)).toEqual(new Set(FR_KEYS));
-        // shared grows across lots (C: 7, D: +colLabel = 8, …); payments is stable at 50
-        // (tabs 5 lot A + non-tabs 45 lot C). Guard the payments count exactly, shared loosely.
-        expect(flatten({payments: fr.payments})).toHaveLength(50);
+        // shared grows across lots (C: 7, D: +colLabel = 8, …); payments dropped to 48 when the
+        // shared-consolidation removed payments.cols.label + payments.status.deleteConfirm
+        // (tabs 5 lot A + non-tabs 43). Guard the payments count exactly, shared loosely.
+        expect(flatten({payments: fr.payments})).toHaveLength(48);
         expect(flatten({x: fr.shared}).length).toBeGreaterThanOrEqual(7);
     });
 
-    test("the lot-C additions are present: shared.* atoms + 45 non-tab payments.*", () => {
+    test("the lot-C additions are present: shared.* atoms + 43 non-tab payments.*", () => {
         for (const k of [
             "actions", "yes", "no", "errorTitle", "deleteConfirmYes", "deleteConfirmNo", "genericError",
+            // shared-consolidation atoms
+            "saveCompleted", "genericErrorShort", "saveSuccessTitle", "deleteStatusConfirm",
         ]) {
             expect(fr.shared).toHaveProperty(k);
         }
         const paymentsNonTabs = flatten({payments: fr.payments}).filter(
             (k) => !k.startsWith("payments.tabs."),
         );
-        expect(paymentsNonTabs).toHaveLength(45);
+        expect(paymentsNonTabs).toHaveLength(43);
     });
 
     test.each(["fr", "en"])(
@@ -223,7 +226,7 @@ describe("parameters shared.* + payments.* — i18n layer", () => {
     );
 
     // The four interpolating keys must embed the passed value and leave no braces.
-    const NAME_KEYS = ["payments.methods.deleteConfirm", "payments.status.deleteConfirm"];
+    const NAME_KEYS = ["payments.methods.deleteConfirm", "shared.deleteStatusConfirm"];
     const LABEL_KEYS = ["payments.adhesion.deleteConfirm", "payments.adhesion.deleteImpossibleText"];
 
     test.each(["fr", "en"])("{{name}} interpolation keys embed the value in %s", (lng) => {
@@ -272,7 +275,7 @@ describe("PaymentsMethods / PaymentsStatus — class tables extending BaseDataTa
         },
         PaymentsStatus: {
             Component: PaymentsStatus,
-            deleteKey: "payments.status.deleteConfirm",
+            deleteKey: "shared.deleteStatusConfirm",
             fr: ["#", "Libellé", "Couleur", "Actions"],
             en: ["#", "Label", "Color", "Actions"],
         },

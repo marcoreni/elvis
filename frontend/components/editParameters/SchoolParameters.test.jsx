@@ -140,10 +140,12 @@ describe("editParameters.school.* — i18n layer", () => {
     const FR_KEYS = flatten(fr).filter((k) => k.startsWith("editParameters.school."));
     const EN_KEYS = flatten(en).filter((k) => k.startsWith("editParameters.school."));
 
-    test("fr and en expose exactly the same editParameters.school.* key set (34)", () => {
+    test("fr and en expose exactly the same editParameters.school.* key set (31)", () => {
+        // 34 at lot-E3; the shared-consolidation moved loadingTitle/saveSuccess/genericError
+        // onto common:loading / shared.saveCompleted / shared.genericErrorShort -> 31.
         expect(new Set(EN_KEYS)).toEqual(new Set(FR_KEYS));
-        expect(FR_KEYS).toHaveLength(34);
-        expect(EN_KEYS).toHaveLength(34);
+        expect(FR_KEYS).toHaveLength(31);
+        expect(EN_KEYS).toHaveLength(31);
     });
 
     test.each(["fr", "en"])(
@@ -343,10 +345,10 @@ describe("SchoolParameters — submit / swal", () => {
             fireEvent.submit(container.querySelector("form"));
 
             await waitFor(() => expect(swal).toHaveBeenCalledTimes(2));
-            expect(swal.mock.calls[0][0].title).toBe(tP(lng)("editParameters.school.loadingTitle"));
+            expect(swal.mock.calls[0][0].title).toBe(tC(lng)("loading"));
             expect(swal.mock.calls[1][0]).toMatchObject({
                 type: "success",
-                title: tP(lng)("editParameters.school.saveSuccess"),
+                title: tP(lng)("shared.saveCompleted"),
             });
         },
     );
@@ -362,10 +364,10 @@ describe("SchoolParameters — submit / swal", () => {
             fireEvent.submit(container.querySelector("form"));
 
             await waitFor(() => expect(swal).toHaveBeenCalledTimes(2));
-            expect(swal.mock.calls[0][0].title).toBe(tP(lng)("editParameters.school.loadingTitle"));
+            expect(swal.mock.calls[0][0].title).toBe(tC(lng)("loading"));
             expect(swal.mock.calls[1][0]).toMatchObject({
                 type: "error",
-                title: tP(lng)("editParameters.school.genericError"),
+                title: tP(lng)("shared.genericErrorShort"),
             });
         },
     );
