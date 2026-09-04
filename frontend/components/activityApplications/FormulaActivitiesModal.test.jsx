@@ -123,3 +123,41 @@ describe("FormulaActivitiesModal — plural keys (i18n layer)", () => {
         );
     });
 });
+
+// Regression: the duration cell's "min" suffix used to be a hardcoded literal, not routed through
+// i18n (activityApplications:units.minuteAbbrev) -- the "--" placeholder for a missing duration is
+// left as a plain sentinel (not language text), matching the same convention as the "/" fallback in
+// the sibling SelectedActivitiesTable.
+describe("FormulaActivitiesModal — duration cell goes through activityApplications:units.minuteAbbrev", () => {
+    const formulaProps = {
+        ...props,
+        activeFormula: {
+            id: 1,
+            name: "Trio",
+            number_of_items: 2,
+            formule_items: [
+                {item_type: "ActivityRef", item: {id: 5}},
+                {item_type: "ActivityRef", item: {id: 6}},
+            ],
+        },
+        allActivityRefs: [
+            {id: 5, label: "Piano", duration: 45},
+            {id: 6, label: "Solfège", duration: null},
+        ],
+    };
+
+    // The cell's "45" / "min" / "--" pieces are separate JSX text nodes, so match on the <td>'s
+    // combined textContent rather than an exact getByText (which only joins direct text children).
+    const cellWithText = text =>
+        screen.getByText((_content, node) => node.tagName === "TD" && node.textContent.trim() === text);
+
+    for (const lng of ["fr", "en"]) {
+        test(`${lng}: a set duration renders "45 min", a missing one renders "--" with no suffix`, async () => {
+            await i18n.changeLanguage(lng);
+            render(<FormulaActivitiesModal {...formulaProps} />);
+
+            expect(cellWithText("45 min")).toBeInTheDocument();
+            expect(cellWithText("--")).toBeInTheDocument();
+        });
+    }
+});

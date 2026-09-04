@@ -247,7 +247,7 @@ const FormulaActivitiesModal = ({
                                             </td>
                                             <td>
                                                 {duration}{" "}
-                                                {duration !== "--" ? "min" : ""}
+                                                {duration !== "--" ? t("activityApplications:units.minuteAbbrev") : ""}
                                             </td>
                                             <td className="text-center">
                                                 <button

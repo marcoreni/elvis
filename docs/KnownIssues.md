@@ -423,30 +423,26 @@ avoid restructuring ad hoc across an already-merged domain.
 
 ## `activityApplications` — small untranslated unit tokens
 
-Surfaced during the i18n-06 activities lot-3a review; the `noIntervalMessage`/`tooltip` override
-and the `Validation.jsx` `<h3>` headings this section used to flag are now translated (lots 3e/3g).
-What's left, low priority:
+Surfaced during the i18n-06 activities lot-3a review; the `noIntervalMessage`/`tooltip` override,
+the `Validation.jsx` `<h3>` headings, and the `SelectedActivitiesTable.jsx`/`FormulaActivitiesModal.jsx`
+duration unit tokens this section used to flag are now translated (lots 3e/3g and a later small-fixes
+pass — `activityApplications:units.*`). What's left, low priority:
 
-- `SelectedActivitiesTable.jsx:10-12`'s `displayDuration` emits `"5h30"` / `"45min"` with
-  untranslated unit tokens (the `<th>`s themselves are translated). Same untranslated `"min"` /
-  `"--"` tokens in `FormulaActivitiesModal.jsx:~228,~250`.
 - `EvaluationChoiceTable.jsx` — pre-existing (not i18n): verify `data[].timeInterval.start/end`
   reach `toHourMin()` as `Date` objects, not ISO strings, the way the sibling
   `TimePreferencesTable` wraps them with `toDate()` — an ISO string would silently render
   `NaN:NaN`.
 
-## `courses/LessonList.jsx` — Started/Stopped dates always render French-style
+## `courses/LessonList.jsx` — remaining frozen-at-construct-time string
 
-The row expander's Started/Stopped dates use `Intl.DateTimeFormat("fr")` (`LessonList.jsx` ~1418,
-1423) — always `DD/MM/YYYY`, ambiguous for en-US users, regardless of the active UI language. (The
-level-column and day-column issues previously logged here are both resolved — planning lot 3c and
-a `moment.locale("fr")` removal, respectively.)
-
-Also: `message.title` defaults to `i18n.t("courses:lessonList.messageDefaultTitle")` evaluated in
-the **constructor**, so it's frozen at construct time and won't follow a later `changeLanguage`
+`message.title` defaults to `i18n.t("courses:lessonList.messageDefaultTitle")` evaluated in the
+**constructor**, so it's frozen at construct time and won't follow a later `changeLanguage`
 (harmless — a locale switch is a full server reload; same class of issue as the
 generalPayments/`planning/Calendar.jsx` frozen-header notes above). The 12 react-table column
-headers are fine — they're rebuilt inside `render()`.
+headers are fine — they're rebuilt inside `render()`. (The Started/Stopped-dates,
+level-column and day-column issues previously logged here are all resolved — a
+`Intl.DateTimeFormat(i18n.language)` fix, planning lot 3c, and a `moment.locale("fr")` removal,
+respectively.)
 
 ## `frontend/tools/constants.js` — hardcoded French constants leak into English mode — RESOLVED
 
