@@ -249,7 +249,23 @@ describe("ActivityRefBasics", () => {
             return col.Cell;
         }
 
-        test("open-ended row (to_season_id undefined) renders '<start> > ...' without throwing", async () => {
+        test("open-ended row (to_season_id: null, the shape every real producer sends) renders '<start> > ...'", async () => {
+            // Every producer of this row (ActivityRefPricingController#as_json, both
+            // {New,}ActivityRefDataService) sets to_season_id to null, never omits the key, for an
+            // open-ended price. This is the shape that actually reaches the Cell in production.
+            await i18n.changeLanguage("fr");
+            renderBasics();
+            act(() => mockLastApiSuccess(twoSeasonsPayload));
+
+            const Cell = getSelectedSeasonsCell();
+            const result = Cell({original: {from_season_id: 1, to_season_id: null}});
+            expect(result).toBe("2025-26 > ...");
+        });
+
+        test("row with to_season_id key absent renders '<start> > ...' without throwing", async () => {
+            // Defensive: no known call site produces this shape today, but the pre-fix code
+            // (`seasonEnd !== undefined`) crashed on `null.label` here specifically, not on the
+            // to_season_id: null case above (which already rendered correctly before the fix).
             await i18n.changeLanguage("fr");
             renderBasics();
             act(() => mockLastApiSuccess(twoSeasonsPayload));

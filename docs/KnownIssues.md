@@ -463,9 +463,16 @@ inline HTML:
 - For any new `<Trans>` key: react-i18next's default `transKeepBasicHtmlNodesFor` is
   `["br","strong","i","p"]` — `em`/`a`/`u` are not in it. Use the indexed `<1>…</1>` form.
 
-Non-i18n code bugs surfaced while extracting these files (all still open, none are locale-file
-defects; the `ActivityRefBasics.jsx` `seasonEnd` crash listed here previously was fixed in
-`fix/known-issues-easy-batch`):
+Remaining non-i18n code bugs surfaced while extracting these files (none are locale-file defects).
+The `ActivityRefBasics.jsx` `seasonEnd` guard listed here previously (`seasonEnd !== undefined`
+crashing on `null.label`) was fixed in `fix/known-issues-easy-batch`, along with the byte-identical
+copy in `formules/EditFormule.jsx:342-343` — no known call site produces the `to_season_id`-key-
+absent shape that actually crashes (every producer sends `to_season_id: null` for an open-ended
+row, which never crashed), so both were defensive hardening rather than a live-bug fix; still
+worth keeping as a guard against a future caller building the row by hand. The same `Cell` in both
+files still has the identical unguarded shape one line up — `seasonStart.label` throws if
+`from_season_id` doesn't match any fetched season — low reachability (`get_seasons_and_pricing_categories`
+returns every season) but the asymmetry is now visible since the `seasonEnd` half was hardened.
 - `activityApplications/summary/Summary.jsx:~1322` reads `e.activity.activity_reéf_id` (stray
   accented `é`) where it means `activity_ref_id` — a silent lookup failure in the `courseOption`
   label, not a crash.
