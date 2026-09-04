@@ -25,6 +25,9 @@ describe("PaymentScheduleOptionForm", () => {
         expect(screen.getByText("Sélectionner le ou les mois de règlement")).toBeInTheDocument();
         expect(screen.getByText("Jour du règlement")).toBeInTheDocument();
         expect(screen.getByRole("button", { name: "Enregistrer" })).toBeInTheDocument();
+        // Month toggle buttons are built from MONTHS (tools/constants) — French names by default.
+        expect(screen.getByText("Janvier")).toBeInTheDocument();
+        expect(screen.getByText("Décembre")).toBeInTheDocument();
     });
 
     test("English labels when active language is en", async () => {
@@ -39,5 +42,8 @@ describe("PaymentScheduleOptionForm", () => {
         expect(screen.getByText("Associated pricing")).toBeInTheDocument();
         expect(screen.getByText("Payment day")).toBeInTheDocument();
         expect(screen.getByRole("button", { name: "Save" })).toBeInTheDocument();
+        // MONTHS follows the active language since constants-i18n lot 1.
+        expect(screen.getByText("January")).toBeInTheDocument();
+        expect(screen.getByText("December")).toBeInTheDocument();
     });
 });

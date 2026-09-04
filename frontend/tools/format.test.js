@@ -3,7 +3,7 @@
 // is currently set to.
 
 import i18n from "../i18n";
-import { toLocaleDate, toMonthName, formatActivityForDisplay } from "./format";
+import { toLocaleDate, toMonthName, formatActivityForDisplay, toFullDateFr } from "./format";
 
 describe("locale-aware date formatting", () => {
     afterEach(async () => {
@@ -45,5 +45,18 @@ describe("locale-aware date formatting", () => {
 
         await i18n.changeLanguage("fr");
         expect(formatActivityForDisplay(activity)).toMatch(/lundi/i);
+    });
+
+    test("toFullDateFr's weekday follows the active language (WEEKDAYS from tools/constants)", async () => {
+        // 2026-01-12 is a Monday -> WEEKDAYS[getDay()] === WEEKDAYS[1]. Since constants-i18n
+        // lot 1, WEEKDAYS is sourced from the `common` namespace, so this leading token is
+        // "Lundi" in fr and "Monday" in en instead of always-French.
+        const monday = new Date(2026, 0, 12);
+
+        await i18n.changeLanguage("en");
+        expect(toFullDateFr(monday)).toMatch(/^Monday /);
+
+        await i18n.changeLanguage("fr");
+        expect(toFullDateFr(monday)).toMatch(/^Lundi /);
     });
 });

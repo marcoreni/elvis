@@ -1,3 +1,5 @@
+import i18n from "../i18n";
+
 export const API_ERRORS_MESSAGES = {
     default: "Une erreur s'est produite lors de la récupération des données",
     err_interval_validated: "Ce créneau a déjà été validé.",
@@ -34,30 +36,22 @@ export const PRE_APPLICATION_ACTION_LABELS = {
     cham: "Inscription CHAM"
 };
 
-export const WEEKDAYS = [
-    "Dimanche",
-    "Lundi",
-    "Mardi",
-    "Mercredi",
-    "Jeudi",
-    "Vendredi",
-    "Samedi",
-];
+// Day/month name arrays, sourced from the `common` i18n namespace so they follow the active UI
+// language. `import i18n from "../i18n"` runs i18next's synchronous init (inline resources), so
+// `t(..., { returnObjects: true })` returns the array immediately at module load. The
+// `languageChanged` subscription re-reads them on an in-page locale switch; because these are
+// `export let` bindings, every `import { WEEKDAYS }` sees the updated array (ES live bindings).
+// WEEKDAYS is Sunday-indexed (`WEEKDAYS[date.getDay()]`).
+const _loadWeekdays = () => i18n.t("common:weekdays", { returnObjects: true });
+const _loadMonths = () => i18n.t("common:months", { returnObjects: true });
 
-export const MONTHS = [
-    "Janvier",
-    "Février",
-    "Mars",
-    "Avril",
-    "Mai",
-    "Juin",
-    "Juillet",
-    "Août",
-    "Septembre",
-    "Octobre",
-    "Novembre",
-    "Décembre",
-];
+export let WEEKDAYS = _loadWeekdays();
+export let MONTHS = _loadMonths();
+
+i18n.on("languageChanged", () => {
+    WEEKDAYS = _loadWeekdays();
+    MONTHS = _loadMonths();
+});
 
 export const INTERVAL_KINDS = {
     AVAILABILITY: "p",

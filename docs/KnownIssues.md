@@ -934,15 +934,20 @@ the **constructor**, so it's frozen at construct time and won't follow a later `
 generalPayments/`planning/Calendar.jsx` frozen-header notes above). The 12 react-table column
 headers are fine — they're rebuilt inside `render()`.
 
-## `frontend/tools/constants.js` — hardcoded French `WEEKDAYS` / `MONTHS` / `MESSAGES` leak into English mode
+## `frontend/tools/constants.js` — hardcoded French `MESSAGES` leak into English mode (`WEEKDAYS` / `MONTHS` resolved)
 
 Surfaced during the i18n-06 `courses` lot 1 extraction (`AddCourse.jsx`, `AddCourseSummary.jsx`,
 `AddActivityForCourse.jsx`). These modules were switched to `t()` for their own copy, but they
-still read three shared French-only constants that were left as-is:
+still read shared French-only constants that were left as-is:
 
-- `WEEKDAYS` / `MONTHS` (`tools/constants.js`) — French day/month name arrays. `AddCourseSummary.jsx`
+- ~~`WEEKDAYS` / `MONTHS` (`tools/constants.js`) — French day/month name arrays. `AddCourseSummary.jsx`
   builds its slot line from them, so in English the recap reads e.g.
-  `Lundi 16 Juin 2025 from 08h00 to 09h00`.
+  `Lundi 16 Juin 2025 from 08h00 to 09h00`.~~ **Resolved — constants-i18n lot 1**
+  (`feature/i18n-constants-lot1-dates`): the two arrays moved to `common:weekdays` /
+  `common:months` (7 / 12 entries, Sunday-indexed; FR copied verbatim from the old
+  `constants.js` arrays, EN added). `constants.js` now re-exports `WEEKDAYS` / `MONTHS` as
+  `export let` live bindings that a `languageChanged` handler re-reads from the `common`
+  bundle, so day/month names follow the active UI language for every consumer.
 - `MESSAGES.err_data_missing` ("Impossible de continuer, des données obligatoires sont manquantes.")
   — toasted from `AddCourse.jsx`.
 - `MESSAGES.err_must_choose_activity` ("Veuillez choisir une activité avant de continuer.") —
@@ -952,8 +957,10 @@ still read three shared French-only constants that were left as-is:
 
 `tools/constants.js` is imported from many components across the app, so this is a cross-cutting
 pass in its own right (a `common:` namespace + a `useTranslation`/prop for the class consumers),
-not something to fix piecemeal inside one domain lot. Left verbatim for now; logged here so a
-later "constants i18n" lot picks them all up together. Grep: `from "../../tools/constants"`.
+not something to fix piecemeal inside one domain lot. `WEEKDAYS` / `MONTHS` were done as
+constants-i18n lot 1 (see above). The `MESSAGES.*` toasts here are still verbatim, left for a
+later constants-i18n lot (2–4) together with `API_ERRORS_MESSAGES`, `KINDS_LABEL`,
+`PRE_APPLICATION_ACTION_LABELS` and `RECURRENCE_TYPES`. Grep: `from "../../tools/constants"`.
 
 ## `parameters` domain (i18n-06) — French source strings preserved verbatim
 
