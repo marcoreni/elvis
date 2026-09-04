@@ -947,7 +947,12 @@ still read shared French-only constants that were left as-is:
   `common:months` (7 / 12 entries, Sunday-indexed; FR copied verbatim from the old
   `constants.js` arrays, EN added). `constants.js` now re-exports `WEEKDAYS` / `MONTHS` as
   `export let` live bindings that a `languageChanged` handler re-reads from the `common`
-  bundle, so day/month names follow the active UI language for every consumer.
+  bundle, so day/month names follow the active UI language for every consumer that re-renders.
+  Two consumers with no i18n subscription of their own — `activityApplications/ItemPreferences.jsx`
+  and `availability/AvailabilityList.jsx` — won't repaint on an in-page `changeLanguage` unless a
+  subscribed ancestor happens to re-render (same class as the frozen-header notes above; harmless
+  today since the locale switch is a full server reload, and both files are queued for a later
+  extraction lot anyway).
 - `MESSAGES.err_data_missing` ("Impossible de continuer, des données obligatoires sont manquantes.")
   — toasted from `AddCourse.jsx`.
 - `MESSAGES.err_must_choose_activity` ("Veuillez choisir une activité avant de continuer.") —
@@ -961,6 +966,23 @@ not something to fix piecemeal inside one domain lot. `WEEKDAYS` / `MONTHS` were
 constants-i18n lot 1 (see above). The `MESSAGES.*` toasts here are still verbatim, left for a
 later constants-i18n lot (2–4) together with `API_ERRORS_MESSAGES`, `KINDS_LABEL`,
 `PRE_APPLICATION_ACTION_LABELS` and `RECURRENCE_TYPES`. Grep: `from "../../tools/constants"`.
+
+## `frontend/tools/format.jsx` — `toFullDateFr` renders the month off by one
+
+Pre-existing (not i18n), spotted during constants-i18n lot 1 review. `toMonthName`
+(`format.jsx:37`) is 1-based (`date.setMonth(parseInt(month, 10) - 1)`), but `toFullDateFr`
+(`format.jsx:87`) feeds it a 0-based `getMonth()`:
+
+```js
+`${WEEKDAYS[tmpDate.getDay()]} ${tmpDate.getDate()} ${toMonthName(tmpDate.getMonth())} ${tmpDate.getFullYear()}`
+```
+
+So `toFullDateFr(new Date(2026, 0, 12))` → "Lundi 12 décembre 2026" instead of "…janvier…";
+every month is off by one (January wraps to December of the same year). `toMonthName` itself is
+correct — `WeekSelector.jsx:36` passes it a 1-based month. The only broken caller is this one.
+User-visible in the create-activity modal date header (`planning/CreateActivityModal.jsx:67,112`).
+Fix: `toMonthName(tmpDate.getMonth() + 1)`. `constants.test.js` / `format.test.js` deliberately
+assert only the weekday token of `toFullDateFr` output so as not to pin the bug.
 
 ## `parameters` domain (i18n-06) — French source strings preserved verbatim
 

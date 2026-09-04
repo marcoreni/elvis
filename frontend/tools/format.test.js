@@ -51,6 +51,9 @@ describe("locale-aware date formatting", () => {
         // 2026-01-12 is a Monday -> WEEKDAYS[getDay()] === WEEKDAYS[1]. Since constants-i18n
         // lot 1, WEEKDAYS is sourced from the `common` namespace, so this leading token is
         // "Lundi" in fr and "Monday" in en instead of always-French.
+        // Only the weekday token is asserted: toFullDateFr feeds a 0-based getMonth() into the
+        // 1-based toMonthName, so its month segment is off by one (pre-existing bug, see
+        // docs/KnownIssues.md "toFullDateFr renders the month off by one"). Don't pin it here.
         const monday = new Date(2026, 0, 12);
 
         await i18n.changeLanguage("en");

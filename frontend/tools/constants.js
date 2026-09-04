@@ -40,10 +40,20 @@ export const PRE_APPLICATION_ACTION_LABELS = {
 // language. `import i18n from "../i18n"` runs i18next's synchronous init (inline resources), so
 // `t(..., { returnObjects: true })` returns the array immediately at module load. The
 // `languageChanged` subscription re-reads them on an in-page locale switch; because these are
-// `export let` bindings, every `import { WEEKDAYS }` sees the updated array (ES live bindings).
+// `export let` bindings, the *binding* every `import { WEEKDAYS }` reads is updated (ES live
+// bindings) — a consumer still only repaints on locale change if it (or an ancestor) re-renders.
 // WEEKDAYS is Sunday-indexed (`WEEKDAYS[date.getDay()]`).
-const _loadWeekdays = () => i18n.t("common:weekdays", { returnObjects: true });
-const _loadMonths = () => i18n.t("common:months", { returnObjects: true });
+// `_load` falls back to the hardcoded arrays if the `common` keys ever go missing (botched merge):
+// `t()` would otherwise return the key string, and `WEEKDAYS[i]` / `.length` would be silent garbage.
+const _WEEKDAYS_FR = ["Dimanche", "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"];
+const _MONTHS_FR = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août",
+    "Septembre", "Octobre", "Novembre", "Décembre"];
+const _load = (key, fallback) => {
+    const value = i18n.t(key, { returnObjects: true });
+    return Array.isArray(value) ? value : fallback;
+};
+const _loadWeekdays = () => _load("common:weekdays", _WEEKDAYS_FR);
+const _loadMonths = () => _load("common:months", _MONTHS_FR);
 
 export let WEEKDAYS = _loadWeekdays();
 export let MONTHS = _loadMonths();

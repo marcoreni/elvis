@@ -46,9 +46,19 @@ describe("WEEKDAYS / MONTHS follow the active UI language", () => {
             "Friday",
             "Saturday",
         ]);
+        expect(constants.MONTHS).toHaveLength(12);
         expect(constants.MONTHS[0]).toBe("January");
         expect(constants.MONTHS[5]).toBe("June");
         expect(constants.MONTHS[11]).toBe("December");
+    });
+
+    test("an aliased capture freezes at its value — the gotcha the header warns about", async () => {
+        await i18n.changeLanguage("fr");
+        const aliased = WEEKDAYS; // captures the array reference at fr
+
+        await i18n.changeLanguage("en");
+        expect(aliased[1]).toBe("Lundi"); // stale — alias did not follow the switch
+        expect(WEEKDAYS[1]).toBe("Monday"); // the binding itself did
     });
 
     test("switching back to fr restores the French names", async () => {
