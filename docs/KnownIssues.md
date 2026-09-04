@@ -231,28 +231,15 @@ When someone picks this up: audit activated plugins' route files and prod reques
 paths first; only then drop the dead actions/views and tighten the route declarations with
 `only:`/`except:` in `config/routes.rb`.
 
-## i18n PRs #7–#11 not reviewed by a specialized code-review agent
+## i18n PRs #7–#10 never got a specialized code-review pass
 
-The i18n extraction PRs were reviewed **inline by the assistant only** (read the diff, run the
-test suites, check locale-key parity) — not by the dedicated `/code-review` skill / specialized
-review agent. That inline process has already missed things a structured pass would likely have
-caught (e.g. the `for`/`id` label mismatch repeated across branches, the `hh` vs `HH` date-format
-bug, the `{{count}}` vs `{{n}}` plural-resolution inconsistency).
-
-**Action:** re-review these with the specialized agent, most-recent first:
-
-- PR #11 `feature/i18n-06-payments-general-shell` — specialized `/code-review` run 2026-08-28:
-  **no correctness bugs**; one pre-existing cleanup finding logged below (`CheckList` dead
-  `message` state). Done.
-- PR #10 `feature/i18n-common-react-table-keys` (merged) — **not** specialized-reviewed.
-- PR #9  `feature/i18n-06-extract-payments` (merged) — **not** specialized-reviewed.
-- PR #8  `feature/i18n-06-extract-evaluation` (merged) — **not** specialized-reviewed.
-- (PR #7 `feature/i18n-05-extract-users`, merged — also inline-only; lower priority, it had the
-  most inline scrutiny.)
-
-**Process change:** every future i18n PR (payments lots 2b/2c/2d, planning, activities,
-courses/formules, parameters) must be run through the specialized `/code-review` agent before
-merge, not just an inline read.
+The first few i18n extraction PRs (#7 `extract-users`, #8 `extract-evaluation`, #9
+`extract-payments`, #10 `common-react-table-keys`) were reviewed inline only (diff read + test
+suites + key-parity check), before the process changed to route every i18n PR through the
+specialized `code-reviewer` agent (from PR #11 onward, followed ever since). Backfilling a
+specialized pass on these four is still open but low priority — every one of them has since been
+re-touched, tested, and reviewed by several later lots, so a fresh full-codebase review is more
+useful than re-reviewing an isolated 2026-08 diff in isolation.
 
 ## `generalPayments/GeneralPayments.jsx` — likely-dead imports
 
@@ -428,460 +415,120 @@ Pre-existing (identical `{errors.name && "Le créneau est requis"}` at the pre-l
 lot E only swapped the literal for `t(…)`. Fix is `errors.sessionHour` — do it in the cleanup
 pass, not mid-extraction. Covered by an inline comment in `PlanningsSettings.test.jsx`.
 
-## French typos preserved verbatim during i18n extraction — clean up the locale files
+## Locale-file verbatim typos — RESOLVED, three items still open
 
-**STATUS (branch `feature/i18n-typo-cleanup`): the value fixes below are DONE.** Every `"…" → "…"`
-correction listed in this section and in the per-domain `parameters` / `planning lot 3c` sections
-further down was applied to `frontend/locales/fr/*.json` + `config/locales/fr.yml` (keys and the
-EN side unchanged; fr/en parity + `bin/i18n-tasks health` verified; the ~26 test files that pinned
-the old spellings were realigned). Including the ~15 "missing French space before `:`" cases and
-the `editParameters.mail.*` English-in-French swal titles.
+**STATUS: DONE.** The full extraction-era catalogue of preserved-verbatim French defects across
+`frontend/locales/fr/*.json` and `config/locales/fr.yml` — missing accents, colon-spacing,
+number/gender agreement, anglicisms, casing, the informal `.e`/`·e` inclusive-gender contractions,
+apostrophe style, the œ ligature, and the `MailSettings`/`RulesSettings`/`DragAndDrop` casing
+defects — was corrected across `feature/i18n-typo-cleanup` (PR #51) and
+`feature/i18n-parameters-shared-consolidation` (PR #52). Verified 2026-09-04 by reading every
+flagged key back out of the current locale files: all of it landed. fr/en parity and
+`bin/i18n-tasks health` are clean.
 
-**What is still live in this section** and must NOT be lost to a future blanket pass:
-- the **load-bearing whitespace** warnings (leading/trailing spaces that are concatenation glue —
-  `activityModal.createCoursesButton`/`createCourseButton`, `summary.reasonForRefusal`,
-  `summary.memberNumber`, `wizard.applicationSubtitle.{allActivities,oneActivity}`, …). Those
-  values were left exactly as-is;
-- the **non-typo behaviour / consistency notes** (`const T` non-reactivity, plural-key fallback,
-  `<Trans>` keep-list, `ActivityRefBasics` `seasonEnd` bug, the various pre-existing **CODE bugs**
-  noted "out of i18n scope");
-- the dedup / `shared.*` consolidation opportunities (deliberately not done here — structural).
+Three items were deliberately left because they need more than a mechanical string edit:
 
-The historical `"old" → "new"` bullet lists are kept below only as the record of what changed and
-for the interleaved notes above; the corrections themselves need no further action.
+- **`parameters:evaluations.levels.deleteConfirm` — wrong noun, user-facing, highest priority of
+  the three.** Still reads "Voulez-vous vraiment supprimer **l'instrument** '{{name}}' ?" in the
+  evaluation-levels delete dialog (`EvaluationLevels.jsx`) — copy-pasted from the instruments
+  table's identical string. Should be "…supprimer **le niveau d'évaluation** '…' ?" (EN mirror
+  needs the matching fix, currently "Do you really want to delete the instrument '{{name}}'?").
+- `parameters:evaluations.levels.colCanContinue` — still "Peut continue ?" → "Peut continuer ?"
+  (missing verb ending; `EvaluationLevels.jsx` ReactTable header).
+- `parameters:plannings.schoolAvailabilities.hint` — still "(si il y en a, …)" → "(s'il y en a, …)"
+  (elision; `SchoolAvailabilities.jsx`).
 
----
+**Load-bearing whitespace — do not let a future normalize/trim pass touch these.** Each carries a
+leading and/or trailing space that is concatenation glue at its call site, or wraps intentional
+inline HTML:
+- `planning:activityModal.createCoursesButton` / `createCourseButton` (trailing space before the
+  next inline element) and `activityModal.teacherChangeWarningLabel` (trailing space, `<b>` prefix).
+- `activityApplications:summary.reasonForRefusal` / `summary.memberNumber` (leading/trailing space,
+  concatenated next to a value at the call site).
+- `activityApplications:wizard.applicationSubtitle.{allActivities,oneActivity}` — leading-space-only
+  fragments concatenated into `applicationSubtitle.full`; adding a trailing space would double the
+  gap in the rendered `<h3>`.
+- `courses:lessonList.help.body`, `activityApplications:wizard.submit.applicationRegisteredHtml`,
+  `activityApplications:addPreApp.confirmHtml` — literal `<br/>`/`<p>`/`<b>`/`<h5>` HTML rendered by
+  sweetalert2 or `dangerouslySetInnerHTML`; the tags are intentional, not markup that leaked in.
+- `parameters:editParameters.school.activitiesNotVatLabel` is a `<Trans>` key using the indexed
+  `<1>…</1>` form (`u` is not in react-i18next's default `transKeepBasicHtmlNodesFor`) — `<1>` must
+  stay `<1>` in both locales.
 
-Original catalogue (corrections applied, notes retained):
+**Non-typo behaviour notes still relevant:**
+- The `const T = (k, o) => i18n.t(...)` helper used by StepZilla steps (`UserSearch.jsx`,
+  `WizardUserSelectMember.jsx`, and `TimeIntervalPreferencesEditor.jsx`'s nested `Availability`
+  class) re-reads the singleton per call but doesn't subscribe to `languageChanged`, so these
+  components don't re-render on an in-page `i18n.changeLanguage()`. `UserSearch`'s one `<Trans>`
+  line *does* subscribe, so a live switch would briefly show one line in the new language while the
+  rest stays in the old one. Harmless while the locale switch is a full server reload — same class
+  as the frozen-at-construct section above.
+- Plural keys with no non-plural fallback: `activityApplications:formulaActivitiesModal.{maxSelectable,
+  selectToValidate, selectAmong}` are `_one`/`_other` only — `t(key, {count: undefined})` renders
+  the raw key string. Not currently reachable (`Formule#number_of_items` is always present), but
+  keep that attribute in any future serializer `as_json only:` list.
+- The level sentinel `activityApplications:summaryActivity.notSpecified` mirrors the **raw** French
+  string a `===` comparison checks elsewhere (`LevelCell`) — correct as-is; don't translate the
+  comparison literal itself in a future refactor.
+- For any new `<Trans>` key: react-i18next's default `transKeepBasicHtmlNodesFor` is
+  `["br","strong","i","p"]` — `em`/`a`/`u` are not in it. Use the indexed `<1>…</1>` form.
 
-`frontend/locales/fr/payments.json`:
-- `general.statusEditFailed` — "Echec" → "Échec"
-- `general.subPayments.columns.method` — "Mode de réglement" → "Mode de règlement"
-- `general.subPayments.columns.checkIssuer` — "Emmeteur du Chèque" → "Émetteur du chèque"
-- `general.checks.paymentDateLabel` / `.paymentDateTooltip` — "Date de réglement" → "Date de règlement"
-- `userPayments.paymentsList.bulkEdit` — "Edition de masse" → "Édition de masse"
-- `userPayments.paymentsList.bulkEditTitle` — "Edition de règlements" → "Édition de règlements"
-- `userPayments.paymentsList.editPaymentTitle` — "Edition Règlement" → "Édition du règlement"
-- `userPayments.paymentsList.editButton` — "Editer" → "Éditer"
-- `userPayments.paymentsList.dueNumber` — "Echéance N°{{n}}" → "Échéance n° {{n}}"
-- `userPayments.paymentsList.selectPaymentMethod` — "Selectionnez un mode de paiement" → "Sélectionnez un mode de paiement"
-- `userPayments.paymentsList.selectDue` — "Selectionnez une échéance" → "Sélectionnez une échéance"
-- `userPayments.paymentsList.checkIssuerLabel` — "Emmeteur du Chèque" → "Émetteur du chèque"
-- `userPayments.paymentsList.firstCheckNumberLabel` — "…seront incrémenté automatiquement" → "…seront incrémentés automatiquement"
+Non-i18n code bugs surfaced while extracting these files (all still open, none are locale-file
+defects):
+- `activityRef/ActivityRefBasics.jsx` `selectedSeasons` `Cell` (~line 158): `seasonEnd` is set to
+  `null` in the else branch then tested with `seasonEnd !== undefined`, which `null` passes → an
+  open-ended pricing row throws on `null.label` instead of rendering `"<start> > ..."`. Fix:
+  `to_season_id !== undefined` / `seasonEnd != null`.
+- `activityApplications/summary/Summary.jsx:~1322` reads `e.activity.activity_reéf_id` (stray
+  accented `é`) where it means `activity_ref_id` — a silent lookup failure in the `courseOption`
+  label, not a crash.
+- `parameters/Practice/Materials.jsx` "Est Actif ?" column: `accessor: d => d.name` should be
+  `d => d.active` — the `Cell` renders the right value from `props.original.active`, but
+  sorting/filtering that column operates on the name field instead.
+- `parameters/Payments/AdhesionSettings.jsx` second `useEffect`'s error branch uses
+  `icon: 'error'`; every other swal in the file uses `type: 'error'`. sweetalert2 is pinned at
+  `^7.26.11` (`icon:` only exists from v9), so that one dialog renders without its error styling.
+- `parameters/Payments/AdhesionSettings.jsx`'s inline `<ReactTable>` (not routed through
+  `BaseDataTable`) passes none of the `common:reactTable.*` pagination props, so react-table's
+  English defaults ("No rows found", "Page", "of", "rows") render inside the French UI.
+- `parameters/Payments/AdhesionSettings.jsx` / `AdhesionEditModal.jsx`: `initialValues.label`
+  defaults to the translated string `t("payments.adhesion.modal.defaultLabel")`. If an EN-locale
+  admin leaves the field untouched, that literal English string gets POSTed and persisted as data —
+  a UI-string-as-data smell that should be an explicit server-side default, not a client i18n key.
+- `parameters/Evaluations/EvaluationSlot.jsx`: the required-field error `{errors.name &&
+  t("evaluations.slot.requiredError")}` guards on `errors.name`, but the field is registered as
+  `register('sessionHour', ...)` — the message can never render. Fix: `errors.sessionHour`.
+- `editParameters/SchoolParameters.jsx`: `register("email", {required: true, pattern:
+  validateEmail})` passes a function where react-hook-form's `pattern:` needs a RegExp
+  (`tools/format.jsx`'s `validateEmail` is a matcher, not a RegExp) — RHF's `instanceof RegExp`
+  guard silently drops the rule, so `required` still fires but the format check is a no-op.
+- `frontend/tools/format.jsx` `toFullDateFr` month off-by-one — see its own section below.
+- `courses/LessonList.jsx` calls `moment.locale("fr")` at module scope *and* on every `render()`
+  (`:15, :594`), which also clobbers the process-wide moment locale `frontend/i18n/index.js`
+  maintains — any component rendered after `LessonList` on the same page gets French dates
+  regardless of the active UI language.
 
-`config/locales/fr.yml` (added by feature/i18n-06-extract-planning lot 1):
-- `views.planning.index_for_rooms.new_room` — "Creer une nouvelle salle" → "Créer une nouvelle salle"
-- `views.planning.show_availabilities_for_date.lock_link_message` — "…vraiment verouiller le planning…" → "…vraiment verrouiller le planning…"
-- `views.planning.show_for_conflict.heading` — "Resolution du conflit" → "Résolution du conflit"
+Reference — dedup opportunities intentionally not touched (each pair is a distinct source literal
+under the verbatim policy, not a bug): `activityChoice.*`/`formulaChoice.*`/
+`selectedActivitiesTable.*`/`validation.col*` in `activityApplications.json` all redeclare the same
+"Récapitulatif"/"Durée"/"Tarif estimé"/"Rechercher" concepts per-component; the "no activity
+selected" concept has three near-duplicate keys across `activityChoice`/`formulaChoice`/
+`validation`. A shared `activityApplications` sub-block would fold these — not attempted here to
+avoid restructuring ad hoc across an already-merged domain.
 
-`frontend/locales/fr/planning.json` (added by feature/i18n-06-extract-planning-modals, lot 2a):
-- `studentModal.title` — "Selection" → "Sélection" (missing accent; preserved verbatim from
-  `StudentModal.jsx`)
+## `activityApplications` — small untranslated unit tokens
 
-Accent fixes **already applied** in `frontend/locales/fr/planning.json` during
-feature/i18n-06-extract-planning-modals-2 (lot 2b) — the source spellings were corrected rather
-than preserved, for consistency with the `evaluationModal.student` = "Élève" unification in the
-same lot (the `EvaluationModal.jsx` source had both "Elève" and "Élève"):
-- `kinds.evaluation` — source "Evaluation" → "Évaluation"
-- `multiViewModal.students` — source "Elèves" → "Élèves"
-- `evaluationModal.student` — source "Elève"/"Élève" → "Élève"
+Surfaced during the i18n-06 activities lot-3a review; the `noIntervalMessage`/`tooltip` override
+and the `Validation.jsx` `<h3>` headings this section used to flag are now translated (lots 3e/3g).
+What's left, low priority:
 
-`frontend/locales/fr/planning.json` (added by feature/i18n-06-extract-planning-container, lot 4) —
-preserved verbatim from `Planning.jsx`:
-- `container.modals.slotDetail` — "Detail d'un créneau" → "Détail d'un créneau" (a11y contentLabel)
-- `container.modals.slotCreation` — "Creation d'un créneau" → "Création d'un créneau" (a11y contentLabel)
-- `container.toasts.updateFailed` — "Echec de la mise à jour" → "Échec de la mise à jour"
-- `container.toasts.courseUpdated` = "Le cours est mis à jour !" vs `container.toasts.courseUpdatedShort`
-  = "Le cours est mis-à-jour!" — the same message with two different source spellings; unify.
-
-`frontend/locales/fr/planning.json` (added by feature/i18n-06-extract-planning-activity-modal (lot 5)) —
-preserved verbatim from `ActivityDetailsModal.jsx`:
-- `activityModal.editGroupNameTitle` — "Editer le nom du groupe de cette activité" → "Éditer le nom du groupe de cette activité"
-- `activityModal.toBeSpecified` — "A PRECISER" → "À PRÉCISER"
-- `activityModal.attendanceTable.student` — "Elève" → "Élève"
-- Intentional **trailing spaces** kept verbatim in `activityModal.createCoursesButton`
-  ("Créer les cours de cette activité "), `activityModal.createCourseButton` ("Créer ce cours "),
-  and `activityModal.teacherChangeWarningLabel` ("Attention : " — a `<b>` prefix). A blanket
-  "trim the locale files" pass must not strip these — they glue onto the next word/element.
-
-`config/locales/fr.yml` (added by feature/i18n-06 activities lot 1 — activity_ref / activity_ref_kind
-admin CRUD) — preserved verbatim from the ERB/React sources:
-- `views.activity_ref.index.destroy_error_title` — source literal is the English word "Error"; fr
-  should be "Erreur" (`Error` → `Erreur`)
-- `views.activity_ref.edit.heading` — "Editer l'activité \"%{label}\"" → "Éditer l'activité \"%{label}\""
-  (missing accent on "Editer")
-- `views.instruments.form.label_field` — "Nom_de_l'instrument" → "Nom de l'instrument" (stray underscores)
-- `views.activity_ref.new.heading` = "Ajouter une **A**ctivité" while `views.activity_ref.index.add`
-  = "Ajouter une **a**ctivité" — same phrase, inconsistent capital, both preserved verbatim
-
-`frontend/locales/fr/courses.json` (added by feature/i18n-06-extract-courses-lot2 —
-`AddTeacherForCourse.jsx`):
-- `addTeacher.slotBusy` — source template literal read
-  `Ce créneau est déjà occupé pour ce professeur:\n     cours de ${activity_ref} de ${start} à ${end}  - ${room}.`
-  The newline + indent run and the double space before `-` were whitespace artifacts of the JS
-  template literal and were collapsed to single spaces during extraction (no visible change —
-  HTML collapses them anyway). The string is otherwise preserved verbatim, including the missing
-  French space before the colon: `professeur:` → `professeur :` (still a typo, still pending).
-
-`frontend/locales/fr/courses.json` (added by feature/i18n-06-courses lot 3 —
-`AddSlotForCourse.jsx`, `DeleteCourseModal.jsx`):
-- `deleteCourse.prompt` — "Souhaitez-vous:" → "Souhaitez-vous :" (missing French space before the
-  colon; preserved verbatim from `DeleteCourseModal.jsx`, same treatment as the lot-2
-  `professeur:` entry above).
-- `deleteCourse.deleteAll` / `deleteCourse.deleteSelected` / `addSlot.editSeasonPeriodHint` /
-  `addSlot.weeklyRecurrenceInfo` — extracted from multi-line JSX text (and, for `deleteAll`, a
-  leading space after the `<label>` tag). Leading/among-word whitespace collapsed to single
-  spaces during extraction; no visible change (HTML collapses it, and a `{" "}` already precedes
-  the affected label). Same normalization note as the lot-2 `slotBusy` entry.
-
-`frontend/locales/fr/courses.json` (added by feature/i18n-06-extract-courses-lot4 —
-`LessonList.jsx`) — preserved verbatim from the component (the reference-date help popover was
-assembled from 6 concatenated string literals):
-- `lessonList.help.body` — `</u>. tous les cours` → `</u>. Tous les cours` (lowercase after the
-  full stop)
-- `lessonList.help.body` — `imaginons le cas suivant:` → `imaginons le cas suivant :` (missing
-  French space before the colon)
-- `lessonList.help.body` — `que les nombres la colonne "Occupation"` → `que les nombres de la
-  colonne "Occupation"` (missing "de")
-- `lessonList.help.body` — `l'occupation seras de 3` → `l'occupation sera de 3` ("seras" → "sera")
-
-The literal `\n`, the `<br />` tags, the single-quote HTML attributes and the trailing space
-before the final `</p>` inside `lessonList.help.body` are intentional source artifacts kept
-verbatim — a blanket "trim / normalize the locale files" pass must not touch them. The English
-side (`lessonList.help.body`) is a clean translation with these defects fixed, as expected.
-
-`frontend/locales/fr/activities.json` (added by feature/i18n-06-extract-activities-lot2b —
-`ActivityRefBasics.jsx`) — preserved verbatim from the component:
-- `activityRefBasics.fields.spotsOverbooking` — "Places (avec surbooking)": "surbooking" is
-  franglais → "surréservation" (or "overbooking"). Kept verbatim; the English side reads
-  "Spots (with overbooking)".
-- `activityRefBasics.fields.spotsOverbookingTooltip` — "vous pouvez ajouter des nouvelles places"
-  → "…de nouvelles places" (partitive "de", not "des", before the preposed adjective "nouvelles").
-  Kept verbatim.
-- `activityRefBasics.pricing.sectionHint` — extracted from JSX text split across two lines; the
-  inter-line whitespace was collapsed to a single space during extraction (no visible change —
-  HTML collapses it). Same normalization note as the lot-3 `courses.json` entries.
-
-`frontend/locales/fr/activities.json` (added by feature/i18n-06-extract-activities-lot2c —
-`ActivityRefApplication.jsx`, `WorkGroupTemplateEditor.jsx`, `ActivityRefPricingModal.jsx`) —
-preserved verbatim from the components:
-- `activityRefApplication.visibility.isLesson` — "Ce cours peut être **selectionné** lors d'une
-  inscription": "selectionné" → "sélectionné" (missing accent).
-- `activityRefApplication.visibility.isVisibleToAdmin` — same "selectionné" → "sélectionné"
-  (missing accent).
-- `activityRefApplication.evaluation.title` — "Evaluation" → "Évaluation" (missing accent; this is
-  the `<h3>` above the `is_evaluable` checkbox, distinct from the `activityRefKind` "type"
-  wording). The English side reads "Evaluation" (correct as-is in English).
-- `activityRefApplication.reenrollment.label` — extracted from `<label>` JSX text split across two
-  lines; the inter-line whitespace was collapsed to a single space during extraction (no visible
-  change — HTML collapses it). Same normalization note as the lot-2b `sectionHint` entry.
-
-`ActivityRefBasics.jsx` also has two non-i18n issues noticed during the lot-2b review, left as-is:
-- `fetchSeasonsAndPricings` runs from the **constructor**, so the `const { t } = this.props` its
-  `.error` swal closure captures is frozen at mount time (won't follow a later `changeLanguage`).
-  Materially benign — the request settles within ms of mount and a locale switch is a full server
-  reload — but same class as the other frozen-at-construct translations logged in this file.
-- `selectedSeasons` `Cell` (`ActivityRefBasics.jsx` ~line 158): `seasonEnd` is set to `null` in the
-  else branch then tested with `seasonEnd !== undefined`, which `null` passes → an open-ended
-  pricing row (no `to_season_id`) hits `null.label` and throws in the cell instead of rendering
-  the intended `"<start> > ..."`. Pre-existing (byte-identical before the i18n extraction),
-  needs its own fix — the test should be `to_season_id !== undefined` / `seasonEnd != null`.
-
-`frontend/locales/fr/activityApplications.json` (added by feature/i18n-06-extract-activities-lot3a
-— new `activityApplications` namespace; `Evaluation.jsx`, `TimePreferences.jsx`,
-`AddPreAppFromStopApp.jsx`) — preserved verbatim from the components:
-- `evaluation.answerQuestionnairesError` — "Veuillez répondre **au.x questionnaire.s**":
-  `au.x questionnaire.s` → `au(x) questionnaire(s)` (sloppy dotted "au(x)/(s)" contraction in the
-  source). Kept verbatim; the English side reads "Please answer the questionnaire(s)" (clean).
-- `timePreferences.title` — "**Préferences** horaires des activités (hors **Eveil**)": two typos in
-  one string — `Préferences` → `Préférences` (missing accent) and `Eveil` → `Éveil` (missing accent
-  on the proper activity name). Both kept verbatim.
-- `addPreApp.confirmHtml` — "…de se préinscrire **à l 'activité** pour la…": stray space in
-  `à l 'activité` → `à l'activité`. Kept verbatim (sweetalert2 `title` rendered as HTML, so the
-  literal `<h5>`/`<b>` tags are intentional).
-- `addPreApp.openButton` — "Ouvrir la **PréInscription**": `PréInscription` → `préinscription`
-  (odd internal capital, mid-sentence). Kept verbatim; the English side reads "Open
-  pre-registration".
-
-`frontend/locales/fr/activityApplications.json` (added by feature/i18n-06-extract-activities-lot3b
-— `UserSearch.jsx`, `TimeIntervalPreferencesEditor.jsx`, `FormulaActivitiesModal.jsx`,
-`summary/WorkGroupEditor.jsx`, `WizardUserSelectMember.jsx`) — preserved verbatim from the
-components:
-- `formulaActivitiesModal.selectedCount` — "Activités sélectionnées:" → "Activités sélectionnées :"
-  (missing French space before the colon; a `<strong>` label followed by " N / M").
-- `formulaActivitiesModal.selectAmong_one` / `selectAmong_other` — "…parmi les suivantes:" →
-  "…parmi les suivantes :" (missing French space before the colon). Same defect in both plural
-  forms.
-- `workGroupEditor.cannotAddMultiple` — "Impossible d'ajouter plusieurs **rôle et option** à un
-  seul élève" → "…plusieurs **rôles et options**…" (plural agreement after "plusieurs"). Used 4×
-  in the component; one key. English side reads correctly ("multiple roles and options").
-- `workGroupEditor.close` — source literal is the English word "Close" (an `aria-label`); fr should
-  be "Fermer" (`Close` → `Fermer`). Kept verbatim; the English side is "Close" (correct as-is).
-- `workGroupEditor.addRole` — "Ajouter rôle" (no article), inconsistent with "Ajouter un membre" /
-  "Ajouter un contact" elsewhere in the same namespace; should be "Ajouter un rôle". Kept verbatim.
-- `wizardUserSelectMember.selectMember` — "**Veuilez** sélectionner un membre" → "**Veuillez**
-  sélectionner un membre" (typo). Kept verbatim; the English side reads "Please select a member".
-- `wizardUserSelectMember.ifMinorAddMember` — "Si la personne est **mineur**, ajouter un nouveau
-  membre" → "…est **mineure**…" ("la personne" is feminine). Masculine agreement for a person of
-  unknown gender; kept verbatim. English side: "If the person is a minor…".
-
-The `feature/i18n-typo-cleanup` pass also re-scanned the whole `frontend/locales/fr/` +
-`config/locales/fr.yml` (`Edition\b`, `Editer\b`, `Selectionn`, `réglement`, `Echéance`, `Echec`,
-`Emmeteur`, `Precedent`, `Creer\b`, `verouiller`, `Resolution\b`, `complêtement`, `remplis\b`,
-`smtp\b`, `<-space>:`); nothing beyond this catalogue turned up. `components/utils/ui/tabs.jsx`'s
-hardcoded French tooltip ("Cet onglet n'est pas complêtement remplis") is a separate entry below —
-it is a *component* string, not a locale-file value, so it was out of this pass's scope.
-
-Non-typo notes from the lot-3b review (behaviour / consistency, not blocking):
-- **`const T` helper is non-reactive.** `UserSearch.jsx` and `WizardUserSelectMember.jsx` are
-  StepZilla steps (can't be `withTranslation`-wrapped), so their strings go through a module-level
-  `const T = (k, o) => i18n.t(\`activityApplications:${k}\`, o)`. `T` re-reads the singleton per
-  call (not frozen), but the components don't subscribe to `languageChanged`, so they don't
-  re-render on an in-page `i18n.changeLanguage()`. In `UserSearch` the one `<Trans>` line
-  ("Sinon …") *does* subscribe, so a live locale switch would render that line in the new language
-  while the surrounding `T(...)` sentences stay in the old one — a mixed-language panel. Same
-  non-reactivity in `TimeIntervalPreferencesEditor.jsx`'s nested `Availability` class (calls
-  `i18n.t` directly). Harmless while a locale switch is a full server reload; same class as the
-  other frozen-translation entries in this file. Fix (if ever): thread `t` in from `Wizard` once
-  that's translated, or split the `<Trans>` into `T(...)` fragments.
-- **Plural keys have no non-plural fallback.** `formulaActivitiesModal.{maxSelectable,
-  selectToValidate,selectAmong}` are `_one`/`_other` only. `t(key, {count: undefined})` renders the
-  raw key string to the user (verified). Not reachable now — `Formule` validates
-  `number_of_items` present + `>= 1` and the serializer emits it as an Integer — but if a future
-  `as_json only:` list drops the attribute, the old hand-rolled code degraded to
-  "Sélectionnez  activité …" whereas the new code prints a translation key. Keep `number_of_items`
-  in that serializer's output.
-- For future `<Trans>` keys: react-i18next 17's default `transKeepBasicHtmlNodesFor` is
-  `["br","strong","i","p"]` — `em`/`a` are NOT in it. Use the **indexed** form (`<1>…</1>`), which
-  maps by child position regardless of the keep-list; a literal `<em>`/`<a>` in a key value gets
-  escaped instead of kept.
-
-`frontend/locales/fr/activityApplications.json` (added by feature/i18n-06-extract-activities-lot3c
-— `FormulaChoice.jsx`, `ActivityChoice.jsx`, the two enrolment-wizard "choose your package /
-choose your activities" panels) — preserved verbatim from the components:
-- `formulaChoice.estimatedTotal` — "Total estimé:" → "Total estimé :" (missing French space before
-  the colon; rendered as `{estimatedTotal} {price} €`).
-- `activityChoice.estimatedTotal` — "Total estimé" (no colon). The source JSX had "Total\n estimé"
-  split across two lines; the inter-line whitespace was collapsed to a single space during
-  extraction (no visible change — HTML collapses it). Note the sibling
-  `formulaChoice.estimatedTotal` for the same concept carries a trailing colon and this one does
-  not — kept as-is.
-- `activityChoice.noActivitySelected` — "aucune activité sélectionnée" (lowercase leading "a"),
-  inconsistent with `formulaChoice.noActivitiesSelected` = "Aucune activité sélectionnée"
-  (capitalised) for the same concept; both are standalone `<td>` cell contents, so the lowercase
-  is just a defect, not a mid-sentence context. Kept verbatim; the English side reads "No activity
-  selected" (capitalised, correct).
-- `activityChoice.unpopularWarning` — "…soumises à un nombre minimum d'élèves par cours:" →
-  "…par cours :" (missing French space before the colon). Was JSX text across two lines,
-  whitespace collapsed during extraction. Kept verbatim; the English side is clean.
-
-Dedup opportunity (not a defect): `formulaChoice.*` and `activityChoice.*` each redeclare
-`summary` = "Récapitulatif", `duration`/`colDuration` = "Durée", `colEstimatedPrice` = "Tarif
-estimé", `searchPlaceholder` = "Rechercher"; these also duplicate `selectedActivitiesTable.*` and
-`formulaActivitiesModal.col*` from lots 3a/3b — and `activityChoice.title` ("Choix de l'activité"
-/ "Activity choice") is EN-identical to lot-3b's `formulaActivitiesModal.activityChoice` ("Choix
-des activités" / "Activity choice"). Kept per-component for now (consistent with the earlier
-sub-lots). A shared `activityApplications` sub-block is a later cleanup — do not restructure ad hoc.
-
-Untranslated unit tokens in the two lot-3c files (same class as the `SelectedActivitiesTable` /
-`FormulaActivitiesModal` entry below — the `<th>`s are translated, the value formatters are not):
-`ActivityChoice.jsx:25,27` (`` `${hours}h${minutes}` `` / `` `${ref.duration} min` ``),
-`FormulaChoice.jsx:181` (`{duration !== "--" ? "min" : ""}`), and `"--"` placeholders at
-`ActivityChoice.jsx:15,17,21,297,449` / `FormulaChoice.jsx:96,131,171`.
-
-`frontend/locales/fr/activityApplications.json` (added by feature/i18n-06-extract-activities-lot3d
-— `Wizard.jsx`, the StepZilla orchestrator of the enrolment flow) — preserved verbatim from the
-component:
-- `wizard.seasonsClosed` — "Les inscriptions à la saison actuelle **est fermée** et celles de la
-  saison suivante ne sont pas encore ouvertes." → "…**sont fermées**…" (number agreement: the
-  subject "Les inscriptions" is plural). Was JSX text across two lines, inter-line whitespace
-  collapsed to a single space during extraction. Kept verbatim; the English side is a clean,
-  grammatically correct translation.
-- `wizard.newApplicationTitle` — "Nouvelle demande **d’inscription**" uses a **typographic
-  apostrophe** `’` (U+2019), unlike every other value in this file, which uses the straight `'`
-  (`d'inscription`, `à l'activité`, `l'accueil`, …). Preserved verbatim; flagged as an
-  apostrophe-style inconsistency for the eventual cleanup pass (do not let a blanket
-  quote-normalisation silently "fix" only this one).
-- `wizard.steps.member` — "Membre **C**oncerné" has a mid-phrase capital "C" → "Membre concerné"
-  (cf. `wizardUserSelectMember.memberConcerned` = "Membre concerné", the correct form, in the same
-  file). Kept verbatim; the English side reads "Member concerned".
-- `wizard.steps.changeWishes` — "**Voeux** de changement" → "**Vœux** de changement" (missing the
-  œ ligature). Kept verbatim; the English side reads "Change requests".
-
-Intentional artifacts in the lot-3d block — a blanket "trim / normalize the locale files" pass
-must not touch these:
-- `wizard.applicationSubtitle.allActivities` (" aux activités") and
-  `wizard.applicationSubtitle.oneActivity` (" à l'activité {{activity}}") each carry a **leading
-  space only** — they are sub-lexical fragments concatenated into `applicationSubtitle.full`
-  ("Demande d'inscription{{activityPart}} pour la {{season}}"), which supplies the space before
-  "pour la". The leading spaces are load-bearing glue; do NOT add a trailing space (that would
-  double the space before "pour la" in the rendered `<h3>`). Same shape on the English side
-  (" for all activities" / " for the activity {{activity}}").
-- `wizard.submit.applicationRegisteredHtml` was assembled from 7 `+`-concatenated JS string
-  literals with no separator; the literal `<p>`/`<b>`/`<br/>` tags are intentional (rendered as
-  HTML by sweetalert2). The French text has no typo of its own; the English side is a clean
-  translation. Same class as the lot-4 `courses.json` `lessonList.help.body` entry.
-
-Not a defect (keep note): `wizard.nextStep` = "Suivant" and `wizard.prevStep` = "Précédent" are
-byte-identical to `common:reactTable.nextText` / a matching back label, but they are StepZilla
-next/back button labels in a different context and are kept local to the `wizard` block, per the
-lot brief.
-
-`frontend/locales/fr/activityApplications.json` (added by feature/i18n-06-extract-activities-lot3e
-— `Validation.jsx`, the final "review your enrolment request" step of the wizard) — preserved
-verbatim from the component:
-- `validation.phone` — "**Télephone** {{label}}**:**" → "**Téléphone** {{label}} **:**" — two
-  defects in one string: `Télephone` → `Téléphone` (missing accent on the second "e") and a
-  missing French space before the colon. Both kept verbatim; the English side reads
-  "Phone {{label}}:" (the accent defect is FR-only; the no-space-before-colon is intentional in
-  English).
-- `validation.noActivitySelected` — "Aucune activité sélectionnée" (capitalised). The
-  "no activity selected" concept now has **three** keys in this one file, two spellings:
-  - `activityChoice.noActivitySelected` (lot 3c) — fr "aucune activité sélectionnée" (lowercase),
-    en "No activity selected"
-  - `formulaChoice.noActivitiesSelected` (lot 3c) — fr "Aucune activité sélectionnée", en
-    "No activit**ies** selected"
-  - `validation.noActivitySelected` (this lot) — fr "Aucune activité sélectionnée", en
-    "No activity selected"
-  `formulaChoice.noActivitiesSelected` is fr-identical to the new key but diverges in English —
-  that pair is the real duplicate for a future dedup pass; `activityChoice`'s is a casing variant.
-  Kept as-is per the verbatim policy (each lot's source spelling preserved).
-- `validation.levelEvaluation` — "**Evaluation** de niveau" → "**Évaluation** de niveau" (missing
-  accent on the leading "E"). Inconsistent with `wizard.steps.levelEvaluation` (lot 3d) =
-  "Évaluation de niveau", which is the correct form, for the same concept in the same file. Kept
-  verbatim; the English side reads "Level evaluation" (matches `wizard.steps.levelEvaluation`).
-- `validation.paymentSchedule` — "**Echéancier**" → "**Échéancier**" (missing accent on the
-  leading "E"). Kept verbatim; the English side reads "Payment schedule".
-
-Not a defect (keep note): `validation.totalEstimatedCost` = "Coût total estimé :" **does** carry
-the French space before the colon (rendered as `{totalEstimatedCost} {amount} €`), unlike the
-lot-3c `formulaChoice.estimatedTotal` / `activityChoice.unpopularWarning` which were missing it.
-
-Pre-existing, untouched by lot 3e (observation only): `Validation.jsx:~366` renders the
-packages-table subtotal as `{reduce(...)}€` — no `.toFixed(2)`, no space before `€` (e.g.
-"120€") — while the grand-total line 15 rows down is "0.00 €". Not i18n; flagged so it isn't
-mistaken for extraction fallout.
-Also `validation.colPackage` = "Formule" / `colEstimatedPrice` = "Tarif estimé" /
-`estimatedTotal` = "Total estimé" duplicate the same `formulaChoice.*` / `activityChoice.*` /
-`selectedActivitiesTable.*` values from lots 3a–3c — kept per-component for now, same as the
-earlier sub-lots (a shared `activityApplications` sub-block is a later cleanup).
-
-`frontend/locales/fr/activityApplications.json` (added by feature/i18n-06-extract-activities-lot3f
-— `summary/Activity.jsx`, the per-activity admin panel of the application summary; new
-`summaryActivity.*` block) — preserved verbatim from the component:
-- `summaryActivity.editLevelTitle` — "**Edition** du niveau de {{label}}" → "**Édition** du niveau
-  de {{label}}" (missing accent on the leading "E"). Same defect class as the payments
-  `userPayments.paymentsList.bulkEdit*` / activities lot-1 `views.activity_ref.edit.heading`
-  entries. Kept verbatim; the English side reads "Edit {{label}}'s level" (clean).
-
-Incidental fix (noted, not a pending typo): the source `previousText` prop passed to this file's
-suggestions `<ReactTable>` was `"Précedent"` (missing accent). Lot 3f routes it through the shared
-`common:reactTable.previousText` = `"Précédent"`, which **corrects** it — same acceptable
-incidental fix as the `formules` `rowsText` reuse. No new locale-file defect to clean up.
-
-Not a defect (keep note): `summaryActivity.headcountAt` = "Effectifs au : {{date}}" and
-`summaryActivity.suggestionCriteria` (lowercase-initial, renders after an `<i class="fas
-fa-info-circle"/>`) both correctly carry the French space before the colon — like the lot-3e
-`validation.totalEstimatedCost` note, and unlike several earlier `activityApplications` strings
-that were missing it. Also `summaryActivity.notSpecified` = "NON INDIQUÉ" (all-caps) is an
-intentional level sentinel value, distinct from `summaryActivity.notIndicated` = "Non indiqué"
-(sentence case, the student's displayed level when none is set) — not an inconsistency.
-
-Non-reactive note (behaviour, not blocking): `LevelCell` and `SubStudentList` take `t` from
-`useTranslation("activityApplications")` (reactive), but the level sentinel comparison
-`studentLevel === 'NON INDIQUÉ'` in `LevelCell` matches the **raw** string from the API / from
-`TimeIntervalHelpers.levelDisplayForActivity` — not the translated `summaryActivity.notSpecified`
-value — so the sentinel stays French-literal in code while only its *display* goes through i18n.
-Correct as-is (the key mirrors the literal); noted so a future refactor doesn't translate the
-sentinel and break the `=== 'NON INDIQUÉ'` check.
-
-Residual French in / reached from `summary/Activity.jsx` that lot 3f did NOT extract (out of the
-"translate this file's own copy" scope — pulled from helpers/constants or `Intl`):
-- `Activity.jsx:~165, ~170` — the `SubStudentList` "Début le" / "Arrêt le" cells format dates with
-  `Intl.DateTimeFormat('fr')`, so under the now-translated `Start on` / `Stop on` headers an
-  English user still sees `DD/MM/YYYY`. Same class as the logged `LessonList.jsx ~1418,1423` entry.
-- `PRE_APPLICATION_ACTION_LABELS` (`tools/constants.js:28`) — feeds `actionLabel` → a
-  `<span class="badge badge-warning">` at `Activity.jsx:~948` whenever `application.pre_application_activity`
-  exists. French-only constant (`Nouvelle inscription` / `Renouvellement` / `Changement` / `Arrêt`
-  / `Poursuite enfance` / `Inscription CHAM`); the `newRequest` fallback beside it IS translated.
-  Same class as the `WEEKDAYS`/`MONTHS`/`MESSAGES` constants entry below — fold in when that pass
-  happens.
-- `TimeIntervalHelpers.averageAgeDisplay` (`:~313`) returns `` `${age} ans` `` — the `Cell` of the
-  `average_age` column (`Activity.jsx:~617`). So the average-age column renders "11 ans" in English
-  under an `Age` header, while the per-student age cell in the same table IS translated
-  (`summaryActivity.ageYears` = "11 years old"). Fix when `TimeIntervalHelpers` is extracted
-  (planning lot 3c).
-- `tools/format.jsx:~219` — `data-tippy-content="Aucun rôle n'a été ajouté"`, reached via
-  `formatActivityHeadcount` (the `Occupied` column `Cell`). French tooltip under an English header.
-- `Activity.jsx:~486/~495` — the "Jour" column `Cell` uses `moment(...).format("dddd")` (follows
-  the i18n-maintained moment locale) but its `Filter` `<option>`s come from the French `WEEKDAYS`
-  constant → rows say "MONDAY", the dropdown says "Lundi". Covered by the `constants.js` entry.
-
-`frontend/locales/fr/activityApplications.json` (added by feature/i18n-06-activities-lot3g —
-`summary/Summary.jsx`, the top-level application-summary panel; new `summary.*` block, 60 leaves) —
-preserved verbatim from the component:
-- `summary.confirmDeleteApplication.body` — "<p>La demande de {{name}} sera définitivement
-  **supprimé**</p>" → **supprimée** ("demande" is feminine, so the past participle needs the `e`).
-  Kept verbatim; the English side reads "{{name}}'s request will be permanently deleted" (clean).
-- `summary.genericConfirm` — "**Êtes vous** **sûr.e** de vouloir faire cela ?": two defects —
-  missing hyphen ("Êtes-vous"), and the informal `.e` inclusive-gender contraction where the rest
-  of the repo writes "Êtes-vous sûr ?" (see `common:confirm.sure`). Kept verbatim; the English
-  side reads "Are you sure you want to do this?" (clean).
-- `summary.proposalAccepted` — "Proposition **A**cceptée": stray mid-phrase capital on the second
-  word (cf. `summary.proposalRefused` = "Proposition refusée", correct). Kept verbatim; the
-  English side reads "Proposal accepted" (clean).
-- `summary.evaluationRenderError` — "**Echec** du rendu : cette évaluation n'existe pas" →
-  **Échec** (missing accent on the leading "E"). Same defect class as the payments `"Echec"` entry
-  and activities lot-3e `validation.levelEvaluation` = "Evaluation de niveau". Kept verbatim; the
-  English side reads "Rendering failed: this evaluation does not exist" (clean).
-- `summary.selectReferent` — "**SELECTIONNER UN REFERENT**" → "SÉLECTIONNER UN RÉFÉRENT" (missing
-  accents; all-caps is an intentional placeholder style, only the accents are the defect). Kept
-  verbatim; the English side reads "SELECT A REFERENT" (accent-free anyway).
-- `summary.infoLabel` — "**Infos:**" → "Infos :" (missing the French space before the colon —
-  same class as the lot-2 `courses.json` / `activityModal` colon-spacing entries). Kept verbatim;
-  the English side reads "Info:" (correct as-is in English).
-
-Not a defect (keep note): `summary.reasonForRefusal` = "Raison du refus : " and
-`summary.memberNumber` = " - Adhérent n°{{number}}" carry **intentional** leading/trailing spaces
-(each is concatenated inline next to a value at the call site) — a blanket "trim the locale files"
-pass must not touch them. The English side (`"Reason for refusal: "`, `" - Member no. {{number}}"`)
-keeps the same padding. `summary.adhesionDeleteConfirm.text` uses the `sûr·e` middle-dot
-inclusive form (U+00B7) while `summary.genericConfirm` uses `sûr.e` — both preserved as written;
-not unified (different keys, verbatim policy).
-
-Pre-existing CODE bug (out of i18n scope, noted only — not a locale-file defect): the
-`summary.courseOption` call site in `Summary.jsx` reads `e.activity.activity_reéf_id` (stray
-accented `é` in the identifier) where it means `activity_ref_id`. The i18n change only wraps the
-surrounding display string; the typo'd property access is untouched and should be fixed by
-whoever next works that component.
-
-## `activityApplications` — residual French from lot-3a's not-yet-processed siblings
-
-The i18n-06 activities lot-3a review surfaced hardcoded French in files that lot 3a did NOT touch
-but that sit right next to (or override) the keys it added. Deferred to the later 3.x sub-lots;
-listed here so the flow isn't half-localised in the meantime and nothing gets missed:
-
-- `frontend/components/activityApplications/summary/Summary.jsx:1431` — passes
-  `noIntervalMessage="Pas de créneau"` into `EvaluationChoiceTable`, which **overrides** the new
-  `activityApplications:evaluationChoice.noIntervalMessage` key at the only call site that supplies
-  the prop → that modal still shows French in English mode. Also `Summary.jsx:1428`
-  `tooltip="Créneau d'évaluation"`. → **DONE in lot 3g** (`summary.noEvaluationSlot` /
-  `summary.tooltips.evaluationSlot`).
-- `frontend/components/activityApplications/Validation.jsx:287, 291, 403, 407, 427` — hardcoded
-  French `<h3>` section headings. → lot 3e.
-- `frontend/components/activityApplications/SelectedActivitiesTable.jsx:10-12` — `displayDuration`
-  emits `"5h30"` / `"45min"` with untranslated unit tokens (the `<th>`s themselves ARE translated
-  as of lot 3a). Low priority; arguably acceptable in EN. → whenever `SelectedActivitiesTable` is
-  revisited. **Same untranslated `"min"` / `"--"` tokens in
-  `FormulaActivitiesModal.jsx:~228,~250`** (lot 3b — `<th>`s translated, unit token left).
-- `frontend/components/activityApplications/EvaluationChoiceTable.jsx` — pre-existing (not i18n):
-  its `data[].timeInterval.start/end` are passed straight to `toHourMin()` (`.getHours()`), so they
-  must be `Date` objects, not ISO strings — unlike the sibling `TimePreferencesTable` which wraps
-  with `toDate()`. An ISO string silently renders `NaN:NaN`. Fix when that file is next touched.
-- Behaviour note (not a bug): lot 3a replaced `noIntervalMessage = DEFAULT` (fires on `undefined`
-  only) with `noIntervalMessage ?? t(...)` (fires on `undefined` AND `null`) in `EvaluationChoice`
-  / `EvaluationChoiceTable`. No call site passes `null`; `""` is unchanged. Flagged only so a
-  future caller passing `null` to mean "render nothing" isn't a surprise.
+- `SelectedActivitiesTable.jsx:10-12`'s `displayDuration` emits `"5h30"` / `"45min"` with
+  untranslated unit tokens (the `<th>`s themselves are translated). Same untranslated `"min"` /
+  `"--"` tokens in `FormulaActivitiesModal.jsx:~228,~250`.
+- `EvaluationChoiceTable.jsx` — pre-existing (not i18n): verify `data[].timeInterval.start/end`
+  reach `toHourMin()` as `Date` objects, not ISO strings, the way the sibling
+  `TimePreferencesTable` wraps them with `toDate()` — an ISO string would silently render
+  `NaN:NaN`.
 
 ## `components/utils/ui/tabs.jsx` — hardcoded French tab-error tooltip (+ 2 typos)
 
@@ -906,19 +553,13 @@ selected, and the icon lags one render (instance mutation inside final-form `val
 ## `courses/LessonList.jsx` — residual French after the lot-4 i18n extraction
 
 The lot-4 extraction (`feature/i18n-06-extract-courses-lot4`) translated every string the component
-*owns*, but three things still render French in English mode and are deliberately out of that
-lot's scope:
+*owns*. One item flagged at the time is now resolved; two are deliberately still out of scope:
 
-- **Level column / row-expander level cell** — `displayLevel()` compares `studentLevel` and
-  `TimeIntervalHelpers.levelDisplayForActivity(...)` against the French sentinel literals
-  `"NON INDIQUÉ"` and `"À PRÉCISER"`. Lot 4 maps *both* sentinels to the translated
-  `lessonList.userRow.notSpecified`, but the comparisons themselves still hard-code the French
-  strings, which live in `frontend/components/planning/TimeIntervalHelpers.jsx:264,270,271`
-  (not yet extracted). **When the planning lot i18ns `TimeIntervalHelpers`, these `===` /
-  `!==` checks in `LessonList.jsx` (~lines 1384, 1401-1403) break silently** — `displayLevel()`
-  will fall through to the raw helper output. Extract helper + call-site comparisons together.
-  Any *real* level label the helper returns (e.g. a season-defined "Débutant") is data, not
-  chrome, and is left as-is.
+- ~~**Level column / row-expander level cell**~~ **Resolved by planning lot 3c**: the
+  `=== "NON INDIQUÉ"` / `"À PRÉCISER"` comparisons in `displayLevel()` now use the exported
+  `TimeIntervalHelpers.LEVEL_NOT_INDICATED` / `LEVEL_TO_SPECIFY` constants (see the
+  `TimeIntervalHelpers.jsx` design note below), so they no longer depend on the raw French
+  literals living in that file.
 - **Day column** — the `Jour` header is translated but the `Cell` (`moment(start).format("dddd")`)
   and the day-filter `<option>`s (`day.format("dddd")`) stay `lundi`/`mardi` because the component
   calls `moment.locale("fr")` at module scope *and* on every `render()` (`LessonList.jsx:13, 594`).
@@ -940,19 +581,12 @@ Surfaced during the i18n-06 `courses` lot 1 extraction (`AddCourse.jsx`, `AddCou
 `AddActivityForCourse.jsx`). These modules were switched to `t()` for their own copy, but they
 still read shared French-only constants that were left as-is:
 
-- ~~`WEEKDAYS` / `MONTHS` (`tools/constants.js`) — French day/month name arrays. `AddCourseSummary.jsx`
-  builds its slot line from them, so in English the recap reads e.g.
-  `Lundi 16 Juin 2025 from 08h00 to 09h00`.~~ **Resolved — constants-i18n lot 1**
-  (`feature/i18n-constants-lot1-dates`): the two arrays moved to `common:weekdays` /
-  `common:months` (7 / 12 entries, Sunday-indexed; FR copied verbatim from the old
-  `constants.js` arrays, EN added). `constants.js` now re-exports `WEEKDAYS` / `MONTHS` as
-  `export let` live bindings that a `languageChanged` handler re-reads from the `common`
-  bundle, so day/month names follow the active UI language for every consumer that re-renders.
-  Two consumers with no i18n subscription of their own — `activityApplications/ItemPreferences.jsx`
-  and `availability/AvailabilityList.jsx` — won't repaint on an in-page `changeLanguage` unless a
-  subscribed ancestor happens to re-render (same class as the frozen-header notes above; harmless
-  today since the locale switch is a full server reload, and both files are queued for a later
-  extraction lot anyway).
+- ~~`WEEKDAYS` / `MONTHS`~~ **Resolved — constants-i18n lot 1** (`feature/i18n-constants-lot1-dates`):
+  moved to `common:weekdays` / `common:months`, re-exported as `export let` live bindings that
+  follow `i18n.changeLanguage`. Two consumers with no i18n subscription of their own
+  (`activityApplications/ItemPreferences.jsx`, `availability/AvailabilityList.jsx`) won't repaint
+  on an in-page switch — harmless today (full-reload locale switch), same class as the
+  frozen-header notes above.
 - `MESSAGES.err_data_missing` ("Impossible de continuer, des données obligatoires sont manquantes.")
   — toasted from `AddCourse.jsx`.
 - `MESSAGES.err_must_choose_activity` ("Veuillez choisir une activité avant de continuer.") —
@@ -984,510 +618,62 @@ User-visible in the create-activity modal date header (`planning/CreateActivityM
 Fix: `toMonthName(tmpDate.getMonth() + 1)`. `constants.test.js` / `format.test.js` deliberately
 assert only the weekday token of `toFullDateFr` output so as not to pin the bug.
 
-## `parameters` domain (i18n-06) — French source strings preserved verbatim
+## `parameters` domain — remaining structural / dead-code items
 
-**`shared.*` consolidation DONE** (branch `feature/i18n-parameters-shared-consolidation`): every
-byte-identical `parameters:*` duplicate flagged in the lot-A…E3 bullets below is resolved.
-`parameters.json` 255 → 233 leaves. Removed key → canonical target:
-- `practice.cols.name` → `shared.colName`; `payments.cols.label` → `shared.colLabel`
-- `practice.{yes,no,errorTitle}` → `shared.{yes,no,errorTitle}`;
-  `practice.cols.actions` → `shared.actions`;
-  `practice.delete.{confirmYes,confirmNo}` → `shared.{deleteConfirmYes,deleteConfirmNo}`
-- `payments.status.deleteConfirm` + `activityApplications.statusTable.deleteConfirm` → new `shared.deleteStatusConfirm`
-- `activityApplications.settings.{loadError,saveSuccess,saveError}` → `shared.{loadParamsError,saveSuccess,saveError}`
-- `editParameters.{csv,teachers,mail}.saveSuccessTitle` → new `shared.saveSuccessTitle`
-- `editParameters.mail.genericError` → `shared.genericError` (already byte-equal after the typo pass)
-- `editParameters.{rules,school}.loadingTitle` + `evaluations.slot.loadingTitle` → `common:loading`
-- `editParameters.{rules,school}.saveSuccess` + `evaluations.slot.saveSuccess` → new `shared.saveCompleted`
-- `editParameters.{rules,school}.genericError` + `evaluations.slot.genericError` → new `shared.genericErrorShort`
+The i18n-06 `parameters` domain (lots A–F, `feature/i18n-06-parameters-lot-*`) is functionally
+complete, and its own verbatim-typo catalogue was folded into the "Locale-file verbatim typos"
+section above (`evaluations.levels.deleteConfirm`/`colCanContinue`,
+`plannings.schoolAvailabilities.hint` are the three still open). `feature/i18n-parameters-shared-
+consolidation` additionally folded every byte-identical `parameters:*` duplicate flagged across
+lots A–E3 into a `shared.*` block (`parameters.json` 255 → 233 leaves) — `shared.colName`,
+`shared.colLabel`, `shared.deleteStatusConfirm`, `shared.saveCompleted`, `shared.genericErrorShort`,
+`shared.saveSuccessTitle`, plus folding three separate loading-title copies into `common:loading`.
 
-`shared.saveSuccess` ("Sauvegarde effectuée") and `shared.saveCompleted` ("Enregistrement
-effectué") are **kept separate** — different source strings, verbatim policy.
+What's still open in this domain:
 
-Incidental EN copy fix from the `common:loading` fold (recorded, not a defect — same as the lot-D /
-lot-E `Loading...` notes): the three swal loading-title callsites now render EN "Loading..." where
-the removed `editParameters.rules.loadingTitle` etc. rendered "loading..." (lowercase — itself a
-logged verbatim artifact). FR "Chargement..." unchanged.
+- **Cross-namespace duplicate that can't be folded into `shared.*`**: the "no level set" concept
+  has three separate keys, one per namespace — `activityApplications:summaryActivity.notSpecified`,
+  `courses:lessonList.userRow.notSpecified`, `planning:levelDisplay.notIndicated` (all "NOT
+  SPECIFIED" in EN). `shared.*` lives inside `parameters.json`, so it can't reach across namespaces.
+- **`editParameters/DragAndDrop.jsx` is a shared component locked to the `parameters` namespace** —
+  `useTranslation("parameters")` for a component with 4 call sites across *three* i18n domains
+  (`editParameters/{RulesSettings,SchoolParameters}.jsx`,
+  `parameters/ActivityApplications/ConsentDocumentModal.jsx`, and `activityRef/ActivityRefBasics.jsx`
+  — the last one is the `activities` domain). Harmless today (every namespace loads eagerly), but
+  a future lazy-namespace split would break the `activityRef` caller silently. Move its strings to
+  `common:dragAndDrop.*`.
+- **Possible dead code** (do not delete — recover-don't-delete policy): `parameters/Rooms/
+  RoomsParameters.jsx` isn't mounted by any core view (`rooms_parameters/index.html.erb` mounts
+  `Rooms/Localisations` directly); its only key is exercised solely by the parity test.
+  `editParameters/FormulesParameters` is referenced by
+  `formules_parameters_edit.html.erb`'s `react_component` call but **the component file doesn't
+  exist** under `frontend/components/editParameters/` — likely a dead route or a plugin-provided
+  component. Audit against activated plugins / prod logs before touching either.
+- **Mixed-language side effect of planning lot 3c** (not a parameters-domain bug, but visible on a
+  parameters-adjacent screen): `SimplePlanning.jsx` renders `<KindLegend>` right below the level
+  line lot 3c localized, so English mode shows "NOT SPECIFIED" above a legend still reading
+  "Evaluation / Cours / Option" (`tools/constants.js` `KINDS_LABEL`, part of the pending
+  constants-i18n lots). `ActivitiesApplicationsList.jsx` has the same split: its level cell is
+  localized, its column headers ("Niveau", "Âge", "Activité") are not.
+- **Pre-existing dead guard** in `courses/LessonList.jsx`: `UserRow` seeds `studentLevel` from
+  `data.evaluation_level_ref.label`, but `desired_activity_controller.rb:92` renders
+  `evaluation_level_ref` as a bare **string**, so `.label` on it is always `undefined` and the
+  `studentLevel === LEVEL_NOT_INDICATED` fast path never fires — every row falls through to the
+  `levelDisplayForActivity` recompute. `Activity.jsx:44` handles the same endpoint correctly
+  (no `.label`). Fix `LessonList` to match.
 
-Still NOT consolidated (cross-namespace, can't share a `parameters:` key): the "no level set"
-concept has `activityApplications:summaryActivity.notSpecified`, `courses:lessonList.userRow.notSpecified`,
-`planning:levelDisplay.notIndicated` — three namespaces, three keys (all "NOT SPECIFIED" in EN).
+Design note (`planning/TimeIntervalHelpers.jsx`, lot 3c — so a later reader doesn't "simplify" it):
+`levelDisplay()` / `levelDisplayForActivity()` keep returning the raw French sentinels
+(`LEVEL_NOT_INDICATED = "NON INDIQUÉ"`, `LEVEL_TO_SPECIFY = "À PRÉCISER"`, both exported constants)
+so `===` call-site comparisons stay locale-stable; a separate `levelDisplayLabel(value)` localizes
+only at render via `i18n.t("planning:levelDisplay.*")`, passing any real level label through
+unchanged. Every call site was split into "compare" (use the constant) vs "display" (wrap in
+`levelDisplayLabel`) — touched `Activity.jsx`, `LessonList.jsx`, `ActivitiesApplicationsList.jsx`,
+`Calendar.jsx`, `SimplePlanning.jsx`, `RawPlanning.jsx`.
 
-`config/locales/fr.yml` (added by feature/i18n-06-parameters-lot-a — `parameters` lot A, the
-settings-index ERB) — preserved verbatim from `app/views/parameters/index.html.erb`:
-- `views.parameters.index.edit` — "Editer" → "Éditer" (missing accent on the leading "E"). Same
-  defect class as the activities lot-1 `views.activity_ref.edit.heading` = "Editer l'activité …"
-  entry above. Kept verbatim; the English side reads "Edit" (correct as-is).
-
-`frontend/locales/fr/parameters.json` (added by the same lot — new `parameters` namespace, the
-settings-screen tab labels; 28 leaves) — preserved verbatim from the `parameters/*Parameters.jsx`
-components:
-- `payments.tabs.paymentMethods` — "Moyens de paiements" → "Moyens de paiement" (number agreement:
-  the complement "de paiement" stays singular). The correct form already exists in this repo at
-  `config/locales/fr.yml` `views.payment_method.index.heading` = "Moyens de paiement". Kept
-  verbatim (different file / earlier lot, so the lot-internal unification rule does not apply);
-  the English side reads "Payment methods". Fold into the eventual cleanup pass.
-
-Noted, not logged as defects (acceptable French, kept as written): `practice.tabs.bandTypes` =
-"Type de groupes" and `practice.tabs.roomOptions` = "Option des salles" pair a singular head noun
-with a plural complement — idiomatic enough as "the type of groups" / "the [set of] room options",
-so preserved without change.
-
-Possible dead code (do not delete — "log, don't delete on looks-dead"): `parameters/Rooms/RoomsParameters.jsx`
-is not mounted by any core view (`parameters/rooms_parameters/index.html.erb` mounts
-`parameters/Rooms/Localisations` directly). Its only lot-A key, `parameters:rooms.tabs.siteList`,
-is therefore exercised only by the parity test, never rendered in-app. A plugin could still mount
-it via prepended routes. Candidate for the dead-code list alongside `planning/activity_management/`
-and `TeachersEditor`.
-
-`frontend/locales/fr/parameters.json` (added by feature/i18n-06-parameters-lot-b — `parameters`
-lot B, the `Practice/*` CRUD tables: `BandsType`, `Features`, `FlatRate`, `Groups`, `Instruments`,
-`Materials`, `MusicGenres`) — preserved verbatim from `frontend/components/parameters/Practice/*.jsx`:
-- `practice.cols.active` = "Actif ?" vs `practice.cols.activeMaterials` = "Est Actif ?" — the same
-  boolean column is headed two different ways (`Materials.jsx` = "Est Actif ?", the other three
-  tables = "Actif ?"). Both kept verbatim; the English side unifies both to "Active?". Flag for
-  the cleanup pass — pick one FR form for all four.
-- `practice.cols.hoursCount` = "Nombre d'heure" (`FlatRate.jsx`) → should be "Nombre d'heures"
-  (plural). Preserved verbatim; English reads "Number of hours".
-- Not a defect, noted: the delete-confirm swal buttons are lowercase "oui"/"non"
-  (`practice.delete.confirmYes`/`confirmNo`) while the table cells are capitalised "Oui"/"Non"
-  (`practice.yes`/`practice.no`). Kept as two separate key pairs, each verbatim.
-
-CODE bug, note only (out of i18n scope): `Materials.jsx` "Est Actif ?" column has
-`accessor: d => d.name` where it means `d => d.active`. The `Cell` renderer reads
-`props.original.active` so the displayed value is correct, but sorting/filtering that column
-operates on the name field and is broken. Pre-existing — not introduced by lot B.
-
-`frontend/locales/fr/parameters.json` (added by feature/i18n-06-parameters-lot-c — `parameters`
-lot C, the `Payments/*` components: `PaymentsMethods`, `PaymentsStatus`, `Coupons`,
-`CouponFormContent`, `AdhesionSettings`, `AdhesionEditModal`, `EditPaymentScheduleOptions`) —
-preserved verbatim from `frontend/components/parameters/Payments/*.jsx`:
-- `payments.status.deleteConfirm` — "Voulez-vous vraiment supprimer le **status** '…' ?" →
-  "le **statut**" (anglicism; French is "statut"). Preserved verbatim from `PaymentsStatus.jsx`;
-  the English side reads "status" (correct as-is).
-- `payments.adhesion.deleteImpossibleText` — two defects in one string, from `AdhesionSettings.jsx`:
-  "ne **peux** être supprimé" → "ne **peut**" (wrong conjugation), and "un **réglement**" →
-  "un **règlement**" (missing accent / wrong accent). Preserved verbatim; the English side
-  ("… cannot be deleted because it is already used in a payment.") is clean.
-- `payments.adhesion.cols.labels` = "Libellés" (plural, `AdhesionSettings.jsx` ReactTable header)
-  vs `payments.cols.label` = "Libellé" (singular, `PaymentsMethods`/`PaymentsStatus` header) —
-  same concept, two different columns in two different components, each kept verbatim. English
-  unifies to "Labels" / "Label". Flag for the cleanup pass.
-
-Not a defect, noted: `payments.adhesion.modal.seasonLabel` = "Par défaut pour la saison :" (form
-`<label>`, trailing " :") vs `payments.adhesion.cols.defaultForSeason` = "Par défaut pour la
-saison" (ReactTable column header, no colon) — different UI elements, both verbatim.
-
-CODE bug, note only (out of i18n scope): `AdhesionSettings.jsx` second `useEffect` — the
-`!response.ok` branch calls `swal({ …, icon: 'error' })` while every other swal in the file uses
-`type: 'error'`. This app's sweetalert2 is pinned at `^7.26.11` (`icon:` replaced `type:` only in
-sweetalert2 v9), so v7 ignores `icon:` and that one error dialog renders without its error
-styling. Pre-existing — not introduced by lot C.
-
-Not i18n, but touched next to the lot-C `columns` prop: `AdhesionSettings.jsx`'s `<ReactTable>`
-(the inline one, not via `parameters/BaseDataTable`) passes no `previousText`/`nextText`/
-`loadingText`/`noDataText`/`pageText`/`ofText`/`rowsText`, so react-table's English defaults ("No
-rows found", "Page", "of", "rows") render inside the otherwise-French UI. `parameters/BaseDataTable.jsx`
-and `userPayments/PaymentsSummary.jsx` both pass the `common:reactTable.*` set — this table is the
-odd one out. A one-line fix when the persisted-default question below is settled.
-
-Persisted data default is now locale-dependent (added by lot C): `AdhesionSettings` /
-`AdhesionEditModal.jsx` — `initialValues.label = (adhesion || {}).label || t("payments.adhesion.modal.defaultLabel")`.
-If the admin leaves the Name field untouched, that value is POSTed to `/adhesion-prices` and
-stored, so an EN-locale admin creates a row literally labelled "Default price" (FR: "Prix par
-défaut") that every user then sees. No backend code matches the literal `"Prix par défaut"` (grep
-of `app/ lib/ db/ config/`), so nothing breaks — but this is a UI-string-as-data decision that
-should be an explicit default on the server, not a client i18n key. Flag for the cleanup.
-
-`frontend/locales/fr/parameters.json` (added by feature/i18n-06-parameters-lot-d — `parameters`
-lot D, the `ActivityApplications/*` components: `ApplicationParameters`,
-`ApplicationStepParameters`, `ConsentDocumentModal`, `ConsentDocumentsList`,
-`ApplicationStatusTable` + 1 ERB) — preserved verbatim from
-`frontend/components/parameters/ActivityApplications/*.jsx`:
-- `activityApplications.consentModal.title` — "**Edition** d'un document de consentement" →
-  "**Édition**" (missing accent). Preserved verbatim from `ConsentDocumentModal.jsx`; the English
-  side ("Editing a consent document") is clean.
-- `activityApplications.consentList.deleteError` — "Erreur lors de la **suppresion**" →
-  "**suppression**" (missing an `s`). Preserved verbatim from `ConsentDocumentsList.jsx`; the
-  English side ("Error while deleting") is clean.
-- `activityApplications.statusTable.deleteConfirm` — "Voulez-vous vraiment supprimer le
-  **status** '{{name}}' ?" → "le **statut**" (anglicism; French is "statut"). Preserved verbatim
-  from `ApplicationStatusTable.jsx`; the English side ("… delete the status '{{name}}'?") is
-  correct as-is. This string is **identical** to `payments.status.deleteConfirm` (lot C) — two
-  copies of the same sentence under two different sections, kept separate rather than
-  cross-referencing a `payments.*` key from an `activityApplications` component. Fold both into
-  `shared.*` in the cleanup pass.
-- `activityApplications.consentModal.requiredError` = "requis" (lowercase, bare) — a
-  react-final-form `validate` return value from `ConsentDocumentModal.jsx`, not a sentence.
-  Verbatim; English "required".
-- `shared.colLabel` (lot D, ReactTable header "Libellé" in `ApplicationStatusTable.jsx`)
-  duplicates `payments.cols.label` (lot C) — both "Libellé" / "Label". Same cleanup note as the
-  lot-C `cols.label` / `adhesion.cols.labels` entry: consolidate in the cleanup pass.
-
-Not a defect, noted: `activityApplications.settings.enableLabel` — the source JSX in
-`ApplicationParameters.jsx` renders " Activer" with a leading space from indentation; stored as
-"Activer" (insignificant whitespace dropped). English "Enable".
-
-Incidental fix, recorded not as a defect: `ApplicationParameters.jsx` previously returned a
-hardcoded English `<div>Loading...</div>` in its loading branch, which showed literally
-"Loading..." even in FR mode. Lot D swaps it for `t("common:loading")` → "Chargement..." (FR) /
-"Loading..." (EN). Same class as the earlier `reactTable` "Précedent" → "Précédent" incidental
-fix — an English string corrected in FR mode, not a regression.
-
-Pre-existing code bug **fixed in lot D**: `ApplicationStepParameters.jsx` first `useEffect`
-`.error(err => { swal("…", res.error, "error") })` referenced an unbound `res` (the parameter is
-named `err`), so a real load error threw `ReferenceError` instead of showing the swal. The qa
-pass surfaced it while covering the now-translated string; `res.error` → `err.error` on that one
-line (the sibling `.error(res => …)` callbacks already name their param `res`).
-
-The 4 scaffold ERBs `app/views/parameters/activity_application_parameters/{edit,show,update,destroy}.html.erb`
-are Rails-generated English placeholders ("Find me in app/views/…") and are deliberately left
-unextracted, like the payments lot-1 scaffold error blocks.
-
-Frozen-at-mount `t` (same class as the `ActivityRefBasics.fetchSeasonsAndPricings` entry above,
-equally benign — locale switch is a full server reload): the `useTranslation` `t` captured by the
-mount-time api callbacks in `ApplicationParameters.jsx` (`useEffect` `.error`),
-`ApplicationStepParameters.jsx`, and `ConsentDocumentsList.jsx` (`fetchDocuments` / `handleMoveUp`
-/ `handleMoveDown` `.error` closures) won't follow a later in-page `changeLanguage`. Note the
-contrast: `ApplicationStatusTable.jsx` rebuilds its `columns` (and their `Header`/`Cell` `t(…)`)
-inside `render()`, so it is **not** affected.
-
-`ConsentDocumentModal.jsx` had `aria-label="Close"` hardcoded (English, in an otherwise-French
-modal) and no react-modal `contentLabel` (runtime warning). Lot D extracted the `aria-label` to a
-new `common:actions.close` ("Fermer" / "Close") and set `contentLabel` to the modal's own title
-key. Recorded because it is a behaviour change (accessible name now localised) beyond a plain
-string swap.
-
-`frontend/locales/fr/parameters.json` + `config/locales/{fr,en}.yml` (added by
-feature/i18n-06-parameters-lot-e — `parameters` lot E, the leaf components under `Plannings/`,
-`Evaluations/`, `Rooms/`, `Localization/`, `Activities/`: `SchoolAvailabilities`,
-`TeacherAvailabilities`, `CancelActivityParameters`, `PlanningDisplayParameters`,
-`EvaluationLevels`, `EvaluationSlot`, `Localisations`, `LocalizationParameters`,
-`PricingCategoriesEdit`, `PricingCategoryFormContent` + 3 tab/index ERBs). Preserved verbatim:
-
-- **`evaluations.levels.deleteConfirm` — user-facing WRONG NOUN, higher priority than a typo.**
-  "Voulez-vous vraiment supprimer **l'instrument** '{{name}}' ?" in the evaluation-levels delete
-  dialog (`EvaluationLevels.jsx`) — this table manages evaluation levels, not instruments; the
-  string is a copy-paste from the instruments table (`practice.delete.instrument` is the same
-  sentence). Preserved verbatim in FR **and mirrored in EN** ("Do you really want to delete the
-  instrument '{{name}}'?") so the two locales stay in step. This one should be **corrected**
-  (FR → "…supprimer le niveau d'évaluation '…' ?", EN → "…delete the evaluation level '…'?") in
-  the cleanup pass, not merely normalised.
-- `evaluations.levels.colCanContinue` — "Peut **continue** ?" → "Peut **continuer** ?" (missing
-  final `r`). ReactTable header from `EvaluationLevels.jsx`. Preserved verbatim; EN side
-  ("Can continue?") is clean.
-- `evaluations.slot.loadingTitle` — "**chargement...**" (lowercase `c`, no accent, trailing
-  `...`). A sweetalert2 loading-title from `EvaluationSlot.jsx`. Preserved verbatim; note the
-  inconsistency with the sentence-case swal titles elsewhere in the same file
-  ("Enregistrement effectué", "Une erreur est survenue"). EN "loading...".
-- `plannings.schoolAvailabilities.hint` — "(**si il** y en a, …)" → "(**s'il** y en a, …)"
-  (elision). Preserved verbatim from `SchoolAvailabilities.jsx`; EN side is clean.
-
-Three "save" verbs now coexist in this namespace, all verbatim from different components — a
-consolidation candidate for the cleanup pass:
-- `common:actions.save` = "Enregistrer" (`EvaluationSlot.jsx` submit, `LocalizationParameters.jsx`
-  submit).
-- `common:actions.validate` = "Valider" (used as a **save** button in `CancelActivityParameters.jsx`
-  and `PlanningDisplayParameters.jsx`).
-- `shared.saveButton` = "Sauvegarder" (`TeacherAvailabilities.jsx` submit) — kept as its own key
-  because the source really uses a third verb here.
-
-Duplicate keys promoted / to be folded in the cleanup pass:
-- `shared.colName` = "Nom" (lot E) duplicates `practice.cols.name` (lot B) — both "Nom" / "Name".
-- `shared.loadParamsError` / `shared.saveSuccess` / `shared.saveError` (lot E) are the same
-  strings as `activityApplications.settings.{loadError,saveSuccess,saveError}` (lot D) —
-  "Erreur lors du chargement des paramètres" / "Sauvegarde effectuée" / "Erreur lors de la
-  sauvegarde". Lot E promotes them to `shared.*`; the lot-D copies are left in place until the
-  cleanup pass migrates lot B's `practice.cols.name` and lot D's `settings.*` onto `shared.*`.
-
-Incidental fix, recorded not as a defect: `LocalizationParameters.jsx` previously returned a
-hardcoded English `<div>Loading...</div>` in its loading branch (showed literally "Loading..."
-even in FR mode). Lot E swaps it for `t("common:loading")` → "Chargement..." (FR) / "Loading..."
-(EN). Same class as the lot-D `ApplicationParameters.jsx` incidental fix.
-
-Not a defect, noted so a later reader does not "fix" it: `LOCALE_LABELS = {fr: "Français",
-en: "English"}` in `LocalizationParameters.jsx` is left hardcoded — these are language endonyms
-(each language's name for itself), not translatable UI copy.
-
-`config/locales/{fr,en}.yml` — 3 new `views.parameters.*` index blocks, verbatim from the ERB
-headings: `planning_parameters.index.heading` "Paramétrage du planning" / "Schedule settings";
-`rooms_parameters.index.heading` "Liste des sites" / "List of locations" +
-`rooms_parameters.index.new_site` "Créer un nouveau site" / "Create a new location";
-`localization_parameters.index.heading` "Langues" / "Languages". All clean, no defects.
-
-Traceability — extraction-script bug caught in review: the lot-E commit's `parameters.json` edit
-`replace`d the whole `plannings` and `evaluations` objects (same class of bug as lot C's
-`payments` replacement), dropping lot A's `plannings.tabs.*` (4) and `evaluations.tabs.*` (2).
-`PlanningsParameters.jsx` / `EvaluationsParameters.jsx` (lot A, merged) still call
-`t("plannings.tabs.*")` / `t("evaluations.tabs.*")` for their tab labels. Restored verbatim from
-lot A in **both** locales during the lot-E translation pass (fr: "Disponibilité de l'école" /
-"Professeurs" / "Annulation des cours" / "Paramètres d'affichage" / "Niveaux d'évaluation" /
-"Créneau d'évaluation"). Final leaf count 172, not 166. **Do not use `d["<section>"] = OrderedDict(...)`
-to add keys to an existing namespace section — merge into it.**
-
-The scaffold-style standalone `*_parameters_edit.html.erb` (`school`, `teachers`, `rules`, `mails`,
-`csv`, `formules`) and the `frontend/components/editParameters/*` React subtree they mount were
-scoped OUT of lot E — they are a distinct area (advanced-settings screens), deferred to a
-follow-up "parameters lot E2 / editParameters" pass. Their `<h2>`/`<h1>` page headings
-("Paramétrage des droits des professeurs", "Règlement intérieur", "Paramètres avancés : Mails",
-"Paramètres avancés : Exports CSV", "Paramètres : Formules", "Pas de nom" fallback) remain in FR.
-
-`frontend/locales/fr/parameters.json` + `config/locales/{fr,en}.yml` (added by
-feature/i18n-06-parameters-lot-e2 — `parameters` lot E2, the advanced-settings screens under
-`frontend/components/editParameters/`: `CsvSettings`, `MailSettings`, `RulesSettings`,
-`TeachersParameters`, `DragAndDrop` + the 6 `*_parameters_edit.html.erb` page headings). New
-`parameters:editParameters.*` subtree (+49 leaves → `parameters.json` 221/221). Preserved verbatim:
-
-- `editParameters.mail.saveSuccessTitle` = "**Success**" and `editParameters.mail.errorTitle` =
-  "**Error**" — the sweetalert2 titles in `MailSettings.jsx` are written in **English in the
-  French source**, while the sibling `CsvSettings.jsx` right next to it uses "Succès" / "Erreur"
-  for the exact same success/error dialogs. Preserved verbatim; the EN values are identically
-  "Success" / "Error", so no visible EN effect, but the FR side shows English words. Cleanup
-  candidate: align `MailSettings` on "Succès" / reuse `shared.errorTitle` ("Erreur").
-- `editParameters.mail.smtpAddressRequired` = "L'adresse **smtp** est requise" — lowercase "smtp"
-  in the validation message while the field label (`smtpAddressLabel`) writes "Adresse **SMTP**:".
-  Preserved verbatim; EN side ("The SMTP address is required") is clean. → right: "L'adresse SMTP
-  est requise".
-- `editParameters.mail.genericError` = "Une erreur est survenue**,** **contactez** un
-  administrateur" (comma + lowercase c) is a near-duplicate of `shared.genericError` = "Une erreur
-  est survenue**.** **Contactez** un administrateur" (period + capital C), which `CsvSettings.jsx`
-  reuses for the same error dialog. `MailSettings.jsx` got its own `editParameters.mail.genericError`
-  key **only because the punctuation/casing differs** in the source. Preserved verbatim on both
-  sides; consolidate onto `shared.genericError` in the cleanup pass.
-- `editParameters.rules.loadingTitle` = "**chargement...**" (lowercase c, no accent, trailing
-  `...`) — sweetalert2 loading-title in `RulesSettings.jsx`. Same defect already logged for
-  `evaluations.slot.loadingTitle` (lot E); this is a recurring pattern across the codebase's swal
-  loaders. Preserved verbatim; EN "loading...".
-- `editParameters.dragAndDrop.tooManyFiles` = "**un** seul fichier autorisé" (lowercase start, no
-  final period) vs the sibling `editParameters.dragAndDrop.invalidType` = "**T**ype de fichier non
-  autorisé" (capitalised) — both are `div.innerHTML =` assignments in the same
-  `handleDropRejected` in `DragAndDrop.jsx`. Preserved verbatim; EN side ("only one file allowed"
-  / "File type not allowed") mirrors the casing split. → right: "Un seul fichier autorisé".
-
-Not logged as typos, noted for the cleanup pass: the `MailSettings.jsx` field labels omit the
-French space before `:` ("Adresse SMTP:", "Port SMTP:", "Authentification:", "Identifiant:", …) —
-preserved verbatim; the repo standard is a space before `:`. `editParameters.rules.urlLabel` =
-"Renseigner l'url" and `editParameters.rules.pdfLabel` = "Ajouter un pdf" keep the source's
-lowercase "url" / "pdf" (EN side normalises to "URL" / "PDF").
-
-Reuse confirmed (no new key added): `shared.errorTitle` ("Erreur") by `CsvSettings` +
-`TeachersParameters`; `shared.genericError` by `CsvSettings`; `shared.saveButton` ("Sauvegarder")
-by `TeachersParameters`; `common:actions.save` ("Enregistrer") by the 3 submit `<input value>`s
-in `CsvSettings` / `MailSettings` / `RulesSettings`.
-
-ERB headings — 6 new `views.parameters.*` keys, verbatim from the `<h1>`/`<h2>` in the
-`*_parameters_edit.html.erb` scaffolds (fr / en):
-`school_parameters.edit.no_name` "Pas de nom" / "No name" (the `@school_informations&.name ||`
-fallback); `teachers_parameters.edit.heading` "Paramétrage des droits des professeurs" /
-"Teacher rights settings"; `rules_parameters.edit.heading` "Règlement intérieur" /
-"Internal rules"; `mails_parameters.edit.heading` "Paramètres avancés : Mails" /
-"Advanced settings: Emails"; `csv_parameters.edit.heading` "Paramètres avancés : Exports CSV" /
-"Advanced settings: CSV exports"; `formules_parameters.edit.heading` "Paramètres : Formules" /
-"Settings: Packages". The `rules` source is `<h1>  Règlement intérieur  </h1>` with surrounding
-whitespace — stored trimmed (whitespace-only normalisation, not a content change).
-
-Scoped OUT of lot E2, deferred to lot E3: `frontend/components/editParameters/SchoolParameters.jsx`
-(306 loc — legal/fiscal identity fields, SIRET / RCS / VAT — warrants its own focused pass). Only
-its ERB fallback heading ("Pas de nom") was extracted here.
-
-`frontend/components/editParameters/FormulesParameters` is referenced by
-`app/views/parameters/formules_parameters_edit.html.erb` (`react_component "editParameters/FormulesParameters"`)
-but **the component file does not exist** under `frontend/components/editParameters/` — likely a
-dead route or a plugin-provided component (`copy_react` mirrors plugin components into
-`frontend/components/plugins/`, not here). Per the "don't delete on 500 / looks dead" rule the
-route/view was left untouched; the ERB `<h2>` heading was still extracted, the (missing) component
-was not.
-
-`frontend/components/editParameters/DragAndDrop.jsx` is a **shared** component and lot E2 makes it
-depend on the `parameters` namespace (`useTranslation("parameters")` for its own literals —
-"Sélectionner", the `handleDropRejected` messages, the "Document actuel : aucun" fallback, the img
-`alt`). It has **four** call sites across three i18n domains: `editParameters/RulesSettings.jsx`,
-`editParameters/SchoolParameters.jsx` (both `parameters`), `parameters/ActivityApplications/ConsentDocumentModal.jsx`
-(`parameters`), and `activityRef/ActivityRefBasics.jsx` (`activities` domain). Harmless today —
-`frontend/i18n/index.js` bundles every namespace eagerly — but the natural home for these strings
-is `common:`; a future lazy-namespace split would break the `activityRef` caller silently. Move to
-`common:dragAndDrop.*` in the cleanup pass. (The two `handleDropRejected` writes were also switched
-from `div.innerHTML =` to `div.textContent =` while the lines were being touched — identical output
-for these developer-authored strings, no behaviour change.)
-
-Duplicate title keys for the cleanup pass: `editParameters.csv.saveSuccessTitle` and
-`editParameters.teachers.saveSuccessTitle` are both "Succès" / "Success" — there is no
-`shared.saveSuccessTitle` yet (`shared.saveSuccess` = "Sauvegarde effectuée" is a different
-string). Add `shared.saveSuccessTitle` and collapse both (plus align `editParameters.mail.saveSuccessTitle`
-from the preserved English "Success" at the same time).
-
-`frontend/locales/fr/parameters.json` (added by feature/i18n-06-parameters-lot-e3 — `parameters`
-lot E3, `frontend/components/editParameters/SchoolParameters.jsx` alone: the school legal/fiscal
-identity form — name/email/phone, address + holiday zones, SIRET / RCS / VAT). New
-`parameters:editParameters.school.*` subtree (+34 leaves → `parameters.json` 255/255). No `.yml`
-touched (frontend-only lot). Preserved verbatim:
-
-- `editParameters.school.schoolInfoHeading` = "Informations de l'école " — **trailing space**
-  kept from the source `<h3 …>Informations de l'école </h3>`. EN "School information " carries the
-  same trailing space. Trim/normalise in the cleanup pass.
-- `editParameters.school.postalCodeLabel` = " Code Postal" — **leading space** AND "Postal"
-  capitalised mid-phrase, from `<label> Code Postal <span…`. EN " Postal code" keeps the leading
-  space (EN casing normalised to "Postal code"). This is the only "Code Postal" in the file, so
-  no unification trigger — normalise in the cleanup pass.
-- `editParameters.school.schoolHolidaysZoneLabel` = " Zone de vacances scolaires : " —
-  **leading AND trailing spaces**, from `<label> Zone de vacances scolaires : </label>`. EN
-  " School holidays zone: " mirrors both. Trim in the cleanup pass.
-- `editParameters.school.{loadingTitle,saveSuccess,genericError}` = "chargement..." /
-  "Enregistrement effectué" / "Une erreur est survenue" — the **3rd** verbatim copy of this
-  recurring sweetalert2 loader/result trio (also `editParameters.rules.*` from lot E2 and
-  `evaluations.slot.*` from lot E). "chargement..." keeps the lowercase `c` / missing accent /
-  trailing `...` defect already logged twice. Byte-identical to both prior copies on both locale
-  sides (EN "loading..." / "Save completed" / "An error occurred"). Three lots, three copies each
-  — strong candidates for `shared.{loadingTitle,saveCompleted,genericErrorShort}` in the cleanup
-  pass.
-
-Not a defect — recorded as an improvement: `editParameters.school.siretRnaError` collapses a
-sentence the source duplicated **inline twice** — a template literal in the `validate` return
-`` `…pays (${getValues("countryCode")})` `` and the same text in a `<p className="text-danger">` —
-into one interpolated key `t("editParameters.school.siretRnaError", {country: getValues("countryCode")})`
-at both call sites. `{{country}}` is a plain value (a country code string), no plural forms. FR
-value ends with " ({{country}})"; EN "The input matches neither an RNA nor your country's SIRET
-({{country}})".
-
-`editParameters.school.activitiesNotVatLabel` = "Les activités musicales <1>ne sont pas
-assujetties</1> à la TVA" is a `<Trans>` key: the source wraps "ne sont pas assujetties" in an
-inline `<u>`, and `u` is **not** in react-i18next's default `transKeepBasicHtmlNodesFor`
-(br/strong/i/p), so it serialises to the indexed `<1>…</1>` form — `<1>` must stay `<1>` in both
-locales (EN "Music activities <1>are not subject</1> to VAT"). Same pattern as the `activityRef`
-lot-2 `<Trans>` keys.
-
-Reuse confirmed (no new key added): `common:actions.save` = "Enregistrer" / "Save" for the submit
-`<input type="submit" value="Enregistrer">`.
-
-Dead code left as-is: the commented-out "Recaptcha" `<div>` block (`SchoolParameters.jsx`
-~250-258) still contains French ("Score minimum requis (optionnel)") — not extracted, not a live
-string.
-
-Pre-existing code bug, note only (surfaced by the lot-E3 test's email mock, NOT introduced here):
-`SchoolParameters.jsx` `register("email", {required: true, pattern: validateEmail})` passes a
-*function* (`tools/format.jsx` `validateEmail` is a matcher, not a RegExp) where react-hook-form's
-`pattern:` requires a RegExp — RHF's `x instanceof RegExp` guard rejects it, so the email
-format rule is a silent no-op. `required` still fires; a malformed address like `"not-an-email"`
-submits cleanly. The `emailRequired` key extraction is faithful; fixing the validation itself is
-out of i18n scope.
-
-This closes the `editParameters/*` React tree (lots E2 + E3). Remaining `parameters` work is
-lot F (`parameters_controller#set_base_parameters`), which needs a design decision on the
-`:général` / `:personnalisation` plugin symbol keys.
-
-`config/locales/{fr,en}.yml` (added by feature/i18n-06-parameters-lot-f — `parameters` lot F,
-`parameters_controller#set_base_parameters` + `app/views/parameters/index.html.erb:10`: the
-`/parameters` landing page, its 7 setting-cards and 2 section headings, all previously hardcoded
-French in the controller). New `views.parameters.index.sections.*` (2 keys) and
-`views.parameters.index.cards.<slug>.{title,text}` (7×2 keys) blocks. Preserved verbatim:
-
-- `views.parameters.index.cards.school.text` — "Définissez les informations générales de votre
-  **école:** nom, adresse postale, etc." — missing the French space before the colon;
-  right: "…de votre **école :** nom…". Preserved verbatim from `set_base_parameters`. The EN side
-  ("Set your school's general information: name, postal address, etc.") is correct as-is (no space
-  before `:` in English). Same defect class as the lot-2 `courses.json` `professeur:` /
-  `Souhaitez-vous:` entries.
-
-Not a defect — design decision recorded so a later reader does not "fix" it: the controller keeps
-the accented Ruby symbols `@parameters[:général]` / `@parameters[:personnalisation]` (not renamed
-to ASCII). `index.html.erb:10` looks them up as `t("views.parameters.index.sections.#{key}",
-default: key.to_s.humanize)` — the `default:` fallback (`"général".humanize` → "Général",
-`"personnalisation".humanize` → "Personnalisation", byte-identical to the previous bare
-`key.to_s.humanize` render, so FR output is unchanged) means any future `@parameters[:<other>]`
-section still renders even without a locale entry. Grep-confirmed that no in-repo
-plugin / hook / listener writes `@parameters`: `set_base_parameters` is its sole populator and the
-`||=` guards are defensive idiom, not a live extension point — the roadmap's earlier
-"plugin extension point" note was speculative.
-
-i18n-tasks: the `sections.#{key}` lookup is dynamic, but `bin/i18n-tasks health` still reports
-"Every translation is in use" with **no** `config/i18n-tasks.yml` change — its static scanner
-turns the `#{key}` interpolation in the scanned key into a wildcard segment and credits every key
-under `views.parameters.index.sections.*` as used. No `ignore_unused` / `ignore_missing` entry was
-needed. Post-lot health: `569` keys, `0 missing / 0 unused / 0 inconsistent interpolations`.
-
-**This completes the `parameters` domain (lots A–F).**
-
-`frontend/locales/fr/planning.json` (added by feature/i18n-06-planning-lot3c —
-`planning` domain, lot 3c, `frontend/components/planning/TimeIntervalHelpers.jsx`, a pure helper
-module that is not a component and so reads the `i18n` singleton directly:
-`import i18n from "../../i18n"` + `i18n.t("planning:…")`). Preserved verbatim:
-
-- `scheduleTitles.evaluation` — "Evaluation" — missing accent (right: "Évaluation"). Preserved
-  verbatim from the `formatIntervalsForSchedule` title literal
-  `int.is_validated ? "Evaluation" : "Dispo. Evaluation"`. Note `planning:kinds.evaluation`, a
-  different string used elsewhere, sits right next to it in the same file and *is* accented
-  ("Évaluation") — the two are not unified because they are distinct source literals from
-  distinct call paths (this policy's "two spellings in one extraction lot" clause does not apply:
-  only one of them was extracted in this lot). The sibling reused key
-  `scheduleTitles.availabilityEvaluation` = "Dispo. Evaluation" carries the same missing accent,
-  logged under lot 2b / lot 5 already. Same defect class as the `parameters`
-  `evaluations.slot.*` missing-accent copies (lots C / E).
-- `levelDisplay.notIndicated` — "NON INDIQUÉ" — all-caps, verbatim from `levelDisplay`'s
-  `return "NON INDIQUÉ"` / `|| "NON INDIQUÉ"` statements. Correctly accented; not a defect, logged
-  only because it is a raw French UI sentinel now living in the locale file. EN aligned to
-  "NOT SPECIFIED" (all-caps) to match the established renderings of the same concept in sibling
-  namespaces — `courses:lessonList.userRow.notSpecified`, `activityApplications:summaryActivity.notSpecified`
-  (both "NOT SPECIFIED"), and `planning:activityModal.toBeSpecified` ("TO BE SPECIFIED") within
-  planning's own namespace — which the very call-sites this helper feeds also render. (Initial
-  extraction wrote sentence-case "Not specified" / "To be specified"; corrected during the lot's
-  translation audit for cross-namespace consistency.)
-- `levelDisplay.toSpecify` — "À PRÉCISER" — all-caps, verbatim from `levelDisplay`'s
-  `uniqueLevels.length > 1 ? "À PRÉCISER" : …`. Correctly accented; same note as above. EN aligned
-  to "TO BE SPECIFIED". Note `planning:activityModal.toBeSpecified` (lot 5) holds the *unaccented*
-  variant "A PRECISER" from a different source literal — not unified, distinct call paths.
-- `ageYears` — fr "{{age}} ans" — was the template literal `` `${age} ans` `` in
-  `averageAgeDisplay(age)` (leading interpolation, single space, "ans"). Plain interpolated value,
-  no plural forms, so `{{age}}` (not `{{count}}`). EN "{{age}} years old" matches the established
-  `activityApplications:summaryActivity.ageYears` / `courses:lessonList.userRow.ageYears`.
-
-Design note (so a later reader does not "simplify" it): `TimeIntervalHelpers.jsx` now
-`export`s two raw-string constants — `LEVEL_NOT_INDICATED = "NON INDIQUÉ"` and
-`LEVEL_TO_SPECIFY = "À PRÉCISER"`. `levelDisplay` / `levelDisplayForActivity` keep **returning
-these raw French sentinels unchanged** so the ~6 call-site `=== "NON INDIQUÉ"` comparisons stay
-stable across locales (they were switched to `=== TimeIntervalHelpers.LEVEL_NOT_INDICATED`).
-A new `export const levelDisplayLabel(value)` maps the two sentinels to
-`i18n.t("planning:levelDisplay.{notIndicated,toSpecify}")` and passes any real level label
-through unchanged; the localization happens **only at render**. Every call-site was split into
-"compare" (use the exported constant) vs "display" (wrap the helper output in
-`levelDisplayLabel(...)`). Touched files:
-
-- `frontend/components/planning/TimeIntervalHelpers.jsx` — the two title literals + `averageAgeDisplay`
-  + the new `LEVEL_*` constants + `levelDisplayLabel`.
-- `frontend/components/activityApplications/summary/Activity.jsx` — `LevelCell`: the 2
-  `|| 'NON INDIQUÉ'` seeds, the `=== 'NON INDIQUÉ'` check, the `<>{studentLevel}</>` fallthrough
-  (now `levelDisplayLabel(studentLevel)`), and the react-table `level` accessor.
-- `frontend/components/courses/LessonList.jsx` — `displayLevel()`'s `===` guards and the
-  react-table `level` Cell.
-- `frontend/components/ActivitiesApplicationsList.jsx`, `frontend/components/planning/Calendar.jsx`,
-  `frontend/components/planning/SimplePlanning.jsx`, `frontend/components/planning/RawPlanning.jsx`
-  — import-path / call-site follow-through.
-
-`frontend/components/planning/TimeInterval.jsx` was **left untouched**: its `levelDisplay()`
-method is a stub (`return "Banana";`, the rest commented out) and it carries its own separate
-hardcoded `` `${averageAge} ans` `` (~line 111). Broken legacy component — flagged for a future
-pass, not extracted here (don't-delete / don't-touch-on-looks-dead).
-
-`frontend/tools/constants.js` `KINDS_LABEL` (`"Disponibilité"` / `"Evaluation"` / `"Cours"` /
-`"Option"`, consumed by `KindLegend.jsx` / `AvailabilityInput.jsx`) still duplicates these
-strings — that belongs to the separate "constants i18n" pass already logged, not to this lot.
-**Newly-visible consequence** of lot 3c: `SimplePlanning.jsx` renders `<KindLegend>` right below
-the level line this lot localized (`SimplePlanning.jsx:127`), so in EN that screen now shows
-"NOT SPECIFIED" above a legend still reading "Evaluation / Cours / Option". Same for
-`ActivitiesApplicationsList.jsx` — its level cell is localized here but its column headers
-("Niveau", "Âge", "Activité") are still hardcoded French. Both are for the constants / that
-component's own extraction pass, but the mixed-language render is a lot-3c side effect.
-
-Pre-existing dead guard, note only (lot 3c edited the exact lines but did not introduce the bug):
-`courses/LessonList.jsx` `UserRow` seeds `studentLevel` from
-`data.evaluation_level_ref.label`, but `desired_activity_controller.rb:92` renders
-`evaluation_level_ref` as a bare **string** (`level&.evaluation_level_ref&.label`), so `.label`
-on it is `undefined` and `studentLevel` is only ever `null`/`undefined` — the
-`studentLevel === LEVEL_NOT_INDICATED` guard and the `if (studentLevel) return studentLevel`
-branch are both unreachable, and every row falls through to the `levelDisplayForActivity`
-recompute. `Activity.jsx:44` handles the same endpoint correctly (`response?.data?.evaluation_level_ref`
-with no `.label`). Fix `LessonList` to match; out of scope for a `TimeIntervalHelpers` lot.
-
-**This is the last i18n-06 lot — the i18n-06 rollout is functionally complete.**
+`frontend/components/planning/TimeInterval.jsx` was left untouched by lot 3c: its `levelDisplay()`
+method is a stub (`return "Banana";`, the rest commented out) and it has its own separate hardcoded
+`` `${averageAge} ans` ``. Broken legacy component, not extracted (don't-delete-on-looks-dead).
 
 ## `frontend/components/common/baseDataTable/BaseDataTable.jsx` — hardcoded French chrome leaks into English
 
@@ -1514,19 +700,3 @@ within one page load, and `Coupons` passes `showFullScreenButton={false}`, so im
 
 This whole component wants its own extraction pass (a `common:` namespace + `useTranslation` for
 the fn body); it was out of scope for every lot that fed it a translated resource name.
-
-Cross-lot duplication (flag for the eventual cleanup pass): lot C added a top-level `shared.*`
-block — `shared.{actions,yes,no,errorTitle,deleteConfirmYes,deleteConfirmNo,genericError}` — for
-the cross-section atoms in `Payments/*`. These duplicate lot B's `practice.{cols.actions,yes,no,
-errorTitle,delete.confirmYes,delete.confirmNo}`, which were scoped under `practice.*` before a
-shared block existed. The lot-B keys should migrate to `shared.*` in the cleanup so both lots
-resolve the same atoms from one place.
-
-Not a preserved typo — recorded for traceability: the lot-C extraction commit initially dropped
-the five `payments.tabs.*` keys (lot A) from `frontend/locales/fr/parameters.json` when it
-replaced the `payments` block; `PaymentsParameters.jsx` still calls `t("payments.tabs.*")` for its
-tab labels and `en/parameters.json` still carried them, so this was a parity break. Restored
-verbatim from lot A during the lot-C translation audit ("Adhésion" / "Moyens de paiements" /
-"Catégories de prix" / "Modalités de paiement" / "Taux de remise"). The pre-existing
-`payments.tabs.paymentMethods` = "Moyens de paiements" number-agreement defect (logged under lot A
-above) is carried through unchanged.
