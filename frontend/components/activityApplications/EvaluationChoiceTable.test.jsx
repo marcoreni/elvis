@@ -44,6 +44,8 @@ describe("EvaluationChoiceTable", () => {
             screen.getByText("Créneaux d'évaluation sélectionnés pour Piano")
         ).toBeInTheDocument();
         expect(screen.getByText("Choix n°1")).toBeInTheDocument();
+        // The slot's weekday cell comes from WEEKDAYS (tools/constants) — 2025-09-01 is a Monday.
+        expect(screen.getByText("Lundi")).toBeInTheDocument();
     });
 
     test("renders the English header + choice badge after switching to en", async () => {
@@ -54,6 +56,8 @@ describe("EvaluationChoiceTable", () => {
             screen.getByText("Selected evaluation slots for Piano")
         ).toBeInTheDocument();
         expect(screen.getByText("Choice no. 1")).toBeInTheDocument();
+        // WEEKDAYS follows the active language since constants-i18n lot 1.
+        expect(screen.getByText("Monday")).toBeInTheDocument();
     });
 
     test("a null timeInterval row falls back to the translated no-slot message", async () => {

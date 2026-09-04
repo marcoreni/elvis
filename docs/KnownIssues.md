@@ -934,15 +934,25 @@ the **constructor**, so it's frozen at construct time and won't follow a later `
 generalPayments/`planning/Calendar.jsx` frozen-header notes above). The 12 react-table column
 headers are fine — they're rebuilt inside `render()`.
 
-## `frontend/tools/constants.js` — hardcoded French `WEEKDAYS` / `MONTHS` / `MESSAGES` leak into English mode
+## `frontend/tools/constants.js` — hardcoded French `MESSAGES` leak into English mode (`WEEKDAYS` / `MONTHS` resolved)
 
 Surfaced during the i18n-06 `courses` lot 1 extraction (`AddCourse.jsx`, `AddCourseSummary.jsx`,
 `AddActivityForCourse.jsx`). These modules were switched to `t()` for their own copy, but they
-still read three shared French-only constants that were left as-is:
+still read shared French-only constants that were left as-is:
 
-- `WEEKDAYS` / `MONTHS` (`tools/constants.js`) — French day/month name arrays. `AddCourseSummary.jsx`
+- ~~`WEEKDAYS` / `MONTHS` (`tools/constants.js`) — French day/month name arrays. `AddCourseSummary.jsx`
   builds its slot line from them, so in English the recap reads e.g.
-  `Lundi 16 Juin 2025 from 08h00 to 09h00`.
+  `Lundi 16 Juin 2025 from 08h00 to 09h00`.~~ **Resolved — constants-i18n lot 1**
+  (`feature/i18n-constants-lot1-dates`): the two arrays moved to `common:weekdays` /
+  `common:months` (7 / 12 entries, Sunday-indexed; FR copied verbatim from the old
+  `constants.js` arrays, EN added). `constants.js` now re-exports `WEEKDAYS` / `MONTHS` as
+  `export let` live bindings that a `languageChanged` handler re-reads from the `common`
+  bundle, so day/month names follow the active UI language for every consumer that re-renders.
+  Two consumers with no i18n subscription of their own — `activityApplications/ItemPreferences.jsx`
+  and `availability/AvailabilityList.jsx` — won't repaint on an in-page `changeLanguage` unless a
+  subscribed ancestor happens to re-render (same class as the frozen-header notes above; harmless
+  today since the locale switch is a full server reload, and both files are queued for a later
+  extraction lot anyway).
 - `MESSAGES.err_data_missing` ("Impossible de continuer, des données obligatoires sont manquantes.")
   — toasted from `AddCourse.jsx`.
 - `MESSAGES.err_must_choose_activity` ("Veuillez choisir une activité avant de continuer.") —
@@ -952,8 +962,27 @@ still read three shared French-only constants that were left as-is:
 
 `tools/constants.js` is imported from many components across the app, so this is a cross-cutting
 pass in its own right (a `common:` namespace + a `useTranslation`/prop for the class consumers),
-not something to fix piecemeal inside one domain lot. Left verbatim for now; logged here so a
-later "constants i18n" lot picks them all up together. Grep: `from "../../tools/constants"`.
+not something to fix piecemeal inside one domain lot. `WEEKDAYS` / `MONTHS` were done as
+constants-i18n lot 1 (see above). The `MESSAGES.*` toasts here are still verbatim, left for a
+later constants-i18n lot (2–4) together with `API_ERRORS_MESSAGES`, `KINDS_LABEL`,
+`PRE_APPLICATION_ACTION_LABELS` and `RECURRENCE_TYPES`. Grep: `from "../../tools/constants"`.
+
+## `frontend/tools/format.jsx` — `toFullDateFr` renders the month off by one
+
+Pre-existing (not i18n), spotted during constants-i18n lot 1 review. `toMonthName`
+(`format.jsx:37`) is 1-based (`date.setMonth(parseInt(month, 10) - 1)`), but `toFullDateFr`
+(`format.jsx:87`) feeds it a 0-based `getMonth()`:
+
+```js
+`${WEEKDAYS[tmpDate.getDay()]} ${tmpDate.getDate()} ${toMonthName(tmpDate.getMonth())} ${tmpDate.getFullYear()}`
+```
+
+So `toFullDateFr(new Date(2026, 0, 12))` → "Lundi 12 décembre 2026" instead of "…janvier…";
+every month is off by one (January wraps to December of the same year). `toMonthName` itself is
+correct — `WeekSelector.jsx:36` passes it a 1-based month. The only broken caller is this one.
+User-visible in the create-activity modal date header (`planning/CreateActivityModal.jsx:67,112`).
+Fix: `toMonthName(tmpDate.getMonth() + 1)`. `constants.test.js` / `format.test.js` deliberately
+assert only the weekday token of `toFullDateFr` output so as not to pin the bug.
 
 ## `parameters` domain (i18n-06) — French source strings preserved verbatim
 

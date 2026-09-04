@@ -8,7 +8,9 @@
 // frontend/i18n/index.js singleton with i18n.changeLanguage(...); no <I18nextProvider> needed
 // because the singleton is wired through initReactI18next.
 //
-// The component pulls WEEKDAYS / MONTHS from tools/constants (always French, not i18n) and reads
+// The component pulls WEEKDAYS / MONTHS from tools/constants — since the constants-i18n pass these
+// follow the active UI language (sourced from the `common` namespace), so the recap slot line
+// reads "Lundi ... Juin" in fr and "Monday ... June" in en. It also reads
 // `firstDayStartTime._d.getDate()` etc. plus `firstDayStartTime.format(...)` — a plain stub with
 // a `_d` Date and a `format` fn is enough, no moment dependency needed here.
 
@@ -17,8 +19,8 @@ import {render, screen} from "@testing-library/react";
 import i18n from "../../i18n";
 import AddCourseSummary from "./AddCourseSummary";
 
-// 2025-06-16 is a Monday -> WEEKDAYS[dayOfWeek % 7] === WEEKDAYS[1] === "Lundi",
-// MONTHS[5] === "Juin".
+// 2025-06-16 is a Monday -> WEEKDAYS[dayOfWeek % 7] === WEEKDAYS[1] === "Lundi" / "Monday",
+// MONTHS[5] === "Juin" / "June".
 const timeStub = (hour, minute) => ({
     _d: new Date(2025, 5, 16, hour, minute, 0),
     format: () => `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`,
@@ -52,6 +54,8 @@ describe("AddCourseSummary", () => {
         expect(screen.getByText("Salle")).toBeInTheDocument();
         // summary.timeFrom ("de") + summary.timeTo ("à") inside the split slot line.
         expect(screen.getByText(/de 08h00 à 09h00/)).toBeInTheDocument();
+        // WEEKDAYS / MONTHS now follow the locale: French day + month names in the recap line.
+        expect(screen.getByText(/Lundi 16 Juin 2025/)).toBeInTheDocument();
     });
 
     test("renders the English section labels when the active language is en", async () => {
@@ -67,5 +71,7 @@ describe("AddCourseSummary", () => {
         expect(screen.getByText("Room")).toBeInTheDocument();
         // summary.timeFrom ("from") + summary.timeTo ("to").
         expect(screen.getByText(/from 08h00 to 09h00/)).toBeInTheDocument();
+        // WEEKDAYS / MONTHS now follow the locale: English day + month names in the recap line.
+        expect(screen.getByText(/Monday 16 June 2025/)).toBeInTheDocument();
     });
 });

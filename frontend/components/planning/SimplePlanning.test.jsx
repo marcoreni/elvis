@@ -87,6 +87,8 @@ describe("SimplePlanning", () => {
         expect(screen.getByText(/0\/8 élèves/)).toBeInTheDocument();
         expect(screen.getByText("EVAL")).toBeInTheDocument();
         expect(screen.getByText("Lire auto-évaluation")).toBeInTheDocument();
+        // Day-column <h4> header uses WEEKDAYS[day] (tools/constants) — key "1" -> WEEKDAYS[1].
+        expect(screen.getByText(/Lundi/)).toBeInTheDocument();
     });
 
     test("threads t into SimpleActivity and SimpleEvaluation (English)", async () => {
@@ -96,5 +98,7 @@ describe("SimplePlanning", () => {
         expect(screen.getByText(/0\/8 students/)).toBeInTheDocument();
         expect(screen.getByText("EVAL")).toBeInTheDocument();
         expect(screen.getByText("Read self-assessment")).toBeInTheDocument();
+        // WEEKDAYS follows the active language since constants-i18n lot 1.
+        expect(screen.getByText(/Monday/)).toBeInTheDocument();
     });
 });

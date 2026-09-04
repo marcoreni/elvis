@@ -6,7 +6,7 @@ import { withTranslation } from "react-i18next";
 const moment = require("moment");
 
 import { getSeasonFromDate } from "./TimeIntervalHelpers";
-import { RECURRENCE_TYPES, WEEKDAYS } from "../../tools/constants";
+import { RECURRENCE_TYPES } from "../../tools/constants";
 import { toFullDateFr, toLocaleDate } from "../../tools/format";
 import Checkbox from "../common/Checkbox";
 

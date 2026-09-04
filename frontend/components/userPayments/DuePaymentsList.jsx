@@ -11,7 +11,6 @@ import BulkEditModalAlert from "../utils/alerts/BulkEditModalAlert";
 import swal from "sweetalert2";
 import { withTranslation } from "react-i18next";
 import { Fragment } from "@fullcalendar/react";
-import { MONTHS } from "../../tools/constants";
 
 class DuePaymentsList extends React.Component {
     constructor(props) {
