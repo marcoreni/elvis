@@ -240,19 +240,21 @@ from inside a commented-out JSX block, so it never rendered — no plugin risk o
   outlives a locale change. Fix (if it ever matters) = destroy + recreate the tui-calendar
   instance on `languageChanged`.
 
-## `planning/practice_planning/PracticePlanning.jsx` — FullCalendar `locale="fr"` is inert
+## `PracticePlanning.jsx` — the `buttonText.today` override is now redundant
 
-Noted 2026-08-30 (i18n-06 lot 6). `PracticePlanning` passes `locale="fr"` to `<FullCalendar>`,
-but **no FullCalendar locale data is imported anywhere** (`@fullcalendar/core/locales/fr` /
-`locales-all` — grep is empty). So `queryLocale(["fr"])` falls back to the built-in English
-locale table: month/day names and the toolbar title still render French (those go through
-`Intl.DateTimeFormat`, locale-table-independent), but FullCalendar's own chrome — the
-`resourceTimelineDay` / `resourceTimelineWeek` view buttons, `allDayText`, `moreLinkText`,
-`noEventsText` — renders in **English** even in the French UI. That is almost certainly why
-`buttonText={{today: t("practice.today")}}` is patched in by hand. `locale="fr"` is also
-hardcoded, so it won't follow `i18n.changeLanguage` (same frozen-locale class as the
-`columns`/`daynames` notes here). Fix = `import frLocale from "@fullcalendar/core/locales/fr"`
-and drive `locale` from the active i18n language.
+`PracticePlanning` imports `@fullcalendar/core/locales/fr` and drives `locale` from
+`i18n.language`, so FullCalendar now resolves its own chrome per language: the
+`resourceTimelineDay` button renders "Jour"/"day" from the locale tables, and the
+`resourceTimelineWeek` button gets its label explicitly (its `duration: {days: 7}` override leaves
+FullCalendar's `singleUnit` empty, so no locale table can supply it — it used to render the literal
+view type "resourceTimelineWeek" in both languages).
+
+What is left is cosmetic: `buttonText={{today: t("practice.today")}}` predates the locale import
+and is no longer needed, and it forces the lowercase extracted strings "aujourd'hui"/"today" over
+FullCalendar's own "Aujourd'hui"/"today". In French that reads inconsistently next to the
+capitalised "Jour" button. Dropping the override (and the now-unused `planning:practice.today`
+key) would take the capitalisation from the locale table instead; left alone here because it
+changes user-visible copy beyond the scope of the locale wiring.
 
 ## generalPayments tables freeze translated column headers at construct time
 
@@ -568,28 +570,36 @@ unchanged. Every call site was split into "compare" (use the constant) vs "displ
 method is a stub (`return "Banana";`, the rest commented out) and it has its own separate hardcoded
 `` `${averageAge} ans` ``. Broken legacy component, not extracted (don't-delete-on-looks-dead).
 
-## `frontend/components/common/baseDataTable/BaseDataTable.jsx` — hardcoded French chrome leaks into English
+## `frontend/components/common/baseDataTable/` — sibling modals still hardcode their own chrome
 
-The **functional** shared data-table (`frontend/components/common/baseDataTable/`, distinct from
-the older class-based `frontend/components/parameters/BaseDataTable.jsx`) builds its modal
-titles from hardcoded French templates and passes hardcoded react-table pagination strings:
+`BaseDataTable.jsx` itself (the **functional** shared data-table, distinct from the older
+class-based `frontend/components/parameters/BaseDataTable.jsx`) now reads its modal-title
+templates, delete-confirmation question, fetch-error message, and react-table pagination strings
+from `common:baseDataTable.*` / the pre-existing `common:reactTable.*`, so call sites that already
+pass a translated `oneResourceTypeName` / `thisResourceTypeName` (`parameters/Payments/
+Coupons.jsx`, `activityRef/ActivityRefBasics.jsx`, `formules/EditFormule.jsx`,
+`parameters/Activities/PricingCategoriesEdit.jsx`) no longer get a mixed-language modal header in
+English mode.
 
-- `` `Mettre à jour ${oneResourceTypeName}` `` / `` `Créer ${oneResourceTypeName}` `` /
-  `` `Supprimer ${oneResourceTypeName}` `` / `` `Voulez-vous vraiment supprimer ${thisResourceTypeName || "cet élément"} : ${…} ?` `` (around `BaseDataTable.jsx:287-298`)
-- `previousText="Précédent"` / `nextText="Suivant"` / `ofText="sur"` / `rowsText="résultats"` /
-  `noDataText="Aucune donnée"` (`BaseDataTable.jsx:270-274`) — `common:reactTable.*` already exists.
+Found while fixing the above, not yet fixed (own hardcoded French chrome, no `useTranslation` at
+all in either file):
+- `ItemFormModal.jsx`: the "Mise à jour"/"Création" fallback titles, the "Annuler"/"Sauvegarder"
+  buttons, and the "Erreur(s) :" list heading.
+- `DeleteItemModal.jsx`: the "Suppression"/"Voulez-vous vraiment supprimer cet élément ?" fallback
+  copy (only reachable when a caller omits `title`/`question`, which no current call site does),
+  the "Annuler"/"Supprimer" buttons, and the "Une erreur est survenue lors de la suppression."
+  fallback error message.
 
-Call sites that pass a (now-translated, as of the respective i18n lot) `oneResourceTypeName` /
-`thisResourceTypeName` into it, producing **mixed-language** modal headers in English mode
-("Créer a discount rate", "Supprimer a discount rate"):
-- `parameters/Payments/Coupons.jsx:59-60` (i18n-06 parameters lot C)
-- `activityRef/ActivityRefBasics.jsx:~327` (i18n-06 activities lot 2)
-- `formules/EditFormule.jsx:~510` (i18n-06 formules)
+Still hardcoded in `BaseDataTable.jsx` itself, deliberately left: the appended actions column's
+`Header: "Actions"`. Impact is nil — the word is spelled identically in French and English — but
+it is the one user-visible string in the file that does not go through `common:`.
 
-Latent, same file: `const tableName = "table-" + oneResourceTypeName` (`BaseDataTable.jsx:~109`)
-feeds a `reactTableFullscreen${tableName}Change` custom-event name (`ReactTableFullScreen.jsx`),
-so a previously-constant event name is now locale-derived. Dispatcher and listener stay consistent
+Latent, `BaseDataTable.jsx`: `const tableName = "table-" + oneResourceTypeName` feeds a
+`reactTableFullscreen${tableName}Change` custom-event name (`ReactTableFullScreen.jsx`), so a
+previously-constant event name is now locale-derived. Dispatcher and listener stay consistent
 within one page load, and `Coupons` passes `showFullScreenButton={false}`, so impact today is nil.
 
-This whole component wants its own extraction pass (a `common:` namespace + `useTranslation` for
-the fn body); it was out of scope for every lot that fed it a translated resource name.
+Latent, same file: the fetch-error message is resolved to a string and stored in state
+(`errorMessage`), so a `changeLanguage` after a failed fetch leaves the previous language's message
+on screen until the next fetch resolves. Same frozen-translation class as the `columns`/`daynames`
+notes above, and harmless for the same reason (switching locale is a full server reload).

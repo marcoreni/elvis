@@ -1,5 +1,6 @@
 import React, {useState} from "react";
 import ReactTable from "react-table";
+import {useTranslation} from "react-i18next";
 import {makeDebounce} from "../../../tools/inputs";
 import ItemFormModal from "./ItemFormModal";
 import DeleteItemModal from "./DeleteItemModal";
@@ -89,6 +90,7 @@ export default function BaseDataTable({
                                           formContentComponent,
                                           ...reactTableProps
                                       }) {
+    const {t} = useTranslation("common");
     const debounce = makeDebounce();
 
     const [state, setState] = useState({
@@ -152,7 +154,7 @@ export default function BaseDataTable({
                     setState(prevState => ({
                         ...prevState,
                         loading: false,
-                        errorMessage: "Une erreur est survenue lors du chargement des données."
+                        errorMessage: t("baseDataTable.loadError")
                     }));
                 });
         }, 400);
@@ -212,8 +214,8 @@ export default function BaseDataTable({
                 })
 
         } else {
-            console.error("L'item n'a pas été trouvé dans la liste des items.")
-            return Promise.reject(["L'item n'a pas été trouvé dans la liste des items."])
+            console.error(t("baseDataTable.itemNotFound"))
+            return Promise.reject([t("baseDataTable.itemNotFound")])
         }
     }
 
@@ -235,7 +237,7 @@ export default function BaseDataTable({
             <div className="row">
                 <div className="col">
                     {showFullScreenButton &&
-                        <button data-tippy-content="Mettre le tableau en plein écran"
+                        <button data-tippy-content={t("baseDataTable.fullScreenTooltip")}
                                 className="btn btn-primary"
                                 onClick={() => goFullScreen(tableName)}>
                             <i className="fas fa-expand-arrows-alt"></i>
@@ -267,13 +269,13 @@ export default function BaseDataTable({
                             }
                         }}
                         resizable={false}
-                        previousText="Précédent"
-                        nextText="Suivant"
-                        loadingText="Chargement..."
-                        noDataText={state.errorMessage || "Aucune donnée"}
-                        pageText="Page"
-                        ofText="sur"
-                        rowsText="résultats"
+                        previousText={t("reactTable.previousText")}
+                        nextText={t("reactTable.nextText")}
+                        loadingText={t("reactTable.loadingText")}
+                        noDataText={state.errorMessage || t("reactTable.noDataText")}
+                        pageText={t("reactTable.pageText")}
+                        ofText={t("reactTable.ofText")}
+                        rowsText={t("reactTable.rowsText")}
                         minRows={1}
                         {...reactTableProps}
                     />
@@ -284,8 +286,8 @@ export default function BaseDataTable({
                         item={state.item}
                         component={formContentComponent}
                         isOpen={state.showItemModal}
-                        updateTitle={`Mettre à jour ${oneResourceTypeName}`}
-                        createTitle={`Créer ${oneResourceTypeName}`}
+                        updateTitle={t("baseDataTable.updateTitle", {name: oneResourceTypeName})}
+                        createTitle={t("baseDataTable.createTitle", {name: oneResourceTypeName})}
                         onRequestClose={closeItemFormModal}
                         onSubmit={item => (state.wantUpdate ? updateItem(item) : createItem(item))}
                     />}
@@ -294,8 +296,11 @@ export default function BaseDataTable({
                     item={state.item}
                     isOpen={state.showDeleteModal}
                     onRequestClose={closeDeleteItemModal}
-                    title={`Supprimer ${oneResourceTypeName}`}
-                    question={`Voulez-vous vraiment supprimer ${thisResourceTypeName || "cet élément"} : ${state.item && labellizer ? labellizer(state.item) : ""} ?`}
+                    title={t("baseDataTable.deleteTitle", {name: oneResourceTypeName})}
+                    question={t("baseDataTable.deleteQuestion", {
+                        name: thisResourceTypeName || t("baseDataTable.defaultResource"),
+                        label: state.item && labellizer ? labellizer(state.item) : "",
+                    })}
                     onDelete={() => deleteItem(state.item)}
                 />
             </div>

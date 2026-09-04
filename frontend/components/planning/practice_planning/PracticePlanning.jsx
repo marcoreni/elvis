@@ -3,11 +3,13 @@ import { withTranslation } from "react-i18next";
 import FullCalendar from "@fullcalendar/react";
 import interactionPlugin from "@fullcalendar/interaction";
 import resourceTimelinePlugin from "@fullcalendar/resource-timeline";
+import frLocale from "@fullcalendar/core/locales/fr";
 import Modal from "react-modal";
 import PracticeMultiViewModal from "./PracticeMultiViewModel";
 import PracticeHandleSessions from "./PracticeHandleSessions";
 import {csrfToken} from "../../utils";
 import * as api from "../../../tools/api";
+import i18n from "../../../i18n";
 
 const moment = require("moment-timezone");
 
@@ -474,10 +476,17 @@ class PracticePlanning extends React.Component {
                         views={{
                             resourceTimelineWeek: {
                                 type: "resourceTimelineWeek",
-                                duration: {days: 7}
+                                // `duration: {days: 7}` (rather than {weeks: 1}) makes FullCalendar's
+                                // `singleUnit` empty, so it can't resolve this view's button label from
+                                // the locale table's `buttonText.week` and falls all the way back to the
+                                // view *type* as the label -- i.e. the button rendered the literal string
+                                // "resourceTimelineWeek". Supply the label explicitly.
+                                duration: {days: 7},
+                                buttonText: this.props.t("practice.weekButton")
                             }
                         }}
-                        locale="fr"
+                        locales={[frLocale]}
+                        locale={i18n.language}
                         // selectConstraint="businessHours"
                         selectable={true}
                         eventLimit={true}

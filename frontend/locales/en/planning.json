@@ -210,6 +210,7 @@
     },
     "practice": {
         "today": "today",
+        "weekButton": "week",
         "rooms": "Rooms",
         "slot": "Slot",
         "date": "Date:",
