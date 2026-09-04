@@ -221,6 +221,52 @@ describe("LessonList — column header row (i18n)", () => {
     });
 });
 
+// Regression for the moment.locale("fr") global side effect (see docs/KnownIssues.md's former
+// "courses/LessonList.jsx" entry): the component used to force moment's process-wide locale to
+// French at module scope *and* on every render(), clobbering the active-language sync that
+// frontend/i18n/index.js otherwise maintains -- so the day column's Cell/Filter (and any other
+// component rendered after LessonList on the same page) stayed French regardless of the UI
+// language. Both forced calls are removed; moment now just follows whatever frontend/i18n/index.js
+// already set. Reached via the "day" column's Cell/Filter, extracted from the stashed react-table
+// stub props (same technique as the SubComponent reach below).
+describe("day column follows the active UI language (moment locale no longer forced to fr)", () => {
+    const dayColumn = () => lastReactTableProps.columns.find(c => c.id === "day");
+
+    test("Cell renders the weekday in French by default", async () => {
+        await i18n.changeLanguage("fr");
+        render(<LessonList {...makeProps()} />);
+
+        // 2026-01-12 is a Monday.
+        expect(dayColumn().Cell({value: {start: "2026-01-12T10:00:00"}})).toBe("lundi");
+    });
+
+    test("Cell renders the weekday in English when the active language is en", async () => {
+        await i18n.changeLanguage("en");
+        render(<LessonList {...makeProps()} />);
+
+        expect(dayColumn().Cell({value: {start: "2026-01-12T10:00:00"}})).toBe("Monday");
+    });
+
+    test("Filter's day options render in the active language", async () => {
+        // daysOptions is built once per LessonList render() call (closure), using whichever
+        // moment locale is active *at that render* -- so each language needs its own fresh mount,
+        // not just a fresh <Filter> render off a stale closure.
+        await i18n.changeLanguage("en");
+        const enList = render(<LessonList {...makeProps()} />);
+        const enFilter = render(<>{dayColumn().Filter({filter: null, onChange: () => {}})}</>);
+        expect(enFilter.getByRole("option", {name: "Monday"})).toBeInTheDocument();
+        enFilter.unmount();
+        enList.unmount();
+
+        await i18n.changeLanguage("fr");
+        const frList = render(<LessonList {...makeProps()} />);
+        const frFilter = render(<>{dayColumn().Filter({filter: null, onChange: () => {}})}</>);
+        expect(frFilter.getByRole("option", {name: "Lundi"})).toBeInTheDocument();
+        frFilter.unmount();
+        frList.unmount();
+    });
+});
+
 // Reach UserList / UserRow through the react-table `SubComponent` render prop (the stub stashes
 // it). This is the diff's riskiest edit — UserList was rewritten from `=> ( … )` to
 // `=> { … return ( … ) }` — and it's where the lot-4 review found the Level cell rendering a raw

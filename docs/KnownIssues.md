@@ -445,12 +445,12 @@ The lot-4 extraction (`feature/i18n-06-extract-courses-lot4`) translated every s
   `TimeIntervalHelpers.LEVEL_NOT_INDICATED` / `LEVEL_TO_SPECIFY` constants (see the
   `TimeIntervalHelpers.jsx` design note below), so they no longer depend on the raw French
   literals living in that file.
-- **Day column** — the `Jour` header is translated but the `Cell` (`moment(start).format("dddd")`)
-  and the day-filter `<option>`s (`day.format("dddd")`) stay `lundi`/`mardi` because the component
-  calls `moment.locale("fr")` at module scope *and* on every `render()` (`LessonList.jsx:13, 594`).
-  That call also clobbers the process-wide moment locale that `frontend/i18n/index.js` maintains,
-  so any component rendered after `LessonList` on the same page gets French dates too. Pre-existing,
-  not introduced by lot 4.
+- ~~**Day column**~~ **Resolved**: the component called `moment.locale("fr")` at module scope
+  *and* on every `render()`, clobbering the process-wide moment locale `frontend/i18n/index.js`
+  otherwise maintains — so the `Cell` (`moment(start).format("dddd")`) and the day-filter
+  `<option>`s stayed `lundi`/`mardi` regardless of the UI language, and any *other* component
+  rendered after `LessonList` on the same page got French dates too. Both calls removed; moment
+  now just follows whatever `frontend/i18n/index.js` already set.
 - **Started/Stopped dates** in the row expander use `Intl.DateTimeFormat("fr")`
   (`LessonList.jsx` ~1418, 1423) — always `DD/MM/YYYY`, ambiguous for en-US users.
 
