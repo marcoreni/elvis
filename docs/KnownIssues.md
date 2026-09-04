@@ -601,9 +601,17 @@ constants-i18n lots 1–3, not piecemeal inside one domain lot:
   `RECURRENCE_TYPES` needed a different shape: it's an enum object with a `toString(type)` method,
   not a plain value dictionary, so only the object literal *inside* `toString` moved to
   `common:recurrenceTypes` (6 entries) — no `export let`/`languageChanged` needed there, since
-  `toString` is a method and already reads `i18n.t()` fresh on every call.
+  `toString` is a method and already reads `i18n.t()` fresh on every call. Two consumers with no
+  i18n subscription of their own — `common/KindLegend.jsx` (plain function component) and
+  `availability/AvailabilityInput.jsx` (bare `React.PureComponent`) — won't repaint on an in-page
+  `changeLanguage` unless a subscribed ancestor happens to re-render; same class as the lot-1
+  `ItemPreferences.jsx`/`AvailabilityList.jsx` note, harmless today (full-reload locale switch).
 
 Grep: `from "../../tools/constants"`.
+
+Dedup note (not a defect): `common:kindsLabel` now duplicates `planning:kinds` in both locales
+(Cours/Course, Option, Évaluation/Evaluation all appear in both namespaces with agreeing values).
+Fold into the existing cross-namespace consolidation backlog rather than acting on it now.
 
 Two bugs found while extracting `MESSAGES` (preserved verbatim in the new locale keys per the
 extraction policy, not fixed here):
@@ -680,12 +688,12 @@ What's still open in this domain:
   `formules_parameters_edit.html.erb`'s `react_component` call but **the component file doesn't
   exist** under `frontend/components/editParameters/` — likely a dead route or a plugin-provided
   component. Audit against activated plugins / prod logs before touching either.
-- **Mixed-language side effect of planning lot 3c** (not a parameters-domain bug, but visible on a
-  parameters-adjacent screen): `SimplePlanning.jsx` renders `<KindLegend>` right below the level
-  line lot 3c localized, so English mode shows "NOT SPECIFIED" above a legend still reading
-  "Evaluation / Cours / Option" (`tools/constants.js` `KINDS_LABEL`, part of the pending
-  constants-i18n lots). `ActivitiesApplicationsList.jsx` has the same split: its level cell is
-  localized, its column headers ("Niveau", "Âge", "Activité") are not.
+- **Mixed-language side effect of planning lot 3c, `KindLegend` half resolved by constants-i18n
+  lot 3**: `SimplePlanning.jsx` renders `<KindLegend>` right below the level line lot 3c
+  localized — `tools/constants.js` `KINDS_LABEL` now follows the active language too (lot 3), so
+  that particular mismatch is gone. Still open: `ActivitiesApplicationsList.jsx`'s column headers
+  ("Niveau", "Âge", "Activité" and 10 more) are still hardcoded French next to its now-localized
+  level cell and Action column.
 - **Pre-existing dead guard** in `courses/LessonList.jsx`: `UserRow` seeds `studentLevel` from
   `data.evaluation_level_ref.label`, but `desired_activity_controller.rb:92` renders
   `evaluation_level_ref` as a bare **string**, so `.label` on it is always `undefined` and the

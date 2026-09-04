@@ -775,7 +775,7 @@ class Activity extends React.Component {
                 PRE_APPLICATION_ACTION_LABELS[
                     this.props.application.pre_application_activity.action
                 ];
-        } else if (this.props.pre_application_desired_activity) {
+        } else if (this.props.application.pre_application_desired_activity) {
             actionLabel =
                 PRE_APPLICATION_ACTION_LABELS[
                     this.props.application.pre_application_desired_activity

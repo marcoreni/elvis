@@ -46,7 +46,7 @@ wrong-noun bug (delete dialog says "l'instrument" when it means "le niveau d'év
 kind of thing that stays flagged rather than auto-fixed, since it's a semantic slip, not a spelling
 one.
 
-## French quality bar (for *new* translations, and corrections you're cleared to make)
+## French quality bar
 
 - Full accents: é è ê ë  à â  ç  ù û ü  ô  î ï  œ. "Evaluation" → "Évaluation", "eleve" → "élève",
   "creneau" → "créneau", "resolu" → "résolu".
@@ -126,7 +126,8 @@ change:
 ## Output
 
 The key/value pairs you placed or changed, per locale; a parity confirmation
-(`bin/i18n-tasks health` output and/or the `n/n` flatten-diff); and a list of every typo you
-preserved verbatim with its `docs/KnownIssues.md` entry.
+(`bin/i18n-tasks health` output and/or the `n/n` flatten-diff); and a list of every minor French
+defect you fixed inline (`wrong → right`), plus every wrong-word/semantic issue you flagged
+instead of fixing.
 
 New documentation you write must be in English (existing French docs stay as they are).

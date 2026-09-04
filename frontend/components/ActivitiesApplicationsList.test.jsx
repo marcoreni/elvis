@@ -70,13 +70,11 @@ describe("ActivitiesApplicationsList — Action column fallback", () => {
             const {accessor} = getActionColumn();
             const expected = lng === "fr" ? "Nouvelle inscription" : "New enrollment";
 
+            // The pre-fix bug returned `undefined` here (indexing with the numeric enum value 0);
+            // `.toBe(expected)` below already fails on that, so no separate `.not.toBeUndefined()`.
             expect(accessor({pre_application_desired_activity: null, pre_application_activity: null})).toBe(
                 expected,
             );
-            // The pre-fix bug returned `undefined` (indexing with the numeric enum value 0).
-            expect(
-                accessor({pre_application_desired_activity: null, pre_application_activity: null}),
-            ).not.toBeUndefined();
         },
     );
 

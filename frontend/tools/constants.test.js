@@ -285,24 +285,24 @@ describe("PRE_APPLICATION_ACTION_LABELS follows the active UI language", () => {
         expect(constants.PRE_APPLICATION_ACTION_LABELS.new).toBe("New enrollment"); // live
     });
 
-    // Regression guard for the fallback bug fixed alongside this lot's extraction
-    // (ActivitiesApplicationsList.jsx indexed with the numeric PRE_APPLICATION_ACTIONS.NEW enum
-    // value instead of the "new" string key — always undefined). Covered mechanically against the
-    // real component in ActivitiesApplicationsList.test.jsx; this just pins that the constant
-    // itself resolves under its string key in both locales.
-    test.each(["fr", "en"])("the 'new' key used by the ActivitiesApplicationsList fallback resolves (%s)", async lng => {
-        await i18n.changeLanguage(lng);
-        expect(constants.PRE_APPLICATION_ACTION_LABELS.new).toBeTruthy();
-        expect(constants.PRE_APPLICATION_ACTION_LABELS.new).not.toBe("undefined");
-    });
+    // The fallback bug fixed alongside this lot's extraction (ActivitiesApplicationsList.jsx
+    // indexed with the numeric PRE_APPLICATION_ACTIONS.NEW enum value instead of the "new" string
+    // key — always undefined) is covered directly against the real component in
+    // ActivitiesApplicationsList.test.jsx; the exact-value assertions above already pin that
+    // `.new` itself resolves correctly in both locales, so no separate regression test is needed
+    // here.
 });
 
 describe("RECURRENCE_TYPES.toString follows the active UI language (no export let needed)", () => {
-    test("RECURRENCE_TYPES is a plain export const, not a live binding reassigned on languageChanged", () => {
+    test("RECURRENCE_TYPES is a plain export const, not a live binding reassigned on languageChanged", async () => {
         // Unlike WEEKDAYS/KINDS_LABEL/etc., there is no `constants.RECURRENCE_TYPES = ...`
-        // reassignment anywhere — the object identity itself never changes.
+        // reassignment anywhere — the object identity itself never changes across a locale switch.
+        // (Reading both sides before any changeLanguage would make this pass trivially even if a
+        // future regression reassigned the binding on "languageChanged" — the switch below is
+        // what actually exercises that.)
         const ref = constants.RECURRENCE_TYPES;
-        expect(RECURRENCE_TYPES).toBe(ref);
+        await i18n.changeLanguage("en");
+        expect(constants.RECURRENCE_TYPES).toBe(ref);
     });
 
     test("default language (fr) resolves recurrence-type strings", async () => {
