@@ -235,3 +235,11 @@ u.save!
 ## Soft restart
 - send `SIGUSR2` signal to process
 - change restart.txt in tmp folder (add any value)
+## Removed dead code
+Code confirmed unreachable (no import/consumer anywhere in the app) was deleted outright rather
+than kept around "just in case" — this fork has no plugins, so the "a plugin might still use it"
+caveat that used to justify leaving dead code in place doesn't apply. Each entry below names the
+commit that removed it; recover with `git show <sha>^:<path>` (the `^` is the parent commit, i.e.
+the state just before the removal).
+- `frontend/components/generalPayments/GeneralPayments.jsx`: unused `swal` (`sweetalert2`) and
+  `csrfToken` imports — `git show 7972b0f^:frontend/components/generalPayments/GeneralPayments.jsx`
