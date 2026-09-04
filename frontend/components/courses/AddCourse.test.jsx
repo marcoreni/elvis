@@ -46,6 +46,7 @@ beforeEach(() => {
 
 afterEach(async () => {
     vi.restoreAllMocks();
+    vi.clearAllMocks();
     await i18n.changeLanguage("fr");
 });
 

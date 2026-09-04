@@ -608,13 +608,14 @@ extraction policy, not fixed here):
   "lte")` is used. Fix: swap the two message bodies (or the two key names) to match.
 - **`err_starts_with` / `startsWith` validator is dead and buggy.** `MESSAGES.err_starts_with`
   never uses its own `str` parameter (always renders the same generic text — preserved as-is,
-  same class as the `noIntervalMessage` type of no-op default). Its only caller,
-  `validators.js`'s exported `startsWith`, references an undefined variable `length` instead of
-  its own `str` param when building the call (`MESSAGES["err_starts_with"](length)` — `length` is
-  not in scope in that function) — a real `ReferenceError` if this validator's failure branch ever
-  ran. No import of `startsWith` from `tools/validators.js` was found anywhere in `frontend/`, so
-  it is dead code today; noted here rather than fixed, since fixing dead code risks masking that
-  it's unreachable.
+  same class as the `noIntervalMessage` type of no-op default). Its only caller, `validators.js`'s
+  exported `startsWith`, passes `length` instead of its own `str` param
+  (`MESSAGES["err_starts_with"](length)`) — in a browser this resolves to `window.length` (`0`,
+  the frame count), not a `ReferenceError`, so the failure branch silently returns the generic
+  no-op text with the wrong argument rather than throwing. It **would** throw where there is no
+  global `window` — e.g. reached from `packs/server_rendering.js`. No import of `startsWith` from
+  `tools/validators.js` was found anywhere in `frontend/`, so it is dead code today; noted here
+  rather than fixed, since fixing dead code risks masking that it's unreachable.
 
 Verbatim typos preserved in the new `common:messages` / `common:apiErrors` keys (same policy as
 every other lot — corrected only on request):
@@ -625,6 +626,13 @@ every other lot — corrected only on request):
   inconsistent with every sibling `err_must_*` message (capitalised "Veuillez…"). Kept verbatim;
   EN mirror is properly capitalised ("Please select…"), same as every other lot's clean-EN
   convention for an FR-only casing defect.
+
+Adjacent bug found by the constants-i18n lot 2 review, pre-existing and untouched by this lot
+(same class as the two above, more severe, not yet fixed): `userForm/ContactForm.jsx:202` and
+`userForm/WizardContactForm.jsx:178` both render `{MESSAGES[meta.error]}` without ever importing
+`MESSAGES` — neither file declares it locally either. A real `ReferenceError` crashes the render
+of the family-link `<select>`'s error message on any validation failure there, in both languages.
+Fix: add `import { MESSAGES } from "../../tools/constants";` to both files.
 
 ## `frontend/tools/format.jsx` — `toFullDateFr` renders the month off by one
 

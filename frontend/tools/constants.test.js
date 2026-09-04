@@ -93,7 +93,7 @@ describe("WEEKDAYS / MONTHS follow the active UI language", () => {
 });
 
 describe("MESSAGES follows the active UI language", () => {
-    test("default language (fr) exposes the French plain-string messages", async () => {
+    test("after changeLanguage('fr') exposes the French plain-string messages", async () => {
         await i18n.changeLanguage("fr");
 
         expect(constants.MESSAGES.err_required).toBe("Cette information est requise.");
@@ -167,7 +167,7 @@ describe("MESSAGES follows the active UI language", () => {
 });
 
 describe("API_ERRORS_MESSAGES follows the active UI language", () => {
-    test("default language (fr) exposes French server-error text", async () => {
+    test("after changeLanguage('fr') exposes French server-error text", async () => {
         await i18n.changeLanguage("fr");
 
         expect(constants.API_ERRORS_MESSAGES.default).toBe(
