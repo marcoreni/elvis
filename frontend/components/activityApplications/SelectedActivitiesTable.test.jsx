@@ -37,3 +37,27 @@ describe("SelectedActivitiesTable", () => {
         expect(screen.getByText("Estimated total")).toBeInTheDocument();
     });
 });
+
+// Regression: displayDuration() used to build the "1h30" / "45min" cell with hardcoded, untranslated
+// "h"/"min" unit tokens (activityApplications:units.*), not going through i18n at all -- so it
+// couldn't have looked any different in en even though the current en value happens to match fr.
+describe("SelectedActivitiesTable — duration cell goes through activityApplications:units.*", () => {
+    const activitiesProps = {
+        selectedActivities: [
+            {display_name: "Piano", duration: 90, display_price: 10},
+            {display_name: "Solfège", duration: 45, display_price: 5},
+        ],
+        packs: {},
+        selectedPacks: {},
+    };
+
+    for (const lng of ["fr", "en"]) {
+        test(`${lng}: hours+minutes and minutes-only durations render via activityApplications:units.*`, async () => {
+            await i18n.changeLanguage(lng);
+            render(<SelectedActivitiesTable {...activitiesProps} />);
+
+            expect(screen.getByText("1h30")).toBeInTheDocument();
+            expect(screen.getByText("45min")).toBeInTheDocument();
+        });
+    }
+});

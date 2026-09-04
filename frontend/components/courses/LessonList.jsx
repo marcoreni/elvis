@@ -1419,12 +1419,12 @@ const UserRow = ({
             {isWorkGroup && <td>{userInstrument}</td>}
             <td>
                 {(user.begin_at &&
-                        Intl.DateTimeFormat("fr").format(new Date(user.begin_at))) ||
+                        Intl.DateTimeFormat(i18n.language).format(new Date(user.begin_at))) ||
                     ""}
             </td>
             <td>
                 {(user.stopped_at &&
-                        Intl.DateTimeFormat("fr").format(new Date(user.stopped_at))) ||
+                        Intl.DateTimeFormat(i18n.language).format(new Date(user.stopped_at))) ||
                     ""}
             </td>
         </tr>

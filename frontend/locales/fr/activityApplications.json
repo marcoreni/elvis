@@ -34,6 +34,11 @@
         "estimatedPrice": "Tarif estimé",
         "estimatedTotal": "Total estimé"
     },
+    "units": {
+        "hoursMinutes": "{{hours}}h{{minutes}}",
+        "minutes": "{{minutes}}min",
+        "minuteAbbrev": "min"
+    },
     "addPreApp": {
         "confirmHtml": "<h5>Cette action permet à <b>{{firstName}} {{lastName}}</b> de se préinscrire à l'activité pour la <b>{{season}}</b></h5>",
         "alreadyDone": "Cette action a déjà été effectuée",

@@ -2,14 +2,14 @@ import React, { useMemo } from 'react';
 import { useTranslation } from "react-i18next";
 import _ from "lodash";
 
-function displayDuration(duration) {
+function displayDuration(duration, t) {
     if (duration) {
         if (duration >= 60) {
             const hours = Math.floor(duration / 60);
             const minutes = duration % 60;
-            return `${hours}h${minutes.toString().padStart(2, '0')}`;
+            return t("activityApplications:units.hoursMinutes", { hours, minutes: minutes.toString().padStart(2, '0') });
         } else {
-            return `${duration.toString().padStart(2, '0')}min`;
+            return t("activityApplications:units.minutes", { minutes: duration.toString().padStart(2, '0') });
         }
 
     } else {
@@ -77,7 +77,7 @@ export default function SelectedActivitiesTable(props) {
                 <tr key={index} style={{color: "#00283B"}}>
                     <td className="font-weight-bold">{activity.display_name}
                         {activity.amount > 1 ? ` x${activity.amount}` : ""}</td>
-                    <td>{displayDuration(activity.duration)}</td>
+                    <td>{displayDuration(activity.duration, t)}</td>
                     <td>{activity.display_price}€</td>
                 </tr>
             ))}

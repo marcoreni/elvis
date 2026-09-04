@@ -324,6 +324,38 @@ describe("row expander (UserList / UserRow) — i18n", () => {
         // UserRow age cell: t("lessonList.userRow.ageYears", { age })
         expect(getByText(/\d+ years old/)).toBeInTheDocument();
     });
+
+    // Regression: Started/Stopped dates used to be hardcoded to Intl.DateTimeFormat("fr")
+    // regardless of the active UI language -- always DD/MM/YYYY, ambiguous for en-US users.
+    //
+    // stopped_at must be in the future (beyond the "reference date", which defaults to today)
+    // or the SubComponent's own `hasUser` filter drops the row entirely -- see the begin_at
+    // comment on activityFixture() above for the same constraint on begin_at.
+    test("Started/Stopped dates follow the active UI language, not a hardcoded fr locale", async () => {
+        const withStoppedAt = () => {
+            const fixture = activityFixture();
+            fixture.users[0].stopped_at = "2030-06-15";
+            return fixture;
+        };
+
+        await i18n.changeLanguage("fr");
+        const frList = render(<LessonList {...makeProps()} />);
+        await waitFor(() => expect(lastReactTableProps).not.toBeNull());
+        const frSub = render(lastReactTableProps.SubComponent({original: withStoppedAt()}));
+        expect(frSub.getByText("01/01/2020")).toBeInTheDocument();
+        expect(frSub.getByText("15/06/2030")).toBeInTheDocument();
+        frSub.unmount();
+        frList.unmount();
+
+        await i18n.changeLanguage("en");
+        const enList = render(<LessonList {...makeProps()} />);
+        await waitFor(() => expect(lastReactTableProps).not.toBeNull());
+        const enSub = render(lastReactTableProps.SubComponent({original: withStoppedAt()}));
+        expect(enSub.getByText("1/1/2020")).toBeInTheDocument();
+        expect(enSub.getByText("6/15/2030")).toBeInTheDocument();
+        enSub.unmount();
+        enList.unmount();
+    });
 });
 
 // UserList / UserRow are not exported, and several keys (httpError, andNOthers, selectRemaining,
