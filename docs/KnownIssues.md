@@ -435,24 +435,12 @@ What's left, low priority:
   `TimePreferencesTable` wraps them with `toDate()` — an ISO string would silently render
   `NaN:NaN`.
 
-## `courses/LessonList.jsx` — residual French after the lot-4 i18n extraction
+## `courses/LessonList.jsx` — Started/Stopped dates always render French-style
 
-The lot-4 extraction (`feature/i18n-06-extract-courses-lot4`) translated every string the component
-*owns*. One item flagged at the time is now resolved; two are deliberately still out of scope:
-
-- ~~**Level column / row-expander level cell**~~ **Resolved by planning lot 3c**: the
-  `=== "NON INDIQUÉ"` / `"À PRÉCISER"` comparisons in `displayLevel()` now use the exported
-  `TimeIntervalHelpers.LEVEL_NOT_INDICATED` / `LEVEL_TO_SPECIFY` constants (see the
-  `TimeIntervalHelpers.jsx` design note below), so they no longer depend on the raw French
-  literals living in that file.
-- ~~**Day column**~~ **Resolved**: the component called `moment.locale("fr")` at module scope
-  *and* on every `render()`, clobbering the process-wide moment locale `frontend/i18n/index.js`
-  otherwise maintains — so the `Cell` (`moment(start).format("dddd")`) and the day-filter
-  `<option>`s stayed `lundi`/`mardi` regardless of the UI language, and any *other* component
-  rendered after `LessonList` on the same page got French dates too. Both calls removed; moment
-  now just follows whatever `frontend/i18n/index.js` already set.
-- **Started/Stopped dates** in the row expander use `Intl.DateTimeFormat("fr")`
-  (`LessonList.jsx` ~1418, 1423) — always `DD/MM/YYYY`, ambiguous for en-US users.
+The row expander's Started/Stopped dates use `Intl.DateTimeFormat("fr")` (`LessonList.jsx` ~1418,
+1423) — always `DD/MM/YYYY`, ambiguous for en-US users, regardless of the active UI language. (The
+level-column and day-column issues previously logged here are both resolved — planning lot 3c and
+a `moment.locale("fr")` removal, respectively.)
 
 Also: `message.title` defaults to `i18n.t("courses:lessonList.messageDefaultTitle")` evaluated in
 the **constructor**, so it's frozen at construct time and won't follow a later `changeLanguage`
