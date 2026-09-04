@@ -235,3 +235,44 @@ u.save!
 ## Soft restart
 - send `SIGUSR2` signal to process
 - change restart.txt in tmp folder (add any value)
+## Removed dead code
+Code confirmed unreachable (no import/consumer anywhere in the app) was deleted outright rather
+than kept around "just in case" — this fork has no plugins, so the "a plugin might still use it"
+caveat that used to justify leaving dead code in place doesn't apply. To recover any entry below,
+find the commit that removed it, then check out the parent state:
+```shell
+# Whole file/directory deletions:
+git log --oneline --diff-filter=D -- <path>
+
+# Partial removals (a block deleted from a file that still exists) -- pick a distinctive
+# symbol name from the entry below and pickaxe-search for the commit that removed it:
+git log --oneline -S'<symbol>' -- <path>
+
+# Once you have the commit SHA from either search:
+git show <that-sha>^:<path>            # print the file/lines as they were just before
+git checkout <that-sha>^ -- <path>     # or restore the whole file in place
+```
+- `frontend/components/generalPayments/GeneralPayments.jsx`: unused `swal` (`sweetalert2`) and
+  `csrfToken` imports.
+- `frontend/components/generalPayments/CheckList.jsx`: dead `message` state (never rendered, no
+  `MessageModal`) and the `MESSAGE_MODAL_ID` constant it went with.
+- `frontend/components/formules/NewFormule.jsx` (whole file, 603 lines): standalone "create
+  formule" screen superseded by `EditFormule.jsx`.
+- `frontend/components/planning/Calendar.jsx`: the `ConflictDisplayItem` component (referenced only
+  from inside a commented-out JSX block in `CalendarControls`) plus that commented block itself,
+  and the `handleSetToConflictDate` method/prop-thread that had no other caller once that block
+  was gone.
+- `frontend/components/planning/activity_management/` (whole subtree: `index.jsx`,
+  `attendance_table.jsx`, `activity_edition.jsx`, `edit_group_name_input.jsx`,
+  `recurrences_editor.jsx`, `teacher_covering_editor.jsx`, `teachers_editor.jsx`): an abandoned
+  extract-into-files refactor — everything in it was unreachable except the `withSave` helper,
+  which moved to `frontend/components/planning/withSave.jsx` (its one live consumer,
+  `ActivityDetailsModal.jsx`, now imports it from there).
+- `frontend/components/planning/ActivityDetailsModal.jsx`: the `TeachersEditor` component, the
+  `renderTeacherSelection()` method, and the `teachers_constrained` state field they were the only
+  readers of (computed in two places, read nowhere after `renderTeacherSelection` was gone) — the
+  live teacher-editing UI is inline in the same file. Locale keys removed with it:
+  `planning:activityModal.teachersEditor.{teacher,main,remove,needMainTeacher,cannotRemoveMain}`
+  and `planning:activityModal.{otherTeacherLabel,chooseTeacher}` (also only read by the dead
+  method); `planning:activityModal.{noMainTeacher,teacherLabel}` were left alone — both still used
+  by the live `ActivityEdition` component.

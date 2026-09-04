@@ -223,43 +223,13 @@ specialized pass on these four is still open but low priority — every one of t
 re-touched, tested, and reviewed by several later lots, so a fresh full-codebase review is more
 useful than re-reviewing an isolated 2026-08 diff in isolation.
 
-## `generalPayments/GeneralPayments.jsx` — likely-dead imports
+## `planning/Calendar.jsx` — tui-calendar strings frozen at mount
 
-`GeneralPayments.jsx` imports `swal` (`sweetalert2`) and `csrfToken` (`../utils`) but its body is
-only a `TabbedComponent` with four tab definitions — neither symbol appears to be used. Pre-existing
-(not introduced by the i18n-06 lot-2a extraction); flagged during that PR's review. Verify and
-remove if genuinely unused. Low priority.
+Surfaced 2026-08-30 during the i18n-06 planning lot 3b (`Calendar.jsx`) extraction. The dead
+`ConflictDisplayItem` component this section used to also flag was deleted (it was referenced only
+from inside a commented-out JSX block, so it never rendered — no plugin risk on this fork, so no
+"recover, don't delete" caveat applies; see `README.md`'s "Removed dead code" section).
 
-## `generalPayments/CheckList.jsx` — dead `message` state
-
-`CheckList` initializes `this.state.message = { title, content, isEmail, isSMS }` (title now seeded
-from `props.t("general.reminderDefaultTitle")`), but the component never renders or reads it — it
-has no `MessageModal` and no send-reminder path, unlike its sibling `PaymentScheduleList` it was
-evidently copied from. Found by the specialized `/code-review` of PR #11 (2026-08-28). Pre-existing;
-the i18n-06 lot-2a change only re-touched the `title` line. Safe to drop the whole `message` state
-block (and the `props.t` call with it) in a cleanup pass. Low priority.
-
-## `formules/NewFormule.jsx` — dead, superseded by `EditFormule.jsx`
-
-`frontend/components/formules/NewFormule.jsx` (a standalone default-export function component,
-~460 lines) plus its helper `NewFormulePricingDataService.js` look like an earlier "create" screen
-that `EditFormule.jsx` replaced — `EditFormule` handles both create and edit via `formule.id ?`,
-and it's the only formule editor mounted (`app/views/formules/{new,edit,show}.html.erb` all
-`react_component("formules/EditFormule", …)`). `NewFormule` (the component) is imported/mounted
-**nowhere**; only `NewFormulePricingDataService` is still referenced (by `EditFormule.jsx`, for the
-unsaved-formule pricing path). Surfaced 2026-08-29 during the i18n-06 `formules` extraction — left
-**untranslated and in place** per the recover-don't-delete policy above. Verify against activated
-plugins / prod logs, then delete `NewFormule.jsx` (keep `NewFormulePricingDataService.js`). Low
-priority.
-
-## `planning/Calendar.jsx` — dead `ConflictDisplayItem`; tui-calendar strings frozen at mount
-
-Surfaced 2026-08-30 during the i18n-06 planning lot 3b (`Calendar.jsx`) extraction:
-
-- `ConflictDisplayItem` (component, ~55 lines, strings "Voir le conflit" / "Résolu") is
-  referenced **only** from inside a `{/* … */}` JSX comment block in `CalendarControls`, so it
-  never renders. Left untranslated and in place per the recover-don't-delete policy; verify and
-  delete along with the commented conflict-dropdown block.
 - `week.daynames` is passed to the `tui-calendar` constructor once in `componentDidMount` (a
   frozen array), and the `monthGridHeaderExceed` / `weekDayname` template functions capture the
   mount-time `t`. So after an in-page `i18n.changeLanguage`, the day-name headers, "N autres"
@@ -283,48 +253,6 @@ locale table: month/day names and the toolbar title still render French (those g
 hardcoded, so it won't follow `i18n.changeLanguage` (same frozen-locale class as the
 `columns`/`daynames` notes here). Fix = `import frLocale from "@fullcalendar/core/locales/fr"`
 and drive `locale` from the active i18n language.
-
-## `planning/activity_management/` — the whole subtree is dead except `withSave`
-
-Confirmed 2026-08-30 during i18n-06 planning lot 6. `activity_management/index.jsx` exports two
-things:
-
-- `withSave` (named) — **live**, imported by `ActivityDetailsModal.jsx`.
-- `ActivityManagement` (default `class`, ~660 lines) — mounted **nowhere** (`react_component`
-  never names it; no `.jsx` imports the default). It is the only consumer of its siblings
-  `attendance_table.jsx`, `activity_edition.jsx`, `edit_group_name_input.jsx`,
-  `recurrences_editor.jsx`, `teacher_covering_editor.jsx`. `teachers_editor.jsx` is imported by
-  nothing at all.
-
-`ActivityDetailsModal.jsx` carries its own inline `AttendanceTable` / `ActivityEdition` /
-`EditGroupNameInput` / `TeacherCoveringEditor` / `TeachersEditor` — those are the live ones. This
-subtree is an abandoned extract-into-files refactor. i18n lot 6 left it **untranslated** (per the
-recover-don't-delete policy); when someone audits it, keep `withSave` and delete the rest.
-
-`withSave`'s `label = "Enregistrer"` default param is still a hardcoded string. There are 7
-`withSave(` call sites total; the 3 **live** ones (all in `ActivityDetailsModal.jsx` after lot 5,
-`:965`/`:1013`/`:1025`) each pass an explicit translated `label`, so the default is unreachable
-from live code. The other 4 are in the dead `activity_management/index.jsx` (2 of them pass no
-`label`). If the subtree is kept, change the default to `null`.
-
-## `planning/ActivityDetailsModal.jsx` — dead `TeachersEditor` + `renderTeacherSelection`
-
-Surfaced 2026-08-30 during the i18n-06 planning lot 5 extraction. Both are defined but never
-rendered/called:
-
-- `TeachersEditor` (module-level function component, ~130 lines) — no `<TeachersEditor …/>` site
-  anywhere. The live equivalent is almost certainly
-  `frontend/components/planning/activity_management/teachers_editor.jsx` (lot 6).
-- `ActivityDetailsModal.renderTeacherSelection()` (class method) — never called from `render()`
-  or elsewhere.
-
-Both had their strings extracted anyway (given `useTranslation` / `const { t } = this.props`
-respectively) so they stay consistent if revived; the `t(...)` calls in them are inert. Verify
-against `activity_management/*` and prod usage, then delete.
-
-**When deleting `TeachersEditor`**: its keys `planning.activityModal.teachersEditor.{teacher,
-main,remove,needMainTeacher,cannotRemoveMain}` go with it, but `planning.activityModal.noMainTeacher`
-does **not** live under that subtree — it's used by the live `ActivityEdition.render()`. Leave it.
 
 ## generalPayments tables freeze translated column headers at construct time
 

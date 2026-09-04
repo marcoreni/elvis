@@ -1,13 +1,11 @@
 import React from "react";
 
-import swal from "sweetalert2";
 import { withTranslation } from "react-i18next";
 
 import DuePaymentList from "./DuePaymentList";
 import PaymentList from "./PaymentList";
 import PaymentScheduleList from "./PaymentScheduleList";
 import CheckList from "./CheckList";
-import { csrfToken } from "../utils";
 import TabbedComponent from "../utils/ui/tabs";
 
 class GeneralPayments extends React.Component {

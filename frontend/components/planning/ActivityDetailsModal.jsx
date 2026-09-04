@@ -9,7 +9,7 @@ import YearlyCalendar from "./YearlyCalendar";
 import TabbedComponent from "../utils/ui/tabs";
 import * as api from "../../tools/api";
 import {AttendanceControl} from '../PresenceSheet'
-import {withSave} from '../planning/activity_management/index'
+import {withSave} from './withSave'
 import swal from "sweetalert2";
 
 const moment = require("moment");
@@ -86,18 +86,6 @@ class ActivityDetailsModal extends React.Component {
             _.filter(activity.teachers_activities, ta => !ta.is_main)[0];
         assistantTeacherId = assistantTeacherId && assistantTeacherId.user_id;
 
-        const teachers_constrained = activity
-            ? _.chain(props.teachers)
-                .filter(teacher =>
-                    _.chain(teacher.teachers_activity_refs)
-                        .map(act => act.activity_ref_id)
-                        .includes(activityId)
-                        .value()
-                )
-                .sortBy(["last_name", "first_name"])
-                .value()
-            : props.teachers;
-
         let recurrences = [
             {
                 start: moment(this.props.interval.start),
@@ -135,7 +123,6 @@ class ActivityDetailsModal extends React.Component {
             conflicting_interval_teacher: null,
 
             rooms_constrained: rooms_constrained,
-            teachers_constrained: teachers_constrained,
 
             editionMode: false,
 
@@ -247,16 +234,6 @@ class ActivityDetailsModal extends React.Component {
 
     handleSelectActivity(e) {
         const activityId = parseInt(e.target.value);
-        const teachers_constrained = _.chain(this.props.teachers)
-            .filter(teacher =>
-                _.chain(teacher.teachers_activity_refs)
-                    .map(act => act.activity_ref_id)
-                    .includes(activityId)
-                    .value()
-            )
-            .sortBy(["last_name", "first_name"])
-            .value();
-
         const rooms_constrained = _.chain(this.props.rooms)
             .filter(room =>
                 _.chain(room.activity_refs)
@@ -269,7 +246,6 @@ class ActivityDetailsModal extends React.Component {
 
         this.setState({
             activityId,
-            teachers_constrained,
             rooms_constrained,
         });
     }
@@ -692,58 +668,6 @@ class ActivityDetailsModal extends React.Component {
     // ========================================
     // RENDERING HELPERS
     // ========================================
-
-    renderTeacherSelection() {
-        const { t } = this.props;
-        const renderMainTeacherOptions = this.state.teachers_constrained
-            .filter(teacher => teacher.id !== this.state.assistantTeacherId)
-            .map((teacher, i) => (
-                <option key={i} value={teacher.id}>
-                    {`${teacher.first_name} ${teacher.last_name}`}
-                </option>
-            ));
-
-        const renderAssistantTeacherOptions = this.state.teachers_constrained
-            .filter(teacher => teacher.id !== this.state.mainTeacherId)
-            .map((teacher, i) => (
-                <option key={i} value={teacher.id}>
-                    {`${teacher.first_name} ${teacher.last_name}`}
-                </option>
-            ));
-
-        return (
-            <div className="flex-column m-b-md">
-                <label className="label-control" htmlFor="o">
-                    {t("activityModal.teacherLabel")}
-                </label>
-                <select
-                    onChange={e =>
-                        this.handleChangeTeacher(e.target.value, true)
-                    }
-                    value={this.state.mainTeacherId || 0}
-                    className="form-control m-b"
-                >
-                    <option value={0} disabled>
-                        {t("activityModal.chooseTeacher")}
-                    </option>
-                    {renderMainTeacherOptions}
-                </select>
-                <label className="label-control" htmlFor="o">
-                    {t("activityModal.otherTeacherLabel")}
-                </label>
-                <select
-                    className="form-control m-b"
-                    onChange={e =>
-                        this.handleChangeTeacher(e.target.value, false)
-                    }
-                    value={this.state.assistantTeacherId || 0}
-                >
-                    <option value={0}>{t("activityModal.chooseTeacher")}</option>
-                    {renderAssistantTeacherOptions}
-                </select>
-            </div>
-        );
-    }
 
     render() {
         const { t } = this.props;
@@ -1821,127 +1745,6 @@ class ActivityEdition extends React.Component {
             </div>
         );
     };
-}
-
-const TeachersEditor = ({
-                            teachers,
-                            selected,
-                            onChangeTeacher,
-                            onToggleIsMainTeacher,
-                            onAddTeacher,
-                            onRemoveTeacher,
-                        }) => {
-    const { t } = useTranslation("planning");
-    const notSelectedTeachersOptions = teachers
-        .filter(tt => !selected.map(ta => ta.user_id).includes(tt.id))
-        .map(tt => (
-            <option key={tt.id} value={tt.id}>
-                {`${tt.first_name} ${tt.last_name}`}
-            </option>
-        ));
-    return (
-        <div>
-            <table className="table table-bordered">
-                <thead>
-                <tr>
-                    <th>{t("activityModal.teachersEditor.teacher")}</th>
-                    <th>{t("activityModal.teachersEditor.main")}</th>
-                    <th>{t("activityModal.teachersEditor.remove")}</th>
-                </tr>
-                </thead>
-                <tbody>
-                {selected.map(ta => (
-                    <tr key={ta.user_id}>
-                        <td>
-                            <select
-                                className="form-control"
-                                onChange={e =>
-                                    onChangeTeacher(
-                                        ta.user_id,
-                                        e.target.value
-                                    )
-                                }
-                                value={ta.user_id}
-                            >
-                                {[
-                                    ...notSelectedTeachersOptions,
-                                    <option
-                                        key={ta.user_id}
-                                        value={ta.user_id}
-                                    >
-                                        {`${teachers.find(
-                                            tt => tt.id === ta.user_id
-                                        ).first_name
-                                        } ${teachers.find(
-                                            tt => tt.id === ta.user_id
-                                        ).last_name
-                                        }`}
-                                    </option>,
-                                ]}
-                            </select>
-                        </td>
-                        <td>
-                            <input
-                                type="checkbox"
-                                style={{margin: "auto"}}
-                                checked={ta.is_main}
-                                disabled={
-                                    ta.is_main &&
-                                    !(
-                                        selected.filter(tt => tt.is_main)
-                                            .length > 1
-                                    )
-                                }
-                                title={
-                                    ta.is_main
-                                        ? t("activityModal.teachersEditor.needMainTeacher")
-                                        : ""
-                                }
-                                onChange={() =>
-                                    onToggleIsMainTeacher(ta.user_id)
-                                }
-                            />
-                        </td>
-                        <td>
-                            <button
-                                className="btn btn-primary"
-                                disabled={
-                                    ta.is_main &&
-                                    !(
-                                        selected.filter(tt => tt.is_main)
-                                            .length > 1
-                                    )
-                                }
-                                title={
-                                    ta.is_main
-                                        ? t("activityModal.teachersEditor.cannotRemoveMain")
-                                        : ""
-                                }
-                                onClick={() => onRemoveTeacher(ta.user_id)}
-                            >
-                                <i className="fas fa-times"/>
-                            </button>
-                        </td>
-                    </tr>
-                ))}
-                <tr>
-                    <td>
-                        <select
-                            className="form-control"
-                            value=""
-                            onChange={e => onAddTeacher(e.target.value)}
-                        >
-                            <option value=""/>
-                            {notSelectedTeachersOptions}
-                        </select>
-                    </td>
-                    <td/>
-                    <td/>
-                </tr>
-                </tbody>
-            </table>
-        </div>
-    );
 }
 
 const coveringEditorSelectStyles = {
