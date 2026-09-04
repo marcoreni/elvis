@@ -37,7 +37,7 @@ const rejectStyle = {
 };
 
 function DragAndDrop(props) {
-    const {t} = useTranslation("parameters");
+    const {t} = useTranslation("common");
     const [file, setFile] = useState(undefined);
     const [url, setUrl] = useState(props.file_url);
 
@@ -67,12 +67,12 @@ function DragAndDrop(props) {
         let div = document.getElementById("error");
         if (fileRejections[0].errors[0].code === "file-invalid-type") {
             div.classList.remove("d-none");
-            div.textContent = t("editParameters.dragAndDrop.invalidType");
+            div.textContent = t("dragAndDrop.invalidType");
         }
 
         if (fileRejections[0].errors[0].code === "too-many-files") {
             div.classList.remove("d-none");
-            div.textContent = t("editParameters.dragAndDrop.tooManyFiles");
+            div.textContent = t("dragAndDrop.tooManyFiles");
         }
     }
 
@@ -105,7 +105,7 @@ function DragAndDrop(props) {
                                     className="btn btn-primary"
                                     type="button"
                                 >
-                                    {t("editParameters.dragAndDrop.selectButton")}
+                                    {t("dragAndDrop.selectButton")}
                                 </button>
                             </div>
                         </div>
@@ -129,7 +129,7 @@ function DragAndDrop(props) {
                             <img className="img-responsive img-rounded"
                                  id="output"
                                  src={url == "" ? "" : url}
-                                 alt={t("editParameters.dragAndDrop.imageAlt")}
+                                 alt={t("dragAndDrop.imageAlt")}
                                  style={{maxHeight: "300px"}}
                             />
                         )
@@ -148,7 +148,7 @@ function DragAndDrop(props) {
                                 </div>
                             </div>
 
-                            : <p className={"ml-5"}>{t("editParameters.dragAndDrop.currentDocument")} <strong>{t("editParameters.dragAndDrop.none")}</strong></p>;
+                            : <p className={"ml-5"}>{t("dragAndDrop.currentDocument")} <strong>{t("dragAndDrop.none")}</strong></p>;
                     }
                 })()}
             </div>

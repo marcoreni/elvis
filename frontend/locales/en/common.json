@@ -14,6 +14,14 @@
   "tabs": {
     "incomplete": "This tab is not fully filled in"
   },
+  "dragAndDrop": {
+    "invalidType": "File type not allowed",
+    "tooManyFiles": "Only one file allowed",
+    "selectButton": "Select",
+    "currentDocument": "Current document:",
+    "none": "none",
+    "imageAlt": "unable to load image"
+  },
   "confirm": {
     "sure": "Are you sure?"
   },

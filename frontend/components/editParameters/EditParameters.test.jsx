@@ -27,11 +27,13 @@
 //       editParameters.teachers.saveSuccessTitle, text: .saveSuccessText}` then
 //       `window.location.reload()`; the `else` branch and the `.error` callback both ->
 //       `{title: shared.errorTitle, text: editParameters.teachers.saveErrorText}`.
-//   DragAndDrop        — fn `useTranslation("parameters")`. Dropzone branch: `<p>{props.textDisplayed}</p>`
-//       + `<button>` = `editParameters.dragAndDrop.selectButton`. `handleDropRejected` assigns
-//       `div.innerHTML = t("editParameters.dragAndDrop.{invalidType,tooManyFiles}")` (DOM-string
-//       write, only asserted at the i18n layer); `.imageAlt` / `.currentDocument` / `.none` sit on
-//       branches that need a pre-existing file/url and are likewise asserted at the i18n layer.
+//   DragAndDrop        — fn `useTranslation("common")` (moved out of `parameters` — it's a shared
+//       component with call sites in three i18n domains, see KnownIssues.md history). Dropzone
+//       branch: `<p>{props.textDisplayed}</p>` + `<button>` = `common:dragAndDrop.selectButton`.
+//       `handleDropRejected` assigns `div.innerHTML = t("dragAndDrop.{invalidType,tooManyFiles}")`
+//       (DOM-string write, only asserted at the i18n layer); `.imageAlt` / `.currentDocument` /
+//       `.none` sit on branches that need a pre-existing file/url and are likewise asserted at the
+//       i18n layer.
 //
 // Keys live in `frontend/locales/{fr,en}/parameters.json` under `editParameters.*` (49 leaves);
 // `parameters.json` is 221 leaves this branch. Reuses `shared.{errorTitle,genericError,saveButton}`
@@ -195,9 +197,9 @@ describe("editParameters.* — i18n layer", () => {
     //     react-dropzone's own reject path. Assert those two keys resolve. --------------------
     test.each(["fr", "en"])("dragAndDrop.{invalidType,tooManyFiles,imageAlt} keys resolve in %s", (lng) => {
         for (const k of ["invalidType", "tooManyFiles", "imageAlt"]) {
-            const v = tP(lng)(`editParameters.dragAndDrop.${k}`);
+            const v = tC(lng)(`dragAndDrop.${k}`);
             expect(v.length).toBeGreaterThan(0);
-            expect(v).not.toBe(`editParameters.dragAndDrop.${k}`);
+            expect(v).not.toBe(`dragAndDrop.${k}`);
         }
     });
 
@@ -206,7 +208,7 @@ describe("editParameters.* — i18n layer", () => {
         await i18n.changeLanguage(lng);
         render(<DragAndDrop acceptedTypes="application/pdf" setFile={() => {}} textDisplayed="drop here" />);
         expect(
-            screen.getByRole("button", {name: tP(lng)("editParameters.dragAndDrop.selectButton")}),
+            screen.getByRole("button", {name: tC(lng)("dragAndDrop.selectButton")}),
         ).toBeInTheDocument();
     });
 
@@ -452,7 +454,7 @@ describe("DragAndDrop", () => {
         );
 
         expect(
-            screen.getByRole("button", {name: tP(lng)("editParameters.dragAndDrop.selectButton")}),
+            screen.getByRole("button", {name: tC(lng)("dragAndDrop.selectButton")}),
         ).toBeInTheDocument();
         expect(screen.getByText("drop a file here")).toBeInTheDocument();
     });
