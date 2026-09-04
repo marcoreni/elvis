@@ -560,7 +560,9 @@ et à mesure de son intégration :
             `NewActivityRefDataService.jsx` : aucune chaîne visible, non touchés. Tests Vitest
             (3 fichiers, gardes HOC + résolution i18n des fragments d'erreur), 15 tests.
             Revue : 0 bug ; 2 notes pré-existantes consignées dans `docs/KnownIssues.md`
-            (tooltip FR en dur dans `utils/ui/tabs.jsx` + typos ; `this.teachersError` à sens unique).
+            (tooltip FR en dur dans `utils/ui/tabs.jsx` + typos ; `this.teachersError` à sens unique)
+            **(les deux corrigées depuis -- voir `README.md` pour la première, entrée supprimée de
+            KnownIssues pour la seconde)**.
       - [x] **Lot 2b — `ActivityRefBasics.jsx`** (l'onglet « Activité ») : branche
             `feature/i18n-06-extract-activities-lot2b`. `withTranslation("activities")` ;
             `const { t } = this.props` dans `addKind` / `fetchSeasonsAndPricings` / `CreateButton`
