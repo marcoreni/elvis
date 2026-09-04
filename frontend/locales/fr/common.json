@@ -11,6 +11,9 @@
     "close": "Fermer"
   },
   "loading": "Chargement...",
+  "tabs": {
+    "incomplete": "Cet onglet n'est pas complètement rempli"
+  },
   "confirm": {
     "sure": "Êtes-vous sûr ?"
   },

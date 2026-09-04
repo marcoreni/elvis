@@ -47,19 +47,20 @@ describe("locale-aware date formatting", () => {
         expect(formatActivityForDisplay(activity)).toMatch(/lundi/i);
     });
 
-    test("toFullDateFr's weekday follows the active language (WEEKDAYS from tools/constants)", async () => {
+    test("toFullDateFr follows the active language, including the month (WEEKDAYS from tools/constants)", async () => {
         // 2026-01-12 is a Monday -> WEEKDAYS[getDay()] === WEEKDAYS[1]. Since constants-i18n
-        // lot 1, WEEKDAYS is sourced from the `common` namespace, so this leading token is
-        // "Lundi" in fr and "Monday" in en instead of always-French.
-        // Only the weekday token is asserted: toFullDateFr feeds a 0-based getMonth() into the
-        // 1-based toMonthName, so its month segment is off by one (pre-existing bug, see
-        // docs/KnownIssues.md "toFullDateFr renders the month off by one"). Don't pin it here.
+        // lot 1, WEEKDAYS is sourced from the `common` namespace, so the leading token is
+        // "Lundi" in fr and "Monday" in en instead of always-French. toMonthName is 1-based;
+        // toFullDateFr used to feed it a 0-based getMonth() (December instead of January) —
+        // fixed, so the full string (weekday + month) is asserted here, not just the weekday.
         const monday = new Date(2026, 0, 12);
 
         await i18n.changeLanguage("en");
-        expect(toFullDateFr(monday)).toMatch(/^Monday /);
+        expect(toFullDateFr(monday)).toBe("Monday 12 January 2026");
 
         await i18n.changeLanguage("fr");
-        expect(toFullDateFr(monday)).toMatch(/^Lundi /);
+        // WEEKDAYS is capitalised ("Lundi"); the month segment comes straight from
+        // Date#toLocaleString, which renders French month names lowercase ("janvier").
+        expect(toFullDateFr(monday)).toBe("Lundi 12 janvier 2026");
     });
 });

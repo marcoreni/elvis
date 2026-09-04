@@ -172,24 +172,6 @@ Worth a dedicated `bundle exec rubocop -a` (or manual) cleanup pass across the w
 than fixing these piecemeal as they're noticed — deferred here for the same reason as the frontend
 dependency bumps above.
 
-## "Edit" action label has three divergent i18n keys
-
-Surfaced 2026-08-28 in the i18n-06 evaluation review. The single UI string "Edit" (French
-"Éditer") now has three separate translation keys, added across different branches without a shared
-one existing yet:
-
-- `common.actions.edit` — `"Éditer"` / `"Edit"` (added in i18n-06 for
-  `evaluation_level_ref/index.html.erb`)
-- `views.users._family.edit_action` — `"Éditer"` / `"Edit"` (i18n-05)
-- `views.users.show.edit_link` — `"Éditer"` / `"Edit"` (i18n-05) — the missing-accent value
-  (`"Editer"`) was fixed in `feature/i18n-typo-cleanup`, so all three now agree on copy.
-
-`common.actions.edit` is still the intended canonical key: the two `views.users.*` keys should be
-pointed at it and dropped in a cleanup pass — **not done** (retrofitting the users views is a
-structural change, out of the typo pass's scope). Same applies to any other verbatim action-label
-duplication that predates `common.actions.*` (check `common.actions` against the `views.*` trees
-when doing the pass).
-
 ## Scaffold views suspected dead — recovery log + removal candidates
 
 Surfaced 2026-08-28 across the i18n-06 evaluation + payments work. Several admin CRUD `resources :x`
@@ -498,7 +480,6 @@ returns every season) but the asymmetry is now visible since the `seasonEnd` hal
   validateEmail})` passes a function where react-hook-form's `pattern:` needs a RegExp
   (`tools/format.jsx`'s `validateEmail` is a matcher, not a RegExp) — RHF's `instanceof RegExp`
   guard silently drops the rule, so `required` still fires but the format check is a no-op.
-- `frontend/tools/format.jsx` `toFullDateFr` month off-by-one — see its own section below.
 - `courses/LessonList.jsx` calls `moment.locale("fr")` at module scope *and* on every `render()`
   (`:15, :594`), which also clobbers the process-wide moment locale `frontend/i18n/index.js`
   maintains — any component rendered after `LessonList` on the same page gets French dates
@@ -525,17 +506,6 @@ What's left, low priority:
   reach `toHourMin()` as `Date` objects, not ISO strings, the way the sibling
   `TimePreferencesTable` wraps them with `toDate()` — an ISO string would silently render
   `NaN:NaN`.
-
-## `components/utils/ui/tabs.jsx` — hardcoded French tab-error tooltip (+ 2 typos)
-
-`frontend/components/utils/ui/tabs.jsx:~44` sets `title: "Cet onglet n'est pas complètement rempli"`
-on any tab whose `isInError` is true. Surfaced during i18n-06 `activities` lot 2a:
-`ActivityRefContainer` passes `isInError` for the "Activité"/"Professeurs" tabs, so in English mode
-the header renders "Activity" but its hover tooltip is still **French** — the string is a component
-literal, not a locale key. The two typos (`complêtement` → `complètement`, `remplis` → `rempli`)
-were fixed in-place in `feature/i18n-typo-cleanup`; the string itself is still not i18n'd. `tabs.jsx`
-is a shared UI util — extract it whenever a lot owns `components/utils/` (a `common:` namespace +
-a `t` prop, since it's a fn component with no `useTranslation`), not piecemeal from `activities`.
 
 ## `activityRef/ActivityRefContainer.jsx` — `this.teachersError` is a one-way side-channel
 
@@ -641,22 +611,16 @@ Adjacent bug found by the constants-i18n lot 2 review, pre-existing and untouche
 of the family-link `<select>`'s error message on any validation failure there, in both languages.
 Fix: add `import { MESSAGES } from "../../tools/constants";` to both files.
 
-## `frontend/tools/format.jsx` — `toFullDateFr` renders the month off by one
+## `frontend/tools/format.jsx` — `toFullDateFr` is day-before-month regardless of locale
 
-Pre-existing (not i18n), spotted during constants-i18n lot 1 review. `toMonthName`
-(`format.jsx:37`) is 1-based (`date.setMonth(parseInt(month, 10) - 1)`), but `toFullDateFr`
-(`format.jsx:87`) feeds it a 0-based `getMonth()`:
-
-```js
-`${WEEKDAYS[tmpDate.getDay()]} ${tmpDate.getDate()} ${toMonthName(tmpDate.getMonth())} ${tmpDate.getFullYear()}`
-```
-
-So `toFullDateFr(new Date(2026, 0, 12))` → "Lundi 12 décembre 2026" instead of "…janvier…";
-every month is off by one (January wraps to December of the same year). `toMonthName` itself is
-correct — `WeekSelector.jsx:36` passes it a 1-based month. The only broken caller is this one.
-User-visible in the create-activity modal date header (`planning/CreateActivityModal.jsx:67,112`).
-Fix: `toMonthName(tmpDate.getMonth() + 1)`. `constants.test.js` / `format.test.js` deliberately
-assert only the weekday token of `toFullDateFr` output so as not to pin the bug.
+The month off-by-one bug (`toFullDateFr` feeding a 0-based `getMonth()` into the 1-based
+`toMonthName`) is fixed — `format.test.js` now pins the full string, not just the weekday token.
+One thing remains hardcoded: the word order itself is always `<weekday> <day> <month> <year>`
+(French field order), even in English mode — `toFullDateFr(new Date(2026, 0, 12))` renders
+"Monday 12 January 2026" rather than a US-style "January 12, 2026". Defensible given the function
+name (`Fr` = French format, kept as one specific rendering), but flag it if this function's scope
+ever grows beyond the create-activity modal date header (`planning/CreateActivityModal.jsx:67,112`,
+its only consumer).
 
 ## `parameters` domain — remaining structural / dead-code items
 

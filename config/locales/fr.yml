@@ -126,7 +126,6 @@ fr:
                 no_family_link_heading: Pas de lien familial
                 profile_heading: Profil
                 view_action: Voir
-                edit_action: Éditer
                 activities_heading: Activités
                 preregister_action: Pré-inscrire
                 empty_state_html: "Si vous souhaitez inscrire un membre de votre famille à une activité, cliquez sur le bouton <b>ajouter un nouveau membre</b>, puis cliquez sur le bouton <b>pré-inscrire</b> correspondant"
@@ -227,7 +226,6 @@ fr:
                 tab_activities: Activités
                 tab_family: Liens familiaux
                 tab_absences: Absences
-                edit_link: Éditer
                 no_activity: Aucune activité
                 unknown_schedule: Horaire inconnu
                 stopped_on: Arrêt le

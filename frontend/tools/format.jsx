@@ -84,7 +84,7 @@ export const timeToDate = (timestr, refDate = null) => {
 export const toFullDateFr = date => {
     const tmpDate = new Date(date);
 
-    return `${WEEKDAYS[tmpDate.getDay()]} ${tmpDate.getDate()} ${toMonthName(tmpDate.getMonth())} ${tmpDate.getFullYear()}`;
+    return `${WEEKDAYS[tmpDate.getDay()]} ${tmpDate.getDate()} ${toMonthName(tmpDate.getMonth() + 1)} ${tmpDate.getFullYear()}`;
 }
 
 export const fullname = user =>

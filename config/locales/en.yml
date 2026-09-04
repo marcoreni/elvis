@@ -123,7 +123,6 @@ en:
                 no_family_link_heading: No family link
                 profile_heading: Profile
                 view_action: View
-                edit_action: Edit
                 activities_heading: Activities
                 preregister_action: Pre-register
                 empty_state_html: "If you would like to register a family member for an activity, click the <b>add a new member</b> button, then click the corresponding <b>pre-register</b> button"
@@ -224,7 +223,6 @@ en:
                 tab_activities: Activities
                 tab_family: Family links
                 tab_absences: Absences
-                edit_link: Edit
                 no_activity: No activity
                 unknown_schedule: Unknown schedule
                 stopped_on: Stopped on
