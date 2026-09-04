@@ -208,13 +208,15 @@ class ActivityRefContainer extends React.Component {
             errors.activityRef.to_age = t("activityRef.container.errors.toAgeTooLow");
         }
 
-        if (!values.teachers || values.teachers.length === 0)
-        {
-            // errors.teachers = "doit être renseigné";
+        // errors.teachers = "doit être renseigné";
 
-            // on n'enregistre pas l'erreur dans les erreurs pour ne pas bloquer le formulaire, mais on garde l'information pour l'affiché
-            this.teachersError = t("activityRef.container.errors.required");
-        }
+        // on n'enregistre pas l'erreur dans les erreurs pour ne pas bloquer le formulaire -- the
+        // Teachers tab's error indicator is derived straight from `values.teachers` in render()
+        // instead (isInError below), not tracked here as separate state: onValidate() can run
+        // inside React's render phase (final-form runs its first validation synchronously while
+        // constructing the form, before the component has mounted), so a setState() here would
+        // update a *different* component mid-render -- React 16 tolerates that with a dev warning,
+        // but it's exactly the kind of thing concurrent rendering forbids outright.
 
         return errors;
     }
@@ -282,7 +284,7 @@ class ActivityRefContainer extends React.Component {
                                 {
                                     id: "activity_ref_teachers",
                                     header: t("activityRef.container.tabs.teachers"),
-                                    isInError: !!this.teachersError,
+                                    isInError: !values.teachers || values.teachers.length === 0,
                                     body: <ActivityRefTeachers
                                         teachers={values.teachers}
                                         mutators={form.mutators}

@@ -435,15 +435,6 @@ What's left, low priority:
   `TimePreferencesTable` wraps them with `toDate()` — an ISO string would silently render
   `NaN:NaN`.
 
-## `activityRef/ActivityRefContainer.jsx` — `this.teachersError` is a one-way side-channel
-
-`onValidate` sets `this.teachersError` (instance field, not form state) when `values.teachers` is
-empty and never clears it; `render` reads it as `isInError: !!this.teachersError`. Once tripped,
-the Teachers tab keeps its error icon + tooltip for the component's life even after a teacher is
-selected, and the icon lags one render (instance mutation inside final-form `validate`, read in
-`render`). Pre-existing — i18n-06 lot 2a only swapped the literal `"doit être renseigné"` for
-`t(...)`, behaviour unchanged. Noted here so it isn't mistaken for extraction damage.
-
 ## `courses/LessonList.jsx` — residual French after the lot-4 i18n extraction
 
 The lot-4 extraction (`feature/i18n-06-extract-courses-lot4`) translated every string the component

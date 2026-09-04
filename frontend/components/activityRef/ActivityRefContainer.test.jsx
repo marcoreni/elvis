@@ -16,7 +16,7 @@
 // i18n.changeLanguage(...), no <I18nextProvider> needed for a withTranslation() class.
 
 import React from "react";
-import {render, screen} from "@testing-library/react";
+import {act, fireEvent, render, screen} from "@testing-library/react";
 import _ from "lodash";
 import i18n from "../../i18n";
 import ActivityRefContainer from "./ActivityRefContainer";
@@ -31,8 +31,22 @@ global._ = _;
 vi.mock("./ActivityRefBasics", () => ({default: () => null}));
 vi.mock("./ActivityRefApplication", () => ({default: () => null}));
 vi.mock("./WorkGroupTemplateEditor", () => ({default: () => null}));
-vi.mock("./ActivityRefTeachers", () => ({default: () => null}));
 vi.mock("sweetalert2", () => ({default: vi.fn()}));
+
+// ActivityRefTeachers itself is mocked (it pulls in its own selects/fields, irrelevant to what's
+// under test), but its props are stashed so a test can reach `mutators` -- react-final-form's
+// `form.mutators`, threaded here straight from the <Form> render prop -- and drive a real
+// `values.teachers` change through the actual form, the same way a user adding/removing a teacher
+// via ActivityRefTeachers would. It only mounts once the Teachers tab (not the default-active one)
+// is selected -- TabbedComponent renders only the active tab's body -- so a test needs to click
+// its header first.
+let lastTeachersProps = null;
+vi.mock("./ActivityRefTeachers", () => ({
+    default: props => {
+        lastTeachersProps = props;
+        return null;
+    },
+}));
 
 const props = {
     activityRef: {
@@ -117,4 +131,42 @@ describe("activities:activityRef.container.errors.* resolution", () => {
             });
         }
     }
+});
+
+// Regression for the "one-way side-channel" bug: the Teachers tab's error indicator used to be
+// this.teachersError, a plain instance field set by onValidate() when the teachers list was empty
+// but never cleared once it wasn't -- so the tab's error icon/tooltip stayed tripped for the
+// component's life even after a teacher was added. Fixed by deriving isInError directly from
+// `values.teachers` in render() (the data react-final-form's <Form> render prop already provides),
+// rather than tracking it as separate state: onValidate() can run inside React's render phase
+// (final-form validates synchronously while constructing the form, before mount), so setState()
+// there would be an update to a *different* component mid-render.
+describe("ActivityRefContainer — Teachers tab isInError follows values.teachers", () => {
+    // Real <Form>/<TabbedComponent>, real mutators -- the same path a user adding/removing a
+    // teacher via ActivityRefTeachers takes, not a manually-invoked onValidate(). ActivityRefTeachers
+    // only mounts once its tab is made active (TabbedComponent renders only the active tab's
+    // body), so each test clicks the "Professeurs" header first.
+    const activateTeachersTab = () => fireEvent.click(screen.getByText("Professeurs"));
+    const teachersTabItem = () => screen.getByText("Professeurs").closest("li");
+
+    test("tab starts in error when the fixture has no teachers, and clears once one is added", async () => {
+        await i18n.changeLanguage("fr");
+        render(<ActivityRefContainer {...props} />);
+
+        expect(teachersTabItem()).toHaveAttribute("title", "Cet onglet n'est pas complètement rempli");
+
+        act(() => activateTeachersTab());
+        expect(lastTeachersProps).not.toBeNull();
+
+        act(() => {
+            lastTeachersProps.mutators.push("teachers", 42);
+        });
+        expect(teachersTabItem()).not.toHaveAttribute("title");
+
+        // And removing it again re-trips the error -- not just a one-time clear, the actual bug.
+        act(() => {
+            lastTeachersProps.mutators.remove("teachers", 0);
+        });
+        expect(teachersTabItem()).toHaveAttribute("title", "Cet onglet n'est pas complètement rempli");
+    });
 });
