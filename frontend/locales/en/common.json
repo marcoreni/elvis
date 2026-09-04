@@ -95,5 +95,27 @@
     "errGroupNameExists": "The group already exists for this season and this teacher.",
     "errGroupNameEmpty": "The group name cannot be empty.",
     "errEvaluationIntervalAlreadyTaken": "This evaluation slot is already taken, please choose another one."
+  },
+  "kindsLabel": {
+    "availability": "Availability",
+    "lesson": "Course",
+    "evaluation": "Evaluation",
+    "option": "Option"
+  },
+  "preApplicationActionLabels": {
+    "new": "New enrollment",
+    "renew": "Renewal",
+    "change": "Change",
+    "stop": "Stop",
+    "pursueChildhood": "Continuing from Kids",
+    "cham": "CHAM enrollment"
+  },
+  "recurrenceTypes": {
+    "daily": "Every day",
+    "weekly": "Every week",
+    "biweekly": "Every two weeks",
+    "monthly": "Every month",
+    "bimonthly": "Every two months",
+    "yearly": "Every year"
   }
 }

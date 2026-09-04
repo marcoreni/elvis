@@ -8,7 +8,7 @@ import swal from "sweetalert2";
 import {age, levelDisplay, levelDisplayLabel} from "./planning/TimeIntervalHelpers";
 import {csrfToken, optionMapper, USER_OPTIONS_SHORT} from "./utils";
 import {makeDebounce} from "../tools/inputs";
-import {PRE_APPLICATION_ACTION_LABELS, PRE_APPLICATION_ACTIONS} from "../tools/constants";
+import {PRE_APPLICATION_ACTION_LABELS} from "../tools/constants";
 import ListPreferences from "./common/ListPreferences";
 import StopList from "./StopList";
 import UserWithInfos from "./common/UserWithInfos";
@@ -705,7 +705,7 @@ class ActivitiesApplicationsList extends React.Component {
                         return PRE_APPLICATION_ACTION_LABELS[d.pre_application_activity.action];
                     }
 
-                    return PRE_APPLICATION_ACTION_LABELS[PRE_APPLICATION_ACTIONS.NEW];
+                    return PRE_APPLICATION_ACTION_LABELS.new;
                 },
                 Filter: ({filter, onChange}) => (
                     <Select
