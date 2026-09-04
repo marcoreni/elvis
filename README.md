@@ -246,3 +246,6 @@ the state just before the removal).
 - `frontend/components/generalPayments/CheckList.jsx`: dead `message` state (never rendered, no
   `MessageModal`) and the `MESSAGE_MODAL_ID` constant it went with —
   `git show 19f4de7^:frontend/components/generalPayments/CheckList.jsx`
+- `frontend/components/formules/NewFormule.jsx` (whole file, ~460 lines): standalone "create
+  formule" screen superseded by `EditFormule.jsx` — restore with
+  `git checkout 4afe2b3^ -- frontend/components/formules/NewFormule.jsx`
