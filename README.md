@@ -243,3 +243,6 @@ commit that removed it; recover with `git show <sha>^:<path>` (the `^` is the pa
 the state just before the removal).
 - `frontend/components/generalPayments/GeneralPayments.jsx`: unused `swal` (`sweetalert2`) and
   `csrfToken` imports — `git show 7972b0f^:frontend/components/generalPayments/GeneralPayments.jsx`
+- `frontend/components/generalPayments/CheckList.jsx`: dead `message` state (never rendered, no
+  `MessageModal`) and the `MESSAGE_MODAL_ID` constant it went with —
+  `git show 19f4de7^:frontend/components/generalPayments/CheckList.jsx`
