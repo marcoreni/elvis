@@ -4,7 +4,6 @@ import * as api from "../../../tools/api";
 import swal from "sweetalert2"
 import Input from "../../common/Input";
 import {toLocaleDate} from '../../../tools/format'
-import {MESSAGES} from "../../../tools/constants";
 
 export default class ReplicateAct extends React.Component
 {

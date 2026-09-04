@@ -65,8 +65,6 @@ export default class AddTeacherForCourse extends React.Component {
 
 
     isValidated() {
-        // NB: when MESSAGES.* is eventually i18n'd, this non-render method will need its own
-        // `const { t } = this.props;` — it has none today because MESSAGES is still hardcoded.
         if (!this.state.teacherId) {
             toast.error(MESSAGES.err_must_choose_teacher, { autoClose: 3000 });
             return false;

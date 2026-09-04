@@ -3,7 +3,6 @@ import {withTranslation} from "react-i18next";
 import {csrfToken} from "../utils";
 import Select from "react-select";
 import { Field } from "react-final-form";
-import { MESSAGES } from "../../tools/constants";
 import { required } from "../../tools/validators";
 import SelectMultiple from "../common/SelectMultiple";
 

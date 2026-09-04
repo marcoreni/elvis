@@ -14,6 +14,7 @@
 import React from "react";
 import {render, screen, act} from "@testing-library/react";
 import _ from "lodash";
+import {toast} from "react-toastify";
 import i18n from "../../i18n";
 import UserSearch from "./UserSearch";
 
@@ -130,6 +131,39 @@ describe("UserSearch — 'no profile found' block (driven via setState)", () => 
         expect(
             screen.getByRole("button", {name: "Create a new profile"})
         ).toBeInTheDocument();
+    });
+});
+
+describe("UserSearch — isValidated() toasts the localized MESSAGES.err_must_select_user", () => {
+    // Direct `MESSAGES.err_must_select_user` toast call (constants-i18n lot 2): isValidated()
+    // reads the `MESSAGES` live binding at call time, so it must resolve in whatever language is
+    // active when StepZilla invokes it, not just at mount.
+    test("French: toasts the French copy when no user is selected", async () => {
+        await i18n.changeLanguage("fr");
+        const ref = React.createRef();
+        render(<UserSearch ref={ref} {...props} />);
+
+        const result = ref.current.isValidated();
+
+        expect(result).toBe(false);
+        expect(toast.error).toHaveBeenCalledWith(
+            "Veuillez sélectionner un utilisateur avant de continuer.",
+            {autoClose: 3000}
+        );
+    });
+
+    test("English: toasts the English copy when no user is selected", async () => {
+        await i18n.changeLanguage("en");
+        const ref = React.createRef();
+        render(<UserSearch ref={ref} {...props} />);
+
+        const result = ref.current.isValidated();
+
+        expect(result).toBe(false);
+        expect(toast.error).toHaveBeenCalledWith(
+            "Please select a user before continuing.",
+            {autoClose: 3000}
+        );
     });
 });
 

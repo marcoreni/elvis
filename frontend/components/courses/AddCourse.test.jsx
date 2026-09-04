@@ -13,7 +13,8 @@
 // ("Ajouter un cours" / "Add a course") and the StepZilla next/prev button labels.
 
 import React from "react";
-import {render, screen} from "@testing-library/react";
+import {render, screen, fireEvent} from "@testing-library/react";
+import {toast} from "react-toastify";
 import i18n from "../../i18n";
 import AddCourse from "./AddCourse";
 
@@ -21,6 +22,9 @@ vi.mock("./AddActivityForCourse", () => ({default: () => <div data-testid="step-
 vi.mock("./AddSlotForCourse", () => ({default: () => <div data-testid="step-slot" />}));
 vi.mock("./AddTeacherForCourse", () => ({default: () => <div data-testid="step-teacher" />}));
 vi.mock("./AddLocationForCourse", () => ({default: () => <div data-testid="step-location" />}));
+vi.mock("react-toastify", () => ({
+    toast: Object.assign(vi.fn(), {error: vi.fn()}),
+}));
 
 const currentSeason = {
     id: 7,
@@ -42,6 +46,7 @@ beforeEach(() => {
 
 afterEach(async () => {
     vi.restoreAllMocks();
+    vi.clearAllMocks();
     await i18n.changeLanguage("fr");
 });
 
@@ -68,5 +73,36 @@ describe("AddCourse", () => {
         expect(await screen.findByText("Add a course")).toBeInTheDocument();
         expect(screen.getByText("Next step")).toBeInTheDocument();
         expect(screen.getByText("Previous step")).toBeInTheDocument();
+    });
+});
+
+describe("AddCourse — handleSubmit() toasts the localized MESSAGES.err_data_missing", () => {
+    // Direct `MESSAGES.err_data_missing` toast call (constants-i18n lot 2). None of the wizard
+    // step fields (teacher/activityRef/room/...) are ever set here — the four step children are
+    // mocked out — so submitting the form always takes handleSubmit's missing-data branch.
+    test("French: toasts the French copy on submit with missing fields", async () => {
+        await i18n.changeLanguage("fr");
+        const {container} = render(<AddCourse href_path="" />);
+        await screen.findByText("Ajouter un cours");
+
+        fireEvent.submit(container.querySelector("form"));
+
+        expect(toast.error).toHaveBeenCalledWith(
+            "Impossible de continuer, des données obligatoires sont manquantes.",
+            {autoClose: 3000}
+        );
+    });
+
+    test("English: toasts the English copy on submit with missing fields", async () => {
+        await i18n.changeLanguage("en");
+        const {container} = render(<AddCourse href_path="" />);
+        await screen.findByText("Add a course");
+
+        fireEvent.submit(container.querySelector("form"));
+
+        expect(toast.error).toHaveBeenCalledWith(
+            "Cannot continue, required data is missing.",
+            {autoClose: 3000}
+        );
     });
 });

@@ -1,23 +1,5 @@
 import i18n from "../i18n";
 
-export const API_ERRORS_MESSAGES = {
-    default: "Une erreur s'est produite lors de la récupération des données",
-    err_interval_validated: "Ce créneau a déjà été validé.",
-    err_interval_creation_failed:
-        "Le créneau n'a pas pu être ajouté. Un ou plusieurs créneaux existent déjà sur cette plage horaire.",
-    err_interval_creation_partial:
-        "Le ou les créneaux ont été partiellement créés en raison de conflits avec le planning.",
-    err_interval_bounds:
-        "Le créneau spécifié est invalide. L'heure de début doit être inférieure à l'heure de fin.",
-    err_interval_not_found:
-        "Ce créneau ne peut être supprimé. Il a déjà été validé ou supprimé par un permanent.",
-    err_group_name_exists:
-        "Le groupe existe déjà pour cette saison et ce professeur.",
-    err_group_name_empty: "Le nom du groupe ne peut être vide.",
-    err_evaluation_interval_already_taken:
-        "Ce créneau d'évaluation est déjà pris, veuillez en choisir un autre.",
-};
-
 export const PRE_APPLICATION_ACTIONS = {
     NEW: 0,
     RENEW: 1,
@@ -36,32 +18,109 @@ export const PRE_APPLICATION_ACTION_LABELS = {
     cham: "Inscription CHAM"
 };
 
-// Day/month name arrays, sourced from the `common` i18n namespace so they follow the active UI
-// language. `import i18n from "../i18n"` runs i18next's synchronous init (inline resources), so
-// `t(..., { returnObjects: true })` returns the array immediately at module load. The
-// `languageChanged` subscription re-reads them on an in-page locale switch; because these are
-// `export let` bindings, the *binding* every `import { WEEKDAYS }` reads is updated (ES live
-// bindings) — a consumer still only repaints on locale change if it (or an ancestor) re-renders.
-// WEEKDAYS is Sunday-indexed (`WEEKDAYS[date.getDay()]`).
-// `_load` falls back to the hardcoded arrays if the `common` keys ever go missing (botched merge):
-// `t()` would otherwise return the key string, and `WEEKDAYS[i]` / `.length` would be silent garbage.
+// --- Constants sourced from the `common` i18n namespace, so they follow the active UI language
+// (constants-i18n lots 1-2; KINDS_LABEL / PRE_APPLICATION_ACTION_LABELS / RECURRENCE_TYPES above
+// and below are still pending, see docs/KnownIssues.md). `import i18n from "../i18n"` runs
+// i18next's synchronous init (inline resources), so `t()` returns real values immediately at
+// module load, not just after the first render. Every export below is an `export let` binding
+// that the single `languageChanged` subscription at the bottom of this block re-reads on an
+// in-page locale switch — the *binding* every `import { X }` reads is updated (ES live bindings);
+// a consumer still only repaints if it (or an ancestor) re-renders. WEEKDAYS/MONTHS fall back to
+// a hardcoded French array if their `common:` key ever goes missing (botched merge) — `t()` would
+// otherwise return the key string, and indexing/iterating that string would be silent garbage.
+// MESSAGES/API_ERRORS_MESSAGES have no such fallback: a missing key there just renders as the raw
+// i18next key string in that one message, not a whole-object failure, so it isn't worth doubling
+// every string as a hardcoded duplicate.
+
 const _WEEKDAYS_FR = ["Dimanche", "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"];
 const _MONTHS_FR = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août",
     "Septembre", "Octobre", "Novembre", "Décembre"];
-const _load = (key, fallback) => {
+const _loadArray = (key, fallback) => {
     const value = i18n.t(key, { returnObjects: true });
     return Array.isArray(value) ? value : fallback;
 };
-const _loadWeekdays = () => _load("common:weekdays", _WEEKDAYS_FR);
-const _loadMonths = () => _load("common:months", _MONTHS_FR);
+const _loadWeekdays = () => _loadArray("common:weekdays", _WEEKDAYS_FR);
+const _loadMonths = () => _loadArray("common:months", _MONTHS_FR);
 
+// WEEKDAYS is Sunday-indexed (`WEEKDAYS[date.getDay()]`).
 export let WEEKDAYS = _loadWeekdays();
 export let MONTHS = _loadMonths();
+
+// API_ERRORS_MESSAGES: server error-code -> display text. Keys stay the original snake_case
+// identifiers (tools/api.js looks them up as `API_ERRORS_MESSAGES[err]`, where `err` is a
+// server-supplied error code, not a UI string) — only the *values* are localized.
+const _loadApiErrorsMessages = () => ({
+    default: i18n.t("common:apiErrors.default"),
+    err_interval_validated: i18n.t("common:apiErrors.errIntervalValidated"),
+    err_interval_creation_failed: i18n.t("common:apiErrors.errIntervalCreationFailed"),
+    err_interval_creation_partial: i18n.t("common:apiErrors.errIntervalCreationPartial"),
+    err_interval_bounds: i18n.t("common:apiErrors.errIntervalBounds"),
+    err_interval_not_found: i18n.t("common:apiErrors.errIntervalNotFound"),
+    err_group_name_exists: i18n.t("common:apiErrors.errGroupNameExists"),
+    err_group_name_empty: i18n.t("common:apiErrors.errGroupNameEmpty"),
+    err_evaluation_interval_already_taken: i18n.t("common:apiErrors.errEvaluationIntervalAlreadyTaken"),
+});
+
+export let API_ERRORS_MESSAGES = _loadApiErrorsMessages();
+
+// MESSAGES: shared validation-error / toast dictionary. Keys stay the original snake_case
+// identifiers because several call sites index into this object with a bare sentinel string a
+// validator returned (`tools/validators.js`'s plain validators return e.g. "err_required", not
+// display text; a consuming component then resolves it via `MESSAGES[error]` — see
+// components/common/{Input,InputSelect,InputColor,AlertCheckbox,AlertYesNoRadio,
+// InlineYesNoRadio,ValidationErrorList}.jsx). The 7 function-valued entries
+// (err_min_length/err_exact_length/err_starts_with/the 4 err_ord_*) take the interpolation value
+// and return the localized string immediately, bypassing that lookup.
+const _loadMessages = () => ({
+    no_answer: i18n.t("common:messages.noAnswer"),
+    err_min_length: length => i18n.t("common:messages.errMinLength", { length }),
+    err_exact_length: length => i18n.t("common:messages.errExactLength", { length }),
+    err_starts_with: str => i18n.t("common:messages.errStartsWith"),
+    err_required: i18n.t("common:messages.errRequired"),
+    err_is_invalid: i18n.t("common:messages.errIsInvalid"),
+    err_is_invalid_id: i18n.t("common:messages.errIsInvalidId"),
+    err_agreement_gdpr: i18n.t("common:messages.errAgreementGdpr"),
+    err_agreement_image_right: i18n.t("common:messages.errAgreementImageRight"),
+    err_must_have_payer: i18n.t("common:messages.errMustHavePayer"),
+    err_must_check_rules: i18n.t("common:messages.errMustCheckRules"),
+    err_phone_format: i18n.t("common:messages.errPhoneFormat"),
+    err_at_least_one_phone: i18n.t("common:messages.errAtLeastOnePhone"),
+    err_at_least_one_address: i18n.t("common:messages.errAtLeastOneAddress"),
+    err_postal_code: i18n.t("common:messages.errPostalCode"),
+    err_must_select_user: i18n.t("common:messages.errMustSelectUser"),
+    err_must_choose_slot: i18n.t("common:messages.errMustChooseSlot"),
+    err_must_choose_activity: i18n.t("common:messages.errMustChooseActivity"),
+    err_must_choose_teacher: i18n.t("common:messages.errMustChooseTeacher"),
+    err_must_choose_room: i18n.t("common:messages.errMustChooseRoom"),
+    err_negative_date_range: i18n.t("common:messages.errNegativeDateRange"),
+    err_negative_hour_range: i18n.t("common:messages.errNegativeHourRange"),
+    err_data_missing: i18n.t("common:messages.errDataMissing"),
+    err_invalid_age: i18n.t("common:messages.errInvalidAge"),
+    err_invalid_NN: i18n.t("common:messages.errInvalidNN"),
+    err_invalid_email: i18n.t("common:messages.errInvalidEmail"),
+    err_links_missing: i18n.t("common:messages.errLinksMissing"),
+    err_interval_integrity: i18n.t("common:messages.errIntervalIntegrity"),
+    err_ord_gte: mark => i18n.t("common:messages.errOrdGte", { mark }),
+    err_ord_gt: mark => i18n.t("common:messages.errOrdGt", { mark }),
+    err_ord_lte: mark => i18n.t("common:messages.errOrdLte", { mark }),
+    err_ord_lt: mark => i18n.t("common:messages.errOrdLt", { mark }),
+    err_must_check_consent: i18n.t("common:messages.errMustCheckConsent"),
+    err_must_respond: i18n.t("common:messages.errMustRespond"),
+    err_must_select_price: i18n.t("common:messages.errMustSelectPrice"),
+    err_cannot_duplicate_price: i18n.t("common:messages.errCannotDuplicatePrice"),
+    err_must_select_payment_terms: i18n.t("common:messages.errMustSelectPaymentTerms"),
+});
+
+export let MESSAGES = _loadMessages();
 
 i18n.on("languageChanged", () => {
     WEEKDAYS = _loadWeekdays();
     MONTHS = _loadMonths();
+    API_ERRORS_MESSAGES = _loadApiErrorsMessages();
+    MESSAGES = _loadMessages();
 });
+
+// --- End of constants sourced from the `common` i18n namespace.
 
 export const INTERVAL_KINDS = {
     AVAILABILITY: "p",
@@ -125,45 +184,4 @@ export const ACTIVITY_KIND_COLORS = {
     CHAM: "#5A676F",
     ATELIERS: "#FF9846",
     DEFAULT: "#E96469",
-};
-
-
-export const MESSAGES = {
-    no_answer: "PAS DE RÉPONSE",
-    err_min_length: length => `Ce champ doit comporter au minimum ${length} caractères`,
-    err_exact_length: length => `Ce champ doit comporter exactement ${length} caractères`,
-    err_starts_with: str => `Ce champ n'a pas le bon préfixe`,
-    err_required: "Cette information est requise.",
-    err_is_invalid: "Des erreurs de saisies ont été détectées. Veuillez vérifier les informations renseignées.",
-    err_is_invalid_id: "La combinaison de Nom - Prénom - date de naissance est déjà prise, vous possédez déjà un compte chez nous. Veuillez vous connecter sur votre espace personel ",
-    err_agreement_gdpr: "Pour continuer l'inscription, vous devez exprimer votre consentement sur la collecte de vos données personnelles.",
-    err_agreement_image_right: "Pour continuer l'inscription, vous devez nous autoriser à utiliser votre image.",
-    err_must_have_payer: "Un payeur doit être déclaré.",
-    err_must_check_rules: "Pour continuer, vous devez accepter le règlement intérieur",
-    err_phone_format: "Le numéro de téléphone est invalide.",
-    err_at_least_one_phone: "Pour continuer l'inscription, vous devez renseigner au moins un numéro de téléphone.",
-    err_at_least_one_address: "Pour continuer l'inscription, vous devez renseigner au moins une adresse postale.",
-    err_postal_code: "Le code postal est invalide.",
-    err_must_select_user: "Veuillez sélectionner un utilisateur avant de continuer.",
-    err_must_choose_slot:"Veuillez choisir un créneau avant de continuer.",
-    err_must_choose_activity:"Veuillez choisir une activité avant de continuer.",
-    err_must_choose_teacher:"Veuillez choisir un professeur avant de continuer.",
-    err_must_choose_room:"Veuillez choisir une salle avant de continuer.",
-    err_negative_date_range: "Les dates de début et de fin renseignées sont invalides.",
-    err_negative_hour_range: "Les heures de début et de fin renseignées sont invalides.",
-    err_data_missing: "Impossible de continuer, des données obligatoires sont manquantes.",
-    err_invalid_age: "La date de naissance ne peut être saisie à l'avance.",
-    err_invalid_NN: "Le numéro de registre national est invalide.",
-    err_invalid_email: "L'adresse mail saisie est invalide.",
-    err_links_missing: "Vous devez préciser le lien de parenté pour chaque membre de la famille.",
-    err_interval_integrity: "Le début doit être inférieur à la fin",
-    err_ord_gte: mark => `La valeur doit être supérieure ou égale à ${mark}`,
-    err_ord_gt: mark => `La valeur doit être supérieure à ${mark}`,
-    err_ord_lte: mark => `La valeur doit être inférieure à ${mark}`,
-    err_ord_lt: mark => `La valeur doit être inférieure ou égale à ${mark}`,
-    err_must_check_consent: "Vous devez donner votre consentement pour continuer.",
-    err_must_respond: "Vous devez répondre pour continuer.",
-    err_must_select_price: "Sélectionnez un tarif ou supprimez la ligne.",
-    err_cannot_duplicate_price: "Impossible d'ajouter deux fois le même produit avec le même tarif.",
-    err_must_select_payment_terms: "veuillez sélectionner les modalités de paiement.",
 };

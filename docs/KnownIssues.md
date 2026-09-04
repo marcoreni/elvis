@@ -569,7 +569,7 @@ the **constructor**, so it's frozen at construct time and won't follow a later `
 generalPayments/`planning/Calendar.jsx` frozen-header notes above). The 12 react-table column
 headers are fine — they're rebuilt inside `render()`.
 
-## `frontend/tools/constants.js` — hardcoded French `MESSAGES` leak into English mode (`WEEKDAYS` / `MONTHS` resolved)
+## `frontend/tools/constants.js` — hardcoded French constants leak into English mode (`WEEKDAYS`/`MONTHS`/`MESSAGES`/`API_ERRORS_MESSAGES` resolved)
 
 Surfaced during the i18n-06 `courses` lot 1 extraction (`AddCourse.jsx`, `AddCourseSummary.jsx`,
 `AddActivityForCourse.jsx`). These modules were switched to `t()` for their own copy, but they
@@ -581,19 +581,58 @@ still read shared French-only constants that were left as-is:
   (`activityApplications/ItemPreferences.jsx`, `availability/AvailabilityList.jsx`) won't repaint
   on an in-page switch — harmless today (full-reload locale switch), same class as the
   frozen-header notes above.
-- `MESSAGES.err_data_missing` ("Impossible de continuer, des données obligatoires sont manquantes.")
-  — toasted from `AddCourse.jsx`.
-- `MESSAGES.err_must_choose_activity` ("Veuillez choisir une activité avant de continuer.") —
-  toasted from `AddActivityForCourse.jsx#isValidated`.
-- `MESSAGES.err_must_select_user` ("Veuillez sélectionner un utilisateur avant de continuer.") —
-  toasted from `activityApplications/UserSearch.jsx#isValidated` (i18n-06 activities lot 3b).
+- ~~`MESSAGES` / `API_ERRORS_MESSAGES`~~ **Resolved — constants-i18n lot 2**
+  (`feature/i18n-constants-lot2-messages`): moved to `common:messages` / `common:apiErrors` (37 /
+  9 entries), same `export let` live-binding + `languageChanged` re-read pattern as lot 1. Keys
+  stay the original snake_case identifiers on both objects — several call sites index `MESSAGES`
+  with a bare sentinel string a validator returned (`tools/validators.js`), not with UI text, and
+  `tools/api.js` indexes `API_ERRORS_MESSAGES` with a server-supplied error code — only the
+  *values* changed. 4 dead `MESSAGES` imports removed in the same pass
+  (`DetachAccount.jsx`, `ActivityRefTeachers.jsx`, `ReplicateAct.jsx`, `InputSelectReact.jsx`).
 
 `tools/constants.js` is imported from many components across the app, so this is a cross-cutting
-pass in its own right (a `common:` namespace + a `useTranslation`/prop for the class consumers),
-not something to fix piecemeal inside one domain lot. `WEEKDAYS` / `MONTHS` were done as
-constants-i18n lot 1 (see above). The `MESSAGES.*` toasts here are still verbatim, left for a
-later constants-i18n lot (2–4) together with `API_ERRORS_MESSAGES`, `KINDS_LABEL`,
-`PRE_APPLICATION_ACTION_LABELS` and `RECURRENCE_TYPES`. Grep: `from "../../tools/constants"`.
+pass in its own right, not something to fix piecemeal inside one domain lot. `WEEKDAYS`/`MONTHS`
+(lot 1) and `MESSAGES`/`API_ERRORS_MESSAGES` (lot 2) are done. `KINDS_LABEL`,
+`PRE_APPLICATION_ACTION_LABELS`, and `RECURRENCE_TYPES` are left for constants-i18n lot 3. Grep:
+`from "../../tools/constants"`.
+
+Two bugs found while extracting `MESSAGES` (preserved verbatim in the new locale keys per the
+extraction policy, not fixed here):
+- **`err_ord_lte` / `err_ord_lt` are swapped relative to their names.** `err_ord_lte` ("less than
+  or equal", by its name) actually says "…doit être inférieure à…" (strictly less than, no
+  "or equal"); `err_ord_lt` ("less than") says "…inférieure ou égale à…" (less than **or equal**).
+  `validators.js`'s `ordCheck` calls each by name (`case "lt": ... err_ord_lt`, `case "lte": ...
+  err_ord_lte`), so a real validation failure shows the **wrong** boundary wording — e.g. an
+  `ordCheck(10, "lt")` failure says "…must be less than or equal to 10" when the rule actually
+  requires strictly less than 10. Reachable wherever `ordCheck(..., "lt")` or `ordCheck(...,
+  "lte")` is used. Fix: swap the two message bodies (or the two key names) to match.
+- **`err_starts_with` / `startsWith` validator is dead and buggy.** `MESSAGES.err_starts_with`
+  never uses its own `str` parameter (always renders the same generic text — preserved as-is,
+  same class as the `noIntervalMessage` type of no-op default). Its only caller, `validators.js`'s
+  exported `startsWith`, passes `length` instead of its own `str` param
+  (`MESSAGES["err_starts_with"](length)`) — in a browser this resolves to `window.length` (`0`,
+  the frame count), not a `ReferenceError`, so the failure branch silently returns the generic
+  no-op text with the wrong argument rather than throwing. It **would** throw where there is no
+  global `window` — e.g. reached from `packs/server_rendering.js`. No import of `startsWith` from
+  `tools/validators.js` was found anywhere in `frontend/`, so it is dead code today; noted here
+  rather than fixed, since fixing dead code risks masking that it's unreachable.
+
+Verbatim typos preserved in the new `common:messages` / `common:apiErrors` keys (same policy as
+every other lot — corrected only on request):
+- `messages.errIsInvalidId` — "…votre espace **personel** " → "…personnel" (missing an `n`).
+  Trailing space is intentional glue (kept), same class as the other load-bearing-whitespace
+  entries above.
+- `messages.errMustSelectPaymentTerms` — source is lowercase-initial ("veuillez sélectionner…"),
+  inconsistent with every sibling `err_must_*` message (capitalised "Veuillez…"). Kept verbatim;
+  EN mirror is properly capitalised ("Please select…"), same as every other lot's clean-EN
+  convention for an FR-only casing defect.
+
+Adjacent bug found by the constants-i18n lot 2 review, pre-existing and untouched by this lot
+(same class as the two above, more severe, not yet fixed): `userForm/ContactForm.jsx:202` and
+`userForm/WizardContactForm.jsx:178` both render `{MESSAGES[meta.error]}` without ever importing
+`MESSAGES` — neither file declares it locally either. A real `ReferenceError` crashes the render
+of the family-link `<select>`'s error message on any validation failure there, in both languages.
+Fix: add `import { MESSAGES } from "../../tools/constants";` to both files.
 
 ## `frontend/tools/format.jsx` — `toFullDateFr` renders the month off by one
 
