@@ -1,13 +1,15 @@
 import React, { Fragment, useEffect, useState } from "react";
 import PropTypes from "prop-types";
 import _ from "lodash";
+import { useTranslation } from "react-i18next";
 
 /**
  *
  * @param {*} param0 tabs, an array containing four key-values: id, header, active (bool), mode ("buttons" / "classic") and body
  */
 export default function TabbedComponent({ tabs: tabsProps , mode: modeProps, defaultActiveTab = 0 }) {
-    tabsProps = tabsProps.filter(t => t != undefined);
+    const { t } = useTranslation("common");
+    tabsProps = tabsProps.filter(tab => tab != undefined);
 
     const [active, setActive] = useState(defaultActiveTab);
 
@@ -15,7 +17,7 @@ export default function TabbedComponent({ tabs: tabsProps , mode: modeProps, def
 
     const [tabErrorState, setTabErrorState] = useState(tmp);
 
-    const propsActivated = tabsProps.findIndex(t => t.active);
+    const propsActivated = tabsProps.findIndex(tab => tab.active);
 
     useEffect(() => {
         if (propsActivated !== -1)
@@ -35,37 +37,37 @@ export default function TabbedComponent({ tabs: tabsProps , mode: modeProps, def
                     className={`flex ${mode === "classic" ? "nav nav-tabs" : "bg-light-blue flex no-padding"}`}
                     role="tablist"
                 >
-                    {tabsProps.map((t, i) => (
+                    {tabsProps.map((tab, i) => (
                         <li
                             key={i}
                             style={{ height: "auto" }}
                             className={`${mode === "classic" ? "" : "btn btn-primary btn_slider"} ${active === i ? "active" : ""}`}
-                            onClick={t.headerHandler || (() => {})}
-                            { ...(tabErrorState[t.id] || t.isInError ? { ["title"]: "Cet onglet n'est pas complètement rempli" } : {})}
+                            onClick={tab.headerHandler || (() => {})}
+                            { ...(tabErrorState[tab.id] || tab.isInError ? { ["title"]: t("tabs.incomplete") } : {})}
                         >
                             <a
                                 className={`${mode === "classic" ? "nav-link " : "text-"} ${active === i ? "active" : ""}`}
-                                data-toggle={!t.headerHandler && "tab"}
+                                data-toggle={!tab.headerHandler && "tab"}
                                 onClick={() => handleTabClick(i)}
                                 style={{
-                                    ...(t.headerStyle || {}),
+                                    ...(tab.headerStyle || {}),
                                 }}
-                                href={`#${t.id}`}
+                                href={`#${tab.id}`}
                             >
-                                {t.header} {tabErrorState[t.id] || t.isInError ? <i className="fa fa-exclamation-circle text-danger" /> : <i className=" fa fa-check-circle text-success" />}
+                                {tab.header} {tabErrorState[tab.id] || tab.isInError ? <i className="fa fa-exclamation-circle text-danger" /> : <i className=" fa fa-check-circle text-success" />}
                             </a>
                         </li>
                     ))}
                 </ul>
                 <div className="tab-content">
                     {
-                        tabsProps.map((t, i) => <div
+                        tabsProps.map((tab, i) => <div
                             key={i}
-                            id={t.id}
+                            id={tab.id}
                             className={`tab-pane ${active === i ? "active" : ""}`}
                             role="tabpanel">
                             <div className={`panel-body ${mode === "classic" ? "" : "no-padding"}`}>
-                                {active === i && { ...t.body, props: { ...t.body.props, setTabError: isError => setTabErrorState(tabErrorState => ({ ...tabErrorState, [t.id]: isError })) } }}
+                                {active === i && { ...tab.body, props: { ...tab.body.props, setTabError: isError => setTabErrorState(tabErrorState => ({ ...tabErrorState, [tab.id]: isError })) } }}
                             </div>
                         </div>)
                     }

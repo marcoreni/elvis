@@ -11,6 +11,9 @@
     "close": "Close"
   },
   "loading": "Loading...",
+  "tabs": {
+    "incomplete": "This tab is not fully filled in"
+  },
   "confirm": {
     "sure": "Are you sure?"
   },

@@ -308,7 +308,7 @@
               <div class="m-r-md">
                 <%= t("views.users.show.tab_activities") %>
                 <% if current_user.is_admin %>
-                  <%= link_to t("views.users.show.edit_link"), edit_user_activities_path(@user), class: "btn btn-primary btn-xs" %>
+                  <%= link_to t("common.actions.edit"), edit_user_activities_path(@user), class: "btn btn-primary btn-xs" %>
                 <% end %>
               </div>
             </h2>
