@@ -437,7 +437,8 @@ et à mesure de son intégration :
           `multiViewModal.replacedBy`, `common:reactTable.loadingText`. `moment.locale("fr")` codé
           en dur dans `calculateTotalHours` supprimé (la locale moment est centralisée dans
           `frontend/i18n/index.js`). `ConflictDisplayItem` = code mort (jamais rendu) → laissé,
-          consigné dans KnownIssues. `getTimeTemplate` et `CalendarControls` exportés pour le test
+          consigné dans KnownIssues **(supprimé depuis, voir `README.md` « Removed dead code »)**.
+          `getTimeTemplate` et `CalendarControls` exportés pour le test
           (tui-calendar ne monte pas proprement en jsdom). Test : `Calendar.test.jsx` (7, fr+en —
           vue mois, vue semaine/jour, ligne remplaçant). `yarn test` → 30 fichiers / 90 tests.
           **Revue `/code-review`** : `calculateTotalHours` passé à `isoWeek` (fenêtre du total
@@ -495,7 +496,8 @@ et à mesure de son intégration :
           `translator`** (parité 164/164) ; 3 fautes préservées verbatim (`Editer`, `A PRECISER`,
           `Elève`) + espaces de fin intentionnels, consignées dans `docs/KnownIssues.md`.
           `TeachersEditor` (composant) et `renderTeacherSelection` (méthode) = code mort (jamais
-          rendus/appelés) — extraits quand même, consignés. `TimeSelection`/`LocationSelection`/
+          rendus/appelés) — extraits quand même, consignés **(supprimés depuis, voir `README.md`
+          « Removed dead code »)**. `TimeSelection`/`LocationSelection`/
           `RoomSelection`/`TeacherCoveringEditor` exportés pour le test (le modal ne monte pas en
           jsdom). Test : `ActivityDetailsModal.test.jsx` (agent `qa`).
     - [x] **Lot 6** : branche `feature/i18n-06-extract-planning-subtrees`.
@@ -514,10 +516,12 @@ et à mesure de son intégration :
         (`activityModal.roomBusy`, parité 176/176).
       - `activity_management/` : **tout le sous-arbre est mort sauf `withSave`** (le container
         `ActivityManagement` n'est monté nulle part ; `ActivityDetailsModal.jsx` a ses propres
-        copies inline des composants). Non traduit, consigné dans `docs/KnownIssues.md`.
+        copies inline des composants). Non traduit, consigné dans `docs/KnownIssues.md`
+        **(sous-arbre supprimé depuis, `withSave` déplacé vers `planning/withSave.jsx` — voir
+        `README.md` « Removed dead code »)**.
     - **Domaine `planning` — extraction terminée** (lots 1 → 6 + lot 3c), sauf :
       - `ConflictDisplayItem` de `Calendar.jsx` (« Résolu »/« Voir le conflit ») — code mort,
-        déjà consigné dans `docs/KnownIssues.md`.
+        déjà consigné dans `docs/KnownIssues.md` **(supprimé depuis, voir `README.md`)**.
       - `planning/TimeInterval.jsx` — composant legacy cassé (`levelDisplay()` = stub
         `return "Banana";`, `` `${averageAge} ans` `` en dur ~l. 111) — consigné, passe future.
 
@@ -834,7 +838,8 @@ et à mesure de son intégration :
     - [x] `NewFormule.jsx` + `NewFormulePricingDataService.js` : `NewFormule` (composant) monté
           nulle part — écran « créer » historique remplacé par `EditFormule`. **Non traduit, laissé
           en place** (politique recover-don't-delete) ; consigné dans `docs/KnownIssues.md`
-          (« `formules/NewFormule.jsx` — dead »). `NewFormulePricingDataService` reste utilisé par
+          (« `formules/NewFormule.jsx` — dead ») **(fichier supprimé depuis, voir `README.md`
+          « Removed dead code »)**. `NewFormulePricingDataService` reste utilisé par
           `EditFormule`.
     - [x] Pas de composant `formules/*` rendu en SSR (`prerender`) — la dette
           `server_rendering.js` (ligne ~355) ne bloque donc pas cette branche.

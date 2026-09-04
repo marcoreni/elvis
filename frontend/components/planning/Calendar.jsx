@@ -424,14 +424,6 @@ class CustomCalendar extends React.Component {
         this.setState({ currentDate: this.calendar.getDate().toDate() });
     }
 
-    handleSetToConflictDate(ts) {
-        const conflictDate = moment(ts);
-        conflictDate.startOf("week");
-        this.calendar.setDate(conflictDate.toDate());
-        this.props.updateIntervals(conflictDate.toDate(), this.props.view);
-        this.setState({ currentDate });
-    }
-
     render() {
         const totalHours = this.calculateTotalHours();
 
@@ -456,9 +448,6 @@ class CustomCalendar extends React.Component {
                         }
                         handleTogglePrev={() => this.handleTogglePrev()}
                         handleToggleNext={() => this.handleToggleNext()}
-                        handleSetToConflictDate={ts =>
-                            this.handleSetToConflictDate(ts)
-                        }
                     />
                 )}
 
@@ -482,7 +471,6 @@ export const CalendarControls = ({
     handleToggleNextSeasonStartView,
     handleTogglePrev,
     handleToggleNext,
-    handleSetToConflictDate,
     conflicts,
 }) => {
     const filteredConflicts = _.filter(conflicts, c => !c.is_resolved);
@@ -558,29 +546,7 @@ export const CalendarControls = ({
                     </div>
                     <span className="separator">|</span>
                     {conflicts && filteredConflicts.length > 0 ? (
-                        <React.Fragment>
-                            {/*<div className="btn-group">
-                                <button
-                                    data-toggle="dropdown"
-                                    className="btn btn-warning dropdown-toggle"
-                                >
-                                    <i className="fas fa-exclamation-triangle m-r-sm" />
-                                    {filteredConflicts.length} conflits
-                                </button>
-                                <ul className="dropdown-menu dropdown-menu-conflit">
-                                    {_.map(filteredConflicts, (c, i) => (
-                                        <ConflictDisplayItem
-                                            key={i}
-                                            conflict={c}
-                                            currentDate={currentDate}
-                                            handleSetToConflictDate={ts =>
-                                                handleSetToConflictDate(ts)
-                                            }
-                                        />
-                                    ))}
-                                </ul>
-                                </div> */}
-                        </React.Fragment>
+                        <React.Fragment></React.Fragment>
                     ) : null}
                     <div className="m-l">
                         <h3>
@@ -593,68 +559,6 @@ export const CalendarControls = ({
                 </div>
             </div>
         </React.Fragment>
-    );
-};
-
-const ConflictDisplayItem = ({
-    conflict,
-    currentDate,
-    handleSetToConflictDate,
-}) => {
-    const start = currentDate ? moment(currentDate) : null;
-    const end = moment(start).add(6, "d");
-    const conflictTs = moment(conflict.ts);
-    const isConflictDisplayedOnCalendar = conflictTs.isBetween(start, end);
-
-    let icon;
-    switch (conflict.kind) {
-        case "room":
-            icon = <i className="fas  fa-building" />;
-            break;
-        case "teacher":
-            icon = <i className="fas fa-male" />;
-            break;
-        case "holiday":
-            icon = <i className="fas fa-calendar" />;
-            break;
-    }
-
-    let seeConflict;
-    if (conflict.kind == "room") {
-        seeConflict = (
-            <a
-                href={`/plannings/conflict/${conflict.id}`}
-                className="conflict-item"
-            >
-                {icon}
-                <span className="conflict-item-infos">
-                    <b>{moment(conflict.ts).format("D MMM YYYY - HH:mm")}</b>
-                    {conflict.id}
-                </span>
-            </a>
-        );
-    } else {
-        seeConflict = (
-            <button
-                onClick={() => handleSetToConflictDate(conflict.ts)}
-                className="btn btn-sm btn-primary"
-            >
-                {icon} Voir le conflit
-            </button>
-        );
-    }
-
-    return (
-        <li>
-            {/* {icon}
-            {conflict.id + ' - '}
-            <b>{moment(conflict.ts).format('D MMM YYYY HH:mm')}</b> */}
-            {isConflictDisplayedOnCalendar && conflict.kind != "room" ? (
-                <button className="btn btn-sm btn-primary">Résolu</button>
-            ) : (
-                seeConflict
-            )}
-        </li>
     );
 };
 

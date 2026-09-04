@@ -25,7 +25,6 @@ const defaultTableProps = () => ({
 });
 
 const NB_DISPLAYED_RECIPIENTS = 3;
-const MESSAGE_MODAL_ID = "messagesModal";
 
 const debounce = makeDebounce();
 
@@ -94,12 +93,6 @@ class CheckList extends React.Component {
         this.state = {
             data: [],
             pages: null,
-            message: {
-                title: props.t("general.reminder.defaultTitle"),
-                content: "",
-                isEmail: true,
-                isSMS: false,
-            },
             bulkEdit: {},
             page: 0,
             filter,

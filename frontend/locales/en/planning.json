@@ -176,8 +176,6 @@
         "createCourseButton": "Create this course ",
         "noStudents": "No student is enrolled in this course yet.",
         "teacherLabel": "Teacher",
-        "otherTeacherLabel": "Other teacher",
-        "chooseTeacher": "Choose a teacher",
         "teacherBusy": "Teacher \"{{name}}\" is already busy during this time slot ({{from}} - {{to}})",
         "roomBusy": "Room {{room}} is already busy from {{from}} to {{to}}",
         "startLabel": "Start",
@@ -205,13 +203,6 @@
             "adherentNumber": "Member no.",
             "student": "Student",
             "present": "Present"
-        },
-        "teachersEditor": {
-            "teacher": "Teacher",
-            "main": "Main",
-            "remove": "Remove",
-            "needMainTeacher": "Each course needs at least one main teacher",
-            "cannotRemoveMain": "You can only remove a main teacher if there is another one"
         },
         "noSubstitute": "NO SUBSTITUTE",
         "hoursCountedForAbsent": "Hours counted for the absent teacher?",

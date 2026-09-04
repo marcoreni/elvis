@@ -176,8 +176,6 @@
         "createCourseButton": "Créer ce cours ",
         "noStudents": "Pour le moment, aucun élève n'est inscrit à ce cours.",
         "teacherLabel": "Professeur",
-        "otherTeacherLabel": "Autre professeur",
-        "chooseTeacher": "Choisir un Professeur",
         "teacherBusy": "Le professeur \"{{name}}\" est déjà occupé durant ce créneau horaire ({{from}} - {{to}})",
         "roomBusy": "La salle {{room}} est déjà occupée de {{from}} à {{to}}",
         "startLabel": "Début",
@@ -205,13 +203,6 @@
             "adherentNumber": "N° Adh",
             "student": "Élève",
             "present": "Présent"
-        },
-        "teachersEditor": {
-            "teacher": "Professeur",
-            "main": "Principal",
-            "remove": "Supprimer",
-            "needMainTeacher": "Il faut au moins un professeur principal par cours",
-            "cannotRemoveMain": "Vous ne pouvez supprimer un professeur principal que s'il y en a un autre"
         },
         "noSubstitute": "PAS DE REMPLAÇANT",
         "hoursCountedForAbsent": "Heures comptées pour le professeur absent ?",
