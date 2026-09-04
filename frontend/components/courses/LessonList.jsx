@@ -12,8 +12,6 @@ import DeleteCourseModal from "./DeleteCourseModal";
 import * as api from "../../tools/api";
 import swal from "sweetalert2";
 
-moment.locale("fr");
-
 import * as TimeIntervalHelpers from "../planning/TimeIntervalHelpers";
 import {
     DownloadButton,
@@ -591,7 +589,6 @@ class LessonList extends React.Component {
     }
 
     render() {
-        moment.locale("fr");
         const { t } = this.props;
 
         const activity = this.state.activity;
