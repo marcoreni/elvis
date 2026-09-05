@@ -22,7 +22,7 @@ default: &default
   public_root_path: public
   public_output_path: packs
   cache_path: tmp/shakapacker
-  webpack_compile_output: true
+  rspack_compile_output: true
   # See https://github.com/shakacode/shakapacker#deployment
   shakapacker_precompile: true
 
@@ -37,7 +37,8 @@ default: &default
   cache_manifest: false
 
   # Select loader to use, available options are 'babel' (default), 'swc' or 'esbuild'
-  webpack_loader: 'babel'
+  javascript_transpiler: 'swc'
+  assets_bundler: "rspack" # or 'webpack' (default)
 
   # Raises an error if there is a mismatch in the shakapacker gem and npm package being used
   ensure_consistent_versioning: true

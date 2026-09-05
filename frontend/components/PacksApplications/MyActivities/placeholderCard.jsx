@@ -21,7 +21,7 @@ export default function placeholderCard({ user })
                style={{borderRadius: '0 0 5px 5px'}}
                href={"/inscriptions/new?user_id=" + user.id}>
                 <div className="text-white font-bold pl-4">
-                    JE M'INSCRIS<span className="pull-right pr-3"> > </span>
+                    JE M'INSCRIS<span className="pull-right pr-3"> &gt; </span>
                 </div>
             </a>
         </div>

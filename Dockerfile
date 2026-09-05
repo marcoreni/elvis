@@ -1,6 +1,6 @@
 FROM node:20-alpine3.20 AS node
 
-FROM ruby:3.3.6-alpine3.20 AS build
+FROM ruby:3.3.12-alpine3.20 AS build
 
 COPY --from=node /usr/lib /usr/lib
 COPY --from=node /usr/local/lib /usr/local/lib
@@ -78,7 +78,6 @@ COPY frontend /Elvis/frontend
 COPY db /Elvis/db
 COPY public /Elvis/public
 COPY app/assets /Elvis/app/assets
-COPY babel.config.js postcss.config.js /Elvis/
 
 # ignore error when precompiling assets
 RUN NODE_OPTIONS=--openssl-legacy-provider rails assets:precompile
@@ -120,7 +119,7 @@ RUN rm -r /usr/local/bundle/cache
 
 FROM surnet/alpine-wkhtmltopdf:3.20.3-0.12.6-small AS wkhtmltopdf
 
-FROM ruby:3.3.6-alpine3.20
+FROM ruby:3.3.12-alpine3.20
 
 # Copy wkhtmltopdf files from docker-wkhtmltopdf image
 # ~ 47mb
