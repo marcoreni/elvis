@@ -20,6 +20,7 @@
     "@fullcalendar/resource-timeline": "^5.5.0",
     "@fullcalendar/timegrid": "^5.5.1",
     "@ramonak/react-progress-bar": "^5.4.0",
+    "bootstrap": "^4",
     "draft-js": "^0.11.7",
     "draftjs-to-html": "^0.9.1",
     "final-form": "^5.0.1",
