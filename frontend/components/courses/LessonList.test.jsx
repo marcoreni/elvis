@@ -363,6 +363,29 @@ describe("row expander (UserList / UserRow) — i18n", () => {
         enList.unmount();
     });
 
+    // Regression: begin_at/stopped_at are Paris-zone timestamps (config.time_zone = "Paris") at
+    // local midnight, but Intl.DateTimeFormat(...) with no `timeZone` option formats in the
+    // *machine's* zone instead -- for a Paris-midnight instant, any machine west of Paris (e.g.
+    // an en-US server or CI runner on UTC) rolls the displayed date back to the previous day. This
+    // is exactly the audience the fr->i18n.language fix above was supposed to help. Verified with
+    // `TZ=America/New_York` locally, where this test fails without the `timeZone: "Europe/Paris"`
+    // option and passes with it, regardless of the ambient TZ.
+    test("Started/Stopped dates don't roll back a day on a machine west of Paris", async () => {
+        const withParisMidnight = () => {
+            const fixture = activityFixture();
+            fixture.users[0].begin_at = "2020-01-01T00:00:00+01:00"; // Paris midnight, winter (UTC+1)
+            fixture.users[0].stopped_at = "2030-06-15T00:00:00+02:00"; // Paris midnight, summer (UTC+2)
+            return fixture;
+        };
+
+        await i18n.changeLanguage("en");
+        render(<LessonList {...makeProps()} />);
+        await waitFor(() => expect(lastReactTableProps).not.toBeNull());
+        const sub = render(lastReactTableProps.SubComponent({original: withParisMidnight()}));
+        expect(sub.getByText("1/1/2020")).toBeInTheDocument();
+        expect(sub.getByText("6/15/2030")).toBeInTheDocument();
+    });
+
     // Regression: UserRow used to read `data.evaluation_level_ref.label` from the API response,
     // but desired_activity_controller.rb renders evaluation_level_ref as a bare string, not an
     // object -- `.label` on a string is always undefined, so studentLevel never got set and the

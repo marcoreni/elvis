@@ -39,7 +39,16 @@ export const SUB_ROW = {
         activity_ref: {is_work_group: false, id: 3},
         activity_ref_id: 3,
         time_interval: {id: 7, start: "2025-09-01T17:00:00"},
-        users: [{id: 99, first_name: "Jean", last_name: "Dupont", birthday: "2014-01-01"}],
+        users: [{
+            id: 99,
+            first_name: "Jean",
+            last_name: "Dupont",
+            birthday: "2014-01-01",
+            // Paris-zone midnight timestamps (config.time_zone = "Paris") -- exercises the
+            // Started/Stopped-date columns' timezone-safe formatting, see the dedicated
+            // describe block below.
+            application: {id: 1, begin_at: "2020-01-01T00:00:00+01:00", stopped_at: "2030-06-15T00:00:00+02:00"},
+        }],
         inactive_users: [],
         options: [],
         activities_instruments: [],
@@ -277,6 +286,34 @@ describe("Activity — rendered copy per locale", () => {
         await waitFor(() =>
             expect(within(sub).getByText(expected.sub.levelCell)).toBeInTheDocument(),
         );
+    });
+});
+
+// Regression: SubStudentList's Started/Stopped date columns formatted begin_at/stopped_at with
+// Intl.DateTimeFormat('fr') -- hardcoded to French AND with no `timeZone` option. Since those
+// fields are Paris-zone timestamps at local midnight (config.time_zone = "Paris"), formatting
+// without an explicit timeZone uses the *machine's* zone instead, silently rolling the displayed
+// date back a day for anyone west of Paris (the exact en-US audience the locale-aware fix is for).
+// SUB_ROW's user carries a Paris-midnight begin_at/stopped_at pair for this reason.
+describe("Activity — SubStudentList Started/Stopped dates are locale-aware and timezone-safe", () => {
+    test("en: dates render in en format without rolling back a day", async () => {
+        await i18n.changeLanguage("en");
+        render(<Activity {...baseProps()} />);
+        await waitFor(() => expect(global.fetch).toHaveBeenCalled());
+
+        const sub = screen.getByTestId("rt-sub");
+        expect(within(sub).getByText("1/1/2020")).toBeInTheDocument();
+        expect(within(sub).getByText("6/15/2030")).toBeInTheDocument();
+    });
+
+    test("fr: dates render in fr format", async () => {
+        await i18n.changeLanguage("fr");
+        render(<Activity {...baseProps()} />);
+        await waitFor(() => expect(global.fetch).toHaveBeenCalled());
+
+        const sub = screen.getByTestId("rt-sub");
+        expect(within(sub).getByText("01/01/2020")).toBeInTheDocument();
+        expect(within(sub).getByText("15/06/2030")).toBeInTheDocument();
     });
 });
 

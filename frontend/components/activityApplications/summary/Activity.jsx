@@ -7,6 +7,7 @@ const moment = require("moment");
 import ReactModal from "react-modal";
 import ReactTable from "react-table";
 
+import i18n from "../../../i18n";
 import * as api from "../../../tools/api";
 import * as TimeIntervalHelpers from "../../planning/TimeIntervalHelpers";
 import {csrfToken, FR_DATE_FORMAT, findAndGet, optionMapper} from "../../utils";
@@ -14,6 +15,11 @@ import {radioValue} from "../../evaluation/question/radio_question";
 import {PRE_APPLICATION_ACTION_LABELS, modalStyle, WEEKDAYS} from "../../../tools/constants.js";
 import {displayActivityRef, formatActivityHeadcount, occupationInfos, toAge} from "../../../tools/format";
 import WorkGroupEditor from "./WorkGroupEditor";
+
+// begin_at/stopped_at are Paris-zone timestamps (config.time_zone = "Paris") at local midnight.
+// Formatting them without an explicit timeZone uses the *browser's* zone instead, which silently
+// rolls the displayed date back a day for anyone west of Paris.
+const PARIS_DATE_FORMAT_OPTIONS = { timeZone: "Europe/Paris" };
 
 // SUB COMPONENTS
 
@@ -166,11 +172,11 @@ const SubStudentList = ({ row, seasons }) => {
                     );
 
                     const formattedBeginAt = app?.begin_at
-                        ? Intl.DateTimeFormat('fr').format(new Date(app.begin_at))
+                        ? Intl.DateTimeFormat(i18n.language, PARIS_DATE_FORMAT_OPTIONS).format(new Date(app.begin_at))
                         : '';
 
                     const formattedStoppedAt = app?.stopped_at
-                        ? Intl.DateTimeFormat('fr').format(new Date(app.stopped_at))
+                        ? Intl.DateTimeFormat(i18n.language, PARIS_DATE_FORMAT_OPTIONS).format(new Date(app.stopped_at))
                         : '';
 
                     return (
