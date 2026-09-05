@@ -495,16 +495,14 @@ Dedup note (not a defect): `common:kindsLabel` now duplicates `planning:kinds` i
 (Cours/Course, Option, Évaluation/Evaluation all appear in both namespaces with agreeing values).
 Fold into the existing cross-namespace consolidation backlog rather than acting on it now.
 
-Two bugs found while extracting `MESSAGES` (preserved verbatim in the new locale keys per the
-extraction policy, not fixed here):
-- **`err_ord_lte` / `err_ord_lt` are swapped relative to their names.** `err_ord_lte` ("less than
-  or equal", by its name) actually says "…doit être inférieure à…" (strictly less than, no
-  "or equal"); `err_ord_lt` ("less than") says "…inférieure ou égale à…" (less than **or equal**).
-  `validators.js`'s `ordCheck` calls each by name (`case "lt": ... err_ord_lt`, `case "lte": ...
-  err_ord_lte`), so a real validation failure shows the **wrong** boundary wording — e.g. an
-  `ordCheck(10, "lt")` failure says "…must be less than or equal to 10" when the rule actually
-  requires strictly less than 10. Reachable wherever `ordCheck(..., "lt")` or `ordCheck(...,
-  "lte")` is used. Fix: swap the two message bodies (or the two key names) to match.
+Bugs found while extracting `MESSAGES`. The extraction itself carried the strings over verbatim per
+the extraction policy; where a bullet below is struck through, the defect was fixed later as a
+deliberate follow-up (`fix/messages-ordcheck-and-contactform-import`), not during the extraction:
+- ~~**`err_ord_lte` / `err_ord_lt` are swapped relative to their names.**~~ **Fixed** — the
+  `common:messages.errOrdLt` / `errOrdLte` values were swapped back so they match how
+  `validators.js`'s `ordCheck` calls them (`case "lt"` → `err_ord_lt` = strict wording, `case
+  "lte"` → `err_ord_lte` = "or equal" wording). `constants.test.js`'s swap-bug test now pins the
+  corrected behavior.
 - **`err_starts_with` / `startsWith` validator is dead and buggy.** `MESSAGES.err_starts_with`
   never uses its own `str` parameter (always renders the same generic text — preserved as-is,
   same class as the `noIntervalMessage` type of no-op default). Its only caller, `validators.js`'s
@@ -516,12 +514,11 @@ extraction policy, not fixed here):
   `tools/validators.js` was found anywhere in `frontend/`, so it is dead code today; noted here
   rather than fixed, since fixing dead code risks masking that it's unreachable.
 
-Adjacent bug found by the constants-i18n lot 2 review, pre-existing and untouched by this lot
-(same class as the two above, more severe, not yet fixed): `userForm/ContactForm.jsx:202` and
-`userForm/WizardContactForm.jsx:178` both render `{MESSAGES[meta.error]}` without ever importing
-`MESSAGES` — neither file declares it locally either. A real `ReferenceError` crashes the render
-of the family-link `<select>`'s error message on any validation failure there, in both languages.
-Fix: add `import { MESSAGES } from "../../tools/constants";` to both files.
+Adjacent bug found by the constants-i18n lot 2 review, pre-existing: `userForm/ContactForm.jsx` and
+`userForm/WizardContactForm.jsx` both render `{MESSAGES[meta.error]}` without ever importing
+`MESSAGES`, so a `ReferenceError` crashed the render of the family-link `<select>`'s error message
+on any validation failure there, in both languages. **Fixed** — added
+`import { MESSAGES } from "../../tools/constants";` to both files.
 
 ## `Sauvegarder` / `Enregistrer` — two established save-button wordings, not unified
 

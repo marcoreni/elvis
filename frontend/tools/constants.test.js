@@ -156,18 +156,18 @@ describe("MESSAGES follows the active UI language", () => {
         );
     });
 
-    // Pinning the pre-existing err_ord_lte / err_ord_lt swap bug (docs/KnownIssues.md): by name
-    // err_ord_lte should be the "or equal" variant and err_ord_lt the strict one, but the message
-    // bodies are swapped relative to their key names. Preserved verbatim from the pre-i18n French
-    // strings — do NOT "fix" this while touching the messages; a deliberate fix should show up as
-    // an intentional change to this test, not a silent regression.
+    // err_ord_lt / err_ord_lte carry the wording that matches how validators.js `ordCheck` calls
+    // them: `case "lt"` (fails on `a >= b`, i.e. requires strictly less) renders err_ord_lt, and
+    // `case "lte"` (fails on `a > b`) renders err_ord_lte. So err_ord_lt must be the strict
+    // wording and err_ord_lte the "or equal" one. These were swapped verbatim from the pre-i18n
+    // French strings until this batch corrected them (docs/KnownIssues.md).
     test.each(["fr", "en"])(
-        "err_ord_lte / err_ord_lt swap-bug is preserved as-is (%s)",
+        "err_ord_lt is the strict variant, err_ord_lte the 'or equal' one (%s)",
         async lng => {
             await i18n.changeLanguage(lng);
 
-            expect(constants.MESSAGES.err_ord_lt(10)).toMatch(/or equal|ou égale/);
-            expect(constants.MESSAGES.err_ord_lte(10)).not.toMatch(/or equal|ou égale/);
+            expect(constants.MESSAGES.err_ord_lt(10)).not.toMatch(/or equal|ou égale/);
+            expect(constants.MESSAGES.err_ord_lte(10)).toMatch(/or equal|ou égale/);
         }
     );
 });
