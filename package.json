@@ -55,7 +55,6 @@
     "react-switch": "^6.0.0",
     "react-table": "^6.8.0",
     "react-toastify": "^4.5.2",
-    "react-yearly-calendar": "SIXMON/react-yearly-calendar",
     "react_ujs": "^2.4.3",
     "sweetalert2": "^7.26.11",
     "tui-calendar": "https://github.com/SIXMON/tui.calendar.git"

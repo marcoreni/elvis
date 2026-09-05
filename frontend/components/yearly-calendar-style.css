@@ -124,7 +124,7 @@ div.calendar-controls .today {
 .seasonDay {
   background-color: white !important;
 }
-.holiday {
+.fc-daygrid-day.holiday {
   background-color: #d0d0d0 !important;
 }
 .existingInstances {
@@ -137,4 +137,20 @@ div.calendar-controls .today {
 }
 .today {
     border: 1px solid #293846 !important;
+}
+
+.year-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);  /* 10 months -> 3 rows (4-4-2) */
+    gap: 12px;
+}
+
+.year-grid-month-label {
+    text-align: center;
+    font-weight: bold;
+    padding: 2px 0;
+}
+
+.year-grid .fc {
+    font-size: 0.75em;
 }
