@@ -1,12 +1,10 @@
+// Must be first: puts jQuery on `window` as an import side effect, before the inspinia plugin
+// imports below are evaluated (they read `window.jQuery` at module-eval time). See the file's
+// header comment for why this cannot just be a statement in this module body.
+import '../expose-jquery';
+
 import './application.scss';
 import './application_print.scss';
-
-// jQuery (full build, 3.7.1) is the single source now -- no CDN tag, no vendored copies. Its dist
-// UMD sets `noGlobal` under CommonJS so it doesn't attach to `window` itself; the inline page
-// scripts across the layouts and the vendored inspinia plugins below (`}(window.jQuery)`) both
-// need it there, so expose it explicitly before anything that consumes it.
-import jQuery from 'jquery';
-window.jQuery = window.$ = jQuery;
 
 import Rails from "@rails/ujs";
 import '../inspinia/js/plugins/metisMenu/jquery.metisMenu.js';
