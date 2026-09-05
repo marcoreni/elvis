@@ -11,8 +11,8 @@ import {render, screen} from "@testing-library/react";
 import i18n from "../../i18n";
 import EvaluationChoiceTable from "./EvaluationChoiceTable";
 
-// The component passes `timeInterval.start` straight to `toHourMin` (which calls .getHours()),
-// so these must be Date objects, not ISO strings — that's the shape the wizard hands down.
+// The component now wraps `timeInterval.start`/`.end` in `toDate()` before `toHourMin`, so it
+// accepts both Date objects (this fixture) and ISO strings (the `withStringSlot` regression).
 const withSlot = {
     data: [
         {
@@ -79,5 +79,34 @@ describe("EvaluationChoiceTable", () => {
         expect(
             screen.queryByText(/Aucun créneau d'évaluation disponible actuellement/)
         ).not.toBeInTheDocument();
+    });
+
+    // Regression: the wizard can hand `timeInterval.start`/`.end` down as ISO strings rather
+    // than Date objects. `toHourMin` calls `.getHours()`, which is undefined on a string, so
+    // the time cell renders "NaN:NaN" unless the component wraps each bound in `toDate()`
+    // first (matching the sibling TimePreferencesTable). Revert the two `toDate()` wraps in
+    // EvaluationChoiceTable.jsx and this test fails.
+    const withStringSlot = {
+        data: [
+            {
+                refId: 1,
+                timeInterval: {
+                    start: "2025-09-01T17:00:00",
+                    end: "2025-09-01T18:30:00",
+                },
+            },
+        ],
+        activityRefs: [{id: 1, kind: "Piano"}],
+    };
+
+    test("renders real HH:MM → HH:MM when timeInterval bounds are ISO strings, not NaN:NaN", async () => {
+        await i18n.changeLanguage("fr");
+        render(<EvaluationChoiceTable {...withStringSlot} />);
+
+        const cell = screen.getByText("Lundi").closest("td");
+        expect(cell).toHaveTextContent("17:00");
+        expect(cell).toHaveTextContent("18:30");
+        expect(cell.textContent).toMatch(/17:00\s*→\s*18:30/);
+        expect(cell.textContent).not.toMatch(/NaN/);
     });
 });

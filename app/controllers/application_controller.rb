@@ -110,18 +110,38 @@ class ApplicationController < ActionController::Base
       I18n.default_locale
   end
 
-  # The already-signed-in user's saved locale, read straight from the Warden session WITHOUT
-  # running authentication strategies. switch_locale is a prepend_around_action, so it runs
-  # before verify_authenticity_token; calling `current_user` here would make Warden authenticate
-  # the submitted credentials on a sign-in POST, and a *successful* auth fires Devise's
-  # clean_up_csrf_token_on_authentication hook, which deletes session[:_csrf_token] before the
-  # CSRF check reads it -> every valid login 422s with InvalidAuthenticityToken. `warden.user`
-  # only deserializes an already-persisted user (event: :fetch, which the Devise hook ignores)
-  # and returns nil on the sign-in request itself, where the user isn't signed in yet anyway.
+  # The already-signed-in user's saved locale, read from the Warden session (or, failing that, the
+  # remember-me cookie) WITHOUT running authentication strategies. switch_locale is a
+  # prepend_around_action, so it runs before verify_authenticity_token; calling `current_user`
+  # here would make Warden authenticate the submitted credentials on a sign-in POST, and a
+  # *successful* auth fires Devise's clean_up_csrf_token_on_authentication hook (registered
+  # `after_authentication`, i.e. only for `event: :authentication`), which deletes
+  # session[:_csrf_token] before the CSRF check reads it -> every valid login 422s with
+  # InvalidAuthenticityToken. `warden.user` only deserializes an already-persisted user
+  # (`event: :fetch`, which that hook does not run for) and returns nil on the sign-in request
+  # itself, where the user isn't signed in yet anyway.
   def persisted_user_locale
-    request.env["warden"]&.user(scope: :user)&.locale
-  rescue StandardError
+    (request.env["warden"]&.user(scope: :user) || remembered_user)&.locale
+  rescue StandardError => e
+    Rails.logger.debug("[i18n] persisted_user_locale lookup failed: #{e.message}")
     nil
+  end
+
+  # `warden.user` above only sees a user already in the *session*. A visitor coming back with a
+  # valid "remember me" cookie but no session (a browser restart drops the session cookie) is
+  # only signed in later, by Devise's :rememberable strategy inside authenticate_user! — long
+  # after switch_locale resolved the locale — so without this their saved preference would be
+  # skipped and the first page after every restart would render from the stale locale cookie.
+  #
+  # We can't reach that user via warden.authenticate here (that is the whole point of
+  # persisted_user_locale), so deserialize the signed cookie directly: the same two calls
+  # Devise::Strategies::Rememberable#authenticate! makes, minus the Warden authentication event.
+  # Nothing is written, no hook fires, and the strategy still does the real sign-in afterwards.
+  def remembered_user
+    cookie = cookies.signed[User.rememberable_options.fetch(:key, "remember_user_token")]
+    return nil if cookie.blank?
+
+    User.serialize_from_cookie(*cookie)
   end
 
   # Locales this installation actually exposes to its users — the subset of the code-shipped

@@ -502,3 +502,60 @@ describe("Summary — handler i18n (swal / toast)", () => {
         );
     });
 });
+
+// ==============================================================================================
+// F. courseOption <option> label — regression guard for the `activity_reéf_id` typo.
+//
+// The "change questionnaire" <select> builds each <option> label from
+//   t("summary.courseOption", { course: findAndGet(this.props.activityRefs,
+//                                                   r => r.id === e.activity.activity_ref_id, "label"), ... })
+// The property was misspelled `activity_reéf_id` (stray accented é), so `r.id === undefined`
+// never matched an activityRef and `{{course}}` interpolated to nothing — a silent label defect,
+// not a crash. Fixed to `activity_ref_id` in `fix/wrong-property-refs`.
+// react-modal / ButtonModal are mocked to render their children, so the <select> is in the DOM
+// without a click.
+// ==============================================================================================
+
+describe("Summary — courseOption label resolves the activityRef via activity_ref_id", () => {
+    const propsWithChangeForm = () => ({
+        ...baseProps(),
+        activityRefs: [
+            {id: 7, label: "Piano"},
+            {id: 8, label: "Guitare"},
+        ],
+        application_change_questionnaires: {
+            forms: [
+                {
+                    form: {
+                        id: 555,
+                        activity: {
+                            activity_ref_id: 7,
+                            group_name: "Groupe A",
+                            teacher: {first_name: "Jean", last_name: "Bach"},
+                        },
+                    },
+                },
+            ],
+        },
+    });
+
+    test.each(["fr", "en"])("the <option> shows the interpolated course label in %s", async (lng) => {
+        await i18n.changeLanguage(lng);
+        const t = i18n.getFixedT(lng, "activityApplications");
+        const expected = t("summary.courseOption", {
+            course: "Piano",
+            group: "Groupe A",
+            teacher: "Jean Bach",
+        });
+
+        render(<Summary {...propsWithChangeForm()} />);
+
+        const option = screen.getByRole("option", {name: expected});
+        expect(option).toBeInTheDocument();
+        expect(option.textContent).toContain("Piano");
+        // pre-fix (`activity_reéf_id` -> id === undefined -> no match) this dropped {{course}}:
+        expect(option.textContent).not.toBe(
+            t("summary.courseOption", {course: "", group: "Groupe A", teacher: "Jean Bach"}),
+        );
+    });
+});

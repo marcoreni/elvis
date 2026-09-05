@@ -74,7 +74,7 @@ export default function AdhesionSettings()
                     swal({
                         title: t("shared.errorTitle"),
                         text: t("shared.genericError"),
-                        icon: 'error'
+                        type: 'error'
                     });
                 }
 
@@ -201,6 +201,13 @@ export default function AdhesionSettings()
                     ]}
                     defaultPageSize={10}
                     className="-striped -highlight"
+                    previousText={t("common:reactTable.previousText")}
+                    nextText={t("common:reactTable.nextText")}
+                    loadingText={t("common:reactTable.loadingText")}
+                    noDataText={t("common:reactTable.noDataText")}
+                    pageText={t("common:reactTable.pageText")}
+                    ofText={t("common:reactTable.ofText")}
+                    rowsText={t("common:reactTable.rowsText")}
                 />
 
             </div>

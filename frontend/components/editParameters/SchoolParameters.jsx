@@ -155,7 +155,7 @@ export default function SchoolParameters(props) {
                     <label>{t("editParameters.school.emailLabel")} <span className="text-danger">*</span> :</label>
                     <input type="email" name="email" {...register("email", {
                         required: true,
-                        pattern: validateEmail
+                        validate: value => !!validateEmail(value)
                     })} defaultValue={props.school.email} className="form-control"/>
                     <p className="text-danger">{errors.email && t("editParameters.school.emailRequired")}</p>
                 </div>
