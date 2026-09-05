@@ -30,8 +30,6 @@
 @import "../../node_modules/react-calendar/dist/Calendar";
 @import "react-draft-wysiwyg/dist/react-draft-wysiwyg.css";
 
-@import "react-datepicker/dist/react-datepicker.css";
-
 
 /* ========================================================================== */
 /* VARIABLES */
@@ -107,14 +105,6 @@ body {
     z-index: 10000;
     padding: 3px 12px;
     border-radius: 8px;
-}
-
-.react-datepicker__input-container .react-datepicker__calendar-icon {
-    margin-top: 5px
-}
-
-.react-date-picker__button {
-    border: none;
 }
 
 .footer-buttons::after {

@@ -43,7 +43,6 @@
     "react": "^16.14.0",
     "react-autosuggest": "^9.3.4",
     "react-csv": "^2.2.2",
-    "react-datepicker": "^5.1.0",
     "react-dom": "^16.2.0",
     "react-draft-wysiwyg": "^1.15.0",
     "react-dropzone": "^11.2.4",
