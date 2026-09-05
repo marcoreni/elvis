@@ -471,7 +471,6 @@ class PracticePlanning extends React.Component {
                             center: "title",
                             right: "resourceTimelineDay,resourceTimelineWeek",
                         }}
-                        buttonText={{today: this.props.t("practice.today")}}
                         initialView="resourceTimelineDay"
                         views={{
                             resourceTimelineWeek: {

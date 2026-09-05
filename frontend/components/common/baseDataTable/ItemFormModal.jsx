@@ -1,8 +1,11 @@
 import React, {useState} from "react";
+import _ from "lodash";
 import Modal from "react-modal";
 import {Form} from "react-final-form";
+import {useTranslation} from "react-i18next";
 
 export default function ItemFormModal(props) {
+    const {t} = useTranslation("common");
 
     const FormContentComponent = props.component;
     const isUpdate = !!(props.item && props.item.id);
@@ -35,7 +38,7 @@ export default function ItemFormModal(props) {
             className="modal-dialog modal-sm"
         >
             <div className="modal-header">
-                <h4 className="modal-title">{isUpdate ? props.updateTitle || "Mise à jour" : props.createTitle || "Création"}</h4>
+                <h4 className="modal-title">{isUpdate ? props.updateTitle || t("itemFormModal.updateTitleFallback") : props.createTitle || t("itemFormModal.createTitleFallback")}</h4>
                 <button type="button" className="close" onClick={props.onRequestClose}>
                     <span aria-hidden="true">&times;</span>
                 </button>
@@ -61,12 +64,12 @@ export default function ItemFormModal(props) {
                                             type="reset" className="btn btn-block"
                                             onClick={props.onRequestClose}
                                         >
-                                            Annuler
+                                            {t("actions.cancel")}
                                         </button>
                                     </div>
                                     <div>
                                         <button type="submit" className="btn btn-primary btn-block">
-                                            Sauvegarder
+                                            {t("itemFormModal.saveButton")}
                                             &nbsp;
                                             {submitting ?
                                                 <i className="fas fa-circle-notch fa-spin"></i>
@@ -77,7 +80,7 @@ export default function ItemFormModal(props) {
                                 </div>
 
                                 <div>{
-                                    errors && <div className="alert alert-danger">Erreur(s) :
+                                    errors && <div className="alert alert-danger">{t("itemFormModal.errorsHeading")}
                                         <ul>
                                             {Array.isArray(errors)  ?
                                                 _.map(errors, (error, index) => {

@@ -1,7 +1,9 @@
 import React, {useEffect, useState} from "react";
 import Modal from "react-modal";
+import {useTranslation} from "react-i18next";
 
 export default function DeleteItemModal(props) {
+    const {t} = useTranslation("common");
     const [error, setError] = useState(null);
     const [submitting, setSubmitting] = useState(false);
     useEffect(() => {
@@ -20,7 +22,7 @@ export default function DeleteItemModal(props) {
             })
             .catch(err => {
                 setSubmitting(false);
-                setError(err.message || "Une erreur est survenue lors de la suppression.");
+                setError(err.message || t("deleteItemModal.genericError"));
             });
     }
 
@@ -31,14 +33,14 @@ export default function DeleteItemModal(props) {
             className="modal-dialog modal-sm"
         >
             <div className="modal-header">
-                <h4 className="modal-title">{props.title || "Suppression"}</h4>
+                <h4 className="modal-title">{props.title || t("deleteItemModal.titleFallback")}</h4>
                 <button type="button" className="close" onClick={props.onRequestClose}>
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
 
             <div className="modal-body">
-                {props.question || "Voulez-vous vraiment supprimer cet élément ?"}
+                {props.question || t("deleteItemModal.questionFallback")}
             </div>
 
             {error && <div className="alert alert-danger mt-3">{error}</div>}
@@ -50,7 +52,7 @@ export default function DeleteItemModal(props) {
                         onClick={props.onRequestClose}
                         disabled={submitting}
                     >
-                        Annuler
+                        {t("actions.cancel")}
                     </button>
                 </div>
                 <div>
@@ -60,7 +62,7 @@ export default function DeleteItemModal(props) {
                         onClick={handleDelete}
                         disabled={submitting}
                     >
-                        Supprimer
+                        {t("actions.delete")}
                         &nbsp;
                         {submitting ?
                             <i className="fas fa-circle-notch fa-spin"></i>
