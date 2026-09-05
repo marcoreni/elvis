@@ -8,6 +8,7 @@
 import React from "react";
 import {render, screen} from "@testing-library/react";
 import i18n from "../../i18n";
+import enActivityApplications from "../../locales/en/activityApplications.json";
 import SelectedActivitiesTable from "./SelectedActivitiesTable";
 
 const props = {selectedActivities: [], packs: {}, selectedPacks: {}};
@@ -60,4 +61,29 @@ describe("SelectedActivitiesTable — duration cell goes through activityApplica
             expect(screen.getByText("45min")).toBeInTheDocument();
         });
     }
+
+    // The test above can't actually distinguish "wired through i18n" from "still hardcoded",
+    // because the fr and en `units.*` values are byte-identical -- a regression back to a
+    // hardcoded `${hours}h${minutes}` template would render exactly "1h30" and still pass it.
+    // Prove the string genuinely comes from the en catalogue by giving it a distinguishable
+    // value at runtime and asserting the render reflects it; a hardcoded literal could never
+    // pick this up.
+    test("en: renders whatever the en catalogue actually says, not a value baked into the component", async () => {
+        await i18n.changeLanguage("en");
+        i18n.addResourceBundle(
+            "en",
+            "activityApplications",
+            {units: {hoursMinutes: "{{hours}}HR{{minutes}}", minutes: "{{minutes}}MIN"}},
+            true,
+            true,
+        );
+
+        try {
+            render(<SelectedActivitiesTable {...activitiesProps} />);
+            expect(screen.getByText("1HR30")).toBeInTheDocument();
+            expect(screen.getByText("45MIN")).toBeInTheDocument();
+        } finally {
+            i18n.addResourceBundle("en", "activityApplications", enActivityApplications, true, true);
+        }
+    });
 });

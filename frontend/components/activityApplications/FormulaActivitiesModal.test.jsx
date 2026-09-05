@@ -14,6 +14,7 @@
 import React from "react";
 import {render, screen} from "@testing-library/react";
 import i18n from "../../i18n";
+import enActivityApplications from "../../locales/en/activityApplications.json";
 import FormulaActivitiesModal from "./FormulaActivitiesModal";
 
 const props = {
@@ -160,4 +161,27 @@ describe("FormulaActivitiesModal — duration cell goes through activityApplicat
             expect(cellWithText("--")).toBeInTheDocument();
         });
     }
+
+    // The test above can't actually distinguish "wired through i18n" from "still hardcoded",
+    // because the fr and en `units.minuteAbbrev` values are byte-identical ("min") -- a
+    // regression back to the old hardcoded `"min"` literal would render exactly the same text
+    // and still pass it. Prove the suffix genuinely comes from the en catalogue by giving it a
+    // distinguishable value at runtime and asserting the render reflects it.
+    test("en: the suffix renders whatever the en catalogue actually says, not a value baked into the component", async () => {
+        await i18n.changeLanguage("en");
+        i18n.addResourceBundle(
+            "en",
+            "activityApplications",
+            {units: {minuteAbbrev: "MINUTES"}},
+            true,
+            true,
+        );
+
+        try {
+            render(<FormulaActivitiesModal {...formulaProps} />);
+            expect(cellWithText("45 MINUTES")).toBeInTheDocument();
+        } finally {
+            i18n.addResourceBundle("en", "activityApplications", enActivityApplications, true, true);
+        }
+    });
 });
