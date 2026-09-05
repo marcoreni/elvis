@@ -1111,25 +1111,47 @@ indépendant et peut être réordonné ou repris lors d'une session future.
 | Mailer classes (`app/mailers`) | 15 | Devise mailer only | 14, of which ~7 have hardcoded `subject` + untranslated views |
 | Model string literals (validation msgs, enum labels) | — | `translate_enum :activity_type` only | ~47 literals to triage |
 
-## Definition of "done" (this never existed — establish it)
+## How to run Phase 07 — lean batching + checkpoint tests
 
-The roadmap's §Vérification stops at "après 05" and "pour les périmètres déjà balayés". There is
-no whole-app completion criterion. Adopt one:
+Phases 00–06 built and proved the pipeline (key conventions, extraction tooling, `translator` /
+`qa` / `code-reviewer` subagents, PR flow). **What remains is translation volume, not
+engineering** — so the two things that made 00–06 slow (many small PRs; a render test per
+extracted component) are the wrong shape for it.
 
-1. **`bin/i18n-tasks health` with an empty `ignore_missing` / `ignore_unused`** — today those
-   lists hide un-swept scopes; "done" = they are empty and health is clean.
-2. **A grep gate** (CI or pre-commit) that fails on a bare capitalised multi-word literal inside
-   `<%= %>`/JSX text nodes in any `app/views/**` / `frontend/components/**` path not on an
-   allow-list. Rough, but it catches regressions the i18n-tasks scanner can't (it only tracks
-   *keys*, not un-keyed literals).
-3. **Per-area sign-off** against the checklist below — each item is a walkable page in both locales
-   with no visible French and no `translation missing:` marker.
+**Batching — coalesce.** Do *not* split this into ~20 one-file-folder PRs; each PR carries the
+full pipeline cost (translate → qa → review → push → PR → human merge), and for mechanical
+extraction that overhead dwarfs the work. Group by natural boundary into **~6–9 large PRs**
+(the "PR groups" column in §Remaining work). Within a PR, still work folder-by-folder; just
+don't cut a branch per folder.
+
+**Testing — checkpoint only, don't grow the count 1:1 with extraction.** The suite is already
+~1250 tests and the pipeline is proven. Per Phase 07 PR:
+
+1. **`bin/i18n-tasks health`** — 0 missing / 0 unused, with the PR's scope removed from
+   `ignore_missing` / `ignore_unused`. This *is* the test that keys are wired and fr↔en match.
+2. **fr↔en key parity** across every namespace touched (leaf-count + no fr-only / en-only key).
+3. **One bilingual smoke test per *area*** (not per file): request the area's main page in `fr`
+   and `en`, assert no `translation missing:` marker and one representative translated string.
+   ~1 spec per PR group, extending the `spec/requests/*_pages_spec.rb` pattern.
+4. **Targeted tests only for real edge cases**: `<Trans>` interpolation, plural `_one`/`_other`,
+   sub-lexical interpolation, the load-bearing-whitespace keys. These are rare — most extraction
+   needs none.
+
+Don't delete existing tests; just stop adding a render test per extracted file.
+
+**Whole-app "done" criterion** (never existed before): §1 + §2 above clean for every scope, plus
+a **grep gate** (CI or pre-commit) that fails on a bare capitalised multi-word literal inside
+`<%= %>` / JSX text nodes outside an allow-list — the only thing that catches *un-keyed* literals,
+which i18n-tasks (key-based) cannot.
 
 ## Remaining work, by area
 
-Each item: scale, suggested lot count (at the roadmap's ~15–30-file lot size), dependencies.
+Each item: scale, which PR group it belongs to, dependencies. **PR groups** (target ~7):
+`P1 menu+chrome` · `P2 practice/* + parameters ERB` · `P3 enrolment & money ERB` ·
+`P4 member-facing + activity-catalogue + misc ERB` · `P5 React tail (audit + extract)` ·
+`P6 backend strings (mailers + controller JSON + model + format parity)` · `P7 OAuth + legal/mgmt pages`.
 
-### A. Global navigation menu — 1 lot
+### A. Global navigation menu  →  PR group P1
 - `config/initializers/20-menu_generator.rb`: 44 `caption:` **String** literals ("Utilisateurs",
   "Inscriptions", "Adhésions", "Plannings", "Gestion des saisons", …).
 - `Elvis::MenuManager::MenuItem#caption` already does `@caption.is_a?(Symbol) ? l(@caption) : @caption`
@@ -1137,50 +1159,50 @@ Each item: scale, suggested lot count (at the roadmap's ~15–30-file lot size),
 - Check plugin-contributed menu items too (`lib/elvis/plugin_loader.rb` registers plugin menus) —
   out of this repo, but document the convention so plugins follow it.
 
-### B. App chrome / layouts / shared partials — 1 lot
+### B. App chrome / layouts / shared partials  →  PR group P1
 - `app/views/layouts/{application,simple,static_pages}.html.erb` (`devise.html.erb` was done in 04):
   header, breadcrumbs, user dropdown, footer, the flash-message renderer, any `title`/`alt`.
 - `app/views/partials/*` (non-`_language_switcher`), `app/views/partials/mailer/*`.
 - The 5 inline `<script>` blocks across `app/views/**/*.erb` — check for user-facing strings
   (`alert(...)`, `confirm(...)`, injected text).
 
-### C. Remaining ERB view domains — ~6–8 lots
-Fully-untouched folders (erb count), grouped into lot-sized batches:
+### C. Remaining ERB view domains  →  PR groups P2, P3, P4, P7
+Fully-untouched folders (erb count). ~135 files; folder-by-folder inside each PR, one branch per group not per folder:
 - **C1 — `practice/*` CRUD** (29 erb: `band_types` 4, `bands` 5, `flat_rates` 4, `materials` 4,
   `music_genres` 5, `room_features` 4, `planning` 2, `rooms` 1). The React `parameters/Practice/*.jsx`
-  side was done in `parameters` lot B; these server-rendered scaffolds were not. ~2 lots.
-- **C2 — rooms & locations** (`rooms/` 7, `locations/` 4). 1 lot.
+  side was done in `parameters` lot B; these server-rendered scaffolds were not. **P2**.
+- **C2 — rooms & locations** (`rooms/` 7, `locations/` 4). **P2**.
 - **C3 — activity catalogue ERB** (`activity/` 3, `activity_instance/` 2, `activity_ref/` 5,
   `activity_ref_kind/` 4, `activity_application_statuses/` 5, `activities_applications/` 5,
-  `instruments/` 4). Some partial. ~2 lots.
+  `instruments/` 4). Some partial. **P4**.
 - **C4 — enrolment / money ERB** (`adhesion/` 2, `seasons/` 6, `packs/` 1, `payment_method/` 4,
   `payment_schedule/` 1, `payment_schedule_options/` 2, `payment_statuses/` 5, `due_payment/` 1,
-  `user_payments/` 1, `payments/` 3 minus the deliberate `bill.html.erb`). ~2 lots.
+  `user_payments/` 1, `payments/` 3 minus the deliberate `bill.html.erb`). **P3**.
 - **C5 — member-facing & misc** (`my_activities/` 3, `family_members/` 1, `family_member_users/` 1,
   `students/` 1, `teachers/` 2, `comments/` 3, `search/` 1, `absences/` 1, `time_interval/` 1,
-  `student_evaluations_stats/` 1, `failed_payment_imports/` 1). 1 lot.
+  `student_evaluations_stats/` 1, `failed_payment_imports/` 1). **P4**.
 - **C6 — `parameters/*` ERB shells** still at 0 (`activities_parameters`, `community_parameters`,
   `evaluation_parameters`, `payments_parameters`, `pratice_parameters` [sic], plus the 7-file
   `parameters/` root and `parameters/activity_application_parameters/` 5). Mostly thin mount points;
-  fold into whichever lot touches their React screen. <1 lot.
+  fold into whichever PR touches their React screen, else **P2**.
 - **C7 — OAuth consent** (`oidc/authorizations/` 3) — user-facing (the "authorise this app" screen).
-  1 small lot.
+  **P7**.
 - **C8 — management/legal pages** (`errors/` 2, `static_pages/` 2, `cgu/` 1, `admin/` 1,
   `settings/` 1, `events_rules/` 1, `notification_templates/` 3 [the admin editor chrome, not the
-  template bodies], `debug/` 1). 1 lot; `debug/` and `debug_mailer/` can be skipped.
+  template bodies], `debug/` 1). **P7**; `debug/` and `debug_mailer/` skipped.
 
-### D. Remaining React components — ~4–6 lots
+### D. Remaining React components  →  PR group P5
 ~130–190 components have no `useTranslation`/`withTranslation`/`<Trans>`; ~90 of those still contain
 a French-looking literal. Many are legitimately stringless (pure layout/leaf) — the real backlog is
 smaller than 90 but needs a file-by-file pass. By feature dir (adopted / total):
 - `advancedSearch` **0 / ~2+** — the advanced-search UI is essentially untouched. 1 lot.
 - `activityApplications` 17 / 27, `courses` 5 / 8, `evaluation` 3 / 8, `formules` 2 / 4,
-  `planning` 18 / 22 — the "done" domains have tails (some are stringless, some not). ~2 lots to close.
+  `planning` 18 / 22 — the "done" domains have tails (some stringless, some not). Audit first, then extract in one P5 branch.
 - Top-level `frontend/components/*.jsx` not in a feature dir, and dirs with no lot yet
-  (`dashboard`, member self-service, `common/*` leftovers). ~2 lots.
+  (`dashboard`, member self-service, `common/*` leftovers). Same P5 branch.
 - `frontend/tools/*` + `frontend/packs/*`: ~2 residual literals. Trivial, fold in.
 
-### E. Mailers (non-Devise) — 1–2 lots
+### E. Mailers (non-Devise)  →  PR group P6
 - 15 mailer classes; ~7 have hardcoded `subject` strings. Mailer views untouched:
   `adhesion_mailer/` 1, `activity_assigned_mailer/` 1, `application_mailer/` 1, `debug_mailer/` 1
   (skip), `partials/mailer/` 1.
@@ -1188,25 +1210,25 @@ smaller than 90 but needs a file-by-file pass. By feature dir (adopted / total):
   when omitted. Bodies use `_html` keys.
 - **Not** `NotificationTemplate` bodies (out of scope, below).
 
-### F. Controller-layer strings — 1 lot (or fold per-domain)
+### F. Controller-layer strings  →  PR group P6
 - ~8 `flash[:notice]`/`notice:`/`alert:` literals in `app/controllers/**`.
 - ~27 `render json: { message: "…" }` literals. §Stratégie already calls JSON-response i18n "une
   autre passe … hors périmètre" — this makes it a real, scheduled lot rather than an open-ended
   deferral. The React side already surfaces some of these verbatim (`res.message` toasts).
 
-### G. Model-layer strings — 1 lot
+### G. Model-layer strings  →  PR group P6
 - ~47 capitalised literals in `app/models/**`. Triage: `validates … message:` strings, enum
   display labels (only `activity_ref.activity_type` uses `translate_enum` today — other enums like
   payment/status/kind enums render raw), any `to_s`/label methods with French.
 - Custom validation messages → `activerecord.errors.models.<model>.attributes.<attr>.<key>`.
 
-### H. Services / jobs / exports — 1 lot
+### H. Services / jobs / exports  →  PR group P6
 - ~2 service/job files with French CSV/export headers ("Nom", "Prénom", "Montant", …). Any
   user-downloaded artefact (CSV, generated text) needs its column headers / labels keyed.
 - No `.pdf.erb`/prawn views exist (checked) — the only "document" is `payments/bill.html.erb`,
   which is a deliberate French exception.
 
-### I. Locale-file completeness & format parity — ongoing, ~0.5 lot
+### I. Locale-file completeness & format parity  →  PR group P6 (+ ongoing per-PR parity check)
 - `activerecord` leaf parity fr vs en (top-level keys match; verify nested
   `attributes`/`errors`/enum leaves — an earlier count showed fr 20 / en 15 at one nesting level).
 - `date`/`time`/`number` **format** keys: `en.yml` currently defines very few (`en.date.formats`
@@ -1247,7 +1269,19 @@ product ever wants a no-reload switch, this is ~2–3 lots on top of everything 
 ## Rough total
 
 Excluding the frozen-at-construct refactor (J) and the deliberate out-of-scope list:
-**~20–28 lots / PRs** at the established size — A(1) + B(1) + C(~7) + D(~5) + E(~1.5) + F(1) +
-G(1) + H(1) + I(~0.5). The ERB view backlog (C) and the React tail (D) are the bulk. None of it
-is architecturally hard — the pipeline, key conventions, extraction tooling, and review process
-are all already in place from Phases 00–06; it is now volume work.
+**~7 PRs**, each large.
+
+| PR | Contents | ~files |
+|---|---|---|
+| **P1** | A menu (44 captions) + B app chrome / layouts / shared partials + inline `<script>` | ~15 |
+| **P2** | C1 `practice/*` CRUD + C2 rooms/locations + C6 `parameters/*` ERB shells | ~45 |
+| **P3** | C4 enrolment & money ERB (`adhesion`, `seasons`, `packs`, `payment*`, `due_payment`, …) | ~30 |
+| **P4** | C3 activity-catalogue ERB + C5 member-facing & misc ERB | ~40 |
+| **P5** | D — React tail: file-by-file audit of the ~130–190 hook-less components, extract the ~90 with real literals (`advancedSearch`, domain tails, top-level, `dashboard`) | ~90 |
+| **P6** | E mailers + F controller flash/JSON strings + G model strings + H export headers + I locale-file & date/number format parity | ~40 |
+| **P7** | C7 OAuth consent + C8 legal/management pages (`errors`, `static_pages`, `cgu`, `notification_templates` chrome, …) | ~15 |
+
+Each PR: extract folder-by-folder on one branch → `translator` for the fr↔en strings →
+`i18n-tasks health` + parity + **one** bilingual smoke test for the area → `code-reviewer` → PR.
+No render test per file. None of this is architecturally hard — Phases 00–06 built and proved
+everything; P1–P7 are volume.
