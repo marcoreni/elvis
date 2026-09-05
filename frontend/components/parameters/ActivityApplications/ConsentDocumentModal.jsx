@@ -1,4 +1,4 @@
-import React, {Fragment, useState} from "react";
+import React, {Fragment, useEffect, useState} from "react";
 import Modal from "react-modal";
 import {Field, Form} from "react-final-form";
 import Input from "../../common/Input";
@@ -17,9 +17,18 @@ export default function ConsentDocumentModal({document, isOpen, isFetching, onRe
         onSubmit(values, file, fileHasChanged);
     }
 
-
-    if(document===null && fileHasChanged)
-        setFileHasChanged(false);
+    // This component never unmounts between opens (the parent keeps it mounted and toggles
+    // `isOpen`/`document` instead, see ConsentDocumentsList.jsx), so fileHasChanged has to be
+    // reset explicitly whenever the modal closes (document becomes null) -- otherwise a file
+    // picked in one edit session would still read as "changed" the next time the modal opens
+    // for a different document. This used to be a bare `if (...) setFileHasChanged(false)` call
+    // in the render body itself -- calling setState unconditionally during render. Under React 16
+    // (this app's version) that happens to converge harmlessly, with no observable behavior
+    // difference from the useEffect below; it's fixed anyway since it's exactly the pattern
+    // React's own docs warn will misbehave under concurrent rendering.
+    useEffect(() => {
+        if (document === null) setFileHasChanged(false);
+    }, [document]);
 
     return isOpen ?
         <Modal

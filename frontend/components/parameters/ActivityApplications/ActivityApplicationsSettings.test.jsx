@@ -114,6 +114,10 @@ vi.mock("../../editParameters/DragAndDrop", () => ({
         <div data-testid="drag-and-drop">
             <span data-testid="dnd-file-label">{props.fileLabel}</span>
             <span data-testid="dnd-text-displayed">{props.textDisplayed}</span>
+            {/* Simulates picking a file, for the fileHasChanged-reset regression test below.
+                type="button" matters: this renders inside ConsentDocumentModal's <form>, and a
+                plain <button> defaults to type="submit" there. */}
+            <button type="button" data-testid="dnd-pick-file" onClick={() => props.setFile(new File([""], "consent.pdf"))} />
         </div>
     ),
 }));
@@ -455,6 +459,40 @@ describe("ConsentDocumentModal (real component via vi.importActual)", () => {
             );
         },
     );
+
+    // Guards the fileHasChanged reset behavior itself: ConsentDocumentModal never unmounts
+    // between opens (ConsentDocumentsList keeps it mounted and toggles `isOpen`/`document`
+    // instead), so `fileHasChanged` has to be reset whenever the modal closes (document -> null)
+    // or a file picked in one edit session would still read as "changed" the next time the modal
+    // opens for a different document. (The reset used to be a bare
+    // `if (...) setFileHasChanged(false)` call in the render body -- calling setState
+    // unconditionally during render -- now a `useEffect` keyed on `document`; under React 16 both
+    // converge to the same observable behavior this test checks, so this doesn't distinguish the
+    // two implementations, only that the reset itself still works.)
+    test("fileHasChanged resets to false when the modal is reopened for a different document", async () => {
+        await i18n.changeLanguage("fr");
+        const onSubmitFirst = vi.fn().mockResolvedValue();
+        const {rerender} = render(
+            <ConsentDocumentModal isOpen document={{title: "A", content: "B"}} onSubmit={onSubmitFirst} />,
+        );
+
+        fireEvent.click(screen.getByTestId("dnd-pick-file"));
+        fireEvent.click(screen.getByRole("button", {name: tC("fr")("actions.save")}));
+        await waitFor(() => expect(onSubmitFirst).toHaveBeenCalled());
+        expect(onSubmitFirst.mock.calls[0][2]).toBe(true); // fileHasChanged
+
+        // Modal closes -- ConsentDocumentsList sets editedDocument (and isOpen) back to null/false.
+        rerender(<ConsentDocumentModal isOpen={false} document={null} onSubmit={onSubmitFirst} />);
+
+        // Modal reopens for a different document; no new file is picked this time.
+        const onSubmitSecond = vi.fn().mockResolvedValue();
+        rerender(
+            <ConsentDocumentModal isOpen document={{title: "C", content: "D"}} onSubmit={onSubmitSecond} />,
+        );
+        fireEvent.click(screen.getByRole("button", {name: tC("fr")("actions.save")}));
+        await waitFor(() => expect(onSubmitSecond).toHaveBeenCalled());
+        expect(onSubmitSecond.mock.calls[0][2]).toBe(false); // fileHasChanged, NOT leaked from the first session
+    });
 });
 
 // ============================================================================================
