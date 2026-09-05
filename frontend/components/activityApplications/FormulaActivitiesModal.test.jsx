@@ -125,11 +125,11 @@ describe("FormulaActivitiesModal — plural keys (i18n layer)", () => {
     });
 });
 
-// Regression: the duration cell's "min" suffix used to be a hardcoded literal, not routed through
-// i18n (activityApplications:units.minuteAbbrev) -- the "--" placeholder for a missing duration is
-// left as a plain sentinel (not language text), matching the same convention as the "/" fallback in
-// the sibling SelectedActivitiesTable.
-describe("FormulaActivitiesModal — duration cell goes through activityApplications:units.minuteAbbrev", () => {
+// Regression: the duration cell's "min" suffix used to be a hardcoded literal; it now renders via
+// activityApplications:units.minutes (shared with SelectedActivitiesTable). The "--" placeholder
+// for a missing duration is left as a plain sentinel (not language text), matching the "/" fallback
+// convention in the sibling SelectedActivitiesTable.
+describe("FormulaActivitiesModal — duration cell goes through activityApplications:units.minutes", () => {
     const formulaProps = {
         ...props,
         activeFormula: {
@@ -163,16 +163,16 @@ describe("FormulaActivitiesModal — duration cell goes through activityApplicat
     }
 
     // The test above can't actually distinguish "wired through i18n" from "still hardcoded",
-    // because the fr and en `units.minuteAbbrev` values are byte-identical ("min") -- a
-    // regression back to the old hardcoded `"min"` literal would render exactly the same text
-    // and still pass it. Prove the suffix genuinely comes from the en catalogue by giving it a
-    // distinguishable value at runtime and asserting the render reflects it.
-    test("en: the suffix renders whatever the en catalogue actually says, not a value baked into the component", async () => {
+    // because the fr and en `units.minutes` values are byte-identical -- a regression back to a
+    // hardcoded `"${duration} min"` template would render exactly the same text and still pass it.
+    // Prove it genuinely comes from the en catalogue by giving it a distinguishable value at
+    // runtime and asserting the render reflects it.
+    test("en: renders whatever the en catalogue actually says, not a value baked into the component", async () => {
         await i18n.changeLanguage("en");
         i18n.addResourceBundle(
             "en",
             "activityApplications",
-            {units: {minuteAbbrev: "MINUTES"}},
+            {units: {minutes: "{{minutes}} MINUTES"}},
             true,
             true,
         );

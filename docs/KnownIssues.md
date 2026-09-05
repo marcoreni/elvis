@@ -410,22 +410,18 @@ avoid restructuring ad hoc across an already-merged domain.
 ## `activityApplications` — small untranslated unit tokens
 
 Surfaced during the i18n-06 activities lot-3a review; the `noIntervalMessage`/`tooltip` override,
-the `Validation.jsx` `<h3>` headings, and the `SelectedActivitiesTable.jsx`/`FormulaActivitiesModal.jsx`
-duration unit tokens this section used to flag are now translated (lots 3e/3g and a later small-fixes
-pass — `activityApplications:units.*`). What's left, low priority:
+the `Validation.jsx` `<h3>` headings, and all three duration formatters
+(`SelectedActivitiesTable.jsx`, `FormulaActivitiesModal.jsx`, `Activity.jsx#displayDuration`) are
+now translated and consistent — via `activityApplications:units.{minutes,hoursMinutes}`, with
+`units.minutes` standardized to `"{{minutes}} min"` (spaced). What's left, low priority:
 
 - `EvaluationChoiceTable.jsx` — pre-existing (not i18n): verify `data[].timeInterval.start/end`
   reach `toHourMin()` as `Date` objects, not ISO strings, the way the sibling
   `TimePreferencesTable` wraps them with `toDate()` — an ISO string would silently render
   `NaN:NaN`.
-- `activityApplications/summary/Activity.jsx:~315` has a third, still-untranslated duration
-  formatter (a class method, unrelated to `SelectedActivitiesTable`/`FormulaActivitiesModal`):
-  `` duration < 60 ? `- ${minutes} min` : `- ${hours}h${minutes}` ``, rendered around line 909.
-  Same class of fix as `activityApplications:units.*` would apply here too.
-- The two fixed call sites don't even agree with each other: `SelectedActivitiesTable.jsx` renders
-  `"45min"` (no separator), `FormulaActivitiesModal.jsx` renders `"45 min"` (space). Worth
-  standardizing on one convention (and French typography wants a non-breaking space before the
-  unit) next time either file is touched.
+- `frontend/tools/constants.js` `TIME_STEPS` still has hardcoded labels (`"1h"`, `"45min"`,
+  `"30min"`, `"15min"`) — a 4-element const array left out of the constants-i18n pass, and now
+  also inconsistent with the spaced `activityApplications:units.minutes` convention above.
 
 ## `courses/LessonList.jsx` — remaining frozen-at-construct-time string
 

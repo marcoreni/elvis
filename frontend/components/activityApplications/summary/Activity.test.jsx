@@ -20,6 +20,7 @@
 import React from "react";
 import {render, screen, within, waitFor} from "@testing-library/react";
 import i18n from "../../../i18n";
+import enActivityApplications from "../../../locales/en/activityApplications.json";
 import Activity from "./Activity";
 
 // --- mocks -----------------------------------------------------------------------------------
@@ -309,6 +310,54 @@ describe("Activity — SubStudentList Started/Stopped dates are locale-aware and
         const sub = screen.getByTestId("rt-sub");
         expect(within(sub).getByText("01/01/2020")).toBeInTheDocument();
         expect(within(sub).getByText("15/06/2030")).toBeInTheDocument();
+    });
+});
+
+// Regression: `Activity#displayDuration` (rendered in the change-activity <select>'s <option>s)
+// was a third hardcoded duration formatter -- `- ${minutes} min` / `- ${hours}h${minutes}` -- not
+// routed through i18n. It now uses the shared activityApplications:units.{minutes,hoursMinutes}.
+describe("Activity — displayDuration goes through activityApplications:units.*", () => {
+    const withRefs = () => ({
+        ...baseProps(),
+        activityRefs: [
+            {id: 20, label: "Guitare", duration: 45},
+            {id: 21, label: "Batterie", duration: 90},
+        ],
+    });
+
+    const optionText = t =>
+        screen.getByText((_c, node) => node.tagName === "OPTION" && node.textContent.replace(/\s+/g, " ").trim() === t);
+
+    for (const lng of ["fr", "en"]) {
+        test(`${lng}: minutes-only and hours+minutes durations render via units.*`, async () => {
+            await i18n.changeLanguage(lng);
+            render(<Activity {...withRefs()} />);
+            await waitFor(() => expect(global.fetch).toHaveBeenCalled());
+
+            expect(optionText("Guitare - 45 min")).toBeInTheDocument();
+            expect(optionText("Batterie - 1h30")).toBeInTheDocument();
+        });
+    }
+
+    // Distinguishable-value check: prove the string is read from the catalogue at render time,
+    // not baked in (fr and en units.* are byte-identical so a plain assertion can't tell).
+    test("en: reflects a runtime override of units.minutes and units.hoursMinutes", async () => {
+        await i18n.changeLanguage("en");
+        i18n.addResourceBundle(
+            "en",
+            "activityApplications",
+            {units: {minutes: "{{minutes}} MINS", hoursMinutes: "{{hours}}HR{{minutes}}"}},
+            true,
+            true,
+        );
+        try {
+            render(<Activity {...withRefs()} />);
+            await waitFor(() => expect(global.fetch).toHaveBeenCalled());
+            expect(optionText("Guitare - 45 MINS")).toBeInTheDocument();
+            expect(optionText("Batterie - 1HR30")).toBeInTheDocument();
+        } finally {
+            i18n.addResourceBundle("en", "activityApplications", enActivityApplications, true, true);
+        }
     });
 });
 
