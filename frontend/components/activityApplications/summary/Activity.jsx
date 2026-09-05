@@ -317,10 +317,13 @@ class Activity extends React.Component {
             return null;
         }
 
+        const { t } = this.props;
         const hours = Math.floor(duration / 60);
         const minutes = (duration % 60).toString().padStart(2, '0');
 
-        return duration < 60 ? `- ${minutes} min` : `- ${hours}h${minutes}`;
+        return duration < 60
+            ? `- ${t("units.minutes", { minutes })}`
+            : `- ${t("units.hoursMinutes", { hours, minutes })}`;
     }
 
     handleOptionButton(suggestion) {
