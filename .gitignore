@@ -9,6 +9,10 @@ Gemfile.lock
 # Ignore bundler config.
 /.bundle
 
+# Local env vars (loaded by foreman) -- holds SECRET_KEY_BASE, never commit.
+/.env
+/.env.*
+
 /.idea/*
 /.idea/dataSources.xml
 
