@@ -6,7 +6,7 @@ import {makeDebounce} from "../tools/inputs";
 import DetachAccount from "./DetachAccount";
 import Modal from "react-modal";
 
-const moment = require("moment");
+import moment from "moment";
 
 const requestData = (pageSize, page, sorted, filtered, format) => {
 
@@ -70,7 +70,7 @@ class UserAttach extends React.Component {
         this.swalShowLoading();
 
         const attached_users = await this.fetchAttachedUsers(user.id)
-        
+
         if (attached_users.length < 1) {
             if (user.attached_to_id) { //si compte déjà rattaché
                 const referent_user = await this.fetchReferentUser(user.attached_to_id)
@@ -297,7 +297,7 @@ class UserAttach extends React.Component {
                                     display: "inline-block",
                                 }}
                             >
-                            
+
                             { is_user || is_attached_to_user ?
                                 <div>
                                     { is_user ?

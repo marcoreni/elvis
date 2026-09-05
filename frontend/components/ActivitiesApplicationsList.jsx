@@ -25,7 +25,7 @@ import {
 } from "./utils/ActivityApplicationsStatuses";
 import Swal from "sweetalert2";
 
-const moment = require("moment");
+import moment from "moment";
 
 const FILTER_STORAGE_KEY = "activities_application_list_filters";
 const PREFERENCES_STORAGE_KEY = "activities_applications_list_preferences";

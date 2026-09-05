@@ -4,7 +4,7 @@ import _, {isArray} from "lodash";
 import { withTranslation } from "react-i18next";
 import { ISO_DATE_FORMAT } from "../utils";
 
-const moment = require("moment");
+import moment from "moment";
 
 class YearlyCalendar extends React.Component
 {

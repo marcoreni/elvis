@@ -2,7 +2,7 @@ import React from "react";
 import PropTypes from "prop-types";
 import _ from "lodash";
 
-const moment = require("moment");
+import moment from "moment";
 
 import ReactTable from "react-table";
 import BulkEditModalAlert from "../utils/alerts/BulkEditModalAlert";

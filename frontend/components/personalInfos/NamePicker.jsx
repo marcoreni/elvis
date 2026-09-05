@@ -2,7 +2,7 @@ import React from "react";
 import _ from "lodash";
 import { toLocaleDate, toDate } from "../../tools/format";
 
-const moment = require("moment");
+import moment from "moment";
 
 class NamePicker extends React.Component {
     constructor(props) {
@@ -15,11 +15,11 @@ class NamePicker extends React.Component {
         const lastNameError =
         this.props.validationState &&
         this.props.validationState.failed.includes("last_name");
-        
+
         const firstNameError =
             this.props.validationState &&
             this.props.validationState.failed.includes("first_name");
-            
+
         return (
             <div className="form form-group">
                 {this.props.inEdition ||

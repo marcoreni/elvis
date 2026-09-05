@@ -12,7 +12,7 @@ import {AttendanceControl} from '../PresenceSheet'
 import {withSave} from './withSave'
 import swal from "sweetalert2";
 
-const moment = require("moment");
+import moment from "moment";
 
 const getRoom = (rooms, id) => _.find(rooms, r => r.id == id);
 

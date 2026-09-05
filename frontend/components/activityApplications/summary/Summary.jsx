@@ -18,7 +18,7 @@ import TimePreferencesStep from "../TimePreferencesStep";
 import { PLANNING_MODE } from "../TimePreferencesStep";
 import * as api from "../../../tools/api";
 
-const moment = require("moment");
+import moment from "moment";
 import { withTranslation } from "react-i18next";
 import i18n from "../../../i18n";
 
