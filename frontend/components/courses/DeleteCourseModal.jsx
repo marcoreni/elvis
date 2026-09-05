@@ -38,7 +38,7 @@ class DeleteCourseModal extends React.Component {
             } else {
 
                 const instanceStatus = {}
-                
+
                 data.forEach((instance) => {
                     const date = instance.time_interval.start.split('T')[0]
                     instanceStatus[date] = {activity_instance_id: instance.activity_instance_id, start: moment(instance.time_interval.start), selected:true}
@@ -95,7 +95,7 @@ class DeleteCourseModal extends React.Component {
 
                         if(instanceIds.length === 0)
                         {
-                            swal.fire({
+                            swal({
                                 title: t("deleteCourse.warningTitle"),
                                 text: t("deleteCourse.noneDeletable"),
                                 type: "error",
@@ -110,7 +110,7 @@ class DeleteCourseModal extends React.Component {
                     {
                         if(instanceIds.length === 0)
                         {
-                            swal.fire({
+                            swal({
                                 title: t("deleteCourse.warningTitle"),
                                 text: t("deleteCourse.noneSelected"),
                                 type: "error",
@@ -123,7 +123,7 @@ class DeleteCourseModal extends React.Component {
                             .filter(ai =>  instanceIds.includes(ai.activity_instance_id))
                             .filter(ai => new Date(ai.time_interval.start) <= today && ai.student_count >= 0).length > 0)
                         {
-                            swal.fire({
+                            swal({
                                 title: t("deleteCourse.warningTitle"),
                                 text: t("deleteCourse.pastWithStudents"),
                                 type: "warning",

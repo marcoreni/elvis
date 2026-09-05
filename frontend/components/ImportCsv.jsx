@@ -94,7 +94,7 @@ class ImportCsv extends React.Component {
                                     "<p>Toute votre communauté a bien été importée</p>" +
                                     "<p>Vous allez être redirigé vers la liste de vos membres";
 
-                                swal.fire({
+                                swal({
                                     title: "Bravo !",
                                     html: htmltext,
                                     type: "success",
@@ -111,7 +111,7 @@ class ImportCsv extends React.Component {
                 .catch(error => {
                     this.setState({ submitting: false });
                     console.error(error);
-                    swal.fire({
+                    swal({
                         title: "Erreur",
                         html:
                             "<p>Une erreur est survenue lors de l'import. Veuillez réessayer.</p>",

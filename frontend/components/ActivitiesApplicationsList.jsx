@@ -99,7 +99,7 @@ class ActivitiesApplicationsList extends React.Component {
         ReactDOM.render(<JobProgress jobId={jobId}
                                      onError={(res) => swal({title: "Erreur", text: res, type: "error"})}/>, container);
 
-        swal.fire({
+        swal({
             title: 'Suivi de l\'exécution',
             html: container,
             showCloseButton: true,
@@ -179,7 +179,7 @@ class ActivitiesApplicationsList extends React.Component {
             })
             .then(data => {
                 if (data.error) {
-                    swal.fire({
+                    swal({
                         title: "Erreur d'importation",
                         text: data.error,
                         type: "error",
@@ -214,7 +214,7 @@ class ActivitiesApplicationsList extends React.Component {
                 ? "Attention, l'adhésion associée à cette demande d'inscription va être supprimée. Êtes-vous sûr de continuer ?"
                 : `Attention, les adhésions associées aux ${selectedCount} demandes d'inscription sélectionnées vont être supprimées. Êtes-vous sûr de continuer ?`;
 
-            swal.fire({
+            swal({
                 title: 'Attention !',
                 text: confirmationText,
                 type: 'warning',
@@ -498,9 +498,9 @@ class ActivitiesApplicationsList extends React.Component {
                 }).then(response => response.json())
                     .then(res => {
                         if (res.success)
-                            swal.fire("", "Les mails vont être envoyés", "success");
+                            swal("", "Les mails vont être envoyés", "success");
                         else
-                            swal.fire("", res.message, "error");
+                            swal("", res.message, "error");
                     });
             }
         });

@@ -21,7 +21,7 @@ export default function Roles({ user, lessonsPlanned, onSubmit }) {
     function removeLessons() {
         api.set()
             .success(() => {
-                swal.fire({
+                swal({
                     title: "Succès",
                     type: "success",
                     text: "Les séances à venir ont été supprimées",
@@ -56,7 +56,7 @@ export default function Roles({ user, lessonsPlanned, onSubmit }) {
                     `Les ${lessonsPlanned} séances font partie des cours suivants :<br/><br/>` +
                     _.reduce(activities, (res, activity) => res + formatActivity(activity), res);
 
-                swal.fire({
+                swal({
                     title: "Liste des cours à remplacer",
                     type: "success",
                     html: htmlText,
@@ -77,7 +77,7 @@ export default function Roles({ user, lessonsPlanned, onSubmit }) {
     function onChangeIsTeacher(isTeacher) {
         // dans le cas où on cherche à désactiver le rôle professeur, on doit prendre quelques précautions
         if (isTeacher && lessonsPlanned > 0) {
-            swal.fire({
+            swal({
                 title: "Etes-vous sûr ?",
                 html: `Ce professeur a ${lessonsPlanned} séances de cours à venir dans le planning.<br/>Que souhaitez-vous faire ?`,
                 confirmButtonText: "Les supprimer",

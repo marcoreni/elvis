@@ -142,7 +142,7 @@ class Summary extends React.Component
         if (adhesion_delete_ids.includes(status_id))
         {
             return new Promise((resolve) => {
-                swal.fire({
+                swal({
                     title: t("summary.adhesionDeleteConfirm.title"),
                     text: t("summary.adhesionDeleteConfirm.text"),
                     type: 'warning',
@@ -184,7 +184,7 @@ class Summary extends React.Component
             const htmltext = t("summary.confirmBeginAtChange.body");
             const confirmtext = t("summary.confirmBeginAtChange.confirm");
 
-            swal.fire({
+            swal({
                 title: title,
                 html: htmltext,
                 allowOutsideClick: true,
@@ -543,7 +543,7 @@ class Summary extends React.Component
             let title = t("summary.confirmDeleteApplication.title");
             let htmltext = t("summary.confirmDeleteApplication.body", { name: `${this.props.application.user.first_name} ${this.props.application.user.last_name}` });
             let confirmtext = t("summary.confirmDeleteApplication.confirm");
-            swal.fire({
+            swal({
                 title: title,
                 html: htmltext,
                 allowOutsideClick: true,
@@ -563,7 +563,7 @@ class Summary extends React.Component
                             }
                             else
                             {
-                                swal.fire({
+                                swal({
                                     title: t("summary.errorTitle"),
                                     html: data.message,
                                     type: "error",
@@ -572,7 +572,7 @@ class Summary extends React.Component
                         })
                         .error(error =>
                         {
-                            swal.fire({
+                            swal({
                                 title: t("summary.errorTitle"),
                                 html: error.message,
                                 type: "error",

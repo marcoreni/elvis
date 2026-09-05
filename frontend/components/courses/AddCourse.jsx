@@ -95,7 +95,7 @@ class AddCourse extends React.Component {
                 .success(res => {
                     let htmltext = `<p>${t("addCourse.created")}</p>`;
 
-                    swal.fire({
+                    swal({
                         title: t("addCourse.successTitle"),
                         html: htmltext,
                         type: "success",
@@ -185,7 +185,7 @@ class AddCourse extends React.Component {
             firstDayStartTime: firstDayStartTime,
             firstDayEndTime: firstDayEndTime,
             dayOfWeek: dayOfWeek
-            
+
         };
 
         const steps = [
