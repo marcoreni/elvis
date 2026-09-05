@@ -107,7 +107,7 @@ force_default_language_for_anonymous:
 force_default_language_for_loggedin:
   default: 0
 host_name:
-  default: localhost:3000
+  default: localhost:7212
 protocol:
   default: http
   security_notifications: 1
