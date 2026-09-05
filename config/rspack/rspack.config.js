@@ -11,7 +11,12 @@ const customConfig = {
   resolve: {
     extensions: ['.css', '.scss', '.js', '.jsx'],
     alias: {
-      jquery: 'jquery/src/jquery',
+      // NOTE: do not alias jquery to 'jquery/src/jquery' -- that is jQuery's AMD source build
+      // (one bare `define([...], factory)` with no `typeof define` guard). Webpack's built-in
+      // AMD parser rewrote it; rspack + swc do not, so it throws `define is not defined` at
+      // runtime and the whole jquery module fails to load (which in turn stops
+      // jquery/src/exports/global.js from running `window.jQuery = window.$ = jQuery`). Plain
+      // 'jquery' resolves to the dist UMD build, which rspack handles natively.
       React: 'react',
       ReactDOM: 'react-dom',
     }
