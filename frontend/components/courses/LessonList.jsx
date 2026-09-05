@@ -1376,8 +1376,13 @@ const UserRow = ({
                 if (data && data.evaluation_level_ref) {
                     // desired_activity_controller.rb renders evaluation_level_ref as a bare string,
                     // not an object -- Activity.jsx (activityApplications/summary) handles the same
-                    // endpoint this way already. `.label` on a string is always undefined, which
-                    // used to make the LEVEL_NOT_INDICATED fast path above never fire.
+                    // endpoint this way already. `.label` on a string is always undefined, so
+                    // studentLevel never got set at all and every row fell through to the
+                    // levelDisplayForActivity recompute below, regardless of what the API actually
+                    // returned. (The LEVEL_NOT_INDICATED fast path in displayLevel() below is a
+                    // separate, still effectively dead branch: the API's evaluation_level_ref is a
+                    // real DB label, never the JS "NON INDIQUÉ" sentinel -- see LEVEL_NOT_INDICATED's
+                    // own definition -- so that comparison isn't expected to fire either way.)
                     setStudentLevel(data.evaluation_level_ref);
                 }
 

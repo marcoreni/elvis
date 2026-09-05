@@ -35,8 +35,8 @@
 //       `.none` sit on branches that need a pre-existing file/url and are likewise asserted at the
 //       i18n layer.
 //
-// Keys live in `frontend/locales/{fr,en}/parameters.json` under `editParameters.*` (49 leaves);
-// `parameters.json` is 221 leaves this branch. Reuses `shared.{errorTitle,genericError,saveButton}`
+// Keys live in `frontend/locales/{fr,en}/parameters.json` under `editParameters.*` (67 leaves);
+// `parameters.json` is 227 leaves this branch. Reuses `shared.{errorTitle,genericError,saveButton}`
 // + `common:actions.save`.
 
 import React from "react";
