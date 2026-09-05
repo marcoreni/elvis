@@ -672,8 +672,8 @@ class ActivityDetailsModal extends React.Component {
     render() {
         const { t } = this.props;
         const errors = [
-            ...(this.props.errors || []),
-            ...(this.state.errors || [])
+            //...(this.props.errors || []),
+            //...(this.state.errors || [])
         ];
 
         const start = moment.isMoment(this.state.startTime)
