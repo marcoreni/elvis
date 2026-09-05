@@ -534,6 +534,8 @@ consolidation` additionally folded every byte-identical `parameters:*` duplicate
 lots A–E3 into a `shared.*` block (`parameters.json` 255 → 233 leaves) — `shared.colName`,
 `shared.colLabel`, `shared.deleteStatusConfirm`, `shared.saveCompleted`, `shared.genericErrorShort`,
 `shared.saveSuccessTitle`, plus folding three separate loading-title copies into `common:loading`.
+A later fix moved `editParameters.dragAndDrop.*` out to `common:dragAndDrop.*` (233 → 227 leaves;
+see `frontend/components/editParameters/DragAndDrop.jsx`).
 
 What's still open in this domain:
 
@@ -554,6 +556,13 @@ What's still open in this domain:
   that particular mismatch is gone. Still open: `ActivitiesApplicationsList.jsx`'s column headers
   ("Niveau", "Âge", "Activité" and 10 more) are still hardcoded French next to its now-localized
   level cell and Action column.
+- **`courses/LessonList.jsx`'s `UserRow` has no unmount guard on its level-fetching effect**:
+  found by a retroactive code-reviewer audit of the `studentLevel` fix (PR #67). The sibling
+  `LevelCell` in `activityApplications/summary/Activity.jsx` uses `let isMounted = true` with a
+  cleanup return before calling `setStudentLevel`; `UserRow`'s equivalent effect has none. Harmless
+  in practice today, but a late or out-of-order response can now visibly change the rendered level
+  (and emit React's unmounted-`setState` dev warning) since the fix makes the API response drive
+  rendered content instead of being ignored.
 
 Design note (`planning/TimeIntervalHelpers.jsx`, lot 3c — so a later reader doesn't "simplify" it):
 `levelDisplay()` / `levelDisplayForActivity()` keep returning the raw French sentinels

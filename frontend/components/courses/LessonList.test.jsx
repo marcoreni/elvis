@@ -53,12 +53,23 @@ vi.mock("react-table", () => ({
     },
 }));
 
-// UserRow fires api.set().error().success().get(...) in a useEffect. Chainable no-op stub whose
+// UserRow fires api.set().error().success().get(url) in a useEffect. Chainable no-op stub whose
 // .get never invokes the success callback, so `studentLevel` stays null and displayLevel() falls
 // through to the levelDisplayForActivity branch — the one the lot-4 review flagged. The success
-// callback itself is stashed so a test can invoke it directly with fixture data (see the
-// studentLevel describe block below), without any test relying on it firing spontaneously.
+// callback (and the URL it was registered against) is stashed so a test can invoke it directly
+// with fixture data (see the studentLevel describe block below), without any test relying on it
+// firing spontaneously.
+//
+// Caveat found by a retroactive code-reviewer audit: this is ONE shared `chain` object reused by
+// every `api.set()` call in the module under test, unlike the real tools/api (which returns a
+// fresh chain per call). `lastApiSuccess` therefore means "the last .success() registered by
+// ANYTHING in this render", not "the studentLevel fetch's callback" -- LessonList.jsx itself
+// registers two more `.success()` handlers (onSubmit's delete-all/delete-selected branches), which
+// don't fire today only because nothing in these tests clicks the buttons that would trigger them.
+// Resetting both in beforeEach + asserting the captured URL keeps a future test from silently
+// asserting against the wrong callback if that ever changes.
 let lastApiSuccess = null;
+let lastApiSuccessUrl = null;
 vi.mock("../../tools/api", () => {
     const chain = {};
     chain.set = () => chain;
@@ -67,7 +78,10 @@ vi.mock("../../tools/api", () => {
         return chain;
     };
     chain.error = () => chain;
-    chain.get = () => chain;
+    chain.get = url => {
+        lastApiSuccessUrl = url;
+        return chain;
+    };
     chain.post = () => chain;
     chain.del = () => chain;
     return {...chain, set: () => chain};
@@ -114,6 +128,8 @@ const fetchOk = body =>
 beforeEach(() => {
     localStorage.clear();
     global.fetch = fetchOk({data: [], pages: 1, total: 7});
+    lastApiSuccess = null;
+    lastApiSuccessUrl = null;
 });
 
 afterEach(async () => {
@@ -375,6 +391,9 @@ describe("row expander (UserList / UserRow) — i18n", () => {
         render(lastReactTableProps.SubComponent({original: activityFixture()}));
 
         expect(lastApiSuccess).not.toBeNull();
+        // Pin which fetch this callback actually belongs to, since the mock's chain is shared
+        // across every api.set() call in the module (see the mock's own comment above).
+        expect(lastApiSuccessUrl).toMatch(/^\/desired_activities\/user\/\d+\/activity\/\d+\/ref\/\d+\/time\/\d+$/);
         act(() => {
             lastApiSuccess({id: 1, evaluation_level_ref: "Débutant", activity_application_id: 5});
         });
