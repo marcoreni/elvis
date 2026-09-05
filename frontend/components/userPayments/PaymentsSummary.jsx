@@ -7,7 +7,7 @@ import DataService from "../common/baseDataTable/DataService";
 import CouponFormContent from "../parameters/Payments/CouponFormContent";
 import CreateCouponModal from "../common/baseDataTable/ItemFormModal";
 
-const moment = require("moment");
+import moment from "moment";
 
 class PaymentsSummary extends React.Component {
     constructor(props) {

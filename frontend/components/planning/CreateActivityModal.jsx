@@ -3,7 +3,7 @@ import PropTypes from "prop-types";
 import _ from "lodash";
 import { withTranslation } from "react-i18next";
 
-const moment = require("moment");
+import moment from "moment";
 
 import { getSeasonFromDate } from "./TimeIntervalHelpers";
 import { RECURRENCE_TYPES } from "../../tools/constants";

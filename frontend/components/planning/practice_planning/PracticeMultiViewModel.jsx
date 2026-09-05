@@ -2,7 +2,7 @@ import React, { Fragment } from "react";
 import { withTranslation } from "react-i18next";
 import { fullname } from "../../../tools/format";
 
-const moment = require("moment-timezone");
+import moment from "moment-timezone";
 
 // MAIN COMPONENT
 class PracticeMultiViewModal extends React.Component {
@@ -27,7 +27,7 @@ class PracticeMultiViewModal extends React.Component {
         var startSplit = start.split(':');
         var hour = startSplit[0];
         var minute = startSplit[1];
-        
+
         this.setState({
             startTime : start
         })
@@ -82,7 +82,7 @@ class PracticeMultiViewModal extends React.Component {
                     </select>
 
                     <label className="label-control">{t("activityModal.startLabel")}</label>
-                    <input 
+                    <input
                         className="form-control"
                         type="time"
                         name="start"
@@ -91,7 +91,7 @@ class PracticeMultiViewModal extends React.Component {
                     />
 
                     <label className="label-control">{t("activityModal.endLabel")}</label>
-                    <input 
+                    <input
                         className="form-control"
                         type="time"
                         name="end"

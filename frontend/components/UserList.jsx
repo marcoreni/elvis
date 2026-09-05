@@ -2,7 +2,7 @@ import React from "react";
 import _ from "lodash";
 import {withTranslation} from "react-i18next";
 
-const moment = require("moment");
+import moment from "moment";
 
 import {csrfToken} from "./utils";
 import {makeDebounce} from "../tools/inputs";

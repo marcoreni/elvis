@@ -37,8 +37,15 @@
         <%= javascript_pack_tag 'app' %>
 
       <script type="text/javascript">
-          const footer = $(".app-footer");
-          footer.parent().height(footer[0].offsetHeight);
+          // Plain DOM only -- must not depend on the deferred `app` pack (jQuery lives inside it
+          // now). If a pack chunk is slow/stale/failed on this page load, `$` would be undefined
+          // here; `document.querySelector` never is.
+          document.addEventListener("DOMContentLoaded", function () {
+              var footer = document.querySelector(".app-footer");
+              if (footer && footer.parentElement) {
+                  footer.parentElement.style.height = footer.offsetHeight + "px";
+              }
+          });
       </script>
     </body>
 </html>

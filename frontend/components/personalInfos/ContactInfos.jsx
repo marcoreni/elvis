@@ -2,7 +2,7 @@ import React from "react";
 import _ from "lodash";
 import { fullname } from "../../tools/format";
 
-const moment = require("moment");
+import moment from "moment";
 
 const testId = id => id || id === 0;
 
@@ -32,7 +32,7 @@ const ContactInfos = ({
     const hasFamily = Array.isArray(family) && family.length;
 
     const phoneNumbers = _.map(infos.telephones, (t, i) => {
-        const hasIdenticalTelephone = Array.isArray(identicalTelephones) 
+        const hasIdenticalTelephone = Array.isArray(identicalTelephones)
             && identicalTelephones.length;
 
         const identicalTelephone = hasIdenticalTelephone && identicalTelephones[i];
@@ -86,7 +86,7 @@ const ContactInfos = ({
                             : null}
                         </div>
                     : null}
-                        
+
                     <div className="row">
                         <div className="col-sm-6 m-b-xs">
                             <input
@@ -131,7 +131,7 @@ const ContactInfos = ({
     return (
         <div className="clearfix">
             {title ? <h3>Contact</h3> : null}
-            
+
             <div className="row">
                 <div
                     className={"col-xs-12 m-b-md" + (emailError ? " has-warning" : "")}
@@ -182,7 +182,7 @@ const ContactInfos = ({
                         name="email"
                         value={infos.email || ""}
                         disabled={identicalMailUserId !== null}
-                        onChange={e => handleChangeInfos(e)} 
+                        onChange={e => handleChangeInfos(e)}
                     />
                 </div>
 

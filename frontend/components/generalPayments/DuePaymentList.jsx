@@ -20,7 +20,7 @@ import * as DuePaymentStatus from '../utils/DuePaymentStatuses'
 import {UNPAID_ID} from "../utils/DuePaymentStatuses";
 
 
-const moment = require("moment");
+import moment from "moment";
 
 const FILTER_STORAGE_KEY = "general_due_payments_list_filters";
 

@@ -137,9 +137,9 @@ still need Postgres/Redis/Elasticsearch, just not ruby/node themselves.
     ```shell
     sudo usermod -a -G rvm $USER
     ```
-- install ruby version 3.3.2 
+- install ruby version 3.3.12 
   - ```shell
-    rvm install 3.3.2
+    rvm install 3.3.12
     ```
 - install bundler (bundle version is specified in the `Gemfile.lock` file) :
   ```shell
@@ -152,10 +152,10 @@ still need Postgres/Redis/Elasticsearch, just not ruby/node themselves.
   - ```shell
     sudo apt-get install libpq-dev postgresql-client-14
     ```
-- install node version 20
+- install node version 22
   - direct install
     ```shell
-    curl -sL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+    curl -sL https://deb.nodesource.com/setup_22.x | sudo -E bash -
     sudo apt-get install -y nodejs
     ```
   - install with nvm
@@ -228,8 +228,8 @@ u.save!
 # Additional information
 ## Recommended versions
 - postgresql v14
-- node v20
-- ruby v3.3.2
+- node v22
+- ruby v3.3.12
 - rails v6.1.7.8
 - elastic-search v7.16.3
 ## Soft restart

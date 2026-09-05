@@ -99,7 +99,7 @@ describe("DeleteCourseModal — i18n", () => {
         await waitFor(() => expect(global.fetch).toHaveBeenCalled());
     });
 
-    // The onSubmit handler is a closure inside render(), and its three swal.fire branches are the
+    // The onSubmit handler is a closure inside render(), and its three swal branches are the
     // only place `t` is used outside plain JSX. Guard the "all recurrences, nothing deletable"
     // branch: with the mount fetch resolving [], activityInstances === [], so repetition:"all"
     // yields instanceIds.length === 0 and must swal the translated "noneDeletable" text — not
@@ -114,8 +114,8 @@ describe("DeleteCourseModal — i18n", () => {
         );
         fireEvent.click(screen.getByRole("button", {name: "Valider"}));
 
-        await waitFor(() => expect(swal.fire).toHaveBeenCalled());
-        expect(swal.fire).toHaveBeenCalledWith(
+        await waitFor(() => expect(swal).toHaveBeenCalled());
+        expect(swal).toHaveBeenCalledWith(
             expect.objectContaining({
                 title: "Attention",
                 text: "Aucun cours ne peut être supprimé.",

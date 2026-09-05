@@ -3,7 +3,7 @@ import { withTranslation } from "react-i18next";
 import i18n from "../../i18n";
 import { csrfToken } from "../utils";
 import swal from "sweetalert2";
-import { Form, Field, FormSpy } from "react-final-form";
+import { Field } from "react-final-form";
 import Input from "../common/Input";
 import InputSelect from "../common/InputSelect";
 import InputColor from "../common/InputColor";

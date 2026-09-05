@@ -15,7 +15,7 @@ import DateRangePicker from "../utils/DateRangePicker";
 import * as api from "../../tools/api";
 import * as PaymentStatus from "../utils/PaymentStatuses";
 
-const moment = require("moment");
+import moment from "moment";
 
 const FILTER_STORAGE_KEY = "general_payments_list_filters";
 

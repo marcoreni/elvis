@@ -1,5 +1,4 @@
 import React from "react";
-import util from "tui-code-snippet";
 import Calendar from "tui-calendar";
 import { withTranslation } from "react-i18next";
 
@@ -8,7 +7,6 @@ import { getHoursString } from "../utils/DateUtils";
 
 import moment from "moment-timezone";
 
-import day from "dayjs";
 import _ from "lodash";
 
 const EVENT_TYPES = [
@@ -20,8 +18,8 @@ const EVENT_TYPES = [
 
 export function getTimeTemplate(schedule, isMultiView, show_activity_code, {isAllDay=false, isRoomCalendar=false, seasons=[], user=null, isMonthView=false, t=(k => k),}) {
     let html = [];
-    const start = day(schedule.start.toUTCString());
-    const end = day(schedule.end.toUTCString());
+    const start = moment(schedule.start);
+    const end = moment(schedule.end);
 
     const duration = end.diff(start, "minutes");
 
@@ -108,7 +106,7 @@ export function getTimeTemplate(schedule, isMultiView, show_activity_code, {isAl
         if (schedule.activity && schedule.activityInstance)
         {
             const students = TimeIntervalHelpers.omitInactiveStudents(schedule.activity.users, schedule.activityInstance.inactive_students);
-            
+
             studentTeacherDisplayLine += (students.length === 1 ? `${students[0].first_name} ${students[0].last_name}` : students.length +
                     "/" +
                     schedule.activity.activity_ref.occupation_limit +
@@ -208,7 +206,7 @@ class CustomCalendar extends React.Component {
         if (!this.props.generic) scheduleView.push("allday");
 
         const isMultiView = this.props.selectedPlannings.length > 1;
-        
+
         this.calendar = new Calendar(this.calRef.current, {
             usageStatistics: false,
             taskView: false,

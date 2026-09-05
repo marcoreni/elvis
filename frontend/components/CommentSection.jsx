@@ -1,6 +1,6 @@
 import React, { Fragment } from "react";
 
-const moment = require("moment");
+import moment from "moment";
 
 import _ from "lodash";
 
@@ -58,7 +58,7 @@ class CommentSection extends React.Component {
                             </ButtonModal>
                         </h4>
                     </div>{
-                        this.props.contextType && this.props.contextId ? 
+                        this.props.contextType && this.props.contextId ?
                         <div className="ibox-content">
                         {_.chain(this.props.comments)
                             .orderBy(c => c.created_at)

@@ -5,7 +5,7 @@ import NewActivityItem from "./activityItems/NewActivityItem";
 import RenewActivityItem from "./activityItems/RenewActivityItem";
 import UserAvatar from "./UserAvatar";
 
-const moment = require("moment");
+import moment from "moment";
 
 class PreApplication extends React.Component {
     constructor(props) {
@@ -124,7 +124,7 @@ class PreApplication extends React.Component {
                     {isMainAccount ? this.renderMainAccountView(allowPreApplication) : this.renderAttachedAccountView(allowPreApplication)}
 
                     <div className="row">
-                        {this.props.user.id == this.props.current_user.id ? 
+                        {this.props.user.id == this.props.current_user.id ?
                             <a href={user_path} className="btn btn-primary btn-sm btn-outline mt-5"
                                 style={{borderRadius: "8px"}}>
                                 <i className="fas fa-users"/> Retour vers mon profil
@@ -183,7 +183,7 @@ class PreApplication extends React.Component {
                 {hasFamilyCurrentActivities && (
                     <div className="row col-md-12 mb-4 p-0">
                         <h3 style={{color: "#8AA4B1", fontWeight: "bold"}}>
-                            {this.props.user.id == this.props.current_user.id ? 
+                            {this.props.user.id == this.props.current_user.id ?
                             'Activités actuelles pour mon compte (et mes comptes rattachés) - '
                             :
                             'Activités actuelles pour le compte (et ses comptes rattachés) - '

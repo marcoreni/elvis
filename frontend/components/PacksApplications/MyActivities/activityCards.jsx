@@ -78,7 +78,7 @@ export default function activityCards(props) {
                             href={`${window.location.pathname}/bookActivity/${pack.id}`}
                         >
                             <div className="text-white font-bold pl-4">
-                                RÉSERVER <span className="pull-right pr-3"> > </span>
+                                RÉSERVER <span className="pull-right pr-3"> &gt; </span>
                             </div>
                         </a>
                     {/*)}*/}

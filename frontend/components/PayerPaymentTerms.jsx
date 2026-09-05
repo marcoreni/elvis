@@ -4,9 +4,8 @@ import {useTranslation} from "react-i18next";
 import PropTypes from "prop-types";
 import ToggleButtonGroup from "./ToggleButtonGroup";
 import Checkbox from "./common/Checkbox";
-import {composeValidators, isEmpty, isValidNN, required} from "../tools/validators";
+import {isEmpty} from "../tools/validators";
 import Input from "./common/Input";
-import {Field} from "react-final-form";
 
 function PayersListEditor({
                               user,

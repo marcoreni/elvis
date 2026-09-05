@@ -25,7 +25,7 @@ class DeleteCourseModal extends React.Component {
             season: detectedSeason,
             activity: this.props.activity,
             activityInstances: undefined,
-            instanceStatus: undefined
+            instanceStatus: undefined,
         };
     }
 
@@ -36,15 +36,22 @@ class DeleteCourseModal extends React.Component {
             if (error) {
                 console.error(error);
             } else {
+                const instanceStatus = {};
 
-                const instanceStatus = {}
-                
                 data.forEach((instance) => {
-                    const date = instance.time_interval.start.split('T')[0]
-                    instanceStatus[date] = {activity_instance_id: instance.activity_instance_id, start: moment(instance.time_interval.start), selected:true}
+                    const date = instance.time_interval.start.split("T")[0];
+                    instanceStatus[date] = {
+                        activity_instance_id: instance.activity_instance_id,
+                        start: moment(instance.time_interval.start),
+                        selected: true,
+                    };
                 });
 
-                this.setState({ ...this.state, activityInstances: data, instanceStatus: instanceStatus});
+                this.setState({
+                    ...this.state,
+                    activityInstances: data,
+                    instanceStatus: instanceStatus,
+                });
             }
         });
     }
@@ -78,82 +85,103 @@ class DeleteCourseModal extends React.Component {
         } = this.state;
         return (
             <Form
-                onSubmit={(values) =>
-                {
-                    const tmpValues = {...values};
+                onSubmit={(values) => {
+                    const tmpValues = { ...values };
 
-                    const instances = Object.values(this.state.instanceStatus).filter(instance => !instance.selected);
-                    const instanceIds = instances.map((instance) => instance.activity_instance_id)
+                    const instances = Object.values(
+                        this.state.instanceStatus
+                    ).filter((instance) => !instance.selected);
+                    const instanceIds = instances.map(
+                        (instance) => instance.activity_instance_id
+                    );
 
                     const today = new Date();
 
-                    if(values.repetition == "all")
-                    {
-                        const deletableInstances = activityInstances.filter(ai => new Date(ai.time_interval.start) >= today || ai.student_count <= 0);
+                    if (values.repetition == "all") {
+                        const deletableInstances = activityInstances.filter(
+                            (ai) =>
+                                new Date(ai.time_interval.start) >= today ||
+                                ai.student_count <= 0
+                        );
 
-                        deletableInstances.forEach((instance) => instanceIds.push(instance.activity_instance_id));
+                        deletableInstances.forEach((instance) =>
+                            instanceIds.push(instance.activity_instance_id)
+                        );
 
-                        if(instanceIds.length === 0)
-                        {
-                            swal.fire({
+                        if (instanceIds.length === 0) {
+                            swal({
                                 title: t("deleteCourse.warningTitle"),
                                 text: t("deleteCourse.noneDeletable"),
                                 type: "error",
                             });
 
-                            return
+                            return;
                         }
 
                         tmpValues.repetition = "custom_all";
-                    }
-                    else
-                    {
-                        if(instanceIds.length === 0)
-                        {
-                            swal.fire({
+                    } else {
+                        if (instanceIds.length === 0) {
+                            swal({
                                 title: t("deleteCourse.warningTitle"),
                                 text: t("deleteCourse.noneSelected"),
                                 type: "error",
                             });
 
-                            return
+                            return;
                         }
 
-                        if(activityInstances
-                            .filter(ai =>  instanceIds.includes(ai.activity_instance_id))
-                            .filter(ai => new Date(ai.time_interval.start) <= today && ai.student_count >= 0).length > 0)
-                        {
-                            swal.fire({
+                        if (
+                            activityInstances
+                                .filter((ai) =>
+                                    instanceIds.includes(
+                                        ai.activity_instance_id
+                                    )
+                                )
+                                .filter(
+                                    (ai) =>
+                                        new Date(ai.time_interval.start) <=
+                                            today && ai.student_count >= 0
+                                ).length > 0
+                        ) {
+                            swal({
                                 title: t("deleteCourse.warningTitle"),
                                 text: t("deleteCourse.pastWithStudents"),
                                 type: "warning",
                             });
 
-                            return
+                            return;
                         }
                     }
 
                     const timeIntervalIds = this.state.activityInstances
-                        .filter((activityInstance) =>  instanceIds.includes(activityInstance.activity_instance_id))
-                        .map((activityInstance) => activityInstance.time_interval.id);
+                        .filter((activityInstance) =>
+                            instanceIds.includes(
+                                activityInstance.activity_instance_id
+                            )
+                        )
+                        .map(
+                            (activityInstance) =>
+                                activityInstance.time_interval.id
+                        );
 
                     this.props.onSubmit({
                         ...tmpValues,
                         instanceIds: instanceIds,
-                        timeIntervalIds: timeIntervalIds
-                    })
-                }
-                }
+                        timeIntervalIds: timeIntervalIds,
+                    });
+                }}
                 render={({ handleSubmit }) => (
                     <form onSubmit={handleSubmit} className="p-lg">
                         <div className="row">
-                            <h3 className="text-center">{t("deleteCourse.title")}</h3>
+                            <h3 className="text-center">
+                                {t("deleteCourse.title")}
+                            </h3>
 
                             <div className="row">
                                 <p>{t("deleteCourse.prompt")}</p>
                                 <div
                                     className="form-group"
-                                    onClick={e => {
+                                    onClick={(e) => {
                                         this.setState({
                                             selected: e.target.value,
                                         });
@@ -167,7 +195,9 @@ class DeleteCourseModal extends React.Component {
                                             value="all"
                                             id={"delete_all"}
                                         />{" "}
-                                        <label htmlFor={"delete_all"}>{t("deleteCourse.deleteAll")}</label>
+                                        <label htmlFor={"delete_all"}>
+                                            {t("deleteCourse.deleteAll")}
+                                        </label>
                                     </p>
                                     <p>
                                         <Field
@@ -177,7 +207,9 @@ class DeleteCourseModal extends React.Component {
                                             value="select"
                                             id={"delete_select"}
                                         />{" "}
-                                        <label htmlFor={"delete_select"}>{t("deleteCourse.deleteSelected")}</label>
+                                        <label htmlFor={"delete_select"}>
+                                            {t("deleteCourse.deleteSelected")}
+                                        </label>
                                     </p>
                                 </div>
                             </div>
@@ -197,7 +229,14 @@ class DeleteCourseModal extends React.Component {
                                             classes
                                         )
                                     }
-                                    legend={{selected: t("deleteCourse.legendExisting"), unselected: t("deleteCourse.legendToDelete")}}
+                                    legend={{
+                                        selected: t(
+                                            "deleteCourse.legendExisting"
+                                        ),
+                                        unselected: t(
+                                            "deleteCourse.legendToDelete"
+                                        ),
+                                    }}
                                 />
                             )}
                         </div>

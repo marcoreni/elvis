@@ -466,13 +466,13 @@ describe("Summary — handler i18n (swal / toast)", () => {
         );
     });
 
-    test("handleSaveStatus adhesion-delete branch fires swal.fire with the resolved title (fr)", () => {
+    test("handleSaveStatus adhesion-delete branch fires swal with the resolved title (fr)", () => {
         const inst = mountInstance("fr");
         inst.state.status_id = CANCELED_ID;
 
         inst.handleSaveStatus();
 
-        expect(swal.fire).toHaveBeenCalledWith(
+        expect(swal).toHaveBeenCalledWith(
             expect.objectContaining({title: "Attention !"}),
         );
     });

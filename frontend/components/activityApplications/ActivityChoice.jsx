@@ -8,7 +8,7 @@ import {frenchEnumeration} from "../utils";
 import {Editor, EditorState, convertFromRaw, ContentState} from "draft-js";
 import WysiwygViewer from "../utils/WysiwygViewer";
 
-const moment = require("moment-timezone");
+import moment from "moment-timezone";
 
 const getDisplayPrice = (ref, season) => {
     if (ref == undefined || season == undefined)

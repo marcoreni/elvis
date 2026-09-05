@@ -1,13 +1,12 @@
 import React, {Fragment} from "react";
 import PropTypes from "prop-types";
 import _ from "lodash";
-import fetch from "isomorphic-unfetch";
 
 import {toast} from "react-toastify";
 import {withTranslation} from "react-i18next";
 import * as api from "../../tools/api";
 
-const moment = require("moment-timezone");
+import moment from "moment-timezone";
 
 import ActivityDetailsModal from "./ActivityDetailsModal";
 import SelectActivity from "./SelectActivity";

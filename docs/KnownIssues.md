@@ -34,67 +34,56 @@ workflow) — that's part of why this drifted this far without being noticed.
 
 ## Frontend dependencies: major-version bumps still pending
 
-Surveyed 2026-08-27 (`yarn outdated`, each entry checked individually — see git history around that
-date for the accompanying unused-dependency cleanup and in-range bumps, both already done). What's
-left all requires an explicit major-version jump and, in several cases, code changes — tackle one
-at a time rather than in bulk, starting with React since most of the rest is either downstream of it
-or independent of it.
+Surveyed 2026-08-27 (`yarn outdated`, each entry checked individually). Much of the original list
+was cleared by `feat/bump-shakapacker` (2026-09-05): the whole webpack + babel + postcss build
+toolchain was replaced by rspack + swc, React went 16 → 17, `react-final-form` / `final-form` /
+`react-dropzone` / `react-email-editor` / `isomorphic-dompurify` were bumped across their majors,
+and `@wojtekmaj/react-daterange-picker` / `dayjs` / `rc-time-picker` / `react-csv` /
+`react-datepicker` / `react-yearly-calendar` / `tui-code-snippet` were removed. What's left:
 
-**React 16 → 19 (do this one first)** — `react`/`react-dom` `^16.14.0` → 19.x. Three majors behind,
-crossing several real breaking boundaries, not just a version bump:
+**React 17 → 19** — `react`/`react-dom` now at 17 (via `feat/bump-shakapacker`). Two majors still to
+go, crossing real breaking boundaries:
 - Legacy string refs (`ref="foo"`) and the legacy context API (`contextTypes`/`getChildContext`) are
   both removed in 19 — need to grep the ~118 class components (see `docs/I18n-Roadmap.md`'s context
   count) for both before attempting this.
-- `ReactDOM.render` is gone from 18+ in favor of `createRoot`. `react_ujs` (currently 2.7.1, latest
+- `ReactDOM.render` is gone from 18+ in favor of `createRoot`. `react_ujs` (currently `^2.4.3`, latest
   3.3.1) needs bumping in lockstep — it already tries to resolve `react-dom/client` internally
-  (`node_modules/react_ujs/react_ujs/src/reactDomClient.js`), which is why a production
-  `bin/shakapacker` build currently prints a harmless
-  `Module not found: Error: Can't resolve 'react-dom/client'` warning; that's dormant code in the
-  installed react_ujs version waiting for React 18+.
+  (`node_modules/react_ujs/react_ujs/src/reactDomClient.js`).
 - React 18 also changed effect/StrictMode timing enough to surface latent class-component lifecycle
-  bugs that never showed up under 16's behavior.
-- Consider staging this (16 → 18 first, prove it out, then 18 → 19) rather than one big-bang jump.
-- `@testing-library/react` is deliberately pinned at `^12.1.5` *because* it's the last major
-  supporting React 16 (see the Vitest setup commit) — once React moves, this should move with it
-  (latest is 16.3.2, needs React 18+).
+  bugs that never showed up under 16/17's behavior.
+- Stage it 17 → 18 first, prove it out, then 18 → 19.
+- `@testing-library/react` is deliberately pinned at `^12.1.5` — RTL 13+ needs React 18+. Bump it
+  when React moves past 17 (latest is 16.3.2).
 
-**Downstream of the React bump** (all currently pinned well below latest, but bumping most of these
-before React itself would just be churn): `react-select`, `react-table`, `react-toastify`,
-`react-datepicker`, `react-loader-spinner`, `react-dropzone`, `react-autosuggest`, `react-switch`,
-`react-final-form` + `react-final-form-arrays`, `@wojtekmaj/react-daterange-picker`.
+**Downstream of the React bump** (pinned below latest; bumping before React itself is mostly churn):
+`react-select`, `react-table`, `react-toastify`, `react-loader-spinner`, `react-autosuggest`,
+`react-switch`.
 
 **Independent of React, each a real API-surface jump**:
 - `sweetalert2` 7.33.1 → 11.26.25 — dropped the old callback-based `swal({...})` API for promises
   somewhere in the 9.x line; every call site (dozens, via `frontend/tools/api.js` and components
   directly) would need reviewing.
-- `bootstrap` 4.6.2 → 5.3.8 — drops the jQuery dependency, markup/class changes.
-- `isomorphic-dompurify` 0.20.0 → 3.23.0.
+- `bootstrap` 4.6.2 → 5.3.8 — drops the jQuery dependency, markup/class changes. (`feat/bump-shakapacker`
+  briefly dropped `bootstrap` from `package.json` while `PresenceSheet.jsx` still `import`ed it,
+  which pulled in a transitive `bootstrap@3` — restored to `^4` in `f7c9b92`.)
 - `prettier` 1.19.1 → 3.9.6 — different default formatting rules; bumping would reformat large parts
   of the codebase in one commit.
 
-**Build tooling, moderate risk**: `shakapacker` 8→10, `webpack-cli` 4→7, `webpack-dev-server` 4→6,
-`babel-loader` 8→10, `compression-webpack-plugin` 9→12, the whole `@babel/*` toolchain 7→8.
+**Build tooling**: `shakapacker` is at 9.3.0 (target was 10 — one more major).
 
-**Smaller/isolated, lower priority**: `jquery` 3→4, `tui-code-snippet`, `webpack-assets-manifest`,
-`webpack-merge`, `css-minimizer-webpack-plugin` 7→8, `sass-loader` 16→17, `postcss-preset-env` 10→11.
+**Smaller/isolated, lower priority**: `jquery` 3.7.1 → 4, `sass-loader` 16→17.
 
-**Blocked on this repo's Node version, not just "not yet bumped"**: `postcss-import` 16→17 and
-`jsdom` 26→30 both require Node ≥22 — this repo's `engines.node` is pinned to `^20.9.0`. Don't bump
-either past their current major without bumping Node first (same wall we hit picking versions for
-the Vitest/jsdom setup and `postcss-import` itself).
-
-**`node-sass` is deprecated but still load-bearing** — `sass-loader` needs either `node-sass` or
-`sass` (dart-sass) installed to actually compile the `.scss` files in this repo, and only `node-sass`
-is currently present. Migrating to `sass` is a real (if probably mechanical) task, not a version
-bump — dart-sass's syntax is close to but not 100% compatible with node-sass's on some edge cases.
+**Node** is at 22 (`feat/bump-shakapacker`), which unblocks `jsdom` 26→30 (had required Node ≥22) —
+still a pending major bump, just no longer gated.
 
 ## Exotic (git-pinned) dependencies need a per-package decision, not a version bump
 
-5 dependencies resolve to a git ref rather than a registry version (`yarn outdated` calls these
+4 dependencies resolve to a git ref rather than a registry version (`yarn outdated` calls these
 `exotic` and can't give a real "how far behind" comparison): `jQuery-QueryBuilder`,
-`jQuery-QueryBuilder-Elasticsearch`, `react-stepzilla`, `react-yearly-calendar`, `tui-calendar`.
-None are pinned to a commit SHA (branch/tag refs instead), so each can change underneath the app
-with zero `package.json`/lockfile signal.
+`jQuery-QueryBuilder-Elasticsearch`, `react-stepzilla`, `tui-calendar`. None are pinned to a
+commit SHA (branch/tag refs instead), so each can change underneath the app with zero
+`package.json`/lockfile signal. (`react-yearly-calendar` was on this list — it was dropped by
+`feat/bump-shakapacker`, which reimplemented `YearlyCalendar.jsx` on `@fullcalendar/react`.)
 
 For each one the real question isn't "bump the version" but: why was it forked, is the fork's patch
 still needed, is upstream (or the fork itself) still maintained, and does it make more sense to
@@ -111,14 +100,9 @@ maintenance risk is highest:
   could just be dropped — the app's actual calendar behavior depends on it. Un-forking means
   re-implementing all 14 commits' behavior against a version 1426 commits newer; worth scoping
   carefully before starting.
-- **`react-yearly-calendar`** (`SIXMON/react-yearly-calendar` fork of `BelkaLab/react-yearly-calendar`)
-  — **highest maintenance risk**. Upstream is **archived** (dead since ~2020). Fork carries 4 commits
-  ahead including a real behavioral change ("Change from civil year to range period") and is 17
-  commits behind an upstream that will never move again. Since upstream is dead either way, "un-fork"
-  isn't really an option — this is a keep-and-pin-to-a-commit-SHA vs. replace-the-library decision.
 - **`react-stepzilla`** (`SIXMON/react-stepzilla` fork of `newbreedofgeek/react-stepzilla`) — upstream
   is alive but slow (615 stars, last pushed 2022-12). Fork has 3 real commits ahead (nav-state bug
-  fixes for dynamic step counts) and is only 2 commits behind — the smallest gap of the four forks,
+  fixes for dynamic step counts) and is only 2 commits behind — the smallest gap of the forks here,
   and the patches look like legitimate upstreamable bug fixes rather than app-specific behavior.
   Reasonable candidate to try upstreaming the fix and dropping the fork.
 - **`jQuery-QueryBuilder`** (`SIXMON/jQuery-QueryBuilder` fork of `mistic100/jQuery-QueryBuilder`) —

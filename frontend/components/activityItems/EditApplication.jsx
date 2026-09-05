@@ -55,7 +55,7 @@ export default function EditApplication(props) {
                         <button className="btn btn-primary text-white"
                                 onClick={() => {
                                     if (editInput === "") {
-                                        swal.fire({
+                                        swal({
                                             title: "Veuillez renseigner les modifications à apporter",
                                             icon: "info",
                                             confirmButtonColor: "#00334A",

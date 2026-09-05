@@ -20,7 +20,6 @@
   <meta name="theme-color" content="#ffffff">
   <meta name="viewport" content="width=device-width, user-scalable=no">
 
-  <script src="https://code.jquery.com/jquery-3.7.1.slim.min.js" integrity="sha256-kmHvs0B+OpCW5GVHUNjv9rOmY0IvSIRcf7zGUDTDQM8=" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/interactjs@1.3.4/dist/interact.min.js" integrity="sha384-U99lrcuVtzU2dFcaPZK5iRy0UQ9gD1dnXrHcBO+/eJ9UN/omReEFZ3slqvobtRym" crossorigin="anonymous"></script>
   <%= stylesheet_pack_tag 'application', media: nil %>
   <%= stylesheet_pack_tag 'application_print', media: "print" %>
@@ -246,19 +245,23 @@
         );
     });
 
-    const footer = $(".app-footer");
-    footer.parent().height(footer[0].offsetHeight);
+    // jQuery is provided by the deferred `app` pack (window.$ set in frontend/packs/app.js), so it
+    // is not defined yet when this inline script parses. Wait for it, same as `tippy` above.
+    whenAvailable("jQuery", function ($) {
+        const footer = $(".app-footer");
+        footer.parent().height(footer[0].offsetHeight);
 
-    $("#a-profile").on("click", function () {
-        const rotates = $(".rotate-fa");
+        $("#a-profile").on("click", function () {
+            const rotates = $(".rotate-fa");
 
-        rotates.addClass("down");
+            rotates.addClass("down");
 
-        setTimeout(() => $("body").click(function () {
-            rotates.removeClass("down");
-            $("body").off("click");
-        }), 500);
+            setTimeout(() => $("body").click(function () {
+                rotates.removeClass("down");
+                $("body").off("click");
+            }), 500);
 
+        });
     });
 </script>
 <%= react_component("utils/SwalBackEndModal", { swal_props: { title: 'Message', type: 'info', text: '3 saisons ont été créées par défault en fonction de la date actuelle' } }) if @base_season_created %>

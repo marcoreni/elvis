@@ -1,5 +1,3 @@
-version: '3.9'
-
 name: elvis
 
 x-base_elvis: &base_elvis

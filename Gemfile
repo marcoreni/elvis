@@ -21,7 +21,7 @@ gem "bootsnap"
 gem "mutex_m"
 
 gem "react-rails"
-gem "shakapacker", "< 9"
+gem "shakapacker", "10.3.2"
 
 gem "irb"
 gem "i18n"

@@ -2,7 +2,7 @@ import React from "react";
 import { withTranslation, useTranslation } from "react-i18next";
 import _ from "lodash";
 
-const moment = require("moment");
+import moment from "moment";
 
 import ReactModal from "react-modal";
 import ReactTable from "react-table";

@@ -1,9 +1,8 @@
 import React from "react";
 import PropTypes from "prop-types";
 import _ from "lodash";
-import { subnetMatch } from "ipaddr.js";
 
-const moment = require("moment");
+import moment from "moment";
 
 const getRoom = (rooms, id) => _.find(rooms, r => r.id == id);
 const getTeacher = (activity, activities) => {

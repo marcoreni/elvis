@@ -7,7 +7,7 @@ import ActivityRefBasics from "./ActivityRefBasics";
 import ActivityRefApplication from "./ActivityRefApplication";
 import TabbedComponent from "../utils/ui/tabs";
 import WorkGroupTemplateEditor from "./WorkGroupTemplateEditor";
-import {Form, Field, FormSpy} from "react-final-form";
+import {Form} from "react-final-form";
 import * as api from "../../tools/api.js";
 import {redirectTo} from "../../tools/url";
 import ActivityRefTeachers from "./ActivityRefTeachers";

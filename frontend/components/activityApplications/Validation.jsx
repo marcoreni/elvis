@@ -8,7 +8,7 @@ import UserAvatar from "../UserAvatar";
 import WysiwygViewer from "../utils/WysiwygViewer";
 
 
-const moment = require("moment");
+import moment from "moment";
 
 const Validation = ({
                         application,

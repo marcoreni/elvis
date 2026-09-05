@@ -2,7 +2,7 @@ import React, { Fragment } from "react";
 
 import NamePicker from "./NamePicker";
 
-const moment = require("moment");
+import moment from "moment";
 
 class GeneralInfos extends React.Component {
     constructor(props) {

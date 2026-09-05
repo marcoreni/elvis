@@ -1,17 +1,14 @@
 import React from "react";
-import { csrfToken } from "../utils";
-import swal from "sweetalert2";
-import { Form, Field, FormSpy } from "react-final-form";
+import { Form, Field } from "react-final-form";
 import {
     required,
     isValidAge,
     isValidEmail,
     composeValidators,
-    minLength,
 } from "../../tools/validators";
 import Input from "../common/Input";
 import InputSelect from "../common/InputSelect";
-import { toBirthday, toAge } from "../../tools/format";
+import { toBirthday } from "../../tools/format";
 import Checkbox from "../common/Checkbox";
 
 const sexes = [

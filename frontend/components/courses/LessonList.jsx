@@ -214,7 +214,7 @@ class LessonList extends React.Component {
         if (values.repetition === "all") {
             api.set()
                 .success(() => {
-                    swal.fire({
+                    swal({
                         title: t("lessonList.successTitle"),
                         type: "success",
                         allowOutsideClick: false,
@@ -238,7 +238,7 @@ class LessonList extends React.Component {
         } else {
             api.set()
                 .success(() => {
-                    swal.fire({
+                    swal({
                         title: t("lessonList.successTitle"),
                         type: "success",
                         allowOutsideClick: false,

@@ -1,7 +1,60 @@
 import React, { useState } from "react";
-import { CSVLink } from "react-csv";
 import { csrfToken } from "./utils";
 import swal from "sweetalert2";
+
+const CSV_TEMPLATE_ROWS = [
+    [
+        "Prenom",
+        "Nom",
+        "Date de naissance",
+        "Email",
+        "Adresse",
+        "Code postal",
+        "Ville",
+        "Telephone",
+        "Role",
+    ],
+    [
+        "John",
+        "Doe",
+        "25/04/1964",
+        "john.doe@gmail.com",
+        "18 rue des navets",
+        "76600",
+        "Le Havre",
+        "0625334455",
+        "administrateur",
+    ],
+    [
+        "Jane",
+        "Doe",
+        "25/04/1969",
+        "jane.doe@gmail.com",
+        "18 rue des navets",
+        "76600",
+        "Le Havre",
+        "0622334455",
+        "professeur",
+    ],
+    [
+        "Jack",
+        "Doe",
+        "25/04/1999",
+        "jack.doe@gmail.com",
+        "18 rue des navets",
+        "76600",
+        "Le Havre",
+        "0626336455",
+        "",
+    ],
+];
+
+// separator=";" preserved; \uFEFF BOM so Excel handles accents correctly
+const CSV_TEMPLATE_URI =
+    "data:text/csv;charset=utf-8,\uFEFF" +
+    encodeURIComponent(
+        CSV_TEMPLATE_ROWS.map(row => row.join(";")).join("\r\n")
+    );
 
 class ImportCsv extends React.Component {
     constructor(props) {
@@ -11,7 +64,6 @@ class ImportCsv extends React.Component {
     }
 
     handleSubmit(event) {
-
         if (event.target.csv_file && event.target.csv_file.files.length > 0) {
             this.setState({ submitting: true });
             event.preventDefault();
@@ -25,46 +77,48 @@ class ImportCsv extends React.Component {
                     "X-CSRF-Token": csrfToken,
                 },
                 body: formData,
-            }).then(res => {
-                this.setState({ submitting: false });
-
-                if (res.ok) {
-                    res.json().then(json => {
-                        const import_report = json.import_report;
-console.log(import_report);
-                        if (Object.keys(import_report.errors).length > 0) {
-                            this.setState({
-                                import_report: json.import_report,
-                            });
-                        } else {
-                            let htmltext =
-                                "<p>Toute votre communauté a bien été importée</p>" +
-                                "<p>Vous allez être redirigé vers la liste de vos membres";
-
-                            swal.fire({
-                                title: "Bravo !",
-                                html: htmltext,
-                                type: "success",
-                                timer: 10000,
-                                allowOutsideClick: false,
-                            }).then(
-                                () =>
-                                    (window.location.href = `/users?auth_token=${csrfToken}`)
-                            );
-                        }
-                    });
-                }
-            }).catch(error => {
-                this.setState({ submitting: false });
-                console.error(error);
-                swal.fire({
-                    title: "Erreur",
-                    html: "<p>Une erreur est survenue lors de l'import. Veuillez réessayer.</p>",
-                    type: "error",
-                    timer: 10000,
-                });
             })
-            ;
+                .then(res => {
+                    this.setState({ submitting: false });
+
+                    if (res.ok) {
+                        res.json().then(json => {
+                            const import_report = json.import_report;
+                            console.log(import_report);
+                            if (Object.keys(import_report.errors).length > 0) {
+                                this.setState({
+                                    import_report: json.import_report,
+                                });
+                            } else {
+                                let htmltext =
+                                    "<p>Toute votre communauté a bien été importée</p>" +
+                                    "<p>Vous allez être redirigé vers la liste de vos membres";
+
+                                swal({
+                                    title: "Bravo !",
+                                    html: htmltext,
+                                    type: "success",
+                                    timer: 10000,
+                                    allowOutsideClick: false,
+                                }).then(
+                                    () =>
+                                        (window.location.href = `/users?auth_token=${csrfToken}`)
+                                );
+                            }
+                        });
+                    }
+                })
+                .catch(error => {
+                    this.setState({ submitting: false });
+                    console.error(error);
+                    swal({
+                        title: "Erreur",
+                        html:
+                            "<p>Une erreur est survenue lors de l'import. Veuillez réessayer.</p>",
+                        type: "error",
+                        timer: 10000,
+                    });
+                });
         }
     }
 
@@ -96,64 +150,22 @@ console.log(import_report);
 
     display_row_numbers(lines) {
         switch (lines.length) {
-            case 0: return "";
-            case 1: return "Ligne " + lines + " : ";
-            default: return "Lignes " + lines + " : ";
+            case 0:
+                return "";
+            case 1:
+                return "Ligne " + lines + " : ";
+            default:
+                return "Lignes " + lines + " : ";
         }
     }
 
     render() {
-        const content = [
-            [
-                "Prenom",
-                "Nom",
-                "Date de naissance",
-                "Email",
-                "Adresse",
-                "Code postal",
-                "Ville",
-                "Telephone",
-                "Role",
-            ],
-            [
-                "John",
-                "Doe",
-                "25/04/1964",
-                "john.doe@gmail.com",
-                "18 rue des navets",
-                "76600",
-                "Le Havre",
-                "0625334455",
-                "administrateur",
-            ],
-            [
-                "Jane",
-                "Doe",
-                "25/04/1969",
-                "jane.doe@gmail.com",
-                "18 rue des navets",
-                "76600",
-                "Le Havre",
-                "0622334455",
-                "professeur",
-            ],
-            [
-                "Jack",
-                "Doe",
-                "25/04/1999",
-                "jack.doe@gmail.com",
-                "18 rue des navets",
-                "76600",
-                "Le Havre",
-                "0626336455",
-                "",
-            ],
-        ];
-
         const import_report = this.state.import_report;
 
         const data =
-            import_report && (import_report.errors != null) ? this.formatData(import_report.errors) : [];
+            import_report && import_report.errors != null
+                ? this.formatData(import_report.errors)
+                : [];
 
         const { submitting } = this.state;
 
@@ -183,16 +195,14 @@ console.log(import_report);
                         des exemples.
                     </p>
 
-                    <CSVLink
-                        className="btn btn-primary  m-b-md"
-                        filename={"import_users.csv"}
-                        data={content}
-                        separator={";"}
-                        enclosingCharacter={""}
+                    <a
+                        className="btn btn-primary m-b-md"
+                        href={CSV_TEMPLATE_URI}
+                        download="import_users.csv"
                     >
                         <i className="fas fa-download"></i> Télécharger le
                         fichier CSV type
-                    </CSVLink>
+                    </a>
                 </div>
                 <div className="row m-b-md">
                     <h3>
@@ -291,18 +301,24 @@ console.log(import_report);
                             >
                                 <i className="fas fa-upload"></i> Importer
                                 &nbsp;
-
-                                {submitting && <i className="fas fa-circle-notch fa-spin"/> }
+                                {submitting && (
+                                    <i className="fas fa-circle-notch fa-spin" />
+                                )}
                             </button>
                         </div>
                     </form>
                 </div>
 
-                {import_report && import_report.lines_imported>0 && (
+                {import_report && import_report.lines_imported > 0 && (
                     <div className="row">
                         <div className="alert alert-success">
                             <p>
-                                Le fichier a bien été importé ({import_report.lines_imported} {import_report.lines_imported===1 ? "utilisateur" : "utilisateurs"} )
+                                Le fichier a bien été importé (
+                                {import_report.lines_imported}{" "}
+                                {import_report.lines_imported === 1
+                                    ? "utilisateur"
+                                    : "utilisateurs"}{" "}
+                                )
                             </p>
                         </div>
                     </div>
@@ -314,13 +330,16 @@ console.log(import_report);
                             <h4>Attention</h4>
                             {data.map(row => {
                                 return (
-                                    <p
-                                        key={row.lines}
-                                    >{`${this.display_row_numbers(row.lines)}${row.message}`}.</p>
+                                    <p key={row.lines}>
+                                        {`${this.display_row_numbers(
+                                            row.lines
+                                        )}${row.message}`}
+                                        .
+                                    </p>
                                 );
                             })}
                             <hr />
-                            <p >Veuillez modifier le fichier et réessayer.</p>
+                            <p>Veuillez modifier le fichier et réessayer.</p>
                         </div>
                     </div>
                 )}

@@ -6,7 +6,7 @@ import {makeDebounce} from "../tools/inputs";
 import DetachAccount from "./DetachAccount";
 import Modal from "react-modal";
 
-const moment = require("moment");
+import moment from "moment";
 
 const requestData = (pageSize, page, sorted, filtered, format) => {
 
@@ -52,7 +52,7 @@ class UserAttach extends React.Component {
     }
 
     async swalShowLoading() {
-        swal.fire({
+        swal({
             showConfirmButton: false,
             allowOutsideClick: false,
             allowEscapeKey: false,
@@ -70,13 +70,13 @@ class UserAttach extends React.Component {
         this.swalShowLoading();
 
         const attached_users = await this.fetchAttachedUsers(user.id)
-        
+
         if (attached_users.length < 1) {
             if (user.attached_to_id) { //si compte déjà rattaché
                 const referent_user = await this.fetchReferentUser(user.attached_to_id)
                 swal.hideLoading()
 
-                swal.fire({
+                swal({
                     type: 'warning',
                     html:`<h3><b>${user.first_name} ${user.last_name}</b> est déjà rattaché·e à <b>${referent_user.first_name} ${referent_user.last_name}</b><br><br>
                     Souhaitez-vous la·e rattacher à<br><b>${this.props.user.first_name} ${this.props.user.last_name}</b> à la place ?</h3>`,
@@ -89,7 +89,7 @@ class UserAttach extends React.Component {
             } else {
                 swal.hideLoading()
 
-                swal.fire({
+                swal({
                     type: 'info',
                     html:`<h3>Souhaitez-vous rattacher<br><br><b>${user.first_name} ${user.last_name}</b><br><br>à<br><br><b>${this.props.user.first_name} ${this.props.user.last_name}</b> ?</h3>`,
                     cancelButtonText: 'Annuler',
@@ -114,7 +114,7 @@ class UserAttach extends React.Component {
 
             swal.hideLoading();
 
-            swal.fire({
+            swal({
                 type: "warning",
                 title: "Cet utilisateur·rice a des comptes rattachés",
                 html:`<h3>Souhaitez-vous rattacher<br><br><b>${user.first_name} ${user.last_name}</b> ainsi que :<br>${str_users}<br><br>à<br><br><b>${this.props.user.first_name} ${this.props.user.last_name}</b> ?</h3>`,
@@ -141,12 +141,12 @@ class UserAttach extends React.Component {
                     })
 
         if (res.ok) {
-            return swal.fire({
+            return swal({
                 type: "success",
                 title: "Compte(s) rattaché(s) avec succès",
             }).then(() => this.loadAttachedUsers());
         } else {
-            return swal.fire({
+            return swal({
                 type: "error",
                 title: "Une erreur est survenue lors de l'envoi des données :",
                 html: `${res.status}<br>${res.statusText}<br>`
@@ -297,7 +297,7 @@ class UserAttach extends React.Component {
                                     display: "inline-block",
                                 }}
                             >
-                            
+
                             { is_user || is_attached_to_user ?
                                 <div>
                                     { is_user ?

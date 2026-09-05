@@ -1,7 +1,7 @@
 import React from "react";
 import _ from "lodash";
 
-const moment = require("moment");
+import moment from "moment";
 
 class DateFilter extends React.Component {
     constructor(props) {

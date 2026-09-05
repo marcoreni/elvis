@@ -3,7 +3,7 @@ import _ from "lodash";
 import swal from "sweetalert2";
 import { withTranslation } from "react-i18next";
 
-const moment = require("moment");
+import moment from "moment";
 
 import ReactTable from "react-table";
 

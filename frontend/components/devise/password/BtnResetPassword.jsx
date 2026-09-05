@@ -18,21 +18,21 @@ export default function BtnResetPassword({
         if (sendRequest.url === "/users/reset_password") {
             if (user?.is_admin || user?.is_teacher) {
                 api.set()
-                    .success(() => swal.fire("Email envoyé !", "", "success"))
-                    .error(() => swal.fire("Erreur lors de l'envoi de l'email.", "", "error"))
+                    .success(() => swal("Email envoyé !", "", "success"))
+                    .error(() => swal("Erreur lors de l'envoi de l'email.", "", "error"))
                     .post(sendRequest.url, { ...sendRequest.data, send_email: "true" }, sendRequest.additionnalHeaders);
             } else {
                 api.set()
                     .success((data) => {
                         if (!data?.reset_link) {
-                            swal.fire("Erreur", "Erreur lors de la génération du lien", "error");
+                            swal("Erreur", "Erreur lors de la génération du lien", "error");
                             return;
                         }
                         setResetLink(data.reset_link);
                         showResetLinkPopup(data.reset_link);
                     })
                     .error(() => {
-                        swal.fire("Erreur", "Impossible de récupérer les informations de l'utilisateur", "error");
+                        swal("Erreur", "Impossible de récupérer les informations de l'utilisateur", "error");
                     })
                     .post(sendRequest.url, sendRequest.data, sendRequest.additionnalHeaders);
             }
@@ -40,20 +40,20 @@ export default function BtnResetPassword({
             api.set()
                 .success((data) => {
                     if ((!data || data.length === 0) && textNoData) {
-                        swal.fire("Erreur", textNoData, "error");
+                        swal("Erreur", textNoData, "error");
                         return;
                     }
-                    swal.fire("Succès", textSuccess, "success");
+                    swal("Succès", textSuccess, "success");
                 })
                 .error(() => {
-                    swal.fire("Erreur", textError || "Une erreur est survenue.", "error");
+                    swal("Erreur", textError || "Une erreur est survenue.", "error");
                 })
                 [sendRequest.type](sendRequest.url, sendRequest.data, sendRequest.additionnalHeaders);
         }
     }
 
     function showResetLinkPopup(link) {
-        swal.fire({
+        swal({
             title: "Lien de réinitialisation",
             html: `
                 <input id="reset-link" class="swal2-input" value="${link}" readonly>
@@ -63,14 +63,14 @@ export default function BtnResetPassword({
             confirmButtonText: "Copier",
             preConfirm: () => {
                 navigator.clipboard.writeText(link)
-                    .then(() => swal.fire("Lien copié !", "", "success"))
-                    .catch(() => swal.fire("Erreur lors de la copie", "", "error"));
+                    .then(() => swal("Lien copié !", "", "success"))
+                    .catch(() => swal("Erreur lors de la copie", "", "error"));
             }
         }).then((result) => {
             if (result.dismiss === swal.DismissReason.cancel) {
                 api.set()
-                    .success(() => swal.fire("Email envoyé !", "", "success"))
-                    .error(() => swal.fire("Erreur lors de l'envoi de l'email.", "", "error"))
+                    .success(() => swal("Email envoyé !", "", "success"))
+                    .error(() => swal("Erreur lors de l'envoi de l'email.", "", "error"))
                     .post(sendRequest.url, { ...sendRequest.data, send_email: "true" }, sendRequest.additionnalHeaders);
             }
         });

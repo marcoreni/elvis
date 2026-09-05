@@ -49,7 +49,7 @@ u.save!
 - Frontend tests: `yarn test` (Vitest, added alongside the i18n frontend work — `vitest.config.mjs`,
   colocated `*.test.js`/`*.test.jsx` files under `frontend/`). Any `.js` file under `frontend/`
   containing JSX must be named `.jsx` — Vite's esbuild/oxc integration only parses JSX in
-  `.jsx`/`.tsx` by default, unlike this app's actual webpack/Babel build, which doesn't care about
+  `.jsx`/`.tsx` by default, unlike this app's actual webpack// build, which doesn't care about
   the extension. Component-rendering tests use `@testing-library/react@^12`
   (`@testing-library/jest-dom@6.9.1`/`@testing-library/user-event@^13`) — pinned below their
   latest majors for this app's React 16/Node 20, not because of a Vite/Vitest constraint.

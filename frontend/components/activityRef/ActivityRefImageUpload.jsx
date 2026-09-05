@@ -16,7 +16,7 @@ class ActivityRefImageUpload extends React.Component {
         if (acceptedFiles.length)
             formPayLoad.append("avatar", _.head(acceptedFiles));
 
-        console.log(`j'envoie le fichier ${acceptedFiles}`)
+        console.log(`j'envoie le fichier ${acceptedFiles}`);
         // fetch(`/users/${this.props.userId}/upload_avatar`, {
         //     method: "post",
         //     credentials: "same-origin",
@@ -33,22 +33,24 @@ class ActivityRefImageUpload extends React.Component {
 
     render() {
         return (
-            <Dropzone onDrop={this.onDrop}
+            <Dropzone
+                onDrop={this.onDrop}
                 disablePreview={true}
                 multiple={false}
-                accept="image/*"
+                accept={{ "image/*": [] }}
             >
                 {({ getRootProps, getInputProps }) => (
-                    <section style={{
-                        cursor: "pointer"
-                    }}>
+                    <section
+                        style={{
+                            cursor: "pointer",
+                        }}
+                    >
                         <div {...getRootProps()}>
                             <i
                                 className="fas fa-pencil-alt"
                                 style={{ color: "#d63031", fontSize: 20 }}
                             />
                             <input {...getInputProps()} />
-
                         </div>
                     </section>
                 )}

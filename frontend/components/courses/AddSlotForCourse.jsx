@@ -1,7 +1,5 @@
 import React from "react";
 import Input from "../common/Input";
-import TimePicker from "rc-time-picker";
-import "rc-time-picker/assets/index.css";
 import InputSelect from "../common/InputSelect";
 import { toast } from "react-toastify";
 import { MESSAGES } from "../../tools/constants";

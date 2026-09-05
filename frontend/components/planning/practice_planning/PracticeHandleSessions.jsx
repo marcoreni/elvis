@@ -2,7 +2,7 @@ import React, { Fragment } from "react";
 import { withTranslation } from "react-i18next";
 import { fullname } from "../../../tools/format";
 
-const moment = require("moment-timezone");
+import moment from "moment-timezone";
 
 class PracticeHandleSessions extends React.Component {
     constructor(props){
@@ -40,15 +40,15 @@ class PracticeHandleSessions extends React.Component {
 
     dateChange(event) {
         let date = new Date(event.target.value);
-        let start = this.state.session.start 
-            ? new Date(this.state.session.start) 
+        let start = this.state.session.start
+            ? new Date(this.state.session.start)
             : new Date(this.props.session.start);
         start.setFullYear(date.getFullYear());
         start.setMonth(date.getMonth());
         start.setDate(date.getDate());
-        
-        let end = this.state.session.end 
-            ? new Date(this.state.session.end) 
+
+        let end = this.state.session.end
+            ? new Date(this.state.session.end)
             : new Date(this.props.session.end);
         end.setFullYear(date.getFullYear());
         end.setMonth(date.getMonth());
@@ -67,16 +67,16 @@ class PracticeHandleSessions extends React.Component {
 
     validateDate(dateStart) {
         let day = new Date(dateStart).getUTCDay();
-        let validated = !(day === 0 || day === 6) 
+        let validated = !(day === 0 || day === 6)
         return validated
     }
 
 
     hourStartChange(event) {
         let hour = event.target.value
-        let start = this.state.session.start 
+        let start = this.state.session.start
             ? new Date(this.state.session.start)
-            : new Date(this.props.session.start); 
+            : new Date(this.props.session.start);
         start.setHours(hour.substring(0,2))
         start.setMinutes(hour.substring(3))
 
@@ -91,9 +91,9 @@ class PracticeHandleSessions extends React.Component {
 
     hourEndChange(event) {
         let hour = event.target.value
-        let end = this.state.session.end 
+        let end = this.state.session.end
             ? new Date(this.state.session.end)
-            : new Date(this.props.session.end); 
+            : new Date(this.props.session.end);
         end.setHours(hour.substring(0,2))
         end.setMinutes(hour.substring(3))
 
@@ -144,10 +144,10 @@ class PracticeHandleSessions extends React.Component {
             <hr/>
             <div >
                 <label> {t("activityModal.roomLabel")} </label>
-                <select id="room" 
+                <select id="room"
                     onChange={e => this.roomChange(e)}
                     value={this.state.roomId}>
-                    {rooms.map(r => 
+                    {rooms.map(r =>
                         <option
                             key={r.id}
                             value={r.id}
@@ -158,10 +158,10 @@ class PracticeHandleSessions extends React.Component {
             </div>
             <div >
                 <label> {t("multiViewModal.group")} </label>
-                <select id="band" 
+                <select id="band"
                     onChange={e => this.bandChange(e)}
                     value={this.state.bandId}>
-                    {bands.map(b => 
+                    {bands.map(b =>
                         <option
                             key={b.id}
                             value={b.id}

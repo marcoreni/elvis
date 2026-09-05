@@ -5,7 +5,7 @@ import WysiwygViewer from "../utils/WysiwygViewer";
 import { toast } from "react-toastify";
 import FormulaActivitiesModal from "./FormulaActivitiesModal";
 
-const moment = require("moment-timezone");
+import moment from "moment-timezone";
 
 const FormulaChoice = ({
                            infoText,

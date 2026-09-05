@@ -27,7 +27,7 @@ export default class ReplicateWeekAct extends React.Component {
         const container = document.createElement('div');
         ReactDOM.render(<JobProgress jobId={jobId} onError={(res) => swal({ title: "Erreur", text: res, type: "error" })} />, container);
 
-        swal.fire({
+        swal({
             title: 'Suivi de la réplication',
             html: container,
             showCloseButton: true,
