@@ -1,7 +1,10 @@
-// i18n extraction test for the generalPayments shell (i18n-06 payments lot 2a). The four tab
-// bodies (DuePaymentList / PaymentList / PaymentScheduleList / CheckList) are mocked out — this
-// only checks the tab headers that live in GeneralPayments.jsx itself. The TabbedComponent is
-// mocked to a trivial header list so we don't depend on its markup.
+// Domain bilingual smoke test for the `generalPayments` area (Phase 07 P0 checkpoint strategy —
+// docs/I18n-Roadmap.md §P0). The per-component "renders the fr / renders the en" string-echo
+// pairs for DuePaymentList / PaymentList / SubPaymentList / PaymentScheduleList / CheckList /
+// BulkEditModal / MessageModal were redundant once the i18n pipeline was proven and have been
+// removed; this shell render is the single locale checkpoint for the area. The four tab bodies
+// are mocked out, so this checks the tab headers owned by GeneralPayments.jsx and that none of
+// them fall through to a "translation missing" marker.
 
 import React from "react";
 import { render, screen, waitFor } from "@testing-library/react";
@@ -37,26 +40,22 @@ afterEach(async () => {
     await i18n.changeLanguage("fr");
 });
 
-describe("GeneralPayments", () => {
-    test("renders the French tab headers by default", async () => {
-        await i18n.changeLanguage("fr");
-        render(<GeneralPayments {...props} />);
+const TAB_HEADERS = {
+    fr: ["Échéances", "Règlements", "Échéanciers sans payeur", "Chèques"],
+    en: ["Due dates", "Payments", "Schedules without a payer", "Cheques"],
+};
 
-        expect(screen.getByText("Échéances")).toBeInTheDocument();
-        expect(screen.getByText("Règlements")).toBeInTheDocument();
-        expect(screen.getByText("Échéanciers sans payeur")).toBeInTheDocument();
-        expect(screen.getByText("Chèques")).toBeInTheDocument();
-    });
-
-    test("renders the English tab headers when the active language is en", async () => {
-        await i18n.changeLanguage("en");
+describe.each(["fr", "en"])("generalPayments area — bilingual smoke (%s)", lng => {
+    test("renders the shell tab headers with real translated copy, no missing-key markers", async () => {
+        await i18n.changeLanguage(lng);
         render(<GeneralPayments {...props} />);
 
         await waitFor(() =>
-            expect(screen.getByText("Due dates")).toBeInTheDocument()
+            expect(screen.getByText(TAB_HEADERS[lng][0])).toBeInTheDocument()
         );
-        expect(screen.getByText("Payments")).toBeInTheDocument();
-        expect(screen.getByText("Schedules without a payer")).toBeInTheDocument();
-        expect(screen.getByText("Cheques")).toBeInTheDocument();
+        for (const header of TAB_HEADERS[lng]) {
+            expect(screen.getByText(header)).toBeInTheDocument();
+        }
+        expect(document.body.textContent).not.toMatch(/translation missing/i);
     });
 });

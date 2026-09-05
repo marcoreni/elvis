@@ -7,7 +7,7 @@
 // it would pull in react-select / DB-shaped question objects for no benefit here.
 
 import React from "react";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import i18n from "../../i18n";
 import EvaluationForm from "./EvaluationForm";
 
@@ -28,14 +28,9 @@ describe("EvaluationForm", () => {
         expect(screen.getByRole("button")).toHaveTextContent("Enregistrer les réponses");
     });
 
-    test("uses the English default submit label when the active language is en", async () => {
-        await i18n.changeLanguage("en");
-        render(<EvaluationForm questions={[]} answers={{}} onSubmit={() => {}} />);
-
-        await waitFor(() =>
-            expect(screen.getByRole("button")).toHaveTextContent("Save answers")
-        );
-    });
+    // The mirror "English default submit label" test was a pure string-echo (Phase 07 P0) — the
+    // mechanic it shared with the case above is "the default label now comes from t(), not a
+    // module const", which the French case and the override case below already pin.
 
     test("an explicit submitLabel prop still overrides the translated default", async () => {
         await i18n.changeLanguage("fr");

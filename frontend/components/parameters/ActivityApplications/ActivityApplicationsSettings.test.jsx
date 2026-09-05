@@ -36,8 +36,6 @@
 import React from "react";
 import {render, screen, fireEvent, act, waitFor} from "@testing-library/react";
 import i18n from "../../../i18n";
-import fr from "../../../locales/fr/parameters.json";
-import en from "../../../locales/en/parameters.json";
 
 // --- api: chainable no-op stub; last success/error callbacks captured for hand-firing --------
 const apiState = vi.hoisted(() => ({lastSuccess: null, lastError: null}));
@@ -176,48 +174,11 @@ afterEach(async () => {
 // 1. i18n layer — lot-D key set resolves fr AND en, parity, interpolation, literal token
 // ============================================================================================
 describe("parameters activityApplications.* (lot D) — i18n layer", () => {
-    const flattenAll = (obj, p = "") =>
-        Object.entries(obj).flatMap(([k, v]) =>
-            v && typeof v === "object" ? flattenAll(v, `${p}${k}.`) : [`${p}${k}`],
-        );
-
-    const GROUPS = ["settings", "stepParams", "consentModal", "consentList", "statusTable"];
-    const keysFor = (d) =>
-        GROUPS.flatMap((g) =>
-            Object.keys(d.activityApplications[g]).map((k) => `activityApplications.${g}.${k}`),
-        ).concat(["shared.colLabel"]);
-
-    const FR_KEYS = keysFor(fr);
-    const EN_KEYS = keysFor(en);
-
-    test("fr and en expose exactly the same lot-D key set (25 activityApplications.* + shared.colLabel)", () => {
-        // shared.* consolidation removed 4 lot-D keys:
-        //  settings.{loadError,saveSuccess,saveError} -> shared.{loadParamsError,saveSuccess,saveError}
-        //  statusTable.deleteConfirm -> shared.deleteStatusConfirm  (29 - 4 = 25)
-        expect(new Set(EN_KEYS)).toEqual(new Set(FR_KEYS));
-        expect(FR_KEYS).toHaveLength(26);
-        expect(FR_KEYS.filter((k) => k.startsWith("activityApplications."))).toHaveLength(25);
-    });
-
-    test("parameters.json fr/en leaf counts stay in lock-step (grows across lots)", () => {
-        expect(flattenAll(fr).length).toBe(flattenAll(en).length);
-        expect(flattenAll(fr).length).toBeGreaterThanOrEqual(133);
-    });
-
-    test.each(["fr", "en"])(
-        "every lot-D key resolves to real, non-empty, double-brace-free copy in %s",
-        (lng) => {
-            const t = tP(lng);
-            for (const key of FR_KEYS) {
-                const v = t(key, {name: "Zephyr"});
-                expect(typeof v).toBe("string");
-                expect(v.length).toBeGreaterThan(0);
-                expect(v).not.toBe(key);
-                expect(v).not.toBe(key.split(".").pop());
-                expect(v).not.toMatch(/\{\{/);
-            }
-        },
-    );
+    // Phase 07 P0 (docs/I18n-Roadmap.md §P0): the lot-D key-set parity check + count pins, the
+    // leaf-count lock-step pin and the "every lot-D key resolves" loop were pure pipeline
+    // coverage — redundant with frontend/i18n/index.test.js's cross-namespace parity guard and
+    // `bin/i18n-tasks health`. Removed. Kept below: the {{name}} interpolation path, the
+    // deliberately-un-interpolated {schoolName} literal token, and the lot-A survival regression.
 
     test.each(["fr", "en"])(
         "statusTable.deleteConfirm interpolates {{name}} — value embedded, no leftover braces (%s)",
@@ -237,18 +198,7 @@ describe("parameters activityApplications.* (lot D) — i18n layer", () => {
         },
     );
 
-    test("explicit fr / en copy for a sample of lot-D keys", () => {
-        expect(tP("fr")("activityApplications.settings.defaultStatusHeading")).toBe(
-            "Statut d'inscription par défaut",
-        );
-        expect(tP("en")("activityApplications.settings.defaultStatusHeading")).toBe(
-            "Default enrollment status",
-        );
-        expect(tP("fr")("shared.colLabel")).toBe("Libellé");
-        expect(tP("en")("shared.colLabel")).toBe("Label");
-        expect(tP("fr")("activityApplications.consentModal.requiredError")).toBe("requis");
-        expect(tP("en")("activityApplications.consentModal.requiredError")).toBe("required");
-    });
+    // "explicit fr / en copy for a sample of lot-D keys" removed (Phase 07 P0) — pure string-echo.
 
     test("regression: lot-A activityApplications.tabs.* / stepDesc.* still resolve", () => {
         expect(tP("fr")("activityApplications.tabs.statuses")).toBe("Statuts d'inscription");

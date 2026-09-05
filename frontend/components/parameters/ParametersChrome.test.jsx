@@ -25,8 +25,6 @@ import React from "react";
 import {render, screen} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import i18n from "../../i18n";
-import fr from "../../locales/fr/parameters.json";
-import en from "../../locales/en/parameters.json";
 
 // --- react-table stub: echo the i18n-driven props as data-* attributes -----------------------
 vi.mock("react-table", () => ({
@@ -93,55 +91,11 @@ afterEach(async () => {
     vi.clearAllMocks();
 });
 
-// ============================================================================================
-// A. i18n layer — parameters.* + common:actions.create
-// ============================================================================================
-describe("parameters namespace — i18n layer", () => {
-    const flatten = (obj, prefix = "") =>
-        Object.entries(obj).flatMap(([k, v]) =>
-            v && typeof v === "object" ? flatten(v, `${prefix}${k}.`) : [`${prefix}${k}`],
-        );
-
-    const FR_KEYS = flatten(fr);
-    const EN_KEYS = flatten(en);
-
-    test("fr and en expose exactly the same parameters.* key set", () => {
-        expect(new Set(EN_KEYS)).toEqual(new Set(FR_KEYS));
-        // pin the exact total — bump per parameters lot (A: 28, B: 51, C: 103, D: 133, E: 172, E2: 221, E3: 255, shared-consolidation: 233, dragAndDrop-to-common: 227)
-        expect(FR_KEYS).toHaveLength(227);
-    });
-
-    test.each(["fr", "en"])("every parameters.* key resolves to real, non-empty copy in %s", (lng) => {
-        const t = i18n.getFixedT(lng, "parameters");
-        for (const key of FR_KEYS) {
-            // pass every interpolation var any parameters.* string uses, so `{{...}}` resolves
-            const v = t(key, {name: "X", label: "X", country: "FR", academy: "Paris"});
-            expect(typeof v).toBe("string");
-            expect(v.length).toBeGreaterThan(0);
-            expect(v).not.toBe(key);
-            expect(v).not.toMatch(/\{\{/);
-        }
-    });
-
-    test("common:actions.create resolves to Créer / Create", () => {
-        expect(i18n.getFixedT("fr", "common")("actions.create")).toBe("Créer");
-        expect(i18n.getFixedT("en", "common")("actions.create")).toBe("Create");
-    });
-
-    test("common:reactTable.* (used by BaseDataTable) resolves in both locales", () => {
-        for (const lng of ["fr", "en"]) {
-            const t = i18n.getFixedT(lng, "common");
-            for (const key of [
-                "previousText", "nextText", "loadingText", "noDataText",
-                "pageText", "ofText", "rowsText",
-            ]) {
-                const v = t(`reactTable.${key}`);
-                expect(v.length).toBeGreaterThan(0);
-                expect(v).not.toBe(`reactTable.${key}`);
-            }
-        }
-    });
-});
+// Phase 07 P0: the "parameters namespace — i18n layer" block (fr/en key-set parity, "every key
+// resolves", the common:actions.create / common:reactTable.* resolution loops) was pure pipeline
+// coverage — now redundant with frontend/i18n/index.test.js's cross-namespace parity guard and
+// `bin/i18n-tasks health`. Removed. The behaviour sections below (BaseDataTable chrome, tab-list
+// wrappers, the props.t-in-constructor regression guard) stay.
 
 // ============================================================================================
 // B. BaseDataTable — the "+ Créer" link + the ReactTable i18n props

@@ -54,26 +54,26 @@ afterEach(async () => {
     await i18n.changeLanguage("fr");
 });
 
-describe("Evaluation", () => {
-    test("renders the French strings by default", async () => {
-        await i18n.changeLanguage("fr");
-        renderEvaluation();
+// Domain bilingual smoke for the `evaluation` area (Phase 07 P0 checkpoint strategy —
+// docs/I18n-Roadmap.md §P0). Beyond the plain header string, this keeps the previous-season
+// level line because it interpolates {{kind}} / {{season}} into a copy that the component then
+// upper-cases — a real interpolation path, not a string-echo. StudentEvaluationsStats's echo
+// pair was removed; EvaluationForm keeps its own submit-label behaviour test.
+const LEVEL_LINE = {
+    fr: /PAS DE NIVEAU TROUVÉ POUR GUITARE EN 2023-2024/,
+    en: /NO LEVEL FOUND FOR GUITARE IN 2023-2024/,
+};
+const HEADER = { fr: "A évaluer", en: "To evaluate" };
 
-        expect(screen.getByText("A évaluer")).toBeInTheDocument();
-        expect(
-            screen.getByText(/PAS DE NIVEAU TROUVÉ POUR GUITARE EN 2023-2024/)
-        ).toBeInTheDocument();
-    });
-
-    test("renders the English strings when the active language is en", async () => {
-        await i18n.changeLanguage("en");
+describe.each(["fr", "en"])("Evaluation — bilingual smoke (%s)", lng => {
+    test("renders the panel header and the interpolated previous-season level line", async () => {
+        await i18n.changeLanguage(lng);
         renderEvaluation();
 
         await waitFor(() =>
-            expect(screen.getByText("To evaluate")).toBeInTheDocument()
+            expect(screen.getByText(HEADER[lng])).toBeInTheDocument()
         );
-        expect(
-            screen.getByText(/NO LEVEL FOUND FOR GUITARE IN 2023-2024/)
-        ).toBeInTheDocument();
+        expect(screen.getByText(LEVEL_LINE[lng])).toBeInTheDocument();
+        expect(document.body.textContent).not.toMatch(/translation missing/i);
     });
 });

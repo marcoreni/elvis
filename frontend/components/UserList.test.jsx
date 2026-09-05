@@ -25,45 +25,28 @@ afterEach(async () => {
     await i18n.changeLanguage("fr");
 });
 
-describe("UserList", () => {
-    test("renders the French translations by default", async () => {
-        await i18n.changeLanguage("fr");
+// Domain bilingual smoke test for the `users` area (Phase 07 P0 checkpoint strategy —
+// docs/I18n-Roadmap.md §P0). This replaces the old paired "renders the fr / renders the en"
+// string-echoes here and in UserEdit.test.jsx (which now keeps only its conditional-tab
+// behaviour). It renders the list and asserts a representative translated string per locale,
+// including react-table's shared common:reactTable.* pagination chrome — no "translation
+// missing" marker anywhere.
+const REPRESENTATIVE = {
+    fr: ["Exporter en CSV", "Type de compte", "Tous les utilisateurs", "Précédent", "Suivant"],
+    en: ["Export to CSV", "Account type", "All users", "Previous", "Next"],
+};
+
+describe.each(["fr", "en"])("users area — bilingual smoke (%s)", lng => {
+    test("renders UserList with real translated copy, no missing-key markers", async () => {
+        await i18n.changeLanguage(lng);
         render(<UserList/>);
 
-        expect(screen.getByText("Exporter en CSV")).toBeInTheDocument();
-        expect(screen.getByText("Fusionner des doublons")).toBeInTheDocument();
-        expect(screen.getByText("Rôle")).toBeInTheDocument();
-        expect(screen.getByText("Type de compte")).toBeInTheDocument();
-        expect(screen.getByText("Nom")).toBeInTheDocument();
-        expect(screen.getByText("Prénom")).toBeInTheDocument();
-        expect(screen.getByText("Date de naissance")).toBeInTheDocument();
-        expect(screen.getByText("Actions")).toBeInTheDocument();
-        expect(screen.getByText("Tous les utilisateurs")).toBeInTheDocument();
-        // react-table pagination text now comes from the shared common:reactTable.* keys
-        expect(screen.getByText("Précédent")).toBeInTheDocument();
-        expect(screen.getByText("Suivant")).toBeInTheDocument();
+        for (const text of REPRESENTATIVE[lng]) {
+            expect(screen.getByText(text)).toBeInTheDocument();
+        }
+        expect(document.body.textContent).not.toMatch(/translation missing/i);
 
-        // Let the debounced initial fetch settle so it doesn't leak a state update into the
-        // next test.
-        await waitFor(() => expect(global.fetch).toHaveBeenCalled(), {timeout: 2000});
-    });
-
-    test("renders the English translations when the active language is en", async () => {
-        await i18n.changeLanguage("en");
-        render(<UserList/>);
-
-        expect(screen.getByText("Export to CSV")).toBeInTheDocument();
-        expect(screen.getByText("Merge duplicates")).toBeInTheDocument();
-        expect(screen.getByText("Role")).toBeInTheDocument();
-        expect(screen.getByText("Account type")).toBeInTheDocument();
-        expect(screen.getByText("Last name")).toBeInTheDocument();
-        expect(screen.getByText("First name")).toBeInTheDocument();
-        expect(screen.getByText("Date of birth")).toBeInTheDocument();
-        expect(screen.getByText("Actions")).toBeInTheDocument();
-        expect(screen.getByText("All users")).toBeInTheDocument();
-        expect(screen.getByText("Previous")).toBeInTheDocument();
-        expect(screen.getByText("Next")).toBeInTheDocument();
-
+        // Let the debounced initial fetch settle so it doesn't leak a state update.
         await waitFor(() => expect(global.fetch).toHaveBeenCalled(), {timeout: 2000});
     });
 });

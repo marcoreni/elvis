@@ -3,7 +3,7 @@
 // empty data set so react-table paints only the column headers.
 
 import React from "react";
-import { render, screen, waitFor, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import i18n from "../../i18n";
 import PaymentsSummary from "./PaymentsSummary";
 
@@ -30,33 +30,10 @@ afterEach(async () => {
 });
 
 describe("userPayments/PaymentsSummary", () => {
-    test("French column headers + title by default", async () => {
-        await i18n.changeLanguage("fr");
-        render(<PaymentsSummary {...props} />);
-
-        expect(screen.getByRole("heading", { name: "Infos générales" })).toBeInTheDocument();
-        expect(screen.getByText("Créer un taux de remise")).toBeInTheDocument();
-        expect(screen.getByText("Activité")).toBeInTheDocument();
-        expect(screen.getByText("N° d'adhérent")).toBeInTheDocument();
-        expect(screen.getByText("Prix unitaire")).toBeInTheDocument();
-        expect(screen.getByText("Montant total remisé")).toBeInTheDocument();
-    });
-
-    test("English when active language is en", async () => {
-        await i18n.changeLanguage("en");
-        render(<PaymentsSummary {...props} />);
-
-        await waitFor(() =>
-            expect(
-                screen.getByRole("heading", { name: "General information" })
-            ).toBeInTheDocument()
-        );
-        expect(screen.getByText("Create a discount rate")).toBeInTheDocument();
-        expect(screen.getByText("Activity")).toBeInTheDocument();
-        expect(screen.getByText("Member no.")).toBeInTheDocument();
-        expect(screen.getByText("Unit price")).toBeInTheDocument();
-        expect(screen.getByText("Discounted total")).toBeInTheDocument();
-    });
+    // The plain "renders the fr / renders the en column headers" pair was a pure string-echo and
+    // has been dropped under the Phase 07 P0 checkpoint strategy — the interaction test below
+    // still renders this component in both locales, and the `userPayments` area locale checkpoint
+    // lives in PaymentsManagement.test.jsx.
 
     // ItemFormModal (aliased here as CreateCouponModal) is this component's second real caller,
     // alongside BaseDataTable.jsx -- and unlike the ItemFormModal.test.jsx suite, this one doesn't
