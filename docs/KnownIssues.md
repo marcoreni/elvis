@@ -303,23 +303,11 @@ Same pattern again (added by i18n-06 `parameters` lot E):
   `Plannings/PlanningDisplayParameters.jsx`, and `Localization/LocalizationParameters.jsx`.
 All harmless today (locale switch = full server reload); logged for the same cleanup pass.
 
-`parameters/Evaluations/EvaluationSlot.jsx` — the `evaluations.slot.requiredError` key was
-**unreachable copy** (gated on `errors.name` while the field registers as `sessionHour`).
-**Fixed** in `fix/wrong-property-refs` → `errors.sessionHour` (its `PlanningsSettings.test.jsx`
-note was updated in the same commit).
+## Locale-file verbatim typos — reference notes (catalogue resolved)
 
-## Locale-file verbatim typos — RESOLVED
-
-**STATUS: DONE.** The full extraction-era catalogue of preserved-verbatim French defects across
-`frontend/locales/fr/*.json` and `config/locales/fr.yml` — missing accents, colon-spacing,
-number/gender agreement, anglicisms, casing, the informal `.e`/`·e` inclusive-gender contractions,
-apostrophe style, the œ ligature, and the `MailSettings`/`RulesSettings`/`DragAndDrop` casing
-defects — was corrected across `feature/i18n-typo-cleanup` (PR #51) and
-`feature/i18n-parameters-shared-consolidation` (PR #52). Verified 2026-09-04 by reading every
-flagged key back out of the current locale files: all of it landed. fr/en parity and
-`bin/i18n-tasks health` are clean. The three stragglers this section used to list —
-`evaluations.levels.deleteConfirm` (wrong noun), `evaluations.levels.colCanContinue`, and
-`plannings.schoolAvailabilities.hint` — were fixed in `fix/known-issues-easy-batch`.
+The extraction-era catalogue of preserved-verbatim French defects was corrected across
+`feature/i18n-typo-cleanup` (PR #51), `feature/i18n-parameters-shared-consolidation` (PR #52), and
+`fix/known-issues-easy-batch`. The notes below are the parts still worth keeping.
 
 **Load-bearing whitespace — do not let a future normalize/trim pass touch these.** Each carries a
 leading and/or trailing space that is concatenation glue at its call site, or wraps intentional
@@ -358,63 +346,35 @@ inline HTML:
 - For any new `<Trans>` key: react-i18next's default `transKeepBasicHtmlNodesFor` is
   `["br","strong","i","p"]` — `em`/`a`/`u` are not in it. Use the indexed `<1>…</1>` form.
 
-Remaining non-i18n code bugs surfaced while extracting these files (none are locale-file defects).
-The `ActivityRefBasics.jsx` `seasonEnd` guard listed here previously (`seasonEnd !== undefined`
-crashing on `null.label`) was fixed in `fix/known-issues-easy-batch`, along with the byte-identical
-copy in `formules/EditFormule.jsx:342-343` — no known call site produces the `to_season_id`-key-
-absent shape that actually crashes (every producer sends `to_season_id: null` for an open-ended
-row, which never crashed), so both were defensive hardening rather than a live-bug fix; still
-worth keeping as a guard against a future caller building the row by hand. The same `Cell` in both
-files still has the identical unguarded shape one line up — `seasonStart.label` throws if
-`from_season_id` doesn't match any fetched season — low reachability (`get_seasons_and_pricing_categories`
-returns every season) but the asymmetry is now visible since the `seasonEnd` half was hardened.
-- ~~`activityApplications/summary/Summary.jsx:~1322` reads `e.activity.activity_reéf_id`~~ **Fixed**
-  (`fix/wrong-property-refs`) — stray accented `é` → `activity_ref_id`. Same commit also guarded the
-  adjacent `e.activity.teacher.first_name` with `?.` — `Activity#teacher` returns `nil` when an
-  activity has no `is_main` teacher (`app/models/activity.rb`), which would `TypeError` the whole
-  `Summary` render for a change-questionnaire on such an activity.
-- ~~`parameters/Practice/Materials.jsx` "Est Actif ?" column `accessor: d => d.name`~~ **Changed**
-  (`fix/wrong-property-refs`) to `d => d.active` so the accessor returns the field the column
-  represents — but this is **inert**: `parameters/BaseDataTable.jsx` renders `<ReactTable manual>`,
-  so react-table v6 never runs client-side sort/filter; both go to the server via `onFetchData`
-  keyed on the column `id`, not the accessor (`pratice_parameters_controller.rb` filters
-  `where(active: filter[:value] == "oui")` and orders by `params[:sorted][:id]`). Kept for
-  consistency. Footgun: `BaseDataTable.jsx`'s `defaultFilterMethod` does `row[filter.id].toLowerCase()`
-  — dead while `manual`, but would now throw on the boolean `active` value if anyone removes
-  `manual` (the numeric `prix` column already has this hazard).
+Non-i18n code bugs still open, surfaced while extracting these files (none are locale-file defects):
+- `ActivityRefBasics.jsx` / `formules/EditFormule.jsx:342-343` — the `Cell` that renders the
+  season range: the `seasonEnd` half was hardened in `fix/known-issues-easy-batch`, but the
+  identical `seasonStart.label` access one line up is still unguarded and throws if `from_season_id`
+  doesn't match any fetched season. Low reachability (`get_seasons_and_pricing_categories` returns
+  every season); the asymmetry is the visible part.
 - **Server-side `active` filter is hardcoded French** — `pratice_parameters_controller.rb:86` (and
   `:107` for features): `query.where(active: filter[:value] == "oui")`. An EN-locale admin filtering
-  the "active" column gets `active: false` for anything other than the literal string `"oui"`. This
-  is the actual reason that column's filtering is broken (not the accessor above). Fold into the
-  controller-strings pass (roadmap Phase 07 P6).
-- ~~`parameters/Payments/AdhesionSettings.jsx` … error branch uses `icon: 'error'`~~ **Fixed**
-  (`fix/wrong-property-refs`) — `type: 'error'` to match the other swals + the pinned sweetalert2 `^7`.
-  The **same `icon:` / v7 defect is still open elsewhere** (inert under `^7` — `icon:` is an unknown
-  param, no crash, just no icon styling): `editParameters/MailSettings.jsx:37,43`,
+  the "active" column gets `active: false` for anything other than the literal string `"oui"`.
+  Fold into the controller-strings pass (roadmap Phase 07 P6).
+- **`icon:` / sweetalert2-v7** — under the pinned `sweetalert2 ^7`, `icon:` is an unknown param
+  (no crash, just no icon styling; use `type:`). Open at: `editParameters/MailSettings.jsx:37,43`,
   `editParameters/CsvSettings.jsx:30,36`, `planning/ActivityDetailsModal.jsx:918`,
-  `activityItems/EditApplication.jsx:60`, `userForm/Absences.jsx:92,97`. Sweep them together (or
-  when `sweetalert2` is finally bumped — see the deps section).
-- ~~`parameters/Payments/AdhesionSettings.jsx`'s inline `<ReactTable>` passes none of the
-  `common:reactTable.*` pagination props~~ **Fixed** (`fix/lesson-list-and-table-bugs`) — the 7
-  `previousText`/`nextText`/… props now go through `t("common:reactTable.*")`. **Same gap still
-  open** in three other bare `<ReactTable>` renders: `frontend/components/ReactTableFullScreen.jsx`,
-  `frontend/components/StopList.jsx`, `frontend/components/FailedPaymentImportsPage.jsx` — english
-  defaults ("Page", "of", "rows") in the FR UI. Also `parameters/Payments/PaymentsMethods.jsx:5`
-  has a dead `ReactTable` import (it extends the class `BaseDataTable`, which passes the props).
+  `activityItems/EditApplication.jsx:60`, `userForm/Absences.jsx:92,97`. Sweep together, or when
+  `sweetalert2` is finally bumped (deps section).
+- **Bare `<ReactTable>` missing `common:reactTable.*` pagination props** → English defaults
+  ("Page", "of", "rows") in the FR UI: `frontend/components/ReactTableFullScreen.jsx`,
+  `frontend/components/StopList.jsx`, `frontend/components/FailedPaymentImportsPage.jsx`. Also
+  `parameters/Payments/PaymentsMethods.jsx:5` has a dead `ReactTable` import (extends the class
+  `BaseDataTable`, which passes the props).
 - `parameters/Payments/AdhesionSettings.jsx` / `AdhesionEditModal.jsx`: `initialValues.label`
   defaults to the translated string `t("payments.adhesion.modal.defaultLabel")`. If an EN-locale
   admin leaves the field untouched, that literal English string gets POSTed and persisted as data —
   a UI-string-as-data smell that should be an explicit server-side default, not a client i18n key.
-- ~~`parameters/Evaluations/EvaluationSlot.jsx`: the required-field error guards on `errors.name`
-  while the field is `register('sessionHour', …)`~~ **Fixed** (`fix/wrong-property-refs`) —
-  `errors.sessionHour`.
-- ~~`editParameters/SchoolParameters.jsx`: `register("email", {… pattern: validateEmail})` passes a
-  function where RHF's `pattern:` needs a RegExp~~ **Fixed** (`fix/wrong-property-refs`) — switched
-  to `validate: value => !!validateEmail(value)` so the format check actually runs. Minor leftover
-  (matches the sibling `contactPhone` field's existing shape): a `validate` failure renders the
-  `emailRequired` key ("L'email est requis"), so a *malformed* non-empty address shows a
-  "required" message. A dedicated `parameters:editParameters.school.emailInvalid` key would fix
-  the copy — do it in the parameters-domain follow-up, not here.
+- `editParameters/SchoolParameters.jsx` — a bad email now correctly blocks submit
+  (`fix/wrong-property-refs` switched `pattern: validateEmail` → `validate:`), but a malformed
+  non-empty address renders the `emailRequired` copy ("L'email est requis"). Same shape as the
+  sibling `contactPhone` field. A dedicated `parameters:editParameters.school.emailInvalid` key
+  would fix the copy — parameters-domain follow-up.
 
 Reference — dedup opportunities intentionally not touched (each pair is a distinct source literal
 under the verbatim policy, not a bug): `activityChoice.*`/`formulaChoice.*`/
@@ -432,9 +392,6 @@ the `Validation.jsx` `<h3>` headings, and all three duration formatters
 now translated and consistent — via `activityApplications:units.{minutes,hoursMinutes}`, with
 `units.minutes` standardized to `"{{minutes}} min"` (spaced). What's left, low priority:
 
-- ~~`EvaluationChoiceTable.jsx` — `data[].timeInterval.start/end` reach `toHourMin()` as ISO
-  strings, not `Date`s → `NaN:NaN`~~ **Fixed** (`fix/lesson-list-and-table-bugs`) — wrapped both
-  in `toDate()`, matching the sibling `TimePreferencesTable`.
 - `frontend/tools/constants.js` `TIME_STEPS` still has hardcoded labels (`"1h"`, `"45min"`,
   `"30min"`, `"15min"`) — a 4-element const array left out of the constants-i18n pass, and now
   also inconsistent with the spaced `activityApplications:units.minutes` convention above.
@@ -471,57 +428,17 @@ section) rather than a source-code constant. Not fixed here — flagging so it d
 duplicate the day-off-by-one bug in reverse (Paris-vs-installation mismatch) once/if the app is
 ever deployed outside France.
 
-## `frontend/tools/constants.js` — hardcoded French constants leak into English mode — RESOLVED
+## `frontend/tools/constants.js` — constants-i18n leftovers
 
-Surfaced during the i18n-06 `courses` lot 1 extraction (`AddCourse.jsx`, `AddCourseSummary.jsx`,
-`AddActivityForCourse.jsx`). These modules were switched to `t()` for their own copy, but they
-still read shared French-only constants that were left as-is. `tools/constants.js` is imported
-from many components across the app, so this was a cross-cutting pass in its own right, done as
-constants-i18n lots 1–3, not piecemeal inside one domain lot:
+The `WEEKDAYS`/`MONTHS`, `MESSAGES`/`API_ERRORS_MESSAGES`, and
+`KINDS_LABEL`/`PRE_APPLICATION_ACTION_LABELS`/`RECURRENCE_TYPES` French constants were moved to
+`common:*` namespaces across constants-i18n lots 1–3 (`export let` live bindings + `languageChanged`
+re-read). Two things left:
 
-- ~~`WEEKDAYS` / `MONTHS`~~ **Resolved — constants-i18n lot 1** (`feature/i18n-constants-lot1-dates`):
-  moved to `common:weekdays` / `common:months`, re-exported as `export let` live bindings that
-  follow `i18n.changeLanguage`. Two consumers with no i18n subscription of their own
-  (`activityApplications/ItemPreferences.jsx`, `availability/AvailabilityList.jsx`) won't repaint
-  on an in-page switch — harmless today (full-reload locale switch), same class as the
-  frozen-header notes above.
-- ~~`MESSAGES` / `API_ERRORS_MESSAGES`~~ **Resolved — constants-i18n lot 2**
-  (`feature/i18n-constants-lot2-messages`): moved to `common:messages` / `common:apiErrors` (37 /
-  9 entries), same `export let` live-binding + `languageChanged` re-read pattern as lot 1. Keys
-  stay the original snake_case identifiers on both objects — several call sites index `MESSAGES`
-  with a bare sentinel string a validator returned (`tools/validators.js`), not with UI text, and
-  `tools/api.js` indexes `API_ERRORS_MESSAGES` with a server-supplied error code — only the
-  *values* changed. 4 dead `MESSAGES` imports removed in the same pass
-  (`DetachAccount.jsx`, `ActivityRefTeachers.jsx`, `ReplicateAct.jsx`, `InputSelectReact.jsx`).
-- ~~`KINDS_LABEL` / `PRE_APPLICATION_ACTION_LABELS` / `RECURRENCE_TYPES`~~ **Resolved —
-  constants-i18n lot 3** (`feature/i18n-constants-lot3-labels`), closing out the constants-i18n
-  pass: `KINDS_LABEL` (4 entries, keyed by `INTERVAL_KINDS` codes) and
-  `PRE_APPLICATION_ACTION_LABELS` (6 entries, keyed by action strings) moved to
-  `common:kindsLabel` / `common:preApplicationActionLabels`, same `export let` pattern as lots 1–2.
-  `RECURRENCE_TYPES` needed a different shape: it's an enum object with a `toString(type)` method,
-  not a plain value dictionary, so only the object literal *inside* `toString` moved to
-  `common:recurrenceTypes` (6 entries) — no `export let`/`languageChanged` needed there, since
-  `toString` is a method and already reads `i18n.t()` fresh on every call. Two consumers with no
-  i18n subscription of their own — `common/KindLegend.jsx` (plain function component) and
-  `availability/AvailabilityInput.jsx` (bare `React.PureComponent`) — won't repaint on an in-page
-  `changeLanguage` unless a subscribed ancestor happens to re-render; same class as the lot-1
-  `ItemPreferences.jsx`/`AvailabilityList.jsx` note, harmless today (full-reload locale switch).
+**Dedup (not a defect):** `common:kindsLabel` now duplicates `planning:kinds` in both locales
+(Cours/Course, Option, Évaluation/Evaluation). Fold into the cross-namespace consolidation backlog.
 
-Grep: `from "../../tools/constants"`.
-
-Dedup note (not a defect): `common:kindsLabel` now duplicates `planning:kinds` in both locales
-(Cours/Course, Option, Évaluation/Evaluation all appear in both namespaces with agreeing values).
-Fold into the existing cross-namespace consolidation backlog rather than acting on it now.
-
-Bugs found while extracting `MESSAGES`. The extraction itself carried the strings over verbatim per
-the extraction policy; where a bullet below is struck through, the defect was fixed later as a
-deliberate follow-up (`fix/messages-ordcheck-and-contactform-import`), not during the extraction:
-- ~~**`err_ord_lte` / `err_ord_lt` are swapped relative to their names.**~~ **Fixed** — the
-  `common:messages.errOrdLt` / `errOrdLte` values were swapped back so they match how
-  `validators.js`'s `ordCheck` calls them (`case "lt"` → `err_ord_lt` = strict wording, `case
-  "lte"` → `err_ord_lte` = "or equal" wording). `constants.test.js`'s swap-bug test now pins the
-  corrected behavior.
-- **`err_starts_with` / `startsWith` validator is dead and buggy.** `MESSAGES.err_starts_with`
+**Bug still open — `err_starts_with` / `startsWith` validator is dead and buggy.** `MESSAGES.err_starts_with`
   never uses its own `str` parameter (always renders the same generic text — preserved as-is,
   same class as the `noIntervalMessage` type of no-op default). Its only caller, `validators.js`'s
   exported `startsWith`, passes `length` instead of its own `str` param
@@ -531,12 +448,6 @@ deliberate follow-up (`fix/messages-ordcheck-and-contactform-import`), not durin
   global `window` — e.g. reached from `packs/server_rendering.js`. No import of `startsWith` from
   `tools/validators.js` was found anywhere in `frontend/`, so it is dead code today; noted here
   rather than fixed, since fixing dead code risks masking that it's unreachable.
-
-Adjacent bug found by the constants-i18n lot 2 review, pre-existing: `userForm/ContactForm.jsx` and
-`userForm/WizardContactForm.jsx` both render `{MESSAGES[meta.error]}` without ever importing
-`MESSAGES`, so a `ReferenceError` crashed the render of the family-link `<select>`'s error message
-on any validation failure there, in both languages. **Fixed** — added
-`import { MESSAGES } from "../../tools/constants";` to both files.
 
 ## `Sauvegarder` / `Enregistrer` — two established save-button wordings, not unified
 
@@ -600,10 +511,6 @@ What's still open in this domain:
   that particular mismatch is gone. Still open: `ActivitiesApplicationsList.jsx`'s column headers
   ("Niveau", "Âge", "Activité" and 10 more) are still hardcoded French next to its now-localized
   level cell and Action column.
-- ~~**`courses/LessonList.jsx`'s `UserRow` has no unmount guard on its level-fetching effect**~~
-  **Fixed** (`fix/lesson-list-and-table-bugs`) — added `let isMounted` + cleanup return, guarding
-  the `.success`/`.error` callbacks, matching the sibling `LevelCell` in
-  `activityApplications/summary/Activity.jsx`.
 
 Design note (`planning/TimeIntervalHelpers.jsx`, lot 3c — so a later reader doesn't "simplify" it):
 `levelDisplay()` / `levelDisplayForActivity()` keep returning the raw French sentinels
