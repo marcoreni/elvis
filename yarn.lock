@@ -104,14 +104,14 @@
   dependencies:
     "@babel/types" "^7.26.0"
 
-"@babel/runtime@^7.1.2", "@babel/runtime@^7.10.0", "@babel/runtime@^7.12.5", "@babel/runtime@^7.15.4", "@babel/runtime@^7.19.4", "@babel/runtime@^7.7.2":
+"@babel/runtime@^7.1.2", "@babel/runtime@^7.12.5", "@babel/runtime@^7.15.4", "@babel/runtime@^7.19.4", "@babel/runtime@^7.7.2":
   version "7.26.0"
   resolved "https://registry.yarnpkg.com/@babel/runtime/-/runtime-7.26.0.tgz#8600c2f595f277c60815256418b85356a65173c1"
   integrity sha512-FDSOghenHTiToteC/QRlv2q3DhPZ/oOXTBoirfWNx1Cx3TMVcGWQtMMmQcSvb/JjpNeGzx8Pq/b4fKEJuWm1sw==
   dependencies:
     regenerator-runtime "^0.14.0"
 
-"@babel/runtime@^7.23.2", "@babel/runtime@^7.25.0", "@babel/runtime@^7.26.10", "@babel/runtime@^7.29.7":
+"@babel/runtime@^7.10.0", "@babel/runtime@^7.23.2", "@babel/runtime@^7.25.0", "@babel/runtime@^7.26.10", "@babel/runtime@^7.29.7":
   version "7.29.7"
   resolved "https://registry.yarnpkg.com/@babel/runtime/-/runtime-7.29.7.tgz#12022450c45a4da6d8d8287b18a4ff2ddb23f768"
   integrity sha512-Nq8OhGWiZIZGV6hLHoyAKLLcJihP/xFeBMGJoUrxTX2psI8dCifzLhZISFb+VWS3wFMRDmCGw5R+dOySCqPLhw==
@@ -697,7 +697,7 @@
   resolved "https://registry.yarnpkg.com/@pkgjs/parseargs/-/parseargs-0.11.0.tgz#a77ea742fab25775145434eb1d2328cf5013ac33"
   integrity sha512-+1VkjdD0QBLPodGrJUeqarH8VAIvQODIbwh9XpP5Syisf7YoQgsJKPNFoqqLQlu+VQ/tVSshMR6loPMn8U+dPg==
 
-"@ramonak/react-progress-bar@^5.0.3":
+"@ramonak/react-progress-bar@^5.4.0":
   version "5.4.0"
   resolved "https://registry.yarnpkg.com/@ramonak/react-progress-bar/-/react-progress-bar-5.4.0.tgz#b366c75af79eaff9d143841d796717d21d9af23b"
   integrity sha512-3MJ0TKPw7xhearDuO6egIRQrvuERoLn6CVc2hKnw89iEegUL6DzMY7Rptmz2KaHjK0zbev+PGyyvDW+IK4FJBg==
@@ -1145,10 +1145,10 @@
   resolved "https://registry.yarnpkg.com/@types/trusted-types/-/trusted-types-2.0.7.tgz#baccb07a970b91707df3a3e8ba6896c57ead2d11"
   integrity sha512-ScaPdn1dQczgbl0QFTeTOmVHFULt394XJgOQNoyVhZ6r2vLnMLJfBPd53SB52T/3G36VI1/g2MZaX0cwDuXsfw==
 
-"@unlayer/types@latest":
-  version "1.477.0"
-  resolved "https://registry.yarnpkg.com/@unlayer/types/-/types-1.477.0.tgz#7b7a29c9ea8d534199e362bd58c294fc5454e5bf"
-  integrity sha512-yTadBVaN7IjBEo8S9CELJvFTxS960x6KHRsPsgW+nBQwPMAaKnCL8Eg4RV/dYdQ6pd2IOUxNjKjVIjTIEMXJzQ==
+"@unlayer/types@^1.448.0":
+  version "1.482.0"
+  resolved "https://registry.yarnpkg.com/@unlayer/types/-/types-1.482.0.tgz#e9d5b51c48e2a5f4f0c7f992e619453b04014b86"
+  integrity sha512-F/IdKi7zcljNdQvJrV90snk5qsUOOTqcdHvixh5J3AD5jMjCH/9Lck7ZC0/frQyEf2hkSAMUo4rHPYJS83mamw==
 
 "@vitest/expect@4.1.11":
   version "4.1.11"
@@ -2355,15 +2355,15 @@ fill-range@^7.1.1:
   dependencies:
     to-regex-range "^5.0.1"
 
-final-form-arrays@^3.0.2:
-  version "3.1.0"
-  resolved "https://registry.yarnpkg.com/final-form-arrays/-/final-form-arrays-3.1.0.tgz#8bdace2fccedd61f3cbd032ae429813ae5ea37af"
-  integrity sha512-TWBvun+AopgBLw9zfTFHBllnKMVNEwCEyDawphPuBGGqNsuhGzhT7yewHys64KFFwzIs6KEteGLpKOwvTQEscQ==
+final-form-arrays@^4.0.1:
+  version "4.0.1"
+  resolved "https://registry.yarnpkg.com/final-form-arrays/-/final-form-arrays-4.0.1.tgz#ba2b36e650bb19100743f113546623f6cd3b368b"
+  integrity sha512-aIGGN1ibtxxmRR4LsIEhSbWbUKyHAy9BCAUEcG19U1OpYqD1M9dU9MxgXHmGoM6JLegD4DEVKFLxJjI0q1VjhQ==
 
-final-form@^4.20.7:
-  version "4.20.10"
-  resolved "https://registry.yarnpkg.com/final-form/-/final-form-4.20.10.tgz#1a484be6e9a91989121c054dcbd6f48bad051ecc"
-  integrity sha512-TL48Pi1oNHeMOHrKv1bCJUrWZDcD3DIG6AGYVNOnyZPr7Bd/pStN0pL+lfzF5BNoj/FclaoiaLenk4XUIFVYng==
+final-form@^5.0.1:
+  version "5.0.1"
+  resolved "https://registry.yarnpkg.com/final-form/-/final-form-5.0.1.tgz#b08a92ccb7da622f0fb4b1d9ed02b83004302096"
+  integrity sha512-Ohygw2lDgc2HNynfUu82Jp5U45+OLLeBQcwWbrex1IAbQw0uNaFMUbm5dhYCF6y7jcORgl5tg19/1zYxlJtLmg==
   dependencies:
     "@babel/runtime" "^7.10.0"
 
@@ -4441,24 +4441,24 @@ react-dropzone@^19.0.0:
     attr-accept "^2.2.5"
     file-selector "^4.1.0"
 
-react-email-editor@^1.7.8:
-  version "1.8.0"
-  resolved "https://registry.yarnpkg.com/react-email-editor/-/react-email-editor-1.8.0.tgz#512f3bfd8412d7a5b4a456ea9916e82883235378"
-  integrity sha512-wauG/fES4k3VueIYVvsnxL+6+AAOw8oG3r1QlQclnC2aErpsjJSDmYgQRmDBhkts0QTKJf4uPiXOd3OxPv50OA==
+react-email-editor@^2.1.2:
+  version "2.1.2"
+  resolved "https://registry.yarnpkg.com/react-email-editor/-/react-email-editor-2.1.2.tgz#808536880df7b16654dfa22ef59f754c9746e056"
+  integrity sha512-zePLRUTzaVyHipRrtdWBAmjvDKaH+ShoOIjkOcK/HbGK93TYe24yIII3qwalRMd44vJVXD2Xm+3uKSQw+MV+gg==
   dependencies:
-    "@unlayer/types" latest
+    "@unlayer/types" "^1.448.0"
 
-react-final-form-arrays@^3.1.1:
-  version "3.1.4"
-  resolved "https://registry.yarnpkg.com/react-final-form-arrays/-/react-final-form-arrays-3.1.4.tgz#2744941d8fd200fc648481022e515588f60bbac3"
-  integrity sha512-siVFAolUAe29rMR6u8VwepoysUcUdh6MLV2OWnCtKpsPRUdT9VUgECjAPaVMAH2GROZNiVB9On1H9MMrm9gdpg==
+react-final-form-arrays@^5.0.0:
+  version "5.0.0"
+  resolved "https://registry.yarnpkg.com/react-final-form-arrays/-/react-final-form-arrays-5.0.0.tgz#bfe05ae9d1c002ab4e4647d666104cd22bffeb13"
+  integrity sha512-M7J73727AaK0YPJbvf/NiBKZrxnCiYZWSuRSHjg6iiA9+KrSuuRm5Y+8gLsah1ziVk4jH4eLK/Atl26LPkB1Dg==
   dependencies:
     "@babel/runtime" "^7.19.4"
 
-react-final-form@^6.5.9:
-  version "6.5.9"
-  resolved "https://registry.yarnpkg.com/react-final-form/-/react-final-form-6.5.9.tgz#644797d4c122801b37b58a76c87761547411190b"
-  integrity sha512-x3XYvozolECp3nIjly+4QqxdjSSWfcnpGEL5K8OBT6xmGrq5kBqbA6+/tOqoom9NwqIPPbxPNsOViFlbKgowbA==
+react-final-form@7.0.1:
+  version "7.0.1"
+  resolved "https://registry.yarnpkg.com/react-final-form/-/react-final-form-7.0.1.tgz#c5746ef34cbf50a75015e825d94d7b15b47efa09"
+  integrity sha512-8K1ITLecBI7F+jCxiMA/JI1amHT/+klQB+nhl5YFZu3R1sQftbiQk/UfwRDvE7ZxIqIvCf8nYLDQRrfwaDT3kQ==
   dependencies:
     "@babel/runtime" "^7.15.4"
 
