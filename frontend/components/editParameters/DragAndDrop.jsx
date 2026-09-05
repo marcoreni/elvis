@@ -1,43 +1,42 @@
-import React, {useCallback, useState} from 'react';
-import Dropzone, {DropEvent, FileRejection} from "react-dropzone";
+import React, { useCallback, useState } from "react";
+import Dropzone from "react-dropzone";
 import PropTypes from "prop-types";
-import {useTranslation} from "react-i18next";
-
+import { useTranslation } from "react-i18next";
 
 const baseStyle = {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    padding: '20px',
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    padding: "20px",
     borderWidth: 2,
     borderRadius: 2,
-    borderColor: '#eeeeee',
-    borderStyle: 'dashed',
-    backgroundColor: '#fafafa',
-    color: 'black',
+    borderColor: "#eeeeee",
+    borderStyle: "dashed",
+    backgroundColor: "#fafafa",
+    color: "black",
     fontSize: 15,
-    transition: 'border .3s ease-in-out'
+    transition: "border .3s ease-in-out",
 };
 
 const previewSize = {
-    width: '50px',
-    height: '50px'
+    width: "50px",
+    height: "50px",
 };
 
 const activeStyle = {
-    borderColor: '#2196f3'
+    borderColor: "#2196f3",
 };
 
 const acceptStyle = {
-    borderColor: '#00e676'
+    borderColor: "#00e676",
 };
 
 const rejectStyle = {
-    borderColor: '#ff1744'
+    borderColor: "#ff1744",
 };
 
 function DragAndDrop(props) {
-    const {t} = useTranslation("common");
+    const { t } = useTranslation("common");
     const [file, setFile] = useState(undefined);
     const [url, setUrl] = useState(props.file_url);
 
@@ -51,8 +50,8 @@ function DragAndDrop(props) {
             let reader = new FileReader();
 
             if (acceptedFiles[0].type.includes("image")) {
-                reader.onloadend = function () {
-                    let output = document.getElementById('output');
+                reader.onloadend = function() {
+                    let output = document.getElementById("output");
                     output.src = reader.result;
                 };
             }
@@ -81,23 +80,35 @@ function DragAndDrop(props) {
         props.setFile(undefined);
         setUrl(undefined);
 
-        if (typeof props.onClearedFile === "function")
-            props.onClearedFile();
+        if (typeof props.onClearedFile === "function") props.onClearedFile();
     }
 
-    return file == undefined && url == undefined ?
-        <Dropzone onDrop={onDrop} accept={props.acceptedTypes} onDropRejected={handleDropRejected} maxFiles={1}>
-            {({getRootProps, getInputProps, isDragActive, isDragAccept, isDragReject}) => (
+    return file == undefined && url == undefined ? (
+        <Dropzone
+            onDrop={onDrop}
+            accept={{ [props.acceptedTypes]: [] }}
+            onDropRejected={handleDropRejected}
+            maxFiles={1}
+        >
+            {({
+                getRootProps,
+                getInputProps,
+                isDragActive,
+                isDragAccept,
+                isDragReject,
+            }) => (
                 <section>
                     <div className="mb-5">
-                        <div {...getRootProps({
-                            style: {
-                                ...baseStyle,
-                                ...(isDragActive ? activeStyle : {}),
-                                ...(isDragAccept ? acceptStyle : {}),
-                                ...(isDragReject ? rejectStyle : {})
-                            }
-                        })}>
+                        <div
+                            {...getRootProps({
+                                style: {
+                                    ...baseStyle,
+                                    ...(isDragActive ? activeStyle : {}),
+                                    ...(isDragAccept ? acceptStyle : {}),
+                                    ...(isDragReject ? rejectStyle : {}),
+                                },
+                            })}
+                        >
                             <input name="picture" {...getInputProps()} />
                             <div className="text-center m-b-sm">
                                 <p> {props.textDisplayed} </p>
@@ -109,50 +120,80 @@ function DragAndDrop(props) {
                                 </button>
                             </div>
                         </div>
-                        <div id="error" className="alert alert-danger d-none mt-3"></div>
+                        <div
+                            id="error"
+                            className="alert alert-danger d-none mt-3"
+                        ></div>
                     </div>
                 </section>
             )}
         </Dropzone>
-        :
-        <div className="white-bg img-rounded" style={isImage ? {borderColor: "black", border: "solid 2px"} : {}}>
-            {isImage ? <button
-                className="btn btn-white text-danger btn-circle black-bg"
-                style={{position: "absolute"}}
-                onClick={removeFile}
-                type="button"
-            >X</button> : null}
-            <div style={isImage ? {textAlign: "-webkit-center"} : {padding: "10px"}}>
+    ) : (
+        <div
+            className="white-bg img-rounded"
+            style={isImage ? { borderColor: "black", border: "solid 2px" } : {}}
+        >
+            {isImage ? (
+                <button
+                    className="btn btn-white text-danger btn-circle black-bg"
+                    style={{ position: "absolute" }}
+                    onClick={removeFile}
+                    type="button"
+                >
+                    X
+                </button>
+            ) : null}
+            <div
+                style={
+                    isImage
+                        ? { textAlign: "-webkit-center" }
+                        : { padding: "10px" }
+                }
+            >
                 {(() => {
                     if (isImage) {
                         return (
-                            <img className="img-responsive img-rounded"
-                                 id="output"
-                                 src={url == "" ? "" : url}
-                                 alt={t("dragAndDrop.imageAlt")}
-                                 style={{maxHeight: "300px"}}
+                            <img
+                                className="img-responsive img-rounded"
+                                id="output"
+                                src={url == "" ? "" : url}
+                                alt={t("dragAndDrop.imageAlt")}
+                                style={{ maxHeight: "300px" }}
                             />
-                        )
+                        );
                     } else {
-                        return url ? <div className="row">
+                        return url ? (
+                            <div className="row">
                                 <div className="col-sm-11">
-                                    {props.fileLabel}<a href={url} target="_blank">
-                                    <strong>
-                                        {props.fileTitle || `${url}`.split("/").pop()}
-                                    </strong>
-                                </a>
+                                    {props.fileLabel}
+                                    <a href={url} target="_blank">
+                                        <strong>
+                                            {props.fileTitle ||
+                                                `${url}`.split("/").pop()}
+                                        </strong>
+                                    </a>
                                 </div>
 
                                 <div className="col-sm-1 text-right">
-                                    <strong className="pointer-event" onClick={removeFile}>X</strong>
+                                    <strong
+                                        className="pointer-event"
+                                        onClick={removeFile}
+                                    >
+                                        X
+                                    </strong>
                                 </div>
                             </div>
-
-                            : <p className={"ml-5"}>{t("dragAndDrop.currentDocument")} <strong>{t("dragAndDrop.none")}</strong></p>;
+                        ) : (
+                            <p className={"ml-5"}>
+                                {t("dragAndDrop.currentDocument")}{" "}
+                                <strong>{t("dragAndDrop.none")}</strong>
+                            </p>
+                        );
                     }
                 })()}
             </div>
         </div>
+    );
 }
 
 DragAndDrop.propTypes = {
@@ -160,7 +201,7 @@ DragAndDrop.propTypes = {
     textDisplayed: PropTypes.string.isRequired,
     file_url: PropTypes.string,
     setFile: PropTypes.func.isRequired,
-    onClearedFile: PropTypes.func
-}
+    onClearedFile: PropTypes.func,
+};
 
 export default DragAndDrop;
