@@ -79,8 +79,7 @@ COPY db /Elvis/db
 COPY public /Elvis/public
 COPY app/assets /Elvis/app/assets
 
-# ignore error when precompiling assets
-RUN NODE_OPTIONS=--openssl-legacy-provider rails assets:precompile
+RUN YARN_PRODUCTION=false bundle exec rails assets:precompile
 
 # copy app components/routes/initializers
 COPY config/routes.rb /Elvis/config/routes.rb
