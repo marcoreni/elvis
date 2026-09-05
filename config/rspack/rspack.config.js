@@ -1,6 +1,7 @@
 // config/rspack/rspack.config.js
 const { generateRspackConfig, merge } = require('shakapacker/rspack')
 const { rspack } = require('@rspack/core')
+const { RsdoctorRspackPlugin } = require('@rsdoctor/rspack-plugin')
 
 // 1. Generate base Shakapacker configuration for Rspack
 const baseConfig = generateRspackConfig()
@@ -25,7 +26,12 @@ const customConfig = {
       // FIXME: remove this after react18 migration
       resourceRegExp: /^react-dom\/client$/,
     }),
-  ],
+    // Only register the plugin when RSDOCTOR is true, as the plugin will increase the build time.
+    process.env.RSDOCTOR &&
+      new RsdoctorRspackPlugin({
+        // plugin options
+      }),
+      ].filter(Boolean),
   module: {
     rules: [
       {
