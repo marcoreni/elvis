@@ -1137,7 +1137,22 @@ don't cut a branch per folder.
    sub-lexical interpolation, the load-bearing-whitespace keys. These are rare — most extraction
    needs none.
 
-Don't delete existing tests; just stop adding a render test per extracted file.
+Just stop *adding* a render test per extracted file.
+
+### P0 (pre-work) — prune the existing i18n test suite to this strategy
+
+Phases 05–06 accumulated a large number of near-identical per-component "renders the fr strings /
+renders the en strings after `changeLanguage`" Vitest specs (and RSpec `*_pages_spec.rb`
+equivalents). Most assert the pipeline, not the component — now that the pipeline is proven, they
+are redundant weight (slower runs, noise on every unrelated change, a tax on the React major bump).
+
+Task: audit `frontend/components/**/*.test.jsx` and `spec/requests/*_pages_spec.rb`, and for each
+domain **keep one bilingual smoke test** (per §Testing point 3) plus whatever genuinely covers
+component behaviour or an edge case (§4); **remove** the rest of the string-echo duplicates. Net
+effect should be a materially smaller suite, not a larger one. Do this as its own PR before P1 so
+the P1–P7 PRs start from the lean baseline. Route through `qa` + `code-reviewer` like any change —
+the risk is deleting a test that was actually covering behaviour, so the reviewer's job is to
+confirm each deletion is a pure string-echo.
 
 **Whole-app "done" criterion** (never existed before): §1 + §2 above clean for every scope, plus
 a **grep gate** (CI or pre-commit) that fails on a bare capitalised multi-word literal inside
@@ -1269,10 +1284,11 @@ product ever wants a no-reload switch, this is ~2–3 lots on top of everything 
 ## Rough total
 
 Excluding the frozen-at-construct refactor (J) and the deliberate out-of-scope list:
-**~7 PRs**, each large.
+**1 pre-work PR + ~7 delivery PRs**, each large.
 
 | PR | Contents | ~files |
 |---|---|---|
+| **P0** | Prune the existing per-component string-echo test suite to the checkpoint strategy (see §P0). Do this first so P1–P7 start lean. | (test files only) |
 | **P1** | A menu (44 captions) + B app chrome / layouts / shared partials + inline `<script>` | ~15 |
 | **P2** | C1 `practice/*` CRUD + C2 rooms/locations + C6 `parameters/*` ERB shells | ~45 |
 | **P3** | C4 enrolment & money ERB (`adhesion`, `seasons`, `packs`, `payment*`, `due_payment`, …) | ~30 |
