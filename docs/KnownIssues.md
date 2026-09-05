@@ -63,8 +63,9 @@ go, crossing real breaking boundaries:
 - `sweetalert2` 7.33.1 → 11.26.25 — dropped the old callback-based `swal({...})` API for promises
   somewhere in the 9.x line; every call site (dozens, via `frontend/tools/api.js` and components
   directly) would need reviewing.
-- `bootstrap` 4.6.2 → 5.3.8 — drops the jQuery dependency, markup/class changes. (See also the
-  separate "bootstrap dropped from package.json" note below — the direct dep needs restoring first.)
+- `bootstrap` 4.6.2 → 5.3.8 — drops the jQuery dependency, markup/class changes. (`feat/bump-shakapacker`
+  briefly dropped `bootstrap` from `package.json` while `PresenceSheet.jsx` still `import`ed it,
+  which pulled in a transitive `bootstrap@3` — restored to `^4` in `f7c9b92`.)
 - `prettier` 1.19.1 → 3.9.6 — different default formatting rules; bumping would reformat large parts
   of the codebase in one commit.
 
