@@ -137,9 +137,9 @@ still need Postgres/Redis/Elasticsearch, just not ruby/node themselves.
     ```shell
     sudo usermod -a -G rvm $USER
     ```
-- install ruby version 3.3.2 
+- install ruby version 3.3.12 
   - ```shell
-    rvm install 3.3.2
+    rvm install 3.3.12
     ```
 - install bundler (bundle version is specified in the `Gemfile.lock` file) :
   ```shell

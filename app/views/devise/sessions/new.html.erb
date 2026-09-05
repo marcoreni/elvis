@@ -18,7 +18,7 @@
         <div class="ibox-content">
           <%= form_for(resource, as: resource_name, url: session_path(resource_name), class: "m-t") do |f| %>
             <div class="form-group">
-              <%= f.label t("views.devise.sessions.new.login_label") %><br/>
+              <%= f.label t("views.devise.sessions.new.login_label") %><br />
               <%= f.text_field :login, required: true, autofocus: true, class: "form-control" %>
               <% if resource.errors.any? %>
                 <div class="alert alert-danger">
