@@ -40,11 +40,46 @@ export interface User extends Entity {
     first_name: string;
     last_name: string;
     planning: Planning;
+    birthday: string;
+    begin_at: string;
+    stopped_at: string;
 }
 export interface Planning extends Entity {}
 
+export interface ActivityInstrument extends Entity {
+    user_id: number | undefined;
+    is_validated: boolean;
+}
+
+export interface ActivityApplication extends Entity {
+    user?: User;
+}
+
+export interface DesiredActivity extends Entity {
+    activity_application?: ActivityApplication;
+}
+
+export interface Option extends Entity {
+    user?: User;
+    desired_activity?: DesiredActivity;
+}
+
+export interface TimeInterval {
+    start: string;
+    end: string;
+}
+
+export interface ActivityRef extends Entity {
+    is_work_group: boolean;
+    occupation_limit?: number;
+}
+
 export interface Activity extends Entity {
     users: User[];
+    activities_instruments: ActivityInstrument[];
+    options: Option[];
+    time_interval: TimeInterval;
+    activity_ref: ActivityRef;
 }
 
 export type ReferenceData = {
