@@ -394,9 +394,13 @@ returns every season) but the asymmetry is now visible since the `seasonEnd` hal
   `editParameters/CsvSettings.jsx:30,36`, `planning/ActivityDetailsModal.jsx:918`,
   `activityItems/EditApplication.jsx:60`, `userForm/Absences.jsx:92,97`. Sweep them together (or
   when `sweetalert2` is finally bumped — see the deps section).
-- `parameters/Payments/AdhesionSettings.jsx`'s inline `<ReactTable>` (not routed through
-  `BaseDataTable`) passes none of the `common:reactTable.*` pagination props, so react-table's
-  English defaults ("No rows found", "Page", "of", "rows") render inside the French UI.
+- ~~`parameters/Payments/AdhesionSettings.jsx`'s inline `<ReactTable>` passes none of the
+  `common:reactTable.*` pagination props~~ **Fixed** (`fix/lesson-list-and-table-bugs`) — the 7
+  `previousText`/`nextText`/… props now go through `t("common:reactTable.*")`. **Same gap still
+  open** in three other bare `<ReactTable>` renders: `frontend/components/ReactTableFullScreen.jsx`,
+  `frontend/components/StopList.jsx`, `frontend/components/FailedPaymentImportsPage.jsx` — english
+  defaults ("Page", "of", "rows") in the FR UI. Also `parameters/Payments/PaymentsMethods.jsx:5`
+  has a dead `ReactTable` import (it extends the class `BaseDataTable`, which passes the props).
 - `parameters/Payments/AdhesionSettings.jsx` / `AdhesionEditModal.jsx`: `initialValues.label`
   defaults to the translated string `t("payments.adhesion.modal.defaultLabel")`. If an EN-locale
   admin leaves the field untouched, that literal English string gets POSTed and persisted as data —
@@ -411,10 +415,6 @@ returns every season) but the asymmetry is now visible since the `seasonEnd` hal
   `emailRequired` key ("L'email est requis"), so a *malformed* non-empty address shows a
   "required" message. A dedicated `parameters:editParameters.school.emailInvalid` key would fix
   the copy — do it in the parameters-domain follow-up, not here.
-- `courses/LessonList.jsx` calls `moment.locale("fr")` at module scope *and* on every `render()`
-  (`:15, :594`), which also clobbers the process-wide moment locale `frontend/i18n/index.js`
-  maintains — any component rendered after `LessonList` on the same page gets French dates
-  regardless of the active UI language.
 
 Reference — dedup opportunities intentionally not touched (each pair is a distinct source literal
 under the verbatim policy, not a bug): `activityChoice.*`/`formulaChoice.*`/
@@ -432,13 +432,14 @@ the `Validation.jsx` `<h3>` headings, and all three duration formatters
 now translated and consistent — via `activityApplications:units.{minutes,hoursMinutes}`, with
 `units.minutes` standardized to `"{{minutes}} min"` (spaced). What's left, low priority:
 
-- `EvaluationChoiceTable.jsx` — pre-existing (not i18n): verify `data[].timeInterval.start/end`
-  reach `toHourMin()` as `Date` objects, not ISO strings, the way the sibling
-  `TimePreferencesTable` wraps them with `toDate()` — an ISO string would silently render
-  `NaN:NaN`.
+- ~~`EvaluationChoiceTable.jsx` — `data[].timeInterval.start/end` reach `toHourMin()` as ISO
+  strings, not `Date`s → `NaN:NaN`~~ **Fixed** (`fix/lesson-list-and-table-bugs`) — wrapped both
+  in `toDate()`, matching the sibling `TimePreferencesTable`.
 - `frontend/tools/constants.js` `TIME_STEPS` still has hardcoded labels (`"1h"`, `"45min"`,
   `"30min"`, `"15min"`) — a 4-element const array left out of the constants-i18n pass, and now
   also inconsistent with the spaced `activityApplications:units.minutes` convention above.
+  Belongs in the roadmap Phase 07 planning/activity area (needs new fr+en keys → a `translator`
+  pass), not a bug batch.
 
 ## `courses/LessonList.jsx` — remaining frozen-at-construct-time string
 
@@ -599,13 +600,10 @@ What's still open in this domain:
   that particular mismatch is gone. Still open: `ActivitiesApplicationsList.jsx`'s column headers
   ("Niveau", "Âge", "Activité" and 10 more) are still hardcoded French next to its now-localized
   level cell and Action column.
-- **`courses/LessonList.jsx`'s `UserRow` has no unmount guard on its level-fetching effect**:
-  found by a retroactive code-reviewer audit of the `studentLevel` fix (PR #67). The sibling
-  `LevelCell` in `activityApplications/summary/Activity.jsx` uses `let isMounted = true` with a
-  cleanup return before calling `setStudentLevel`; `UserRow`'s equivalent effect has none. Harmless
-  in practice today, but a late or out-of-order response can now visibly change the rendered level
-  (and emit React's unmounted-`setState` dev warning) since the fix makes the API response drive
-  rendered content instead of being ignored.
+- ~~**`courses/LessonList.jsx`'s `UserRow` has no unmount guard on its level-fetching effect**~~
+  **Fixed** (`fix/lesson-list-and-table-bugs`) — added `let isMounted` + cleanup return, guarding
+  the `.success`/`.error` callbacks, matching the sibling `LevelCell` in
+  `activityApplications/summary/Activity.jsx`.
 
 Design note (`planning/TimeIntervalHelpers.jsx`, lot 3c — so a later reader doesn't "simplify" it):
 `levelDisplay()` / `levelDisplayForActivity()` keep returning the raw French sentinels
@@ -642,3 +640,23 @@ Latent, same file: the fetch-error message is resolved to a string and stored in
 on screen until the next fetch resolves. Same frozen-translation class as the `columns`/`daynames`
 notes above, and harmless for the same reason (switching locale is a full server reload).
 
+
+## `frontend/components/utils/ui/tabs.jsx` — `setTabError` prop leaks onto DOM elements
+
+`TabbedComponent` (`tabs.jsx:70`) manually clones the active tab's body element and injects a
+`setTabError` callback into its props:
+`{ ...tab.body, props: { ...tab.body.props, setTabError: … } }`. This is unconditional — it does
+not check whether `tab.body.type` is a component or a DOM element, and it does not use
+`React.cloneElement`. When a tab body is a plain DOM element (or a component that forwards its
+unknown props onto a DOM node), `setTabError` lands on a real element and React logs
+*"React does not recognize the `setTabError` prop on a DOM element"*.
+
+Seen 2026-09-05 via `planning/ActivityDetailsModal.jsx`'s tabs (rendered inside `Planning.jsx`),
+but it is a `tabs.jsx` design issue, not specific to that caller. Dev-only warning, no functional
+effect. Pre-existing — predates the current session's work; surfaced when the activity-details
+modal's tab was opened.
+
+Fix (its own small PR + a `tabs.test.jsx` case): in `tabs.jsx:70` only inject `setTabError` when
+`typeof tab.body.type === "function"` (a real component), and switch the manual clone to
+`React.cloneElement`; for the body components that receive but never use `setTabError`, strip it
+before any `{...props}` spread onto a DOM node.
