@@ -34,6 +34,16 @@
     "ofText": "sur",
     "rowsText": "résultats"
   },
+  "baseDataTable": {
+    "updateTitle": "Mettre à jour {{name}}",
+    "createTitle": "Créer {{name}}",
+    "deleteTitle": "Supprimer {{name}}",
+    "defaultResource": "cet élément",
+    "deleteQuestion": "Voulez-vous vraiment supprimer {{name}} : {{label}} ?",
+    "loadError": "Une erreur est survenue lors du chargement des données.",
+    "itemNotFound": "L'élément est introuvable dans la liste des éléments.",
+    "fullScreenTooltip": "Mettre le tableau en plein écran"
+  },
   "weekdays": [
     "Dimanche",
     "Lundi",

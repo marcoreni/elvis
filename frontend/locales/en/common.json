@@ -34,6 +34,16 @@
     "ofText": "of",
     "rowsText": "results"
   },
+  "baseDataTable": {
+    "updateTitle": "Update {{name}}",
+    "createTitle": "Create {{name}}",
+    "deleteTitle": "Delete {{name}}",
+    "defaultResource": "this item",
+    "deleteQuestion": "Do you really want to delete {{name}}: {{label}}?",
+    "loadError": "An error occurred while loading the data.",
+    "itemNotFound": "The item could not be found in the list of items.",
+    "fullScreenTooltip": "Make the table fullscreen"
+  },
   "weekdays": [
     "Sunday",
     "Monday",
