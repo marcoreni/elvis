@@ -25,7 +25,7 @@ export default function EvaluationChoiceTable({
                     <span className="font-weight-bold">
                         {WEEKDAYS[toDate(timeInterval.start).getDay()]}
                     </span><br/>
-                        {toHourMin(timeInterval.start)}{" "}{"\u2192"}{toHourMin(timeInterval.end)}
+                        {toHourMin(toDate(timeInterval.start))}{" "}{"\u2192"}{toHourMin(toDate(timeInterval.end))}
                     </td>
                     <td style={{textAlign: "right"}}>
                     <span className="badge badge-pill badge-primary p-3"
@@ -34,7 +34,7 @@ export default function EvaluationChoiceTable({
                     </span>
                     </td>
                 </tr> :
-                <tr>
+                <tr key={i}>
                     <td>
                     <span className="text-danger font-bold">
                         {noInterval}

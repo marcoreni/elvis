@@ -1366,12 +1366,15 @@ const UserRow = ({
     const [activityApplicationId, setActivityApplicationId] = React.useState(null);
 
     React.useEffect(() => {
+        let isMounted = true;
         api
             .set()
             .error((error) => {
+                if (!isMounted) return;
                 console.error("Erreur lors de la récupération de la demande d'inscription:", error);
             })
             .success((data) => {
+                if (!isMounted || !data) return;
                 setDesiredActivityId(data.id);
                 if (data && data.evaluation_level_ref) {
                     // desired_activity_controller.rb renders evaluation_level_ref as a bare string,
@@ -1389,6 +1392,7 @@ const UserRow = ({
                 setActivityApplicationId(data.activity_application_id);
             })
             .get(`/desired_activities/user/${user.id}/activity/${activity.id}/ref/${activity.activity_ref_id}/time/${activity.time_interval_id}`);
+        return () => { isMounted = false; };
     }, [user.id, activity.id, activity.activity_ref_id, activity.time_interval_id]);
 
     const inscriptionUrl = activityApplicationId ? `/inscriptions/${activityApplicationId}` : "#";
