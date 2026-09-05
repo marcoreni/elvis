@@ -409,6 +409,51 @@ describe("Practice tables — deleteStatus swal i18n", () => {
 });
 
 // ============================================================================================
+// 3b. Materials "active" column — regression pin for the wrong-accessor change.
+//     The column `id: "active"` renders its Cell from `props.original.active` but its `accessor`
+//     read `d => d.name`; changed to `d => d.active` in `fix/wrong-property-refs` so the accessor
+//     returns the field the column represents. NOTE: this table is `<ReactTable manual>`, so
+//     react-table never runs client-side sort/filter (both go to the server keyed on column `id`)
+//     — the change is inert at runtime, kept for consistency. This test just pins the accessor
+//     against a future regression; it asserts implementation, not user-visible behaviour.
+// ============================================================================================
+describe("Materials — 'active' column accessor operates on the `active` field", () => {
+    function mountMaterials(lng) {
+        const Klass = Materials.WrappedComponent;
+        let inst;
+        render(
+            <Klass
+                t={i18n.getFixedT(lng, "parameters")}
+                i18n={i18n}
+                tReady
+                urlListData="/x"
+                urlNew="/x/new"
+                ref={(r) => {
+                    inst = r;
+                }}
+            />,
+        );
+        return inst;
+    }
+
+    test("accessor returns the row's `active` boolean, not its name", async () => {
+        await i18n.changeLanguage("fr");
+        const activeCol = mountMaterials("fr").state.columns.find((c) => c.id === "active");
+
+        expect(activeCol.accessor({name: "Amp", active: true})).toBe(true);
+        expect(activeCol.accessor({name: "Amp", active: false})).toBe(false);
+        // guard against a silent regression back to `d => d.name`
+        expect(activeCol.accessor({name: "Amp", active: true})).not.toBe("Amp");
+    });
+
+    test("the 'name' column still accesses `name` (unchanged by the fix)", async () => {
+        await i18n.changeLanguage("fr");
+        const nameCol = mountMaterials("fr").state.columns.find((c) => c.id === "name");
+        expect(nameCol.accessor({name: "Amp", active: true})).toBe("Amp");
+    });
+});
+
+// ============================================================================================
 // 4. HOC shape — `withTranslation("parameters")(X)` kept the `extends BaseDataTable` chain.
 // ============================================================================================
 describe("Practice tables — withTranslation wrap preserves BaseDataTable inheritance", () => {

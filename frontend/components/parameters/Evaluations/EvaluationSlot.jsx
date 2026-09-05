@@ -73,7 +73,7 @@ export default function EvaluationSlot(props) {
                             <label>{t("evaluations.slot.durationLabel")}</label>
                             <input className="form-control" type="text" name="sessionHour"  {...register('sessionHour', { required: true })}
                                 defaultValue={sessionHour} />
-                            <p className="text-danger">{errors.name && t("evaluations.slot.requiredError")}</p>
+                            <p className="text-danger">{errors.sessionHour && t("evaluations.slot.requiredError")}</p>
                         </div>
                     </div>
                 </div>

@@ -612,14 +612,47 @@ describe("EvaluationSlot", () => {
         ).toBeInTheDocument();
     });
 
-    // The `requiredError` <p> is gated on `errors.name`, but the field is registered as
-    // `sessionHour` — so the message can never actually render. That is a pre-existing bug the
-    // extraction preserved verbatim (`{errors.name && t("evaluations.slot.requiredError")}`); here
-    // we only assert the key itself resolves.
+    // The `requiredError` <p> was gated on `errors.name` while the field registers as
+    // `sessionHour` (`register('sessionHour', { required: true })`), so the message could never
+    // render. Fixed to `errors.sessionHour` in `fix/wrong-property-refs`; the test below submits
+    // the form with an empty field and asserts the message actually appears.
     test.each(["fr", "en"])("evaluations.slot.requiredError key resolves in %s", (lng) => {
         const v = tP(lng)("evaluations.slot.requiredError");
         expect(v).not.toBe("evaluations.slot.requiredError");
         expect(v.length).toBeGreaterThan(0);
+    });
+
+    test.each(["fr", "en"])(
+        "submitting with an empty sessionHour renders the required-error <p> in %s",
+        async (lng) => {
+            await i18n.changeLanguage(lng);
+            apiState.getResolve = {data: {session_hour: {e: null}}};
+
+            const {container} = await renderSlot();
+            const input = container.querySelector('input[name="sessionHour"]');
+            fireEvent.input(input, {target: {value: ""}});
+            fireEvent.submit(container.querySelector("form"));
+
+            expect(
+                await screen.findByText(tP(lng)("evaluations.slot.requiredError")),
+            ).toBeInTheDocument();
+        },
+    );
+
+    test("a filled sessionHour does NOT render the required-error <p>", async () => {
+        await i18n.changeLanguage("fr");
+        global.fetch = vi.fn().mockResolvedValue({ok: true, json: () => Promise.resolve({})});
+
+        const {container} = await renderSlot();
+        fireEvent.input(container.querySelector('input[name="sessionHour"]'), {
+            target: {value: "30"},
+        });
+        fireEvent.submit(container.querySelector("form"));
+
+        await waitFor(() => expect(swal).toHaveBeenCalled());
+        expect(
+            screen.queryByText(tP("fr")("evaluations.slot.requiredError")),
+        ).not.toBeInTheDocument();
     });
 
     test.each(["fr", "en"])(

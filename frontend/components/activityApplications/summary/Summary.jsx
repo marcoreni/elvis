@@ -1319,7 +1319,7 @@ class Summary extends React.Component
                                                     .forms
                                                     .map(e => e.form)
                                                     .map(optionMapper({
-                                                        label: e => t("summary.courseOption", { course: findAndGet(this.props.activityRefs, r => r.id === e.activity.activity_reéf_id, "label"), group: e.activity.group_name, teacher: `${e.activity.teacher.first_name} ${e.activity.teacher.last_name}` }),
+                                                        label: e => t("summary.courseOption", { course: findAndGet(this.props.activityRefs, r => r.id === e.activity.activity_ref_id, "label"), group: e.activity.group_name, teacher: `${e.activity.teacher?.first_name ?? ""} ${e.activity.teacher?.last_name ?? ""}`.trim() }),
                                                     }))
                                             }
                                         </select>
