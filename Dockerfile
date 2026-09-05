@@ -1,6 +1,6 @@
-FROM node:20-alpine3.20 AS node
+FROM node:20-alpine AS node
 
-FROM ruby:3.3.12-alpine3.20 AS build
+FROM ruby:3.3.12-alpine AS build
 
 COPY --from=node /usr/lib /usr/lib
 COPY --from=node /usr/local/lib /usr/local/lib
@@ -119,7 +119,7 @@ RUN rm -r /usr/local/bundle/cache
 
 FROM surnet/alpine-wkhtmltopdf:3.20.3-0.12.6-small AS wkhtmltopdf
 
-FROM ruby:3.3.12-alpine3.20
+FROM ruby:3.3.12-alpine
 
 # Copy wkhtmltopdf files from docker-wkhtmltopdf image
 # ~ 47mb
