@@ -209,7 +209,6 @@
         "noMainTeacher": "No main teacher for this course"
     },
     "practice": {
-        "today": "today",
         "weekButton": "week",
         "rooms": "Rooms",
         "slot": "Slot",

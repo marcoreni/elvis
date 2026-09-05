@@ -240,22 +240,6 @@ from inside a commented-out JSX block, so it never rendered — no plugin risk o
   outlives a locale change. Fix (if it ever matters) = destroy + recreate the tui-calendar
   instance on `languageChanged`.
 
-## `PracticePlanning.jsx` — the `buttonText.today` override is now redundant
-
-`PracticePlanning` imports `@fullcalendar/core/locales/fr` and drives `locale` from
-`i18n.language`, so FullCalendar now resolves its own chrome per language: the
-`resourceTimelineDay` button renders "Jour"/"day" from the locale tables, and the
-`resourceTimelineWeek` button gets its label explicitly (its `duration: {days: 7}` override leaves
-FullCalendar's `singleUnit` empty, so no locale table can supply it — it used to render the literal
-view type "resourceTimelineWeek" in both languages).
-
-What is left is cosmetic: `buttonText={{today: t("practice.today")}}` predates the locale import
-and is no longer needed, and it forces the lowercase extracted strings "aujourd'hui"/"today" over
-FullCalendar's own "Aujourd'hui"/"today". In French that reads inconsistently next to the
-capitalised "Jour" button. Dropping the override (and the now-unused `planning:practice.today`
-key) would take the capitalisation from the locale table instead; left alone here because it
-changes user-visible copy beyond the scope of the locale wiring.
-
 ## generalPayments tables freeze translated column headers at construct time
 
 `DuePaymentList.jsx` and `PaymentList.jsx` (and the smaller `PaymentScheduleList` filter setup)
@@ -543,6 +527,26 @@ Adjacent bug found by the constants-i18n lot 2 review, pre-existing and untouche
 of the family-link `<select>`'s error message on any validation failure there, in both languages.
 Fix: add `import { MESSAGES } from "../../tools/constants";` to both files.
 
+## `Sauvegarder` / `Enregistrer` — two established save-button wordings, not unified
+
+Spotted 2026-09-05 reviewing the `itemFormModal`/`deleteItemModal` addition to `common.json`
+(`fix/known-issues-batch-4`). `common:actions.save` = "Enregistrer" is the dominant save-button
+wording (20+ call sites across the app — `MailSettings.jsx`, `EditFormule.jsx`,
+`ActivityDetailsModal.jsx`, etc.). A second wording, "Sauvegarder", is independently established in
+the `parameters` domain via `parameters.json`'s `shared.saveButton`
+(`editParameters/TeachersParameters.jsx`, `parameters/Plannings/TeacherAvailabilities.jsx`,
+`editParameters/EditParameters.jsx`, `parameters/Plannings/PlanningsSettings.jsx`). The new
+`common:itemFormModal.saveButton` correctly reuses that same "Sauvegarder" wording, since it's
+extracted verbatim from `ItemFormModal.jsx`'s pre-existing hardcoded French literal.
+`CommentSection.jsx` also still hardcodes "Sauvegarder" directly in JSX (not yet run through
+`useTranslation` at all).
+
+Not a typo — both are correctly-spelled, real French words — and not unified here, per the
+cross-lot dedup policy: unifying wording across already-shipped extraction lots is a design call,
+not a mechanical fix. Whoever eventually settles "Enregistrer" vs "Sauvegarder" as the one house
+style should sweep all four sites together: `common:actions.save`, `parameters:shared.saveButton`,
+`common:itemFormModal.saveButton`, and `CommentSection.jsx`'s still-unextracted literal.
+
 ## `frontend/tools/format.jsx` — `toFullDateFr` is day-before-month regardless of locale
 
 The month off-by-one bug (`toFullDateFr` feeding a 0-based `getMonth()` into the 1-based
@@ -606,25 +610,13 @@ unchanged. Every call site was split into "compare" (use the constant) vs "displ
 method is a stub (`return "Banana";`, the rest commented out) and it has its own separate hardcoded
 `` `${averageAge} ans` ``. Broken legacy component, not extracted (don't-delete-on-looks-dead).
 
-## `frontend/components/common/baseDataTable/` — sibling modals still hardcode their own chrome
+## `frontend/components/common/baseDataTable/BaseDataTable.jsx` — remaining minor items
 
-`BaseDataTable.jsx` itself (the **functional** shared data-table, distinct from the older
-class-based `frontend/components/parameters/BaseDataTable.jsx`) now reads its modal-title
-templates, delete-confirmation question, fetch-error message, and react-table pagination strings
-from `common:baseDataTable.*` / the pre-existing `common:reactTable.*`, so call sites that already
-pass a translated `oneResourceTypeName` / `thisResourceTypeName` (`parameters/Payments/
-Coupons.jsx`, `activityRef/ActivityRefBasics.jsx`, `formules/EditFormule.jsx`,
-`parameters/Activities/PricingCategoriesEdit.jsx`) no longer get a mixed-language modal header in
-English mode.
-
-Found while fixing the above, not yet fixed (own hardcoded French chrome, no `useTranslation` at
-all in either file):
-- `ItemFormModal.jsx`: the "Mise à jour"/"Création" fallback titles, the "Annuler"/"Sauvegarder"
-  buttons, and the "Erreur(s) :" list heading.
-- `DeleteItemModal.jsx`: the "Suppression"/"Voulez-vous vraiment supprimer cet élément ?" fallback
-  copy (only reachable when a caller omits `title`/`question`, which no current call site does),
-  the "Annuler"/"Supprimer" buttons, and the "Une erreur est survenue lors de la suppression."
-  fallback error message.
+All of the below refer to the **functional** shared data table under
+`frontend/components/common/baseDataTable/`, not the older class-based
+`frontend/components/parameters/BaseDataTable.jsx`. Its two sibling modals (`ItemFormModal.jsx`,
+`DeleteItemModal.jsx`) were the subject of a "still hardcode their own chrome" entry here; that is
+now resolved (`fix/known-issues-batch-4` wired both to `useTranslation("common")`).
 
 Still hardcoded in `BaseDataTable.jsx` itself, deliberately left: the appended actions column's
 `Header: "Actions"`. Impact is nil — the word is spelled identically in French and English — but
@@ -639,3 +631,53 @@ Latent, same file: the fetch-error message is resolved to a string and stored in
 (`errorMessage`), so a `changeLanguage` after a failed fetch leaves the previous language's message
 on screen until the next fetch resolves. Same frozen-translation class as the `columns`/`daynames`
 notes above, and harmless for the same reason (switching locale is a full server reload).
+
+## `_` used as an undeclared global in ~20 components — real `ReferenceError` risk
+
+Found 2026-09-05 by the code review of `fix/known-issues-batch-4`, while translating
+`ItemFormModal.jsx`'s "Erreur(s) :" heading. Roughly twenty components call `_.map` / `_.find` /
+etc. without ever importing lodash, relying on a global `_` that **this app does not define**:
+`config/webpack/webpack.config.js`'s `ProvidePlugin` supplies only `$` and `jQuery`, no layout
+loads lodash from a script tag or CDN, and `babel.config.js` has no auto-import plugin. In the real
+bundle each such call throws `ReferenceError: _ is not defined`, which — with no error boundary
+anywhere in these trees — unmounts the whole React island rather than showing an error.
+
+Confirmed reachable in `common/baseDataTable/ItemFormModal.jsx`: `frontend/tools/api.js` rejects
+with a plain **array** whenever the server answers `{errors: [...]}` (see its
+`Array.isArray(error.errors)` branch), and `BaseDataTable.jsx`'s `updateItem` likewise does
+`Promise.reject([t("baseDataTable.itemNotFound")])`. Either one lands in `ItemFormModal`'s
+`Array.isArray(errors)` branch and hits `_.map`. So *every* server-side validation failure on a
+BaseDataTable create/update blanked the modal instead of listing the errors.
+
+Fixed in that one file only (it now does `import _ from "lodash"`), because it is the file that
+branch's review was scoped to. The rest of the list is untouched and still latent — how often each
+one actually fires depends on how reachable its `_.` call is:
+
+```
+AdditionalStudentSelection.jsx      PrevisionalGroups.jsx
+userForm/UserForm.jsx               evaluationAppointments/EvaluationAvailabilityEditor.jsx
+eventsRules/EventsRules.jsx         activityRef/ActivityRefContainer.jsx
+planning/MultiViewModal.jsx         planning/EvaluationModal.jsx
+utils/DateFilter.jsx                courses/AddCourse.jsx
+evaluation/question/index.jsx       personalInfos/Address.jsx
+personalInfos/Roles.jsx             personalInfos/ContactInfos.jsx
+personalInfos/FamilyMemberUser.jsx  personalInfos/NamePicker.jsx
+activityApplications/ItemPreferences.jsx
+activityApplications/TimeIntervalPreferencesEditor.jsx
+activityApplications/UserSearch.jsx activityApplications/TimePreferencesStep.jsx
+activityApplications/EvaluationIntervalChoice.jsx
+```
+
+Regenerate that list with:
+
+```sh
+for f in $(grep -rl '_\.[a-z]' frontend/components --include='*.jsx' --include='*.js'); do
+    grep -q lodash "$f" || echo "$f"
+done
+```
+
+The fix is mechanical (`import _ from "lodash";`) and safe — lodash is already a direct dependency
+and most of the codebase imports it properly — but it touches twenty unrelated components, so it
+wants its own branch. **Watch out when testing these**: several existing Vitest files paper the
+problem over with a `global._ = _` line at the top, so a component can pass its test suite and
+still throw in the browser. Drop that shim as each component gets a real import.

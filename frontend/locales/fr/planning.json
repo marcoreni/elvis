@@ -209,7 +209,6 @@
         "noMainTeacher": "Aucun professeur principal pour ce cours"
     },
     "practice": {
-        "today": "aujourd'hui",
         "weekButton": "Semaine",
         "rooms": "Salles",
         "slot": "Créneau",

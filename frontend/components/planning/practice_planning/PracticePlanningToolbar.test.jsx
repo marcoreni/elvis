@@ -10,6 +10,10 @@
 //     *both* languages: the view overrides `duration` to `{days: 7}` rather than `{weeks: 1}`,
 //     which leaves FullCalendar's `singleUnit` empty, so it can't resolve `buttonText.week` from
 //     any locale table and falls back to the view name.
+//   - `buttonText={{today: t("practice.today")}}` was a since-removed workaround for the dead
+//     locale import above: it forced the lowercase extracted "aujourd'hui"/"today" over
+//     FullCalendar's own capitalised "Aujourd'hui"/"today", which read inconsistently next to the
+//     capitalised "Jour" button once the real locale table started being honoured.
 //
 // So this file renders the real calendar and asserts on the real rendered button text.
 
@@ -51,9 +55,9 @@ describe("PracticePlanning — FullCalendar toolbar renders in the active UI lan
             i18n.getFixedT("fr", "planning")("practice.weekButton"),
         );
         expect(buttonText(".fc-resourceTimelineWeek-button")).not.toBe("resourceTimelineWeek");
-        expect(buttonText(".fc-today-button")).toBe(
-            i18n.getFixedT("fr", "planning")("practice.today"),
-        );
+        // No more app-level override -- FullCalendar supplies this straight from the imported fr
+        // locale table, capitalised consistently with "Jour".
+        expect(buttonText(".fc-today-button")).toBe("Aujourd'hui");
     });
 
     test("en: the day button falls back to FullCalendar's built-in English table, the week button to the en key", async () => {
@@ -65,9 +69,8 @@ describe("PracticePlanning — FullCalendar toolbar renders in the active UI lan
             i18n.getFixedT("en", "planning")("practice.weekButton"),
         );
         expect(buttonText(".fc-resourceTimelineWeek-button")).not.toBe("resourceTimelineWeek");
-        expect(buttonText(".fc-today-button")).toBe(
-            i18n.getFixedT("en", "planning")("practice.today"),
-        );
+        // FullCalendar's own built-in English fallback (no fr/en locale table needed for English).
+        expect(buttonText(".fc-today-button")).toBe("today");
     });
 
     test("the resource-area header follows the language too", async () => {

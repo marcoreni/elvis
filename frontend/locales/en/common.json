@@ -44,6 +44,17 @@
     "itemNotFound": "The item could not be found in the list of items.",
     "fullScreenTooltip": "Make the table fullscreen"
   },
+  "itemFormModal": {
+    "updateTitleFallback": "Update",
+    "createTitleFallback": "Create",
+    "saveButton": "Save",
+    "errorsHeading": "Error(s):"
+  },
+  "deleteItemModal": {
+    "titleFallback": "Deletion",
+    "questionFallback": "Do you really want to delete this item?",
+    "genericError": "An error occurred while deleting."
+  },
   "weekdays": [
     "Sunday",
     "Monday",
