@@ -10,13 +10,8 @@
 
 import React from "react";
 import {render, screen} from "@testing-library/react";
-import _ from "lodash";
 import i18n from "../../../i18n";
 import WorkGroupEditor from "./WorkGroupEditor";
-
-// WorkGroupEditor reads the lodash global `_` in render (`_(activity.activities_instruments)…`);
-// it never imports it. Expose it here.
-global._ = _;
 
 vi.mock("../../../tools/api", () => {
     const chain = {

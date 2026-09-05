@@ -1,4 +1,5 @@
 import React from "react";
+import _ from "lodash";
 import { useTranslation } from "react-i18next";
 import i18n from "../../i18n";
 import { toHourMin, toDate } from "../../tools/format";
@@ -81,10 +82,12 @@ class Availability extends React.PureComponent {
                             }
 
                         </div>
-                        <div className="ml-3">
-                            <div>{i18n.t("activityApplications:timeIntervalPreferences.with")}</div>
-                            <div className="font-weight-bold">{teacher.first_name} {teacher.last_name}</div>
-                        </div>
+                        {teacher &&
+                            <div className="ml-3">
+                                <div>{i18n.t("activityApplications:timeIntervalPreferences.with")}</div>
+                                <div className="font-weight-bold">{teacher.first_name} {teacher.last_name}</div>
+                            </div>
+                        }
                     </div>
                 </div>
             </div>

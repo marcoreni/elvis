@@ -1,4 +1,5 @@
 import React from "react";
+import _ from "lodash";
 import { fullname } from "../../tools/format";
 import ContactInfos from "./ContactInfos";
 

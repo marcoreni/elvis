@@ -1,4 +1,5 @@
 import React, {useEffect, useRef, useState} from "react";
+import _ from "lodash";
 import IntervalPreferencesEditor from "./IntervalPreferencesEditor";
 import AvailabilityManager from "../availability/AvailabilityManager";
 import * as api from "../../tools/api";

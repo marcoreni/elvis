@@ -25,12 +25,7 @@
 
 import React from "react";
 import {render, screen} from "@testing-library/react";
-import _ from "lodash";
 import i18n from "../../i18n";
-
-// Wizard.jsx `import _ from "lodash"` directly, but its (mocked-away) children read the webpack
-// `_` ProvidePlugin global; expose it here too, matching activityRef/ActivityRefContainer.test.jsx.
-global._ = _;
 
 // Heavy children / libs that only matter once StepZilla actually renders a step — mocked so the
 // module graph loads under jsdom. The closed-seasons guard returns before any of them mount.

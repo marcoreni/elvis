@@ -1,4 +1,5 @@
 import React, {Component, Fragment} from 'react';
+import _ from "lodash";
 import Select, {makeAnimated} from "react-select";
 import ReactTable from "react-table";
 import Modal from "react-modal";

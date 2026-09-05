@@ -22,7 +22,6 @@
 
 import React from "react";
 import {render, screen, waitFor, within} from "@testing-library/react";
-import _ from "lodash";
 import swal from "sweetalert2";
 import {toast} from "react-toastify";
 import i18n from "../../../i18n";
@@ -30,9 +29,6 @@ import fr from "../../../locales/fr/activityApplications.json";
 import en from "../../../locales/en/activityApplications.json";
 import {CANCELED_ID} from "../../utils/ActivityApplicationsStatuses";
 import Summary from "./Summary";
-
-// Some transitive lodash-chain helpers in this tree read the global `_` without importing it.
-global._ = _;
 
 // --- mocks -------------------------------------------------------------------------------------
 
