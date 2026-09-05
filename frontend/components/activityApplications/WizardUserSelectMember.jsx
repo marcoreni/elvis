@@ -1,10 +1,10 @@
-import React, {Fragment} from "react";
+import React, { Fragment } from "react";
 import * as api from "../../tools/api";
 import swal from "sweetalert2";
 import ToggleButtonGroup from "../ToggleButtonGroup";
 import _ from "lodash";
 import Modal from "react-modal";
-import CreatableSelect from "react-select/lib/Creatable";
+import CreatableSelect from "react-select/creatable";
 import UserAvatar from "../UserAvatar";
 import WizardContactForm from "../userForm/WizardContactForm";
 import { userIsMinor } from "../../tools/utils";
@@ -29,15 +29,16 @@ export default class WizardUserSelectMember extends React.Component {
 
         this.getErrors = this.getErrors.bind(this);
         this.updateMembersData = this.updateMembersData.bind(this);
-        this.onFamilyLinkSelectorChange = this.onFamilyLinkSelectorChange.bind(this);
+        this.onFamilyLinkSelectorChange =
+            this.onFamilyLinkSelectorChange.bind(this);
     }
 
     updateMembersData() {
         api.set()
             .success((data) => {
-                this.setState({members: data});
+                this.setState({ members: data });
             })
-            .error(error => {
+            .error((error) => {
                 console.error(error);
 
                 swal({
@@ -47,7 +48,9 @@ export default class WizardUserSelectMember extends React.Component {
                     confirmButtonText: T("wizardUserSelectMember.close"),
                 });
             })
-            .get(`/users/${this.props.user.id}/family`, {season: this.props.season.id});
+            .get(`/users/${this.props.user.id}/family`, {
+                season: this.props.season.id,
+            });
     }
 
     componentDidMount() {
@@ -58,14 +61,13 @@ export default class WizardUserSelectMember extends React.Component {
         const errors = this.getErrors();
 
         if (!_.isEqual(errors, this.state.error))
-            this.setState({error: errors});
+            this.setState({ error: errors });
 
         if (this.props.season.id !== prevProps.season.id)
             this.updateMembersData();
     }
 
-    onAddMember(values)
-    {
+    onAddMember(values) {
         const newMembers = _.cloneDeep(this.state.members);
 
         const userToAdd = {
@@ -79,7 +81,15 @@ export default class WizardUserSelectMember extends React.Component {
         };
 
         // add the new member if it doesn't exist
-        if(newMembers.filter(m => (m.id != undefined && m.id === userToAdd.id) || (m.first_name === userToAdd.first_name && m.last_name === userToAdd.last_name && m.birthday === userToAdd.birthday)).length === 0)
+        if (
+            newMembers.filter(
+                (m) =>
+                    (m.id != undefined && m.id === userToAdd.id) ||
+                    (m.first_name === userToAdd.first_name &&
+                        m.last_name === userToAdd.last_name &&
+                        m.birthday === userToAdd.birthday)
+            ).length === 0
+        )
             newMembers.push(userToAdd);
 
         this.setState({
@@ -102,8 +112,11 @@ export default class WizardUserSelectMember extends React.Component {
     getErrors() {
         const error = {};
 
-        if (this.state.members.length === 0 || this.state.selected === undefined || this.state.members[this.state.selected] === undefined)
-        {
+        if (
+            this.state.members.length === 0 ||
+            this.state.selected === undefined ||
+            this.state.members[this.state.selected] === undefined
+        ) {
             error.members = T("wizardUserSelectMember.selectMember");
 
             // if no member selected, no need to check the rest
@@ -111,16 +124,27 @@ export default class WizardUserSelectMember extends React.Component {
         }
 
         const memberSelected = this.state.members[this.state.selected];
-        const familyMemberUserForSelection = memberSelected.family_links_with_user || [];
+        const familyMemberUserForSelection =
+            memberSelected.family_links_with_user || [];
 
-        if (userIsMinor(memberSelected))
-        {
-            if(familyMemberUserForSelection.filter(fl => fl.is_legal_referent).length === 0)
-                error.legal_referent = T("wizardUserSelectMember.selectLegalRepresentative");
-            else if(familyMemberUserForSelection.filter(fl => fl.is_legal_referent && !userIsMinor(fl)).length === 0)
-                error.legal_referent = T("wizardUserSelectMember.legalRepresentativeMustBeAdult");
+        if (userIsMinor(memberSelected)) {
+            if (
+                familyMemberUserForSelection.filter(
+                    (fl) => fl.is_legal_referent
+                ).length === 0
+            )
+                error.legal_referent = T(
+                    "wizardUserSelectMember.selectLegalRepresentative"
+                );
+            else if (
+                familyMemberUserForSelection.filter(
+                    (fl) => fl.is_legal_referent && !userIsMinor(fl)
+                ).length === 0
+            )
+                error.legal_referent = T(
+                    "wizardUserSelectMember.legalRepresentativeMustBeAdult"
+                );
         }
-
 
         return error;
     }
@@ -133,11 +157,11 @@ export default class WizardUserSelectMember extends React.Component {
         const error = this.getErrors();
 
         if (Object.keys(error).length > 0) {
-            this.setState({error, showError: true});
+            this.setState({ error, showError: true });
             return false;
         }
 
-        this.props.onSelect(this.state.members[this.state.selected])
+        this.props.onSelect(this.state.members[this.state.selected]);
 
         return true;
     }
@@ -156,190 +180,316 @@ export default class WizardUserSelectMember extends React.Component {
     }
 
     onFamilyLinkSelectorChange(values, fieldForSelection) {
-        const {members, selected} = this.state;
+        const { members, selected } = this.state;
 
-        if (values.value)
-            values = [values];
+        if (values.value) values = [values];
 
         this.setState({
-            members: members.map((m, i) => i === selected ? {
-                ...m,
-                family_links_with_user: [
-                    ...m.family_links_with_user.filter(fl => !values.map(v => v.value).includes(fl.member_id)).map(fl => ({
-                        ...fl,
-                        [fieldForSelection]: false
-                    })),
-                    ...values.map(v => {
-                        const otherUser = members.find(member => member.id === v.value);
+            members: members.map((m, i) =>
+                i === selected
+                    ? {
+                          ...m,
+                          family_links_with_user: [
+                              ...m.family_links_with_user
+                                  .filter(
+                                      (fl) =>
+                                          !values
+                                              .map((v) => v.value)
+                                              .includes(fl.member_id)
+                                  )
+                                  .map((fl) => ({
+                                      ...fl,
+                                      [fieldForSelection]: false,
+                                  })),
+                              ...values.map((v) => {
+                                  const otherUser = members.find(
+                                      (member) => member.id === v.value
+                                  );
 
-                        let res = {
-                            ...(m.family_links_with_user.find(fl => fl.member_id === otherUser.id) || {}),
-                            [fieldForSelection]: true,
-                        };
+                                  let res = {
+                                      ...(m.family_links_with_user.find(
+                                          (fl) => fl.member_id === otherUser.id
+                                      ) || {}),
+                                      [fieldForSelection]: true,
+                                  };
 
-                        if (res.member_id === undefined) {
-                            res.user_id = m.id;
-                            this.completeUserWithOther(res, otherUser);
-                        }
+                                  if (res.member_id === undefined) {
+                                      res.user_id = m.id;
+                                      this.completeUserWithOther(
+                                          res,
+                                          otherUser
+                                      );
+                                  }
 
-                        return res;
-                    })
-                ]
-            } : m),
-        })
+                                  return res;
+                              }),
+                          ],
+                      }
+                    : m
+            ),
+        });
     }
 
     render() {
-        const {user} = this.props;
-        const {members, selected, isModalOpen} = this.state;
+        const { user } = this.props;
+        const { members, selected, isModalOpen } = this.state;
 
-        const virtualFamilyLinks = members.filter(m => m.id !== (members[selected] || {}).id).map(m => {
-            const familyLinkToUse = ((members[selected] || {}).family_links_with_user || []).find(fl => fl.member_id === m.id);
+        const virtualFamilyLinks = members
+            .filter((m) => m.id !== (members[selected] || {}).id)
+            .map((m) => {
+                const familyLinkToUse = (
+                    (members[selected] || {}).family_links_with_user || []
+                ).find((fl) => fl.member_id === m.id);
 
-            return {
-                id: m.id,
-                first_name: m.first_name,
-                last_name: m.last_name,
-                is_legal_referent: familyLinkToUse ? familyLinkToUse.is_legal_referent : false,
-                is_to_call: familyLinkToUse ? familyLinkToUse.is_to_call : false,
-                is_accompanying: familyLinkToUse ? familyLinkToUse.is_accompanying : false,
-            }
-        });
+                return {
+                    id: m.id,
+                    first_name: m.first_name,
+                    last_name: m.last_name,
+                    is_legal_referent: familyLinkToUse
+                        ? familyLinkToUse.is_legal_referent
+                        : false,
+                    is_to_call: familyLinkToUse
+                        ? familyLinkToUse.is_to_call
+                        : false,
+                    is_accompanying: familyLinkToUse
+                        ? familyLinkToUse.is_accompanying
+                        : false,
+                };
+            });
 
-        return <Fragment>
-            <div className="application-form" style={{margin: 0}}>
-                <div className="row">
-                    <div className="d-inline-flex justify-content-between align-items-end w-100 mb-5">
-                        <div>
-                            <h3 style={{color: "#8AA4B1"}}>{T("wizardUserSelectMember.memberConcerned")}</h3>
-                        </div>
-
-                        <div className="text-right">
-                            <button
-                                type="button"
-                                className="btn btn-primary text-white font-weight-bold"
-                                style={{backgroundColor: "#00334A", borderRadius: "8px"}}
-                                onClick={() => this.setState({isModalOpen: true})}
-                            >
-                                <i className="fa fa-plus mr-2"/> {T("wizardUserSelectMember.addMember")}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                {this.state.showError && Object.keys(this.state.error).length ? <div className="row mb-3">
-                    <div className="alert alert-info d-inline-flex align-items-center pt-4 pb-4"
-                         style={{ border: "1px solid #0079BF", borderRadius: "12px", color: "#0079BF" }}>
-                        <div className="col-1 p-0 text-center">
-                            <i className="fas fa-info-circle"></i>
-                        </div>
-                        <div className="col pl-0 h5">
-                            {T("wizardUserSelectMember.ifMinorAddMember")}
-                        </div>
-                    </div>
-                </div> : null}
-
-                {this.state.showError && this.state.error.members ? <div className="row">
-                    <p className="text-danger">{this.state.error.members}</p>
-                </div> : null}
-
-                <div className="row mb-4">
-                    <ToggleButtonGroup
-                        maxSelected={1}
-                        childrenContent={members.map((member, i) => renderUserItem(user.id, member, i, selected === i))}
-                        selected={[selected]}
-                        onChange={selecteds => selecteds.length > 0 ? this.setState({ selected: selecteds[0] }) : 0}
-                        buttonStyles={{
-                            maxWidth: "200px", // max width unset by toggle-button-w-100-sm css class in small screens
-                            width: "100%",
-                            height: "200px",
-                            backgroundColor: "white",
-                            padding: "15px",
-                            borderRadius: "12px",
-                            margin: "0 20px 10px 0",
-                            whiteSpace: "nowrap",
-                            overflowX: "auto",
-                            boxShadow: "none",
-                            WebkitBoxShadow: "none",
-                            MozBoxShadow: "none",
-                        }}
-                        buttonClasses={"col-sm-auto toggle-button-w-100-sm"}
-                    />
-                </div>
-
-                {members.length > 0 && members[selected] && userIsMinor(members[selected]) && <Fragment>
+        return (
+            <Fragment>
+                <div className="application-form" style={{ margin: 0 }}>
                     <div className="row">
-                        <div className="col-md-6 p-0">
-
-                            <div className="mb-4">
-                                <label style={{ color: "#003E5C" }}>
-                                    {T("wizardUserSelectMember.legalRepresentative")}
-                                    {userIsMinor(members[this.state.selected]) ? <span className="text-danger">*</span> : ""}
-                                </label>
-                                <FamilyLinkSelector
-                                    familyLinks={virtualFamilyLinks}
-                                    isMulti
-                                    fieldForSelection="is_legal_referent"
-                                    onChange={this.onFamilyLinkSelectorChange}
-                                />
-                                {this.state.showError && this.state.error.legal_referent && <div className="row">
-                                    <p className="text-danger">{this.state.error.legal_referent}</p>
-                                </div>}
+                        <div className="d-inline-flex justify-content-between align-items-end w-100 mb-5">
+                            <div>
+                                <h3 style={{ color: "#8AA4B1" }}>
+                                    {T(
+                                        "wizardUserSelectMember.memberConcerned"
+                                    )}
+                                </h3>
                             </div>
 
-                            <div className="mb-4">
-                                <label style={{color: "#003E5C"}}>{T("wizardUserSelectMember.personToContact")}</label>
-                                <FamilyLinkSelector
-                                    familyLinks={virtualFamilyLinks}
-                                    fieldForSelection="is_to_call"
-                                    onChange={this.onFamilyLinkSelectorChange}
-                                />
-                                {this.state.showError && this.state.error.to_call && <div className="row">
-                                        <p className="text-danger">{this.state.error.to_call}</p>
-                                </div>}
-                            </div>
-
-                            <div className="mb-5">
-                                <label style={{color: "#003E5C"}}>{T("wizardUserSelectMember.accompanyingPerson")}</label>
-                                <FamilyLinkSelector
-                                    familyLinks={virtualFamilyLinks}
-                                    fieldForSelection="is_accompanying"
-                                    onChange={this.onFamilyLinkSelectorChange}
-                                />
-                                {this.state.showError && this.state.error.accompanying && <div className="row">
-                                        <p className="text-danger">{this.state.error.accompanying}</p>
-                                </div>}
+                            <div className="text-right">
+                                <button
+                                    type="button"
+                                    className="btn btn-primary text-white font-weight-bold"
+                                    style={{
+                                        backgroundColor: "#00334A",
+                                        borderRadius: "8px",
+                                    }}
+                                    onClick={() =>
+                                        this.setState({ isModalOpen: true })
+                                    }
+                                >
+                                    <i className="fa fa-plus mr-2" />{" "}
+                                    {T("wizardUserSelectMember.addMember")}
+                                </button>
                             </div>
                         </div>
                     </div>
-                </Fragment>}
-            </div>
 
+                    {this.state.showError &&
+                    Object.keys(this.state.error).length ? (
+                        <div className="row mb-3">
+                            <div
+                                className="alert alert-info d-inline-flex align-items-center pt-4 pb-4"
+                                style={{
+                                    border: "1px solid #0079BF",
+                                    borderRadius: "12px",
+                                    color: "#0079BF",
+                                }}
+                            >
+                                <div className="col-1 p-0 text-center">
+                                    <i className="fas fa-info-circle"></i>
+                                </div>
+                                <div className="col pl-0 h5">
+                                    {T(
+                                        "wizardUserSelectMember.ifMinorAddMember"
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    ) : null}
 
-            <Modal
-                isOpen={isModalOpen}
-                ariaHideApp={false}
-                onRequestClose={() => this.setState({isModalOpen: false})}
-                style={{
-                    content: {
-                        top: "5%",
-                        left: "25%",
-                        right: "25%",
-                    },
-                }}
-            >
-                <h2 className="mt-0">{T("wizardUserSelectMember.addMember")}</h2>
-                <h4>{T("wizardUserSelectMember.familyLinkCreation", { name: `${user.first_name} ${user.last_name}` })}</h4>
-                <WizardContactForm
-                    user_linked={user}
-                    current_user={user}
-                    initialValues={{}}
-                    showFamilyLinkInfos={false}
-                    onClose={() => this.setState({isModalOpen: false})}
-                    onSubmit={this.onAddMember.bind(this)}
-                />
-            </Modal>
-        </Fragment>;
+                    {this.state.showError && this.state.error.members ? (
+                        <div className="row">
+                            <p className="text-danger">
+                                {this.state.error.members}
+                            </p>
+                        </div>
+                    ) : null}
+
+                    <div className="row mb-4">
+                        <ToggleButtonGroup
+                            maxSelected={1}
+                            childrenContent={members.map((member, i) =>
+                                renderUserItem(
+                                    user.id,
+                                    member,
+                                    i,
+                                    selected === i
+                                )
+                            )}
+                            selected={[selected]}
+                            onChange={(selecteds) =>
+                                selecteds.length > 0
+                                    ? this.setState({ selected: selecteds[0] })
+                                    : 0
+                            }
+                            buttonStyles={{
+                                maxWidth: "200px", // max width unset by toggle-button-w-100-sm css class in small screens
+                                width: "100%",
+                                height: "200px",
+                                backgroundColor: "white",
+                                padding: "15px",
+                                borderRadius: "12px",
+                                margin: "0 20px 10px 0",
+                                whiteSpace: "nowrap",
+                                overflowX: "auto",
+                                boxShadow: "none",
+                                WebkitBoxShadow: "none",
+                                MozBoxShadow: "none",
+                            }}
+                            buttonClasses={"col-sm-auto toggle-button-w-100-sm"}
+                        />
+                    </div>
+
+                    {members.length > 0 &&
+                        members[selected] &&
+                        userIsMinor(members[selected]) && (
+                            <Fragment>
+                                <div className="row">
+                                    <div className="col-md-6 p-0">
+                                        <div className="mb-4">
+                                            <label style={{ color: "#003E5C" }}>
+                                                {T(
+                                                    "wizardUserSelectMember.legalRepresentative"
+                                                )}
+                                                {userIsMinor(
+                                                    members[this.state.selected]
+                                                ) ? (
+                                                    <span className="text-danger">
+                                                        *
+                                                    </span>
+                                                ) : (
+                                                    ""
+                                                )}
+                                            </label>
+                                            <FamilyLinkSelector
+                                                familyLinks={virtualFamilyLinks}
+                                                isMulti
+                                                fieldForSelection="is_legal_referent"
+                                                onChange={
+                                                    this
+                                                        .onFamilyLinkSelectorChange
+                                                }
+                                            />
+                                            {this.state.showError &&
+                                                this.state.error
+                                                    .legal_referent && (
+                                                    <div className="row">
+                                                        <p className="text-danger">
+                                                            {
+                                                                this.state.error
+                                                                    .legal_referent
+                                                            }
+                                                        </p>
+                                                    </div>
+                                                )}
+                                        </div>
+
+                                        <div className="mb-4">
+                                            <label style={{ color: "#003E5C" }}>
+                                                {T(
+                                                    "wizardUserSelectMember.personToContact"
+                                                )}
+                                            </label>
+                                            <FamilyLinkSelector
+                                                familyLinks={virtualFamilyLinks}
+                                                fieldForSelection="is_to_call"
+                                                onChange={
+                                                    this
+                                                        .onFamilyLinkSelectorChange
+                                                }
+                                            />
+                                            {this.state.showError &&
+                                                this.state.error.to_call && (
+                                                    <div className="row">
+                                                        <p className="text-danger">
+                                                            {
+                                                                this.state.error
+                                                                    .to_call
+                                                            }
+                                                        </p>
+                                                    </div>
+                                                )}
+                                        </div>
+
+                                        <div className="mb-5">
+                                            <label style={{ color: "#003E5C" }}>
+                                                {T(
+                                                    "wizardUserSelectMember.accompanyingPerson"
+                                                )}
+                                            </label>
+                                            <FamilyLinkSelector
+                                                familyLinks={virtualFamilyLinks}
+                                                fieldForSelection="is_accompanying"
+                                                onChange={
+                                                    this
+                                                        .onFamilyLinkSelectorChange
+                                                }
+                                            />
+                                            {this.state.showError &&
+                                                this.state.error
+                                                    .accompanying && (
+                                                    <div className="row">
+                                                        <p className="text-danger">
+                                                            {
+                                                                this.state.error
+                                                                    .accompanying
+                                                            }
+                                                        </p>
+                                                    </div>
+                                                )}
+                                        </div>
+                                    </div>
+                                </div>
+                            </Fragment>
+                        )}
+                </div>
+
+                <Modal
+                    isOpen={isModalOpen}
+                    ariaHideApp={false}
+                    onRequestClose={() => this.setState({ isModalOpen: false })}
+                    style={{
+                        content: {
+                            top: "5%",
+                            left: "25%",
+                            right: "25%",
+                        },
+                    }}
+                >
+                    <h2 className="mt-0">
+                        {T("wizardUserSelectMember.addMember")}
+                    </h2>
+                    <h4>
+                        {T("wizardUserSelectMember.familyLinkCreation", {
+                            name: `${user.first_name} ${user.last_name}`,
+                        })}
+                    </h4>
+                    <WizardContactForm
+                        user_linked={user}
+                        current_user={user}
+                        initialValues={{}}
+                        showFamilyLinkInfos={false}
+                        onClose={() => this.setState({ isModalOpen: false })}
+                        onSubmit={this.onAddMember.bind(this)}
+                    />
+                </Modal>
+            </Fragment>
+        );
     }
 }
 
@@ -351,21 +501,37 @@ export default class WizardUserSelectMember extends React.Component {
  * @param {function} onClick
  * @returns {JSX.Element}
  */
-const renderUserItem = (currentUserId, user, i, isSelected) => <Fragment>
-    <div className="d-inline-flex ml-0 mt-0 w-100 justify-content-between">
-        <div className="text-left">
-            <UserAvatar user={user} size={75}/>
-            <h4 className="font-weight-bold" style={{color: "#00283B"}}>{user.full_name}</h4>
-            <p style={{color: "#8AA4B1"}}>{new Date(user.birthday).toLocaleDateString()}</p>
+const renderUserItem = (currentUserId, user, i, isSelected) => (
+    <Fragment>
+        <div className="d-inline-flex ml-0 mt-0 w-100 justify-content-between">
+            <div className="text-left">
+                <UserAvatar user={user} size={75} />
+                <h4 className="font-weight-bold" style={{ color: "#00283B" }}>
+                    {user.full_name}
+                </h4>
+                <p style={{ color: "#8AA4B1" }}>
+                    {new Date(user.birthday).toLocaleDateString()}
+                </p>
+            </div>
+            <div>
+                <input
+                    type="radio"
+                    checked={isSelected}
+                    readOnly={true}
+                    style={{ margin: "-5px -5px 0 0" }}
+                />
+            </div>
         </div>
-        <div>
-            <input type="radio" checked={isSelected} readOnly={true} style={{margin: "-5px -5px 0 0"}}/>
-        </div>
-    </div>
-</Fragment>;
+    </Fragment>
+);
 
-const FamilyLinkSelector = ({isMulti, familyLinks, fieldForSelection, onChange}) => {
-    const options = familyLinks.map(m => ({
+const FamilyLinkSelector = ({
+    isMulti,
+    familyLinks,
+    fieldForSelection,
+    onChange,
+}) => {
+    const options = familyLinks.map((m) => ({
         value: m.id,
         label: `${m.first_name} ${m.last_name}`,
         is_legal_referent: m.is_legal_referent,
@@ -373,23 +539,24 @@ const FamilyLinkSelector = ({isMulti, familyLinks, fieldForSelection, onChange})
         is_accompanying: m.is_accompanying,
     }));
 
-    return <CreatableSelect
-        isMulti={isMulti}
-        options={options}
-        isClearable={false}
-        value={options.filter(fl => fl[fieldForSelection])}
-        onChange={eventValues => onChange(eventValues, fieldForSelection)}
-        styles={{
-            menu: (provided) => ({
-                ...provided,
-                zIndex: 4,
-            }),
-            control: (base, state) => ({
-                ...base,
-                border: "0",
-                borderRadius: "8px",
-            }),
-        }}
-    />
-
+    return (
+        <CreatableSelect
+            isMulti={isMulti}
+            options={options}
+            isClearable={false}
+            value={options.filter((fl) => fl[fieldForSelection])}
+            onChange={(eventValues) => onChange(eventValues, fieldForSelection)}
+            styles={{
+                menu: (provided) => ({
+                    ...provided,
+                    zIndex: 4,
+                }),
+                control: (base, state) => ({
+                    ...base,
+                    border: "0",
+                    borderRadius: "8px",
+                }),
+            }}
+        />
+    );
 };
