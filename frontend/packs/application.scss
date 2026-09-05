@@ -2828,17 +2828,6 @@ body {
     border-radius: 5px;
 }
 
-/*
---------- DateRangePicker ---------------
-*/
-input[type="date"]:invalid {
-    background: rgba(255, 0, 0, 0.1);
-}
-
-/*
---------- Fin DateRangePicker --------
-*/
-
 /* FullScreen */
 .fullscreen-enabled {
     background-color: $ibox-content-bg;
