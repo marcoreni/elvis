@@ -1,6 +1,6 @@
 import React from 'react'
 import draftToHtml from 'draftjs-to-html';
-import DOMPurify from 'isomorphic-dompurify';
+import { sanitize } from 'isomorphic-dompurify';
 import { ContentState, convertFromRaw, convertToRaw, EditorState } from "draft-js";
 
 /**
@@ -27,7 +27,7 @@ export default function WysiwygViewer({wysiwygStrData, className, style})
     const editorState = EditorState.createWithContent(savedContentState);
 
     // ne pas mettre la configuration de sanitize en props, ce serait une faille de sécurité
-    const wysiwygContent = DOMPurify.sanitize(draftToHtml(convertToRaw(editorState.getCurrentContent())), {
+    const wysiwygContent = sanitize(draftToHtml(convertToRaw(editorState.getCurrentContent())), {
         ADD_ATTR: ['target'],
     })
 
