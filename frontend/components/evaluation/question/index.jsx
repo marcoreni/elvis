@@ -1,4 +1,5 @@
 import React from "react";
+import _ from "lodash";
 import SelectQuestion from "./select_question";
 import RadioQuestion from "./radio_question";
 import { MESSAGES } from "../../../tools/constants";

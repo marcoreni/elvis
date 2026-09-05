@@ -12,13 +12,8 @@
 
 import React from "react";
 import { render, screen } from "@testing-library/react";
-import _ from "lodash";
 import i18n from "../../i18n";
 import Validation from "./Validation";
-
-// Validation imports lodash directly, but stay consistent with the other activityApplications /
-// activityRef tests and expose the webpack `_` global defensively.
-global._ = _;
 
 vi.mock("./TimePreferencesTable", () => ({ default: () => null }));
 vi.mock("./SelectedActivitiesTable", () => ({ default: () => null }));

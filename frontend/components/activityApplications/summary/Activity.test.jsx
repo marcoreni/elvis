@@ -19,13 +19,8 @@
 
 import React from "react";
 import {render, screen, within, waitFor} from "@testing-library/react";
-import _ from "lodash";
 import i18n from "../../../i18n";
 import Activity from "./Activity";
-
-// `global._ = (await import("lodash")).default` equivalent — some transitive helpers in this tree
-// read the lodash global without importing it.
-global._ = _;
 
 // --- mocks -----------------------------------------------------------------------------------
 

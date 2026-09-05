@@ -17,14 +17,8 @@
 
 import React from "react";
 import {act, fireEvent, render, screen} from "@testing-library/react";
-import _ from "lodash";
 import i18n from "../../i18n";
 import ActivityRefContainer from "./ActivityRefContainer";
-
-// The container reads the lodash global `_` in its constructor (`_(props.activityInstruments)…`);
-// it never imports it (webpack exposes it as a ProvidePlugin global on real pages). The vitest
-// setup does not, so expose it here.
-global._ = _;
 
 // Mock ALL FOUR tab bodies — they each pull in react-final-form fields, selects, upload widgets
 // and mount-time fetches that are irrelevant to the header/button copy under test.

@@ -13,14 +13,9 @@
 
 import React from "react";
 import {render, screen, act} from "@testing-library/react";
-import _ from "lodash";
 import {toast} from "react-toastify";
 import i18n from "../../i18n";
 import UserSearch from "./UserSearch";
-
-// UserSearch reads the lodash global `_` in render (`_.map(possibleMatches, …)`); it never
-// imports it (webpack exposes it as a ProvidePlugin global on real pages). Expose it here.
-global._ = _;
 
 vi.mock("../common/Input", () => ({
     default: ({label}) => <div data-testid="input-stub">{label}</div>,
