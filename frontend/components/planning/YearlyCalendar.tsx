@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { Calendar } from "../yearlyCalendar/index";
-import { withTranslation, WithTranslation } from "react-i18next";
 import { ISO_DATE_FORMAT } from "../utils";
 
 import moment, { Moment } from "moment";
+import { useTranslation } from "react-i18next";
 
 interface ActivityInstance {
     selected: boolean;
@@ -22,7 +22,7 @@ interface Legend {
     unselected?: string;
 }
 
-interface YearlyCalendarProps extends WithTranslation {
+interface YearlyCalendarProps {
     label: string;
     season?: Season;
     legend?: Legend;
@@ -36,7 +36,8 @@ interface YearlyCalendarProps extends WithTranslation {
 }
 
 const YearlyCalendar: React.FC<YearlyCalendarProps> = (props) => {
-    const { t } = props;
+    const { t } = useTranslation("planning");
+
     const legend = props.legend;
 
     // Used to force a re-render after each click to work around a React bug
@@ -122,4 +123,4 @@ const YearlyCalendar: React.FC<YearlyCalendarProps> = (props) => {
     );
 };
 
-export default withTranslation("planning")(YearlyCalendar);
+export default YearlyCalendar;

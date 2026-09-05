@@ -1,9 +1,9 @@
-import React from "react";
 import { useTranslation } from "react-i18next";
 import EvaluationForm from "../evaluation/EvaluationForm";
 import Modal from "react-modal";
 import { getAnswersObject } from "../evaluation/Evaluation";
 import { fullname } from "../../tools/format";
+import type { Question, ReferenceData, User } from "../evaluation/types";
 
 const QuestionnaireModal = ({
     student,
@@ -12,6 +12,13 @@ const QuestionnaireModal = ({
     referenceData,
     toggleModal,
     isOpen,
+}: {
+    student?: User;
+    questions?: Question[];
+    questionnaire?: { answers: any };
+    referenceData: ReferenceData;
+    toggleModal: () => void;
+    isOpen: boolean;
 }) => {
     const { t } = useTranslation("planning");
     const isLoading = !student || !questions || !questionnaire;
@@ -25,7 +32,10 @@ const QuestionnaireModal = ({
             style={{ content: { overflow: "auto" } }}
         >
             <div>
-                <button className="btn btn-default pull-right" onClick={toggleModal}>
+                <button
+                    className="btn btn-default pull-right"
+                    onClick={toggleModal}
+                >
                     <i className="fas fa-times" />
                 </button>
 
