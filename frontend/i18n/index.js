@@ -3,7 +3,6 @@ import {initReactI18next} from "react-i18next";
 import LanguageDetector from "i18next-browser-languagedetector";
 import moment from "moment";
 import "moment/locale/fr";
-import "moment/locale/en";
 
 import common_fr from "../locales/fr/common.json";
 import common_en from "../locales/en/common.json";

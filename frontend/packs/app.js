@@ -16,7 +16,11 @@ import '../i18n';
 FontAwesome.config.autoReplaceSvg = "nest";
 
 // Support component names relative to this directory:
-var componentRequireContext = require.context('components', true);
+var componentRequireContext = require.context(
+  'components',
+  true,
+  /(?<!\.test)\.(jsx?|tsx?)$/
+);
 
 // Support images directory
 require.context('../images', true, /\.(gif|jpg|png|svg)$/i);
