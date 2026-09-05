@@ -37,8 +37,12 @@
         <%= javascript_pack_tag 'app' %>
 
       <script type="text/javascript">
-          const footer = $(".app-footer");
-          footer.parent().height(footer[0].offsetHeight);
+          // jQuery comes from the deferred `app` pack (window.$ set in frontend/packs/app.js), which
+          // runs before DOMContentLoaded but after this inline script parses.
+          document.addEventListener("DOMContentLoaded", function () {
+              const footer = $(".app-footer");
+              if (footer.length) footer.parent().height(footer[0].offsetHeight);
+          });
       </script>
     </body>
 </html>

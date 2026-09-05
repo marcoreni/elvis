@@ -31,7 +31,7 @@
     "isomorphic-dompurify": "3.19.0",
     "jQuery-QueryBuilder": "https://github.com/SIXMON/jQuery-QueryBuilder#master",
     "jQuery-QueryBuilder-Elasticsearch": "https://github.com/piotch/jQuery-QueryBuilder-Elasticsearch",
-    "jquery": "^3.3.1",
+    "jquery": "^3.7.1",
     "jquery-ujs": "^1.2.2",
     "lodash": "^4.17.15",
     "moment": "^2.21.0",

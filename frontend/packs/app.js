@@ -1,18 +1,15 @@
 import './application.scss';
 import './application_print.scss';
 
-// jQuery's dist UMD build sets `noGlobal` when loaded under CommonJS, so it does not attach
-// itself to `window` on its own. Inline page scripts in the devise / simple / static_pages
-// layouts (which don't load jQuery from a CDN, unlike application.html.erb) and the vendored
-// inspinia plugins below (`}(window.jQuery)`) both need it there, so expose it explicitly
-// before anything that consumes it. See also the "jQuery: CDN vs bundle" note in KnownIssues.md.
+// jQuery (full build, 3.7.1) is the single source now -- no CDN tag, no vendored copies. Its dist
+// UMD sets `noGlobal` under CommonJS so it doesn't attach to `window` itself; the inline page
+// scripts across the layouts and the vendored inspinia plugins below (`}(window.jQuery)`) both
+// need it there, so expose it explicitly before anything that consumes it.
 import jQuery from 'jquery';
 window.jQuery = window.$ = jQuery;
 
 import 'jquery-ujs';
-import '../inspinia/js/jquery-3.1.1.min.js';
 import '../inspinia/js/plugins/metisMenu/jquery.metisMenu.js';
-import '../inspinia/js/plugins/slimscroll/jquery.slimscroll.js';
 import '../inspinia/js/plugins/slimscroll/jquery.slimscroll.js';
 import '../inspinia/js/plugins/jasny/jasny-bootstrap.js';
 import '../inspinia/js/bootstrap.js';
