@@ -11,6 +11,7 @@ import InputSelect from "../common/InputSelect";
 
 import * as api from "../../tools/api";
 import {required} from "../../tools/validators";
+import {MESSAGES} from "../../tools/constants";
 import {fullname, toLocaleDate, toDate} from "../../tools/format";
 import { changeUser, selectPhoneType, changeRelationshipDirection, changeBirthDate } from "../../tools/mutators";
 import InlineYesNoRadio from "../common/InlineYesNoRadio";
