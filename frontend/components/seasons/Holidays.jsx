@@ -2,7 +2,6 @@ import React from 'react'
 import ReactTable from "react-table";
 import { ceil } from "lodash";
 import swal from "sweetalert2";
-//import fetch from "isomorphic-unfetch";
 import { csrfToken } from "../utils";
 import "../../tools/format";
 import { toLocaleDate } from "../../tools/format";

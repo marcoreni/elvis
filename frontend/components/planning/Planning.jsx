@@ -1,7 +1,6 @@
 import React, {Fragment} from "react";
 import PropTypes from "prop-types";
 import _ from "lodash";
-import fetch from "isomorphic-unfetch";
 
 import {toast} from "react-toastify";
 import {withTranslation} from "react-i18next";
