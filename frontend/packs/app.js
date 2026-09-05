@@ -16,15 +16,19 @@ import '../inspinia/font-awesome/js/all';
 
 import '../i18n';
 
+import wrapComponentRequireContext from '../tools/componentRequireContext';
+
 Rails.start();
 FontAwesome.config.autoReplaceSvg = "nest";
 
-// Support component names relative to this directory:
-var componentRequireContext = require.context(
+// Support component names relative to this directory. Wrapped so react_ujs's extensionless
+// lookups (`reqctx("./PasswordInput")`) resolve against the extension-anchored context map --
+// see frontend/tools/componentRequireContext.js.
+var componentRequireContext = wrapComponentRequireContext(require.context(
   'components',
   true,
-  /(?<!\.test)\.(jsx?|tsx?)$/
-);
+  /^((?!\.test\.).)*\.(jsx?|tsx?)$/
+));
 
 // Support images directory
 require.context('../images', true, /\.(gif|jpg|png|svg)$/i);
