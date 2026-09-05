@@ -58,7 +58,7 @@ describe("SelectedActivitiesTable — duration cell goes through activityApplica
             render(<SelectedActivitiesTable {...activitiesProps} />);
 
             expect(screen.getByText("1h30")).toBeInTheDocument();
-            expect(screen.getByText("45min")).toBeInTheDocument();
+            expect(screen.getByText("45 min")).toBeInTheDocument();
         });
     }
 
