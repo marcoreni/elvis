@@ -69,28 +69,12 @@ go, crossing real breaking boundaries:
 - `prettier` 1.19.1 → 3.9.6 — different default formatting rules; bumping would reformat large parts
   of the codebase in one commit.
 
-**Build tooling**: `shakapacker` is at 9.3.0 (target was 10 — one more major). `compression-webpack-plugin`
-is still `9` in devDependencies — check whether it's still wired up under rspack or can be dropped.
+**Build tooling**: `shakapacker` is at 9.3.0 (target was 10 — one more major).
 
-**Smaller/isolated, lower priority**: `jquery` 3→4, `sass-loader` 16→17.
+**Smaller/isolated, lower priority**: `jquery` 3.7.1 → 4, `sass-loader` 16→17.
 
-**Blocked on this repo's Node version**: `jsdom` 26→30 requires Node ≥22 — `engines.node` is pinned
-to `^20.9.0`. Don't bump past its current major without bumping Node first.
-
-**`node-sass` may now be dead weight** — `feat/bump-shakapacker` added `sass` (dart-sass) as a
-devDependency, and `sass-loader` 16 prefers `sass` over `node-sass` when both are installed (no
-`implementation` override was found in the rspack config). `node-sass` `^9.0.0` is still in
-devDependencies; confirm nothing forces it and drop it. Watch for dart-sass syntax incompatibilities
-in the `.scss` files if it turns out node-sass was actually being used.
-
-## jQuery: CDN vs bundle — three loads, mismatched builds
-
-The app currently pulls jQuery in three different ways and should settle on one:
-- `app/views/layouts/application.html.erb:23` — `<script src="https://code.jquery.com/jquery-3.7.1.slim.min.js">` (the **slim** build: no `$.ajax`, no `$.fn.animate`/effects). Only this layout loads it; `devise.html.erb` / `simple.html.erb` / `static_pages.html.erb` don't, and rely entirely on the bundle exposing `window.$` (see `frontend/packs/app.js`, which now does `window.jQuery = window.$ = jQuery` explicitly since the rspack migration broke the implicit exposure).
-- The npm `jquery` (3.7.1, full) bundled into the `app` pack.
-- `frontend/packs/app.js` also `import`s the vendored `../inspinia/js/jquery-3.1.1.min.js` — a third, older copy.
-
-Decide: drop the CDN tag and rely on the bundle everywhere (consistent, one version, full build — but adds jQuery to every page's JS payload), or keep the CDN but load the **full** build not slim and add it to the layouts that are missing it. Either way the vendored `jquery-3.1.1.min.js` import looks removable now that npm jquery is bundled — verify the inspinia plugins work against 3.7.1 first.
+**Node** is at 22 (`feat/bump-shakapacker`), which unblocks `jsdom` 26→30 (had required Node ≥22) —
+still a pending major bump, just no longer gated.
 
 ## Exotic (git-pinned) dependencies need a per-package decision, not a version bump
 
