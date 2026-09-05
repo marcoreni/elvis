@@ -432,6 +432,14 @@ pass — `activityApplications:units.*`). What's left, low priority:
   reach `toHourMin()` as `Date` objects, not ISO strings, the way the sibling
   `TimePreferencesTable` wraps them with `toDate()` — an ISO string would silently render
   `NaN:NaN`.
+- `activityApplications/summary/Activity.jsx:~315` has a third, still-untranslated duration
+  formatter (a class method, unrelated to `SelectedActivitiesTable`/`FormulaActivitiesModal`):
+  `` duration < 60 ? `- ${minutes} min` : `- ${hours}h${minutes}` ``, rendered around line 909.
+  Same class of fix as `activityApplications:units.*` would apply here too.
+- The two fixed call sites don't even agree with each other: `SelectedActivitiesTable.jsx` renders
+  `"45min"` (no separator), `FormulaActivitiesModal.jsx` renders `"45 min"` (space). Worth
+  standardizing on one convention (and French typography wants a non-breaking space before the
+  unit) next time either file is touched.
 
 ## `courses/LessonList.jsx` — remaining frozen-at-construct-time string
 
@@ -441,8 +449,27 @@ pass — `activityApplications:units.*`). What's left, low priority:
 generalPayments/`planning/Calendar.jsx` frozen-header notes above). The 12 react-table column
 headers are fine — they're rebuilt inside `render()`. (The Started/Stopped-dates,
 level-column and day-column issues previously logged here are all resolved — a
-`Intl.DateTimeFormat(i18n.language)` fix, planning lot 3c, and a `moment.locale("fr")` removal,
-respectively.)
+`Intl.DateTimeFormat(i18n.language, { timeZone: "Europe/Paris" })` fix, planning lot 3c, and a
+`moment.locale("fr")` removal, respectively — see the timezone note below for why the `timeZone`
+option matters.)
+
+## Frontend date formatting hardcodes `Europe/Paris` — not per-installation configurable
+
+`courses/LessonList.jsx` and `activityApplications/summary/Activity.jsx` format `begin_at`/
+`stopped_at` with an explicit `timeZone: "Europe/Paris"` option (each in its own
+`PARIS_DATE_FORMAT_OPTIONS` constant), fixing a real bug: those fields are Paris-zone timestamps
+at local midnight (`config.time_zone = "Paris"`, `config/application.rb:50`), and formatting them
+without an explicit `timeZone` uses the *browser's* zone instead — silently rolling the displayed
+date back a day for anyone west of Paris (found by the code-reviewer retroactively auditing PR
+#66, which had introduced the locale-aware formatting but not the timezone fix).
+
+Hardcoding `"Europe/Paris"` fixes today's single-tenant deployment but doesn't generalize: if Elvis
+is ever installed for a school outside the Paris timezone, both the backend
+(`config.time_zone = "Paris"`) and now these two frontend constants would need to become a
+per-installation setting (see the `Parameter`/`Settings` pattern in `CLAUDE.md`'s Multi-tenancy
+section) rather than a source-code constant. Not fixed here — flagging so it doesn't silently
+duplicate the day-off-by-one bug in reverse (Paris-vs-installation mismatch) once/if the app is
+ever deployed outside France.
 
 ## `frontend/tools/constants.js` — hardcoded French constants leak into English mode — RESOLVED
 

@@ -28,6 +28,12 @@ import { averageAgeDisplay } from "../planning/TimeIntervalHelpers";
 const FILTER_STORAGE_KEY = "lessons_list_filters";
 const PREFERENCES_STORAGE_KEY = "lessons_list_preferences";
 
+// begin_at/stopped_at are Paris-zone timestamps (config.time_zone = "Paris") at local midnight.
+// Formatting them without an explicit timeZone uses the *browser's* zone instead, which silently
+// rolls the displayed date back a day for anyone west of Paris -- exactly the en-US audience this
+// locale-aware formatting is otherwise correct for.
+const PARIS_DATE_FORMAT_OPTIONS = { timeZone: "Europe/Paris" };
+
 const defaultTableProps = () => ({
     page: 0,
     pageSize: 20,
@@ -1423,12 +1429,12 @@ const UserRow = ({
             {isWorkGroup && <td>{userInstrument}</td>}
             <td>
                 {(user.begin_at &&
-                        Intl.DateTimeFormat(i18n.language).format(new Date(user.begin_at))) ||
+                        Intl.DateTimeFormat(i18n.language, PARIS_DATE_FORMAT_OPTIONS).format(new Date(user.begin_at))) ||
                     ""}
             </td>
             <td>
                 {(user.stopped_at &&
-                        Intl.DateTimeFormat(i18n.language).format(new Date(user.stopped_at))) ||
+                        Intl.DateTimeFormat(i18n.language, PARIS_DATE_FORMAT_OPTIONS).format(new Date(user.stopped_at))) ||
                     ""}
             </td>
         </tr>
