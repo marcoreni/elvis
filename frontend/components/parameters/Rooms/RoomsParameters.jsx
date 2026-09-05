@@ -2,8 +2,6 @@ import BaseParameters from "../BaseParameters";
 import Localisations from "./Localisations";
 import React from "react";
 import {withTranslation} from "react-i18next";
-import swal from "sweetalert2";
-import {csrfToken} from "../../utils";
 
 class RoomsParameters extends BaseParameters
 {

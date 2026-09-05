@@ -1,41 +1,66 @@
-import React, {useState} from "react";
-import DateRangePickerLib from "@wojtekmaj/react-daterange-picker";
-import swal from 'sweetalert2';
-
 /**
- * @param {{defaultStart: Date, defaultEnd: Date, onChange: ({start: Date, end: Date}) => void}} props onChange was call only when start AND end values was set
+ * @param {{defaultStart: Date, defaultEnd: Date, onChange: ({start: Date, end: Date}) => void}} props
+ *        onChange is called only when start AND end are set, or when both are cleared
  * @returns {JSX.Element}
  * @constructor
  */
-export default function DateRangePicker({defaultStart, defaultEnd, onChange})
-{
+export default function DateRangePicker({
+    defaultStart,
+    defaultEnd,
+    onChange,
+}) {
     let start = defaultStart;
     let end = defaultEnd;
 
-    return <DateRangePickerLib
-        locale={"fr-FR"}
-        format={"d/M/y"}
-        value={[start, end]}
-        onChange={(values) =>
-        {
-            if (values == undefined)
-            {
-                onChange({start: undefined, end: undefined});
-                return;
-            }
+    const handleStart = e => {
+        const value = e.target.value; // "yyyy-MM-dd" or ""
 
-            if(values[0] && new Date(values[0]).getFullYear() < 1000 || values[1] && new Date(values[1]).getFullYear() < 1000) {
-                return;
-            }
+        if (!value) start = undefined;
+        else start = new Date(value);
 
-            if(values[0])
-                start = values[0];
+        emit();
+    };
 
-            if(values[1])
-                end = values[1];
+    const handleEnd = e => {
+        const value = e.target.value; // "yyyy-MM-dd" or ""
 
-            if(start && end && onChange)
-                onChange({ start, end });
-        }}
-         />
+        if (!value) end = undefined;
+        else end = new Date(value);
+
+        emit();
+    };
+
+    const emit = () => {
+        if (!onChange) return;
+
+        if (start && end) onChange({ start: start, end: end });
+        else if (!start && !end) onChange({ start: undefined, end: undefined });
+    };
+
+    return (
+        <span
+            style={{ display: "inline-flex", gap: "4px", alignItems: "center" }}
+        >
+            <input
+                type="date"
+                className="form-control"
+                value={toInputValue(start)}
+                onChange={handleStart}
+            />
+            {" → "}
+            <input
+                type="date"
+                className="form-control"
+                value={toInputValue(end)}
+                onChange={handleEnd}
+            />
+        </span>
+    );
+}
+
+function toInputValue(date) {
+    if (!date) return "";
+
+    const d = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+    return d.toISOString().slice(0, 10);
 }

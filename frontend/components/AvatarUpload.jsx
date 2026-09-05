@@ -1,7 +1,6 @@
 import React from "react";
 import _ from "lodash";
 
-import * as ActiveStorage from "activestorage";
 import Dropzone from "react-dropzone";
 import { csrfToken } from "./utils";
 

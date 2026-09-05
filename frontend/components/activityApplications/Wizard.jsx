@@ -6,7 +6,6 @@ import moment from "moment";
 
 import StepZilla from "react-stepzilla";
 
-import ActivityChoice from "./ActivityChoice";
 import Evaluation from "./Evaluation";
 import Validation from "./Validation";
 

@@ -4,7 +4,6 @@ import Checkbox from "../common/Checkbox";
 import PropTypes from "prop-types";
 import * as api from "../../tools/api";
 import swal from "sweetalert2";
-import { csrfToken } from "../utils";
 import moment from "moment";
 
 moment.locale("fr");

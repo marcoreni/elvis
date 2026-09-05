@@ -1,11 +1,9 @@
 import React, { Fragment, useEffect, useState } from "react";
 import * as api from "../tools/api";
 import Modal from "react-modal";
-import ContactForm, { familyLinks } from "./userForm/ContactForm";
 import { Field, Form } from "react-final-form";
 import { required } from "../tools/validators";
 import _ from "lodash";
-import InlineYesNoRadio from "./common/InlineYesNoRadio";
 import Input from "./common/Input";
 import swal from "sweetalert2";
 

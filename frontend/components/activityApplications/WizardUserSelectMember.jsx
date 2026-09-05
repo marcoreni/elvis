@@ -1,16 +1,10 @@
-import React, {forwardRef, Fragment, useEffect, useImperativeHandle, useState} from "react";
+import React, {Fragment} from "react";
 import * as api from "../../tools/api";
 import swal from "sweetalert2";
 import ToggleButtonGroup from "../ToggleButtonGroup";
 import _ from "lodash";
-import ContactForm from "../userForm/ContactForm";
 import Modal from "react-modal";
-import SelectMultiple from "../common/SelectMultiple";
 import CreatableSelect from "react-select/lib/Creatable";
-import {Field, Form} from "react-final-form";
-import Input from "../common/Input";
-import {required} from "../../tools/validators";
-import arrayMutators from "final-form-arrays";
 import UserAvatar from "../UserAvatar";
 import WizardContactForm from "../userForm/WizardContactForm";
 import { userIsMinor } from "../../tools/utils";

@@ -1,9 +1,9 @@
 import React, {Fragment} from "react";
 import {Field} from "react-final-form";
-import {required, isValidAge, composeValidators, isValidNN} from "../../tools/validators";
+import {required, composeValidators, isValidNN} from "../../tools/validators";
 import Input from "../common/Input";
 import InputSelect from "../common/InputSelect";
-import {toBirthday, toAge} from "../../tools/format";
+import {toAge} from "../../tools/format";
 import CreateOrganizationModal from "./CreateOrganizationModal";
 import { MESSAGES } from "../../tools/constants";
 import DatePicker from "react-datepicker";

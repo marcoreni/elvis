@@ -1,7 +1,5 @@
-import React, { Component } from "react";
+import React from "react";
 import Switch from "react-switch";
-import swal from "sweetalert2";
-import { csrfToken } from "../utils";
 
 export default class SeasonSwitch extends React.Component {
     constructor(props) {

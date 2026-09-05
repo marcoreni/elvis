@@ -2,7 +2,6 @@ import React from "react";
 import _ from "lodash";
 import * as api from "../../../tools/api";
 import swal from "sweetalert2"
-import Input from "../../common/Input";
 import {toLocaleDate} from '../../../tools/format'
 
 export default class ReplicateAct extends React.Component
