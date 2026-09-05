@@ -77,7 +77,7 @@ class YearlyCalendar extends React.Component {
 
     renderMonth({ year, month }, customClasses) {
         return (
-            <div key={`year−{year}-year−{month}`} className="year-grid-month">
+            <div key={`year-${year}-month-${month}`} className="year-grid-month">
                 <div className="year-grid-month-label">
                     {moment(new Date(year, month, 1)).format("MMMM")}
                 </div>

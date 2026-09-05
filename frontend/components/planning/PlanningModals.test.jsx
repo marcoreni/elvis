@@ -4,12 +4,21 @@
 // singleton + useTranslation() / withTranslation("planning").
 //
 // Each component is rendered with the minimum props needed to reach the extracted strings;
-// assertions cover only strings owned by the component under test. YearlyCalendar is not
-// exercised here — it mounts react-yearly-calendar, which does not render cleanly in jsdom.
+// assertions cover only strings owned by the component under test. YearlyCalendar now renders
+// one @fullcalendar/react instance per season month; mounting ~10 real FullCalendars pushes this
+// test past the 5s default timeout under full-suite load, so @fullcalendar/react is stubbed here
+// (the assertions only cover YearlyCalendar's own translated headings, not the grid).
 
 import React from "react";
 import {render, screen} from "@testing-library/react";
 import i18n from "../../i18n";
+
+// YearlyCalendar imports @fullcalendar/react + the daygrid/interaction plugins at module scope;
+// the plugin packages throw "import the top-level fullcalendar lib first" unless the real
+// @fullcalendar/core is registered, so stub all three.
+vi.mock("@fullcalendar/react", () => ({default: () => null}));
+vi.mock("@fullcalendar/daygrid", () => ({default: {}}));
+vi.mock("@fullcalendar/interaction", () => ({default: {}}));
 
 import PauseDetailModal from "./PauseDetailModal";
 import RoomActivitiesListModal from "./RoomActivitiesListModal";
