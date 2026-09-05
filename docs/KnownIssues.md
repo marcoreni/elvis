@@ -303,13 +303,10 @@ Same pattern again (added by i18n-06 `parameters` lot E):
   `Plannings/PlanningDisplayParameters.jsx`, and `Localization/LocalizationParameters.jsx`.
 All harmless today (locale switch = full server reload); logged for the same cleanup pass.
 
-`parameters/Evaluations/EvaluationSlot.jsx` — the `evaluations.slot.requiredError` key
-("Le créneau est requis" / "The slot is required") is **unreachable copy**: it is gated on
-`errors.name` while the field is registered as `sessionHour` (`register('sessionHour', …)`), so
-the react-hook-form error object never has a `name` entry and the message never renders.
-Pre-existing (identical `{errors.name && "Le créneau est requis"}` at the pre-lot-E revision);
-lot E only swapped the literal for `t(…)`. Fix is `errors.sessionHour` — do it in the cleanup
-pass, not mid-extraction. Covered by an inline comment in `PlanningsSettings.test.jsx`.
+`parameters/Evaluations/EvaluationSlot.jsx` — the `evaluations.slot.requiredError` key was
+**unreachable copy** (gated on `errors.name` while the field registers as `sessionHour`).
+**Fixed** in `fix/wrong-property-refs` → `errors.sessionHour` (its `PlanningsSettings.test.jsx`
+note was updated in the same commit).
 
 ## Locale-file verbatim typos — RESOLVED
 
@@ -371,15 +368,32 @@ worth keeping as a guard against a future caller building the row by hand. The s
 files still has the identical unguarded shape one line up — `seasonStart.label` throws if
 `from_season_id` doesn't match any fetched season — low reachability (`get_seasons_and_pricing_categories`
 returns every season) but the asymmetry is now visible since the `seasonEnd` half was hardened.
-- `activityApplications/summary/Summary.jsx:~1322` reads `e.activity.activity_reéf_id` (stray
-  accented `é`) where it means `activity_ref_id` — a silent lookup failure in the `courseOption`
-  label, not a crash.
-- `parameters/Practice/Materials.jsx` "Est Actif ?" column: `accessor: d => d.name` should be
-  `d => d.active` — the `Cell` renders the right value from `props.original.active`, but
-  sorting/filtering that column operates on the name field instead.
-- `parameters/Payments/AdhesionSettings.jsx` second `useEffect`'s error branch uses
-  `icon: 'error'`; every other swal in the file uses `type: 'error'`. sweetalert2 is pinned at
-  `^7.26.11` (`icon:` only exists from v9), so that one dialog renders without its error styling.
+- ~~`activityApplications/summary/Summary.jsx:~1322` reads `e.activity.activity_reéf_id`~~ **Fixed**
+  (`fix/wrong-property-refs`) — stray accented `é` → `activity_ref_id`. Same commit also guarded the
+  adjacent `e.activity.teacher.first_name` with `?.` — `Activity#teacher` returns `nil` when an
+  activity has no `is_main` teacher (`app/models/activity.rb`), which would `TypeError` the whole
+  `Summary` render for a change-questionnaire on such an activity.
+- ~~`parameters/Practice/Materials.jsx` "Est Actif ?" column `accessor: d => d.name`~~ **Changed**
+  (`fix/wrong-property-refs`) to `d => d.active` so the accessor returns the field the column
+  represents — but this is **inert**: `parameters/BaseDataTable.jsx` renders `<ReactTable manual>`,
+  so react-table v6 never runs client-side sort/filter; both go to the server via `onFetchData`
+  keyed on the column `id`, not the accessor (`pratice_parameters_controller.rb` filters
+  `where(active: filter[:value] == "oui")` and orders by `params[:sorted][:id]`). Kept for
+  consistency. Footgun: `BaseDataTable.jsx`'s `defaultFilterMethod` does `row[filter.id].toLowerCase()`
+  — dead while `manual`, but would now throw on the boolean `active` value if anyone removes
+  `manual` (the numeric `prix` column already has this hazard).
+- **Server-side `active` filter is hardcoded French** — `pratice_parameters_controller.rb:86` (and
+  `:107` for features): `query.where(active: filter[:value] == "oui")`. An EN-locale admin filtering
+  the "active" column gets `active: false` for anything other than the literal string `"oui"`. This
+  is the actual reason that column's filtering is broken (not the accessor above). Fold into the
+  controller-strings pass (roadmap Phase 07 P6).
+- ~~`parameters/Payments/AdhesionSettings.jsx` … error branch uses `icon: 'error'`~~ **Fixed**
+  (`fix/wrong-property-refs`) — `type: 'error'` to match the other swals + the pinned sweetalert2 `^7`.
+  The **same `icon:` / v7 defect is still open elsewhere** (inert under `^7` — `icon:` is an unknown
+  param, no crash, just no icon styling): `editParameters/MailSettings.jsx:37,43`,
+  `editParameters/CsvSettings.jsx:30,36`, `planning/ActivityDetailsModal.jsx:918`,
+  `activityItems/EditApplication.jsx:60`, `userForm/Absences.jsx:92,97`. Sweep them together (or
+  when `sweetalert2` is finally bumped — see the deps section).
 - `parameters/Payments/AdhesionSettings.jsx`'s inline `<ReactTable>` (not routed through
   `BaseDataTable`) passes none of the `common:reactTable.*` pagination props, so react-table's
   English defaults ("No rows found", "Page", "of", "rows") render inside the French UI.
@@ -387,13 +401,16 @@ returns every season) but the asymmetry is now visible since the `seasonEnd` hal
   defaults to the translated string `t("payments.adhesion.modal.defaultLabel")`. If an EN-locale
   admin leaves the field untouched, that literal English string gets POSTed and persisted as data —
   a UI-string-as-data smell that should be an explicit server-side default, not a client i18n key.
-- `parameters/Evaluations/EvaluationSlot.jsx`: the required-field error `{errors.name &&
-  t("evaluations.slot.requiredError")}` guards on `errors.name`, but the field is registered as
-  `register('sessionHour', ...)` — the message can never render. Fix: `errors.sessionHour`.
-- `editParameters/SchoolParameters.jsx`: `register("email", {required: true, pattern:
-  validateEmail})` passes a function where react-hook-form's `pattern:` needs a RegExp
-  (`tools/format.jsx`'s `validateEmail` is a matcher, not a RegExp) — RHF's `instanceof RegExp`
-  guard silently drops the rule, so `required` still fires but the format check is a no-op.
+- ~~`parameters/Evaluations/EvaluationSlot.jsx`: the required-field error guards on `errors.name`
+  while the field is `register('sessionHour', …)`~~ **Fixed** (`fix/wrong-property-refs`) —
+  `errors.sessionHour`.
+- ~~`editParameters/SchoolParameters.jsx`: `register("email", {… pattern: validateEmail})` passes a
+  function where RHF's `pattern:` needs a RegExp~~ **Fixed** (`fix/wrong-property-refs`) — switched
+  to `validate: value => !!validateEmail(value)` so the format check actually runs. Minor leftover
+  (matches the sibling `contactPhone` field's existing shape): a `validate` failure renders the
+  `emailRequired` key ("L'email est requis"), so a *malformed* non-empty address shows a
+  "required" message. A dedicated `parameters:editParameters.school.emailInvalid` key would fix
+  the copy — do it in the parameters-domain follow-up, not here.
 - `courses/LessonList.jsx` calls `moment.locale("fr")` at module scope *and* on every `render()`
   (`:15, :594`), which also clobbers the process-wide moment locale `frontend/i18n/index.js`
   maintains — any component rendered after `LessonList` on the same page gets French dates

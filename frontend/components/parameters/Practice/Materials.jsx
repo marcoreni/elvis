@@ -30,7 +30,7 @@ class Materials extends BaseDataTable
             {
                 id: "active",
                 Header: t("practice.cols.activeMaterials"),
-                accessor: d => d.name,
+                accessor: d => d.active,
                 Cell: props => <p>{props.original.active ? t("shared.yes") : t("shared.no")}</p>
             },
             {

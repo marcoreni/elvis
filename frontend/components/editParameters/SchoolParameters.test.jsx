@@ -61,10 +61,11 @@ vi.mock("../../tools/api", () => ({
     },
 }));
 
-// `../../tools/format` is NOT mocked: `validateEmail` is a matcher *function*, and RHF's
-// `pattern:` guard (`x instanceof RegExp`) rejects it, so the email pattern rule is a
-// production no-op (see docs/KnownIssues.md). `required` still fires, which is all the submit
-// tests below rely on.
+// `../../tools/format` is NOT mocked: the real `validateEmail` matcher is exercised. It used to
+// be wired as `register("email", { pattern: validateEmail })` — a function where RHF's `pattern:`
+// needs a RegExp, so the format rule was silently dropped (see docs/KnownIssues.md). Fixed in
+// `fix/wrong-property-refs` to `validate: value => !!validateEmail(value)`; section 6 below
+// asserts the format check now actually blocks a malformed address on submit.
 
 // --- components/utils: only `csrfToken` is imported by SchoolParameters. --------------------
 vi.mock("../utils", () => ({csrfToken: "test-csrf-token"}));
@@ -371,4 +372,58 @@ describe("SchoolParameters — submit / swal", () => {
             });
         },
     );
+});
+
+// ============================================================================================
+// 6. Email format validation — `validate: value => !!validateEmail(value)` (fix/wrong-property-refs)
+//    Pre-fix this was `pattern: validateEmail` (a function, silently dropped by RHF), so a
+//    malformed-but-non-empty address sailed past client validation straight into onSubmit.
+// ============================================================================================
+describe("SchoolParameters — email format validation", () => {
+    const fillOtherRequired = (container) => {
+        const set = (name, value) =>
+            fireEvent.change(container.querySelector(`[name="${name}"]`), {target: {value}});
+        set("name", "My School");
+        set("contactPhone", "0601020304");
+        set("street", "1 rue de la Paix");
+        set("city", "Paris");
+        set("postalCode", "75001");
+        set("siretRna", "12345678901234");
+    };
+
+    test.each(["fr", "en"])(
+        "a malformed email renders the emailRequired <p> and blocks onSubmit in %s",
+        async (lng) => {
+            await i18n.changeLanguage(lng);
+            const {container} = render(<SchoolParameters {...baseProps} />);
+            fillOtherRequired(container);
+            fireEvent.change(container.querySelector('[name="email"]'), {
+                target: {value: "not-an-email"},
+            });
+
+            fireEvent.submit(container.querySelector("form"));
+
+            await screen.findByText(tP(lng)("editParameters.school.emailRequired"));
+            // handleSubmit must NOT have reached onSubmit -> no loading swal
+            expect(swal).not.toHaveBeenCalled();
+        },
+    );
+
+    test("a well-formed email passes validation and onSubmit fires", async () => {
+        await i18n.changeLanguage("fr");
+        global.fetch = vi.fn().mockResolvedValue({ok: true, json: () => Promise.resolve({})});
+        const {container} = render(<SchoolParameters {...baseProps} />);
+        fillOtherRequired(container);
+        fireEvent.change(container.querySelector('[name="email"]'), {
+            target: {value: "valid@example.com"},
+        });
+
+        fireEvent.submit(container.querySelector("form"));
+
+        await waitFor(() => expect(swal).toHaveBeenCalled());
+        expect(swal.mock.calls[0][0].title).toBe(tC("fr")("loading"));
+        expect(
+            screen.queryByText(tP("fr")("editParameters.school.emailRequired")),
+        ).not.toBeInTheDocument();
+    });
 });

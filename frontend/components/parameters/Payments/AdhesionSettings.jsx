@@ -74,7 +74,7 @@ export default function AdhesionSettings()
                     swal({
                         title: t("shared.errorTitle"),
                         text: t("shared.genericError"),
-                        icon: 'error'
+                        type: 'error'
                     });
                 }
 

@@ -556,6 +556,44 @@ describe("AdhesionSettings", () => {
         expect(opts.title).toBe(tP(lng)("shared.errorTitle"));
         expect(opts.text).toBe(tP(lng)("shared.genericError"));
     });
+
+    // The update-adhesion `!response.ok` branch used `icon: 'error'` while the pinned
+    // sweetalert2 ^7 (and every other swal in the file) expects `type: 'error'` — `icon:` does
+    // not exist before v9, so that dialog rendered without its error styling. Fixed to
+    // `type: 'error'` in `fix/wrong-property-refs`.
+    test.each(["fr", "en"])(
+        "update-adhesion !ok branch fires swal with `type: 'error'` (not `icon:`) in %s",
+        async (lng) => {
+            await i18n.changeLanguage(lng);
+            // show_adhesion -> enabled:true so `adhesionEnabled` flips false->true and the
+            // `[adhesionEnabled]` effect runs; update_adhesion -> !ok to hit the error branch.
+            global.fetch = vi.fn((url) =>
+                String(url).includes("show_adhesion")
+                    ? Promise.resolve({
+                          ok: true,
+                          json: () => Promise.resolve({adhesion_enabled: true, seasons: []}),
+                      })
+                    : Promise.resolve({ok: false, json: () => Promise.resolve({})}),
+            );
+
+            render(<AdhesionSettings />);
+
+            await waitFor(() =>
+                expect(
+                    swal.mock.calls.find(
+                        (c) => c[0] && c[0].text === tP(lng)("shared.genericError"),
+                    ),
+                ).toBeTruthy(),
+            );
+
+            const errCall = swal.mock.calls.find(
+                (c) => c[0] && c[0].text === tP(lng)("shared.genericError"),
+            );
+            expect(errCall[0].title).toBe(tP(lng)("shared.errorTitle"));
+            expect(errCall[0].type).toBe("error");
+            expect(errCall[0]).not.toHaveProperty("icon");
+        },
+    );
 });
 
 // ============================================================================================
