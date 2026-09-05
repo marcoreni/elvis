@@ -103,11 +103,25 @@ class ApplicationController < ActionController::Base
   def resolve_locale
     available = available_locales.map(&:to_sym)
 
-    [current_user&.locale, cookies[:locale], localization_settings[:default_language], I18n.default_locale]
+    [persisted_user_locale, cookies[:locale], localization_settings[:default_language], I18n.default_locale]
       .map { |candidate| candidate.to_s.presence&.to_sym }
       .find { |locale| locale && available.include?(locale) } ||
       available.first ||
       I18n.default_locale
+  end
+
+  # The already-signed-in user's saved locale, read straight from the Warden session WITHOUT
+  # running authentication strategies. switch_locale is a prepend_around_action, so it runs
+  # before verify_authenticity_token; calling `current_user` here would make Warden authenticate
+  # the submitted credentials on a sign-in POST, and a *successful* auth fires Devise's
+  # clean_up_csrf_token_on_authentication hook, which deletes session[:_csrf_token] before the
+  # CSRF check reads it -> every valid login 422s with InvalidAuthenticityToken. `warden.user`
+  # only deserializes an already-persisted user (event: :fetch, which the Devise hook ignores)
+  # and returns nil on the sign-in request itself, where the user isn't signed in yet anyway.
+  def persisted_user_locale
+    request.env["warden"]&.user(scope: :user)&.locale
+  rescue StandardError
+    nil
   end
 
   # Locales this installation actually exposes to its users — the subset of the code-shipped
