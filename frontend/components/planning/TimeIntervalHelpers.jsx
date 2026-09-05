@@ -3,9 +3,9 @@ import { ISO_DATE_FORMAT } from "../utils";
 import { getActivityColor } from "../../tools/utils";
 import { capitalFirstLetters } from "../../tools/format";
 import i18n from "../../i18n";
-const moment = require("moment-timezone");
+import moment from "moment-timezone";
 
-//returns hsl color for planning intervals 
+//returns hsl color for planning intervals
 const MAX_HUE = 360;
 const DEFAULT_SAT = 68;
 const DEFAULT_LUM = 60;
@@ -20,7 +20,7 @@ export const resourceGetters = {
     "teacher": getTeacherId
 };
 export const getColors = (resources) => {
-    const colors = {}; 
+    const colors = {};
 
     resources.forEach((res, i) => {
         colors[res.id] = getUniformHSLColor(i, resources.length);
@@ -140,7 +140,7 @@ export const formatIntervalsForSchedule = (rawIntervals, conflict, user, resourc
             bgColor = int.is_validated ? kindColors[int.kind].validated : kindColors[int.kind].bgColor;
             borderColor = bgColor;
         }
-        
+
         // If specific multi resource view
         if (isMultiView) {
             const resourceId = resourceGetters[resourceType](int);

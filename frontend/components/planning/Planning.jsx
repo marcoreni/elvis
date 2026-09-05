@@ -6,7 +6,7 @@ import {toast} from "react-toastify";
 import {withTranslation} from "react-i18next";
 import * as api from "../../tools/api";
 
-const moment = require("moment-timezone");
+import moment from "moment-timezone";
 
 import ActivityDetailsModal from "./ActivityDetailsModal";
 import SelectActivity from "./SelectActivity";
