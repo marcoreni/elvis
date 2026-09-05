@@ -8,7 +8,7 @@ import './application_print.scss';
 import jQuery from 'jquery';
 window.jQuery = window.$ = jQuery;
 
-import 'jquery-ujs';
+import Rails from "@rails/ujs";
 import '../inspinia/js/plugins/metisMenu/jquery.metisMenu.js';
 import '../inspinia/js/plugins/slimscroll/jquery.slimscroll.js';
 import '../inspinia/js/plugins/jasny/jasny-bootstrap.js';
@@ -18,6 +18,7 @@ import '../inspinia/font-awesome/js/all';
 
 import '../i18n';
 
+Rails.start();
 FontAwesome.config.autoReplaceSvg = "nest";
 
 // Support component names relative to this directory:
