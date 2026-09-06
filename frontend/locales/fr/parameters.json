@@ -440,5 +440,13 @@
             "ruleUpdated": "Règle mise à jour",
             "ruleDeleted": "Règle supprimée"
         }
+    },
+    "errorHistory": {
+        "title": "Historique des 20 dernières erreurs",
+        "relatedObjects": "Objets ActiveRecord reliés",
+        "variableName": "Nom de la variable",
+        "class": "Classe",
+        "id": "Id",
+        "stackTrace": "Trace d'appel"
     }
 }

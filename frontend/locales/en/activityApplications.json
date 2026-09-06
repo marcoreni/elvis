@@ -404,5 +404,21 @@
         "studentForAwakening": "Student for Awakening no. {{n}}",
         "chooseStudent": "Choose a student",
         "title": "Additional students / companions selection"
+    },
+    "stopList": {
+        "columns": {
+            "name": "Name",
+            "season": "Season",
+            "activity": "Activity",
+            "reason": "Reason",
+            "actions": "Actions"
+        },
+        "activityWith": "{{activity}} with {{teacher}}",
+        "cancelStopRequest": "Cancel the stop request",
+        "title": "Stop list",
+        "heading_one": "Stop list ({{count}} found)",
+        "heading_other": "Stop list ({{count}} found)",
+        "season": "Season",
+        "all": "ALL"
     }
 }

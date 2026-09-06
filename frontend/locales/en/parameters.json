@@ -440,5 +440,13 @@
             "ruleUpdated": "Rule updated",
             "ruleDeleted": "Rule deleted"
         }
+    },
+    "errorHistory": {
+        "title": "History of the last 20 errors",
+        "relatedObjects": "Related ActiveRecord objects",
+        "variableName": "Variable name",
+        "class": "Class",
+        "id": "Id",
+        "stackTrace": "Stack trace"
     }
 }

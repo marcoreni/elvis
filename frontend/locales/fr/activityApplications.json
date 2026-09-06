@@ -404,5 +404,21 @@
         "studentForAwakening": "Élève pour l'Éveil n° {{n}}",
         "chooseStudent": "Choisir un élève",
         "title": "Choix des élèves supplémentaires / accompagnants"
+    },
+    "stopList": {
+        "columns": {
+            "name": "Nom",
+            "season": "Saison",
+            "activity": "Activité",
+            "reason": "Raison",
+            "actions": "Actions"
+        },
+        "activityWith": "{{activity}} avec {{teacher}}",
+        "cancelStopRequest": "Annuler la demande d'arrêt",
+        "title": "Liste des arrêts",
+        "heading_one": "Liste des arrêts ({{count}} trouvé)",
+        "heading_other": "Liste des arrêts ({{count}} trouvés)",
+        "season": "Saison",
+        "all": "TOUTES"
     }
 }

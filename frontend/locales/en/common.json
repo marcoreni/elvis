@@ -1,202 +1,237 @@
 {
-  "actions": {
-    "save": "Save",
-    "cancel": "Cancel",
-    "delete": "Delete",
-    "validate": "Submit",
-    "confirm": "Confirm",
-    "send": "Send",
-    "add": "Add",
-    "create": "Create",
-    "edit": "Edit",
-    "update": "Update",
-    "close": "Close"
-  },
-  "loading": "Loading...",
-  "tabs": {
-    "incomplete": "This tab is not fully filled in"
-  },
-  "dragAndDrop": {
-    "invalidType": "File type not allowed",
-    "tooManyFiles": "Only one file allowed",
-    "selectButton": "Select",
-    "currentDocument": "Current document:",
-    "none": "none",
-    "imageAlt": "unable to load image"
-  },
-  "confirm": {
-    "sure": "Are you sure?"
-  },
-  "reactTable": {
-    "previousText": "Previous",
-    "nextText": "Next",
-    "loadingText": "Loading...",
-    "noDataText": "No data",
-    "pageText": "Page",
-    "ofText": "of",
-    "rowsText": "results"
-  },
-  "baseDataTable": {
-    "updateTitle": "Update {{name}}",
-    "createTitle": "Create {{name}}",
-    "deleteTitle": "Delete {{name}}",
-    "defaultResource": "this item",
-    "deleteQuestion": "Do you really want to delete {{name}}: {{label}}?",
-    "loadError": "An error occurred while loading the data.",
-    "itemNotFound": "The item could not be found in the list of items.",
-    "fullScreenTooltip": "Make the table fullscreen"
-  },
-  "itemFormModal": {
-    "updateTitleFallback": "Update",
-    "createTitleFallback": "Create",
-    "saveButton": "Save",
-    "errorsHeading": "Error(s):"
-  },
-  "deleteItemModal": {
-    "titleFallback": "Deletion",
-    "questionFallback": "Do you really want to delete this item?",
-    "genericError": "An error occurred while deleting."
-  },
-  "weekdays": [
-    "Sunday",
-    "Monday",
-    "Tuesday",
-    "Wednesday",
-    "Thursday",
-    "Friday",
-    "Saturday"
-  ],
-  "months": [
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December"
-  ],
-  "messages": {
-    "noAnswer": "NO ANSWER",
-    "errMinLength": "This field must be at least {{length}} characters long",
-    "errExactLength": "This field must be exactly {{length}} characters long",
-    "errStartsWith": "This field does not have the right prefix",
-    "errRequired": "This information is required.",
-    "errIsInvalid": "Input errors were detected. Please check the information provided.",
-    "errIsInvalidId": "The Last name - First name - date of birth combination is already taken, you already have an account with us. Please log in to your personal space ",
-    "errAgreementGdpr": "To continue enrolling, you must give your consent to the collection of your personal data.",
-    "errAgreementImageRight": "To continue enrolling, you must authorize us to use your image.",
-    "errMustHavePayer": "A payer must be declared.",
-    "errMustCheckRules": "To continue, you must accept the internal rules",
-    "errPhoneFormat": "The phone number is invalid.",
-    "errAtLeastOnePhone": "To continue enrolling, you must provide at least one phone number.",
-    "errAtLeastOneAddress": "To continue enrolling, you must provide at least one postal address.",
-    "errPostalCode": "The postal code is invalid.",
-    "errMustSelectUser": "Please select a user before continuing.",
-    "errMustChooseSlot": "Please choose a slot before continuing.",
-    "errMustChooseActivity": "Please choose an activity before continuing.",
-    "errMustChooseTeacher": "Please choose a teacher before continuing.",
-    "errMustChooseRoom": "Please choose a room before continuing.",
-    "errNegativeDateRange": "The start and end dates provided are invalid.",
-    "errNegativeHourRange": "The start and end times provided are invalid.",
-    "errDataMissing": "Cannot continue, required data is missing.",
-    "errInvalidAge": "The date of birth cannot be in the future.",
-    "errInvalidNN": "The national register number is invalid.",
-    "errInvalidEmail": "The email address entered is invalid.",
-    "errLinksMissing": "You must specify the family relationship for each family member.",
-    "errIntervalIntegrity": "The start must be earlier than the end",
-    "errOrdGte": "The value must be greater than or equal to {{mark}}",
-    "errOrdGt": "The value must be greater than {{mark}}",
-    "errOrdLte": "The value must be less than or equal to {{mark}}",
-    "errOrdLt": "The value must be less than {{mark}}",
-    "errMustCheckConsent": "You must give your consent to continue.",
-    "errMustRespond": "You must answer to continue.",
-    "errMustSelectPrice": "Select a rate or delete the row.",
-    "errCannotDuplicatePrice": "You cannot add the same product with the same rate twice.",
-    "errMustSelectPaymentTerms": "Please select the payment terms."
-  },
-  "apiErrors": {
-    "default": "An error occurred while retrieving the data",
-    "errIntervalValidated": "This slot has already been validated.",
-    "errIntervalCreationFailed": "The slot could not be added. One or more slots already exist in this time range.",
-    "errIntervalCreationPartial": "The slot(s) were partially created due to conflicts with the schedule.",
-    "errIntervalBounds": "The specified slot is invalid. The start time must be earlier than the end time.",
-    "errIntervalNotFound": "This slot cannot be deleted. It has already been validated or deleted by a staff member.",
-    "errGroupNameExists": "The group already exists for this season and this teacher.",
-    "errGroupNameEmpty": "The group name cannot be empty.",
-    "errEvaluationIntervalAlreadyTaken": "This evaluation slot is already taken, please choose another one."
-  },
-  "kindsLabel": {
-    "availability": "Availability",
-    "lesson": "Course",
-    "evaluation": "Evaluation",
-    "option": "Option"
-  },
-  "preApplicationActionLabels": {
-    "new": "New enrollment",
-    "renew": "Renewal",
-    "change": "Change",
-    "stop": "Stop",
-    "pursueChildhood": "Continuing from Kids",
-    "cham": "CHAM enrollment"
-  },
-  "recurrenceTypes": {
-    "daily": "Every day",
-    "weekly": "Every week",
-    "biweekly": "Every two weeks",
-    "monthly": "Every month",
-    "bimonthly": "Every two months",
-    "yearly": "Every year"
-  },
-  "yesNo": {
-    "yes": "Yes",
-    "no": "No"
-  },
-  "userWithInfos": {
-    "profile": "Profile",
-    "payments": "Payments",
-    "email": "Email",
-    "phones": "Phone(s)",
-    "none": "None",
-    "family": "Family",
-    "toCallFirst": "To contact first",
-    "payer": "Payer",
-    "legalGuardian": "Legal guardian"
-  },
-  "listPreferences": {
-    "title": "List preferences",
-    "enabled": "Enabled",
-    "disabled": "Disabled",
-    "reset": "Reset"
-  },
-  "imageManager": {
-    "missingImageAlt": "missing image",
-    "deleteImage": "Delete the image",
-    "chooseImage": "Choose an image",
-    "change": "Change"
-  },
-  "dateFilter": {
-    "year": "Year",
-    "month": "Month",
-    "day": "Day"
-  },
-  "jobProgress": {
-    "errorTitle": "Error",
-    "inProgress": "In progress",
-    "completed": "Completed",
-    "failed": "Failed",
-    "errorCount_one": "{{count}} error…",
-    "errorCount_other": "{{count}} errors…",
-    "errorLine": "Line: {{line}}, Message: {{message}}"
-  },
-  "userAvatar": {
-    "alt": "avatar"
-  },
-  "passwordInput": {
-    "minChars": "({{n}} characters minimum)"
-  }
+    "actions": {
+        "save": "Save",
+        "cancel": "Cancel",
+        "delete": "Delete",
+        "validate": "Submit",
+        "confirm": "Confirm",
+        "send": "Send",
+        "add": "Add",
+        "create": "Create",
+        "edit": "Edit",
+        "update": "Update",
+        "close": "Close"
+    },
+    "loading": "Loading...",
+    "tabs": {
+        "incomplete": "This tab is not fully filled in"
+    },
+    "dragAndDrop": {
+        "invalidType": "File type not allowed",
+        "tooManyFiles": "Only one file allowed",
+        "selectButton": "Select",
+        "currentDocument": "Current document:",
+        "none": "none",
+        "imageAlt": "unable to load image"
+    },
+    "confirm": {
+        "sure": "Are you sure?"
+    },
+    "reactTable": {
+        "previousText": "Previous",
+        "nextText": "Next",
+        "loadingText": "Loading...",
+        "noDataText": "No data",
+        "pageText": "Page",
+        "ofText": "of",
+        "rowsText": "results"
+    },
+    "baseDataTable": {
+        "updateTitle": "Update {{name}}",
+        "createTitle": "Create {{name}}",
+        "deleteTitle": "Delete {{name}}",
+        "defaultResource": "this item",
+        "deleteQuestion": "Do you really want to delete {{name}}: {{label}}?",
+        "loadError": "An error occurred while loading the data.",
+        "itemNotFound": "The item could not be found in the list of items.",
+        "fullScreenTooltip": "Make the table fullscreen"
+    },
+    "itemFormModal": {
+        "updateTitleFallback": "Update",
+        "createTitleFallback": "Create",
+        "saveButton": "Save",
+        "errorsHeading": "Error(s):"
+    },
+    "deleteItemModal": {
+        "titleFallback": "Deletion",
+        "questionFallback": "Do you really want to delete this item?",
+        "genericError": "An error occurred while deleting."
+    },
+    "weekdays": [
+        "Sunday",
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+    ],
+    "months": [
+        "January",
+        "February",
+        "March",
+        "April",
+        "May",
+        "June",
+        "July",
+        "August",
+        "September",
+        "October",
+        "November",
+        "December"
+    ],
+    "messages": {
+        "noAnswer": "NO ANSWER",
+        "errMinLength": "This field must be at least {{length}} characters long",
+        "errExactLength": "This field must be exactly {{length}} characters long",
+        "errStartsWith": "This field does not have the right prefix",
+        "errRequired": "This information is required.",
+        "errIsInvalid": "Input errors were detected. Please check the information provided.",
+        "errIsInvalidId": "The Last name - First name - date of birth combination is already taken, you already have an account with us. Please log in to your personal space ",
+        "errAgreementGdpr": "To continue enrolling, you must give your consent to the collection of your personal data.",
+        "errAgreementImageRight": "To continue enrolling, you must authorize us to use your image.",
+        "errMustHavePayer": "A payer must be declared.",
+        "errMustCheckRules": "To continue, you must accept the internal rules",
+        "errPhoneFormat": "The phone number is invalid.",
+        "errAtLeastOnePhone": "To continue enrolling, you must provide at least one phone number.",
+        "errAtLeastOneAddress": "To continue enrolling, you must provide at least one postal address.",
+        "errPostalCode": "The postal code is invalid.",
+        "errMustSelectUser": "Please select a user before continuing.",
+        "errMustChooseSlot": "Please choose a slot before continuing.",
+        "errMustChooseActivity": "Please choose an activity before continuing.",
+        "errMustChooseTeacher": "Please choose a teacher before continuing.",
+        "errMustChooseRoom": "Please choose a room before continuing.",
+        "errNegativeDateRange": "The start and end dates provided are invalid.",
+        "errNegativeHourRange": "The start and end times provided are invalid.",
+        "errDataMissing": "Cannot continue, required data is missing.",
+        "errInvalidAge": "The date of birth cannot be in the future.",
+        "errInvalidNN": "The national register number is invalid.",
+        "errInvalidEmail": "The email address entered is invalid.",
+        "errLinksMissing": "You must specify the family relationship for each family member.",
+        "errIntervalIntegrity": "The start must be earlier than the end",
+        "errOrdGte": "The value must be greater than or equal to {{mark}}",
+        "errOrdGt": "The value must be greater than {{mark}}",
+        "errOrdLte": "The value must be less than or equal to {{mark}}",
+        "errOrdLt": "The value must be less than {{mark}}",
+        "errMustCheckConsent": "You must give your consent to continue.",
+        "errMustRespond": "You must answer to continue.",
+        "errMustSelectPrice": "Select a rate or delete the row.",
+        "errCannotDuplicatePrice": "You cannot add the same product with the same rate twice.",
+        "errMustSelectPaymentTerms": "Please select the payment terms."
+    },
+    "apiErrors": {
+        "default": "An error occurred while retrieving the data",
+        "errIntervalValidated": "This slot has already been validated.",
+        "errIntervalCreationFailed": "The slot could not be added. One or more slots already exist in this time range.",
+        "errIntervalCreationPartial": "The slot(s) were partially created due to conflicts with the schedule.",
+        "errIntervalBounds": "The specified slot is invalid. The start time must be earlier than the end time.",
+        "errIntervalNotFound": "This slot cannot be deleted. It has already been validated or deleted by a staff member.",
+        "errGroupNameExists": "The group already exists for this season and this teacher.",
+        "errGroupNameEmpty": "The group name cannot be empty.",
+        "errEvaluationIntervalAlreadyTaken": "This evaluation slot is already taken, please choose another one."
+    },
+    "kindsLabel": {
+        "availability": "Availability",
+        "lesson": "Course",
+        "evaluation": "Evaluation",
+        "option": "Option"
+    },
+    "preApplicationActionLabels": {
+        "new": "New enrollment",
+        "renew": "Renewal",
+        "change": "Change",
+        "stop": "Stop",
+        "pursueChildhood": "Continuing from Kids",
+        "cham": "CHAM enrollment"
+    },
+    "recurrenceTypes": {
+        "daily": "Every day",
+        "weekly": "Every week",
+        "biweekly": "Every two weeks",
+        "monthly": "Every month",
+        "bimonthly": "Every two months",
+        "yearly": "Every year"
+    },
+    "yesNo": {
+        "yes": "Yes",
+        "no": "No"
+    },
+    "userWithInfos": {
+        "profile": "Profile",
+        "payments": "Payments",
+        "email": "Email",
+        "phones": "Phone(s)",
+        "none": "None",
+        "family": "Family",
+        "toCallFirst": "To contact first",
+        "payer": "Payer",
+        "legalGuardian": "Legal guardian"
+    },
+    "listPreferences": {
+        "title": "List preferences",
+        "enabled": "Enabled",
+        "disabled": "Disabled",
+        "reset": "Reset"
+    },
+    "imageManager": {
+        "missingImageAlt": "missing image",
+        "deleteImage": "Delete the image",
+        "chooseImage": "Choose an image",
+        "change": "Change"
+    },
+    "dateFilter": {
+        "year": "Year",
+        "month": "Month",
+        "day": "Day"
+    },
+    "jobProgress": {
+        "errorTitle": "Error",
+        "inProgress": "In progress",
+        "completed": "Completed",
+        "failed": "Failed",
+        "errorCount_one": "{{count}} error…",
+        "errorCount_other": "{{count}} errors…",
+        "errorLine": "Line: {{line}}, Message: {{message}}"
+    },
+    "userAvatar": {
+        "alt": "avatar"
+    },
+    "passwordInput": {
+        "minChars": "({{n}} characters minimum)"
+    },
+    "removeComponent": {
+        "successTitle": "Success",
+        "successMessage": "Deletion completed. The page will reload when this message is closed",
+        "errorTitle": "Error",
+        "errorMessage": "Something went wrong",
+        "confirmTitle": "Are you sure you want to delete this item?"
+    },
+    "commentSection": {
+        "title": "Comments",
+        "addComment": "Add a comment",
+        "addCommentTitle": "Add a comment",
+        "editCommentTitle": "Edit a comment",
+        "save": "Save",
+        "byOn": "by {{first}} {{last}} on {{date}}",
+        "modifiedOn": "Modified on {{date}}",
+        "unknownUser": "user",
+        "unknownLast": "unknown",
+        "needSchedule": "A payment schedule must be created to leave comments."
+    },
+    "omnisearch": {
+        "search": "Search",
+        "searchNoun": "Search",
+        "closeSearchForm": "Close search form",
+        "foundTotal_one": "{{count}} found in total",
+        "foundTotal_other": "{{count}} found in total",
+        "roomWithFloor": "{{name}} (floor: {{floor}})",
+        "kinds": {
+            "user": "User",
+            "activity": "Activity",
+            "application": "Enrolment request",
+            "adhesion": "Membership",
+            "room": "Room",
+            "practiceRoom": "Practice room"
+        }
+    }
 }
