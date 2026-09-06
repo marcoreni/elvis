@@ -105,6 +105,24 @@ ignore_unused:
   - "activerecord.attributes.material.prix"
   - "activerecord.attributes.music_genre.name"
   - "activerecord.attributes.room_features.name"
+  # activerecord.attributes.season.*: added for Phase 07 P3 (enrolment & money views). The season
+  # form (app/views/seasons/_season_form.html.erb + _date_field.html.erb) labels its fields with
+  # bare `f.label :attr` on a `form_with model: @season` builder, so Rails resolves each caption
+  # through `Season.human_attribute_name(:attr)` at render time. That lookup is not a literal
+  # `t("activerecord.attributes.season.…")` call the static scan can credit, so every one of these
+  # leaves reads as unused despite genuine runtime use — same pattern as the user.{last_name,
+  # first_name} entries above. Leaf-listed (not a `season.*` wildcard) so a real orphan would
+  # still surface.
+  - "activerecord.attributes.season.label"
+  - "activerecord.attributes.season.nb_lessons"
+  - "activerecord.attributes.season.start"
+  - "activerecord.attributes.season.end"
+  - "activerecord.attributes.season.opening_date_for_applications"
+  - "activerecord.attributes.season.opening_date_for_new_applications"
+  - "activerecord.attributes.season.closing_date_for_applications"
+  - "activerecord.attributes.season.date_for_teacher_planning_validation"
+  - "activerecord.attributes.season.is_current"
+  - "activerecord.attributes.season.next_season_id"
   - "devise.**"
   # Side/profile navigation captions. config/initializers/20-menu_generator.rb sets each menu
   # item's `caption:` to a `:"menu.<key>"` Symbol; lib/elvis/menu_manager.rb#caption then does

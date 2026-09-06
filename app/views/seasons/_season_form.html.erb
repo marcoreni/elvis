@@ -6,49 +6,49 @@
 
 <% if has_errors %>
   <div class="m-t h-auto bg-danger rounded p-sm text-white m-b-sm">
-    <strong>Impossible de sauvegarder la saison.</strong><br />
-    Veuillez corriger les champs en rouge ci-dessous.
+    <strong><%= t("views.seasons.form.save_error_title") %></strong><br />
+    <%= t("views.seasons.form.save_error_body") %>
   </div>
 <% end %>
 
 <%= form_with scope: :season, model: @season, local: true, multipart: false do |f| %>
   <div class="form-group">
-    <%= f.label :Nom_de_la_saison %><br />
+    <%= f.label :label %><br />
     <%= f.text_field :label, autofocus: false, id: "label", class: "form-control" %>
   </div>
 
   <div class="form-group">
-    <%= f.label "Nombre de leçons (prorata par défaut)", for: "nb_lessons" %><br />
+    <%= f.label :nb_lessons, for: "nb_lessons" %><br />
     <%= f.number_field :nb_lessons, autofocus: false, id: "nb_lessons", class: "form-control" %>
   </div>
 
-  <%= render "seasons/date_field", f: f, attr: :start, label: "Début", required: false %>
-  <%= render "seasons/date_field", f: f, attr: :end, label: "Fin", required: false %>
+  <%= render "seasons/date_field", f: f, attr: :start, required: false %>
+  <%= render "seasons/date_field", f: f, attr: :end, required: false %>
 
-  <fieldset><legend>Pour la saison</legend>
+  <fieldset><legend><%= t("views.seasons.form.for_the_season") %></legend>
     <div style="margin-left: 1em">
-      <%= render "seasons/date_field", f: f, attr: :opening_date_for_applications, label: "Date d'ouverture des ré-inscriptions", required: true %>
-      <%= render "seasons/date_field", f: f, attr: :opening_date_for_new_applications, label: "Date d'ouverture des nouvelles inscriptions", required: true %>
-      <%= render "seasons/date_field", f: f, attr: :closing_date_for_applications, label: "Date de clôture des inscriptions", required: true %>
-      <%= render "seasons/date_field", f: f, attr: :date_for_teacher_planning_validation, label: "Date de validation de planning par les professeurs", required: false %>
+      <%= render "seasons/date_field", f: f, attr: :opening_date_for_applications, required: true %>
+      <%= render "seasons/date_field", f: f, attr: :opening_date_for_new_applications, required: true %>
+      <%= render "seasons/date_field", f: f, attr: :closing_date_for_applications, required: true %>
+      <%= render "seasons/date_field", f: f, attr: :date_for_teacher_planning_validation, required: false %>
     </div>
   </fieldset>
 
   <div class="form-group">
     <div class="checkbox checkbox-primary">
       <%= f.check_box :is_current, autocomplete: "off", id: "is_current", disabled: true %>
-      <%= f.label "Saison en cours", for: "is_current", class: "control-label" %>
+      <%= f.label :is_current, for: "is_current", class: "control-label" %>
     </div>
   </div>
 
   <div class="form-group">
     <div class="select">
-      <%= f.label "Saison suivante", for: "next_season_id", class: "control-label" %>
+      <%= f.label :next_season_id, for: "next_season_id", class: "control-label" %>
       <%
         # on va constituer la liste des saisons qui peuvent être "saison suivante", en incluant la saison "aucune"
         seasons = []
         # on ajoute, en 1ère position, un élément "aucune saison", avec next_season_id=0
-        seasons.unshift (Season.new(id: 0, label: "<aucune>"))
+        seasons.unshift (Season.new(id: 0, label: t("views.seasons.form.no_next_season")))
         seasons << @season.next_season if @season.next_season_id
         seasons.concat Season.get_next_season_candidates(exclude_id: @season.id).to_a
       %>
@@ -65,6 +65,6 @@
   </div>
   -->
   <div class="form-group">
-    <%= f.submit "Sauvegarder", class: "btn btn-primary block full-width m-b" %>
+    <%= f.submit t("common.actions.save"), class: "btn btn-primary block full-width m-b" %>
   </div>
 <% end %>
