@@ -1,4 +1,4 @@
-<h1>New Band</h1>index
+<h1><%= t("views.practice.bands.new.title") %></h1>
 
 <%= react_component('practice/BandCreator', {
     bandTypes: @band_types,
@@ -7,4 +7,4 @@
     season: Season.current_apps_season,
 }) %>
 
-<%= link_to 'Back', parameters_practice_parameters_path + "#tab-2", class: 'btn btn-primary' %>
+<%= link_to t("common.actions.back"), parameters_practice_parameters_path + "#tab-2", class: 'btn btn-primary' %>

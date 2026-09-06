@@ -1,5 +1,5 @@
 <div class="row wrapper border-bottom white-bg page-heading">
-  <h2>Ajouter une salle</h2>
+  <h2><%= t("views.rooms.new.title") %></h2>
 </div>
 
 <br/>
@@ -7,7 +7,7 @@
 <div class="col-lg-4">
   <% if @room.errors.any? %>
     <div id="error_explanation" class="alert alert-warning">
-      <p><%= pluralize(@room.errors.count, "erreur") %> a empêché la création de cette école :</p>
+      <p><%= t("views.shared.form_errors.heading", count: @room.errors.count) %></p>
 
       <ul>
         <% @room.errors.full_messages.each do |message| %>
@@ -56,11 +56,11 @@
           <span class="fileinput-filename"></span>
         </div>
         <span class="input-group-addon btn btn-default btn-file">
-                      <span class="fileinput-new">Choisir Image</span>
-                      <span class="fileinput-exists">Changer</span>
+                      <span class="fileinput-new"><%= t("views.rooms.new.choose_image") %></span>
+                      <span class="fileinput-exists"><%= t("views.rooms.new.change_image") %></span>
           <%= f.file_field :picture %>
                   </span>
-        <a href="#" class="input-group-addon btn btn-default fileinput-exists" data-dismiss="fileinput">Supprimer</a>
+        <a href="#" class="input-group-addon btn btn-default fileinput-exists" data-dismiss="fileinput"><%= t("common.actions.delete") %></a>
       </div>
     </div>
 
@@ -90,6 +90,6 @@
     </div>-->
 
 
-    <%= f.submit "Ajouter", class: "btn btn-primary block full-width m-b" %>
+    <%= f.submit t("common.actions.add"), class: "btn btn-primary block full-width m-b" %>
   <% end %>
 </div>

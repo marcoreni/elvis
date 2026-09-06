@@ -23,6 +23,8 @@ en:
             back: Back
         labels:
             actions: Actions
+            active: Active
+            inactive: Inactive
         confirm:
             sure: Are you sure?
 
@@ -86,6 +88,27 @@ en:
             payment_status:
                 label: Label
                 color: Color
+            band:
+                name: Name
+                band_type_id: Band type
+                music_genre_id: Music genre
+                blacklisted: Blacklisted
+            band_type:
+                name: Name
+            flat_rate:
+                name: Name
+                nb_hour: Number of hours
+                solo_duo_rate: Solo / duo price
+                group_rate: Group price
+            location:
+                label: Site name
+            material:
+                name: Name
+                prix: Rental price
+            music_genre:
+                name: Name
+            room_features:
+                name: Name
         errors:
             models:
                 user:
@@ -471,3 +494,112 @@ en:
                 heading: Conflict resolution
             show_for_room:
                 heading: Planning of the classroom
+        locations:
+            index:
+                title: Locations
+                create_button: New location
+                error_title: Error
+                cols:
+                    name: Name
+            new:
+                title: New location
+            edit:
+                title: Edit location
+        practice:
+            band_types:
+                index:
+                    title: Band types
+                    create_button: New band type
+                    cols:
+                        name: Name
+                new:
+                    title: New band type
+                edit:
+                    title: Edit band type
+            bands:
+                index:
+                    title: Bands
+                    create_button: New band
+                    view: View
+                    cols:
+                        band: Band
+                        type: Band type
+                        music_genre: Music genre
+                new:
+                    title: New band
+                show:
+                    name_label: "Name:"
+                    band_type_label: "Band type:"
+                    music_genre_label: "Music genre:"
+                    blacklisted_label: "Blacklisted:"
+            flat_rates:
+                index:
+                    title: Flat rates
+                    create_button: New flat rate
+                    cols:
+                        name: Name
+                        nb_hours: Number of hours
+                        solo_duo_rate: Solo / duo price
+                        group_rate: Group price
+                new:
+                    title: New flat rate
+                edit:
+                    title: Edit flat rate
+            materials:
+                index:
+                    title: Equipment
+                    create_button: New equipment
+                    cols:
+                        name: Name
+                        rental_price: Rental price
+                new:
+                    title: New equipment
+                edit:
+                    title: Edit equipment
+            music_genres:
+                index:
+                    title: Music genres
+                    create_button: New music genre
+                    cols:
+                        name: Name
+                new:
+                    title: New music genre
+                edit:
+                    title: Edit music genre
+                show:
+                    name_label: "Name:"
+            room_features:
+                index:
+                    title: Room features
+                    create_button: New feature
+                    cols:
+                        name: Name
+                form:
+                    active_label: "Active:"
+                new:
+                    title: New feature
+                edit:
+                    title: Edit feature
+        rooms:
+            index:
+                title: Room reference list
+                add_room: Add a room
+                floor: "Floor %{number}"
+                ground_floor: Ground floor
+                room_kind: "%{kind} room"
+                location_line: "Location: %{location}, floor %{floor}"
+                activities_label: "Activities:"
+                features_label: "Features:"
+                planning_button: Planning
+                delete_disabled_title: "Activities are linked to this room; you cannot delete it. Please delete the activities first."
+            new:
+                title: Add a room
+                choose_image: Choose image
+                change_image: Change
+            edit:
+                title: "Edit room \"%{label}\""
+            edit_activities:
+                title: "Room activities: %{label}"
+        shared:
+            form_errors:
+                heading: "%{count} error(s) prevented this record from being saved:"

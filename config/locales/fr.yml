@@ -19,6 +19,8 @@ fr:
             back: Retour
         labels:
             actions: Actions
+            active: Actif
+            inactive: Inactif
         confirm:
             sure: Êtes-vous sûr ?
 
@@ -89,6 +91,27 @@ fr:
             payment_status:
                 label: Libellé
                 color: Couleur
+            band:
+                name: Nom
+                band_type_id: Type de groupe
+                music_genre_id: Genre musical
+                blacklisted: Blacklisté
+            band_type:
+                name: Nom
+            flat_rate:
+                name: Nom
+                nb_hour: Nombre d'heures
+                solo_duo_rate: Prix solo / duo
+                group_rate: Prix groupe
+            location:
+                label: Nom du site
+            material:
+                name: Nom
+                prix: Prix de location
+            music_genre:
+                name: Nom
+            room_features:
+                name: Nom
         errors:
             models:
                 user:
@@ -474,3 +497,112 @@ fr:
                 heading: Résolution du conflit
             show_for_room:
                 heading: Planning de la salle
+        locations:
+            index:
+                title: Localisations
+                create_button: Nouvelle localisation
+                error_title: Erreur
+                cols:
+                    name: Nom
+            new:
+                title: Nouvelle localisation
+            edit:
+                title: Modification localisation
+        practice:
+            band_types:
+                index:
+                    title: Types de groupes
+                    create_button: Nouveau type de groupe
+                    cols:
+                        name: Nom
+                new:
+                    title: Nouveau type de groupe
+                edit:
+                    title: Modification type de groupe
+            bands:
+                index:
+                    title: Groupes
+                    create_button: Nouveau groupe
+                    view: Voir
+                    cols:
+                        band: Groupe
+                        type: Type de groupe
+                        music_genre: Genre musical
+                new:
+                    title: Nouveau groupe
+                show:
+                    name_label: "Nom :"
+                    band_type_label: "Type de groupe :"
+                    music_genre_label: "Genre musical :"
+                    blacklisted_label: "Blacklisté :"
+            flat_rates:
+                index:
+                    title: Forfaits
+                    create_button: Nouveau forfait
+                    cols:
+                        name: Nom
+                        nb_hours: Nombre d'heures
+                        solo_duo_rate: Prix solo / duo
+                        group_rate: Prix groupe
+                new:
+                    title: Nouveau forfait
+                edit:
+                    title: Modification forfait
+            materials:
+                index:
+                    title: Matériels
+                    create_button: Nouveau matériel
+                    cols:
+                        name: Nom
+                        rental_price: Prix de location
+                new:
+                    title: Nouveau matériel
+                edit:
+                    title: Modification matériel
+            music_genres:
+                index:
+                    title: Genres musicaux
+                    create_button: Nouveau genre musical
+                    cols:
+                        name: Nom
+                new:
+                    title: Nouveau genre musical
+                edit:
+                    title: Modification genre musical
+                show:
+                    name_label: "Nom :"
+            room_features:
+                index:
+                    title: Caractéristiques des salles
+                    create_button: Nouvelle caractéristique
+                    cols:
+                        name: Nom
+                form:
+                    active_label: "Actif :"
+                new:
+                    title: Nouvelle caractéristique
+                edit:
+                    title: Modification caractéristique
+        rooms:
+            index:
+                title: Référentiel des salles
+                add_room: Ajouter une salle
+                floor: "Étage %{number}"
+                ground_floor: Rez-de-chaussée
+                room_kind: "Salle de %{kind}"
+                location_line: "Lieu : %{location}, étage %{floor}"
+                activities_label: "Activités :"
+                features_label: "Caractéristiques :"
+                planning_button: Planning
+                delete_disabled_title: "Des activités sont reliées à cette salle, vous ne pouvez pas la supprimer. Merci de supprimer les activités en amont."
+            new:
+                title: Ajouter une salle
+                choose_image: Choisir Image
+                change_image: Changer
+            edit:
+                title: "Éditer la salle \"%{label}\""
+            edit_activities:
+                title: "Activités de la salle %{label}"
+        shared:
+            form_errors:
+                heading: "%{count} erreur(s) empêchent l'enregistrement :"
