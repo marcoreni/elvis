@@ -625,7 +625,7 @@ en:
                 heading: New season
             edit:
                 heading: 'Edit "%{label}"'
-                warning: Warning
+                warning: 'Warning:'
                 autosave_notice: Any change made to the table is saved immediately, even without pressing the save buttons.
             form:
                 save_error_title: Unable to save the season.

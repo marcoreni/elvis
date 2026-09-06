@@ -60,4 +60,20 @@ RSpec.describe "Seasons / adhesion i18n", type: :request do
       expect(I18n.t(key, locale: "fr")).not_to eq(I18n.t(key, locale: "en"))
     end
   end
+
+  # The season form labels its fields with bare `f.label :attr`, resolved via
+  # Season.human_attribute_name -> activerecord.attributes.season.*. A missing key there does NOT
+  # raise "translation missing"; Rails silently humanizes the attribute name instead. So the
+  # marker assertion above cannot catch a dropped season.* key -- assert a couple of the
+  # configured labels render verbatim, distinct from their humanized fallback.
+  it "renders the configured activerecord.attributes.season.* form labels on /seasons/new" do
+    cookies[:locale] = "fr"
+    get "/seasons/new"
+    expect(response).to have_http_status(:ok)
+
+    body = CGI.unescapeHTML(response.body)
+    expect(body).to include("Date de clôture des inscriptions")
+    expect(body).to include("Date de validation du planning par les professeurs")
+    expect(body).to include("Nom de la saison")
+  end
 end

@@ -628,7 +628,7 @@ fr:
                 heading: Nouvelle saison
             edit:
                 heading: 'Éditer "%{label}"'
-                warning: Attention
+                warning: 'Attention :'
                 autosave_notice: Toutes les modifications sur le tableau seront directement enregistrées, même sans appuyer sur les boutons de sauvegarde.
             form:
                 save_error_title: Impossible de sauvegarder la saison.

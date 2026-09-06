@@ -13,7 +13,7 @@
 
 <%= form_with scope: :season, model: @season, local: true, multipart: false do |f| %>
   <div class="form-group">
-    <%= f.label :label %><br />
+    <%= f.label :label, for: "label" %><br />
     <%= f.text_field :label, autofocus: false, id: "label", class: "form-control" %>
   </div>
 
