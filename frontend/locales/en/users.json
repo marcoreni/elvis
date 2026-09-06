@@ -309,5 +309,32 @@
         "yes": "yes",
         "no": "no",
         "title": "Advanced search"
+    },
+    "passwordReset": {
+        "emailFallback": "no@address.found",
+        "greeting": "<h5>Hello <b>{{name}}</b></h5>",
+        "emailSentInfo": "<p>An email will be sent to the address <br/><b>{{email}}</b><br/>You will be redirected to the login page</p>",
+        "redirection": "Redirecting",
+        "uniquenessError": "Last name - first name - date of birth must match a user",
+        "required": "Required",
+        "formTitle": "Reset by last name - first name - date of birth",
+        "firstNamePlaceholder": "your first name",
+        "lastNamePlaceholder": "your last name",
+        "birthdayPlaceholder": "dd/mm/yyyy",
+        "submit": "Send a recovery email",
+        "btn": {
+            "emailSent": "Email sent!",
+            "emailSendError": "Error while sending the email.",
+            "errorTitle": "Error",
+            "linkGenError": "Error while generating the link",
+            "userInfoError": "Unable to fetch the user information",
+            "successTitle": "Success",
+            "genericError": "An error occurred.",
+            "resetLinkTitle": "Reset link",
+            "sendByMail": "Send by email",
+            "copy": "Copy",
+            "linkCopied": "Link copied!",
+            "copyError": "Error while copying"
+        }
     }
 }

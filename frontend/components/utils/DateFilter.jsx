@@ -1,5 +1,6 @@
 import React from "react";
 import _ from "lodash";
+import { withTranslation } from "react-i18next";
 
 import moment from "moment";
 
@@ -34,6 +35,7 @@ class DateFilter extends React.Component {
     }
 
     render() {
+        const { t } = this.props;
         const minYear = moment(this.props.minYear).year();
         const maxYear = moment(this.props.maxYear).year();
 
@@ -46,7 +48,7 @@ class DateFilter extends React.Component {
                         name="y"
                         value={this.state.date.y}
                         onChange={this.handleDateChange.bind(this)}
-                        placeholder="Année"
+                        placeholder={t("common:dateFilter.year")}
                     />
                 }
                 {
@@ -56,7 +58,7 @@ class DateFilter extends React.Component {
                         name="m"
                         value={this.state.date.m}
                         onChange={this.handleDateChange.bind(this)}
-                        placeholder="Mois"
+                        placeholder={t("common:dateFilter.month")}
                         enabled={this.state.date.y || false}
                     />
                 }
@@ -67,7 +69,7 @@ class DateFilter extends React.Component {
                         name="d"
                         value={this.state.date.d}
                         onChange={this.handleDateChange.bind(this)}
-                        placeholder="Jour"
+                        placeholder={t("common:dateFilter.day")}
                         enabled={
                             (this.state.date.y || false) &&
                             (this.state.date.m || false)
@@ -118,4 +120,4 @@ export function RangedSelect(props) {
     );
 }
 
-export default DateFilter;
+export default withTranslation("common")(DateFilter);

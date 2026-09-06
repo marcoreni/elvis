@@ -171,5 +171,16 @@
     "enabled": "Activées",
     "disabled": "Désactivées",
     "reset": "Réinitialiser"
+  },
+  "imageManager": {
+    "missingImageAlt": "image manquante",
+    "deleteImage": "Supprimer l'image",
+    "chooseImage": "Choisir une image",
+    "change": "Changer"
+  },
+  "dateFilter": {
+    "year": "Année",
+    "month": "Mois",
+    "day": "Jour"
   }
 }

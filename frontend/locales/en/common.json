@@ -171,5 +171,16 @@
     "enabled": "Enabled",
     "disabled": "Disabled",
     "reset": "Reset"
+  },
+  "imageManager": {
+    "missingImageAlt": "missing image",
+    "deleteImage": "Delete the image",
+    "chooseImage": "Choose an image",
+    "change": "Change"
+  },
+  "dateFilter": {
+    "year": "Year",
+    "month": "Month",
+    "day": "Day"
   }
 }

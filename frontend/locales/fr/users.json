@@ -309,5 +309,32 @@
         "yes": "oui",
         "no": "non",
         "title": "Recherche avancée"
+    },
+    "passwordReset": {
+        "emailFallback": "pas@dadresse.détectée",
+        "greeting": "<h5>Bonjour <b>{{name}}</b></h5>",
+        "emailSentInfo": "<p>Un email va vous être envoyé sur l'adresse <br/><b>{{email}}</b><br/>Vous allez être redirigé vers la page de connexion</p>",
+        "redirection": "Redirection",
+        "uniquenessError": "Nom - prénom - date de naissance doit correspondre à un utilisateur",
+        "required": "Requis",
+        "formTitle": "Réinitialisation par nom - prénom - date de naissance",
+        "firstNamePlaceholder": "votre prénom",
+        "lastNamePlaceholder": "votre nom",
+        "birthdayPlaceholder": "jj/mm/aaaa",
+        "submit": "Envoyer un mail de récupération",
+        "btn": {
+            "emailSent": "Email envoyé !",
+            "emailSendError": "Erreur lors de l'envoi de l'email.",
+            "errorTitle": "Erreur",
+            "linkGenError": "Erreur lors de la génération du lien",
+            "userInfoError": "Impossible de récupérer les informations de l'utilisateur",
+            "successTitle": "Succès",
+            "genericError": "Une erreur est survenue.",
+            "resetLinkTitle": "Lien de réinitialisation",
+            "sendByMail": "Envoyer par mail",
+            "copy": "Copier",
+            "linkCopied": "Lien copié !",
+            "copyError": "Erreur lors de la copie"
+        }
     }
 }
