@@ -396,5 +396,21 @@
         "successBody": "<p>Your whole community has been imported</p><p>You will be redirected to the list of your members</p>",
         "errorTitle": "Error",
         "errorBody": "<p>An error occurred during the import. Please try again.</p>"
+    },
+    "userAttach": {
+        "searchPrompt": "Search for accounts to attach",
+        "noResults": "No results found",
+        "alreadyAttachedHtml": "<h3><b>{{name}}</b> is already attached to <b>{{referent}}</b><br><br>Do you want to attach them to<br><b>{{target}}</b> instead?</h3>",
+        "confirmAttachHtml": "<h3>Do you want to attach<br><br><b>{{name}}</b><br><br>to<br><br><b>{{target}}</b>?</h3>",
+        "hasAttachedTitle": "This user has attached accounts",
+        "confirmAttachWithListHtml": "<h3>Do you want to attach<br><br><b>{{name}}</b> as well as:<br>{{list}}<br><br>to<br><br><b>{{target}}</b>?</h3>",
+        "attachSuccess": "Account(s) attached successfully",
+        "attachError": "An error occurred while sending the data:",
+        "attachedAccountsTitle": "Attached accounts",
+        "noAttachedAccounts": "This user has no attached accounts",
+        "attachAccountsTitle": "Attach accounts",
+        "currentAccount": "Current account",
+        "alreadyAttachedToCurrent": "Already attached to the current account",
+        "attach": "Attach"
     }
 }

@@ -1,15 +1,15 @@
 import React from "react";
+import { withTranslation } from "react-i18next";
 import swal from "sweetalert2";
 import ReactTable from "react-table";
 import { csrfToken } from "./utils";
-import {makeDebounce} from "../tools/inputs";
+import { makeDebounce } from "../tools/inputs";
 import DetachAccount from "./DetachAccount";
 import Modal from "react-modal";
 
 import moment from "moment";
 
 const requestData = (pageSize, page, sorted, filtered, format) => {
-
     return fetch(`/users/list${format ? "." + format : ""}`, {
         method: "POST",
         credentials: "same-origin",
@@ -40,15 +40,15 @@ class UserAttach extends React.Component {
             loading: false,
             filter: {},
             selected: [],
-            no_data_text: "Chercher des comptes à rattacher",
+            no_data_text: props.t("users:userAttach.searchPrompt"),
         };
 
-        this.fetchAttachedUsers = this.fetchAttachedUsers.bind(this)
-        this.fetchUsers = this.fetchUsers.bind(this)
-        this.selectUserToAttach = this.selectUserToAttach.bind(this)
-        this.postAttachUsers = this.postAttachUsers.bind(this)
-        this.fetchReferentUser = this.fetchReferentUser.bind(this)
-        this.loadAttachedUsers = this.loadAttachedUsers.bind(this)
+        this.fetchAttachedUsers = this.fetchAttachedUsers.bind(this);
+        this.fetchUsers = this.fetchUsers.bind(this);
+        this.selectUserToAttach = this.selectUserToAttach.bind(this);
+        this.postAttachUsers = this.postAttachUsers.bind(this);
+        this.fetchReferentUser = this.fetchReferentUser.bind(this);
+        this.loadAttachedUsers = this.loadAttachedUsers.bind(this);
     }
 
     async swalShowLoading() {
@@ -61,43 +61,61 @@ class UserAttach extends React.Component {
     }
 
     async fetchReferentUser(ref_user_id) {
-        const res = await fetch("/users/"+ref_user_id+"/infos");
+        const res = await fetch("/users/" + ref_user_id + "/infos");
         const data = await res.json();
-        return data
+        return data;
     }
 
     async selectUserToAttach(user) {
+        const { t } = this.props;
+
         this.swalShowLoading();
 
-        const attached_users = await this.fetchAttachedUsers(user.id)
+        const attached_users = await this.fetchAttachedUsers(user.id);
+
+        const userName = `${user.first_name} ${user.last_name}`;
+        const targetName = `${this.props.user.first_name} ${this.props.user.last_name}`;
 
         if (attached_users.length < 1) {
-            if (user.attached_to_id) { //si compte déjà rattaché
-                const referent_user = await this.fetchReferentUser(user.attached_to_id)
-                swal.hideLoading()
+            if (user.attached_to_id) {
+                //si compte déjà rattaché
+                const referent_user = await this.fetchReferentUser(
+                    user.attached_to_id
+                );
+                swal.hideLoading();
 
                 swal({
-                    type: 'warning',
-                    html:`<h3><b>${user.first_name} ${user.last_name}</b> est déjà rattaché·e à <b>${referent_user.first_name} ${referent_user.last_name}</b><br><br>
-                    Souhaitez-vous la·e rattacher à<br><b>${this.props.user.first_name} ${this.props.user.last_name}</b> à la place ?</h3>`,
-                    cancelButtonText: 'Annuler',
+                    type: "warning",
+                    html: t("users:userAttach.alreadyAttachedHtml", {
+                        name: userName,
+                        referent: `${referent_user.first_name} ${referent_user.last_name}`,
+                        target: targetName,
+                    }),
+                    cancelButtonText: t("common:actions.cancel"),
                     showCancelButton: !swal.isLoading(),
                     showLoaderOnConfirm: true,
                     allowOutsideClick: () => !swal.isLoading(),
-                    preConfirm: async () => {await this.postAttachUsers([user]);}
-                })
+                    preConfirm: async () => {
+                        await this.postAttachUsers([user]);
+                    },
+                });
             } else {
-                swal.hideLoading()
+                swal.hideLoading();
 
                 swal({
-                    type: 'info',
-                    html:`<h3>Souhaitez-vous rattacher<br><br><b>${user.first_name} ${user.last_name}</b><br><br>à<br><br><b>${this.props.user.first_name} ${this.props.user.last_name}</b> ?</h3>`,
-                    cancelButtonText: 'Annuler',
+                    type: "info",
+                    html: t("users:userAttach.confirmAttachHtml", {
+                        name: userName,
+                        target: targetName,
+                    }),
+                    cancelButtonText: t("common:actions.cancel"),
                     showCancelButton: !swal.isLoading(),
                     showLoaderOnConfirm: true,
                     allowOutsideClick: () => !swal.isLoading(),
-                    preConfirm: async () => {await this.postAttachUsers([user]);}
-                })
+                    preConfirm: async () => {
+                        await this.postAttachUsers([user]);
+                    },
+                });
             }
         } else {
             // mise en forme du texte
@@ -116,60 +134,73 @@ class UserAttach extends React.Component {
 
             swal({
                 type: "warning",
-                title: "Cet utilisateur·rice a des comptes rattachés",
-                html:`<h3>Souhaitez-vous rattacher<br><br><b>${user.first_name} ${user.last_name}</b> ainsi que :<br>${str_users}<br><br>à<br><br><b>${this.props.user.first_name} ${this.props.user.last_name}</b> ?</h3>`,
-                cancelButtonText: 'Annuler',
+                title: t("users:userAttach.hasAttachedTitle"),
+                html: t("users:userAttach.confirmAttachWithListHtml", {
+                    name: userName,
+                    list: str_users,
+                    target: targetName,
+                }),
+                cancelButtonText: t("common:actions.cancel"),
                 showCancelButton: !swal.isLoading(),
                 showLoaderOnConfirm: true,
                 allowOutsideClick: () => !swal.isLoading(),
-                preConfirm: async () => {await this.postAttachUsers(attached_users);}
-            })
+                preConfirm: async () => {
+                    await this.postAttachUsers(attached_users);
+                },
+            });
         }
     }
 
     async postAttachUsers(users_to_attach) {
+        const { t } = this.props;
 
-        const res = await fetch("/users/"+this.props.user.id+"/attach", {
-                        method: "PUT",
-                        headers: {
-                            "X-Csrf-Token": csrfToken,
-                            "Content-Type": "application/json",
-                        },
-                        body: JSON.stringify({
-                            users: users_to_attach
-                        })
-                    })
+        const res = await fetch("/users/" + this.props.user.id + "/attach", {
+            method: "PUT",
+            headers: {
+                "X-Csrf-Token": csrfToken,
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                users: users_to_attach,
+            }),
+        });
 
         if (res.ok) {
             return swal({
                 type: "success",
-                title: "Compte(s) rattaché(s) avec succès",
+                title: t("users:userAttach.attachSuccess"),
             }).then(() => this.loadAttachedUsers());
         } else {
             return swal({
                 type: "error",
-                title: "Une erreur est survenue lors de l'envoi des données :",
-                html: `${res.status}<br>${res.statusText}<br>`
-            })
+                title: t("users:userAttach.attachError"),
+                html: `${res.status}<br>${res.statusText}<br>`,
+            });
         }
-
     }
 
     async fetchAttachedUsers(referent_user_id) {
-        const res = await fetch("/users/"+referent_user_id+"/get_attached_users");
+        const res = await fetch(
+            "/users/" + referent_user_id + "/get_attached_users"
+        );
         const data = await res.json();
-        return data.attached_users
+        return data.attached_users;
     }
 
     async loadAttachedUsers() {
         this.swalShowLoading();
-        const attached_users = await this.fetchAttachedUsers(this.props.user.id)
-        this.setState({attached_users: attached_users});
+        const attached_users = await this.fetchAttachedUsers(
+            this.props.user.id
+        );
+        this.setState({ attached_users: attached_users });
         swal.close();
     }
 
-    async fetchUsers(state) { // state transmis par reacttable
-        this.setState({loading: true, filter: state});
+    async fetchUsers(state) {
+        // state transmis par reacttable
+        const { t } = this.props;
+
+        this.setState({ loading: true, filter: state });
 
         debounce(() => {
             requestData(
@@ -192,14 +223,14 @@ class UserAttach extends React.Component {
                     if (state.filtered.length < 1) {
                         this.setState({
                             loading: false,
-                            no_data_text: 'Chercher des comptes à rattacher',
-                            data: []
+                            no_data_text: t("users:userAttach.searchPrompt"),
+                            data: [],
                         });
                     } else {
                         this.setState({
                             ...res,
                             loading: false,
-                            no_data_text: 'Aucun résultat trouvé',
+                            no_data_text: t("users:userAttach.noResults"),
                         });
                     }
                 });
@@ -207,10 +238,11 @@ class UserAttach extends React.Component {
     }
 
     componentDidMount() {
-        this.loadAttachedUsers()
+        this.loadAttachedUsers();
     }
 
     render() {
+        const { t } = this.props;
         const events = [];
 
         const columns = [
@@ -218,18 +250,14 @@ class UserAttach extends React.Component {
                 Header: "ID",
                 id: "id",
                 accessor: d => (
-                    <span
-                        className="w-100 d-flex text-dark"
-                    >
-                        {d.id}
-                    </span>
+                    <span className="w-100 d-flex text-dark">{d.id}</span>
                 ),
                 width: 75,
                 sortable: false,
             },
             {
                 id: "last_name",
-                Header: "Nom",
+                Header: t("users:list.table.headers.lastName"),
                 sortable: false,
                 accessor: d => (
                     <a
@@ -242,7 +270,7 @@ class UserAttach extends React.Component {
             },
             {
                 id: "first_name",
-                Header: "Prénom",
+                Header: t("users:list.table.headers.firstName"),
                 sortable: false,
                 accessor: d => (
                     <a
@@ -254,7 +282,7 @@ class UserAttach extends React.Component {
                 ),
             },
             {
-                Header: "Date de naissance",
+                Header: t("users:list.table.headers.birthday"),
                 id: "birthday",
                 accessor: "birthday",
                 sortable: false,
@@ -262,9 +290,7 @@ class UserAttach extends React.Component {
                 Cell: props => {
                     if (props.original.birthday) {
                         return (
-                            <div
-                                className="w-100 d-flex text-dark"
-                            >
+                            <div className="w-100 d-flex text-dark">
                                 {moment(props.original.birthday).format(
                                     "DD/MM/YYYY"
                                 )}
@@ -272,24 +298,29 @@ class UserAttach extends React.Component {
                         );
                     }
 
-                    return <p/>;
+                    return <p />;
                 },
                 filterable: false,
             },
             {
                 width: 200,
                 id: "attached",
-                Header: "Type de compte",
+                Header: t("users:list.table.headers.accountType"),
                 sortable: false,
                 filterable: false,
-                accessor: d => d.attached_to_id ? "Rattaché" : "Principal"
+                accessor: d =>
+                    d.attached_to_id
+                        ? t("users:list.table.accountType.attached")
+                        : t("users:list.table.accountType.main"),
             },
             {
                 id: "actions",
-                Header: "Actions",
+                Header: t("users:list.table.headers.actions"),
                 Cell: props => {
-                    let is_user = (props.original.id == this.props.user.id); // si c'est l'utilisateur de la page actuelle
-                    let is_attached_to_user = this.state.attached_users.find(user => user.id == props.original.id); // si c'est un utilisateur déjà rattaché à celui de la page actuelle
+                    let is_user = props.original.id == this.props.user.id; // si c'est l'utilisateur de la page actuelle
+                    let is_attached_to_user = this.state.attached_users.find(
+                        user => user.id == props.original.id
+                    ); // si c'est un utilisateur déjà rattaché à celui de la page actuelle
                     return (
                         <div className="btn-wrapper">
                             <div
@@ -297,23 +328,35 @@ class UserAttach extends React.Component {
                                     display: "inline-block",
                                 }}
                             >
-
-                            { is_user || is_attached_to_user ?
-                                <div>
-                                    { is_user ?
-                                        <div>Compte actuel</div>
-                                    :
-                                        <div>Déjà rattaché·e au compte actuel</div>
-                                    }
-                                </div>
-                            :
-                                <button
-                                    onClick={() => this.selectUserToAttach(props.original)}
-                                    className="btn btn-xs btn-primary m-r-sm m-b-sm"
-                                >
-                                    <i className="fas fa-user-friends"/>&nbsp; Rattacher
-                                </button>
-                            }
+                                {is_user || is_attached_to_user ? (
+                                    <div>
+                                        {is_user ? (
+                                            <div>
+                                                {t(
+                                                    "users:userAttach.currentAccount"
+                                                )}
+                                            </div>
+                                        ) : (
+                                            <div>
+                                                {t(
+                                                    "users:userAttach.alreadyAttachedToCurrent"
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+                                ) : (
+                                    <button
+                                        onClick={() =>
+                                            this.selectUserToAttach(
+                                                props.original
+                                            )
+                                        }
+                                        className="btn btn-xs btn-primary m-r-sm m-b-sm"
+                                    >
+                                        <i className="fas fa-user-friends" />
+                                        &nbsp; {t("users:userAttach.attach")}
+                                    </button>
+                                )}
                             </div>
                         </div>
                     );
@@ -327,32 +370,45 @@ class UserAttach extends React.Component {
             <div>
                 <div className="ibox">
                     <div className="ibox-title">
-                        <h4>Comptes rattachés</h4>
+                        <h4>{t("users:userAttach.attachedAccountsTitle")}</h4>
                     </div>
                     <div className="ibox-content no-padding">
-                        { this.state.attached_users.length > 0 ?
+                        {this.state.attached_users.length > 0 ? (
                             <ul className="list-group">
                                 {this.state.attached_users.map(user => (
-                                    <li className="list-group-item row" key={user.id}>
+                                    <li
+                                        className="list-group-item row"
+                                        key={user.id}
+                                    >
                                         <div className="col-lg-4">
                                             <h4>
-                                                <a href={"/users/"+user.id}>{user.first_name} {user.last_name}</a>
+                                                <a href={"/users/" + user.id}>
+                                                    {user.first_name}{" "}
+                                                    {user.last_name}
+                                                </a>
                                                 &nbsp;&nbsp;
-                                                <DetachAccount user={user} reload_data={this.loadAttachedUsers}></DetachAccount>
+                                                <DetachAccount
+                                                    user={user}
+                                                    reload_data={
+                                                        this.loadAttachedUsers
+                                                    }
+                                                ></DetachAccount>
                                             </h4>
                                         </div>
                                     </li>
                                 ))}
                             </ul>
-                        :
-                            <div className="p">Cet·te utilisateur·rice n'a pas de comptes rattachés</div>
-                        }
+                        ) : (
+                            <div className="p">
+                                {t("users:userAttach.noAttachedAccounts")}
+                            </div>
+                        )}
                     </div>
                 </div>
 
                 <div className="ibox">
                     <div className="ibox-title">
-                        <h4>Rattacher des comptes</h4>
+                        <h4>{t("users:userAttach.attachAccountsTitle")}</h4>
                     </div>
                     <div className="row">
                         <div className="col-lg-12">
@@ -365,33 +421,35 @@ class UserAttach extends React.Component {
                                 loading={this.state.loading}
                                 onFetchData={this.fetchUsers}
                                 columns={columns}
-                                defaultSorted={[{id: "id", desc: false}]}
+                                defaultSorted={[{ id: "id", desc: false }]}
                                 filterable
                                 defaultFilterMethod={(filter, row) => {
                                     if (row[filter.id] != null) {
                                         return row[filter.id]
                                             .toLowerCase()
-                                            .startsWith(filter.value.toLowerCase());
+                                            .startsWith(
+                                                filter.value.toLowerCase()
+                                            );
                                     }
                                 }}
                                 resizable={false}
-                                previousText="Précédent"
-                                nextText="Suivant"
-                                loadingText="Chargement..."
+                                previousText={t(
+                                    "common:reactTable.previousText"
+                                )}
+                                nextText={t("common:reactTable.nextText")}
+                                loadingText={t("common:reactTable.loadingText")}
                                 noDataText={this.state.no_data_text}
-                                pageText="Page"
-                                ofText="sur"
-                                rowsText="résultats"
+                                pageText={t("common:reactTable.pageText")}
+                                ofText={t("common:reactTable.ofText")}
+                                rowsText={t("common:reactTable.rowsText")}
                                 minRows={2}
                             />
                         </div>
                     </div>
                 </div>
-
             </div>
-        )
-
+        );
     }
 }
 
-export default UserAttach;
+export default withTranslation("users")(UserAttach);

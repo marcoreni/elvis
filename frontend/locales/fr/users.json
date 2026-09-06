@@ -396,5 +396,21 @@
         "successBody": "<p>Toute votre communauté a bien été importée</p><p>Vous allez être redirigé vers la liste de vos membres</p>",
         "errorTitle": "Erreur",
         "errorBody": "<p>Une erreur est survenue lors de l’import. Veuillez réessayer.</p>"
+    },
+    "userAttach": {
+        "searchPrompt": "Chercher des comptes à rattacher",
+        "noResults": "Aucun résultat trouvé",
+        "alreadyAttachedHtml": "<h3><b>{{name}}</b> est déjà rattaché·e à <b>{{referent}}</b><br><br>Souhaitez-vous le·la rattacher à<br><b>{{target}}</b> à la place ?</h3>",
+        "confirmAttachHtml": "<h3>Souhaitez-vous rattacher<br><br><b>{{name}}</b><br><br>à<br><br><b>{{target}}</b> ?</h3>",
+        "hasAttachedTitle": "Cet·te utilisateur·rice a des comptes rattachés",
+        "confirmAttachWithListHtml": "<h3>Souhaitez-vous rattacher<br><br><b>{{name}}</b> ainsi que :<br>{{list}}<br><br>à<br><br><b>{{target}}</b> ?</h3>",
+        "attachSuccess": "Compte(s) rattaché(s) avec succès",
+        "attachError": "Une erreur est survenue lors de l'envoi des données :",
+        "attachedAccountsTitle": "Comptes rattachés",
+        "noAttachedAccounts": "Cet·te utilisateur·rice n'a pas de comptes rattachés",
+        "attachAccountsTitle": "Rattacher des comptes",
+        "currentAccount": "Compte actuel",
+        "alreadyAttachedToCurrent": "Déjà rattaché·e au compte actuel",
+        "attach": "Rattacher"
     }
 }
