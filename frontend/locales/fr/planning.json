@@ -347,5 +347,29 @@
             "next": "Suivante",
             "actions": "Actions"
         }
+    },
+    "availabilityInput": {
+        "titleSingle": "Préférences horaires pour l'activité {{label}}",
+        "titleMulti": "Préférences horaires pour les activités ({{labels}})",
+        "day": "Jour",
+        "from": "De",
+        "to": "à",
+        "comment": "Commentaire",
+        "commentPlaceholder": "Vous pouvez renseigner quelques précisions ici...",
+        "create": "Créer la disponibilité"
+    },
+    "availabilityList": {
+        "commentSaved": "Commentaire saisi",
+        "editComment": "Saisir ou éditer un commentaire",
+        "deleteAllConfirm": "Voulez-vous vraiment supprimer les créneaux du {{day}} ?",
+        "title": "Mes disponibilités",
+        "empty": "Aucune disponibilité"
+    },
+    "availabilityManager": {
+        "weekChoice": "Choix de la semaine",
+        "change": "Changer"
+    },
+    "availabilityCommentModal": {
+        "title": "Commentaire"
     }
 }

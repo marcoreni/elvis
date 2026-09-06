@@ -347,5 +347,29 @@
             "next": "Next",
             "actions": "Actions"
         }
+    },
+    "availabilityInput": {
+        "titleSingle": "Time preferences for the activity {{label}}",
+        "titleMulti": "Time preferences for the activities ({{labels}})",
+        "day": "Day",
+        "from": "From",
+        "to": "to",
+        "comment": "Comment",
+        "commentPlaceholder": "You can add a few details here...",
+        "create": "Create availability"
+    },
+    "availabilityList": {
+        "commentSaved": "Comment entered",
+        "editComment": "Enter or edit a comment",
+        "deleteAllConfirm": "Do you really want to delete the {{day}} slots?",
+        "title": "My availabilities",
+        "empty": "No availability"
+    },
+    "availabilityManager": {
+        "weekChoice": "Week selection",
+        "change": "Change"
+    },
+    "availabilityCommentModal": {
+        "title": "Comment"
     }
 }

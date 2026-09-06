@@ -17,5 +17,28 @@
         "changesCount": "Number of changes",
         "informedCount": "Students/parents notified",
         "completionRate": "% of evaluations completed"
+    },
+    "appointments": {
+        "title": "Evaluation management",
+        "noAvailabilities": "No teacher has set availability for evaluations yet",
+        "editor": {
+            "validatedTitle": "Confirmed appointments",
+            "noneYet": "No confirmed appointment yet.",
+            "newTitle": "New appointment",
+            "start": "Start",
+            "end": "End",
+            "overlap": "A slot already exists in this time range ({{start}} - {{end}})",
+            "activity": "Activity",
+            "room": "Room",
+            "selectActivity": "Select an activity",
+            "selectRoom": "Select a room",
+            "table": {
+                "schedule": "Schedule",
+                "activity": "Activity",
+                "room": "Room",
+                "student": "Student",
+                "noStudent": "None"
+            }
+        }
     }
 }

@@ -1,9 +1,11 @@
 import React, { Fragment } from "react";
+import { withTranslation } from "react-i18next";
 import { toDate, toHourMin, displayLevel } from "../../tools/format";
 import { WEEKDAYS } from "../../tools/constants";
 import KindLegend from "../common/KindLegend";
 
 const GroupedAvailabilities = ({
+    t,
     intervals,
     canComment,
     onComment,
@@ -23,7 +25,7 @@ const GroupedAvailabilities = ({
                 {toHourMin(toDate(item.end))}
                 {item.comment && (
                     <i
-                        title="Commentaire saisi"
+                        title={t("planning:availabilityList.commentSaved")}
                         className="fas fa-comment m-l-sm"
                     />
                 )}
@@ -32,7 +34,7 @@ const GroupedAvailabilities = ({
                     {canComment ? (
                         <button
                             className="btn btn-xs btn-primary m-l-xs"
-                            title="Saisir ou éditer un commentaire"
+                            title={t("planning:availabilityList.editComment")}
                             disabled={disabled}
                             onClick={() => onComment(item.id)}
                         >
@@ -92,7 +94,10 @@ class AvailabilityList extends React.PureComponent {
     }
 
     handleDeleteAll(weekday) {
-        const message = `Voulez-vous vraiment supprimer les créneaux du ${WEEKDAYS[weekday]} ?`;
+        const { t } = this.props;
+        const message = t("planning:availabilityList.deleteAllConfirm", {
+            day: WEEKDAYS[weekday],
+        });
 
         if (window.confirm(message)) {
             this.props.onDelete(
@@ -110,6 +115,7 @@ class AvailabilityList extends React.PureComponent {
     render() {
         // Props and state vars
         const {
+            t,
             list,
             onDelete,
             canComment,
@@ -128,7 +134,7 @@ class AvailabilityList extends React.PureComponent {
                         {!showActions ? (
                             <i className="fas fa-lock m-r-sm" />
                         ) : null}
-                        {"Mes disponibilités"}
+                        {t("planning:availabilityList.title")}
                     </h3>
                 </div>
                 <div className="ibox-content">
@@ -136,7 +142,9 @@ class AvailabilityList extends React.PureComponent {
                         <KindLegend kinds={kinds} />
                     </div>
 
-                    {list.length === 0 ? <p>{"Aucune disponibilité"}</p> : null}
+                    {list.length === 0 ? (
+                        <p>{t("planning:availabilityList.empty")}</p>
+                    ) : null}
 
                     <div className="flex flex-wrap">
                         {Object.keys(groupedItems).map((weekday, i) => (
@@ -145,7 +153,15 @@ class AvailabilityList extends React.PureComponent {
                                     <div className="m-b-xs p-xs font-bold bg-primary">
                                         {WEEKDAYS[weekday]}
 
-                                        {showActions && !(groupedItems[weekday].filter(d => !allowedKinds.includes(d.kind)).length > 0) ? (
+                                        {showActions &&
+                                        !(
+                                            groupedItems[weekday].filter(
+                                                d =>
+                                                    !allowedKinds.includes(
+                                                        d.kind
+                                                    )
+                                            ).length > 0
+                                        ) ? (
                                             <div className="pull-right">
                                                 <button
                                                     className="btn btn-xs btn-primary"
@@ -164,6 +180,7 @@ class AvailabilityList extends React.PureComponent {
 
                                     <div>
                                         <GroupedAvailabilities
+                                            t={t}
                                             intervals={groupedItems[weekday]}
                                             onDelete={onDelete}
                                             canComment={canComment}
@@ -183,4 +200,4 @@ class AvailabilityList extends React.PureComponent {
     }
 }
 
-export default AvailabilityList;
+export default withTranslation("planning")(AvailabilityList);

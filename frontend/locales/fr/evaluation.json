@@ -17,5 +17,28 @@
         "changesCount": "Nombre changements",
         "informedCount": "Nombre élèves/parents prévenus",
         "completionRate": "% d'évaluations complétées"
+    },
+    "appointments": {
+        "title": "Gestion des évaluations",
+        "noAvailabilities": "Pour le moment, aucun professeur n'a mis de disponibilité pour des évaluations",
+        "editor": {
+            "validatedTitle": "Rendez-vous validés",
+            "noneYet": "Aucun rendez-vous validé pour le moment.",
+            "newTitle": "Nouveau rendez-vous",
+            "start": "Début",
+            "end": "Fin",
+            "overlap": "Un créneau existe déjà sur ces horaires ({{start}} - {{end}})",
+            "activity": "Activité",
+            "room": "Salle",
+            "selectActivity": "Sélectionnez une activité",
+            "selectRoom": "Sélectionnez une salle",
+            "table": {
+                "schedule": "Horaires",
+                "activity": "Activité",
+                "room": "Salle",
+                "student": "Élève",
+                "noStudent": "Aucun"
+            }
+        }
     }
 }

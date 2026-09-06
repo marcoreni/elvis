@@ -1,7 +1,8 @@
 import React from "react";
-import {checkStartEndTime, getNextWeekWithoutSunday} from "../../tools/date";
-import {timeToDate} from "../../tools/format";
-import {KINDS_LABEL} from "../../tools/constants";
+import { withTranslation } from "react-i18next";
+import { checkStartEndTime, getNextWeekWithoutSunday } from "../../tools/date";
+import { timeToDate } from "../../tools/format";
+import { KINDS_LABEL } from "../../tools/constants";
 
 class AvailabilityInput extends React.PureComponent {
     constructor(props) {
@@ -27,7 +28,7 @@ class AvailabilityInput extends React.PureComponent {
     }
 
     handleSelect(e) {
-        this.setState({[e.target.name]: e.target.value});
+        this.setState({ [e.target.name]: e.target.value });
     }
 
     handleHours(e) {
@@ -35,17 +36,11 @@ class AvailabilityInput extends React.PureComponent {
             e.target.name === "start" ? e.target.value : this.state.start;
         const end = e.target.name === "end" ? e.target.value : this.state.end;
 
-        this.setState({start, end});
+        this.setState({ start, end });
     }
 
     handleAdd() {
-        const {
-            weekday,
-            start,
-            end,
-            kind,
-            comment,
-        } = this.state;
+        const { weekday, start, end, kind, comment } = this.state;
 
         this.props.onAdd({
             from: timeToDate(start, weekday),
@@ -62,8 +57,9 @@ class AvailabilityInput extends React.PureComponent {
     }
 
     render() {
-        const {disabled, showDates, showComment, kinds} = this.props;
-        const {start, end, weekday, options, kind} = this.state;
+        const { t } = this.props;
+        const { disabled, showDates, showComment, kinds } = this.props;
+        const { start, end, weekday, options, kind } = this.state;
 
         const isInvalidInterval = !checkStartEndTime(start, end);
 
@@ -73,13 +69,17 @@ class AvailabilityInput extends React.PureComponent {
                     <div className="ibox-title bg-primary">
                         {this.props.selectionLabels.length === 1 ? (
                             <h3>
-                                Préférences horaires pour l'activité{" "}
-                                {this.props.selectionLabels[0]}
+                                {t("planning:availabilityInput.titleSingle", {
+                                    label: this.props.selectionLabels[0],
+                                })}
                             </h3>
                         ) : (
                             <h3>
-                                Préférences horaires pour les activités (
-                                {this.props.selectionLabels.join(", ")})
+                                {t("planning:availabilityInput.titleMulti", {
+                                    labels: this.props.selectionLabels.join(
+                                        ", "
+                                    ),
+                                })}
                             </h3>
                         )}
                     </div>
@@ -107,7 +107,7 @@ class AvailabilityInput extends React.PureComponent {
 
                     <div className="input-group m-b-sm">
                         <span className="input-group-addon font-bold bg-muted">
-                            {"Jour"}
+                            {t("planning:availabilityInput.day")}
                         </span>
                         <select
                             name="weekday"
@@ -134,7 +134,7 @@ class AvailabilityInput extends React.PureComponent {
                                     className="input-group-addon font-bold bg-muted"
                                     style={{ minWidth: "50px" }}
                                 >
-                                    {"De"}
+                                    {t("planning:availabilityInput.from")}
                                 </span>
                                 <input
                                     className="form-control"
@@ -160,7 +160,7 @@ class AvailabilityInput extends React.PureComponent {
                                     className="input-group-addon font-bold bg-muted"
                                     style={{ minWidth: "50px" }}
                                 >
-                                    {"à"}
+                                    {t("planning:availabilityInput.to")}
                                 </span>
                                 <input
                                     className="form-control"
@@ -180,12 +180,14 @@ class AvailabilityInput extends React.PureComponent {
                     {showComment && (
                         <div className="input-group m-b">
                             <span className="input-group-addon bg-muted font-bold">
-                                Commentaire
+                                {t("planning:availabilityInput.comment")}
                             </span>
                             <textarea
                                 defaultValue=""
                                 className="form-control"
-                                placeholder="Vous pouvez renseigner quelques précisions ici..."
+                                placeholder={t(
+                                    "planning:availabilityInput.commentPlaceholder"
+                                )}
                                 onChange={e => this.handleChangeComment(e)}
                             />
                         </div>
@@ -199,7 +201,7 @@ class AvailabilityInput extends React.PureComponent {
                             onClick={this.handleAdd}
                         >
                             <i className="fas fa-plus" />{" "}
-                            {"Créer la disponibilité"}
+                            {t("planning:availabilityInput.create")}
                         </button>
                     </div>
                 </div>
@@ -208,4 +210,4 @@ class AvailabilityInput extends React.PureComponent {
     }
 }
 
-export default AvailabilityInput;
+export default withTranslation("planning")(AvailabilityInput);
