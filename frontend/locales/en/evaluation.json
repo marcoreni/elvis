@@ -48,5 +48,25 @@
         "assignLevelPrompt": "Please assign a level for the following courses",
         "noLevel": "NO LEVEL",
         "assignGlobalLevel": "Assign a global level"
+    },
+    "appointmentsList": {
+        "colAppointment": "Appointment",
+        "colStudent": "Student",
+        "colActivity": "Activity",
+        "colSlot": "Slot",
+        "colTeacher": "Teacher",
+        "colRoom": "Room",
+        "colActions": "Actions",
+        "searchStudent": "Search for a student",
+        "searchByActivity": "Search by activity",
+        "empty": "No student without a slot",
+        "studentNamePlaceholder": "Student name",
+        "search": "Search",
+        "room": "Room {{label}}",
+        "intervalDisplay": "On {{date}}, from {{startTime}} to {{endTime}}",
+        "intervalDisplayWithTeacher": "On {{date}}, from {{startTime}} to {{endTime}}, with {{teacher}}",
+        "intervalOption": "{{teacher}}, Room {{room}}, {{interval}}",
+        "refreshHint": "Please refresh to get the up-to-date list",
+        "onlyKindSlots": "Only {{kind}} slots"
     }
 }
