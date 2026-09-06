@@ -1,7 +1,7 @@
 <div class="row wrapper border-bottom white-bg page-heading">
-    <h2>Référentiel des salles <%= @location&.label %>
+    <h2><%= t("views.rooms.index.title") %> <%= @location&.label %>
         <%= link_to "/rooms/#{@location&.id}/new", method: :get do %>
-            <button class="btn btn-primary btn-sm pull-right" ><i class="fas fa-plus"></i> Ajouter une salle</button>
+            <button class="btn btn-primary btn-sm pull-right" ><i class="fas fa-plus"></i> <%= t("views.rooms.index.add_room") %></button>
         <% end %>
     </h2>
 </div>
@@ -11,9 +11,9 @@
 <div>
   <% @rooms.each do |floor, rs| %>
     <% if floor.present? && floor > 0 %>
-      <h3>Etage <%= floor.inspect %></h3>
+      <h3><%= t("views.rooms.index.floor", number: floor) %></h3>
     <% else %>
-      <h3>Rez-de-chaussée</h3>
+      <h3><%= t("views.rooms.index.ground_floor") %></h3>
     <% end %>
 
     <div class="flex flex-wrap">
@@ -27,12 +27,12 @@
             </div>
             <div class="col-sm-12">
               <h4><strong><%= room.label %></strong></h4>
-              <p>Salle de <%= room.kind %><p>
+              <p><%= t("views.rooms.index.room_kind", kind: room.kind) %><p>
               <% unless room.location_id.nil? %>
-                <p>Lieu : <%= room.location.label %>, étage <%= room.floor %></p>
+                <p><%= t("views.rooms.index.location_line", location: room.location.label, floor: room.floor) %></p>
               <% end %>
               <% unless room.activity_refs.empty? %>
-                <p>Activités: </p>
+                <p><%= t("views.rooms.index.activities_label") %></p>
                 <ul class="unstyled">
                   <% room.activity_refs.each_with_index do |ref, pos| %>
                     <% if pos < 5 %>
@@ -46,7 +46,7 @@
               <% end %>
 
               <% unless room.room_room_features.empty? %>
-                <p>Features:</p>
+                <p><%= t("views.rooms.index.features_label") %></p>
                 <ul class="unstyled">
                   <% room.room_room_features.each_with_index do |feat, pos| %>
                     <% if pos < 5 %>
@@ -60,30 +60,30 @@
               <% end %>
 
               <%= link_to room_planning_path(room) do %>
-                <button class="btn btn-sm btn-primary">Planning</button>
+                <button class="btn btn-sm btn-primary"><%= t("views.rooms.index.planning_button") %></button>
               <% end %>
 
               <%= link_to edit_room_path(room) do %>
-                <button class="btn btn-sm btn-primary">Éditer</button>
+                <button class="btn btn-sm btn-primary"><%= t("common.actions.edit") %></button>
               <% end %>
 
             <% if room.activities.length > 0 %>
               <%= link_to "/rooms/#{room.id}", method: :delete do %>
-                <button class="btn btn-sm btn-danger disabled" style="pointer-events:auto" title="Des activités sont reliées à cette salle, vous ne pouvez pas la supprimer. Merci de supprimer les activités en amont">Supprimer</button>
+                <button class="btn btn-sm btn-danger disabled" style="pointer-events:auto" title="<%= t("views.rooms.index.delete_disabled_title") %>"><%= t("common.actions.delete") %></button>
               <% end %>
 
 
               <% else %>
               <%= link_to "/rooms/#{room.id}", method: :delete do %>
-                <button class="btn btn-sm btn-danger ">Supprimer</button>
+                <button class="btn btn-sm btn-danger "><%= t("common.actions.delete") %></button>
               <% end %>
-              
+
 
 
               <% end %>
             </div>
             <div class="clearfix"></div>
-            
+
           </div>
         </div>
       <% end %>

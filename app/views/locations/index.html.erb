@@ -1,7 +1,7 @@
 
 <div class="row wrapper border-bottom white-bg page-heading m-b-md">
-  <h2>Localisations</h2>
-  <%= link_to 'Créer une localisation', new_location_path, :class => 'btn btn-primary pull-right' %>
+  <h2><%= t("views.locations.index.title") %></h2>
+  <%= link_to t("views.locations.index.create_button"), new_location_path, :class => 'btn btn-primary pull-right' %>
 </div>
 
 <p id="notice"><%= notice %></p>
@@ -9,8 +9,8 @@
 <table class="table table-bordered bg-white">
   <thead>
   <tr>
-    <th>Nom</th>
-    <th colspan="2">Actions</th>
+    <th><%= t("views.locations.index.cols.name") %></th>
+    <th colspan="2"><%= t("common.labels.actions") %></th>
   </tr>
   </thead>
 
@@ -18,8 +18,8 @@
   <% @locations.each do |location| %>
     <tr>
       <td><%= location.label %></td>
-      <td><%= link_to 'Éditer', edit_location_path(location), :class => 'btn btn-primary' %></td>
-      <td><%= link_to 'Supprimer', location, method: :delete, data: { confirm: 'Êtes vous sur ?' }, :class => 'btn btn-danger' %></td>
+      <td><%= link_to t("common.actions.edit"), edit_location_path(location), :class => 'btn btn-primary' %></td>
+      <td><%= link_to t("common.actions.delete"), location, method: :delete, data: { confirm: t("common.confirm.sure") }, :class => 'btn btn-danger' %></td>
     </tr>
   <% end %>
   </tbody>
@@ -31,7 +31,7 @@
         <ul>
           <% flash[:error].each do |message| %>
             <li>
-              <h3>Erreur</h3>
+              <h3><%= t("views.locations.index.error_title") %></h3>
               <%= message %>
             </li>
             <% end %>

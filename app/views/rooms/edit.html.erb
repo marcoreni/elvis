@@ -1,6 +1,6 @@
 <div class="row wrapper border-bottom white-bg page-heading">
-    <h2>Editer la salle "<%= @room.label %>"</h2>
-    <%= link_to 'retour', rooms_url(location: @room.location_id), class: 'btn btn-primary' %>
+    <h2><%= t("views.rooms.edit.title", label: @room.label) %></h2>
+    <%= link_to t("common.actions.back"), rooms_url(location: @room.location_id), class: 'btn btn-primary' %>
 </div>
 
 <br />
@@ -51,7 +51,6 @@
             <%#= react_component("practice/rooms/RepetWithFeature_Fom", {all_features: @all_features, features: @selected_features, isRepet: @room.is_practice_room}) %>
           </div>-->
 
-          <%= f.submit "Sauvegarder", class: "btn btn-primary block full-width m-b" %>
+          <%= f.submit t("common.actions.save"), class: "btn btn-primary block full-width m-b" %>
     <% end %>
 </div>
-

@@ -1,7 +1,7 @@
 <%= form_with(model: [:practice, room_feature], local: true) do |form| %>
   <% if room_feature.errors.any? %>
     <div id="error_explanation">
-      <h2><%= pluralize(feature.errors.count, "error") %> prohibited this feature from being saved:</h2>
+      <h2><%= t("views.shared.form_errors.heading", count: room_feature.errors.count) %></h2>
 
       <ul>
         <% room_feature.errors.full_messages.each do |message| %>
@@ -17,7 +17,7 @@
     </div>
 
     <div class="col-lg-8 col-md-8 col-sm-12">
-      <label for="active">Actif:</label>
+      <label for="active"><%= t("views.practice.room_features.form.active_label") %></label>
       <div class="onoffswitch">
         <%= form.check_box :active, class: 'onoffswitch-checkbox', id: 'active' %>
         <label class="onoffswitch-label" for='active'>
@@ -29,7 +29,7 @@
   </div>
 
   <div class="actions m-t">
-    <%= link_to 'Retour', parameters_practice_parameters_path + "#tab-5", :class => 'btn btn-primary' %>
-    <%= form.submit "Sauvegarder", :class => 'btn btn-primary' %>
+    <%= link_to t("common.actions.back"), parameters_practice_parameters_path + "#tab-5", :class => 'btn btn-primary' %>
+    <%= form.submit t("common.actions.save"), :class => 'btn btn-primary' %>
   </div>
 <% end %>

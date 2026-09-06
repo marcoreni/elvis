@@ -551,3 +551,18 @@ Fix (its own small PR + a `tabs.test.jsx` case): in `tabs.jsx:70` only inject `s
 `typeof tab.body.type === "function"` (a real component), and switch the manual clone to
 `React.cloneElement`; for the body components that receive but never use `setTabError`, strip it
 before any `{...props}` spread onto a DOM node.
+
+## Pre-existing bugs surfaced during Phase 07 P2 (practice/rooms/locations extraction)
+
+- **`locations_controller.rb:75` sets `flash[:error]` to a bare String**, but `locations/index.html.erb:32`
+  does `flash[:error].each` (and `locations/_form.html.erb:2` `&.any?`) — a `NoMethodError` on the
+  destroy-blocked path. The P2 diff touched the surrounding block (the `<h3>` heading) but not this;
+  fix is to make the controller set an array, or the views handle a scalar.
+- **`app/views/rooms/{new,edit}.html.erb` still render hardcoded French inside `react_component`
+  props** (`title: "Localisation"`, `title: "Activités"`, `title: 'Image'`). Deliberately left by
+  P2 ("React-mount props untouched"); belongs with the `rooms/` React components in a later lot.
+- **`app/views/practice/bands/_form.html.erb` is dead** — `bands` new/edit mount React
+  (`practice/BandCreator` / `practice/BandEdit`) and the `create`/`update` failure paths
+  `render :new`/`:edit` land on those. Its bare `<%= form.submit %>` (no arg) would render the
+  English Rails default "Create Band" if ever revived. Left in place (don't-delete-on-looks-dead);
+  its `activerecord.attributes.band.*` keys stay reachable via `band.errors.full_messages`.

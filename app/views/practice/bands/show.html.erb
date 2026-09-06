@@ -2,25 +2,25 @@
 
 <table class="table w-50 table-striped table-hover table-bordered">
   <tr>
-    <td><strong>Name:</strong></td>
+    <td><strong><%= t("views.practice.bands.show.name_label") %></strong></td>
     <td><%= @band.name %></td>
   </tr>
 
   <tr>
-    <td><strong>Type de groupe:</strong></td>
+    <td><strong><%= t("views.practice.bands.show.band_type_label") %></strong></td>
     <td><%= @band.band_type.name %></td>
   </tr>
 
   <tr>
-    <td><strong>Genre musical:</strong></td>
+    <td><strong><%= t("views.practice.bands.show.music_genre_label") %></strong></td>
     <td><%= @band.music_genre.name %></td>
   </tr>
 
   <tr>
-    <td><strong>Blacklisted:</strong></td>
+    <td><strong><%= t("views.practice.bands.show.blacklisted_label") %></strong></td>
     <td><%= @band.blacklisted %></td>
   </tr>
 </table>
 
-<%= link_to 'Back', practice_bands_path, class: 'btn btn-primary' %>
-<%= link_to 'Edit', edit_practice_band_path(@band), class: 'btn btn-primary' %>
+<%= link_to t("common.actions.back"), practice_bands_path, class: 'btn btn-primary' %>
+<%= link_to t("common.actions.edit"), edit_practice_band_path(@band), class: 'btn btn-primary' %>

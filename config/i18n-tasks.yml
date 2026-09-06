@@ -82,6 +82,29 @@ ignore_unused:
   # statically detected — so it was removed from this list.
   - "activerecord.attributes.user.last_name"
   - "activerecord.attributes.user.first_name"
+  # Phase 07 P2 (feat/i18n-p2-practice-rooms-params): the practice/* and locations scaffolds
+  # label their form fields with bare `f.label :attr` (no explicit string), so Rails auto-resolves
+  # the label text from `activerecord.attributes.<model>.<attr>` via `Model.human_attribute_name`
+  # — no literal `t(...)`/`I18n.t(...)` at the label site for the static scanner to credit, same
+  # as user.{last_name,first_name} above. Leaf-listed (not `<model>.*`) so a genuinely dead key
+  # added later under one of these models still gets flagged. `room_features` is the model class
+  # name (app/models/room_features.rb — plural class), which is the i18n key Rails looks up. The
+  # `band.*` keys are additionally reachable via `band.errors.full_messages` even though
+  # practice/bands/_form.html.erb itself is dead (bands new/edit render React).
+  - "activerecord.attributes.band.name"
+  - "activerecord.attributes.band.band_type_id"
+  - "activerecord.attributes.band.music_genre_id"
+  - "activerecord.attributes.band.blacklisted"
+  - "activerecord.attributes.band_type.name"
+  - "activerecord.attributes.flat_rate.name"
+  - "activerecord.attributes.flat_rate.nb_hour"
+  - "activerecord.attributes.flat_rate.solo_duo_rate"
+  - "activerecord.attributes.flat_rate.group_rate"
+  - "activerecord.attributes.location.label"
+  - "activerecord.attributes.material.name"
+  - "activerecord.attributes.material.prix"
+  - "activerecord.attributes.music_genre.name"
+  - "activerecord.attributes.room_features.name"
   - "devise.**"
   # Side/profile navigation captions. config/initializers/20-menu_generator.rb sets each menu
   # item's `caption:` to a `:"menu.<key>"` Symbol; lib/elvis/menu_manager.rb#caption then does

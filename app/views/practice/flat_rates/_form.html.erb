@@ -1,7 +1,7 @@
 <%= form_with(model: [:practice, flat_rate], local: true) do |form| %>
   <% if flat_rate.errors.any? %>
     <div id="error_explanation">
-      <h2><%= pluralize(flat_rate.errors.count, "error") %> prohibited this flat rates from being saved:</h2>
+      <h2><%= t("views.shared.form_errors.heading", count: flat_rate.errors.count) %></h2>
 
       <ul>
       <% flat_rate.errors.full_messages.each do |message| %>
@@ -15,18 +15,18 @@
 
   <div class="row">
       <div class="field form-group col-lg-3 col-md-4 col-sm-12">
-          <%= form.label :name%>
+          <%= form.label :name %>
           <%= form.text_field :name, :class => 'form-control' %>
       </div>
       <div class="field form-group col-lg-3 col-md-4 col-sm-12">
         <div class="field form-group pull-left m-r-xl m-t-md">
             <%= form.radio_button :enable, true %>
-            <%= form.label :enable, "Actif", for: :enable %>
+            <%= form.label :enable, t("common.labels.active"), for: :enable %>
         </div>
 
         <div class="field form-group pull-left m-t-md">
             <%= form.radio_button :enable, false %>
-            <%= form.label :enable, "Inactif", :for => :enable %>
+            <%= form.label :enable, t("common.labels.inactive"), :for => :enable %>
         </div>
       </div>
   </div>
@@ -57,7 +57,7 @@
   </div>
 
   <div class="actions">
-    <%= link_to 'Retour', parameters_practice_parameters_path + "#tab-4", :class => 'btn btn-primary' %>
-    <%= form.submit "Sauvegarder", :class => 'btn btn-primary' %>
+    <%= link_to t("common.actions.back"), parameters_practice_parameters_path + "#tab-4", :class => 'btn btn-primary' %>
+    <%= form.submit t("common.actions.save"), :class => 'btn btn-primary' %>
   </div>
 <% end %>
