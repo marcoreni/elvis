@@ -383,5 +383,20 @@
         "profile": "Profile",
         "groupSimulation": "Group simulation",
         "viewPlanning": "View planning"
+    },
+    "presenceSheet": {
+        "noCourse": "No course",
+        "allCourses": "All courses",
+        "allStudents": "All students",
+        "room": "Room {{label}}",
+        "updateError": "Error while updating this attendance record",
+        "bulkUpdateError": "Error during the bulk update",
+        "attendance": {
+            "absent": "Absent",
+            "absentFemale": "Absent",
+            "justifiedAbsence": "Justified absence",
+            "present": "Present",
+            "presentFemale": "Present"
+        }
     }
 }
