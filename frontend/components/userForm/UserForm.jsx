@@ -1,6 +1,7 @@
 import React, { Fragment } from "react";
 import _ from "lodash";
 import { Form, FormSpy, Field } from "react-final-form";
+import { withTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import arrayMutators from "final-form-arrays";
 import Swal from "sweetalert2";
@@ -15,9 +16,12 @@ import ContactForm from "./ContactForm";
 
 import * as api from "../../tools/api";
 
-
 import { modalStyle } from "../../tools/constants";
-import { changeBirthDate, findFamilyMemberById, selectPhoneType } from "../../tools/mutators";
+import {
+    changeBirthDate,
+    findFamilyMemberById,
+    selectPhoneType,
+} from "../../tools/mutators";
 import { toRawPhoneNumber } from "../../tools/format";
 import ConsentDocItem from "./ConsentDocItem";
 import Payers from "./Payers";
@@ -74,16 +78,14 @@ class UserForm extends React.PureComponent {
         } = values;
 
         if (memberUsers && inverseMembers)
-            [...memberUsers, ...inverseMembers]
-                .forEach(m => {
-                    const u = m.user || m.member;
-                    // Add member if it isn't already in family
-                    if (u && !this.mutators.findFamilyMemberById(u.id))
-                        toPush.push(u);
-                });
+            [...memberUsers, ...inverseMembers].forEach(m => {
+                const u = m.user || m.member;
+                // Add member if it isn't already in family
+                if (u && !this.mutators.findFamilyMemberById(u.id))
+                    toPush.push(u);
+            });
 
-        if (this.mutators !== null)
-            this.mutators.concat("family", toPush);
+        if (this.mutators !== null) this.mutators.concat("family", toPush);
     }
 
     updateFamilyMember(values) {
@@ -91,7 +93,7 @@ class UserForm extends React.PureComponent {
             this.mutators.update(
                 "family",
                 this.state.selectedFamilyMember,
-                values,
+                values
             );
         }
     }
@@ -109,6 +111,7 @@ class UserForm extends React.PureComponent {
     }
 
     isValidated() {
+        const { t } = this.props;
         this.handleSubmit();
 
         if (!this.isValid) {
@@ -120,7 +123,8 @@ class UserForm extends React.PureComponent {
                 Msg = ({ closeToast, toastProps }) => (
                     <div>
                         {MESSAGES.err_is_invalid_id}
-                        <button onClick={redirect} className="btn btn-warning">Me rediriger vers la page de Connexion
+                        <button onClick={redirect} className="btn btn-warning">
+                            {t("users:userForm.redirectToLogin")}
                         </button>
                     </div>
                 );
@@ -130,16 +134,21 @@ class UserForm extends React.PureComponent {
                 });
             } else if (this.errors.is_paying) {
                 let { initialValues, user } = this.props;
-                let title = "<h5>Aucun payeur n' est déclaré pour " + initialValues.first_name + " " + initialValues.last_name + "</h5>";
-                let htmltext = "<p>" + initialValues.first_name + " " + initialValues.last_name + ", si vous êtes le payeur, merci de cocher la case" + "<br/>"
-                    + "<b>\"L'élève est aussi le payeur\"</b>" + "<br/>"
-                    + "<br/>"
-                    + "Si vous êtes payeur pour " + user.first_name + " " + user.last_name + ", merci de l'indiquer sur votre profil dans l'édition du lien familial." + "<br/>"
-                    + "<br/>"
-                    + "</p>";
+                const studentName =
+                    initialValues.first_name + " " + initialValues.last_name;
+                const payerName = user.first_name + " " + user.last_name;
+                let title = t("users:userForm.noPayer.title", {
+                    student: studentName,
+                });
+                let htmltext = t("users:userForm.noPayer.bodyHtml", {
+                    student: studentName,
+                    payer: payerName,
+                });
 
-                let confirmtext = "Redirection vers la page de profil de " + user.first_name + " " + user.last_name;
-                let cancelText = "Retours à la demande d'inscription";
+                let confirmtext = t("users:userForm.noPayer.confirm", {
+                    payer: payerName,
+                });
+                let cancelText = t("users:userForm.noPayer.cancel");
                 Swal.fire({
                     title: title,
                     html: htmltext,
@@ -165,12 +174,14 @@ class UserForm extends React.PureComponent {
     }
 
     async checkValidUser(values) {
+        const { t } = this.props;
         if (!this.props.user || this.props.create) {
-            this.errors = await api.set()
+            this.errors = await api
+                .set()
                 .success(data => {
                     this.isValidID = !data;
                     return data === true
-                        ? { username: "name/surname/birthday combinaison doit être identique" }
+                        ? { username: t("users:userForm.identityMismatch") }
                         : {};
                 })
                 .error(errors => console.log(errors))
@@ -188,8 +199,7 @@ class UserForm extends React.PureComponent {
         this.errors = {};
         const { user } = this.props;
 
-        if (user ? user.is_admin : false)
-            return this.errors;
+        if (user ? user.is_admin : false) return this.errors;
 
         // Check payer
         if (
@@ -206,17 +216,30 @@ class UserForm extends React.PureComponent {
 
         if (this.props.consent_docs) {
             this.props.consent_docs.forEach(doc => {
-                const consentvalue = _.get(values.consent_docs, `id_${doc.id}.agreement`);
+                const consentvalue = _.get(
+                    values.consent_docs,
+                    `id_${doc.id}.agreement`
+                );
 
-                if (doc.expected_answer && !consentvalue || consentvalue === undefined) {
+                if (
+                    (doc.expected_answer && !consentvalue) ||
+                    consentvalue === undefined
+                ) {
                     this.errors.consent_docs = this.errors.consent_docs || {};
-                    this.errors.consent_docs[`id_${doc.id}`] = this.errors.consent_docs[`id_${doc.id}`] || {};
-                    this.errors.consent_docs[`id_${doc.id}`].agreement = doc.expected_answer ? "err_must_check_consent" : "err_must_respond";
+                    this.errors.consent_docs[`id_${doc.id}`] =
+                        this.errors.consent_docs[`id_${doc.id}`] || {};
+                    this.errors.consent_docs[
+                        `id_${doc.id}`
+                    ].agreement = doc.expected_answer
+                        ? "err_must_check_consent"
+                        : "err_must_respond";
                 }
             });
         }
 
-        return Object.keys(this.errors).length ? this.errors : this.checkValidUser(values);
+        return Object.keys(this.errors).length
+            ? this.errors
+            : this.checkValidUser(values);
     }
 
     submit(values, form) {
@@ -235,96 +258,117 @@ class UserForm extends React.PureComponent {
     handleChangeInfos({ values }) {
         const { mutators } = this;
 
-        values.telephones && values.telephones.forEach(({ number, label } = {}, index) => {
-            if (!number || label)
-                return;
+        values.telephones &&
+            values.telephones.forEach(({ number, label } = {}, index) => {
+                if (!number || label) return;
 
-            const normalizedNumber = toRawPhoneNumber(number);
+                const normalizedNumber = toRawPhoneNumber(number);
 
-            if (normalizedNumber.match(/^0[67]\d{8}$/))
-                mutators.selectPhoneType(index, "portable");
-            else if (normalizedNumber.match(/^0([1-5]|9)\d{8}$/))
-                mutators.selectPhoneType(index, "domicile");
-        });
+                if (normalizedNumber.match(/^0[67]\d{8}$/))
+                    mutators.selectPhoneType(index, "portable");
+                else if (normalizedNumber.match(/^0([1-5]|9)\d{8}$/))
+                    mutators.selectPhoneType(index, "domicile");
+            });
 
         this.setState({
-            requireIdentificationNumber: this.props.displayIdentificationNumber && (values.is_paying || birthdayIsUnder18(values.birthday)),
+            requireIdentificationNumber:
+                this.props.displayIdentificationNumber &&
+                (values.is_paying || birthdayIsUnder18(values.birthday)),
         });
     }
 
     render() {
-        const {
-            isModalOpen,
-            selectedFamilyMember,
-            familyMember,
-        } = this.state;
-        const {
-            user,
-            initialValues,
-            submitting,
-        } = this.props;
+        const { isModalOpen, selectedFamilyMember, familyMember } = this.state;
+        const { t, user, initialValues, submitting } = this.props;
         const formattedInitialValues = {
             ...initialValues,
         };
 
-        YES_NO_FIELDS.forEach(f => _.set(formattedInitialValues, f, formatRadioValue(_.get(formattedInitialValues, f))));
+        YES_NO_FIELDS.forEach(f =>
+            _.set(
+                formattedInitialValues,
+                f,
+                formatRadioValue(_.get(formattedInitialValues, f))
+            )
+        );
 
         return (
-            <div className="application-form" style={{margin: 0}}>
+            <div className="application-form" style={{ margin: 0 }}>
                 <div>
-                    <h3 style={{color: "#8AA4B1"}}>Informations personnelles de {initialValues.first_name}</h3>
+                    <h3 style={{ color: "#8AA4B1" }}>
+                        Informations personnelles de {initialValues.first_name}
+                    </h3>
 
                     <Form
                         onSubmit={this.submit.bind(this)}
-                        mutators={{ ...arrayMutators, findFamilyMemberById, selectPhoneType, changeBirthDate }}
+                        mutators={{
+                            ...arrayMutators,
+                            findFamilyMemberById,
+                            selectPhoneType,
+                            changeBirthDate,
+                        }}
                         initialValues={formattedInitialValues}
                         validate={this.validate.bind(this)}
                     >
                         {({ handleSubmit, form, values, errors }) => {
-
                             // Bind handle submit to trigger
                             // Submit inside isValidated()
                             this.handleSubmit = handleSubmit;
-                            this.mutators = form.mutators
+                            this.mutators = form.mutators;
 
                             return (
                                 <form
                                     onSubmit={handleSubmit}
-                                    className="user-form">
-
+                                    className="user-form"
+                                >
                                     <FormSpy
                                         subscription={{ values: true }}
-                                        onChange={props => this.handleChangeInfos(props)} />
+                                        onChange={props =>
+                                            this.handleChangeInfos(props)
+                                        }
+                                    />
 
                                     <GeneralInfos
                                         displayBirthday
-                                        ignoreValidate={user ? user.is_admin : false}
+                                        ignoreValidate={
+                                            user ? user.is_admin : false
+                                        }
                                         displayGender
-                                        displayIdentificationNumber={this.props.displayIdentificationNumber || this.state.requireIdentificationNumber}
-                                        requireIdentificationNumber={this.state.requireIdentificationNumber}
+                                        displayIdentificationNumber={
+                                            this.props
+                                                .displayIdentificationNumber ||
+                                            this.state
+                                                .requireIdentificationNumber
+                                        }
+                                        requireIdentificationNumber={
+                                            this.state
+                                                .requireIdentificationNumber
+                                        }
                                         birthday={values.birthday}
-                                        organizationOptions={this.props.organizationOptions}
+                                        organizationOptions={
+                                            this.props.organizationOptions
+                                        }
                                         userId={this.props.initialValues.id}
                                         mutators={form.mutators}
                                         formValues={values}
                                         formErrors={errors}
                                     />
 
-                                    {
-                                        (this.props.hidePayers !== true) && (
-                                            <Payers
-                                                values={values}
-                                                mutators={form.mutators}
-                                                currentUser={{ ...initialValues }}
-                                            />
-                                        )
-                                    }
+                                    {this.props.hidePayers !== true && (
+                                        <Payers
+                                            values={values}
+                                            mutators={form.mutators}
+                                            currentUser={{ ...initialValues }}
+                                        />
+                                    )}
 
                                     <ContactInfos
                                         values={values}
                                         form={form}
                                         displaySameAs
-                                        ignoreValidate={user ? user.is_admin : false}
+                                        ignoreValidate={
+                                            user ? user.is_admin : false
+                                        }
                                         mutators={form.mutators}
                                         canAddContacts
                                         onContactAdd={() => {
@@ -338,7 +382,7 @@ class UserForm extends React.PureComponent {
                                         onContactDelete={(idx, member) => {
                                             this.removeFamilyMember(
                                                 idx,
-                                                member,
+                                                member
                                             );
                                         }}
                                         currentUser={{ ...initialValues }}
@@ -346,16 +390,37 @@ class UserForm extends React.PureComponent {
                                     <hr />
                                     <HandicapInfos />
 
-                                    <div className="row" style={{marginBottom: "75px"}}>
-                                        {this.props.consent_docs && this.props.consent_docs.map(doc =>
-                                            <div key={doc.id} className="col-sm-12">
-                                                <ConsentDocItem
-                                                    docItem={doc}
-                                                    schoolName={this.props.schoolName}
-                                                    defaultValue={((initialValues.consent_document_users || []).find(cdu => cdu.consent_document_id === doc.id) || {}).has_consented}
-                                                />
-                                            </div>)
-                                        }
+                                    <div
+                                        className="row"
+                                        style={{ marginBottom: "75px" }}
+                                    >
+                                        {this.props.consent_docs &&
+                                            this.props.consent_docs.map(doc => (
+                                                <div
+                                                    key={doc.id}
+                                                    className="col-sm-12"
+                                                >
+                                                    <ConsentDocItem
+                                                        docItem={doc}
+                                                        schoolName={
+                                                            this.props
+                                                                .schoolName
+                                                        }
+                                                        defaultValue={
+                                                            (
+                                                                (
+                                                                    initialValues.consent_document_users ||
+                                                                    []
+                                                                ).find(
+                                                                    cdu =>
+                                                                        cdu.consent_document_id ===
+                                                                        doc.id
+                                                                ) || {}
+                                                            ).has_consented
+                                                        }
+                                                    />
+                                                </div>
+                                            ))}
                                     </div>
 
                                     <div className="mb-5 text-right">
@@ -365,11 +430,10 @@ class UserForm extends React.PureComponent {
                                                 disabled={submitting}
                                                 className="btn btn-primary"
                                             >
-                                                {"Enregistrer"}
+                                                {t("common:actions.save")}
                                             </button>
                                         )}
                                     </div>
-
                                 </form>
                             );
                         }}
@@ -379,7 +443,7 @@ class UserForm extends React.PureComponent {
                         isOpen={isModalOpen}
                         style={modalStyle}
                         ariaHideApp={false}
-                        contentLabel="Ajouter un contact"
+                        contentLabel={t("users:userForm.addContact")}
                         onRequestClose={this.toggleModal}
                     >
                         <ContactForm
@@ -401,4 +465,4 @@ class UserForm extends React.PureComponent {
     }
 }
 
-export default UserForm;
+export default withTranslation("users")(UserForm);

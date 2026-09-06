@@ -87,5 +87,188 @@
             "roles": "Rôles"
         },
         "errorTitle": "Erreur !"
+    },
+    "consent": {
+        "newsletter": "J'autorise {{schoolName}} à me tenir à jour de son activité par newsletter.",
+        "imageRight": "J'autorise {{schoolName}} à utiliser mon image sur ses différents supports de communication (site Internet, formulaires divers, réseaux sociaux, communiqués de presse, newsletters), et ce uniquement dans l'idée de valoriser la pratique musicale.",
+        "gdpr": "Je consens à ce que mes données personnelles soient utilisées à des fins de traitements associés au fonctionnement de la plateforme comme décrits dans <cgu>la politique de confidentialité et traitement des données personnelles par {{schoolName}}</cgu>"
+    },
+    "handicapInfos": {
+        "title": "Informations complémentaires",
+        "placeholder": "Informations importantes à fournir au personnel encadrant sur la personne inscrite aux activités."
+    },
+    "payers": {
+        "title": "Payeurs"
+    },
+    "selectSameAs": {
+        "label": "Identique à",
+        "none": "Personne"
+    },
+    "resendEmail": {
+        "errorTitle": "Erreur",
+        "alreadyConfigured": "Compte déjà configuré",
+        "sentTitle": "Email envoyé",
+        "sentText": "Un email de confirmation a été envoyé à l'utilisateur.",
+        "errorText": "Une erreur est survenue lors de l'envoi de l'email.",
+        "button": "Renvoyer l'email de confirmation"
+    },
+    "userForm": {
+        "fields": {
+            "civility": "Civilité",
+            "lastName": "Nom",
+            "firstName": "Prénom",
+            "birthday": "Date de naissance",
+            "nationalId": "Numéro national d'identification",
+            "organization": "Organisation",
+            "email": "Email",
+            "sex": "Sexe",
+            "phone": "Téléphone",
+            "phoneType": "Type",
+            "address": "Adresse",
+            "postcode": "Code postal",
+            "city": "Ville"
+        },
+        "genders": {
+            "F": "Madame",
+            "M": "Monsieur",
+            "A": "Autre"
+        },
+        "sexes": {
+            "F": "Féminin",
+            "M": "Masculin",
+            "A": "Autre"
+        },
+        "phoneTypes": {
+            "portable": "Portable",
+            "domicile": "Domicile",
+            "travail": "Travail"
+        },
+        "contactRepresentsOrg": "Ce contact représente l'organisation",
+        "personalCoordinates": "Coordonnées personnelles du demandeur",
+        "addAddress": "Ajouter une adresse",
+        "addPhone": "Ajouter un téléphone",
+        "newStudent": {
+            "title": "Créer un nouvel utilisateur",
+            "sendConfirmation": "Envoyer un email de confirmation ?"
+        },
+        "redirectToLogin": "Me rediriger vers la page de connexion",
+        "noPayer": {
+            "title": "<h5>Aucun payeur n'est déclaré pour {{student}}</h5>",
+            "bodyHtml": "<p>{{student}}, si vous êtes le payeur, merci de cocher la case<br/><b>\"L'élève est aussi le payeur\"</b><br/><br/>Si vous êtes payeur pour {{payer}}, merci de l'indiquer sur votre profil dans l'édition du lien familial.<br/><br/></p>",
+            "confirm": "Redirection vers la page de profil de {{payer}}",
+            "cancel": "Retour à la demande d'inscription"
+        },
+        "identityMismatch": "La combinaison nom / prénom / date de naissance doit être identique",
+        "addContact": "Ajouter un contact"
+    },
+    "organizationModal": {
+        "created": "Organisation créée",
+        "errorTitle": "Une erreur est survenue",
+        "errFieldEmpty": "Ce champ ne peut pas être vide",
+        "errRegNumber": "Le numéro de SIRET doit contenir 14 chiffres. Le numéro de RNA doit être préfixé de W suivi de 9 chiffres.",
+        "errTaxId": "Le numéro de TVA doit être préfixé de FR suivi de 11 chiffres.",
+        "createTooltip": "Créer une organisation",
+        "title": "Créer une organisation",
+        "name": "Nom de l'organisation",
+        "regNumber": "Numéro de SIRET ou RNA",
+        "vatSubject": "Assujetti à la TVA ?",
+        "vatNumber": "Numéro de TVA",
+        "submit": "Créer l'organisation"
+    },
+    "handleFamilyMember": {
+        "errorAdd": "<h5>Une erreur est survenue, <b>{{member}}</b> n'a pas été ajouté à la famille de {{user}}.</h5>",
+        "linkModified": "<h5>Le lien familial entre <b>{{member}}</b> et <b>{{user}}</b> a été modifié.</h5>",
+        "linkAdded": "<h5>L'utilisateur <b>{{member}}</b> a été ajouté à la famille de {{user}}.</h5>",
+        "deleteTitle": "<h5>Voulez-vous supprimer ce lien familial ?</h5>",
+        "deleteBody": "<p>Le lien familial entre <b>{{member}}</b> et <b>{{user}}</b> sera définitivement supprimé</p>",
+        "deleteConfirm": "<i class=\"fas fa-trash\"></i> Supprimer le lien familial",
+        "deleteCancel": "<i class=\"fas fa-ban\"></i> Annuler",
+        "errorTitle": "Une erreur est survenue",
+        "errorHtml": "erreur : {{error}}",
+        "addTooltip": "Ajouter un membre à la famille",
+        "addButton": "Ajouter un nouveau membre",
+        "editTooltip": "Édition du lien familial",
+        "deleteTooltip": "Suppression du lien familial",
+        "linkFromTo": "Lien de {{user}} envers {{member}}",
+        "creatingLink": "Création du lien familial du point de vue de {{user}}"
+    },
+    "contactForm": {
+        "familyLink": "Lien familial",
+        "is": "est",
+        "of": "de",
+        "changeRelationDirection": "Vous pouvez modifier le sens de la relation",
+        "matchesFound": "Nous avons trouvé des profils correspondant aux informations saisies",
+        "matchLine": "né(e) le {{date}}, Adhérent #{{number}}",
+        "noMatchTitle": "Aucun profil existant retrouvé selon ces coordonnées.",
+        "noMatchLine1": "Si l'utilisateur est déjà enregistré, vérifiez que les bonnes coordonnées soient saisies.",
+        "noMatchLine2": "Sinon <em>continuez votre saisie</em>.",
+        "continueEntry": "Continuer ma saisie",
+        "useThisProfile": "Utiliser ce profil",
+        "relationWith": "Relation avec {{name}}",
+        "isPayingFor": "{{a}} est payeur pour {{b}}",
+        "isLegalReferent": "{{a}} est représentant légal de {{b}}",
+        "isToCall": "{{a}} est la première personne à contacter pour {{b}}",
+        "isAccompanying": "{{a}} accompagne à l'école {{b}}"
+    },
+    "familyLinks": {
+        "père": "Père",
+        "mère": "Mère",
+        "grand-père": "Grand-père",
+        "grand-mère": "Grand-mère",
+        "frère": "Frère",
+        "soeur": "Sœur",
+        "enfant": "Enfant",
+        "petit-enfant": "Petit-enfant",
+        "époux": "Époux",
+        "autre": "Autre"
+    },
+    "wizardContactForm": {
+        "userFound": "Utilisateur trouvé :",
+        "bornOn": "né(e) le {{date}},",
+        "alreadyExists": "existe déjà dans la base de données",
+        "notAttached": "mais n'est pas rattaché à votre compte.",
+        "contactSchool": "Veuillez contacter l'école pour le rattacher."
+    },
+    "absences": {
+        "viewGlobal": "Voir dans le suivi global",
+        "kpi": {
+            "total": "Total absences",
+            "totalSub": "sur la période",
+            "justified": "Justifiées",
+            "unjustified": "Injustifiées",
+            "pctOfTotal": "{{pct}}% du total"
+        },
+        "filters": {
+            "season": "Saison",
+            "type": "Type d'absence",
+            "course": "Cours",
+            "search": "Recherche",
+            "searchPlaceholder": "Rechercher dans les remarques..."
+        },
+        "typeOptions": {
+            "all": "Tous"
+        },
+        "badge": {
+            "justified": "Justifiée",
+            "unjustified": "Injustifiée"
+        },
+        "export": "Exporter",
+        "columns": {
+            "date": "Date",
+            "course": "Cours",
+            "teacher": "Professeur",
+            "type": "Type d'absence",
+            "remark": "Remarque"
+        },
+        "loading": "Chargement…",
+        "empty": "Aucune absence pour ces critères.",
+        "rowsPerPage": "Lignes par page",
+        "remarkPlaceholder": "Ajouter une remarque…",
+        "toast": {
+            "savedTitle": "Enregistré !",
+            "savedText": "La remarque a été enregistrée.",
+            "errorTitle": "Erreur",
+            "errorText": "Échec de l'enregistrement de la remarque."
+        }
     }
 }

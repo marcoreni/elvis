@@ -1,5 +1,6 @@
 import React, { Fragment } from "react";
 import { Field } from "react-final-form";
+import { useTranslation } from "react-i18next";
 import { required, composeValidators, isValidNN } from "../../tools/validators";
 import Input from "../common/Input";
 import InputSelect from "../common/InputSelect";
@@ -8,11 +9,7 @@ import CreateOrganizationModal from "./CreateOrganizationModal";
 import { MESSAGES } from "../../tools/constants";
 import moment from "moment";
 
-const genders = [
-    { value: "F", label: "Madame" },
-    { value: "M", label: "Monsieur" },
-    { value: "A", label: "Autre" },
-];
+const genders = [{ value: "F" }, { value: "M" }, { value: "A" }];
 
 const GeneralInfos = ({
     displayBirthday,
@@ -26,179 +23,186 @@ const GeneralInfos = ({
     mutators,
     formValues,
     formErrors,
-}) => (
-    <Fragment>
-        <div className="row">
-            {displayGender && (
-                <div className="col-sm mt-3">
-                    <Field
-                        name="sex"
-                        validate={!ignoreValidate && required}
-                        required
-                    >
-                        {({ input, meta }) => (
-                            <div>
-                                <label
-                                    className="small"
-                                    style={{ color: "#003E5C" }}
-                                >
-                                    Civilité
-                                </label>
-                                <br />
-                                <div className="d-inline-flex">
-                                    {genders.map((gender, index) => (
-                                        <div
-                                            key={index}
-                                            className="mr-5"
-                                            style={{
-                                                color: "#155979",
-                                                fontWeight: "light",
-                                            }}
-                                        >
-                                            <Field
-                                                id={`${input.name}-${gender.value}`}
-                                                name={input.name}
-                                                component="input"
-                                                type={"radio"}
-                                                value={gender.value}
-                                                checked={
-                                                    gender.value === input.value
-                                                }
-                                                onChange={input.onChange}
-                                                className="mr-2"
-                                            />
-                                            <label
-                                                key={`${input.name}-${gender.value}`}
-                                                htmlFor={`${input.name}-${gender.value}`}
-                                            >
-                                                {gender.label}
-                                            </label>
-                                        </div>
-                                    ))}
-                                </div>
+}) => {
+    const { t } = useTranslation("users");
+
+    return (
+        <Fragment>
+            <div className="row">
+                {displayGender && (
+                    <div className="col-sm mt-3">
+                        <Field
+                            name="sex"
+                            validate={!ignoreValidate && required}
+                            required
+                        >
+                            {({ input, meta }) => (
                                 <div>
-                                    {meta.touched && meta.error && (
-                                        <span className="text-danger">
-                                            {MESSAGES[meta.error]}
-                                        </span>
-                                    )}
+                                    <label
+                                        className="small"
+                                        style={{ color: "#003E5C" }}
+                                    >
+                                        {t("users:userForm.fields.civility")}
+                                    </label>
+                                    <br />
+                                    <div className="d-inline-flex">
+                                        {genders.map((gender, index) => (
+                                            <div
+                                                key={index}
+                                                className="mr-5"
+                                                style={{
+                                                    color: "#155979",
+                                                    fontWeight: "light",
+                                                }}
+                                            >
+                                                <Field
+                                                    id={`${input.name}-${gender.value}`}
+                                                    name={input.name}
+                                                    component="input"
+                                                    type={"radio"}
+                                                    value={gender.value}
+                                                    checked={
+                                                        gender.value ===
+                                                        input.value
+                                                    }
+                                                    onChange={input.onChange}
+                                                    className="mr-2"
+                                                />
+                                                <label
+                                                    key={`${input.name}-${gender.value}`}
+                                                    htmlFor={`${input.name}-${gender.value}`}
+                                                >
+                                                    {t(
+                                                        `users:userForm.genders.${gender.value}`
+                                                    )}
+                                                </label>
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <div>
+                                        {meta.touched && meta.error && (
+                                            <span className="text-danger">
+                                                {MESSAGES[meta.error]}
+                                            </span>
+                                        )}
+                                    </div>
                                 </div>
-                            </div>
+                            )}
+                        </Field>
+                    </div>
+                )}
+
+                <div className="col-sm mt-4">
+                    <div className="col-xs-12 col-md-6 p-0">
+                        <label className="small" style={{ color: "#003E5C" }}>
+                            {t("users:userForm.fields.lastName")}
+                        </label>
+                        <br />
+                        <Field
+                            name="last_name"
+                            type="text"
+                            validate={!ignoreValidate && required}
+                            required
+                            render={Input}
+                        />
+                    </div>
+
+                    <div className="col-xs-12 col-md-6 pl-0 pl-md-5 pr-0">
+                        <label className="small" style={{ color: "#003E5C" }}>
+                            {t("users:userForm.fields.firstName")}
+                        </label>
+                        <br />
+                        <Field
+                            name="first_name"
+                            type="text"
+                            validate={!ignoreValidate && required}
+                            required
+                            render={Input}
+                        />
+                    </div>
+                </div>
+
+                {displayBirthday && (
+                    <div className="col-xs-12 col-md-6 pr-0">
+                        <label className="small" style={{ color: "#003E5C" }}>
+                            {t("users:userForm.fields.birthday")}
+                        </label>
+                        <br />
+                        <input
+                            type="date"
+                            className="form-control datepicker"
+                            value={toInputValue(birthday)}
+                            onChange={e => {
+                                const value = e.target.value; // "yyyy-MM-dd" or ""
+                                if (value)
+                                    mutators.changeBirthDate(
+                                        moment(value).format("YYYY/MM/DD")
+                                    );
+                                else mutators.changeBirthDate(null);
+                            }}
+                        />
+
+                        {birthday && (
+                            <p className="help-block">{toAge(birthday)}</p>
                         )}
-                    </Field>
-                </div>
-            )}
 
-            <div className="col-sm mt-4">
-                <div className="col-xs-12 col-md-6 p-0">
-                    <label className="small" style={{ color: "#003E5C" }}>
-                        Nom
-                    </label>
-                    <br />
-                    <Field
-                        name="last_name"
-                        type="text"
-                        validate={!ignoreValidate && required}
-                        required
-                        render={Input}
-                    />
-                </div>
-
-                <div className="col-xs-12 col-md-6 pl-0 pl-md-5 pr-0">
-                    <label className="small" style={{ color: "#003E5C" }}>
-                        Prénom
-                    </label>
-                    <br />
-                    <Field
-                        name="first_name"
-                        type="text"
-                        validate={!ignoreValidate && required}
-                        required
-                        render={Input}
-                    />
-                </div>
+                        {(formErrors || {}).birthday && (
+                            <span className="text-danger">
+                                {MESSAGES[formErrors.birthday]}
+                            </span>
+                        )}
+                    </div>
+                )}
             </div>
 
-            {displayBirthday && (
-                <div className="col-xs-12 col-md-6 pr-0">
-                    <label className="small" style={{ color: "#003E5C" }}>
-                        Date de naissance
-                    </label>
-                    <br />
-                    <input
-                        type="date"
-                        className="form-control datepicker"
-                        value={toInputValue(birthday)}
-                        onChange={e => {
-                            const value = e.target.value; // "yyyy-MM-dd" or ""
-                            if (value)
-                                mutators.changeBirthDate(
-                                    moment(value).format("YYYY/MM/DD")
-                                );
-                            else mutators.changeBirthDate(null);
-                        }}
-                    />
+            <div className="row">
+                {displayIdentificationNumber && (
+                    <div className="col-md-6 pr-0">
+                        <label className="small" style={{ color: "#003E5C" }}>
+                            {t("users:userForm.fields.nationalId")}
+                        </label>
+                        <br />
+                        <Field
+                            name="identification_number"
+                            type="text"
+                            validate={
+                                !ignoreValidate &&
+                                (requireIdentificationNumber
+                                    ? composeValidators(required, isValidNN)
+                                    : isValidNN)
+                            }
+                            required={requireIdentificationNumber}
+                            placeholder="85 07 30 033 28"
+                            mask="99 99 99 999 99"
+                            render={Input}
+                        />
+                    </div>
+                )}
 
-                    {birthday && (
-                        <p className="help-block">{toAge(birthday)}</p>
-                    )}
-
-                    {(formErrors || {}).birthday && (
-                        <span className="text-danger">
-                            {MESSAGES[formErrors.birthday]}
-                        </span>
-                    )}
-                </div>
-            )}
-        </div>
-
-        <div className="row">
-            {displayIdentificationNumber && (
-                <div className="col-md-6 pr-0">
-                    <label className="small" style={{ color: "#003E5C" }}>
-                        Numéro national d'identification
-                    </label>
-                    <br />
-                    <Field
-                        name="identification_number"
-                        type="text"
-                        validate={
-                            !ignoreValidate &&
-                            (requireIdentificationNumber
-                                ? composeValidators(required, isValidNN)
-                                : isValidNN)
-                        }
-                        required={requireIdentificationNumber}
-                        placeholder="85 07 30 033 28"
-                        mask="99 99 99 999 99"
-                        render={Input}
-                    />
-                </div>
-            )}
-
-            {ignoreValidate && organizationOptions && (
-                <div className="col-md-6">
-                    <label className="small" style={{ color: "#003E5C" }}>
-                        Organisation
-                    </label>
-                    <br />
-                    <Field
-                        label="Ce contact représente l'organisation"
-                        name="organization_id"
-                        type="select"
-                        validate={!ignoreValidate && required}
-                        options={organizationOptions}
-                        render={InputSelect}
-                        disabled={organizationOptions.length === 0}
-                    />
-                    <CreateOrganizationModal
-                        urlRedirect={`/users/${userId}/edit`}
-                    />
-                </div>
-            )}
-        </div>
-    </Fragment>
-);
+                {ignoreValidate && organizationOptions && (
+                    <div className="col-md-6">
+                        <label className="small" style={{ color: "#003E5C" }}>
+                            {t("users:userForm.fields.organization")}
+                        </label>
+                        <br />
+                        <Field
+                            label={t("users:userForm.contactRepresentsOrg")}
+                            name="organization_id"
+                            type="select"
+                            validate={!ignoreValidate && required}
+                            options={organizationOptions}
+                            render={InputSelect}
+                            disabled={organizationOptions.length === 0}
+                        />
+                        <CreateOrganizationModal
+                            urlRedirect={`/users/${userId}/edit`}
+                        />
+                    </div>
+                )}
+            </div>
+        </Fragment>
+    );
+};
 
 function toInputValue(dateStr) {
     if (!dateStr) return "";
