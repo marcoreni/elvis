@@ -432,5 +432,81 @@
             "price": "Membership price",
             "lastReminder": "Last reminder"
         }
+    },
+    "absencesTracking": {
+        "title": "Absence tracking",
+        "subtitle": "Global view of student absences",
+        "export": "Export",
+        "filters": {
+            "season": "Season",
+            "periodFrom": "Period — from",
+            "periodTo": "Period — to",
+            "teacher": "Teacher",
+            "day": "Day",
+            "course": "Course / activity",
+            "type": "Absence type",
+            "all": "All",
+            "unjustified": "Unjustified",
+            "justified": "Justified",
+            "reset": "Reset"
+        },
+        "days": {
+            "monday": "Monday",
+            "tuesday": "Tuesday",
+            "wednesday": "Wednesday",
+            "thursday": "Thursday",
+            "friday": "Friday",
+            "saturday": "Saturday",
+            "sunday": "Sunday"
+        },
+        "kpi": {
+            "total": "Total absences",
+            "totalSub": "Over the period",
+            "students": "Students affected",
+            "studentsSub": "{{pct}}% of enrolled students",
+            "unjustified": "Unjustified to handle",
+            "unjustifiedSub": "{{pct}}% of the total"
+        },
+        "table": {
+            "student": "Student",
+            "count": "Nb of absences",
+            "lastAbsence": "Last absence",
+            "type": "Type",
+            "remark": "Remark",
+            "action": "Action"
+        },
+        "loading": "Loading…",
+        "empty": "No absence for these criteria.",
+        "groupCount_one": "{{name}} — {{count}} absence",
+        "groupCount_other": "{{name}} — {{count}} absences",
+        "badge": {
+            "justified": "Justified",
+            "unjustified": "Unjustified"
+        },
+        "view": "View",
+        "none": "—",
+        "panel": {
+            "memberNumber": "Member no. {{number}}",
+            "studentPill": "Student",
+            "memberPill": "Member",
+            "totalAbsences": "Total absences",
+            "unjustified": "Unjustified",
+            "justified": "Justified",
+            "recentAbsences": "Recent absences",
+            "viewStudentSheet": "View student record",
+            "exportHistory": "Export the history"
+        },
+        "csv": {
+            "teacher": "Teacher",
+            "day": "Day",
+            "course": "Course / activity",
+            "student": "Student",
+            "memberNumber": "Member no.",
+            "date": "Date",
+            "type": "Type",
+            "remark": "Remark",
+            "justified": "Justified",
+            "unjustified": "Unjustified"
+        }
     }
 }
