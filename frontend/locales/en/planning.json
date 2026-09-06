@@ -398,5 +398,18 @@
             "present": "Present",
             "presentFemale": "Present"
         }
+    },
+    "hoursSheet": {
+        "titlePrefix": "Timesheet for",
+        "monthlyTitle": "Timesheet {{month}} {{year}}",
+        "colWeek": "WEEK",
+        "colTotal": "TOTAL",
+        "colCovering": "SUBSTITUTE",
+        "colCovered": "SUBSTITUTED",
+        "rowTotals": "TOTALS",
+        "coveringHours": "{{hours}} as substitute",
+        "coveredHours": "{{hours}} substituted",
+        "countedHours": "({{hours}} counted)",
+        "footnote": "*These hours are included in the activities count"
     }
 }

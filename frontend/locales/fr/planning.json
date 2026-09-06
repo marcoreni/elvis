@@ -398,5 +398,18 @@
             "present": "Présent",
             "presentFemale": "Présente"
         }
+    },
+    "hoursSheet": {
+        "titlePrefix": "Feuille d'heures de",
+        "monthlyTitle": "Feuille d'heures {{month}} {{year}}",
+        "colWeek": "SEMAINE",
+        "colTotal": "TOTAL",
+        "colCovering": "REMPLAÇANT",
+        "colCovered": "REMPLACÉ",
+        "rowTotals": "TOTAUX",
+        "coveringHours": "{{hours}} remplaçant",
+        "coveredHours": "{{hours}} remplacé",
+        "countedHours": "({{hours}} comptées)",
+        "footnote": "*Ces heures sont comprises dans le compte des activités"
     }
 }
