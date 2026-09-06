@@ -22,6 +22,46 @@ fr:
         confirm:
             sure: Êtes-vous sûr ?
 
+    menu:
+        plugins: Plugins
+        plugins_list: Liste des plugins
+        users: Utilisateurs
+        inscriptions: Inscriptions
+        adhesions: Adhésions
+        applications: Demandes d'inscription
+        packs: Packs
+        new_application: Nouvelle inscription
+        params: Paramétrage
+        plannings: Plannings
+        presences: Présences
+        seasons: Gestion des saisons
+        courses_list: Liste des cours
+        planning_teachers: Professeurs
+        planning_rooms: Salles de cours
+        replicate_courses: Répliquer des cours
+        monitoring: Suivi
+        absences: Suivi des absences
+        payments: Paiements
+        rooms_sites: Salles et sites
+        activities: Activités musicales
+        activity_families: Familles d'activités
+        instruments: Instruments
+        activity_refs: Activités
+        formulas: Formules
+        evaluations: Évaluation
+        evaluations_summary: Synthèse des évaluations
+        evaluations_management: Gestion des évaluations
+        students_without_slots: Élèves sans créneaux
+        parameters: Paramètres
+        my_planning: Mon planning
+        my_availabilities: Mes disponibilités
+        my_evaluations: Mes évaluations
+        planning_simulation: Simulation de planning
+        home: Accueil
+        my_applications: Mes demandes d'inscription
+        my_profile: Mon profil
+        logout: Se déconnecter
+
     activerecord:
         attributes:
             activity_ref:
@@ -57,6 +97,27 @@ fr:
                             confirmation: "Le mot de passe ne concorde pas."
 
     views:
+        layouts:
+            application:
+                my_planning: Mon planning
+                version_dev: version dev
+                version: version %{number}
+                powered_by: propulsé par
+                other_accounts: "Autres comptes :"
+                help_center: Centre d'aide
+                terms_link: Politique de confidentialité (CGU)
+                base_seasons_created:
+                    title: Message
+                    text: 3 saisons ont été créées par défaut en fonction de la date actuelle
+            static_pages:
+                sign_in: Connexion
+                sign_up: Inscription
+                read_more: EN SAVOIR PLUS
+                toggle_navigation: Afficher la navigation
+                previous: Précédent
+                next: Suivant
+                headline_1_html: Logiciel<br/> de gestion
+                headline_2_html: Cours collectifs <br/> Ateliers
         devise:
             sessions:
                 new:

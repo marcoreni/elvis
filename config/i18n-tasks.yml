@@ -83,3 +83,8 @@ ignore_unused:
   - "activerecord.attributes.user.last_name"
   - "activerecord.attributes.user.first_name"
   - "devise.**"
+  # Side/profile navigation captions. config/initializers/20-menu_generator.rb sets each menu
+  # item's `caption:` to a `:"menu.<key>"` Symbol; lib/elvis/menu_manager.rb#caption then does
+  # `I18n.t(@caption)` at render time. Neither the Symbol literal nor the dynamic `I18n.t` call
+  # is a static `t("menu.…")` the scan can credit, so every menu key reads as unused.
+  - "menu.*"

@@ -68,7 +68,7 @@
             <% unless @current_user.simple? %>
               <li>
                 <%= link_to planning_path(@current_user.planning), class: "m-l-sm m-r-sm img-rounded" do %>
-                  <i class="fas fa-calendar"></i> <span class="nav-label">Mon Planning</span>
+                  <i class="fas fa-calendar"></i> <span class="nav-label"><%= t("views.layouts.application.my_planning") %></span>
                 <% end %>
               </li>
             <% end %>
@@ -89,13 +89,13 @@
         <%# Le numéro de version %>
         <li id="nav-footer" class="text-center">
           <% if ENV["RAILS_ENV"] == "development" %>
-            <p class="nav-label img-rounded">version dev</p>
+            <p class="nav-label img-rounded"><%= t("views.layouts.application.version_dev") %></p>
           <% else %>
             <a class="nav-label img-rounded" target="_blank" href="https://github.com/ELVIS-SOFTWARE/elvis/releases/tag/<%= Elvis::VERSION %>">
-              version <%= Elvis::VERSION %>
+              <%= t("views.layouts.application.version", number: Elvis::VERSION) %>
             </a>
           <% end %>
-          <span class="nav-label img-rounded" style="vertical-align: text-bottom">propulsé par <img src="/powered_by.png" height="20" alt="Elvis"/> </span>
+          <span class="nav-label img-rounded" style="vertical-align: text-bottom"><%= t("views.layouts.application.powered_by") %> <img src="/powered_by.png" height="20" alt="Elvis"/> </span>
         </li>
       </ul>
 
@@ -146,7 +146,7 @@
 
                     <% if @same_email_users.any? %>
                       <li class="divider"></li>
-                      <span>Autres comptes:</span>
+                      <span><%= t("views.layouts.application.other_accounts") %></span>
                       <% @same_email_users.each do |other_user| %>
                         <li>
                           <a class="m-l-sm m-r-sm img-rounded" href="/pick_user/<%= other_user.id %>"><%= "#{other_user.last_name} #{other_user.first_name}" %></a>
@@ -163,7 +163,7 @@
 
           <% if @current_user.is_admin %>
             <div class="col-sm-3 text-right pull-right">
-              <a target="_blank" class="btn btn-rounded btn-info m-t-sm" href="https://elvis.stonly.com/" rel="noopener">Centre d'aide
+              <a target="_blank" class="btn btn-rounded btn-info m-t-sm" href="https://elvis.stonly.com/" rel="noopener"><%= t("views.layouts.application.help_center") %>
                 <i class="fas fa-question"></i> </a>
             </div>
           <% end %>
@@ -182,7 +182,7 @@
       <div class="app-footer m-n m-t-sm">
         <div class="link-footer">
           <%= link_to :cgu do %>
-            Politique de confidentialité (CGU)
+            <%= t("views.layouts.application.terms_link") %>
           <% end %>
         </div>
       </div>
@@ -264,6 +264,6 @@
         });
     });
 </script>
-<%= react_component("utils/SwalBackEndModal", { swal_props: { title: 'Message', type: 'info', text: '3 saisons ont été créées par défault en fonction de la date actuelle' } }) if @base_season_created %>
+<%= react_component("utils/SwalBackEndModal", { swal_props: { title: t("views.layouts.application.base_seasons_created.title"), type: 'info', text: t("views.layouts.application.base_seasons_created.text") } }) if @base_season_created %>
 </body>
 </html>

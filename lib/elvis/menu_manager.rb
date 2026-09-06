@@ -293,8 +293,10 @@ module Elvis
           if @caption.nil?
             name
           else
-            @caption.is_a?(Symbol) ? l(@caption) : @caption
-      end
+            # A Symbol caption is an i18n key, resolved here (at render) so it follows the
+            # request locale even though menu items are built once at boot.
+            @caption.is_a?(Symbol) ? I18n.t(@caption) : @caption
+          end
         end
       end
 
