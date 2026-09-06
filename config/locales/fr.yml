@@ -656,7 +656,7 @@ fr:
                 no_next_season: "<aucune>"
         teachers:
             index:
-                heading: Informations sur les profs
+                heading: Informations sur les professeurs
         students:
             index:
                 title: "Liste des cours de %{teacher}"

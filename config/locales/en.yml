@@ -74,7 +74,7 @@ en:
         attributes:
             activity_application_status:
                 label: Label
-                is_stopping: Stopping status?
+                is_stopping: Stopping?
                 is_active: Active
             user:
                 last_name: Last name
