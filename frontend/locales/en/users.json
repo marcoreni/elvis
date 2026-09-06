@@ -412,5 +412,25 @@
         "currentAccount": "Current account",
         "alreadyAttachedToCurrent": "Already attached to the current account",
         "attach": "Attach"
+    },
+    "adhesionList": {
+        "confirmReminder": "Send a reminder email?",
+        "yes": "Yes!",
+        "successTitle": "Success",
+        "reminderSent": "Reminder sent",
+        "confirmDelete": "Are you sure you want to delete this membership?",
+        "deleted": "Successfully deleted",
+        "notSpecified": "Not specified",
+        "soonExpired": "Expiring soon",
+        "expiresInDays_one": "Expires in {{count}} day",
+        "expiresInDays_other": "Expires in {{count}} days",
+        "totalCount_one": "{{count}} membership in total",
+        "totalCount_other": "{{count}} memberships in total",
+        "columns": {
+            "startDate": "Start date",
+            "endDate": "End date",
+            "price": "Membership price",
+            "lastReminder": "Last reminder"
+        }
     }
 }

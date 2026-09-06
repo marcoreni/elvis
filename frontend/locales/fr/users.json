@@ -412,5 +412,25 @@
         "currentAccount": "Compte actuel",
         "alreadyAttachedToCurrent": "Déjà rattaché·e au compte actuel",
         "attach": "Rattacher"
+    },
+    "adhesionList": {
+        "confirmReminder": "Confirmer l'envoi d'un email de relance ?",
+        "yes": "Oui !",
+        "successTitle": "Réussite",
+        "reminderSent": "Relance effectuée",
+        "confirmDelete": "Êtes-vous sûr de supprimer cette adhésion ?",
+        "deleted": "Suppression réussie",
+        "notSpecified": "Non précisée",
+        "soonExpired": "Bientôt expirés",
+        "expiresInDays_one": "Expire dans {{count}} jour",
+        "expiresInDays_other": "Expire dans {{count}} jours",
+        "totalCount_one": "{{count}} adhésion au total",
+        "totalCount_other": "{{count}} adhésions au total",
+        "columns": {
+            "startDate": "Date de début",
+            "endDate": "Date de fin",
+            "price": "Prix de l'adhésion",
+            "lastReminder": "Dernière relance"
+        }
     }
 }
