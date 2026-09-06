@@ -326,5 +326,72 @@
     "evaluationIntervalChoice": {
         "availableSlotsFor": "Créneaux d'évaluation disponibles pour {{activityName}}",
         "noSlots": "Aucun créneau d'évaluation disponible actuellement, nous reviendrons vers vous très vite pour vous en proposer un."
+    },
+    "activityItems": {
+        "badges": {
+            "proposalAccepted": "Proposition acceptée",
+            "courseProposed": "Cours proposé",
+            "proposalRefused": "Proposition refusée",
+            "courseAssigned": "Cours attribué",
+            "pendingTreatment": "En attente de traitement",
+            "stopped": "Arrêt",
+            "current": "Cours actuel",
+            "inProgress": "En cours",
+            "unsatisfied": "Demande non satisfaite",
+            "waitlist": "Sur liste d'attente"
+        },
+        "viewMyRequests": "Voir mes demandes",
+        "back": "Retour",
+        "confirm": "Je confirme",
+        "yes": "Oui",
+        "no": "Non",
+        "with": "Avec {{teacher}}",
+        "dayTimeRange": "{{day}} de {{start}} à {{end}}",
+        "inRoom": ", en salle : {{room}}",
+        "unknownActivity": "Activité inconnue",
+        "activityContentLabel": "Inscription à une activité",
+        "refuseTitle": "Refus de l'activité",
+        "refuseReasonPlaceholder": "Pouvez-vous nous indiquer les raisons de ce refus ?",
+        "acceptConfirmTitle": "Êtes-vous sûr d'accepter la proposition ?",
+        "toasts": {
+            "errorTitle": "Erreur",
+            "routingError": "Erreur lors de l'acheminement",
+            "proposalRefusedTitle": "Proposition refusée",
+            "reasonsCommunicated": "Les raisons ont été communiquées",
+            "successTitle": "Réussite",
+            "proposalAccepted": "Proposition acceptée",
+            "commentSendError": "Erreur lors de l'envoi du commentaire"
+        },
+        "editApplication": {
+            "comment": "Commenter",
+            "editContentLabel": "Modifier votre inscription",
+            "addCommentTitle": "Ajouter un commentaire sur votre demande",
+            "placeholder": "Indiquer les modifications à nous communiquer (disponibilité, choix professeur)",
+            "emptyError": "Veuillez renseigner les modifications à apporter",
+            "ok": "OK",
+            "submit": "Modifier",
+            "successContentLabel": "Modification réussie",
+            "successTitle": "Votre demande d'inscription a bien été modifiée",
+            "successBody": "Nous avons bien pris en compte les modifications de votre demande d'inscription."
+        },
+        "cancelApplication": {
+            "error": "Erreur lors de l'annulation de l'inscription",
+            "confirmContentLabel": "Confirmation de l'annulation de l'inscription",
+            "confirmTitle": "Cela annulera votre demande d'inscription. Êtes-vous sûr ?",
+            "canceledContentLabel": "Inscription annulée",
+            "canceledTitle": "Votre demande d'inscription est annulée",
+            "canceledBody": "Vous pouvez procéder à une nouvelle demande d'inscription"
+        },
+        "currentActivity": {
+            "stop": "S'arrêter",
+            "enrolInActivity": "S'inscrire à l'activité",
+            "reEnrol": "Se réinscrire",
+            "stopContentLabel": "Arrêt d'activité",
+            "stopQuestion": "Souhaitez-vous arrêter le cours suivant ?",
+            "chooseReason": "Choisir une raison",
+            "reasonPlaceholder": "Entrez votre raison ici...",
+            "noAlternative": "Aucune alternative ne peut vous être proposée.",
+            "stopAllQuestion": "Souhaitez-vous arrêter toute activité musicale et quitter l'école ?"
+        }
     }
 }
