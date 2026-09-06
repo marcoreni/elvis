@@ -270,5 +270,37 @@
             "errorTitle": "Erreur",
             "errorText": "Échec de l'enregistrement de la remarque."
         }
+    },
+    "personalInfos": {
+        "addressN": "Adresse {{n}} : {{address}}",
+        "street": "Voie",
+        "department": "Département",
+        "existingAddresses": "Adresses déjà existantes :",
+        "existingUsersClickToSelect": "Utilisateurs déjà existants (cliquez pour sélectionner) :",
+        "yearsOld": "{{n}} ans",
+        "selectSex": "Sélectionnez le sexe",
+        "selectPhoneType": "Sélectionner un type",
+        "contact": "Contact",
+        "ofLegalGuardian": "du représentant légal",
+        "phones": "Téléphone(s)",
+        "levels": {
+            "unspecifiedSeason": "Non précisée",
+            "canContinue": "Peut continuer",
+            "chooseLevel": "Choisir un niveau",
+            "activity": "ACTIVITÉ",
+            "level": "NIVEAU"
+        }
+    },
+    "roles": {
+        "successTitle": "Succès",
+        "lessonsDeleted": "Les séances à venir ont été supprimées",
+        "ok": "Ok",
+        "errorTitle": "Une erreur est survenue",
+        "courseLine": "Cours de {{label}} le {{day}} de {{start}} à {{end}}",
+        "coursesListIntro": "Les {{n}} séances font partie des cours suivants :",
+        "coursesToReplace": "Liste des cours à remplacer",
+        "hasUpcomingLessons": "Ce professeur a {{n}} séances de cours à venir dans le planning.<br/>Que souhaitez-vous faire ?",
+        "deleteThem": "Les supprimer",
+        "cancelAndView": "Annuler et voir les séances"
     }
 }

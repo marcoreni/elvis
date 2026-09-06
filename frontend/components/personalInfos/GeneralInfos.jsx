@@ -1,4 +1,5 @@
 import React, { Fragment } from "react";
+import { withTranslation } from "react-i18next";
 
 import NamePicker from "./NamePicker";
 
@@ -10,6 +11,7 @@ class GeneralInfos extends React.Component {
     }
 
     render() {
+        const { t } = this.props;
         const necessaryColor = { color: "#D63031" };
 
         const birthdayError =
@@ -27,9 +29,7 @@ class GeneralInfos extends React.Component {
                         personSelection={"other"}
                         validationState={this.props.validationState}
                         infos={this.props.infos}
-                        handleChangeInfos={e =>
-                            this.props.handleChangeInfos(e)
-                        }
+                        handleChangeInfos={e => this.props.handleChangeInfos(e)}
                         possibleMatches={this.props.possibleMatches}
                         handleSelectMatch={matchId =>
                             this.props.handleSelectMatch(matchId)
@@ -37,7 +37,7 @@ class GeneralInfos extends React.Component {
                     />
                     <div className="row">
                         <label className="col-md-2 col-sm-2 control-label">
-                            Date de naissance{" "}
+                            {t("users:userForm.fields.birthday")}{" "}
                             <small className="text-danger">*</small>
                         </label>
                         <div
@@ -49,18 +49,26 @@ class GeneralInfos extends React.Component {
                             <input
                                 type="date"
                                 className="form-control"
-                                value={this.props.infos.birthday ? this.props.infos.birthday.split("T")[0] : ""}
-                                onChange={e =>
-                                    this.props.handleSelectAge(e)
+                                value={
+                                    this.props.infos.birthday
+                                        ? this.props.infos.birthday.split(
+                                              "T"
+                                          )[0]
+                                        : ""
                                 }
+                                onChange={e => this.props.handleSelectAge(e)}
                             />
                             {this.props.infos.birthday ? (
                                 <i>
                                     <small>
-                                        {moment().diff(
-                                            moment(this.props.infos.birthday),
-                                            "years"
-                                        ) + " ans"}
+                                        {t("users:personalInfos.yearsOld", {
+                                            n: moment().diff(
+                                                moment(
+                                                    this.props.infos.birthday
+                                                ),
+                                                "years"
+                                            ),
+                                        })}
                                     </small>
                                 </i>
                             ) : null}
@@ -68,7 +76,8 @@ class GeneralInfos extends React.Component {
                         </div>
 
                         <label className="col-md-2 col-sm-2 control-label">
-                            Sexe <small className="text-danger">*</small>
+                            {t("users:userForm.fields.sex")}{" "}
+                            <small className="text-danger">*</small>
                         </label>
                         <div
                             className={
@@ -80,16 +89,20 @@ class GeneralInfos extends React.Component {
                                 className="form-control m-b"
                                 name="sex"
                                 value={this.props.infos.sex}
-                                onChange={e =>
-                                    this.props.handleChangeInfos(e)
-                                }
+                                onChange={e => this.props.handleChangeInfos(e)}
                             >
                                 <option value="0" disabled>
-                                    Sélectionnez le sexe
+                                    {t("users:personalInfos.selectSex")}
                                 </option>
-                                <option value="F">Féminin</option>
-                                <option value="M">Masculin</option>
-                                <option value="A">Autre</option>
+                                <option value="F">
+                                    {t("users:userForm.sexes.F")}
+                                </option>
+                                <option value="M">
+                                    {t("users:userForm.sexes.M")}
+                                </option>
+                                <option value="A">
+                                    {t("users:userForm.sexes.A")}
+                                </option>
                             </select>
                             <p id="sexError" style={necessaryColor} />
                         </div>
@@ -100,4 +113,4 @@ class GeneralInfos extends React.Component {
     }
 }
 
-export default GeneralInfos;
+export default withTranslation("users")(GeneralInfos);

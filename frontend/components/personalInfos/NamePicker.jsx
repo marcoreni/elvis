@@ -1,5 +1,6 @@
 import React from "react";
 import _ from "lodash";
+import { withTranslation } from "react-i18next";
 import { toLocaleDate, toDate } from "../../tools/format";
 
 import moment from "moment";
@@ -10,11 +11,12 @@ class NamePicker extends React.Component {
     }
 
     render() {
+        const { t } = this.props;
         const necessaryColor = { color: "#D63031" };
 
         const lastNameError =
-        this.props.validationState &&
-        this.props.validationState.failed.includes("last_name");
+            this.props.validationState &&
+            this.props.validationState.failed.includes("last_name");
 
         const firstNameError =
             this.props.validationState &&
@@ -27,13 +29,13 @@ class NamePicker extends React.Component {
                     <div className="row">
                         <div className="form-group">
                             <label className="col-md-2 col-sm-2 control-label">
-                                Nom <small className="text-danger">*</small>
+                                {t("users:userForm.fields.lastName")}{" "}
+                                <small className="text-danger">*</small>
                             </label>
                             <div
                                 className={
-                                    "col-md-4 col-sm-3" + (lastNameError
-                                        ? " has-warning"
-                                        : "")
+                                    "col-md-4 col-sm-3" +
+                                    (lastNameError ? " has-warning" : "")
                                 }
                             >
                                 <input
@@ -50,13 +52,13 @@ class NamePicker extends React.Component {
                                 </p>
                             </div>
                             <label className="col-md-2 col-sm-2 control-label">
-                                Prénom <small className="text-danger">*</small>
+                                {t("users:userForm.fields.firstName")}{" "}
+                                <small className="text-danger">*</small>
                             </label>
                             <div
                                 className={
-                                    "col-md-4 col-sm-3" + (firstNameError
-                                        ? " has-warning"
-                                        : "")
+                                    "col-md-4 col-sm-3" +
+                                    (firstNameError ? " has-warning" : "")
                                 }
                             >
                                 <input
@@ -83,8 +85,9 @@ class NamePicker extends React.Component {
                         <div className="row form-group">
                             <div className="alert alert-warning col-md-12">
                                 <p>
-                                    Utilisateurs déja existants (cliquez pour
-                                    sélectionner):{" "}
+                                    {t(
+                                        "users:personalInfos.existingUsersClickToSelect"
+                                    )}{" "}
                                 </p>
                                 {_.map(this.props.possibleMatches, (m, i) => {
                                     return (
@@ -92,7 +95,7 @@ class NamePicker extends React.Component {
                                             key={i}
                                             onClick={() =>
                                                 this.props.handleSelectMatch(
-                                                    m.id,
+                                                    m.id
                                                 )
                                             }
                                             style={{
@@ -117,4 +120,4 @@ class NamePicker extends React.Component {
     }
 }
 
-export default NamePicker;
+export default withTranslation("users")(NamePicker);

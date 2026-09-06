@@ -270,5 +270,37 @@
             "errorTitle": "Error",
             "errorText": "Failed to save the remark."
         }
+    },
+    "personalInfos": {
+        "addressN": "Address {{n}}: {{address}}",
+        "street": "Street",
+        "department": "Department",
+        "existingAddresses": "Existing addresses:",
+        "existingUsersClickToSelect": "Existing users (click to select):",
+        "yearsOld": "{{n}} years old",
+        "selectSex": "Select the sex",
+        "selectPhoneType": "Select a type",
+        "contact": "Contact",
+        "ofLegalGuardian": "of the legal guardian",
+        "phones": "Phone(s)",
+        "levels": {
+            "unspecifiedSeason": "Not specified",
+            "canContinue": "Can continue",
+            "chooseLevel": "Choose a level",
+            "activity": "ACTIVITY",
+            "level": "LEVEL"
+        }
+    },
+    "roles": {
+        "successTitle": "Success",
+        "lessonsDeleted": "The upcoming sessions have been deleted",
+        "ok": "Ok",
+        "errorTitle": "An error occurred",
+        "courseLine": "{{label}} course on {{day}} from {{start}} to {{end}}",
+        "coursesListIntro": "The {{n}} sessions are part of the following courses:",
+        "coursesToReplace": "List of courses to cover",
+        "hasUpcomingLessons": "This teacher has {{n}} upcoming course sessions in the schedule.<br/>What do you want to do?",
+        "deleteThem": "Delete them",
+        "cancelAndView": "Cancel and view the sessions"
     }
 }

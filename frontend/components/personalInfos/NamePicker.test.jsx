@@ -25,7 +25,12 @@ describe("NamePicker — _.map renders the existing-user matches without throwin
             <NamePicker
                 {...baseProps({
                     possibleMatches: [
-                        { id: 1, first_name: "Jean", last_name: "Dupont", birthday: "2000-01-01" },
+                        {
+                            id: 1,
+                            first_name: "Jean",
+                            last_name: "Dupont",
+                            birthday: "2000-01-01",
+                        },
                     ],
                 })}
             />

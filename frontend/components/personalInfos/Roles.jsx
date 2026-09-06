@@ -1,12 +1,11 @@
 import React, { useState, Fragment } from "react";
 import _ from "lodash";
+import { useTranslation } from "react-i18next";
 import Checkbox from "../common/Checkbox";
 import PropTypes from "prop-types";
 import * as api from "../../tools/api";
 import swal from "sweetalert2";
 import moment from "moment";
-
-moment.locale("fr");
 
 /**
  * @param {{is_teacher: boolean, is_admin: boolean, adhesions: []}} user
@@ -15,6 +14,7 @@ moment.locale("fr");
  * @constructor
  */
 export default function Roles({ user, lessonsPlanned, onSubmit }) {
+    const { t } = useTranslation("users");
     const [isTeacher, setIsTeacher] = useState(user.is_teacher);
     const [isAdmin, setIsAdmin] = useState(user.is_admin);
 
@@ -22,11 +22,11 @@ export default function Roles({ user, lessonsPlanned, onSubmit }) {
         api.set()
             .success(() => {
                 swal({
-                    title: "Succès",
+                    title: t("users:roles.successTitle"),
                     type: "success",
-                    text: "Les séances à venir ont été supprimées",
+                    text: t("users:roles.lessonsDeleted"),
                     width: "400px",
-                    confirmButtonText: "Ok",
+                    confirmButtonText: t("users:roles.ok"),
                 }).then(() => {
                     setIsTeacher(false);
                 });
@@ -35,32 +35,45 @@ export default function Roles({ user, lessonsPlanned, onSubmit }) {
                 console.error("error deleting activity instances : ", errorMsg);
                 swal({
                     type: "error",
-                    title: "Une erreur est survenue",
+                    title: t("users:roles.errorTitle"),
                 });
             })
             .del(`/teachers/${user.id}/activity_instances`);
     }
 
     function formatActivity(a) {
-        const day = moment(a.time_interval.start).format('dddd')
-        const startsAt = moment(a.time_interval.start).format('HH:mm')
-        const endsAt = moment(a.time_interval.end).format('HH:mm')
-        return `Cours de ${a.activity_ref.label} le ${day} de ${startsAt} à ${endsAt}<br/>`;
+        const day = moment(a.time_interval.start).format("dddd");
+        const startsAt = moment(a.time_interval.start).format("HH:mm");
+        const endsAt = moment(a.time_interval.end).format("HH:mm");
+        return (
+            t("users:roles.courseLine", {
+                label: a.activity_ref.label,
+                day,
+                start: startsAt,
+                end: endsAt,
+            }) + "<br/>"
+        );
     }
 
     function getActivitiesList() {
-        return api.set()
-            .success((activities) => {
+        return api
+            .set()
+            .success(activities => {
                 let res = "";
                 const htmlText =
-                    `Les ${lessonsPlanned} séances font partie des cours suivants :<br/><br/>` +
-                    _.reduce(activities, (res, activity) => res + formatActivity(activity), res);
+                    t("users:roles.coursesListIntro", { n: lessonsPlanned }) +
+                    "<br/><br/>" +
+                    _.reduce(
+                        activities,
+                        (res, activity) => res + formatActivity(activity),
+                        res
+                    );
 
                 swal({
-                    title: "Liste des cours à remplacer",
+                    title: t("users:roles.coursesToReplace"),
                     type: "success",
                     html: htmlText,
-                    confirmButtonText: "Ok",
+                    confirmButtonText: t("users:roles.ok"),
                     width: 600,
                 });
             })
@@ -68,7 +81,7 @@ export default function Roles({ user, lessonsPlanned, onSubmit }) {
                 console.error("error fetching lessons : ", errorMsg);
                 swal({
                     type: "error",
-                    title: "Une erreur est survenue",
+                    title: t("users:roles.errorTitle"),
                 });
             })
             .get(`/teachers/${user.id}/activities/`);
@@ -78,20 +91,20 @@ export default function Roles({ user, lessonsPlanned, onSubmit }) {
         // dans le cas où on cherche à désactiver le rôle professeur, on doit prendre quelques précautions
         if (isTeacher && lessonsPlanned > 0) {
             swal({
-                title: "Etes-vous sûr ?",
-                html: `Ce professeur a ${lessonsPlanned} séances de cours à venir dans le planning.<br/>Que souhaitez-vous faire ?`,
-                confirmButtonText: "Les supprimer",
-                cancelButtonText: "Annuler et voir les séances",
+                title: t("common:confirm.sure"),
+                html: t("users:roles.hasUpcomingLessons", {
+                    n: lessonsPlanned,
+                }),
+                confirmButtonText: t("users:roles.deleteThem"),
+                cancelButtonText: t("users:roles.cancelAndView"),
                 showCancelButton: true,
-            })
-                .then(res => {
-                    if (res.value) {
-                        removeLessons();
-                    } else {
-                        getActivitiesList();
-                    }
-                })
-
+            }).then(res => {
+                if (res.value) {
+                    removeLessons();
+                } else {
+                    getActivitiesList();
+                }
+            });
 
             return;
         }
@@ -99,44 +112,57 @@ export default function Roles({ user, lessonsPlanned, onSubmit }) {
         setIsTeacher(!isTeacher);
     }
 
-    return <div className="padding-page application-form">
-        <div className="ibox m-b-lg">
-            <Checkbox
-                id="is_teacher"
-                label="Professeur"
-                input={{
-                    checked: isTeacher,
-                    onChange: () => onChangeIsTeacher(isTeacher)
-                }}
-            />
+    return (
+        <div className="padding-page application-form">
+            <div className="ibox m-b-lg">
+                <Checkbox
+                    id="is_teacher"
+                    label={t("users:list.table.roleBadges.teacher")}
+                    input={{
+                        checked: isTeacher,
+                        onChange: () => onChangeIsTeacher(isTeacher),
+                    }}
+                />
 
-            <Checkbox
-                id="is_admin"
-                label="Administrateur"
-                input={{
-                    checked: isAdmin,
-                    onChange: () => setIsAdmin(!isAdmin)
-                }}
-            />
+                <Checkbox
+                    id="is_admin"
+                    label={t("users:list.table.roleBadges.admin")}
+                    input={{
+                        checked: isAdmin,
+                        onChange: () => setIsAdmin(!isAdmin),
+                    }}
+                />
 
-            <div className="w-100 text-right">
-                <button className="btn btn-success"
-                    onClick={() => onSubmit({ ...user, is_teacher: isTeacher, is_admin: isAdmin })}>Enregistrer
-                </button>
+                <div className="w-100 text-right">
+                    <button
+                        className="btn btn-success"
+                        onClick={() =>
+                            onSubmit({
+                                ...user,
+                                is_teacher: isTeacher,
+                                is_admin: isAdmin,
+                            })
+                        }
+                    >
+                        {t("common:actions.save")}
+                    </button>
+                </div>
             </div>
         </div>
-    </div>
+    );
 }
 
 Roles.propTypes = {
     user: PropTypes.shape({
         is_admin: PropTypes.bool.isRequired,
         is_teacher: PropTypes.bool.isRequired,
-        adhesions: PropTypes.arrayOf(PropTypes.shape({
-            is_active: PropTypes.bool.isRequired,
-            season_id: PropTypes.number.isRequired,
-            validity_start_date: PropTypes.string,
-            validity_end_date: PropTypes.string
-        }))
-    })
-}
+        adhesions: PropTypes.arrayOf(
+            PropTypes.shape({
+                is_active: PropTypes.bool.isRequired,
+                season_id: PropTypes.number.isRequired,
+                validity_start_date: PropTypes.string,
+                validity_end_date: PropTypes.string,
+            })
+        ),
+    }),
+};
