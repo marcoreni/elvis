@@ -21,6 +21,8 @@ fr:
             actions: Actions
             active: Actif
             inactive: Inactif
+            "yes": Oui
+            "no": Non
         confirm:
             sure: Êtes-vous sûr ?
 
@@ -73,6 +75,10 @@ fr:
                     chorale_ma: Chorale MA
                     eveil_musical: Éveil musical
                     actions_culturelles: Actions culturelles
+            activity_application_status:
+                label: Libellé
+                is_stopping: Arrêt ?
+                is_active: Actif
             user:
                 last_name: Nom
                 first_name: Prénom
@@ -341,6 +347,19 @@ fr:
             index:
                 title: Demandes d'inscription
                 create: Créer une inscription
+        activity_application_statuses:
+            index:
+                heading: Liste des statuts d'inscription
+                new_button: Nouveau statut
+                error_title: Erreur
+                message_title: Message
+                cols:
+                    label: Libellé
+                    stopping: Arrêt ?
+            new:
+                title: Créer un statut d'inscription
+            edit:
+                title: Éditer un statut d'inscription
         activity_ref:
             index:
                 heading: Référentiel des activités
@@ -635,6 +654,17 @@ fr:
                 save_error_body: Veuillez corriger les champs en rouge ci-dessous.
                 for_the_season: Pour la saison
                 no_next_season: "<aucune>"
+        teachers:
+            index:
+                heading: Informations sur les profs
+        students:
+            index:
+                title: "Liste des cours de %{teacher}"
+                lesson_slot: "%{day} de %{start} à %{end} : cours de %{activity}"
+                group: "groupe %{name}"
+                room: "salle %{name}"
+                from_date: "à partir du %{date}"
+                until_date: "jusqu'au %{date}"
         shared:
             form_errors:
                 heading: "%{count} erreur(s) empêchent l'enregistrement :"
