@@ -21,8 +21,8 @@ fr:
             actions: Actions
             active: Actif
             inactive: Inactif
-            "yes": Oui
-            "no": Non
+            "yes": "Oui"
+            "no": "Non"
         confirm:
             sure: Êtes-vous sûr ?
 

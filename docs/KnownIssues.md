@@ -583,3 +583,9 @@ before any `{...props}` spread onto a DOM node.
   `activities_applications/create.html.erb`, `comments/{create,update,destroy}.html.erb`,
   `time_interval/validate.html.erb`, `family_members/destroy.html.erb`,
   `family_member_users/destroy.html.erb`. Left in place (don't-delete-on-looks-dead); not extracted.
+- **`app/controllers/activity_application_statuses_controller.rb` flash bodies still hardcoded French.**
+  P4 extracted the `Erreur` / `Message` alert *headings* in `index.html.erb` to
+  `views.activity_application_statuses.index.{error_title,message_title}`, but the flash text those
+  headings sit above (set in the controller's create/update/destroy actions) is still a French string
+  literal — so an EN user sees a translated heading over untranslated body text. Controller-layer
+  strings are Phase 07 P6 scope; noted here so P6 picks it up.

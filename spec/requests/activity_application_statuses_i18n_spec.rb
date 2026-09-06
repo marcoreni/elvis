@@ -65,6 +65,16 @@ RSpec.describe "Activity application statuses i18n", type: :request do
     end
   end
 
+  # common.labels.yes/no are shared boolean-cell labels. "Yes"/"No" (and "Oui"/"Non") must stay
+  # quoted in the YAML -- bare `yes:`/`no:` values parse as YAML 1.1 booleans and the cell then
+  # renders "true"/"false". i18n-tasks health can't see this (leaf is present and non-empty).
+  it "resolves common.labels.yes/no to strings, not YAML booleans, in both locales" do
+    %w[fr en].each do |lng|
+      expect(I18n.t("common.labels.yes", locale: lng)).to be_a(String)
+      expect(I18n.t("common.labels.no", locale: lng)).to be_a(String)
+    end
+  end
+
   # The form labels its fields with bare `f.label :attr`, resolved via
   # ActivityApplicationStatus.human_attribute_name -> activerecord.attributes.activity_application_status.*.
   # A missing key there does NOT raise "translation missing"; Rails silently humanizes the
