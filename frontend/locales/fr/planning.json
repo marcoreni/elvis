@@ -260,7 +260,7 @@
             "calendar": "Calendrier de la saison {{label}}",
             "startLabel": "Début de saison",
             "endLabel": "Fin de saison",
-            "reopenLabel": "Ouverture ré-inscriptions",
+            "reopenLabel": "Ouverture réinscriptions",
             "openNewLabel": "Ouverture nouvelles inscriptions",
             "closeLabel": "Clôture des inscriptions",
             "lessonCountLabel": "Nombre de leçons (calculé auto)",

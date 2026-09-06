@@ -435,7 +435,7 @@
             "routingError": "Error while routing the request",
             "successTitle": "Success",
             "ruleCreated": "Rule created",
-            "ruleAlreadyExists": "The event « {{event}} » already has a rule",
+            "ruleAlreadyExists": "The event \"{{event}}\" already has a rule",
             "missingFields": "Please fill in all the fields",
             "ruleUpdated": "Rule updated",
             "ruleDeleted": "Rule deleted"
