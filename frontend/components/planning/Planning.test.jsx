@@ -37,26 +37,43 @@ afterEach(async () => {
     await i18n.changeLanguage("fr");
 });
 
-describe("Planning", () => {
-    test("renders the holidays alert and filter-bar labels in French by default", async () => {
-        await i18n.changeLanguage("fr");
+// Domain bilingual smoke test for the `planning` area (Phase 07 P0 checkpoint strategy —
+// docs/I18n-Roadmap.md §P0). The per-leaf-component "renders the fr / renders the en" pairs that
+// phases 05-06 accumulated across the planning modals have been collapsed; this container render
+// (holidays alert + filter bar + a data-tippy-content tooltip) is the single locale checkpoint
+// for the area's chrome.
+const REPRESENTATIVE = {
+    fr: {
+        alert: /les vacances scolaires n'ont pas été importées/,
+        manage: "Gérer dès maintenant les dates de vacances de votre école.",
+        tooltip: "Réinitialiser les filtres",
+        // RESTORED BY CODE REVIEW: the h3 is a multi-node run — {t("otherRooms")} then " à
+        // afficher (…)" — so this regex is the only assertion that the adjacent nodes still
+        // concatenate with the whitespace between them (load-bearing whitespace, which the
+        // prune's own policy says to keep).
+        otherRooms: /Autres salles\s+à afficher/,
+    },
+    en: {
+        alert: /school holidays have not been imported/,
+        manage: "Manage your school's holiday dates now.",
+        tooltip: "Reset filters",
+        otherRooms: /Other rooms\s+to display/,
+    },
+};
+
+describe.each(["fr", "en"])("planning area — bilingual smoke (%s)", lng => {
+    test("renders Planning chrome with real translated copy, no missing-key markers", async () => {
+        await i18n.changeLanguage(lng);
         render(<Planning {...props} />);
 
-        expect(screen.getByText(/les vacances scolaires n'ont pas été importées/)).toBeInTheDocument();
-        expect(screen.getByText("Gérer dès maintenant les dates de vacances de votre école.")).toBeInTheDocument();
-        // h3 text = "<Autres salles> à afficher (…)" — assert the whole run in one go
-        expect(screen.getByRole("heading", { name: /Autres salles\s+à afficher/ })).toBeInTheDocument();
-        expect(document.querySelector('[data-tippy-content="Réinitialiser les filtres"]')).toBeTruthy();
-        expect(document.querySelector('[data-tippy-content="Activités de cette salle"]')).toBeTruthy();
-    });
-
-    test("renders in English when the active language is en", async () => {
-        await i18n.changeLanguage("en");
-        render(<Planning {...props} />);
-
-        expect(screen.getByText(/school holidays have not been imported/)).toBeInTheDocument();
-        expect(screen.getByText("Manage your school's holiday dates now.")).toBeInTheDocument();
-        expect(screen.getByText(/Other rooms/)).toBeInTheDocument();
-        expect(document.querySelector('[data-tippy-content="Reset filters"]')).toBeTruthy();
+        expect(screen.getByText(REPRESENTATIVE[lng].alert)).toBeInTheDocument();
+        expect(screen.getByText(REPRESENTATIVE[lng].manage)).toBeInTheDocument();
+        expect(
+            document.querySelector(`[data-tippy-content="${REPRESENTATIVE[lng].tooltip}"]`)
+        ).toBeTruthy();
+        expect(
+            screen.getByRole("heading", { name: REPRESENTATIVE[lng].otherRooms })
+        ).toBeInTheDocument();
+        expect(document.body.textContent).not.toMatch(/translation missing/i);
     });
 });

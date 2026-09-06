@@ -133,35 +133,11 @@ afterEach(async () => {
 // 1. i18n layer — editParameters.school.* parity + resolution + the interpolated keys
 // ============================================================================================
 describe("editParameters.school.* — i18n layer", () => {
-    const flatten = (obj, prefix = "") =>
-        Object.entries(obj).flatMap(([k, v]) =>
-            v && typeof v === "object" ? flatten(v, `${prefix}${k}.`) : [`${prefix}${k}`],
-        );
-
-    const FR_KEYS = flatten(fr).filter((k) => k.startsWith("editParameters.school."));
-    const EN_KEYS = flatten(en).filter((k) => k.startsWith("editParameters.school."));
-
-    test("fr and en expose exactly the same editParameters.school.* key set (31)", () => {
-        // 34 at lot-E3; the shared-consolidation moved loadingTitle/saveSuccess/genericError
-        // onto common:loading / shared.saveCompleted / shared.genericErrorShort -> 31.
-        expect(new Set(EN_KEYS)).toEqual(new Set(FR_KEYS));
-        expect(FR_KEYS).toHaveLength(31);
-        expect(EN_KEYS).toHaveLength(31);
-    });
-
-    test.each(["fr", "en"])(
-        "every editParameters.school.* key resolves to real, non-empty copy in %s",
-        (lng) => {
-            const t = tP(lng);
-            for (const key of FR_KEYS) {
-                const v = t(key, {country: "FR", academy: "Paris"});
-                expect(typeof v).toBe("string");
-                expect(v.length).toBeGreaterThan(0);
-                expect(v).not.toBe(key);
-                expect(v).not.toMatch(/\{\{/);
-            }
-        },
-    );
+    // Phase 07 P0 (docs/I18n-Roadmap.md §P0): the editParameters.school.* key-set parity + count
+    // pin, the "every key resolves" loop and the common:actions.save string-echo were pure
+    // pipeline coverage — redundant with frontend/i18n/index.test.js's cross-namespace parity
+    // guard and `bin/i18n-tasks health`. Removed. Kept: the {{country}} / {{academy}}
+    // interpolation paths and the activitiesNotVatLabel <Trans> marker check.
 
     // `siretRnaError` is used at TWO call sites — the `validateSiretRna` return value and the
     // `<p className="text-danger">` — both `t("...siretRnaError", {country: getValues("countryCode")})`.
@@ -188,10 +164,8 @@ describe("editParameters.school.* — i18n layer", () => {
         },
     );
 
-    test("common:actions.save (submit button) resolves to Enregistrer / Save", () => {
-        expect(tC("fr")("actions.save")).toBe("Enregistrer");
-        expect(tC("en")("actions.save")).toBe("Save");
-    });
+    // "common:actions.save resolves to Enregistrer / Save" removed (Phase 07 P0) — pure
+    // string-echo; the submit button copy is asserted in the render section below.
 });
 
 // ============================================================================================

@@ -42,8 +42,6 @@
 import React from "react";
 import {render, screen, fireEvent, waitFor} from "@testing-library/react";
 import i18n from "../../i18n";
-import fr from "../../locales/fr/parameters.json";
-import en from "../../locales/en/parameters.json";
 
 // --- sweetalert2: plain spy with a `.showLoading` no-op (RulesSettings + TeachersParameters
 //     call `swal.showLoading()` on the default export). --------------------------------------
@@ -124,48 +122,13 @@ afterEach(async () => {
 // 1. i18n layer — editParameters.* parity + resolution, and the reused keys
 // ============================================================================================
 describe("editParameters.* — i18n layer", () => {
-    const flatten = (obj, prefix = "") =>
-        Object.entries(obj).flatMap(([k, v]) =>
-            v && typeof v === "object" ? flatten(v, `${prefix}${k}.`) : [`${prefix}${k}`],
-        );
-
-    const FR_KEYS = flatten(fr).filter((k) => k.startsWith("editParameters."));
-    const EN_KEYS = flatten(en).filter((k) => k.startsWith("editParameters."));
-
-    test("fr and en expose exactly the same editParameters.* key set", () => {
-        expect(new Set(EN_KEYS)).toEqual(new Set(FR_KEYS));
-        // grows across sub-lots (E2: 49, E3: +34 school.* = 83; shared-consolidation moved
-        // ~9 swal-title/status keys onto shared.*/common: -> ~74). Exact total pinned in
-        // ParametersChrome.test.jsx; here just guard the floor + fr/en lock-step.
-        expect(FR_KEYS.length).toBe(EN_KEYS.length);
-        expect(FR_KEYS.length).toBeGreaterThanOrEqual(49);
-    });
-
-    test.each(["fr", "en"])("every editParameters.* key resolves to real, non-empty copy in %s", (lng) => {
-        const t = tP(lng);
-        for (const key of FR_KEYS) {
-            // pass every interpolation var any editParameters.* string uses
-            const v = t(key, {country: "FR", academy: "Paris"});
-            expect(typeof v).toBe("string");
-            expect(v.length).toBeGreaterThan(0);
-            expect(v).not.toBe(key);
-            expect(v).not.toMatch(/\{\{/);
-        }
-    });
-
-    test("reused shared.* + common:actions.save keys resolve to the expected copy", () => {
-        expect(tP("fr")("shared.errorTitle")).toBe("Erreur");
-        expect(tP("en")("shared.errorTitle")).toBe("Error");
-
-        expect(tP("fr")("shared.genericError")).toBe("Une erreur est survenue. Contactez un administrateur");
-        expect(tP("en")("shared.genericError")).toBe("An error occurred. Contact an administrator");
-
-        expect(tP("fr")("shared.saveButton")).toBe("Sauvegarder");
-        expect(tP("en")("shared.saveButton")).toBe("Save");
-
-        expect(tC("fr")("actions.save")).toBe("Enregistrer");
-        expect(tC("en")("actions.save")).toBe("Save");
-    });
+    // Phase 07 P0 (docs/I18n-Roadmap.md §P0): the editParameters.* key-set parity + floor pin,
+    // the "every key resolves" loop and the "reused shared.*/common:actions.save resolve to the
+    // expected copy" string-echo were pure pipeline coverage — redundant with
+    // frontend/i18n/index.test.js's cross-namespace parity guard and `bin/i18n-tasks health`.
+    // Removed. Kept below: the consolidation pins, and the key-resolution checks for the two
+    // branches that genuinely cannot be render-tested (the dead csv.*Required gate, the
+    // react-dropzone reject path) plus the real Dropzone renders.
 
     test("mail swal titles are now localised in fr (English kept in en)", () => {
         // saveSuccessTitle was consolidated onto shared.saveSuccessTitle; mail.errorTitle stays.

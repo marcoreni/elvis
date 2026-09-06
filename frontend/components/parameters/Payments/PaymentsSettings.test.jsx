@@ -184,46 +184,11 @@ describe("parameters shared.* + payments.* — i18n layer", () => {
             v && typeof v === "object" ? flatten(v, `${prefix}${k}.`) : [`${prefix}${k}`],
         );
 
-    const SUBSET = (d) => ({shared: d.shared, payments: d.payments});
-    const FR_KEYS = flatten(SUBSET(fr));
-    const EN_KEYS = flatten(SUBSET(en));
-
-    test("fr and en expose exactly the same shared.* + payments.* key set", () => {
-        expect(new Set(EN_KEYS)).toEqual(new Set(FR_KEYS));
-        // shared grows across lots (C: 7, D: +colLabel = 8, …); payments dropped to 48 when the
-        // shared-consolidation removed payments.cols.label + payments.status.deleteConfirm
-        // (tabs 5 lot A + non-tabs 43). Guard the payments count exactly, shared loosely.
-        expect(flatten({payments: fr.payments})).toHaveLength(48);
-        expect(flatten({x: fr.shared}).length).toBeGreaterThanOrEqual(7);
-    });
-
-    test("the lot-C additions are present: shared.* atoms + 43 non-tab payments.*", () => {
-        for (const k of [
-            "actions", "yes", "no", "errorTitle", "deleteConfirmYes", "deleteConfirmNo", "genericError",
-            // shared-consolidation atoms
-            "saveCompleted", "genericErrorShort", "saveSuccessTitle", "deleteStatusConfirm",
-        ]) {
-            expect(fr.shared).toHaveProperty(k);
-        }
-        const paymentsNonTabs = flatten({payments: fr.payments}).filter(
-            (k) => !k.startsWith("payments.tabs."),
-        );
-        expect(paymentsNonTabs).toHaveLength(43);
-    });
-
-    test.each(["fr", "en"])(
-        "every shared.* + payments.* key resolves to real, non-empty, brace-free copy in %s",
-        (lng) => {
-            const t = tP(lng);
-            for (const key of FR_KEYS) {
-                const v = t(key, {name: "X", label: "Y"});
-                expect(typeof v).toBe("string");
-                expect(v.length).toBeGreaterThan(0);
-                expect(v).not.toBe(key);
-                expect(v).not.toMatch(/\{\{/);
-            }
-        },
-    );
+    // Phase 07 P0 (docs/I18n-Roadmap.md §P0): the shared.*+payments.* key-set parity check, the
+    // structural "lot-C additions are present" count pin and the "every key resolves" loop were
+    // pure pipeline coverage — redundant with frontend/i18n/index.test.js's cross-namespace
+    // parity guard and `bin/i18n-tasks health`. Removed. Kept: the {{name}} / {{label}}
+    // interpolation paths and the lot-A tab-survival regression.
 
     // The four interpolating keys must embed the passed value and leave no braces.
     const NAME_KEYS = ["payments.methods.deleteConfirm", "shared.deleteStatusConfirm"];
@@ -247,12 +212,8 @@ describe("parameters shared.* + payments.* — i18n layer", () => {
         }
     });
 
-    test("shared.deleteConfirmYes / deleteConfirmNo resolve to the lowercase oui/non forms", () => {
-        expect(tP("fr")("shared.deleteConfirmYes")).toBe("oui");
-        expect(tP("fr")("shared.deleteConfirmNo")).toBe("non");
-        expect(tP("en")("shared.deleteConfirmYes")).toBe("yes");
-        expect(tP("en")("shared.deleteConfirmNo")).toBe("no");
-    });
+    // "shared.deleteConfirmYes / deleteConfirmNo resolve to lowercase oui/non" removed
+    // (Phase 07 P0) — pure string-echo.
 
     test("regression: payments.tabs.adhesion (lot A) still resolves — not dropped by lot C", () => {
         expect(tP("fr")("payments.tabs.adhesion")).toBe("Adhésion");

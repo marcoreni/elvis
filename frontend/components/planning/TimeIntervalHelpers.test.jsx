@@ -272,47 +272,15 @@ describe("reactivity to i18n.changeLanguage", () => {
 // ------------------------------------------------------------------------------------------------
 
 describe("planning.json i18n layer", () => {
-    const KEYS = [
-        "scheduleTitles.evaluation",
-        "scheduleTitles.availability",
-        "scheduleTitles.availabilityEvaluation",
-        "levelDisplay.notIndicated",
-        "levelDisplay.toSpecify",
-        "ageYears",
-    ];
-
-    test.each(["fr", "en"])("every key resolves to real copy in %s", lng => {
-        const t = i18n.getFixedT(lng, "planning");
-        for (const key of KEYS) {
-            const v = t(key, { age: 12 });
-            expect(typeof v).toBe("string");
-            expect(v.length).toBeGreaterThan(0);
-            expect(v).not.toBe(key);
-            expect(v).not.toContain("{{");
-            expect(v).not.toContain("}}");
-        }
-    });
+    // Phase 07 P0 (docs/I18n-Roadmap.md §P0): the "every key resolves" loop and the
+    // scheduleTitles/levelDisplay key-set parity check were pure pipeline coverage — redundant
+    // with frontend/i18n/index.test.js's cross-namespace parity guard. Removed. Kept: the
+    // {{age}} sub-lexical interpolation and the evaluation-vs-availabilityEvaluation
+    // distinct-copy regression from the calendar lot.
 
     test("ageYears interpolates {{age}} brace-free in both locales", () => {
         expect(i18n.getFixedT("fr", "planning")("ageYears", { age: 12 })).toBe("12 ans");
         expect(i18n.getFixedT("en", "planning")("ageYears", { age: 12 })).toBe("12 years old");
-    });
-
-    test("fr and en agree on the scheduleTitles / levelDisplay / ageYears key set", () => {
-        const flat = (obj, prefix = "") =>
-            Object.entries(obj).flatMap(([k, v]) => {
-                const key = prefix ? `${prefix}.${k}` : k;
-                return v && typeof v === "object" && !Array.isArray(v) ? flat(v, key) : [key];
-            });
-        const subset = bundle => ({
-            scheduleTitles: flat(bundle.scheduleTitles).sort(),
-            levelDisplay: flat(bundle.levelDisplay).sort(),
-            hasAgeYears: typeof bundle.ageYears === "string",
-        });
-
-        const fr = i18n.getResourceBundle("fr", "planning");
-        const en = i18n.getResourceBundle("en", "planning");
-        expect(subset(en)).toEqual(subset(fr));
     });
 
     test("the new scheduleTitles.evaluation key is distinct from availabilityEvaluation (fr)", () => {

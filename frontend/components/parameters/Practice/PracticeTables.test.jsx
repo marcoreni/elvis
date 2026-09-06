@@ -22,8 +22,6 @@
 import React from "react";
 import {render, screen} from "@testing-library/react";
 import i18n from "../../../i18n";
-import fr from "../../../locales/fr/parameters.json";
-import en from "../../../locales/en/parameters.json";
 
 // --- react-table stub: echo every column's (string) Header into the DOM, in column order.
 //     Also short-circuits the real ReactTable's mount-time `onFetchData` -> no `fetch`.
@@ -140,34 +138,11 @@ afterEach(async () => {
 // 1. i18n layer — practice.* resolves in fr AND en, fr/en parity, delete.* interpolation
 // ============================================================================================
 describe("parameters practice.* — i18n layer", () => {
-    const flatten = (obj, prefix = "") =>
-        Object.entries(obj).flatMap(([k, v]) =>
-            v && typeof v === "object" ? flatten(v, `${prefix}${k}.`) : [`${prefix}${k}`],
-        );
-
-    const FR_KEYS = flatten({practice: fr.practice});
-    const EN_KEYS = flatten({practice: en.practice});
-
-    test("fr and en expose exactly the same practice.* key set", () => {
-        expect(new Set(EN_KEYS)).toEqual(new Set(FR_KEYS));
-        // pin the exact count — bump per lot so a lot adding fewer keys than intended trips here.
-        // shared-consolidation moved practice.cols.name onto shared.colName -> 30 - 1 = 29.
-        expect(FR_KEYS).toHaveLength(23);
-    });
-
-    test.each(["fr", "en"])(
-        "every practice.* key resolves to real, non-empty, brace-free copy in %s",
-        (lng) => {
-            const t = i18n.getFixedT(lng, "parameters");
-            for (const key of FR_KEYS) {
-                const v = t(key, {name: "X"});
-                expect(typeof v).toBe("string");
-                expect(v.length).toBeGreaterThan(0);
-                expect(v).not.toBe(key);
-                expect(v).not.toMatch(/\{\{/);
-            }
-        },
-    );
+    // Phase 07 P0 (docs/I18n-Roadmap.md §P0): the practice.* key-set parity check + count pin,
+    // the "every practice.* key resolves" loop and the shared-atom resolution loop were pure
+    // pipeline coverage — redundant with frontend/i18n/index.test.js's cross-namespace parity
+    // guard and `bin/i18n-tasks health`. Removed. Kept: the 7 entity-specific delete-prompt
+    // {{name}} interpolation checks (they also assert the right entity noun).
 
     // The 7 entity-specific delete prompts each interpolate {{name}} and name their entity.
     const DELETE_ENTITY = [
@@ -196,16 +171,8 @@ describe("parameters practice.* — i18n layer", () => {
         },
     );
 
-    test.each(["fr", "en"])("shared delete-confirm + yes/no + errorTitle atoms resolve in %s", (lng) => {
-        const t = i18n.getFixedT(lng, "parameters");
-        for (const key of [
-            "shared.deleteConfirmYes", "shared.deleteConfirmNo",
-            "shared.yes", "shared.no", "shared.errorTitle",
-        ]) {
-            expect(t(key)).not.toBe(key);
-            expect(t(key).length).toBeGreaterThan(0);
-        }
-    });
+    // "shared delete-confirm + yes/no + errorTitle atoms resolve" removed (Phase 07 P0) —
+    // pure resolution loop.
 });
 
 // ============================================================================================

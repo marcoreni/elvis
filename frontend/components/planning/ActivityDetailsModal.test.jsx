@@ -20,89 +20,75 @@ import {
     RoomSelection,
     TeacherCoveringEditor,
     EditGroupNameInput,
-    GroupNameInput,
     ActivitySelection,
+    GroupNameInput,
 } from "./ActivityDetailsModal";
 
 afterEach(async () => {
     await i18n.changeLanguage("fr");
 });
 
-describe("TimeSelection", () => {
-    const props = {
-        startTime: moment("2026-09-01T10:00:00"),
-        endTime: moment("2026-09-01T11:30:00"),
-        handleSelectTime: () => {},
+// Phase 07 P0 (docs/I18n-Roadmap.md §P0): the per-sub-component "renders the fr labels /
+// renders the en labels" pairs for TimeSelection, LocationSelection, RoomSelection,
+// GroupNameInput and ActivitySelection were pure string-echoes. They are collapsed into this one
+// bilingual smoke that still mounts each of them per locale and checks the representative
+// translated copy plus the absence of a "translation missing" marker. The behaviour-carrying
+// blocks below (TeacherCoveringEditor's conditional hours-counted question, EditGroupNameInput's
+// `t`-prop reactivity) are kept.
+describe.each(["fr", "en"])("ActivityDetailsModal sub-selectors — bilingual smoke (%s)", lng => {
+    const REPRESENTATIVE = {
+        fr: {time: ["Début", "Fin"], location: "Choisir un Lieu", room: "Choisir une salle", activity: "Choisir une activité", groupName: "Nom du groupe"},
+        en: {time: ["Start", "End"], location: "Choose a location", room: "Choose a room", activity: "Choose an activity", groupName: "Group name"},
     };
 
-    test("renders the start/end labels in French", async () => {
-        await i18n.changeLanguage("fr");
-        render(<TimeSelection {...props} />);
-        expect(screen.getByText("Début")).toBeInTheDocument();
-        expect(screen.getByText("Fin")).toBeInTheDocument();
-    });
+    test("TimeSelection / LocationSelection / RoomSelection / ActivitySelection / GroupNameInput render translated copy", async () => {
+        await i18n.changeLanguage(lng);
+        const rep = REPRESENTATIVE[lng];
 
-    test("renders the start/end labels in English", async () => {
-        await i18n.changeLanguage("en");
-        render(<TimeSelection {...props} />);
-        expect(screen.getByText("Start")).toBeInTheDocument();
-        expect(screen.getByText("End")).toBeInTheDocument();
-    });
-});
+        const {unmount: u1} = render(
+            <TimeSelection
+                startTime={moment("2026-09-01T10:00:00")}
+                endTime={moment("2026-09-01T11:30:00")}
+                handleSelectTime={() => {}}
+            />,
+        );
+        for (const label of rep.time) expect(screen.getByText(label)).toBeInTheDocument();
+        u1();
 
-describe("LocationSelection", () => {
-    // Two+ locations so the <select> branch (not the single-location static branch) renders.
-    const props = {
-        locations: [
-            {id: 1, label: "Conservatoire"},
-            {id: 2, label: "Annexe"},
-        ],
-        locationId: null,
-        handleSelectLocation: () => {},
-    };
+        const {unmount: u2} = render(
+            <LocationSelection
+                locations={[{id: 1, label: "Conservatoire"}, {id: 2, label: "Annexe"}]}
+                locationId={null}
+                handleSelectLocation={() => {}}
+            />,
+        );
+        expect(screen.getByText(rep.location)).toBeInTheDocument();
+        u2();
 
-    test("renders the disabled choose-location option in French", async () => {
-        await i18n.changeLanguage("fr");
-        render(<LocationSelection {...props} />);
-        expect(screen.getByText("Choisir un Lieu")).toBeInTheDocument();
-    });
+        const {unmount: u3} = render(
+            <RoomSelection
+                roomsConstrained={[]}
+                roomId={null}
+                roomRefs={[{id: 10, label: "Salle Debussy"}, {id: 11, label: "Salle Ravel"}]}
+                handleSelectRoom={() => {}}
+            />,
+        );
+        expect(screen.getByText(rep.room)).toBeInTheDocument();
+        u3();
 
-    test("renders the disabled choose-location option in English", async () => {
-        await i18n.changeLanguage("en");
-        render(<LocationSelection {...props} />);
-        expect(screen.getByText("Choose a location")).toBeInTheDocument();
-    });
-});
+        const {unmount: u4} = render(
+            <ActivitySelection activities={[]} activityId={0} handleSelectActivity={() => {}} />,
+        );
+        expect(screen.getByText(rep.activity)).toBeInTheDocument();
+        u4();
 
-describe("RoomSelection", () => {
-    // roomsConstrained = [] -> the React.Fragment fallback branch with the "no suitable rooms"
-    // paragraph plus a second choose-room <select> built from roomRefs.
-    const props = {
-        roomsConstrained: [],
-        roomId: null,
-        roomRefs: [
-            {id: 10, label: "Salle Debussy"},
-            {id: 11, label: "Salle Ravel"},
-        ],
-        handleSelectRoom: () => {},
-    };
+        // RESTORED BY CODE REVIEW: the trailing comment in this file claimed GroupNameInput was
+        // "still mounted per locale by the smoke describe above", but the prune removed it from
+        // the import list and never rendered it — it was left with zero coverage.
+        render(<GroupNameInput value="" onChange={() => {}} />);
+        expect(screen.getByText(rep.groupName)).toBeInTheDocument();
 
-    test("renders the no-suitable-rooms and choose-room copy in French", async () => {
-        await i18n.changeLanguage("fr");
-        render(<RoomSelection {...props} />);
-        expect(
-            screen.getByText("Aucune salle adaptée disponible pour ce cours, autres salles:"),
-        ).toBeInTheDocument();
-        expect(screen.getByText("Choisir une salle")).toBeInTheDocument();
-    });
-
-    test("renders the no-suitable-rooms and choose-room copy in English", async () => {
-        await i18n.changeLanguage("en");
-        render(<RoomSelection {...props} />);
-        expect(
-            screen.getByText("No suitable room available for this course, other rooms:"),
-        ).toBeInTheDocument();
-        expect(screen.getByText("Choose a room")).toBeInTheDocument();
+        expect(document.body.textContent).not.toMatch(/translation missing/i);
     });
 });
 
@@ -115,24 +101,18 @@ describe("TeacherCoveringEditor", () => {
         onChange: () => {},
     };
 
-    test("renders the substitute-for label and react-select placeholder in French", async () => {
+    // The substitute-for label is split across text nodes ({t(...)} {first_name}{" "}{last_name}) —
+    // kept (not a plain string-echo) to pin that the interpolated teacher name lands inside the
+    // translated label in both locales. fr/en merged into one rerender under Phase 07 P0.
+    test("interpolates the covered teacher's name into the substitute-for label (fr + en)", async () => {
         await i18n.changeLanguage("fr");
-        render(<TeacherCoveringEditor {...baseProps} coverTeacherId={null} />);
-        // Label text is split across nodes ({t(...)} {first_name}{" "}{last_name}) -> regex match.
-        expect(screen.getByText(/Remplaçant de/)).toBeInTheDocument();
-        expect(screen.getByText("Ada", {exact: false})).toHaveTextContent(
-            "Remplaçant de Ada Lovelace",
-        );
+        const {rerender} = render(<TeacherCoveringEditor {...baseProps} coverTeacherId={null} />);
+        expect(screen.getByText("Ada", {exact: false})).toHaveTextContent("Remplaçant de Ada Lovelace");
         expect(screen.getByText("PAS DE REMPLAÇANT")).toBeInTheDocument();
-    });
 
-    test("renders the substitute-for label and react-select placeholder in English", async () => {
         await i18n.changeLanguage("en");
-        render(<TeacherCoveringEditor {...baseProps} coverTeacherId={null} />);
-        expect(screen.getByText(/Substitute for/)).toBeInTheDocument();
-        expect(screen.getByText("Ada", {exact: false})).toHaveTextContent(
-            "Substitute for Ada Lovelace",
-        );
+        rerender(<TeacherCoveringEditor {...baseProps} coverTeacherId={null} />);
+        expect(screen.getByText("Ada", {exact: false})).toHaveTextContent("Substitute for Ada Lovelace");
         expect(screen.getByText("NO SUBSTITUTE")).toBeInTheDocument();
     });
 
@@ -176,36 +156,17 @@ describe("EditGroupNameInput", () => {
         onSave: () => {},
     };
 
-    test("renders the addon, save button and help alert in French", async () => {
-        await i18n.changeLanguage("fr");
-        render(<EditGroupNameInput {...baseProps} t={i18n.getFixedT(null, "planning")} />);
-        expect(screen.getByText("Nom du groupe")).toBeInTheDocument();
-        expect(screen.getByText("Enregistrer")).toBeInTheDocument();
-        expect(
-            screen.getByText(
-                "Changer le nom du groupe pour cette instance le modifiera pour toutes les occurences de cette activité.",
-            ),
-        ).toBeInTheDocument();
-    });
-
-    test("renders the addon, save button and help alert in English", async () => {
-        await i18n.changeLanguage("en");
-        render(<EditGroupNameInput {...baseProps} t={i18n.getFixedT(null, "planning")} />);
-        expect(screen.getByText("Group name")).toBeInTheDocument();
-        expect(screen.getByText("Save")).toBeInTheDocument();
-        expect(
-            screen.getByText(
-                "Changing the group name for this instance will change it for all occurrences of this activity.",
-            ),
-        ).toBeInTheDocument();
-    });
-
+    // The plain fr / en "renders the addon, save button and help alert" pair was a string-echo
+    // (Phase 07 P0). The `t`-prop reactivity test below already asserts the fr copy, switches
+    // language, and asserts the en copy — it is the mechanic worth keeping (this class reads `t`
+    // from props rather than useTranslation, so a stale prop would silently keep the old locale).
     test("picks up a fresh t prop when the language changes", async () => {
         await i18n.changeLanguage("fr");
         const {rerender} = render(
             <EditGroupNameInput {...baseProps} t={i18n.getFixedT(null, "planning")} />,
         );
         expect(screen.getByText("Nom du groupe")).toBeInTheDocument();
+        expect(screen.getByText("Enregistrer")).toBeInTheDocument();
 
         await i18n.changeLanguage("en");
         rerender(<EditGroupNameInput {...baseProps} t={i18n.getFixedT(null, "planning")} />);
@@ -215,45 +176,8 @@ describe("EditGroupNameInput", () => {
     });
 });
 
-describe("GroupNameInput", () => {
-    // Function component, useTranslation("planning"). Props are `value` / `onChange`
-    // (destructured directly in the source, not groupName/handleChangeGroupName).
-    const props = {
-        value: "",
-        onChange: () => {},
-    };
-
-    test("renders the group-name label in French", async () => {
-        await i18n.changeLanguage("fr");
-        render(<GroupNameInput {...props} />);
-        expect(screen.getByText("Nom du groupe")).toBeInTheDocument();
-    });
-
-    test("renders the group-name label in English", async () => {
-        await i18n.changeLanguage("en");
-        render(<GroupNameInput {...props} />);
-        expect(screen.getByText("Group name")).toBeInTheDocument();
-    });
-});
-
-describe("ActivitySelection", () => {
-    const props = {
-        activities: [],
-        activityId: 0,
-        handleSelectActivity: () => {},
-    };
-
-    test("renders the activity label and disabled choose-activity option in French", async () => {
-        await i18n.changeLanguage("fr");
-        render(<ActivitySelection {...props} />);
-        expect(screen.getByText("Activité")).toBeInTheDocument();
-        expect(screen.getByText("Choisir une activité")).toBeInTheDocument();
-    });
-
-    test("renders the activity label and disabled choose-activity option in English", async () => {
-        await i18n.changeLanguage("en");
-        render(<ActivitySelection {...props} />);
-        expect(screen.getByText("Activity")).toBeInTheDocument();
-        expect(screen.getByText("Choose an activity")).toBeInTheDocument();
-    });
-});
+// GroupNameInput and ActivitySelection had fr/en "renders the label" string-echo pairs only —
+// removed under Phase 07 P0. Both components are mounted per locale by the "ActivityDetailsModal
+// sub-selectors — bilingual smoke" describe above. (GroupNameInput's mount was RESTORED BY CODE
+// REVIEW: the prune dropped it from the import list and never re-rendered it, so this comment had
+// become false and the component was left with zero coverage anywhere in the suite.)

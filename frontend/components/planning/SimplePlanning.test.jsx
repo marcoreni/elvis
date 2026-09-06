@@ -64,21 +64,10 @@ const dayData = {
 };
 
 describe("SimplePlanning", () => {
-    test("renders the empty-week message and teacher dropdown in French by default", async () => {
-        await i18n.changeLanguage("fr");
-        render(<SimplePlanning {...props} />);
-
-        expect(screen.getByText("Aucune activité cette semaine.")).toBeInTheDocument();
-        expect(screen.getByText("Planning de")).toBeInTheDocument();
-    });
-
-    test("renders in English when the active language is en", async () => {
-        await i18n.changeLanguage("en");
-        render(<SimplePlanning {...props} />);
-
-        expect(screen.getByText("No activity this week.")).toBeInTheDocument();
-        expect(screen.getByText("Planning of")).toBeInTheDocument();
-    });
+    // The plain "renders the empty-week message in fr / in en" pair was a pure string-echo and
+    // has been removed (Phase 07 P0). The two prop-threading tests below still render this
+    // component in both locales and assert the child SimpleActivity / SimpleEvaluation actually
+    // mount with a working `t`.
 
     test("threads t into SimpleActivity and SimpleEvaluation (French)", async () => {
         await i18n.changeLanguage("fr");

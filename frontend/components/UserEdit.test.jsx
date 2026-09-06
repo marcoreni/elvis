@@ -11,7 +11,7 @@
 //   instance as react-i18next's default.
 
 import React from "react";
-import {render, screen, waitFor} from "@testing-library/react";
+import {render, screen} from "@testing-library/react";
 import i18n from "../i18n";
 import UserEdit from "./UserEdit";
 
@@ -46,29 +46,10 @@ describe("UserEdit", () => {
         await i18n.changeLanguage("fr");
     });
 
-    test("renders the French translations by default", async () => {
-        await i18n.changeLanguage("fr");
-        renderUserEdit();
-
-        expect(await screen.findByText(/Édition du profil :/)).toBeInTheDocument();
-        expect(screen.getByText("DOE John")).toBeInTheDocument();
-        expect(screen.getByText("Coordonnées")).toBeInTheDocument();
-        expect(screen.getByText("Évaluations")).toBeInTheDocument();
-        expect(screen.getByText("Rôles")).toBeInTheDocument();
-    });
-
-    test("renders the English translations when the active language is en", async () => {
-        await i18n.changeLanguage("en");
-        renderUserEdit();
-
-        await waitFor(() =>
-            expect(screen.getByText(/Editing profile:/)).toBeInTheDocument()
-        );
-        expect(screen.getByText("DOE John")).toBeInTheDocument();
-        expect(screen.getByText("Contact details")).toBeInTheDocument();
-        expect(screen.getByText("Evaluations")).toBeInTheDocument();
-        expect(screen.getByText("Roles")).toBeInTheDocument();
-    });
+    // The plain "renders the fr / renders the en" title + tab-header pair was a pure string-echo
+    // and has been removed under the Phase 07 P0 checkpoint strategy (docs/I18n-Roadmap.md §P0).
+    // The `users` area locale checkpoint lives in UserList.test.jsx; the conditional-tab
+    // behaviour below is what is specific to this component.
 
     test("hides the evaluations/roles tabs for a non-admin, non-teacher current_user", async () => {
         await i18n.changeLanguage("fr");

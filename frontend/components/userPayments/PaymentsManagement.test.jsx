@@ -1,7 +1,10 @@
-// i18n extraction test for userPayments/PaymentsManagement (i18n-06 payments lot 2c-iii), the
-// container. The four heavy child components are mocked; assertions target the strings that live
-// directly in PaymentsManagement — the printable form headings, the page heading, the season
-// label and the empty-state text.
+// Domain bilingual smoke test for the `userPayments` area (Phase 07 P0 checkpoint strategy —
+// docs/I18n-Roadmap.md §P0). The per-component "renders the fr / renders the en" string-echo
+// pairs for PaymentsList / DuePaymentsList / SwitchPayerModal / UserPaymentsV2 were redundant now
+// that the i18n pipeline is proven and have been removed; this container render is the single
+// locale checkpoint for the area. The four heavy child components are mocked, so this exercises
+// the strings owned by PaymentsManagement itself (page heading, printable form headings, season
+// label, empty-state) and guards that none of them fall through to a "translation missing" marker.
 
 import React from "react";
 import { render, screen, waitFor } from "@testing-library/react";
@@ -51,34 +54,31 @@ afterEach(async () => {
     await i18n.changeLanguage("fr");
 });
 
-describe("userPayments/PaymentsManagement", () => {
-    test("French strings by default", async () => {
-        await i18n.changeLanguage("fr");
-        render(<PaymentsManagement {...props} />);
+const REPRESENTATIVE = {
+    fr: {
+        heading: "Règlements concernant Alice Durand",
+        sample: "Nombre d'échéance(s)",
+        emptyState: "Aucun échéancier pour cette saison",
+    },
+    en: {
+        heading: "Payments for Alice Durand",
+        sample: "Number of due date(s)",
+        emptyState: "No schedule for this season",
+    },
+};
 
-        expect(
-            screen.getByRole("heading", { name: "Règlements concernant Alice Durand" })
-        ).toBeInTheDocument();
-        expect(screen.getByText("Nombre d'échéance(s)")).toBeInTheDocument();
-        expect(screen.getByText("Pour les prélèvements, date souhaitée")).toBeInTheDocument();
-        expect(screen.getByText("Adhésion réglée différemment")).toBeInTheDocument();
-        expect(screen.getByText("Saison")).toBeInTheDocument();
-        expect(screen.getByText("Aucun échéancier pour cette saison")).toBeInTheDocument();
-    });
-
-    test("English strings when the active language is en", async () => {
-        await i18n.changeLanguage("en");
+describe.each(["fr", "en"])("userPayments area — bilingual smoke (%s)", lng => {
+    test("renders PaymentsManagement with real translated copy, no missing-key markers", async () => {
+        await i18n.changeLanguage(lng);
         render(<PaymentsManagement {...props} />);
 
         await waitFor(() =>
             expect(
-                screen.getByRole("heading", { name: "Payments for Alice Durand" })
+                screen.getByRole("heading", { name: REPRESENTATIVE[lng].heading })
             ).toBeInTheDocument()
         );
-        expect(screen.getByText("Number of due date(s)")).toBeInTheDocument();
-        expect(screen.getByText("For direct debits, preferred date")).toBeInTheDocument();
-        expect(screen.getByText("Membership paid separately")).toBeInTheDocument();
-        expect(screen.getByText("Season")).toBeInTheDocument();
-        expect(screen.getByText("No schedule for this season")).toBeInTheDocument();
+        expect(screen.getByText(REPRESENTATIVE[lng].sample)).toBeInTheDocument();
+        expect(screen.getByText(REPRESENTATIVE[lng].emptyState)).toBeInTheDocument();
+        expect(document.body.textContent).not.toMatch(/translation missing/i);
     });
 });

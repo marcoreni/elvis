@@ -187,67 +187,12 @@ afterEach(async () => {
 // 1. i18n layer
 // ============================================================================================
 describe("parameters lot-E — i18n layer", () => {
-    const flattenAll = (obj, p = "") =>
-        Object.entries(obj).flatMap(([k, v]) =>
-            v && typeof v === "object" ? flattenAll(v, `${p}${k}.`) : [`${p}${k}`],
-        );
-
-    // Whole lot-E-touched subtrees (each includes a lot-A `tabs` block that must survive).
-    const subtree = (d) => ({
-        shared: d.shared,
-        plannings: d.plannings,
-        evaluations: d.evaluations,
-        rooms: d.rooms,
-        localization: d.localization,
-        "activities.pricing": d.activities.pricing,
-    });
-
-    const FR_KEYS = flattenAll(subtree(fr));
-    const EN_KEYS = flattenAll(subtree(en));
-
-    test("fr and en expose exactly the same lot-E subtree key set", () => {
-        expect(new Set(EN_KEYS)).toEqual(new Set(FR_KEYS));
-        expect(FR_KEYS.length).toBe(EN_KEYS.length);
-        // 55 = shared(17) + plannings(17) + evaluations(7) + rooms(3) + localization(5) + activities.pricing(6).
-        // Net +1 vs the pre-consolidation 54: evaluations.slot lost {loadingTitle,saveSuccess,genericError}
-        // (-3) while shared.* gained {saveCompleted,genericErrorShort,saveSuccessTitle,deleteStatusConfirm} (+4).
-        expect(FR_KEYS).toHaveLength(55);
-    });
-
-    test("parameters.json fr/en leaf counts stay in lock-step (grows across lots)", () => {
-        expect(flattenAll(fr).length).toBe(flattenAll(en).length);
-        expect(flattenAll(fr).length).toBeGreaterThanOrEqual(172);
-    });
-
-    test.each(["fr", "en"])(
-        "every lot-E subtree key resolves to real, non-empty, brace-free copy in %s",
-        (lng) => {
-            const t = tP(lng);
-            for (const key of FR_KEYS) {
-                const v = t(key, {name: "Zephyr"});
-                expect(typeof v).toBe("string");
-                expect(v.length).toBeGreaterThan(0);
-                expect(v).not.toBe(key);
-                expect(v).not.toBe(key.split(".").pop());
-                expect(v).not.toMatch(/\{\{/);
-                expect(v).not.toMatch(/translation missing/i);
-            }
-        },
-    );
-
-    test.each(["fr", "en"])(
-        "the lot-E `shared.*` additions resolve to distinct copy in %s",
-        (lng) => {
-            const t = tP(lng);
-            for (const k of [
-                "shared.colName", "shared.loadParamsError", "shared.saveSuccess",
-                "shared.saveError", "shared.saveButton",
-            ]) {
-                expect(t(k)).not.toBe(k);
-                expect(t(k).length).toBeGreaterThan(0);
-            }
-        },
-    );
+    // Phase 07 P0 (docs/I18n-Roadmap.md §P0): the lot-E key-set parity check, the leaf-count
+    // lock-step pin, the "every subtree key resolves" loop and the "shared.* additions resolve"
+    // loop were pure pipeline coverage — redundant with frontend/i18n/index.test.js's
+    // cross-namespace parity guard and `bin/i18n-tasks health`. Removed. What stays below pins
+    // behaviour: the lot-A survival regression, the {{name}} interpolation paths, and the
+    // deleteConfirm copy-paste-slip regression.
 
     test("regression: the lot-A plannings.tabs.* / evaluations.tabs.* keys survive", () => {
         expect(tP("fr")("plannings.tabs.schoolAvailability")).toBe("Disponibilité de l'école");
@@ -286,18 +231,7 @@ describe("parameters lot-E — i18n layer", () => {
         },
     );
 
-    test("explicit fr / en copy for a sample of lot-E keys", () => {
-        expect(tP("fr")("shared.colName")).toBe("Nom");
-        expect(tP("en")("shared.colName")).toBe("Name");
-        expect(tP("fr")("shared.saveButton")).toBe("Sauvegarder");
-        expect(tP("en")("shared.saveButton")).toBe("Save");
-        expect(tP("fr")("plannings.displayParams.saveSuccess")).toBe("Paramètres modifiés");
-        expect(tP("en")("plannings.displayParams.saveSuccess")).toBe("Settings updated");
-        expect(tP("fr")("activities.pricing.createButton")).toBe("Créer une catégorie de prix");
-        expect(tP("en")("activities.pricing.createButton")).toBe("Create a pricing category");
-        expect(tP("fr")("localization.availableHeading")).toBe("Langues disponibles");
-        expect(tP("en")("localization.availableHeading")).toBe("Available languages");
-    });
+    // "explicit fr / en copy for a sample of lot-E keys" removed (Phase 07 P0) — pure string-echo.
 });
 
 // ============================================================================================
