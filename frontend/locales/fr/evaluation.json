@@ -40,5 +40,13 @@
                 "noStudent": "Aucun"
             }
         }
+    },
+    "previsionalGroups": {
+        "globalLevelRequired": "NIVEAU GLOBAL REQUIS",
+        "evaluationSheet": "Fiche d'évaluation",
+        "actionRequired": "Une action est requise de votre part",
+        "assignLevelPrompt": "Veuillez attribuer un niveau pour les cours suivants",
+        "noLevel": "PAS DE NIVEAU",
+        "assignGlobalLevel": "Affecter un niveau global"
     }
 }
