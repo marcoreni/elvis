@@ -109,6 +109,17 @@ en:
                 name: Name
             room_features:
                 name: Name
+            season:
+                label: Season name
+                nb_lessons: Number of lessons
+                start: Start
+                end: End
+                opening_date_for_applications: Re-enrollment opening date
+                opening_date_for_new_applications: New enrollment opening date
+                closing_date_for_applications: Enrollment closing date
+                date_for_teacher_planning_validation: Teacher planning validation date
+                is_current: Current season
+                next_season_id: Next season
         errors:
             models:
                 user:
@@ -313,6 +324,12 @@ en:
                 error_title: Error
             upload_csv:
                 heading: Import your community
+        adhesion:
+            index:
+                heading: Membership list
+                create: New membership
+            new:
+                heading: Create a membership
         activity:
             index:
                 title: Course list
@@ -600,6 +617,21 @@ en:
                 title: "Edit room \"%{label}\""
             edit_activities:
                 title: "Room activities: %{label}"
+        seasons:
+            index:
+                heading: Season management
+                create: Create a new season
+            new:
+                heading: New season
+            edit:
+                heading: 'Edit "%{label}"'
+                warning: 'Warning:'
+                autosave_notice: Any change made to the table is saved immediately, even without pressing the save buttons.
+            form:
+                save_error_title: Unable to save the season.
+                save_error_body: Please correct the fields highlighted in red below.
+                for_the_season: For the season
+                no_next_season: "<none>"
         shared:
             form_errors:
                 heading: "%{count} error(s) prevented this record from being saved:"
