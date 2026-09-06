@@ -1,6 +1,7 @@
-import React, {Component, Fragment, useRef} from 'react';
+import React, { Component, Fragment, useRef } from "react";
 import ReactTable from "react-table";
-import {csrfToken} from "../utils";
+import { withTranslation } from "react-i18next";
+import { csrfToken } from "../utils";
 import swal from "sweetalert2";
 
 const requestData = (pageSize, page, sorted, filtered, format) => {
@@ -15,21 +16,20 @@ const requestData = (pageSize, page, sorted, filtered, format) => {
         body: JSON.stringify({
             pageSize,
             page,
-            sorted:sorted[0],
+            sorted: sorted[0],
             filtered,
         }),
     });
 };
 
 class TemplateIndex extends Component {
-
     constructor(props) {
         super(props);
 
         this.state = {
             data: [],
             pages: null,
-            sorted: '',
+            sorted: "",
             loading: false,
             filter: {},
         };
@@ -40,12 +40,7 @@ class TemplateIndex extends Component {
     fetchData(state) {
         this.setState({ loading: true, filter: state });
 
-        requestData(
-            state.pageSize,
-            state.page,
-            state.sorted,
-            state.filtered
-        )
+        requestData(state.pageSize, state.page, state.sorted, state.filtered)
             .then(response => response.json())
             .then(data => {
                 const res = {
@@ -97,25 +92,28 @@ class TemplateIndex extends Component {
     //     })
     // }
 
-    render () {
+    render() {
+        const { t } = this.props;
         const { data, pages, loading } = this.state;
 
         const columns = [
             {
                 id: "label",
-                Header: "Nom du template",
+                Header: t("parameters:mailTemplates.columns.name"),
                 accessor: "name",
             },
             {
                 id: "",
-                Header: "Chemin",
+                Header: t("parameters:mailTemplates.columns.path"),
                 accessor: "path",
             },
             {
                 id: "actions",
-                Header: "Actions",
+                Header: t("parameters:mailTemplates.columns.actions"),
                 Cell: props => {
-                    return props.original.built_in ? "" :
+                    return props.original.built_in ? (
+                        ""
+                    ) : (
                         <div className="btn-wrapper text-center">
                             <a
                                 className="btn-sm btn-primary m-r-sm"
@@ -127,19 +125,19 @@ class TemplateIndex extends Component {
                                 <i className="fas fa-edit" />
                             </a>
                         </div>
+                    );
                 },
                 sortable: false,
                 filterable: false,
-                width: 200
+                width: 200,
             },
         ];
 
         return (
             <Fragment>
                 <div className="row wrapper border-bottom white-bg page-heading mb-5">
-                    <h1>Édition des templates emails</h1>
+                    <h1>{t("parameters:mailTemplates.listTitle")}</h1>
                 </div>
-
 
                 <div className="col-lg-12 col-sm-12">
                     <div className="row">
@@ -151,17 +149,25 @@ class TemplateIndex extends Component {
                                     manual
                                     loading={loading}
                                     onFetchData={this.fetchData}
-                                    defaultSorted={[{ id: "label", desc: false }]}
+                                    defaultSorted={[
+                                        { id: "label", desc: false },
+                                    ]}
                                     columns={columns}
                                     resizable={false}
                                     showPagination={false}
-                                    previousText="Précédent"
-                                    nextText="Suivant"
-                                    loadingText="Chargement..."
-                                    noDataText="Aucune donnée"
-                                    pageText="Page"
-                                    ofText="sur"
-                                    rowsText="résultats"
+                                    previousText={t(
+                                        "common:reactTable.previousText"
+                                    )}
+                                    nextText={t("common:reactTable.nextText")}
+                                    loadingText={t(
+                                        "common:reactTable.loadingText"
+                                    )}
+                                    noDataText={t(
+                                        "common:reactTable.noDataText"
+                                    )}
+                                    pageText={t("common:reactTable.pageText")}
+                                    ofText={t("common:reactTable.ofText")}
+                                    rowsText={t("common:reactTable.rowsText")}
                                     minRows={1}
                                 />
                             </div>
@@ -169,7 +175,8 @@ class TemplateIndex extends Component {
                     </div>
                 </div>
             </Fragment>
-        )};
+        );
+    }
 }
 
-export default TemplateIndex
+export default withTranslation("parameters")(TemplateIndex);
