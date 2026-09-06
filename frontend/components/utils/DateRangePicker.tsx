@@ -1,3 +1,5 @@
+import type { ChangeEventHandler } from "react";
+
 /**
  * @param {{defaultStart: Date, defaultEnd: Date, onChange: ({start: Date, end: Date}) => void}} props
  *        onChange is called only when start AND end are set, or when both are cleared
@@ -8,33 +10,48 @@ export default function DateRangePicker({
     defaultStart,
     defaultEnd,
     onChange,
-}) {
+}: {
+    defaultStart?: Date;
+    defaultEnd?: Date;
+    onChange?: (param: { start?: Date; end?: Date }) => void;
+}): JSX.Element {
     let start = defaultStart;
     let end = defaultEnd;
 
-    const handleStart = e => {
+    const handleStart: ChangeEventHandler<HTMLInputElement> = (e) => {
         const value = e.target.value; // "yyyy-MM-dd" or ""
 
-        if (!value) start = undefined;
-        else start = new Date(value);
+        if (!value) {
+            start = undefined;
+        } else {
+            start = new Date(value);
+        }
 
         emit();
     };
 
-    const handleEnd = e => {
+    const handleEnd: ChangeEventHandler<HTMLInputElement> = (e) => {
         const value = e.target.value; // "yyyy-MM-dd" or ""
 
-        if (!value) end = undefined;
-        else end = new Date(value);
+        if (!value) {
+            end = undefined;
+        } else {
+            end = new Date(value);
+        }
 
         emit();
     };
 
     const emit = () => {
-        if (!onChange) return;
+        if (!onChange) {
+            return;
+        }
 
-        if (start && end) onChange({ start: start, end: end });
-        else if (!start && !end) onChange({ start: undefined, end: undefined });
+        if (start && end) {
+            onChange({ start: start, end: end });
+        } else if (!start && !end) {
+            onChange({ start: undefined, end: undefined });
+        }
     };
 
     return (
@@ -58,7 +75,7 @@ export default function DateRangePicker({
     );
 }
 
-function toInputValue(date) {
+function toInputValue(date: Date | undefined): string {
     if (!date) return "";
 
     const d = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
