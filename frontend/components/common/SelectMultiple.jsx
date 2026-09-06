@@ -42,7 +42,7 @@ export default class SelectMultiple extends React.Component {
 
         this.state = {
             selectedFeatures: [],
-            features: this.props.all_features.map((f) => ({
+            features: this.props.all_features.map(f => ({
                 label: f[0],
                 value: f[1],
             })),
@@ -52,7 +52,7 @@ export default class SelectMultiple extends React.Component {
             this.props.features !== undefined &&
             this.props.features.length > 0
         ) {
-            this.state.selectedFeatures = this.state.features.filter((f) =>
+            this.state.selectedFeatures = this.state.features.filter(f =>
                 this.props.features.includes(f.value)
             );
             _.remove(this.state.features, this.state.selectedFeatures);
@@ -109,7 +109,7 @@ export default class SelectMultiple extends React.Component {
             const clear = () => {
                 this.state.features.push(
                     ...this.state.selectedFeatures.filter(
-                        (f) => !this.state.features.includes(f)
+                        f => !this.state.features.includes(f)
                     )
                 );
 
@@ -137,7 +137,7 @@ export default class SelectMultiple extends React.Component {
                     confirmButtonText: "Oui !",
                     cancelButtonText: "Non",
                     showCancelButton: true,
-                }).then((willDelete) => {
+                }).then(willDelete => {
                     if (willDelete.value) clear();
                 });
             } else {
@@ -189,7 +189,7 @@ export default class SelectMultiple extends React.Component {
                     name={this.props.name}
                     value={
                         this.props.isMulti
-                            ? this.state.selectedFeatures.map((f) => f.value)
+                            ? this.state.selectedFeatures.map(f => f.value)
                             : (this.state.selectedFeatures[0] || {}).value || ""
                     }
                     style={{ display: "none" }}

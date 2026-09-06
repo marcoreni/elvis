@@ -87,5 +87,458 @@
             "roles": "Rôles"
         },
         "errorTitle": "Erreur !"
+    },
+    "consent": {
+        "newsletter": "J'autorise {{schoolName}} à me tenir à jour de son activité par newsletter.",
+        "imageRight": "J'autorise {{schoolName}} à utiliser mon image sur ses différents supports de communication (site Internet, formulaires divers, réseaux sociaux, communiqués de presse, newsletters), et ce uniquement dans l'idée de valoriser la pratique musicale.",
+        "gdpr": "Je consens à ce que mes données personnelles soient utilisées à des fins de traitements associés au fonctionnement de la plateforme comme décrits dans <cgu>la politique de confidentialité et traitement des données personnelles par {{schoolName}}</cgu>"
+    },
+    "handicapInfos": {
+        "title": "Informations complémentaires",
+        "placeholder": "Informations importantes à fournir au personnel encadrant sur la personne inscrite aux activités."
+    },
+    "payers": {
+        "title": "Payeurs"
+    },
+    "selectSameAs": {
+        "label": "Identique à",
+        "none": "Personne"
+    },
+    "resendEmail": {
+        "errorTitle": "Erreur",
+        "alreadyConfigured": "Compte déjà configuré",
+        "sentTitle": "Email envoyé",
+        "sentText": "Un email de confirmation a été envoyé à l'utilisateur.",
+        "errorText": "Une erreur est survenue lors de l'envoi de l'email.",
+        "button": "Renvoyer l'email de confirmation"
+    },
+    "userForm": {
+        "fields": {
+            "civility": "Civilité",
+            "lastName": "Nom",
+            "firstName": "Prénom",
+            "birthday": "Date de naissance",
+            "nationalId": "Numéro national d'identification",
+            "organization": "Organisation",
+            "email": "Email",
+            "sex": "Sexe",
+            "phone": "Téléphone",
+            "phoneType": "Type",
+            "address": "Adresse",
+            "postcode": "Code postal",
+            "city": "Ville"
+        },
+        "genders": {
+            "F": "Madame",
+            "M": "Monsieur",
+            "A": "Autre"
+        },
+        "sexes": {
+            "F": "Féminin",
+            "M": "Masculin",
+            "A": "Autre"
+        },
+        "phoneTypes": {
+            "portable": "Portable",
+            "domicile": "Domicile",
+            "travail": "Travail"
+        },
+        "contactRepresentsOrg": "Ce contact représente l'organisation",
+        "personalCoordinates": "Coordonnées personnelles du demandeur",
+        "addAddress": "Ajouter une adresse",
+        "addPhone": "Ajouter un téléphone",
+        "newStudent": {
+            "title": "Créer un nouvel utilisateur",
+            "sendConfirmation": "Envoyer un email de confirmation ?"
+        },
+        "redirectToLogin": "Me rediriger vers la page de connexion",
+        "noPayer": {
+            "title": "<h5>Aucun payeur n'est déclaré pour {{student}}</h5>",
+            "bodyHtml": "<p>{{student}}, si vous êtes le payeur, merci de cocher la case<br/><b>\"L'élève est aussi le payeur\"</b><br/><br/>Si vous êtes payeur pour {{payer}}, merci de l'indiquer sur votre profil dans l'édition du lien familial.<br/><br/></p>",
+            "confirm": "Redirection vers la page de profil de {{payer}}",
+            "cancel": "Retour à la demande d'inscription"
+        },
+        "identityMismatch": "La combinaison nom / prénom / date de naissance doit être identique",
+        "addContact": "Ajouter un contact"
+    },
+    "organizationModal": {
+        "created": "Organisation créée",
+        "errorTitle": "Une erreur est survenue",
+        "errFieldEmpty": "Ce champ ne peut pas être vide",
+        "errRegNumber": "Le numéro de SIRET doit contenir 14 chiffres. Le numéro de RNA doit être préfixé de W suivi de 9 chiffres.",
+        "errTaxId": "Le numéro de TVA doit être préfixé de FR suivi de 11 chiffres.",
+        "createTooltip": "Créer une organisation",
+        "title": "Créer une organisation",
+        "name": "Nom de l'organisation",
+        "regNumber": "Numéro de SIRET ou RNA",
+        "vatSubject": "Assujetti à la TVA ?",
+        "vatNumber": "Numéro de TVA",
+        "submit": "Créer l'organisation"
+    },
+    "handleFamilyMember": {
+        "errorAdd": "<h5>Une erreur est survenue, <b>{{member}}</b> n'a pas été ajouté à la famille de {{user}}.</h5>",
+        "linkModified": "<h5>Le lien familial entre <b>{{member}}</b> et <b>{{user}}</b> a été modifié.</h5>",
+        "linkAdded": "<h5>L'utilisateur <b>{{member}}</b> a été ajouté à la famille de {{user}}.</h5>",
+        "deleteTitle": "<h5>Voulez-vous supprimer ce lien familial ?</h5>",
+        "deleteBody": "<p>Le lien familial entre <b>{{member}}</b> et <b>{{user}}</b> sera définitivement supprimé</p>",
+        "deleteConfirm": "<i class=\"fas fa-trash\"></i> Supprimer le lien familial",
+        "deleteCancel": "<i class=\"fas fa-ban\"></i> Annuler",
+        "errorTitle": "Une erreur est survenue",
+        "errorHtml": "erreur : {{error}}",
+        "addTooltip": "Ajouter un membre à la famille",
+        "addButton": "Ajouter un nouveau membre",
+        "editTooltip": "Édition du lien familial",
+        "deleteTooltip": "Suppression du lien familial",
+        "linkFromTo": "Lien de {{user}} envers {{member}}",
+        "creatingLink": "Création du lien familial du point de vue de {{user}}"
+    },
+    "contactForm": {
+        "familyLink": "Lien familial",
+        "is": "est",
+        "of": "de",
+        "changeRelationDirection": "Vous pouvez modifier le sens de la relation",
+        "matchesFound": "Nous avons trouvé des profils correspondant aux informations saisies",
+        "matchLine": "né(e) le {{date}}, Adhérent #{{number}}",
+        "noMatchTitle": "Aucun profil existant retrouvé selon ces coordonnées.",
+        "noMatchLine1": "Si l'utilisateur est déjà enregistré, vérifiez que les bonnes coordonnées soient saisies.",
+        "noMatchLine2": "Sinon <em>continuez votre saisie</em>.",
+        "continueEntry": "Continuer ma saisie",
+        "useThisProfile": "Utiliser ce profil",
+        "relationWith": "Relation avec {{name}}",
+        "isPayingFor": "{{a}} est payeur pour {{b}}",
+        "isLegalReferent": "{{a}} est représentant légal de {{b}}",
+        "isToCall": "{{a}} est la première personne à contacter pour {{b}}",
+        "isAccompanying": "{{a}} accompagne à l'école {{b}}"
+    },
+    "familyLinks": {
+        "père": "Père",
+        "mère": "Mère",
+        "grand-père": "Grand-père",
+        "grand-mère": "Grand-mère",
+        "frère": "Frère",
+        "soeur": "Sœur",
+        "enfant": "Enfant",
+        "petit-enfant": "Petit-enfant",
+        "époux": "Époux",
+        "autre": "Autre"
+    },
+    "wizardContactForm": {
+        "userFound": "Utilisateur trouvé :",
+        "bornOn": "né(e) le {{date}},",
+        "alreadyExists": "existe déjà dans la base de données",
+        "notAttached": "mais n'est pas rattaché à votre compte.",
+        "contactSchool": "Veuillez contacter l'école pour le rattacher."
+    },
+    "absences": {
+        "viewGlobal": "Voir dans le suivi global",
+        "kpi": {
+            "total": "Total absences",
+            "totalSub": "sur la période",
+            "justified": "Justifiées",
+            "unjustified": "Injustifiées",
+            "pctOfTotal": "{{pct}}% du total"
+        },
+        "filters": {
+            "season": "Saison",
+            "type": "Type d'absence",
+            "course": "Cours",
+            "search": "Recherche",
+            "searchPlaceholder": "Rechercher dans les remarques..."
+        },
+        "typeOptions": {
+            "all": "Tous"
+        },
+        "badge": {
+            "justified": "Justifiée",
+            "unjustified": "Injustifiée"
+        },
+        "export": "Exporter",
+        "columns": {
+            "date": "Date",
+            "course": "Cours",
+            "teacher": "Professeur",
+            "type": "Type d'absence",
+            "remark": "Remarque"
+        },
+        "loading": "Chargement…",
+        "empty": "Aucune absence pour ces critères.",
+        "rowsPerPage": "Lignes par page",
+        "remarkPlaceholder": "Ajouter une remarque…",
+        "toast": {
+            "savedTitle": "Enregistré !",
+            "savedText": "La remarque a été enregistrée.",
+            "errorTitle": "Erreur",
+            "errorText": "Échec de l'enregistrement de la remarque."
+        }
+    },
+    "personalInfos": {
+        "addressN": "Adresse {{n}} : {{address}}",
+        "street": "Voie",
+        "department": "Département",
+        "existingAddresses": "Adresses déjà existantes :",
+        "existingUsersClickToSelect": "Utilisateurs déjà existants (cliquez pour sélectionner) :",
+        "yearsOld": "{{n}} ans",
+        "selectSex": "Sélectionnez le sexe",
+        "selectPhoneType": "Sélectionner un type",
+        "contact": "Contact",
+        "ofLegalGuardian": "du représentant légal",
+        "phones": "Téléphone(s)",
+        "levels": {
+            "unspecifiedSeason": "Non précisée",
+            "canContinue": "Peut continuer",
+            "chooseLevel": "Choisir un niveau",
+            "activity": "ACTIVITÉ",
+            "level": "NIVEAU"
+        }
+    },
+    "roles": {
+        "successTitle": "Succès",
+        "lessonsDeleted": "Les séances à venir ont été supprimées",
+        "ok": "Ok",
+        "errorTitle": "Une erreur est survenue",
+        "courseLine": "Cours de {{label}} le {{day}} de {{start}} à {{end}}",
+        "coursesListIntro": "Les {{n}} séances font partie des cours suivants :",
+        "coursesToReplace": "Liste des cours à remplacer",
+        "hasUpcomingLessons": "Ce professeur a {{n}} séances de cours à venir dans le planning.<br/>Que souhaitez-vous faire ?",
+        "deleteThem": "Les supprimer",
+        "cancelAndView": "Annuler et voir les séances"
+    },
+    "advancedSearch": {
+        "age": "Âge",
+        "handicap": "Situation de handicap",
+        "yes": "oui",
+        "no": "non",
+        "title": "Recherche avancée"
+    },
+    "passwordReset": {
+        "emailFallback": "pas@dadresse.détectée",
+        "greeting": "<h5>Bonjour <b>{{name}}</b></h5>",
+        "emailSentInfo": "<p>Un email va vous être envoyé sur l'adresse <br/><b>{{email}}</b><br/>Vous allez être redirigé vers la page de connexion</p>",
+        "redirection": "Redirection",
+        "uniquenessError": "Nom - prénom - date de naissance doit correspondre à un utilisateur",
+        "required": "Requis",
+        "formTitle": "Réinitialisation par nom - prénom - date de naissance",
+        "firstNamePlaceholder": "votre prénom",
+        "lastNamePlaceholder": "votre nom",
+        "birthdayPlaceholder": "jj/mm/aaaa",
+        "submit": "Envoyer un mail de récupération",
+        "btn": {
+            "emailSent": "Email envoyé !",
+            "emailSendError": "Erreur lors de l'envoi de l'email.",
+            "errorTitle": "Erreur",
+            "linkGenError": "Erreur lors de la génération du lien",
+            "userInfoError": "Impossible de récupérer les informations de l'utilisateur",
+            "successTitle": "Succès",
+            "genericError": "Une erreur est survenue.",
+            "resetLinkTitle": "Lien de réinitialisation",
+            "sendByMail": "Envoyer par mail",
+            "copy": "Copier",
+            "linkCopied": "Lien copié !",
+            "copyError": "Erreur lors de la copie"
+        }
+    },
+    "detachAccount": {
+        "notFound": "Impossible de trouver l'utilisateur",
+        "success": "Le compte a bien été détaché",
+        "errorTitle": "Erreur",
+        "genericError": "Une erreur est survenue",
+        "detach": "Détacher",
+        "contentLabel": "Détacher le compte",
+        "question": "Voulez-vous détacher l'utilisateur·rice {{name}} ?",
+        "explanation1": "Ce dernier deviendra indépendant, c'est-à-dire qu'il pourra se connecter et gérer son compte. Il vous est cependant toujours possible de gérer son compte si vous créez un lien familial avec lui.",
+        "explanation2": "Pour détacher un compte, vous devez lui ajouter une adresse email (s'il n'en a pas déjà une). C'est à cette adresse que sera envoyé le lien lui permettant de se connecter. NB : ce nouvel email ne doit pas être déjà affecté à un autre utilisateur.",
+        "emailLabel": "email",
+        "sendNotification": "Envoyer l'email de notification"
+    },
+    "attachAccount": {
+        "memberNumber": "Adhérent #{{number}}",
+        "emailMayBeEmpty": "email (peut être vide) :",
+        "emailPlaceholder": "email",
+        "selectParentAccount": "Sélectionner le compte de rattachement auquel associer des utilisateurs",
+        "confirmText": "Voulez-vous vraiment attacher ces utilisateurs au compte de rattachement ? Cela va supprimer le mot de passe des comptes rattachés. Ces derniers ne pourront donc plus se connecter.",
+        "successTitle": "Comptes attachés",
+        "successText": "Les comptes ont bien été attachés",
+        "errorTitle": "Erreur",
+        "errorText": "Une erreur est survenue lors de l'attachement des comptes",
+        "associateUsers": "Associer des utilisateurs au compte de rattachement ({{name}})",
+        "selectedUsers": "Utilisateurs sélectionnés",
+        "attachAccounts": "Attacher les comptes"
+    },
+    "adhesion": {
+        "chooseStudent": "Choisir cet élève",
+        "membershipFor": "Adhésion pour {{name}}",
+        "validityStartDate": "Date de début de validité"
+    },
+    "importCsv": {
+        "stepsIntro": "Pour réaliser votre import, voici les étapes à suivre :",
+        "step1Title": "Téléchargez notre fichier CSV type",
+        "step1Body": "Il vous suffira de remplir les différentes colonnes pour importer les données sur Elvis. Le fichier CSV est déjà complété avec des exemples pour comprendre comment bien le remplir. Vous pouvez les supprimer, ce ne sont que des exemples.",
+        "downloadTemplate": "Télécharger le fichier CSV type",
+        "step2Title": "Remplissez les cellules de votre fichier CSV",
+        "step2IntroPrefix": "Ajoutez les personnes que vous souhaitez importer. Avant de commencer, voici la règle d’or : ",
+        "step2GoldRule": "1 ligne = 1 personne",
+        "step2RequiredPrefix": "Les champs obligatoires sont : ",
+        "step2RequiredFields": "le nom, le prénom, le mail et la date de naissance",
+        "step2Roles": "Les rôles correspondent au compte professeur ou administrateur. Si vous souhaitez ajouter des professeurs ou des administrateurs, indiquez-le dans la colonne « Rôle ». Les interfaces seront différentes en fonction de ces rôles.",
+        "step3Title": "Importez votre fichier CSV",
+        "step3Body": "Choisissez le fichier CSV préalablement rempli.",
+        "chooseFile": "Choisir un fichier",
+        "change": "Changer",
+        "remove": "Supprimer",
+        "import": "Importer",
+        "importedAlert_one": "Le fichier a bien été importé ({{count}} utilisateur)",
+        "importedAlert_other": "Le fichier a bien été importé ({{count}} utilisateurs)",
+        "warning": "Attention",
+        "fixAndRetry": "Veuillez modifier le fichier et réessayer.",
+        "rowNumberSingle": "Ligne {{lines}} : ",
+        "rowNumberMultiple": "Lignes {{lines}} : ",
+        "successTitle": "Bravo !",
+        "successBody": "<p>Toute votre communauté a bien été importée</p><p>Vous allez être redirigé vers la liste de vos membres</p>",
+        "errorTitle": "Erreur",
+        "errorBody": "<p>Une erreur est survenue lors de l’import. Veuillez réessayer.</p>"
+    },
+    "userAttach": {
+        "searchPrompt": "Chercher des comptes à rattacher",
+        "noResults": "Aucun résultat trouvé",
+        "alreadyAttachedHtml": "<h3><b>{{name}}</b> est déjà rattaché·e à <b>{{referent}}</b><br><br>Souhaitez-vous le·la rattacher à<br><b>{{target}}</b> à la place ?</h3>",
+        "confirmAttachHtml": "<h3>Souhaitez-vous rattacher<br><br><b>{{name}}</b><br><br>à<br><br><b>{{target}}</b> ?</h3>",
+        "hasAttachedTitle": "Cet·te utilisateur·rice a des comptes rattachés",
+        "confirmAttachWithListHtml": "<h3>Souhaitez-vous rattacher<br><br><b>{{name}}</b> ainsi que :<br>{{list}}<br><br>à<br><br><b>{{target}}</b> ?</h3>",
+        "attachSuccess": "Compte(s) rattaché(s) avec succès",
+        "attachError": "Une erreur est survenue lors de l'envoi des données :",
+        "attachedAccountsTitle": "Comptes rattachés",
+        "noAttachedAccounts": "Cet·te utilisateur·rice n'a pas de comptes rattachés",
+        "attachAccountsTitle": "Rattacher des comptes",
+        "currentAccount": "Compte actuel",
+        "alreadyAttachedToCurrent": "Déjà rattaché·e au compte actuel",
+        "attach": "Rattacher"
+    },
+    "adhesionList": {
+        "confirmReminder": "Confirmer l'envoi d'un email de relance ?",
+        "yes": "Oui !",
+        "successTitle": "Réussite",
+        "reminderSent": "Relance effectuée",
+        "confirmDelete": "Êtes-vous sûr de supprimer cette adhésion ?",
+        "deleted": "Suppression réussie",
+        "notSpecified": "Non précisée",
+        "soonExpired": "Bientôt expirés",
+        "expiresInDays_one": "Expire dans {{count}} jour",
+        "expiresInDays_other": "Expire dans {{count}} jours",
+        "totalCount_one": "{{count}} adhésion au total",
+        "totalCount_other": "{{count}} adhésions au total",
+        "columns": {
+            "startDate": "Date de début",
+            "endDate": "Date de fin",
+            "price": "Prix de l'adhésion",
+            "lastReminder": "Dernière relance"
+        }
+    },
+    "absencesTracking": {
+        "title": "Suivi des absences",
+        "subtitle": "Vision globale des absences des élèves",
+        "export": "Exporter",
+        "filters": {
+            "season": "Saison",
+            "periodFrom": "Période — du",
+            "periodTo": "Période — au",
+            "teacher": "Professeur",
+            "day": "Jour",
+            "course": "Cours / activité",
+            "type": "Type d'absence",
+            "all": "Tous",
+            "unjustified": "Injustifiée",
+            "justified": "Justifiée",
+            "reset": "Réinitialiser"
+        },
+        "days": {
+            "monday": "Lundi",
+            "tuesday": "Mardi",
+            "wednesday": "Mercredi",
+            "thursday": "Jeudi",
+            "friday": "Vendredi",
+            "saturday": "Samedi",
+            "sunday": "Dimanche"
+        },
+        "kpi": {
+            "total": "Absences totales",
+            "totalSub": "Sur la période",
+            "students": "Élèves concernés",
+            "studentsSub": "{{pct}}% des inscrits",
+            "unjustified": "Injustifiées à traiter",
+            "unjustifiedSub": "{{pct}}% du total"
+        },
+        "table": {
+            "student": "Élève",
+            "count": "Nb absences",
+            "lastAbsence": "Dernière absence",
+            "type": "Type",
+            "remark": "Remarque",
+            "action": "Action"
+        },
+        "loading": "Chargement…",
+        "empty": "Aucune absence pour ces critères.",
+        "groupCount_one": "{{name}} — {{count}} absence",
+        "groupCount_other": "{{name}} — {{count}} absences",
+        "badge": {
+            "justified": "Justifiée",
+            "unjustified": "Injustifiée"
+        },
+        "view": "Voir",
+        "none": "—",
+        "panel": {
+            "memberNumber": "Adhérent n°{{number}}",
+            "studentPill": "Élève",
+            "memberPill": "Adhérent",
+            "totalAbsences": "Total absences",
+            "unjustified": "Injustifiées",
+            "justified": "Justifiées",
+            "recentAbsences": "Dernières absences",
+            "viewStudentSheet": "Voir la fiche élève",
+            "exportHistory": "Exporter l'historique"
+        },
+        "csv": {
+            "teacher": "Professeur",
+            "day": "Jour",
+            "course": "Cours / activité",
+            "student": "Élève",
+            "memberNumber": "N° adhérent",
+            "date": "Date",
+            "type": "Type",
+            "remark": "Remarque",
+            "justified": "Justifiée",
+            "unjustified": "Injustifiée"
+        }
+    },
+    "mergeUsers": {
+        "switchDelete": "Supprimer l'ancien utilisateur (rouge)",
+        "switchKeep": "Garder l'ancien utilisateur (rouge)",
+        "keepNewUserData": "Garder toutes les données de base * du nouvel utilisateur (bleu)",
+        "keepOldUserData": "Garder toutes les données de base * de l'ancien utilisateur (rouge)",
+        "selectOldUserData": "Sélectionner les données de base * de l'ancien utilisateur à garder.",
+        "fields": {
+            "firstName": "Prénom",
+            "lastName": "Nom",
+            "email": "E-Mail",
+            "birthday": "Date de naissance",
+            "address": "Adresse",
+            "teacherRole": "Rôle du professeur"
+        },
+        "footnoteLine1": "* de base = Toutes les données contenues directement dans un utilisateur (nom, prénom, email, adresse, date de naissance).",
+        "footnoteLine2": "Peu importe le choix effectué, les données liées seront transférées (liens familiaux, paiements, cours, etc.)",
+        "confirmTitle": "Fusionner les deux utilisateurs sélectionnés ?",
+        "confirmDeleteText": "L'utilisateur en rouge sera supprimé.",
+        "yes": "oui",
+        "no": "non",
+        "successTitle": "Fusion effectuée",
+        "errorTitle": "Une erreur est survenue.",
+        "ok": "Ok",
+        "search": {
+            "title": "Chercher des utilisateurs",
+            "lastName": "Nom",
+            "firstName": "Prénom",
+            "results": "Résultats",
+            "bornOn": "né(e) le {{date}}, Adhérent #{{number}}",
+            "reset": "Réinitialiser"
+        }
     }
 }

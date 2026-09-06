@@ -1,8 +1,9 @@
-import React, {Fragment} from "react";
+import React, { Fragment } from "react";
 import _ from "lodash";
-import {csrfToken, optionMapper} from "../utils";
+import { withTranslation } from "react-i18next";
+import { csrfToken, optionMapper } from "../utils";
 import * as StopReasons from "../utils/StopReasons";
-import {PRE_APPLICATION_ACTIONS} from "../../tools/constants";
+import { PRE_APPLICATION_ACTIONS } from "../../tools/constants";
 import moment from "moment/moment";
 import Modal from "react-modal";
 import renderActivityAction from "./renderActivityAction";
@@ -17,36 +18,42 @@ class CurrentActivityItem extends React.Component {
             isStopModalOpen: false,
             stopReasonValue: "0",
             stopReasonCustom: "",
-            selectedNextActivityRef: this.getDefaultChildNextActivityRef()
+            selectedNextActivityRef: this.getDefaultChildNextActivityRef(),
         };
     }
 
     closeStopModal() {
-        this.setState({isStopModalOpen: false});
+        this.setState({ isStopModalOpen: false });
     }
 
     openStopModal() {
-        this.setState({isStopModalOpen: true});
+        this.setState({ isStopModalOpen: true });
     }
 
     handleChangeStopReason(event) {
-        this.setState({stopReasonValue: event.target.value});
+        this.setState({ stopReasonValue: event.target.value });
     }
 
     handleChangeStopReasonCustom(event) {
-        this.setState({stopReasonCustom: event.target.value});
+        this.setState({ stopReasonCustom: event.target.value });
     }
 
     isChildPreApplicationActivity() {
-        return _.get(this.props, "data.activity_ref.activity_type") === "child"
-            || _.get(this.props, "data.activity_ref.kind") === "ENFANCE";
+        return (
+            _.get(this.props, "data.activity_ref.activity_type") === "child" ||
+            _.get(this.props, "data.activity_ref.kind") === "ENFANCE"
+        );
     }
 
     // Pour les enfants, renvoie les activités suivantes parmi celles qui sont possibles
     // @return un tableau d'activités (ActivityRef)
     getChildActivityNextCycles() {
-        const desired_activities = this.props.current_activity_application.desired_activities;
-        return (desired_activities.find(d => d.id === this.props.data.id) || desired_activities[0]).activity_ref.next_cycles;
+        const desired_activities = this.props.current_activity_application
+            .desired_activities;
+        return (
+            desired_activities.find(d => d.id === this.props.data.id) ||
+            desired_activities[0]
+        ).activity_ref.next_cycles;
     }
 
     // Pour les enfants, renvoie l'activité suivante pour l'année prochaine (s'il n'y en a qu'une possible)
@@ -84,26 +91,32 @@ class CurrentActivityItem extends React.Component {
                             this.state.stopReasonValue === StopReasons.OTHER_ID
                                 ? this.state.stopReasonCustom
                                 : this.state.stopReasonValue,
-                        activity_application_id: this.props.current_activity_application.id,
+                        activity_application_id: this.props
+                            .current_activity_application.id,
                     }),
                 }
             ),
         ];
         if (action === "renew") {
             actions.push(
-                fetch(`/pre_application/${this.props.user.id}/renew?auth_token=${csrfToken}`, {
-                    method: "POST",
-                    credentials: "same-origin",
-                    headers: {
-                        "X-CSRF-Token": csrfToken,
-                        "Content-Type": "application/json",
-                        Accept: "application/json",
-                    },
-                    body: JSON.stringify({
-                        pre_application_activity_id: this.props.pre_application_activity.id,
-                        activity_ref_id: this.props.pre_application_activity.activity.activity_ref_id,
-                    }),
-                })
+                fetch(
+                    `/pre_application/${this.props.user.id}/renew?auth_token=${csrfToken}`,
+                    {
+                        method: "POST",
+                        credentials: "same-origin",
+                        headers: {
+                            "X-CSRF-Token": csrfToken,
+                            "Content-Type": "application/json",
+                            Accept: "application/json",
+                        },
+                        body: JSON.stringify({
+                            pre_application_activity_id: this.props
+                                .pre_application_activity.id,
+                            activity_ref_id: this.props.pre_application_activity
+                                .activity.activity_ref_id,
+                        }),
+                    }
+                )
             );
         }
 
@@ -125,12 +138,13 @@ class CurrentActivityItem extends React.Component {
                     newState.activity_application = activityApplication;
                 }
 
-                this.setState({preApplicationActivity: newState});
+                this.setState({ preApplicationActivity: newState });
             });
     }
 
     render() {
         const {
+            t,
             data,
             pre_application_activity,
             openStopModal,
@@ -149,68 +163,99 @@ class CurrentActivityItem extends React.Component {
 
         let actionLabel = "Current";
 
-        let ActivityStatus = _.get(this.props, "current_activity_application.activity_application_status");
+        let ActivityStatus = _.get(
+            this.props,
+            "current_activity_application.activity_application_status"
+        );
         if (ActivityStatus) {
-            if (ActivityStatus.id === ActivityApplicationStatus.STOPPED_ID ||
-                ActivityStatus.id === ActivityApplicationStatus.CANCELED_ID) {
-
+            if (
+                ActivityStatus.id === ActivityApplicationStatus.STOPPED_ID ||
+                ActivityStatus.id === ActivityApplicationStatus.CANCELED_ID
+            ) {
                 actionLabel = "Arrêt";
-            } else if (ActivityStatus.id === ActivityApplicationStatus.TREATMENT_IMPOSSIBLE_ID) {
+            } else if (
+                ActivityStatus.id ===
+                ActivityApplicationStatus.TREATMENT_IMPOSSIBLE_ID
+            ) {
                 actionLabel = "Unsatisfied";
             }
         }
 
-        const isCustomComment = this.state.stopReasonValue === StopReasons.OTHER_ID;
+        const isCustomComment =
+            this.state.stopReasonValue === StopReasons.OTHER_ID;
         let actionButtons = "";
 
-        let StopButton =
+        let StopButton = (
             <button
                 onClick={() => this.openStopModal()}
                 className="btn btn-danger btn-sm font-weight-bold mr-2" // ajout de mr-2 pour marger à droite
                 style={{ borderRadius: "8px" }}
             >
-                S'arrêter
+                {t("activityApplications:activityItems.currentActivity.stop")}
             </button>
+        );
 
         if (isPreapplicationEnabled) {
-            if (this.isChildPreApplicationActivity() && this.state.preApplicationActivity.activity_application === undefined) {
+            if (
+                this.isChildPreApplicationActivity() &&
+                this.state.preApplicationActivity.activity_application ===
+                    undefined
+            ) {
                 this.nextCycles = this.getChildActivityNextCycles();
 
-                const groupedNextActivityRefKinds = _.groupBy(this.nextCycles, "to.activity_ref_kind_id");
+                const groupedNextActivityRefKinds = _.groupBy(
+                    this.nextCycles,
+                    "to.activity_ref_kind_id"
+                );
 
-                let nextActivityRefKinds = _.map(groupedNextActivityRefKinds, (nextCycles) => {
-                    // find default in kind or first
-                    return _.find(nextCycles, (nextCycle) => {
-                        return nextCycle.to["is_default_in_kind?"];
-                    }) || nextCycles[0];
-                });
+                let nextActivityRefKinds = _.map(
+                    groupedNextActivityRefKinds,
+                    nextCycles => {
+                        // find default in kind or first
+                        return (
+                            _.find(nextCycles, nextCycle => {
+                                return nextCycle.to["is_default_in_kind?"];
+                            }) || nextCycles[0]
+                        );
+                    }
+                );
 
-                let timeslotActivities = this.nextCycles.filter(a => a.to.allows_timeslot_selection === true);
-                nextActivityRefKinds = nextActivityRefKinds.concat(timeslotActivities);
+                let timeslotActivities = this.nextCycles.filter(
+                    a => a.to.allows_timeslot_selection === true
+                );
+                nextActivityRefKinds = nextActivityRefKinds.concat(
+                    timeslotActivities
+                );
                 nextActivityRefKinds = _.uniqBy(nextActivityRefKinds, "id");
 
                 inlineButton = false;
 
-                actionButtons =
+                actionButtons = (
                     <Fragment>
                         <div className="d-flex flex-column flex-space-between align-items-end">
-                        {nextActivityRefKinds.map(activity =>
-                            <a  key={activity.to.id}
-                                href={`/inscriptions/new/${user.id}/${this.state.preApplicationActivity.id
-                                }/${activity.to.id}/${PRE_APPLICATION_ACTIONS.PURSUE_CHILDHOOD}?auth_token=${csrfToken}`}
-                                className="btn btn-info mb-2 font-weight-bold">
-                                <div className="flex-xl-row flex-lg-row flex-column">
-                                    <div className="mr-xl-2 mr-lg-2 m-0">S'inscrire à l'activité</div>
-                                    <div>{activity.to.display_name}</div>
-                                </div>
-                            </a>
-                        )}
+                            {nextActivityRefKinds.map(activity => (
+                                <a
+                                    key={activity.to.id}
+                                    href={`/inscriptions/new/${user.id}/${this.state.preApplicationActivity.id}/${activity.to.id}/${PRE_APPLICATION_ACTIONS.PURSUE_CHILDHOOD}?auth_token=${csrfToken}`}
+                                    className="btn btn-info mb-2 font-weight-bold"
+                                >
+                                    <div className="flex-xl-row flex-lg-row flex-column">
+                                        <div className="mr-xl-2 mr-lg-2 m-0">
+                                            {t(
+                                                "activityApplications:activityItems.currentActivity.enrolInActivity"
+                                            )}
+                                        </div>
+                                        <div>{activity.to.display_name}</div>
+                                    </div>
+                                </a>
+                            ))}
                         </div>
-                    </Fragment>;
+                    </Fragment>
+                );
             } else {
                 inlineButton = true;
 
-                actionButtons =
+                actionButtons = (
                     <React.Fragment>
                         {StopButton}
                         <a
@@ -218,47 +263,58 @@ class CurrentActivityItem extends React.Component {
                             className="btn btn-info btn-sm ml-2 mt-2 mt-md-0 font-weight-bold"
                             style={{ borderRadius: "8px" }}
                         >
-                            Se réinscrire
+                            {t(
+                                "activityApplications:activityItems.currentActivity.reEnrol"
+                            )}
                         </a>
                     </React.Fragment>
+                );
             }
         }
-
 
         return (
             <React.Fragment>
                 <tr className="border-top">
-                    <td className="font-weight-bold" style={{color: "#00283B"}}>
+                    <td
+                        className="font-weight-bold"
+                        style={{ color: "#00283B" }}
+                    >
                         {data.activity_ref.label}
                     </td>
                     <td>
                         {this.props.user.first_name} {this.props.user.last_name}
                     </td>
                     <td className="text-right">
-                        {inlineButton ?
+                        {inlineButton ? (
                             <div>{actionButtons}</div> // actionButtons including a StopButton
-                            :
-                            <div>{StopButton}</div> // StopButton only
+                        ) : (
+                            <div>{StopButton}</div>
+                        ) // StopButton only
                         }
                     </td>
                 </tr>
-                {!inlineButton && actionButtons ?
+                {!inlineButton && actionButtons ? (
                     <tr>
                         <td colSpan="3">
-                            {actionButtons} {/* actionButtons without a StopButton (already in the tr above) */}
+                            {actionButtons}{" "}
+                            {/* actionButtons without a StopButton (already in the tr above) */}
                         </td>
                     </tr>
-                :null}
+                ) : null}
 
                 <Modal
                     isOpen={this.state.isStopModalOpen}
                     onRequestClose={() => this.closeStopModal()}
                     className="activity-modal"
                     ariaHideApp={false}
-                    contentLabel="Arrêt Activité"
+                    contentLabel={t(
+                        "activityApplications:activityItems.currentActivity.stopContentLabel"
+                    )}
                 >
                     <h2 className="modal-header">
-                        Souhaitez-vous arrêter le cours suivant ?
+                        {t(
+                            "activityApplications:activityItems.currentActivity.stopQuestion"
+                        )}
                     </h2>
                     <div className="content">
                         <p className="activity-name">
@@ -268,26 +324,46 @@ class CurrentActivityItem extends React.Component {
                                     : data.activity_ref.kind}
                             </strong>
                         </p>
-                        {data.time_interval !== undefined ?
+                        {data.time_interval !== undefined ? (
                             <p className="activity-date">
-                                {data.time_interval && _.capitalize(
-                                    moment(data.time_interval.start).format("dddd")
-                                ) || "??"}{" "}
-                                |{data.time_interval && moment(data.time_interval.start).format("HH:mm") || "??"}{" "}
-                                -{data.time_interval && moment(data.time_interval.end).format("HH:mm") || "??"}
-                            </p> : ""}
-
-                        {data.teacher !== undefined ?
-                            <p className="activity-professor-name">
-                                {data.teacher.first_name} {data.teacher.last_name}
+                                {(data.time_interval &&
+                                    _.capitalize(
+                                        moment(data.time_interval.start).format(
+                                            "dddd"
+                                        )
+                                    )) ||
+                                    "??"}{" "}
+                                |
+                                {(data.time_interval &&
+                                    moment(data.time_interval.start).format(
+                                        "HH:mm"
+                                    )) ||
+                                    "??"}{" "}
+                                -
+                                {(data.time_interval &&
+                                    moment(data.time_interval.end).format(
+                                        "HH:mm"
+                                    )) ||
+                                    "??"}
                             </p>
-                            : ""
-                        }
+                        ) : (
+                            ""
+                        )}
 
-                        {data.room !== undefined ?
+                        {data.teacher !== undefined ? (
+                            <p className="activity-professor-name">
+                                {data.teacher.first_name}{" "}
+                                {data.teacher.last_name}
+                            </p>
+                        ) : (
+                            ""
+                        )}
+
+                        {data.room !== undefined ? (
                             <p className="activity-room">{data.room.label}</p>
-                            : ""
-                        }
+                        ) : (
+                            ""
+                        )}
 
                         <div className="form-group">
                             <select
@@ -297,9 +373,12 @@ class CurrentActivityItem extends React.Component {
                                         ? StopReasons.OTHER_ID
                                         : this.state.stopReasonValue
                                 }
-                                onChange={e => this.handleChangeStopReason(e)}>
+                                onChange={e => this.handleChangeStopReason(e)}
+                            >
                                 <option disabled value="0">
-                                    Choisir une raison
+                                    {t(
+                                        "activityApplications:activityItems.currentActivity.chooseReason"
+                                    )}
                                 </option>
                                 {StopReasons.STOP_REASONS.map(optionMapper())}
                             </select>
@@ -310,23 +389,33 @@ class CurrentActivityItem extends React.Component {
                                         this.handleChangeStopReasonCustom(e)
                                     }
                                     type="text"
-                                    placeholder="Entrez votre raison ici..."
+                                    placeholder={t(
+                                        "activityApplications:activityItems.currentActivity.reasonPlaceholder"
+                                    )}
                                 />
                             ) : null}
                         </div>
 
-                        {this.isChildPreApplicationActivity() ?
+                        {this.isChildPreApplicationActivity() ? (
                             <div className="alert alert-warning">
-                                <p>Aucune alternative ne peut vous être proposée.</p>
-                                <p>Souhaitez-vous arrêter toute activité musicale et quitter l'école ?</p>
+                                <p>
+                                    {t(
+                                        "activityApplications:activityItems.currentActivity.noAlternative"
+                                    )}
+                                </p>
+                                <p>
+                                    {t(
+                                        "activityApplications:activityItems.currentActivity.stopAllQuestion"
+                                    )}
+                                </p>
                             </div>
-                            : null}
+                        ) : null}
                     </div>
                     <button
                         onClick={() => this.closeStopModal()}
                         className="btn btn-white btn-sm"
                     >
-                        Retour
+                        {t("activityApplications:activityItems.back")}
                     </button>
                     <button
                         onClick={(action, comment) =>
@@ -337,7 +426,7 @@ class CurrentActivityItem extends React.Component {
                         }
                         className="btn btn-primary btn-sm pull-right"
                     >
-                        Je confirme
+                        {t("activityApplications:activityItems.confirm")}
                     </button>
                 </Modal>
             </React.Fragment>
@@ -345,4 +434,4 @@ class CurrentActivityItem extends React.Component {
     }
 }
 
-export default CurrentActivityItem;
+export default withTranslation("activityApplications")(CurrentActivityItem);

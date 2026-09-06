@@ -1,4 +1,5 @@
 import React from "react";
+import { withTranslation } from "react-i18next";
 import _ from "lodash";
 
 import moment from "moment";
@@ -67,15 +68,16 @@ class AdhesionList extends React.Component {
     }
 
     handleSendReminder(id) {
+        const { t } = this.props;
         const xcsrfToken = document
             .querySelector('meta[name="csrf-token"]')
             .getAttribute("content");
 
         swal({
-            title: "Confirmer l'envoi d'un email de relance ?",
+            title: t("users:adhesionList.confirmReminder"),
             type: "warning",
-            confirmButtonText: "Oui !",
-            cancelButtonText: "Annuler",
+            confirmButtonText: t("users:adhesionList.yes"),
+            cancelButtonText: t("common:actions.cancel"),
             showCancelButton: true,
         }).then(a => {
             if (a.value)
@@ -86,21 +88,26 @@ class AdhesionList extends React.Component {
                     },
                 }).then(res => {
                     if (res.ok)
-                        swal("Réussite", "Relance effectuée", "success");
+                        swal(
+                            t("users:adhesionList.successTitle"),
+                            t("users:adhesionList.reminderSent"),
+                            "success"
+                        );
                 });
         });
     }
 
     promptDelete(id) {
+        const { t } = this.props;
         const xcsrfToken = document
             .querySelector('meta[name="csrf-token"]')
             .getAttribute("content");
 
         swal({
-            title: "Êtes vous sûr de supprimer cette adhésion ?",
+            title: t("users:adhesionList.confirmDelete"),
             type: "warning",
-            confirmButtonText: "Oui !",
-            cancelButtonText: "Annuler",
+            confirmButtonText: t("users:adhesionList.yes"),
+            cancelButtonText: t("common:actions.cancel"),
             showCancelButton: true,
         }).then(a => {
             if (a.value)
@@ -111,19 +118,23 @@ class AdhesionList extends React.Component {
                     },
                 }).then(res => {
                     if (res.ok)
-                        swal("Réussite", "Suppression réussie", "success").then(
-                            () =>
-                                this.setState({
-                                    data: this.state.data.filter(
-                                        adh => adh.id !== id
-                                    ),
-                                })
+                        swal(
+                            t("users:adhesionList.successTitle"),
+                            t("users:adhesionList.deleted"),
+                            "success"
+                        ).then(() =>
+                            this.setState({
+                                data: this.state.data.filter(
+                                    adh => adh.id !== id
+                                ),
+                            })
                         );
                 });
         });
     }
 
     render() {
+        const { t } = this.props;
         const { data, pages, loading } = this.state;
 
         const end_dates_diffs = {};
@@ -139,43 +150,70 @@ class AdhesionList extends React.Component {
             {
                 Header: "#",
                 id: "users.adherent_number",
-                accessor: d => <a href={`/users/${d.user.id}`} className="w-100 d-flex text-dark">
-                    {d.user.adherent_number}
-                </a>,
+                accessor: d => (
+                    <a
+                        href={`/users/${d.user.id}`}
+                        className="w-100 d-flex text-dark"
+                    >
+                        {d.user.adherent_number}
+                    </a>
+                ),
                 width: 100,
             },
             {
-                Header: "Nom",
+                Header: t("users:list.table.headers.lastName"),
                 id: "users.last_name",
-                accessor: d => <a href={`/users/${d.user.id}`} className="w-100 d-flex text-dark">
-                    {d.user.last_name}
-                </a>,
+                accessor: d => (
+                    <a
+                        href={`/users/${d.user.id}`}
+                        className="w-100 d-flex text-dark"
+                    >
+                        {d.user.last_name}
+                    </a>
+                ),
             },
             {
-                Header: "Prénom",
+                Header: t("users:list.table.headers.firstName"),
                 id: "users.first_name",
-                accessor: d => <a href={`/users/${d.user.id}`} className="w-100 d-flex text-dark">
-                    {d.user.first_name}
-                </a>,
+                accessor: d => (
+                    <a
+                        href={`/users/${d.user.id}`}
+                        className="w-100 d-flex text-dark"
+                    >
+                        {d.user.first_name}
+                    </a>
+                ),
             },
             {
-                Header: "Date de début",
+                Header: t("users:adhesionList.columns.startDate"),
                 id: "validity_start_date",
-                accessor: d => <a href={`/users/${d.user.id}`} className="w-100 d-flex text-dark">
-                    {d.validity_start_date
-                        ? moment(d.validity_start_date).format("DD MMM YYYY")
-                        : "Non précisée"}
-                </a>,
+                accessor: d => (
+                    <a
+                        href={`/users/${d.user.id}`}
+                        className="w-100 d-flex text-dark"
+                    >
+                        {d.validity_start_date
+                            ? moment(d.validity_start_date).format(
+                                  "DD MMM YYYY"
+                              )
+                            : t("users:adhesionList.notSpecified")}
+                    </a>
+                ),
                 filterable: false,
             },
             {
-                Header: "Date de fin",
+                Header: t("users:adhesionList.columns.endDate"),
                 id: "validity_end_date",
-                accessor: d => <a href={`/users/${d.user.id}`} className="w-100 d-flex text-dark">
-                    {d.validity_end_date
-                        ? moment(d.validity_end_date).format("DD MMM YYYY")
-                        : "Non précisée"}
-                </a>,
+                accessor: d => (
+                    <a
+                        href={`/users/${d.user.id}`}
+                        className="w-100 d-flex text-dark"
+                    >
+                        {d.validity_end_date
+                            ? moment(d.validity_end_date).format("DD MMM YYYY")
+                            : t("users:adhesionList.notSpecified")}
+                    </a>
+                ),
                 filterable: true,
                 Filter: ({ onChange }) => (
                     <div
@@ -192,7 +230,9 @@ class AdhesionList extends React.Component {
                             }}
                             style={{ cursor: "pointer" }}
                         />
-                        <span className="text-danger">Bientôt expirés</span>
+                        <span className="text-danger">
+                            {t("users:adhesionList.soonExpired")}
+                        </span>
                     </div>
                 ),
                 Cell: d => {
@@ -204,7 +244,9 @@ class AdhesionList extends React.Component {
                             {diff < 30 && diff >= 0 ? (
                                 <span className="m-l-md text-danger">
                                     <i className="fas fa-exclamation-circle m-r-xs" />
-                                    Expire dans {Math.ceil(diff)} jours
+                                    {t("users:adhesionList.expiresInDays", {
+                                        count: Math.ceil(diff),
+                                    })}
                                 </span>
                             ) : null}
                         </div>
@@ -213,13 +255,13 @@ class AdhesionList extends React.Component {
             },
             {
                 id: "adhesion_prices.price",
-                Header: "Prix de l'adhésion",
+                Header: t("users:adhesionList.columns.price"),
                 filterable: false,
                 sortable: true,
                 accessor: d => (d.adhesion_price || {}).price,
             },
             {
-                Header: "Actions",
+                Header: t("users:list.table.headers.actions"),
                 filterable: false,
                 sortable: false,
                 maxWidth: 100,
@@ -231,28 +273,32 @@ class AdhesionList extends React.Component {
                         >
                             <i className="fas fa-trash" />
                         </button>
-                        {
-                            end_dates_diffs[d.original.id] < 30 ? (
-                                <button
-                                    className="btn btn-danger btn-xs"
-                                    onClick={() =>
-                                        this.handleSendReminder(d.original.id)
-                                    }
-                                >
-                                    <i className="fas fa-envelope" />
-                                </button>
-                            ) : null}
+                        {end_dates_diffs[d.original.id] < 30 ? (
+                            <button
+                                className="btn btn-danger btn-xs"
+                                onClick={() =>
+                                    this.handleSendReminder(d.original.id)
+                                }
+                            >
+                                <i className="fas fa-envelope" />
+                            </button>
+                        ) : null}
                     </div>
                 ),
             },
             {
-                Header: "Dernière relance",
+                Header: t("users:adhesionList.columns.lastReminder"),
                 id: "last_reminder",
-                accessor: d => <a href={`/users/${d.user.id}`} className="w-100 d-flex text-dark">
-                    {d.last_reminder
-                        ? moment(d.last_reminder).format("DD MMM YYYY")
-                        : "Non précisée"}
-                </a>,
+                accessor: d => (
+                    <a
+                        href={`/users/${d.user.id}`}
+                        className="w-100 d-flex text-dark"
+                    >
+                        {d.last_reminder
+                            ? moment(d.last_reminder).format("DD MMM YYYY")
+                            : t("users:adhesionList.notSpecified")}
+                    </a>
+                ),
                 filterable: false,
             },
         ];
@@ -269,22 +315,26 @@ class AdhesionList extends React.Component {
                     defaultSorted={[{ id: "validity_end_date", desc: true }]}
                     filterable
                     resizable={false}
-                    previousText="Précédent"
-                    nextText="Suivant"
-                    loadingText="Chargement..."
-                    noDataText="Aucune donnée"
-                    pageText="Page"
-                    ofText="sur"
-                    rowsText="résultats"
+                    previousText={t("common:reactTable.previousText")}
+                    nextText={t("common:reactTable.nextText")}
+                    loadingText={t("common:reactTable.loadingText")}
+                    noDataText={t("common:reactTable.noDataText")}
+                    pageText={t("common:reactTable.pageText")}
+                    ofText={t("common:reactTable.ofText")}
+                    rowsText={t("common:reactTable.rowsText")}
                     minRows={1}
                 />
 
                 <div className="flex flex-center-justified m-t-xs">
-                    <h3>{`${this.state.total} Adhésions au total`}</h3>
+                    <h3>
+                        {t("users:adhesionList.totalCount", {
+                            count: this.state.total,
+                        })}
+                    </h3>
                 </div>
             </div>
         );
     }
 }
 
-export default AdhesionList;
+export default withTranslation("users")(AdhesionList);

@@ -1,5 +1,6 @@
 import React from "react";
 import _ from "lodash";
+import { useTranslation } from "react-i18next";
 
 const SupplementaryPreferences = ({
     teachers,
@@ -11,12 +12,13 @@ const SupplementaryPreferences = ({
     activities,
     selected_activities,
 }) => {
+    const { t } = useTranslation("activityApplications");
     const uniqueSelectedActivities = _.uniq(selected_activities);
     const renderTeacherSelection = uniqueSelectedActivities.map((actId, i) => {
         const teachersForActivity = _.filter(teachers, teacher => {
             const teacherActivityRefIds = _.map(
                 teacher.activity_refs,
-                a => a.id,
+                a => a.id
             );
             return _.includes(teacherActivityRefIds, actId);
         });
@@ -37,12 +39,12 @@ const SupplementaryPreferences = ({
                                 }
                                 checked={_.includes(
                                     selectedTeachers[actId],
-                                    teacher.id.toString(),
+                                    teacher.id.toString()
                                 )}
                                 onChange={evt =>
                                     handleTeacherSelection(
                                         _.split(evt.target.id, "-")[0],
-                                        evt.target.value,
+                                        evt.target.value
                                     )
                                 }
                             />
@@ -83,16 +85,28 @@ const SupplementaryPreferences = ({
             <div className="col-lg-4 col-lg-offset-4">
                 <div className="ibox">
                     <div className="ibox-title">
-                        <h3>Préférences Annexes</h3>
+                        <h3>
+                            {t(
+                                "activityApplications:supplementaryPreferences.title"
+                            )}
+                        </h3>
                     </div>
                     <div className="ibox-content">
                         <div>
-                            <h4>Professeur</h4>
+                            <h4>
+                                {t(
+                                    "activityApplications:supplementaryPreferences.teacher"
+                                )}
+                            </h4>
                             {renderTeacherSelection}
                         </div>
 
                         <div>
-                            <h4>Lieux</h4>
+                            <h4>
+                                {t(
+                                    "activityApplications:supplementaryPreferences.locations"
+                                )}
+                            </h4>
                             {renderLocationSelection}
                         </div>
                     </div>

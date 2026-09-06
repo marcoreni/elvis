@@ -1,153 +1,237 @@
 {
-  "actions": {
-    "save": "Enregistrer",
-    "cancel": "Annuler",
-    "delete": "Supprimer",
-    "validate": "Valider",
-    "confirm": "Confirmer",
-    "send": "Envoyer",
-    "add": "Ajouter",
-    "create": "Créer",
-    "close": "Fermer"
-  },
-  "loading": "Chargement...",
-  "tabs": {
-    "incomplete": "Cet onglet n'est pas complètement rempli"
-  },
-  "dragAndDrop": {
-    "invalidType": "Type de fichier non autorisé",
-    "tooManyFiles": "Un seul fichier autorisé",
-    "selectButton": "Sélectionner",
-    "currentDocument": "Document actuel :",
-    "none": "aucun",
-    "imageAlt": "image impossible à charger"
-  },
-  "confirm": {
-    "sure": "Êtes-vous sûr ?"
-  },
-  "reactTable": {
-    "previousText": "Précédent",
-    "nextText": "Suivant",
-    "loadingText": "Chargement...",
-    "noDataText": "Aucune donnée",
-    "pageText": "Page",
-    "ofText": "sur",
-    "rowsText": "résultats"
-  },
-  "baseDataTable": {
-    "updateTitle": "Mettre à jour {{name}}",
-    "createTitle": "Créer {{name}}",
-    "deleteTitle": "Supprimer {{name}}",
-    "defaultResource": "cet élément",
-    "deleteQuestion": "Voulez-vous vraiment supprimer {{name}} : {{label}} ?",
-    "loadError": "Une erreur est survenue lors du chargement des données.",
-    "itemNotFound": "L'élément est introuvable dans la liste des éléments.",
-    "fullScreenTooltip": "Mettre le tableau en plein écran"
-  },
-  "itemFormModal": {
-    "updateTitleFallback": "Mise à jour",
-    "createTitleFallback": "Création",
-    "saveButton": "Sauvegarder",
-    "errorsHeading": "Erreur(s) :"
-  },
-  "deleteItemModal": {
-    "titleFallback": "Suppression",
-    "questionFallback": "Voulez-vous vraiment supprimer cet élément ?",
-    "genericError": "Une erreur est survenue lors de la suppression."
-  },
-  "weekdays": [
-    "Dimanche",
-    "Lundi",
-    "Mardi",
-    "Mercredi",
-    "Jeudi",
-    "Vendredi",
-    "Samedi"
-  ],
-  "months": [
-    "Janvier",
-    "Février",
-    "Mars",
-    "Avril",
-    "Mai",
-    "Juin",
-    "Juillet",
-    "Août",
-    "Septembre",
-    "Octobre",
-    "Novembre",
-    "Décembre"
-  ],
-  "messages": {
-    "noAnswer": "PAS DE RÉPONSE",
-    "errMinLength": "Ce champ doit comporter au minimum {{length}} caractères",
-    "errExactLength": "Ce champ doit comporter exactement {{length}} caractères",
-    "errStartsWith": "Ce champ n'a pas le bon préfixe",
-    "errRequired": "Cette information est requise.",
-    "errIsInvalid": "Des erreurs de saisies ont été détectées. Veuillez vérifier les informations renseignées.",
-    "errIsInvalidId": "La combinaison de Nom - Prénom - date de naissance est déjà prise, vous possédez déjà un compte chez nous. Veuillez vous connecter sur votre espace personnel ",
-    "errAgreementGdpr": "Pour continuer l'inscription, vous devez exprimer votre consentement sur la collecte de vos données personnelles.",
-    "errAgreementImageRight": "Pour continuer l'inscription, vous devez nous autoriser à utiliser votre image.",
-    "errMustHavePayer": "Un payeur doit être déclaré.",
-    "errMustCheckRules": "Pour continuer, vous devez accepter le règlement intérieur",
-    "errPhoneFormat": "Le numéro de téléphone est invalide.",
-    "errAtLeastOnePhone": "Pour continuer l'inscription, vous devez renseigner au moins un numéro de téléphone.",
-    "errAtLeastOneAddress": "Pour continuer l'inscription, vous devez renseigner au moins une adresse postale.",
-    "errPostalCode": "Le code postal est invalide.",
-    "errMustSelectUser": "Veuillez sélectionner un utilisateur avant de continuer.",
-    "errMustChooseSlot": "Veuillez choisir un créneau avant de continuer.",
-    "errMustChooseActivity": "Veuillez choisir une activité avant de continuer.",
-    "errMustChooseTeacher": "Veuillez choisir un professeur avant de continuer.",
-    "errMustChooseRoom": "Veuillez choisir une salle avant de continuer.",
-    "errNegativeDateRange": "Les dates de début et de fin renseignées sont invalides.",
-    "errNegativeHourRange": "Les heures de début et de fin renseignées sont invalides.",
-    "errDataMissing": "Impossible de continuer, des données obligatoires sont manquantes.",
-    "errInvalidAge": "La date de naissance ne peut être saisie à l'avance.",
-    "errInvalidNN": "Le numéro de registre national est invalide.",
-    "errInvalidEmail": "L'adresse mail saisie est invalide.",
-    "errLinksMissing": "Vous devez préciser le lien de parenté pour chaque membre de la famille.",
-    "errIntervalIntegrity": "Le début doit être inférieur à la fin",
-    "errOrdGte": "La valeur doit être supérieure ou égale à {{mark}}",
-    "errOrdGt": "La valeur doit être supérieure à {{mark}}",
-    "errOrdLte": "La valeur doit être inférieure ou égale à {{mark}}",
-    "errOrdLt": "La valeur doit être inférieure à {{mark}}",
-    "errMustCheckConsent": "Vous devez donner votre consentement pour continuer.",
-    "errMustRespond": "Vous devez répondre pour continuer.",
-    "errMustSelectPrice": "Sélectionnez un tarif ou supprimez la ligne.",
-    "errCannotDuplicatePrice": "Impossible d'ajouter deux fois le même produit avec le même tarif.",
-    "errMustSelectPaymentTerms": "Veuillez sélectionner les modalités de paiement."
-  },
-  "apiErrors": {
-    "default": "Une erreur s'est produite lors de la récupération des données",
-    "errIntervalValidated": "Ce créneau a déjà été validé.",
-    "errIntervalCreationFailed": "Le créneau n'a pas pu être ajouté. Un ou plusieurs créneaux existent déjà sur cette plage horaire.",
-    "errIntervalCreationPartial": "Le ou les créneaux ont été partiellement créés en raison de conflits avec le planning.",
-    "errIntervalBounds": "Le créneau spécifié est invalide. L'heure de début doit être inférieure à l'heure de fin.",
-    "errIntervalNotFound": "Ce créneau ne peut être supprimé. Il a déjà été validé ou supprimé par un permanent.",
-    "errGroupNameExists": "Le groupe existe déjà pour cette saison et ce professeur.",
-    "errGroupNameEmpty": "Le nom du groupe ne peut être vide.",
-    "errEvaluationIntervalAlreadyTaken": "Ce créneau d'évaluation est déjà pris, veuillez en choisir un autre."
-  },
-  "kindsLabel": {
-    "availability": "Disponibilité",
-    "lesson": "Cours",
-    "evaluation": "Évaluation",
-    "option": "Option"
-  },
-  "preApplicationActionLabels": {
-    "new": "Nouvelle inscription",
-    "renew": "Renouvellement",
-    "change": "Changement",
-    "stop": "Arrêt",
-    "pursueChildhood": "Poursuite enfance",
-    "cham": "Inscription CHAM"
-  },
-  "recurrenceTypes": {
-    "daily": "Tous les jours",
-    "weekly": "Toutes les semaines",
-    "biweekly": "Toutes les deux semaines",
-    "monthly": "Tous les mois",
-    "bimonthly": "Tous les deux mois",
-    "yearly": "Tous les ans"
-  }
+    "actions": {
+        "save": "Enregistrer",
+        "cancel": "Annuler",
+        "delete": "Supprimer",
+        "validate": "Valider",
+        "confirm": "Confirmer",
+        "send": "Envoyer",
+        "add": "Ajouter",
+        "create": "Créer",
+        "edit": "Éditer",
+        "update": "Mettre à jour",
+        "close": "Fermer"
+    },
+    "loading": "Chargement...",
+    "tabs": {
+        "incomplete": "Cet onglet n'est pas complètement rempli"
+    },
+    "dragAndDrop": {
+        "invalidType": "Type de fichier non autorisé",
+        "tooManyFiles": "Un seul fichier autorisé",
+        "selectButton": "Sélectionner",
+        "currentDocument": "Document actuel :",
+        "none": "aucun",
+        "imageAlt": "image impossible à charger"
+    },
+    "confirm": {
+        "sure": "Êtes-vous sûr ?"
+    },
+    "reactTable": {
+        "previousText": "Précédent",
+        "nextText": "Suivant",
+        "loadingText": "Chargement...",
+        "noDataText": "Aucune donnée",
+        "pageText": "Page",
+        "ofText": "sur",
+        "rowsText": "résultats"
+    },
+    "baseDataTable": {
+        "updateTitle": "Mettre à jour {{name}}",
+        "createTitle": "Créer {{name}}",
+        "deleteTitle": "Supprimer {{name}}",
+        "defaultResource": "cet élément",
+        "deleteQuestion": "Voulez-vous vraiment supprimer {{name}} : {{label}} ?",
+        "loadError": "Une erreur est survenue lors du chargement des données.",
+        "itemNotFound": "L'élément est introuvable dans la liste des éléments.",
+        "fullScreenTooltip": "Mettre le tableau en plein écran"
+    },
+    "itemFormModal": {
+        "updateTitleFallback": "Mise à jour",
+        "createTitleFallback": "Création",
+        "saveButton": "Sauvegarder",
+        "errorsHeading": "Erreur(s) :"
+    },
+    "deleteItemModal": {
+        "titleFallback": "Suppression",
+        "questionFallback": "Voulez-vous vraiment supprimer cet élément ?",
+        "genericError": "Une erreur est survenue lors de la suppression."
+    },
+    "weekdays": [
+        "Dimanche",
+        "Lundi",
+        "Mardi",
+        "Mercredi",
+        "Jeudi",
+        "Vendredi",
+        "Samedi"
+    ],
+    "months": [
+        "Janvier",
+        "Février",
+        "Mars",
+        "Avril",
+        "Mai",
+        "Juin",
+        "Juillet",
+        "Août",
+        "Septembre",
+        "Octobre",
+        "Novembre",
+        "Décembre"
+    ],
+    "messages": {
+        "noAnswer": "PAS DE RÉPONSE",
+        "errMinLength": "Ce champ doit comporter au minimum {{length}} caractères",
+        "errExactLength": "Ce champ doit comporter exactement {{length}} caractères",
+        "errStartsWith": "Ce champ n'a pas le bon préfixe",
+        "errRequired": "Cette information est requise.",
+        "errIsInvalid": "Des erreurs de saisies ont été détectées. Veuillez vérifier les informations renseignées.",
+        "errIsInvalidId": "La combinaison de Nom - Prénom - date de naissance est déjà prise, vous possédez déjà un compte chez nous. Veuillez vous connecter sur votre espace personnel ",
+        "errAgreementGdpr": "Pour continuer l'inscription, vous devez exprimer votre consentement sur la collecte de vos données personnelles.",
+        "errAgreementImageRight": "Pour continuer l'inscription, vous devez nous autoriser à utiliser votre image.",
+        "errMustHavePayer": "Un payeur doit être déclaré.",
+        "errMustCheckRules": "Pour continuer, vous devez accepter le règlement intérieur",
+        "errPhoneFormat": "Le numéro de téléphone est invalide.",
+        "errAtLeastOnePhone": "Pour continuer l'inscription, vous devez renseigner au moins un numéro de téléphone.",
+        "errAtLeastOneAddress": "Pour continuer l'inscription, vous devez renseigner au moins une adresse postale.",
+        "errPostalCode": "Le code postal est invalide.",
+        "errMustSelectUser": "Veuillez sélectionner un utilisateur avant de continuer.",
+        "errMustChooseSlot": "Veuillez choisir un créneau avant de continuer.",
+        "errMustChooseActivity": "Veuillez choisir une activité avant de continuer.",
+        "errMustChooseTeacher": "Veuillez choisir un professeur avant de continuer.",
+        "errMustChooseRoom": "Veuillez choisir une salle avant de continuer.",
+        "errNegativeDateRange": "Les dates de début et de fin renseignées sont invalides.",
+        "errNegativeHourRange": "Les heures de début et de fin renseignées sont invalides.",
+        "errDataMissing": "Impossible de continuer, des données obligatoires sont manquantes.",
+        "errInvalidAge": "La date de naissance ne peut être saisie à l'avance.",
+        "errInvalidNN": "Le numéro de registre national est invalide.",
+        "errInvalidEmail": "L'adresse mail saisie est invalide.",
+        "errLinksMissing": "Vous devez préciser le lien de parenté pour chaque membre de la famille.",
+        "errIntervalIntegrity": "Le début doit être inférieur à la fin",
+        "errOrdGte": "La valeur doit être supérieure ou égale à {{mark}}",
+        "errOrdGt": "La valeur doit être supérieure à {{mark}}",
+        "errOrdLte": "La valeur doit être inférieure ou égale à {{mark}}",
+        "errOrdLt": "La valeur doit être inférieure à {{mark}}",
+        "errMustCheckConsent": "Vous devez donner votre consentement pour continuer.",
+        "errMustRespond": "Vous devez répondre pour continuer.",
+        "errMustSelectPrice": "Sélectionnez un tarif ou supprimez la ligne.",
+        "errCannotDuplicatePrice": "Impossible d'ajouter deux fois le même produit avec le même tarif.",
+        "errMustSelectPaymentTerms": "Veuillez sélectionner les modalités de paiement."
+    },
+    "apiErrors": {
+        "default": "Une erreur s'est produite lors de la récupération des données",
+        "errIntervalValidated": "Ce créneau a déjà été validé.",
+        "errIntervalCreationFailed": "Le créneau n'a pas pu être ajouté. Un ou plusieurs créneaux existent déjà sur cette plage horaire.",
+        "errIntervalCreationPartial": "Le ou les créneaux ont été partiellement créés en raison de conflits avec le planning.",
+        "errIntervalBounds": "Le créneau spécifié est invalide. L'heure de début doit être inférieure à l'heure de fin.",
+        "errIntervalNotFound": "Ce créneau ne peut être supprimé. Il a déjà été validé ou supprimé par un permanent.",
+        "errGroupNameExists": "Le groupe existe déjà pour cette saison et ce professeur.",
+        "errGroupNameEmpty": "Le nom du groupe ne peut être vide.",
+        "errEvaluationIntervalAlreadyTaken": "Ce créneau d'évaluation est déjà pris, veuillez en choisir un autre."
+    },
+    "kindsLabel": {
+        "availability": "Disponibilité",
+        "lesson": "Cours",
+        "evaluation": "Évaluation",
+        "option": "Option"
+    },
+    "preApplicationActionLabels": {
+        "new": "Nouvelle inscription",
+        "renew": "Renouvellement",
+        "change": "Changement",
+        "stop": "Arrêt",
+        "pursueChildhood": "Poursuite enfance",
+        "cham": "Inscription CHAM"
+    },
+    "recurrenceTypes": {
+        "daily": "Tous les jours",
+        "weekly": "Toutes les semaines",
+        "biweekly": "Toutes les deux semaines",
+        "monthly": "Tous les mois",
+        "bimonthly": "Tous les deux mois",
+        "yearly": "Tous les ans"
+    },
+    "yesNo": {
+        "yes": "Oui",
+        "no": "Non"
+    },
+    "userWithInfos": {
+        "profile": "Profil",
+        "payments": "Règlements",
+        "email": "Mail",
+        "phones": "Téléphone(s)",
+        "none": "Aucun",
+        "family": "Famille",
+        "toCallFirst": "À contacter en premier",
+        "payer": "Payeur",
+        "legalGuardian": "Représentant légal"
+    },
+    "listPreferences": {
+        "title": "Préférences de la liste",
+        "enabled": "Activées",
+        "disabled": "Désactivées",
+        "reset": "Réinitialiser"
+    },
+    "imageManager": {
+        "missingImageAlt": "image manquante",
+        "deleteImage": "Supprimer l'image",
+        "chooseImage": "Choisir une image",
+        "change": "Changer"
+    },
+    "dateFilter": {
+        "year": "Année",
+        "month": "Mois",
+        "day": "Jour"
+    },
+    "jobProgress": {
+        "errorTitle": "Erreur",
+        "inProgress": "En cours",
+        "completed": "Terminé",
+        "failed": "Échec",
+        "errorCount_one": "{{count}} erreur…",
+        "errorCount_other": "{{count}} erreurs…",
+        "errorLine": "Ligne : {{line}}, Message : {{message}}"
+    },
+    "userAvatar": {
+        "alt": "avatar"
+    },
+    "passwordInput": {
+        "minChars": "({{n}} caractères minimum)"
+    },
+    "removeComponent": {
+        "successTitle": "Succès",
+        "successMessage": "Suppression effectuée. La page va se recharger à la fermeture de ce message",
+        "errorTitle": "Erreur",
+        "errorMessage": "Quelque chose s'est mal passé",
+        "confirmTitle": "Êtes-vous sûr de vouloir supprimer cet élément ?"
+    },
+    "commentSection": {
+        "title": "Commentaires",
+        "addComment": "Ajouter un commentaire",
+        "addCommentTitle": "Ajouter un commentaire",
+        "editCommentTitle": "Éditer un commentaire",
+        "save": "Sauvegarder",
+        "byOn": "par {{first}} {{last}} le {{date}}",
+        "modifiedOn": "Modifié le {{date}}",
+        "unknownUser": "utilisateur",
+        "unknownLast": "inconnu",
+        "needSchedule": "Un échéancier doit être créé pour laisser des commentaires."
+    },
+    "omnisearch": {
+        "search": "Rechercher",
+        "searchNoun": "Recherche",
+        "closeSearchForm": "Fermer le formulaire de recherche",
+        "foundTotal_one": "{{count}} trouvé·e au total",
+        "foundTotal_other": "{{count}} trouvé·e·s au total",
+        "roomWithFloor": "{{name}} (étage : {{floor}})",
+        "kinds": {
+            "user": "Utilisateur",
+            "activity": "Activité",
+            "application": "Demande d'inscription",
+            "adhesion": "Adhésion",
+            "room": "Salle",
+            "practiceRoom": "Salle de répétition"
+        }
+    }
 }

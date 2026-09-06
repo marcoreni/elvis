@@ -1,8 +1,10 @@
 import React, { useState, useEffect, Fragment } from "react";
 import ReactTable from "react-table";
 import { csrfToken } from "../utils";
+import { useTranslation } from "react-i18next";
 
 const PackUtilization = () => {
+    const { t } = useTranslation("activityApplications");
     const [data, setData] = useState([]);
     const [pages, setPages] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -20,30 +22,34 @@ const PackUtilization = () => {
 
     const columns = [
         {
-            Header: "#",
+            Header: t("activityApplications:packs.columns.number"),
             accessor: "id",
             width: 75,
         },
         {
             id: "lastname",
-            Header: "Name",
-            accessor: (u) => u.user.last_name,
+            Header: t("activityApplications:packs.columns.name"),
+            accessor: u => u.user.last_name,
         },
         {
             id: "firstname",
-            Header: "Prénom",
-            accessor: (u) => u.user.first_name,
+            Header: t("activityApplications:packs.columns.firstName"),
+            accessor: u => u.user.first_name,
         },
         {
             id: "nb_lessons",
-            Header: "Nombre de cours restants",
-            accessor: (d) =>
-                `${d.lessons_remaining} cours restants sur ${d.activity_ref_pricing.pricing_category.number_lessons}`,
+            Header: t("activityApplications:packs.columns.remainingLessons"),
+            accessor: d =>
+                t("activityApplications:packs.remainingLessonsOf", {
+                    remaining: d.lessons_remaining,
+                    total:
+                        d.activity_ref_pricing.pricing_category.number_lessons,
+                }),
         },
         {
             id: "activity",
-            Header: "Activité",
-            accessor: (d) => d.activity_ref.label,
+            Header: t("activityApplications:packs.columns.activity"),
+            accessor: d => d.activity_ref.label,
         },
     ];
 
@@ -73,8 +79,8 @@ const PackUtilization = () => {
                 Accept: "application/json",
             },
         })
-            .then((response) => response.json())
-            .then((result) => {
+            .then(response => response.json())
+            .then(result => {
                 setTeachers(result.teachers);
                 setActivityRefs(result.activity_refs);
                 setSeasonsList(result.seasons);
@@ -88,38 +94,38 @@ const PackUtilization = () => {
         setFilter(state);
         setTableState(state);
 
-        requestData(
-            state.pageSize,
-            state.page,
-            state.sorted,
-            state.filtered
-        )
-            .then((response) => response.json())
-            .then((result) => {
+        requestData(state.pageSize, state.page, state.sorted, state.filtered)
+            .then(response => response.json())
+            .then(result => {
                 setData(result.packs);
                 setLoadingTable(false);
             });
     };
 
     const requestData = (pageSize, page, sorted, filtered, format) => {
-        return fetch(`/get_student_packs_attendance_by_filter${format ? "." + format : ""}`, {
-            method: "POST",
-            credentials: "same-origin",
-            headers: {
-                "X-CSRF-Token": csrfToken,
-                "Content-Type": "application/json",
-                Accept: "application/json",
-            },
-            body: JSON.stringify({
-                pageSize,
-                page,
-                sorted: sorted ? sorted[0] : { id: "id", desc: true },
-                filtered,
-                selectedSeason,
-                selectedTeacher,
-                selectedActivityRef,
-            }),
-        });
+        return fetch(
+            `/get_student_packs_attendance_by_filter${
+                format ? "." + format : ""
+            }`,
+            {
+                method: "POST",
+                credentials: "same-origin",
+                headers: {
+                    "X-CSRF-Token": csrfToken,
+                    "Content-Type": "application/json",
+                    Accept: "application/json",
+                },
+                body: JSON.stringify({
+                    pageSize,
+                    page,
+                    sorted: sorted ? sorted[0] : { id: "id", desc: true },
+                    filtered,
+                    selectedSeason,
+                    selectedTeacher,
+                    selectedActivityRef,
+                }),
+            }
+        );
     };
 
     const handleSelectChange = (event, data) => {
@@ -139,13 +145,13 @@ const PackUtilization = () => {
     };
 
     if (loading) {
-        return <p>Chargement des données en cours...</p>;
+        return <p>{t("activityApplications:packs.loadingData")}</p>;
     }
 
     return (
         <Fragment>
             <div className="row wrapper border-bottom white-bg page-heading">
-                <h1>Suivi des élèves</h1>
+                <h1>{t("activityApplications:packs.studentTracking")}</h1>
             </div>
 
             <div className="white-bg pt-5 pb-5 p-1 mt-4">
@@ -153,12 +159,14 @@ const PackUtilization = () => {
                     <select
                         className="custom-select mr-2"
                         value={selectedTeacher}
-                        onChange={(event) =>
+                        onChange={event =>
                             handleSelectChange(event, "selectedTeacher")
                         }
                     >
-                        <option value="">Professeurs</option>
-                        {teachers.map((teacher) => (
+                        <option value="">
+                            {t("activityApplications:packs.filters.teachers")}
+                        </option>
+                        {teachers.map(teacher => (
                             <option key={teacher.id} value={teacher.id}>
                                 {teacher.first_name} {teacher.last_name}
                             </option>
@@ -168,12 +176,14 @@ const PackUtilization = () => {
                     <select
                         className="custom-select mr-2"
                         value={selectedActivityRef}
-                        onChange={(event) =>
+                        onChange={event =>
                             handleSelectChange(event, "selectedActivityRef")
                         }
                     >
-                        <option value="">Activités</option>
-                        {activityRefs.map((activity) => (
+                        <option value="">
+                            {t("activityApplications:packs.filters.activities")}
+                        </option>
+                        {activityRefs.map(activity => (
                             <option key={activity.id} value={activity.id}>
                                 {activity.label}
                             </option>
@@ -183,10 +193,16 @@ const PackUtilization = () => {
                     <select
                         className="custom-select mr-4"
                         value={selectedSeason}
-                        onChange={(event) => handleSelectChange(event, "selectedSeason")}
+                        onChange={event =>
+                            handleSelectChange(event, "selectedSeason")
+                        }
                     >
-                        <option value="">Selectionner une saison</option>
-                        {seasonsList.map((season) => (
+                        <option value="">
+                            {t(
+                                "activityApplications:packs.filters.selectSeason"
+                            )}
+                        </option>
+                        {seasonsList.map(season => (
                             <option key={season.id} value={season.id}>
                                 {season.label}
                             </option>
@@ -206,20 +222,24 @@ const PackUtilization = () => {
                         columns={columns}
                         defaultSorted={[{ id: "id", desc: true }]}
                         resizable={false}
-                        previousText="Précédent"
-                        nextText="Suivant"
-                        loadingText="Chargement..."
-                        noDataText="Aucune donnée"
-                        pageText="Page"
-                        ofText="sur"
-                        rowsText="résultats"
+                        previousText={t("common:reactTable.previousText")}
+                        nextText={t("common:reactTable.nextText")}
+                        loadingText={t("common:reactTable.loadingText")}
+                        noDataText={t("common:reactTable.noDataText")}
+                        pageText={t("common:reactTable.pageText")}
+                        ofText={t("common:reactTable.ofText")}
+                        rowsText={t("common:reactTable.rowsText")}
                         minRows={1}
                         SubComponent={subComponent}
                     />
                 </div>
 
                 <div className="d-flex justify-content-center mt-5">
-                    <p className="mt-4 font-size-big">{nbStudents} élèves au total</p>
+                    <p className="mt-4 font-size-big">
+                        {t("activityApplications:packs.totalStudents", {
+                            n: nbStudents,
+                        })}
+                    </p>
                 </div>
             </div>
         </Fragment>

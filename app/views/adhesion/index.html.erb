@@ -1,9 +1,9 @@
 <div class="row wrapper border-bottom white-bg page-heading m-b-md">
 <h2>
-    Liste des Adhésions
+    <%= t("views.adhesion.index.heading") %>
 
   <%= link_to({controller: "adhesion", action: "new"}, {class: "btn btn-primary pull-right"}) do %>
-    <i class="fas fa-plus"></i> Nouvelle adhésion
+    <i class="fas fa-plus"></i> <%= t("views.adhesion.index.create") %>
   <% end %>
 </h2>
   <% unless flash[:error].nil? %>

@@ -1,5 +1,6 @@
 import React from "react";
 import Select from "react-select";
+import { withTranslation } from "react-i18next";
 import { csrfToken } from "./utils";
 
 class EditActivities extends React.Component {
@@ -52,7 +53,7 @@ class EditActivities extends React.Component {
                 </div>
                 <input
                     type="submit"
-                    value="Mettre à jour"
+                    value={this.props.t("common:actions.update")}
                     className="btn btn-primary block full-width m-b"
                     onClick={() => this.updateActivities()}
                 />
@@ -61,4 +62,4 @@ class EditActivities extends React.Component {
     }
 }
 
-export default EditActivities;
+export default withTranslation("common")(EditActivities);

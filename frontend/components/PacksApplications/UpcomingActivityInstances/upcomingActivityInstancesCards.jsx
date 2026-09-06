@@ -1,11 +1,11 @@
-import React, {Fragment, useState} from "react";
+import React, { Fragment, useState } from "react";
 import moment from "moment";
-
-moment.locale('fr');
+import { useTranslation } from "react-i18next";
 
 export default function upcomingActivityInstancesCards(props) {
+    const { t } = useTranslation("activityApplications");
 
-    const {activity} = props;
+    const { activity } = props;
     const teacher = activity.teacher;
     const room = activity.room;
     const date = activity.time_interval;
@@ -14,14 +14,20 @@ export default function upcomingActivityInstancesCards(props) {
     const currentDate = moment();
 
     function getHours(start, end) {
-        return moment(start).format('HH:mm') + " - " + moment(end).format('HH:mm');
+        return (
+            moment(start).format("HH:mm") + " - " + moment(end).format("HH:mm")
+        );
     }
 
     function getDate(dateStr) {
-        return <Fragment>
-            <h1 className="font-bold">{moment(dateStr).format('DD')}</h1>
-            <p className="card-title font-bold color-red font-size-big">{moment(dateStr).format('MMMM')}</p>
-        </Fragment>
+        return (
+            <Fragment>
+                <h1 className="font-bold">{moment(dateStr).format("DD")}</h1>
+                <p className="card-title font-bold color-red font-size-big">
+                    {moment(dateStr).format("MMMM")}
+                </p>
+            </Fragment>
+        );
     }
 
     function dateIsPassed(date) {
@@ -29,37 +35,68 @@ export default function upcomingActivityInstancesCards(props) {
     }
 
     return (
-        <div className="row m-2"
-        style={dateIsPassed(date.start) ? {opacity: 0.6 } : {}}
+        <div
+            className="row m-2"
+            style={dateIsPassed(date.start) ? { opacity: 0.6 } : {}}
         >
-            <div className={`${minimalDisplay} ? "col-md-11 ml-lg-4" : "col-sm-5"`}>
+            <div
+                className={`${minimalDisplay} ? "col-md-11 ml-lg-4" : "col-sm-5"`}
+            >
                 <div className="ibox animated fadeInRight mb-0 mb-lg-3">
-                    <div className="ibox-content text-align-center-sm"
-                         style={ !minimalDisplay ? {maxWidth: "800px"} : {} }
+                    <div
+                        className="ibox-content text-align-center-sm"
+                        style={!minimalDisplay ? { maxWidth: "800px" } : {}}
                     >
                         <div className="row d-flex align-items-center">
-                            <div className={`${minimalDisplay ? "col-sm-4" : "col-sm-2"} project-status p-xs`}>
+                            <div
+                                className={`${
+                                    minimalDisplay ? "col-sm-4" : "col-sm-2"
+                                } project-status p-xs`}
+                            >
                                 {date !== undefined ? getDate(date.start) : ""}
                             </div>
-                            <div className={`${minimalDisplay ? "col-sm-4" : "col-sm-3"} p-xs ml-3`}>
+                            <div
+                                className={`${
+                                    minimalDisplay ? "col-sm-4" : "col-sm-3"
+                                } p-xs ml-3`}
+                            >
                                 <div className="activity-details mt-4">
-                                    {date !== undefined ? <p>{getHours(date.start, date.end)}</p> :
-                                        <p>Heures non définies</p>}
+                                    {date !== undefined ? (
+                                        <p>{getHours(date.start, date.end)}</p>
+                                    ) : (
+                                        <p>
+                                            {t(
+                                                "activityApplications:packs.card.hoursUndefined"
+                                            )}
+                                        </p>
+                                    )}
                                     <p className="font-bold">
-                                        {activity_ref !== undefined ? activity_ref.label : ""}
+                                        {activity_ref !== undefined
+                                            ? activity_ref.label
+                                            : ""}
                                     </p>
                                 </div>
                             </div>
-                            <div className={`${minimalDisplay ? "col-sm-3" : "col-sm-3"} p-xs`}>
+                            <div
+                                className={`${
+                                    minimalDisplay ? "col-sm-3" : "col-sm-3"
+                                } p-xs`}
+                            >
                                 <div className="activity_infos mt-4">
                                     <p>{room.label}</p>
-                                    <p>{teacher.first_name} {teacher.last_name}</p>
+                                    <p>
+                                        {teacher.first_name} {teacher.last_name}
+                                    </p>
                                 </div>
                             </div>
                             {dateIsPassed(date.start) ? (
                                 <div className="col-sm-3 p-xs">
                                     <div className="delete-icon mt-5">
-                                        <h4 className="pull-right">PASSÉ</h4>
+                                        <h4 className="pull-right">
+                                            {t(
+                                                "activityApplications:packs.card.past"
+                                            )}
+                                        </h4>
                                     </div>
                                 </div>
                             ) : null}
@@ -68,5 +105,5 @@ export default function upcomingActivityInstancesCards(props) {
                 </div>
             </div>
         </div>
-    )
+    );
 }

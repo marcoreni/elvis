@@ -1,7 +1,11 @@
-import React, { useState } from "react";
+import React from "react";
+import { withTranslation } from "react-i18next";
 import { csrfToken } from "./utils";
 import swal from "sweetalert2";
 
+// Column headers + role values ("administrateur"/"professeur") are a data contract with the
+// Rails CSV importer (app/services), which matches on these exact strings — deliberately NOT
+// translated.
 const CSV_TEMPLATE_ROWS = [
     [
         "Prenom",
@@ -64,6 +68,8 @@ class ImportCsv extends React.Component {
     }
 
     handleSubmit(event) {
+        const { t } = this.props;
+
         if (event.target.csv_file && event.target.csv_file.files.length > 0) {
             this.setState({ submitting: true });
             event.preventDefault();
@@ -90,13 +96,9 @@ class ImportCsv extends React.Component {
                                     import_report: json.import_report,
                                 });
                             } else {
-                                let htmltext =
-                                    "<p>Toute votre communauté a bien été importée</p>" +
-                                    "<p>Vous allez être redirigé vers la liste de vos membres";
-
                                 swal({
-                                    title: "Bravo !",
-                                    html: htmltext,
+                                    title: t("users:importCsv.successTitle"),
+                                    html: t("users:importCsv.successBody"),
                                     type: "success",
                                     timer: 10000,
                                     allowOutsideClick: false,
@@ -112,9 +114,8 @@ class ImportCsv extends React.Component {
                     this.setState({ submitting: false });
                     console.error(error);
                     swal({
-                        title: "Erreur",
-                        html:
-                            "<p>Une erreur est survenue lors de l'import. Veuillez réessayer.</p>",
+                        title: t("users:importCsv.errorTitle"),
+                        html: t("users:importCsv.errorBody"),
                         type: "error",
                         timer: 10000,
                     });
@@ -149,17 +150,20 @@ class ImportCsv extends React.Component {
     }
 
     display_row_numbers(lines) {
+        const { t } = this.props;
+
         switch (lines.length) {
             case 0:
                 return "";
             case 1:
-                return "Ligne " + lines + " : ";
+                return t("users:importCsv.rowNumberSingle", { lines });
             default:
-                return "Lignes " + lines + " : ";
+                return t("users:importCsv.rowNumberMultiple", { lines });
         }
     }
 
     render() {
+        const { t } = this.props;
         const import_report = this.state.import_report;
 
         const data =
@@ -172,9 +176,7 @@ class ImportCsv extends React.Component {
         return (
             <div className="row p-w-xl">
                 <div className="row m-b-md">
-                    <h4>
-                        Pour réaliser votre import voici les étapes à suivre:
-                    </h4>
+                    <h4>{t("users:importCsv.stepsIntro")}</h4>
                 </div>
                 <div className="row m-b-md">
                     <h3>
@@ -184,24 +186,18 @@ class ImportCsv extends React.Component {
                         >
                             1
                         </span>
-                        Téléchargez notre fichier CSV type
+                        {t("users:importCsv.step1Title")}
                     </h3>
                     <br />
-                    <p className="m-b-md">
-                        Il vous suffira de remplir les différentes colonnes pour
-                        importer les données sur Elvis. Le fichier CSV est déjà
-                        complété avec des exemples pour comprendre comment bien
-                        le remplir. Vous pouvez les supprimer, ce ne sont que
-                        des exemples.
-                    </p>
+                    <p className="m-b-md">{t("users:importCsv.step1Body")}</p>
 
                     <a
                         className="btn btn-primary m-b-md"
                         href={CSV_TEMPLATE_URI}
                         download="import_users.csv"
                     >
-                        <i className="fas fa-download"></i> Télécharger le
-                        fichier CSV type
+                        <i className="fas fa-download"></i>{" "}
+                        {t("users:importCsv.downloadTemplate")}
                     </a>
                 </div>
                 <div className="row m-b-md">
@@ -212,28 +208,22 @@ class ImportCsv extends React.Component {
                         >
                             2
                         </span>
-                        Remplissez les cellules de votre fichier CSV
+                        {t("users:importCsv.step2Title")}
                     </h3>
                     <br />
                     <p>
-                        {" "}
-                        Ajoutez les personnes que vous souhaitez importer. Avant
-                        de commencer, voici la règle d'or:{" "}
-                        <span className="font-bold">1 ligne = 1 personne</span>
-                    </p>
-                    <p>
-                        Les champs obligatoires sont:{" "}
+                        {t("users:importCsv.step2IntroPrefix")}
                         <span className="font-bold">
-                            le nom, le prénom, le mail et la date de naissance
+                            {t("users:importCsv.step2GoldRule")}
                         </span>
                     </p>
                     <p>
-                        Les rôles correspondent au compte professeur ou
-                        administrateur. Si vous souhaitez ajouter des
-                        professeurs ou des administrateurs, indiquez-le dans la
-                        colonne "Role". Les interfaces seront différentes en
-                        fonction de ces rôles.
+                        {t("users:importCsv.step2RequiredPrefix")}
+                        <span className="font-bold">
+                            {t("users:importCsv.step2RequiredFields")}
+                        </span>
                     </p>
+                    <p>{t("users:importCsv.step2Roles")}</p>
                 </div>
                 <div className="row m-b-md">
                     <h3>
@@ -243,10 +233,10 @@ class ImportCsv extends React.Component {
                         >
                             3
                         </span>
-                        Importez votre fichier CSV
+                        {t("users:importCsv.step3Title")}
                     </h3>
                     <br />
-                    <p>Choisissez le fichier CSV préalablement rempli.</p>
+                    <p>{t("users:importCsv.step3Body")}</p>
 
                     <form
                         encType="multipart/form-data"
@@ -269,10 +259,10 @@ class ImportCsv extends React.Component {
                             </div>
                             <span className="input-group-addon btn btn-default btn-file">
                                 <span className="fileinput-new">
-                                    Choisir Fichier
+                                    {t("users:importCsv.chooseFile")}
                                 </span>
                                 <span className="fileinput-exists">
-                                    Changer
+                                    {t("users:importCsv.change")}
                                 </span>
                                 <input
                                     accept="text/csv"
@@ -285,7 +275,7 @@ class ImportCsv extends React.Component {
                                 className="input-group-addon btn btn-default fileinput-exists"
                                 data-dismiss="fileinput"
                             >
-                                Supprimer
+                                {t("users:importCsv.remove")}
                             </a>
                         </div>
                         <input
@@ -299,7 +289,8 @@ class ImportCsv extends React.Component {
                                 className="btn btn-primary btn-md"
                                 disabled={submitting}
                             >
-                                <i className="fas fa-upload"></i> Importer
+                                <i className="fas fa-upload"></i>{" "}
+                                {t("users:importCsv.import")}
                                 &nbsp;
                                 {submitting && (
                                     <i className="fas fa-circle-notch fa-spin" />
@@ -313,12 +304,9 @@ class ImportCsv extends React.Component {
                     <div className="row">
                         <div className="alert alert-success">
                             <p>
-                                Le fichier a bien été importé (
-                                {import_report.lines_imported}{" "}
-                                {import_report.lines_imported === 1
-                                    ? "utilisateur"
-                                    : "utilisateurs"}{" "}
-                                )
+                                {t("users:importCsv.importedAlert", {
+                                    count: import_report.lines_imported,
+                                })}
                             </p>
                         </div>
                     </div>
@@ -327,7 +315,7 @@ class ImportCsv extends React.Component {
                 {import_report && import_report.errors && (
                     <div className="row">
                         <div className="alert alert-danger">
-                            <h4>Attention</h4>
+                            <h4>{t("users:importCsv.warning")}</h4>
                             {data.map(row => {
                                 return (
                                     <p key={row.lines}>
@@ -339,7 +327,7 @@ class ImportCsv extends React.Component {
                                 );
                             })}
                             <hr />
-                            <p>Veuillez modifier le fichier et réessayer.</p>
+                            <p>{t("users:importCsv.fixAndRetry")}</p>
                         </div>
                     </div>
                 )}
@@ -348,4 +336,4 @@ class ImportCsv extends React.Component {
     }
 }
 
-export default ImportCsv;
+export default withTranslation("users")(ImportCsv);

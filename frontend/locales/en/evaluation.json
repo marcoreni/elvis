@@ -17,5 +17,56 @@
         "changesCount": "Number of changes",
         "informedCount": "Students/parents notified",
         "completionRate": "% of evaluations completed"
+    },
+    "appointments": {
+        "title": "Evaluation management",
+        "noAvailabilities": "No teacher has set availability for evaluations yet",
+        "editor": {
+            "validatedTitle": "Confirmed appointments",
+            "noneYet": "No confirmed appointment yet.",
+            "newTitle": "New appointment",
+            "start": "Start",
+            "end": "End",
+            "overlap": "A slot already exists in this time range ({{start}} - {{end}})",
+            "activity": "Activity",
+            "room": "Room",
+            "selectActivity": "Select an activity",
+            "selectRoom": "Select a room",
+            "table": {
+                "schedule": "Schedule",
+                "activity": "Activity",
+                "room": "Room",
+                "student": "Student",
+                "noStudent": "None"
+            }
+        }
+    },
+    "previsionalGroups": {
+        "globalLevelRequired": "GLOBAL LEVEL REQUIRED",
+        "evaluationSheet": "Evaluation sheet",
+        "actionRequired": "An action is required from you",
+        "assignLevelPrompt": "Please assign a level for the following courses",
+        "noLevel": "NO LEVEL",
+        "assignGlobalLevel": "Assign a global level"
+    },
+    "appointmentsList": {
+        "colAppointment": "Appointment",
+        "colStudent": "Student",
+        "colActivity": "Activity",
+        "colSlot": "Slot",
+        "colTeacher": "Teacher",
+        "colRoom": "Room",
+        "colActions": "Actions",
+        "searchStudent": "Search for a student",
+        "searchByActivity": "Search by activity",
+        "empty": "No student without a slot",
+        "studentNamePlaceholder": "Student name",
+        "search": "Search",
+        "room": "Room {{label}}",
+        "intervalDisplay": "On {{date}}, from {{startTime}} to {{endTime}}",
+        "intervalDisplayWithTeacher": "On {{date}}, from {{startTime}} to {{endTime}}, with {{teacher}}",
+        "intervalOption": "{{teacher}}, Room {{room}}, {{interval}}",
+        "refreshHint": "Please refresh to get the up-to-date list",
+        "onlyKindSlots": "Only {{kind}} slots"
     }
 }

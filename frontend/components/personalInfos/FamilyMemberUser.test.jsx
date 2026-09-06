@@ -26,7 +26,12 @@ describe("FamilyMemberUser — _.map renders the existing-user matches without t
             <FamilyMemberUser
                 {...baseProps({
                     possibleMatches: [
-                        { id: 1, first_name: "Jean", last_name: "Dupont", adherent_number: 42 },
+                        {
+                            id: 1,
+                            first_name: "Jean",
+                            last_name: "Dupont",
+                            adherent_number: 42,
+                        },
                     ],
                 })}
             />

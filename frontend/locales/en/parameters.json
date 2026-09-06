@@ -218,6 +218,40 @@
             "instrument": "Do you really want to delete the instrument '{{name}}'?",
             "material": "Do you really want to delete the equipment '{{name}}'?",
             "musicGenre": "Do you really want to delete the music genre '{{name}}'?"
+        },
+        "bandForm": {
+            "name": "Name",
+            "blacklist": "Blacklist the band",
+            "type": "Type",
+            "genre": "Genre",
+            "otherGenreOption": "OTHER (create)",
+            "genreName": "Genre name",
+            "members": "Members",
+            "formerMembers": "Former member(s)",
+            "instrumentPrompt": "Instrument…",
+            "viewProfile": "view profile",
+            "removeMember": "Remove member",
+            "addMember": "Add a member"
+        },
+        "bandUser": {
+            "title": "New member",
+            "firstName": "First name",
+            "lastName": "Last name",
+            "email": "Email",
+            "emailPlaceholder": "(optional)",
+            "search": "Search",
+            "createNew": "Create a new one",
+            "select": "Select",
+            "noUserFound": "No user found"
+        },
+        "bandEdit": {
+            "title": "Editing band:",
+            "tabInfo": "Information",
+            "tabBookings": "Bookings"
+        },
+        "roomForm": {
+            "isPracticeRoom": "Practice room?",
+            "featuresTitle": "Features"
         }
     },
     "rooms": {
@@ -333,5 +367,86 @@
             "vatExempt": "Exempt",
             "activitiesNotVatLabel": "Music activities <1>are not subject</1> to VAT"
         }
+    },
+    "mailTemplates": {
+        "listTitle": "Email template editing",
+        "columns": {
+            "name": "Template name",
+            "path": "Path",
+            "actions": "Actions"
+        },
+        "backToList": "Back to the list",
+        "backToEdit": "Back to editing",
+        "createTitle": "Template creation",
+        "nameLabel": "Template name",
+        "pathLabel": "Path",
+        "editTemplate": "Edit the template",
+        "deleteConfirm": "Are you sure you want to delete this template?",
+        "deleteYes": "Yes!",
+        "toasts": {
+            "fetchError": "An error occurred while fetching the templates",
+            "errorTitle": "Error",
+            "fetchErrorText": "Unable to fetch the templates.",
+            "routingError": "Error while routing the request",
+            "successTitle": "Success",
+            "created": "Template created",
+            "modified": "Template modified",
+            "deleted": "Template deleted"
+        }
+    },
+    "eventsRules": {
+        "columns": {
+            "name": "Rule name",
+            "event": "On the event",
+            "actions": "Actions"
+        },
+        "deleteConfirm": "Are you sure you want to delete this rule?",
+        "deleteYes": "Yes!",
+        "addRule": "Add a rule",
+        "addContentLabel": "Add an event",
+        "addRuleTitle": "Add a rule",
+        "editRuleTitle": "Edit the rule",
+        "nameLabel": "Rule name",
+        "addConditionLabel": "Add a condition",
+        "addActionLabel": "Add an action",
+        "conditionLabel": "Condition",
+        "actionLabel": "Action",
+        "templateLabel": "Template",
+        "sendCopyLabel": "Send a copy of the email",
+        "back": "Back",
+        "confirm": "I confirm",
+        "events": {
+            "user_created": "a user is created",
+            "activity_accepted": "an activity proposal is accepted",
+            "activity_assigned": "an activity is assigned",
+            "application_created": "an enrolment request is created"
+        },
+        "actions": {
+            "sendSMS": "Send an SMS",
+            "sendMail": "Send an email"
+        },
+        "sendOptions": {
+            "is_admin": "To administrators",
+            "is_teacher": "To teachers",
+            "is_paying": "To payers"
+        },
+        "toasts": {
+            "errorTitle": "Error",
+            "routingError": "Error while routing the request",
+            "successTitle": "Success",
+            "ruleCreated": "Rule created",
+            "ruleAlreadyExists": "The event « {{event}} » already has a rule",
+            "missingFields": "Please fill in all the fields",
+            "ruleUpdated": "Rule updated",
+            "ruleDeleted": "Rule deleted"
+        }
+    },
+    "errorHistory": {
+        "title": "History of the last 20 errors",
+        "relatedObjects": "Related ActiveRecord objects",
+        "variableName": "Variable name",
+        "class": "Class",
+        "id": "Id",
+        "stackTrace": "Stack trace"
     }
 }

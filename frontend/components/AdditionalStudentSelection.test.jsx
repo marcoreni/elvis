@@ -6,7 +6,10 @@
 
 import React from "react";
 import { render, screen } from "@testing-library/react";
+import i18n from "../i18n"; // registers the default i18next instance so withTranslation resolves real strings
 import ChildSelection from "./AdditionalStudentSelection";
+
+beforeAll(() => i18n.changeLanguage("fr"));
 
 describe("ChildSelection (AdditionalStudentSelection) — _.chain/_.map render without throwing", () => {
     test("renders a parent <option> (via _.chain) for each additional student row (via _.map)", () => {
@@ -19,7 +22,7 @@ describe("ChildSelection (AdditionalStudentSelection) — _.chain/_.map render w
         render(<ChildSelection {...props} />);
 
         expect(screen.getByText("Jean Dupont")).toBeInTheDocument();
-        expect(screen.getByText(/Elève pour l'Eveil/)).toBeInTheDocument();
+        expect(screen.getByText(/Élève pour l'Éveil/)).toBeInTheDocument();
     });
 
     test("renders nothing extra when there are no additional students", () => {
@@ -31,6 +34,8 @@ describe("ChildSelection (AdditionalStudentSelection) — _.chain/_.map render w
 
         render(<ChildSelection {...props} />);
 
-        expect(screen.queryByText(/Elève pour l'Eveil/)).not.toBeInTheDocument();
+        expect(
+            screen.queryByText(/Élève pour l'Éveil/)
+        ).not.toBeInTheDocument();
     });
 });

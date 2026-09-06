@@ -1,28 +1,27 @@
 import React from "react";
+import { withTranslation, useTranslation } from "react-i18next";
 import moment from "moment";
 import _ from "lodash";
 import { toast } from "react-toastify";
 import { csrfToken } from "./utils";
-import 'bootstrap'
+import "bootstrap";
 
-function globalAttendanceValue(attendances)
-{
-    if(attendances.length > 0)
-    {
-        if(attendances.reduce((acc, a) => acc && a.attended === 1, true))
+function globalAttendanceValue(attendances) {
+    if (attendances.length > 0) {
+        if (attendances.reduce((acc, a) => acc && a.attended === 1, true))
             return 1;
-        else if(attendances.reduce((acc, a) => acc && a.attended === 0, true))
+        else if (attendances.reduce((acc, a) => acc && a.attended === 0, true))
             return 0;
-        else if(attendances.reduce((acc, a) => acc && a.attended === 2, true))
+        else if (attendances.reduce((acc, a) => acc && a.attended === 2, true))
             return 2;
-        else if(attendances.reduce((acc, a) => acc && a.attended === 3, true))
-            return 3
+        else if (attendances.reduce((acc, a) => acc && a.attended === 3, true))
+            return 3;
     }
 
     return null;
 }
 
-export default class PresenceSheet extends React.Component {
+class PresenceSheet extends React.Component {
     constructor(props) {
         super(props);
 
@@ -30,18 +29,18 @@ export default class PresenceSheet extends React.Component {
 
         hydratedInstances.forEach(i => {
             i.student_attendances.forEach(
-                sa => sa.user = (sa.is_option ?
-                        _.get(
-                            _.find(
-                                _.get(i, "activity.options"),
-                                o => _.get(o, "user.id") === sa.user_id
-                            ),
-                            "user"
-                        ) :
-                        i.activity &&
-                            i.activity.users &&
-                            i.activity.users.find(u => u.id === sa.user_id)
-                ),
+                sa =>
+                    (sa.user = sa.is_option
+                        ? _.get(
+                              _.find(
+                                  _.get(i, "activity.options"),
+                                  o => _.get(o, "user.id") === sa.user_id
+                              ),
+                              "user"
+                          )
+                        : i.activity &&
+                          i.activity.users &&
+                          i.activity.users.find(u => u.id === sa.user_id))
             );
         });
 
@@ -55,7 +54,7 @@ export default class PresenceSheet extends React.Component {
     }
 
     handleUpdateAttendance(instanceId, attendanceId, attended) {
-        console.log("send:" + attended )
+        console.log("send:" + attended);
         fetch(`/student_attendances/${attendanceId}`, {
             method: "POST",
             credentials: "same-origin",
@@ -78,7 +77,7 @@ export default class PresenceSheet extends React.Component {
 
                     if (instance && instance.student_attendances) {
                         const attendance = instance.student_attendances.find(
-                            a => a.id === attendanceId,
+                            a => a.id === attendanceId
                         );
 
                         if (attendance) attendance.attended = attended;
@@ -93,15 +92,18 @@ export default class PresenceSheet extends React.Component {
                 }
             })
             .catch(e =>
-                toast.error("Erreur lors de la mise à jour de cette présence"),
+                toast.error(this.props.t("planning:presenceSheet.updateError"))
             );
     }
 
     bulkUpdatePromise(targets, attended) {
-        const student_attendances = targets.reduce((acc, id) => ({
-            ...acc,
-            [id]: attended,
-        }), {});
+        const student_attendances = targets.reduce(
+            (acc, id) => ({
+                ...acc,
+                [id]: attended,
+            }),
+            {}
+        );
 
         return fetch(`/student_attendances/bulk`, {
             method: "POST",
@@ -127,7 +129,7 @@ export default class PresenceSheet extends React.Component {
 
                 instance.student_attendances.forEach(sa => {
                     const newAttended = res.attendances.find(
-                        a => a.id === sa.id,
+                        a => a.id === sa.id
                     );
 
                     if (newAttended) sa.attended = newAttended.attended;
@@ -140,33 +142,40 @@ export default class PresenceSheet extends React.Component {
                     },
                 });
             })
-            .catch(e => toast.error("Erreur lors de la mise à jour en masse"));
+            .catch(e =>
+                toast.error(
+                    this.props.t("planning:presenceSheet.bulkUpdateError")
+                )
+            );
     }
 
     handleUpdateAllAttendances(targets, attended) {
-        this
-            .bulkUpdatePromise(targets, attended)
+        this.bulkUpdatePromise(targets, attended)
             .then(res => {
-                if(res.ok)
+                if (res.ok)
                     this.setState({
                         instances: Object.values(this.state.instances)
-                            .map(
-                                i => ({
-                                    ...i,
-                                    student_attendances: i
-                                        .student_attendances
-                                        .map(sa => ({
-                                            ...sa,
-                                            attended,
-                                        })),
-                                }))
-                            .reduce((acc, i) => ({...acc, [i.id]: i,}), {}),
-                    })
+                            .map(i => ({
+                                ...i,
+                                student_attendances: i.student_attendances.map(
+                                    sa => ({
+                                        ...sa,
+                                        attended,
+                                    })
+                                ),
+                            }))
+                            .reduce((acc, i) => ({ ...acc, [i.id]: i }), {}),
+                    });
             })
-            .catch(e => toast.error("Erreur lors de la mise à jour en masse"));
+            .catch(e =>
+                toast.error(
+                    this.props.t("planning:presenceSheet.bulkUpdateError")
+                )
+            );
     }
 
     render() {
+        const { t } = this.props;
         const { instances } = this.state;
         const instanceKeys = Object.keys(instances);
 
@@ -179,7 +188,9 @@ export default class PresenceSheet extends React.Component {
                                 <div className="ibox-title">
                                     <h4>
                                         <b>
-                                            Aucun cours
+                                            {t(
+                                                "planning:presenceSheet.noCourse"
+                                            )}
                                         </b>
                                     </h4>
                                 </div>
@@ -187,7 +198,7 @@ export default class PresenceSheet extends React.Component {
                         </div>
                     </div>
                 </div>
-            )
+            );
         }
 
         const showAllCoursesBanner = instanceKeys.length > 1;
@@ -197,34 +208,42 @@ export default class PresenceSheet extends React.Component {
             return start.hour() * 100 + start.minute();
         });
 
-        const allAttendances = Object
-            .values(this.state.instances)
-            .reduce(
-                (acc, i) => [...acc, ...i.student_attendances],
-                [],
-            );
+        const allAttendances = Object.values(this.state.instances).reduce(
+            (acc, i) => [...acc, ...i.student_attendances],
+            []
+        );
 
         return (
             <div className="wrapper wrapper-content">
                 <div className="row">
                     <div className="col-lg-6 col-md-10 col-xs-12">
                         <div className="ibox">
-
                             {showAllCoursesBanner && (
-                            <div className="ibox-title">
-                                <div className="flex flex-center-aligned">
-                                    <div className="col-lg-2 col-md-2 col-xs-3 color-black">
-                                        Tous les cours
-                                    </div>
-                                    <div className="col-lg-10 col-md-10 col-xs-9">
-                                        <AttendanceControl
-                                            value={globalAttendanceValue(allAttendances)}
-                                            handleUpdate={val => this.handleUpdateAllAttendances(allAttendances.map(sa => sa.id), val)} />
+                                <div className="ibox-title">
+                                    <div className="flex flex-center-aligned">
+                                        <div className="col-lg-2 col-md-2 col-xs-3 color-black">
+                                            {t(
+                                                "planning:presenceSheet.allCourses"
+                                            )}
+                                        </div>
+                                        <div className="col-lg-10 col-md-10 col-xs-9">
+                                            <AttendanceControl
+                                                value={globalAttendanceValue(
+                                                    allAttendances
+                                                )}
+                                                handleUpdate={val =>
+                                                    this.handleUpdateAllAttendances(
+                                                        allAttendances.map(
+                                                            sa => sa.id
+                                                        ),
+                                                        val
+                                                    )
+                                                }
+                                            />
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
                             )}
-
                         </div>
                         {orderedInstances.map(i => (
                             <React.Fragment key={i.id}>
@@ -233,13 +252,19 @@ export default class PresenceSheet extends React.Component {
                                         <h4>
                                             <b>
                                                 {durationString(
-                                                    i.time_interval,
+                                                    i.time_interval
                                                 )}
                                             </b>{" "}
                                             | {i.activity.activity_ref.label}
                                             <br />
                                             <small>
-                                                Salle {i.room && i.room.label}
+                                                {i.room &&
+                                                    t(
+                                                        "planning:presenceSheet.room",
+                                                        {
+                                                            label: i.room.label,
+                                                        }
+                                                    )}
                                             </small>
                                         </h4>
                                     </div>
@@ -247,27 +272,44 @@ export default class PresenceSheet extends React.Component {
                                         <div className="container">
                                             <div className="row">
                                                 <div className="col-lg-2 col-md-2 col-xs-3 color-black">
-                                                    Tous les élèves
+                                                    {t(
+                                                        "planning:presenceSheet.allStudents"
+                                                    )}
                                                 </div>
                                                 <div className="col-lg-10 col-md-10 col-xs-9">
                                                     <AttendanceControl
-                                                        value={globalAttendanceValue(i.student_attendances)}
-                                                        handleUpdate={val => this.handleBulkUpdateAttendances(i.id, i.student_attendances.map(sa => sa.id), val)} />
+                                                        value={globalAttendanceValue(
+                                                            i.student_attendances
+                                                        )}
+                                                        handleUpdate={val =>
+                                                            this.handleBulkUpdateAttendances(
+                                                                i.id,
+                                                                i.student_attendances.map(
+                                                                    sa => sa.id
+                                                                ),
+                                                                val
+                                                            )
+                                                        }
+                                                    />
                                                 </div>
 
                                                 <hr />
                                             </div>
 
-                                            {
-                                                i
-                                                    .student_attendances
-                                                    .map(sa => <AttendanceState
-                                                            key={sa.user_id}
-                                                            attendance={sa}
-                                                            interval={i}
-                                                            handleUpdate={val => this.handleUpdateAttendance(i.id, sa.id, val)} />
-                                                    )
-                                            }
+                                            {i.student_attendances.map(sa => (
+                                                <AttendanceState
+                                                    key={sa.user_id}
+                                                    attendance={sa}
+                                                    interval={i}
+                                                    handleUpdate={val =>
+                                                        this.handleUpdateAttendance(
+                                                            i.id,
+                                                            sa.id,
+                                                            val
+                                                        )
+                                                    }
+                                                />
+                                            ))}
                                         </div>
                                     </div>
                                 </div>
@@ -280,55 +322,83 @@ export default class PresenceSheet extends React.Component {
     }
 }
 
-const AttendanceState = ({attendance, handleUpdate}) => <div className="row" style={attendance.is_option ? {color: "#9575CD"} : {}}>
-    {
-        <div className="col-lg-2 col-md-2 col-xs-3">
-            <a
-                href={
-                    "/users/" +
-                    attendance.user_id
-                }
-                className="m-r-sm"
-                style={attendance.is_option ? {color: "#9575CD"} : {}}>
-                {attendance.user
-                    ? `${
-                        attendance
-                            .user
-                            .first_name
-                    } ${
-                        attendance
-                            .user
-                            .last_name
-                    }`
-                    : "?"}
-            </a>
+const AttendanceState = ({ attendance, handleUpdate }) => (
+    <div
+        className="row"
+        style={attendance.is_option ? { color: "#9575CD" } : {}}
+    >
+        {
+            <div className="col-lg-2 col-md-2 col-xs-3">
+                <a
+                    href={"/users/" + attendance.user_id}
+                    className="m-r-sm"
+                    style={attendance.is_option ? { color: "#9575CD" } : {}}
+                >
+                    {attendance.user
+                        ? `${attendance.user.first_name} ${attendance.user.last_name}`
+                        : "?"}
+                </a>
+            </div>
+        }
+        <div className="col-lg-10 col-md-10 col-xs-9 ">
+            <AttendanceControl
+                value={attendance.attended}
+                handleUpdate={handleUpdate}
+                sex={(attendance.user || {}).sex}
+            />
         </div>
-    }
-    <div className="col-lg-10 col-md-10 col-xs-9 ">
-        <AttendanceControl
-            value={attendance.attended}
-            handleUpdate={handleUpdate}
-            sex={(attendance.user || {}).sex}/>
     </div>
-</div>;
+);
 
-export const AttendanceControl = ({value, handleUpdate, sex}) => <div className="presence-buttons" style={{color: "initial"}}>
-    <button
-        className={`m-r-sm ${value == 0 ? "bg-danger" : ""}`}
-        style={{borderRadius: "5px", width: "40px", height: "30px"}}
-        onClick={() => handleUpdate(0)}
-        title={`Absent${sex === 'F' ? "e" : ""}`}>A</button>
+export const AttendanceControl = ({ value, handleUpdate, sex }) => {
+    const { t } = useTranslation("planning");
 
-    <button className="m-r-sm"
-            style={{borderRadius: "5px", width: "40px", height: "30px", backgroundColor: (value == 3 ? "#ff6802" : "")}}
-            onClick={() => handleUpdate(3)}
-            title="Absence justifiée">J</button>
+    return (
+        <div className="presence-buttons" style={{ color: "initial" }}>
+            <button
+                className={`m-r-sm ${value == 0 ? "bg-danger" : ""}`}
+                style={{ borderRadius: "5px", width: "40px", height: "30px" }}
+                onClick={() => handleUpdate(0)}
+                title={
+                    sex === "F"
+                        ? t("planning:presenceSheet.attendance.absentFemale")
+                        : t("planning:presenceSheet.attendance.absent")
+                }
+            >
+                A
+            </button>
 
-    <button className={(value == 1 ? "bg-green" : "")}
-            style={{borderRadius: "5px", width: "40px", height: "30px"}}
-            onClick={() => handleUpdate(1)}
-            title={`Présent${sex === 'F' ? "e" : ""}`}>P</button>
-</div>;
+            <button
+                className="m-r-sm"
+                style={{
+                    borderRadius: "5px",
+                    width: "40px",
+                    height: "30px",
+                    backgroundColor: value == 3 ? "#ff6802" : "",
+                }}
+                onClick={() => handleUpdate(3)}
+                title={t("planning:presenceSheet.attendance.justifiedAbsence")}
+            >
+                J
+            </button>
+
+            <button
+                className={value == 1 ? "bg-green" : ""}
+                style={{ borderRadius: "5px", width: "40px", height: "30px" }}
+                onClick={() => handleUpdate(1)}
+                title={
+                    sex === "F"
+                        ? t("planning:presenceSheet.attendance.presentFemale")
+                        : t("planning:presenceSheet.attendance.present")
+                }
+            >
+                P
+            </button>
+        </div>
+    );
+};
+
+export default withTranslation("planning")(PresenceSheet);
 
 //turns a time interval into a string representing it's hours extremities.
 function durationString(interval) {

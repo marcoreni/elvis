@@ -4,12 +4,12 @@
             <div class="ibox-title">
                 <div class="flex flex-space-between-justified">
                     <h2>
-                        Liste des statuts d'inscription
+                        <%= t("views.activity_application_statuses.index.heading") %>
                     </h2>
                     <div>
                         <%= link_to new_activity_application_status_path, class: "btn btn-primary" do %>
                             <i class="fas fa-plus"></i>
-                            Nouveau statut
+                            <%= t("views.activity_application_statuses.index.new_button") %>
                         <% end %>
                     </div>
                 </div>
@@ -18,10 +18,10 @@
                 <table class="table table-striped" style="margin-bottom: 0">
                     <thead>
                         <th>#</th>
-                        <th>Libellé</th>
-                        <th>Arrêt ?</th>
-                        <th>Actif</th>
-                        <th>Actions</th>
+                        <th><%= t("views.activity_application_statuses.index.cols.label") %></th>
+                        <th><%= t("views.activity_application_statuses.index.cols.stopping") %></th>
+                        <th><%= t("common.labels.active") %></th>
+                        <th><%= t("common.labels.actions") %></th>
                     </thead>
                     <tbody>
                         <%= render partial: "activity_application_status_for_index", collection: @activity_application_statuses, as: :status %>
@@ -31,13 +31,13 @@
             <div class="ibox-footer">
                 <% if @error %>
                     <div class="alert alert-danger">
-                        <h3>Erreur</h3>
+                        <h3><%= t("views.activity_application_statuses.index.error_title") %></h3>
                         <%= @error %>
                     </div>
                 <% end %>
                 <% if @message %>
                     <div class="alert alert-info">
-                        <h3>Message</h3>
+                        <h3><%= t("views.activity_application_statuses.index.message_title") %></h3>
                         <%= @message %>
                     </div>
                 <% end %>

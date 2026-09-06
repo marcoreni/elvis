@@ -231,5 +231,185 @@
         "notIndicated": "NON INDIQUÉ",
         "toSpecify": "À PRÉCISER"
     },
-    "ageYears": "{{age}} ans"
+    "ageYears": "{{age}} ans",
+    "seasonActivation": {
+        "title": "Activation de la saison",
+        "stepLabel": "Étape {{n}}",
+        "loadingData": "Chargement des données...",
+        "step1": {
+            "title": "Étape 1 : configuration des vacances",
+            "intro": "Voulez-vous importer les vacances de l'API ou les configurer manuellement ?",
+            "apiHint": "L'import des vacances depuis l'API garantit que vous avez les dates correctes. Cependant, vous pouvez aussi les configurer manuellement si vous préférez.",
+            "importButton": "Importer les vacances",
+            "addManuallyButton": "Ajouter manuellement",
+            "manualFormTitle": "Ajouter des vacances manuellement",
+            "nameLabel": "Nom des vacances",
+            "namePlaceholder": "Ex : vacances d'hiver",
+            "startLabel": "Date de début",
+            "endLabel": "Date de fin",
+            "addButton": "Ajouter"
+        },
+        "summary": {
+            "title": "Récapitulatif des vacances & jours fériés",
+            "impact_one": "{{count}} période • impact : ~{{lessons}} leçons",
+            "impact_other": "{{count}} périodes • impact : ~{{lessons}} leçons",
+            "empty": "Aucune période de vacances configurée pour le moment"
+        },
+        "step2": {
+            "title": "Étape 2 : dates de la saison",
+            "calendar": "Calendrier de la saison {{label}}",
+            "startLabel": "Début de saison",
+            "endLabel": "Fin de saison",
+            "reopenLabel": "Ouverture ré-inscriptions",
+            "openNewLabel": "Ouverture nouvelles inscriptions",
+            "closeLabel": "Clôture des inscriptions",
+            "lessonCountLabel": "Nombre de leçons (calculé auto)",
+            "lockButton": "Verrouiller",
+            "editButton": "Modifier",
+            "holidaysTitle": "Vacances & jours fériés",
+            "importButton": "Importer",
+            "addButton": "Ajouter",
+            "namePlaceholder": "Nom"
+        },
+        "footer": {
+            "previous": "Précédent",
+            "next": "Suivant",
+            "activating": "Activation en cours...",
+            "activate": "Activer la saison"
+        },
+        "confirmNoHolidays": {
+            "title": "Aucune vacance configurée",
+            "text": "Vous n'avez pas configuré de vacances pour cette saison. Voulez-vous continuer malgré tout ?",
+            "confirm": "Oui, continuer",
+            "cancel": "Non, revenir"
+        },
+        "errors": {
+            "allFieldsRequired": "Tous les champs sont obligatoires",
+            "startAfterEnd": "La date de début doit être avant la date de fin",
+            "fetchHolidaysFailed": "Erreur lors de la récupération des vacances",
+            "addHolidaysFailed": "Erreur lors de l'ajout des vacances",
+            "deleteHolidaysFailed": "Erreur lors de la suppression des vacances",
+            "activationFailed": "Erreur lors de l'activation de la saison",
+            "generic": "Une erreur est survenue",
+            "loadSeasonFailed": "Impossible de charger les données de la saison"
+        },
+        "toast": {
+            "errorTitle": "Erreur",
+            "successTitle": "Succès",
+            "infoTitle": "Information",
+            "holidaysImported": "Les vacances ont été importées avec succès",
+            "holidaysAdded": "Les vacances ont été ajoutées",
+            "holidaysDeleted": "Les vacances ont été supprimées",
+            "seasonActivated": "La saison a été activée avec succès",
+            "nextSeasonCreated": "Puisque vous avez défini cette saison comme « en cours » et qu'il n'y a pas de saison suivante, la saison suivante a été créée automatiquement. Vous pouvez la modifier si nécessaire."
+        }
+    },
+    "holidays": {
+        "sectionTitle": "Vacances & jours fériés",
+        "import": "Importer",
+        "noData": "Aucune vacance",
+        "dateHint": "jj/mm/aaaa",
+        "columns": {
+            "label": "Label",
+            "start": "Date de début",
+            "end": "Date de fin",
+            "action": "Action"
+        },
+        "addModal": {
+            "title": "Nouvelles vacances ou jour férié",
+            "startLabel": "Date de début",
+            "endLabel": "Date de fin",
+            "labelLabel": "Label",
+            "errEmptyField": "Un des champs est vide.",
+            "errStartAfterEnd": "La date de début ne peut pas être après la date de fin.",
+            "errTooLong": "Une durée supérieure à 3 mois n'est pas raisonnable pour des vacances…"
+        },
+        "fetchModal": {
+            "title": "Importer les vacances et jours fériés ?"
+        },
+        "deleteModal": {
+            "title": "Confirmez-vous la suppression de « {{label}} » ?"
+        }
+    },
+    "seasonsList": {
+        "cannotDeleteCurrentTitle": "Impossible de supprimer la saison en cours",
+        "cannotDeleteCurrentText": "Vous devez d'abord définir une autre saison comme « en cours »",
+        "deleteTitle": "Suppression de la saison",
+        "deleteSuccessTitle": "Réussite",
+        "deleteSuccessText": "Suppression réussie",
+        "active": "Active",
+        "activate": "Activer",
+        "columns": {
+            "label": "Label",
+            "start": "Début",
+            "end": "Fin",
+            "status": "Statut",
+            "next": "Suivante",
+            "actions": "Actions"
+        }
+    },
+    "availabilityInput": {
+        "titleSingle": "Préférences horaires pour l'activité {{label}}",
+        "titleMulti": "Préférences horaires pour les activités ({{labels}})",
+        "day": "Jour",
+        "from": "De",
+        "to": "à",
+        "comment": "Commentaire",
+        "commentPlaceholder": "Vous pouvez renseigner quelques précisions ici...",
+        "create": "Créer la disponibilité"
+    },
+    "availabilityList": {
+        "commentSaved": "Commentaire saisi",
+        "editComment": "Saisir ou éditer un commentaire",
+        "deleteAllConfirm": "Voulez-vous vraiment supprimer les créneaux du {{day}} ?",
+        "title": "Mes disponibilités",
+        "empty": "Aucune disponibilité"
+    },
+    "availabilityManager": {
+        "weekChoice": "Choix de la semaine",
+        "change": "Changer"
+    },
+    "availabilityCommentModal": {
+        "title": "Commentaire"
+    },
+    "plannings": {
+        "columns": {
+            "lastModified": "Dernière modification",
+            "lastName": "Nom",
+            "firstName": "Prénom",
+            "actions": "Actions",
+            "room": "Salle"
+        },
+        "profile": "Profil",
+        "groupSimulation": "Simulation groupes",
+        "viewPlanning": "Voir le planning"
+    },
+    "presenceSheet": {
+        "noCourse": "Aucun cours",
+        "allCourses": "Tous les cours",
+        "allStudents": "Tous les élèves",
+        "room": "Salle {{label}}",
+        "updateError": "Erreur lors de la mise à jour de cette présence",
+        "bulkUpdateError": "Erreur lors de la mise à jour en masse",
+        "attendance": {
+            "absent": "Absent",
+            "absentFemale": "Absente",
+            "justifiedAbsence": "Absence justifiée",
+            "present": "Présent",
+            "presentFemale": "Présente"
+        }
+    },
+    "hoursSheet": {
+        "titlePrefix": "Feuille d'heures de",
+        "monthlyTitle": "Feuille d'heures {{month}} {{year}}",
+        "colWeek": "SEMAINE",
+        "colTotal": "TOTAL",
+        "colCovering": "REMPLAÇANT",
+        "colCovered": "REMPLACÉ",
+        "rowTotals": "TOTAUX",
+        "coveringHours": "{{hours}} remplaçant",
+        "coveredHours": "{{hours}} remplacé",
+        "countedHours": "({{hours}} comptées)",
+        "footnote": "*Ces heures sont comprises dans le compte des activités"
+    }
 }

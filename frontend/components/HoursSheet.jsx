@@ -1,4 +1,5 @@
 import React from "react";
+import { withTranslation } from "react-i18next";
 import moment from "moment";
 import _ from "lodash";
 
@@ -11,12 +12,7 @@ import { getHoursString } from "./utils/DateUtils";
 import { RangedSelect } from "./utils/DateFilter";
 import { ISO_DATE_FORMAT, csrfToken } from "./utils";
 
-const shiftDateLocalizer = new Intl.DateTimeFormat("fr-FR", {
-    weekday: "short",
-    day: "2-digit",
-});
-
-export default class HoursSheet extends React.Component {
+class HoursSheet extends React.Component {
     constructor(props) {
         super(props);
 
@@ -139,7 +135,11 @@ export default class HoursSheet extends React.Component {
     }
 
     render() {
-        const sheet = _.get(this.state.sheets, `[${this.state.year}][${this.state.month}]`);
+        const { t } = this.props;
+        const sheet = _.get(
+            this.state.sheets,
+            `[${this.state.year}][${this.state.month}]`
+        );
 
         // all activities kinds
         const activityKinds = _(sheet)
@@ -173,7 +173,7 @@ export default class HoursSheet extends React.Component {
 
                 return acc;
             }, {})
-            .map(w => _.orderBy(w, ({d}) => d.valueOf()))
+            .map(w => _.orderBy(w, ({ d }) => d.valueOf()))
             .value();
 
         shiftsCoveredByWeek = Object.values(shiftsCoveredByWeek);
@@ -189,7 +189,7 @@ export default class HoursSheet extends React.Component {
             <div>
                 <div className="row wrapper border-bottom white-bg page-heading m-b-md">
                     <h2>
-                        Feuille d'heures de{" "}
+                        {t("planning:hoursSheet.titlePrefix")}{" "}
                         <a href={`/users/${this.props.user.id}`}>
                             {this.props.user.first_name}{" "}
                             {this.props.user.last_name}
@@ -251,34 +251,63 @@ export default class HoursSheet extends React.Component {
                         <div className="ibox">
                             <div className="ibox-title">
                                 <h3>
-                                    Feuille d'heures{" "}
-                                    {moment(this.state.month + 1, "MM").format(
-                                        "MMMM"
-                                    )}{" "}
-                                    {this.state.year}
+                                    {t("planning:hoursSheet.monthlyTitle", {
+                                        month: moment(
+                                            this.state.month + 1,
+                                            "MM"
+                                        ).format("MMMM"),
+                                        year: this.state.year,
+                                    })}
                                 </h3>
                             </div>
                             <div className="ibox-content">
-                                <div className="table-responsive" style={{ overflowX: "auto", width: "100%" }}>
-                                <table className="table table-bordered" style={{ width: "100%", marginBottom: 0 }}>
-                                    <thead>
-                                        <tr>
-                                            <th>SEMAINE</th>
-                                            {//Put activity kinds in the headers
+                                <div
+                                    className="table-responsive"
+                                    style={{ overflowX: "auto", width: "100%" }}
+                                >
+                                    <table
+                                        className="table table-bordered"
+                                        style={{
+                                            width: "100%",
+                                            marginBottom: 0,
+                                        }}
+                                    >
+                                        <thead>
+                                            <tr>
+                                                <th>
+                                                    {t(
+                                                        "planning:hoursSheet.colWeek"
+                                                    )}
+                                                </th>
+                                                {//Put activity kinds in the headers
                                                 activityKinds.map((e, i) => (
                                                     <th key={i}>
                                                         {e.toUpperCase()}
                                                     </th>
                                                 ))}
-                                            <th>TOTAL</th>
-                                            <th>REMPLAÇANT<sup>*</sup></th>
-                                            <th>REMPLACÉ<sup>*</sup></th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {/*
-                                         *  Renders each week, displaying their totals grouped by activity kind and global.
-                                         */
+                                                <th>
+                                                    {t(
+                                                        "planning:hoursSheet.colTotal"
+                                                    )}
+                                                </th>
+                                                <th>
+                                                    {t(
+                                                        "planning:hoursSheet.colCovering"
+                                                    )}
+                                                    <sup>*</sup>
+                                                </th>
+                                                <th>
+                                                    {t(
+                                                        "planning:hoursSheet.colCovered"
+                                                    )}
+                                                    <sup>*</sup>
+                                                </th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {/*
+                                             *  Renders each week, displaying their totals grouped by activity kind and global.
+                                             */
                                             _.map(shiftsByWeek, (w, k) => (
                                                 <tr key={k}>
                                                     {
@@ -293,71 +322,118 @@ export default class HoursSheet extends React.Component {
                                                             href={`/planning/${
                                                                 this.props
                                                                     .planningId
-                                                                }/${moment(w[0].d)
-                                                                    .weekday(0)
-                                                                    .format(
-                                                                        ISO_DATE_FORMAT
-                                                                    )}`}
+                                                            }/${moment(w[0].d)
+                                                                .weekday(0)
+                                                                .format(
+                                                                    ISO_DATE_FORMAT
+                                                                )}`}
                                                         >
                                                             {w.length > 1 &&
-                                                                w[0].d.date() !==
+                                                            w[0].d.date() !==
                                                                 w[
                                                                     w.length - 1
                                                                 ].d.date()
                                                                 ? `${w[0].d
-                                                                    .format(
-                                                                        "D MMMM"
-                                                                    )
-                                                                    .toUpperCase()} - ${w[
-                                                                        w.length - 1
-                                                                    ].d
-                                                                        .format(
-                                                                            "D MMMM"
-                                                                        )
-                                                                        .toUpperCase()}`
+                                                                      .format(
+                                                                          "D MMMM"
+                                                                      )
+                                                                      .toUpperCase()} - ${w[
+                                                                      w.length -
+                                                                          1
+                                                                  ].d
+                                                                      .format(
+                                                                          "D MMMM"
+                                                                      )
+                                                                      .toUpperCase()}`
                                                                 : `${w[0].d
-                                                                    .format(
-                                                                        "D MMMM"
-                                                                    )
-                                                                    .toUpperCase()}`}
+                                                                      .format(
+                                                                          "D MMMM"
+                                                                      )
+                                                                      .toUpperCase()}`}
                                                         </a>
                                                     </td>
                                                     {//total of hours of the week per kind
-                                                        activityKinds.map((kind, i) => {
+                                                    activityKinds.map(
+                                                        (kind, i) => {
                                                             let kindTotal = 0;
                                                             let kindCovering = 0;
                                                             let kindCovered = 0;
 
-                                                            w
-                                                                .map(d => d.detail)
-                                                                .forEach(
-                                                                    (d) => {
-                                                                        kindTotal += _.get(d[kind], "total") || 0;
-                                                                        kindCovering += _.get(d[kind], "covering") || 0;
-                                                                        kindCovered += _.get(d[kind], "covered") || 0;
-                                                                    },
-                                                                        
-                                                                    0
-                                                                );
+                                                            w.map(
+                                                                d => d.detail
+                                                            ).forEach(
+                                                                d => {
+                                                                    kindTotal +=
+                                                                        _.get(
+                                                                            d[
+                                                                                kind
+                                                                            ],
+                                                                            "total"
+                                                                        ) || 0;
+                                                                    kindCovering +=
+                                                                        _.get(
+                                                                            d[
+                                                                                kind
+                                                                            ],
+                                                                            "covering"
+                                                                        ) || 0;
+                                                                    kindCovered +=
+                                                                        _.get(
+                                                                            d[
+                                                                                kind
+                                                                            ],
+                                                                            "covered"
+                                                                        ) || 0;
+                                                                },
+
+                                                                0
+                                                            );
 
                                                             //increase kind total aggregator
                                                             detailTotals[
                                                                 kind
                                                             ] += kindTotal;
 
-                                                            let display = `${getHoursString(kindTotal)}`;
+                                                            let display = `${getHoursString(
+                                                                kindTotal
+                                                            )}`;
 
-                                                            if(kindCovering || kindCovered) {
+                                                            if (
+                                                                kindCovering ||
+                                                                kindCovered
+                                                            ) {
                                                                 display += " (";
                                                                 const parts = [];
 
-                                                                if(kindCovering)
-                                                                    parts.push(`${getHoursString(kindCovering)} remplaçant`);
-                                                                if(kindCovered)
-                                                                    parts.push(`${getHoursString(kindCovered)} remplacé`);
+                                                                if (
+                                                                    kindCovering
+                                                                )
+                                                                    parts.push(
+                                                                        t(
+                                                                            "planning:hoursSheet.coveringHours",
+                                                                            {
+                                                                                hours: getHoursString(
+                                                                                    kindCovering
+                                                                                ),
+                                                                            }
+                                                                        )
+                                                                    );
+                                                                if (kindCovered)
+                                                                    parts.push(
+                                                                        t(
+                                                                            "planning:hoursSheet.coveredHours",
+                                                                            {
+                                                                                hours: getHoursString(
+                                                                                    kindCovered
+                                                                                ),
+                                                                            }
+                                                                        )
+                                                                    );
 
-                                                                display += parts.join(", ");
-                                                                display += ")"
+                                                                display += parts.join(
+                                                                    ", "
+                                                                );
+                                                                display += ")";
                                                             }
 
                                                             return (
@@ -365,7 +441,8 @@ export default class HoursSheet extends React.Component {
                                                                     {display}
                                                                 </td>
                                                             );
-                                                        })}
+                                                        }
+                                                    )}
                                                     {
                                                         //Week's total work hours, regardless of activity kinds
                                                     }
@@ -377,7 +454,8 @@ export default class HoursSheet extends React.Component {
                                                         {(() => {
                                                             const total = w.reduce(
                                                                 (acc, d) =>
-                                                                    acc + d.total,
+                                                                    acc +
+                                                                    d.total,
                                                                 0
                                                             );
                                                             monthTotal += total;
@@ -389,58 +467,84 @@ export default class HoursSheet extends React.Component {
                                                     {/*Heures faites en tant que remplaçant*/}
                                                     <td>
                                                         {getHoursString(
-                                                            coveringShiftsByWeek[k]
+                                                            coveringShiftsByWeek[
+                                                                k
+                                                            ]
                                                         )}
                                                     </td>
                                                     {/*Heures remplacées*/}
                                                     <td>
                                                         {getHoursString(
-                                                            shiftsCoveredByWeek[k].total
-                                                        )} {shiftsCoveredByWeek[k].total ? `(${getHoursString(shiftsCoveredByWeek[k].counted)} comptées)` : null}
+                                                            shiftsCoveredByWeek[
+                                                                k
+                                                            ].total
+                                                        )}{" "}
+                                                        {shiftsCoveredByWeek[k]
+                                                            .total
+                                                            ? t(
+                                                                  "planning:hoursSheet.countedHours",
+                                                                  {
+                                                                      hours: getHoursString(
+                                                                          shiftsCoveredByWeek[
+                                                                              k
+                                                                          ]
+                                                                              .counted
+                                                                      ),
+                                                                  }
+                                                              )
+                                                            : null}
                                                     </td>
                                                 </tr>
                                             ))}
-                                        {
-                                            //Month's summary
-                                        }
-                                        <tr
-                                            style={{
-                                                color: "white",
-                                                background: "rgb(214, 48, 49)",
-                                                fontWeight: "bold",
-                                            }}
-                                        >
-                                            <td>TOTAUX</td>
-                                            {activityKinds.map((e, i) => (
-                                                <td key={i}>
-                                                    {getHoursString(
-                                                        detailTotals[e]
+                                            {
+                                                //Month's summary
+                                            }
+                                            <tr
+                                                style={{
+                                                    color: "white",
+                                                    background:
+                                                        "rgb(214, 48, 49)",
+                                                    fontWeight: "bold",
+                                                }}
+                                            >
+                                                <td>
+                                                    {t(
+                                                        "planning:hoursSheet.rowTotals"
                                                     )}
                                                 </td>
-                                            ))}
-                                            <td>
-                                                {getHoursString(monthTotal)}
-                                            </td>
-                                            <td>
-                                                {getHoursString(
-                                                    _.sum(coveringShiftsByWeek)
-                                                )}
-                                            </td>
-                                            <td>
-                                                {getHoursString(
-                                                    _.sum(shiftsCoveredByWeek.map(s => s.total))
-                                                )}
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
+                                                {activityKinds.map((e, i) => (
+                                                    <td key={i}>
+                                                        {getHoursString(
+                                                            detailTotals[e]
+                                                        )}
+                                                    </td>
+                                                ))}
+                                                <td>
+                                                    {getHoursString(monthTotal)}
+                                                </td>
+                                                <td>
+                                                    {getHoursString(
+                                                        _.sum(
+                                                            coveringShiftsByWeek
+                                                        )
+                                                    )}
+                                                </td>
+                                                <td>
+                                                    {getHoursString(
+                                                        _.sum(
+                                                            shiftsCoveredByWeek.map(
+                                                                s => s.total
+                                                            )
+                                                        )
+                                                    )}
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
                                 </div>
                             </div>
                             <div className="ibox-footer">
-                                <p>
-                                    *Ces heures sont comprises dans le compte
-                                    des activités
-                                </p>
+                                <p>{t("planning:hoursSheet.footnote")}</p>
                             </div>
                         </div>
                     </div>
@@ -449,6 +553,8 @@ export default class HoursSheet extends React.Component {
         );
     }
 }
+
+export default withTranslation("planning")(HoursSheet);
 
 function capitalize(s) {
     return s[0].toUpperCase() + s.substring(1);

@@ -312,5 +312,272 @@
         "infoLabel": "Infos :",
         "applicationStatus": "Statut de la demande",
         "activityStopDate": "Date d'arrêt de l'activité"
+    },
+    "supplementaryPreferences": {
+        "title": "Préférences annexes",
+        "teacher": "Professeur",
+        "locations": "Lieux"
+    },
+    "personChoice": {
+        "title": "Première étape",
+        "myself": "Je m'inscris",
+        "other": "J'inscris une autre personne"
+    },
+    "evaluationIntervalChoice": {
+        "availableSlotsFor": "Créneaux d'évaluation disponibles pour {{activityName}}",
+        "noSlots": "Aucun créneau d'évaluation disponible actuellement, nous reviendrons vers vous très vite pour vous en proposer un."
+    },
+    "activityItems": {
+        "badges": {
+            "proposalAccepted": "Proposition acceptée",
+            "courseProposed": "Cours proposé",
+            "proposalRefused": "Proposition refusée",
+            "courseAssigned": "Cours attribué",
+            "pendingTreatment": "En attente de traitement",
+            "stopped": "Arrêt",
+            "current": "Cours actuel",
+            "inProgress": "En cours",
+            "unsatisfied": "Demande non satisfaite",
+            "waitlist": "Sur liste d'attente"
+        },
+        "viewMyRequests": "Voir mes demandes",
+        "back": "Retour",
+        "confirm": "Je confirme",
+        "yes": "Oui",
+        "no": "Non",
+        "with": "Avec {{teacher}}",
+        "dayTimeRange": "{{day}} de {{start}} à {{end}}",
+        "inRoom": ", en salle : {{room}}",
+        "unknownActivity": "Activité inconnue",
+        "activityContentLabel": "Inscription à une activité",
+        "refuseTitle": "Refus de l'activité",
+        "refuseReasonPlaceholder": "Pouvez-vous nous indiquer les raisons de ce refus ?",
+        "acceptConfirmTitle": "Êtes-vous sûr d'accepter la proposition ?",
+        "toasts": {
+            "errorTitle": "Erreur",
+            "routingError": "Erreur lors de l'acheminement",
+            "proposalRefusedTitle": "Proposition refusée",
+            "reasonsCommunicated": "Les raisons ont été communiquées",
+            "successTitle": "Réussite",
+            "proposalAccepted": "Proposition acceptée",
+            "commentSendError": "Erreur lors de l'envoi du commentaire"
+        },
+        "editApplication": {
+            "comment": "Commenter",
+            "editContentLabel": "Modifier votre inscription",
+            "addCommentTitle": "Ajouter un commentaire sur votre demande",
+            "placeholder": "Indiquer les modifications à nous communiquer (disponibilité, choix professeur)",
+            "emptyError": "Veuillez renseigner les modifications à apporter",
+            "ok": "OK",
+            "submit": "Modifier",
+            "successContentLabel": "Modification réussie",
+            "successTitle": "Votre demande d'inscription a bien été modifiée",
+            "successBody": "Nous avons bien pris en compte les modifications de votre demande d'inscription."
+        },
+        "cancelApplication": {
+            "error": "Erreur lors de l'annulation de l'inscription",
+            "confirmContentLabel": "Confirmation de l'annulation de l'inscription",
+            "confirmTitle": "Cela annulera votre demande d'inscription. Êtes-vous sûr ?",
+            "canceledContentLabel": "Inscription annulée",
+            "canceledTitle": "Votre demande d'inscription est annulée",
+            "canceledBody": "Vous pouvez procéder à une nouvelle demande d'inscription"
+        },
+        "currentActivity": {
+            "stop": "S'arrêter",
+            "enrolInActivity": "S'inscrire à l'activité",
+            "reEnrol": "Se réinscrire",
+            "stopContentLabel": "Arrêt d'activité",
+            "stopQuestion": "Souhaitez-vous arrêter le cours suivant ?",
+            "chooseReason": "Choisir une raison",
+            "reasonPlaceholder": "Entrez votre raison ici...",
+            "noAlternative": "Aucune alternative ne peut vous être proposée.",
+            "stopAllQuestion": "Souhaitez-vous arrêter toute activité musicale et quitter l'école ?"
+        }
+    },
+    "dashboard": {
+        "totalMembersRequests": "Total adhérents / demandes",
+        "awaitingProcessing": "En attente de traitement",
+        "inProcessing": "En cours de traitement",
+        "processedRequests": "Demandes traitées"
+    },
+    "childSelection": {
+        "studentForAwakening": "Élève pour l'Éveil n° {{n}}",
+        "chooseStudent": "Choisir un élève",
+        "title": "Choix des élèves supplémentaires / accompagnants"
+    },
+    "stopList": {
+        "columns": {
+            "name": "Nom",
+            "season": "Saison",
+            "activity": "Activité",
+            "reason": "Raison",
+            "actions": "Actions"
+        },
+        "activityWith": "{{activity}} avec {{teacher}}",
+        "cancelStopRequest": "Annuler la demande d'arrêt",
+        "title": "Liste des arrêts",
+        "heading_one": "Liste des arrêts ({{count}} trouvé)",
+        "heading_other": "Liste des arrêts ({{count}} trouvés)",
+        "season": "Saison",
+        "all": "TOUTES"
+    },
+    "packs": {
+        "studentTracking": "Suivi des élèves",
+        "loadingData": "Chargement des données en cours...",
+        "totalStudents": "{{n}} élèves au total",
+        "filters": {
+            "teachers": "Professeurs",
+            "activities": "Activités",
+            "selectSeason": "Sélectionner une saison"
+        },
+        "columns": {
+            "number": "#",
+            "name": "Nom",
+            "firstName": "Prénom",
+            "remainingLessons": "Nombre de cours restants",
+            "activity": "Activité"
+        },
+        "remainingLessonsOf": "{{remaining}} cours restants sur {{total}}",
+        "fetchError": "Une erreur est survenue lors de la récupération des données",
+        "booking": {
+            "title": "Réserver des séances de cours",
+            "selectSlots": "Sélectionner les créneaux de cours que vous souhaitez",
+            "tabUpcoming": "À venir",
+            "tabMySessions": "Mes séances",
+            "book": "Réserver",
+            "tooManySlotsTitle": "Nombre de séances dépassé",
+            "tooManySlotsText": "Vous avez déjà sélectionné toutes vos séances",
+            "noneSelectedTitle": "Aucune activité sélectionnée",
+            "noneSelectedText": "Veuillez sélectionner au moins une activité",
+            "wishesSaved": "Vos souhaits ont bien été enregistrés",
+            "unregisterTitle": "Attention",
+            "unregisterText": "Voulez-vous vraiment vous désinscrire de cette séance ?",
+            "confirm": "Je confirme",
+            "unregisterSuccess": "Désinscription réussie",
+            "unregisterError": "Une erreur est survenue lors de la désinscription"
+        },
+        "bookingList": {
+            "noActivitiesTitle": "Aucune activité disponible pour le moment",
+            "noActivitiesText": "Le professeur n'a pas encore publié ses créneaux de cours pour cette activité",
+            "remainingReminder": "Pour rappel, il vous reste <bold>{{count}} séances à réserver pour le cours de {{label}}</bold>",
+            "allBooked": "Toutes les séances pour le cours de <bold>{{label}}</bold> ont été réservées."
+        },
+        "bookedList": {
+            "title": "Mes séances",
+            "noneTitle": "Vous n'avez pas encore réservé de séances",
+            "noneText": "Les séances réservées s'afficheront ici."
+        },
+        "card": {
+            "remainingSession_one": "{{count}} séance restante",
+            "remainingSession_other": "{{count}} séances restantes",
+            "multipleRooms": "Plusieurs salles",
+            "noRoom": "Aucune salle",
+            "multipleTeachers": "Plusieurs professeurs",
+            "noTeacher": "Aucun professeur",
+            "book": "Réserver",
+            "annual": "Annuel",
+            "hoursUndefined": "Heures non définies",
+            "full": "COMPLET",
+            "past": "PASSÉ",
+            "cardImageAlt": "image de la carte",
+            "teacherPictureAlt": "photo du professeur"
+        },
+        "upcoming": {
+            "loading": "Chargement...",
+            "noneTitle": "Vous n'avez pas de cours prévus",
+            "noneText": "Pas encore inscrit ? Réalisez une demande d'inscription pour une ou plusieurs activités",
+            "enrol": "S'inscrire"
+        },
+        "myActivities": {
+            "hello": "Bonjour {{name}}",
+            "myActivities": "Mes activités",
+            "myNextCourses": "Mes prochains cours",
+            "viewMyPlanning": "Voir mon planning",
+            "reEnrol": "Se réinscrire",
+            "noCoursesForSeason": "Vous n'avez pas de cours pour la saison sélectionnée",
+            "selectSeason": "Sélectionner une saison"
+        },
+        "placeholder": {
+            "notEnrolledYet": "Pas encore inscrit ?",
+            "description": "Réalise une demande d'inscription et sélectionne une de nos activités",
+            "enrolCta": "Je m'inscris"
+        }
+    },
+    "preApplication": {
+        "familyTitle": "Demandes d'inscription de la famille",
+        "myTitle": "Mes demandes d'inscription",
+        "newApplicationNotStarted": "La période d'inscription aux nouvelles activités n'a pas commencé",
+        "newApplication": "Nouvelle demande",
+        "activitiesRegistrationFor": "Inscription aux activités de la {{season}}",
+        "reRegistrationPeriod": "Période de ré-inscription",
+        "closesOn": "Ferme le {{date}}",
+        "opensOn": "Ouvre le {{date}}",
+        "registrationPeriod": "Période d'inscription",
+        "open": "ouverte",
+        "closed": "fermée",
+        "backToMyProfile": "Retour vers mon profil",
+        "backToProfile": "Retour vers le profil",
+        "currentActivitiesMyAccount": "Activités actuelles pour mon compte (et mes comptes rattachés) - saison {{range}}",
+        "currentActivitiesAccount": "Activités actuelles pour le compte (et ses comptes rattachés) - saison {{range}}",
+        "currentActivitiesWithSeason": "Activités actuelles (saison {{range}})",
+        "colActivity": "Activité",
+        "colMember": "Membre",
+        "myRequestsFor": "Mes demandes pour {{name}}",
+        "noPendingApplications": "{{name}} n'a aucune demande d'inscription en cours",
+        "otherFamilyRegistrations": "Autres inscriptions dans la famille",
+        "requestsOf": "Demandes de {{name}}",
+        "manageRegistration": "Gérer son inscription"
+    },
+    "list": {
+        "importErrorTitle": "Erreur d'importation",
+        "cancelWarningTitle": "Attention !",
+        "cancelWarningConfirm": "Oui, continuer",
+        "cancelWarningBody_one": "Attention, l'adhésion associée à cette demande d'inscription va être supprimée. Êtes-vous sûr de continuer ?",
+        "cancelWarningBody_other": "Attention, les adhésions associées aux {{count}} demandes d'inscription sélectionnées vont être supprimées. Êtes-vous sûr de continuer ?",
+        "deleteConfirmTitle": "Suppression",
+        "deleteConfirmBody_one": "Voulez-vous supprimer la demande d'inscription sélectionnée ?",
+        "deleteConfirmBody_other": "Voulez-vous supprimer les {{count}} demandes d'inscription sélectionnées ?",
+        "selectedInfo_one": "Vous avez sélectionné {{count}} demande",
+        "selectedInfo_other": "Vous avez sélectionné {{count}} demandes",
+        "selectRemaining": "Sélectionner les {{count}} restantes",
+        "groupMailTooltip": "Envoi groupé mail confirmation",
+        "bulkEdit": "Édition de masse",
+        "notifyStudentTitle": "Notifier l'élève",
+        "notifyStudentBody": "<p>Un mail de confirmation va être envoyé pour <strong>chaque demande d'inscription sélectionnée</strong></p>",
+        "notifyStudentResendPlaceholder": "<p class=\"mt-3\">Renvoyer les mails ?</p>",
+        "notifyStudentQueued": "Les mails vont être envoyés",
+        "columns": {
+            "adherentNumber": "# Adhérent",
+            "requestNumber": "# Demande",
+            "date": "Date",
+            "name": "Prénom nom",
+            "age": "Âge",
+            "level": "Niveau",
+            "activity": "Activité",
+            "activityFamily": "Famille d'activité",
+            "action": "Action",
+            "season": "Saison",
+            "referent": "Référent·e",
+            "mailSent": "Mail envoyé ?",
+            "status": "Statut"
+        },
+        "allSeasons": "Toutes les saisons",
+        "all": "Tous",
+        "yes": "Oui",
+        "no": "Non",
+        "tooltips": {
+            "resetFilters": "Réinitialiser les filtres",
+            "refreshData": "Rafraîchir les données",
+            "importFile": "Importer un fichier d'inscriptions",
+            "exportCsv": "Exporter en CSV",
+            "showNoAvailability": "Afficher les élèves sans disponibilités renseignées",
+            "stats": "Statistiques d'inscriptions"
+        },
+        "pendingHeading": "En attente de traitement ({{count}})",
+        "totalCount_one": "{{count}} demande d'inscription au total",
+        "totalCount_other": "{{count}} demandes d'inscription au total",
+        "modalTitle": "Édition de masse des demandes",
+        "modalStatus": "Statut",
+        "jobProgressTitle": "Suivi de l'exécution"
     }
 }

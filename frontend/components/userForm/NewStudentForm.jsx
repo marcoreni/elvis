@@ -1,5 +1,6 @@
 import React from "react";
 import { Form, Field } from "react-final-form";
+import { withTranslation } from "react-i18next";
 import {
     required,
     isValidAge,
@@ -11,19 +12,19 @@ import InputSelect from "../common/InputSelect";
 import { toBirthday } from "../../tools/format";
 import Checkbox from "../common/Checkbox";
 
-const sexes = [
-    { value: "F", label: "Féminin" },
-    { value: "M", label: "Masculin" },
-    { value: "A", label: "Autre" },
-];
+const sexValues = ["F", "M", "A"];
 
-export default class NewStudentForm extends React.Component {
+class NewStudentForm extends React.Component {
     constructor(props) {
         super(props);
     }
 
     render() {
-        const { firstName, lastName, onSubmit, onClose } = this.props;
+        const { t, firstName, lastName, onSubmit, onClose } = this.props;
+        const sexes = sexValues.map(value => ({
+            value,
+            label: t(`users:userForm.sexes.${value}`),
+        }));
         return (
             <Form
                 onSubmit={onSubmit}
@@ -32,10 +33,10 @@ export default class NewStudentForm extends React.Component {
                     <form onSubmit={handleSubmit} className="p-lg">
                         <div className="row justify-content-center">
                             <h3 className="m-b-md">
-                                Créer un nouvel utilisateur
+                                {t("users:userForm.newStudent.title")}
                             </h3>
                             <Field
-                                label="Nom"
+                                label={t("users:userForm.fields.lastName")}
                                 defaultValue={lastName}
                                 name="last_name"
                                 type="text"
@@ -45,7 +46,7 @@ export default class NewStudentForm extends React.Component {
                             />
 
                             <Field
-                                label="Prénom"
+                                label={t("users:userForm.fields.firstName")}
                                 defaultValue={firstName}
                                 name="first_name"
                                 type="text"
@@ -55,7 +56,7 @@ export default class NewStudentForm extends React.Component {
                             />
 
                             <Field
-                                label="Date de naissance"
+                                label={t("users:userForm.fields.birthday")}
                                 name="birthday"
                                 type="date"
                                 validate={composeValidators(
@@ -67,7 +68,7 @@ export default class NewStudentForm extends React.Component {
                                 format={toBirthday}
                             />
                             <Field
-                                label="Email"
+                                label={t("users:userForm.fields.email")}
                                 name="email"
                                 type="email"
                                 validate={composeValidators(
@@ -77,7 +78,7 @@ export default class NewStudentForm extends React.Component {
                                 render={Input}
                             />
                             <Field
-                                label="Sexe"
+                                label={t("users:userForm.fields.sex")}
                                 name="sex"
                                 type="select"
                                 validate={required}
@@ -86,11 +87,15 @@ export default class NewStudentForm extends React.Component {
                                 options={sexes}
                             />
 
-                            <Field name="confirm"
-                                   type="checkbox"
-                                   label="Envoyer un email de confirmation ?"
-                                   id="confirm"
-                                   render={Checkbox}/>
+                            <Field
+                                name="confirm"
+                                type="checkbox"
+                                label={t(
+                                    "users:userForm.newStudent.sendConfirmation"
+                                )}
+                                id="confirm"
+                                render={Checkbox}
+                            />
 
                             <div className="pull-right">
                                 <button
@@ -98,13 +103,13 @@ export default class NewStudentForm extends React.Component {
                                     className="btn btn-md m-sm"
                                     onClick={onClose}
                                 >
-                                    Annuler
+                                    {t("common:actions.cancel")}
                                 </button>
                                 <button
                                     type="submit"
                                     className="btn btn-primary btn-md"
                                 >
-                                    Valider
+                                    {t("common:actions.validate")}
                                 </button>
                             </div>
                         </div>
@@ -114,3 +119,5 @@ export default class NewStudentForm extends React.Component {
         );
     }
 }
+
+export default withTranslation("users")(NewStudentForm);

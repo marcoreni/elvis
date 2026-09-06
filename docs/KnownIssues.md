@@ -566,3 +566,70 @@ before any `{...props}` spread onto a DOM node.
   `render :new`/`:edit` land on those. Its bare `<%= form.submit %>` (no arg) would render the
   English Rails default "Create Band" if ever revived. Left in place (don't-delete-on-looks-dead);
   its `activerecord.attributes.band.*` keys stay reachable via `band.errors.full_messages`.
+
+## Pre-existing bugs surfaced during Phase 07 P4 (activity-catalogue + member-facing ERB)
+
+- **`app/views/activity_application_statuses/_activity_application_status_form.html.erb` label `for:`
+  targets are stale.** The `is_stopping` / `is_active` labels carry `for: "is_stopping"` /
+  `for: "is_active"`, but `f.check_box :is_stopping` / `:is_active` emit ids
+  `activity_application_status_is_stopping` / `..._is_active`, so clicking the label does not toggle
+  the box. Pre-existing (predates the P4 i18n pass, which only swapped the label text to
+  `f.label :attr` + `activerecord.attributes.activity_application_status.*` and left `for:`
+  untouched). Fix: drop the `for:` overrides so Rails auto-matches, or give the check boxes
+  `id: "is_stopping"` / `id: "is_active"`.
+- **Rails scaffold placeholder views still present** (English `<h1>Model#action</h1><p>Find me in ...</p>`
+  stubs, no route reaching them for a real render): `activity/remove.html.erb`,
+  `activity_instance/{delete,update}.html.erb`, `activity_ref/{create,update}.html.erb`,
+  `activities_applications/create.html.erb`, `comments/{create,update,destroy}.html.erb`,
+  `time_interval/validate.html.erb`, `family_members/destroy.html.erb`,
+  `family_member_users/destroy.html.erb`. Left in place (don't-delete-on-looks-dead); not extracted.
+- **`app/controllers/activity_application_statuses_controller.rb` flash bodies still hardcoded French.**
+  P4 extracted the `Erreur` / `Message` alert *headings* in `index.html.erb` to
+  `views.activity_application_statuses.index.{error_title,message_title}`, but the flash text those
+  headings sit above (set in the controller's create/update/destroy actions) is still a French string
+  literal — so an EN user sees a translated heading over untranslated body text. Controller-layer
+  strings are Phase 07 P6 scope; noted here so P6 picks it up.
+
+## Phase 07 P5 (React-tail extraction) — pre-existing bugs surfaced, and things deliberately left
+
+- **`frontend/components/AdditionalStudentSelection.jsx` builds its `<label>` text with `key + 1`
+  where `key` is a string object-key.** `_.map(this.props.additionalStudents, (p, i) => …)` passes
+  `i` as the object key ("0", "1", …); `renderParentSelection(key)` then does `{{ n: key + 1 }}`,
+  which string-concatenates to `"01"`, `"11"`, … rather than `1`, `2`. The P5 pass keyed the label
+  (`activityApplications:childSelection.studentForAwakening`) but preserved the existing `key + 1`
+  behaviour verbatim. Fix: `parseInt(key, 10) + 1` (or iterate with `_.map(..., (p, i) => …, )` where
+  `i` is a real index).
+- **`frontend/components/AttachAccount.jsx` `UserListItem` rendered a literal `${…}` in JSX text**
+  (`Adhérent #${user.adherent_number}` inside a JSX text node — the template-literal syntax was
+  never evaluated, so the UI showed a dollar-brace). Fixed while extracting: now
+  `t("users:attachAccount.memberNumber", { number: user.adherent_number })`.
+- **`frontend/components/WorkGroupTemplateEditor.jsx` (root-level `WorkGroupEditor`) is dead code.**
+  It is superseded by the already-i18n'd `frontend/components/activityRef/WorkGroupTemplateEditor.jsx`
+  (the only import site — `activityRef/ActivityRefContainer.jsx`), and is not mounted via any
+  `react_component`. Left untouched (don't-delete-on-looks-dead); NOT extracted. Its broken sentence
+  `"Aucun instrument sauvegardé Vous pouvez en suivant ce <a>lien</a>"` (missing punctuation/verb) is
+  already fixed in the live `activityRef` copy's `activities:workGroup.noInstruments` key.
+- **Constant-module label dictionaries NOT extracted in P5** (they read as id-constant / enum-value
+  modules per the P5 exclusion list, and several feed backend-keyed comparisons):
+  `frontend/components/utils/StopReasons.js` (`STOP_REASONS` — the stop-reason `<select>` options in
+  `CurrentActivityItem` / `StopList`); `frontend/components/mailTemplates/MergeTags.jsx` (~35
+  merge-tag `name`/`sample` pairs consumed by the WYSIWYG's `setMergeTags()`, where `name` may be a
+  load-bearing key); `frontend/components/advancedSearch/utils.js` (a verbatim vendored
+  jQuery-QueryBuilder French language pack + a `PAYMENT_SCHEDULE_OPTIONS_PAYMENTS_NUMBERS` label
+  array). Each is a candidate for a dedicated constants-i18n follow-up.
+- **`frontend/components/utils/DateFilter.jsx` `RangedSelect` throws `"the arguments need to be
+  integers"` under some props** (visible as loud stderr in the Vitest run, inside otherwise-passing
+  tests). Pre-existing; the P5 pass only keyed the three placeholders and did not touch the guard.
+- **`common.json` (`frontend/locales/{fr,en}/common.json`) is committed 2-space-indented and does
+  NOT satisfy `.prettierrc` (`tabWidth: 4`).** This predates P5 (every prior i18n PR added keys the
+  same way). P5 kept matching the existing 2-space style for its `common.json` additions rather than
+  reformatting the whole file; a one-off `prettier --write` normalisation of `common.json` is its
+  own tiny chore.
+- **`frontend/components/{StopList,eventsRules/EventsRules,mailTemplates/TemplateIndex}.jsx` and
+  a few others build react-table `columns` at module scope / in a plain `const` inside `render()`.**
+  Where the array was module-level (`StopList`'s `TABLE_COLUMNS`), P5 converted it to a
+  `getTableColumns(t)` factory called at render time, so headers follow the active locale. Where the
+  array was already inside `render()` (`SeasonsList`, `PlanningList*`, `TemplateIndex`, `EventsRules`,
+  `PackUtilization`), no change was needed — same rationale as the frozen-at-construct section above.
+  `Holidays.jsx` had its `columns` class-field moved to a `getColumns()` render-time getter for the
+  same reason.
