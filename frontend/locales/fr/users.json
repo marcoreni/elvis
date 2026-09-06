@@ -368,5 +368,33 @@
         "chooseStudent": "Choisir cet élève",
         "membershipFor": "Adhésion pour {{name}}",
         "validityStartDate": "Date de début de validité"
+    },
+    "importCsv": {
+        "stepsIntro": "Pour réaliser votre import, voici les étapes à suivre :",
+        "step1Title": "Téléchargez notre fichier CSV type",
+        "step1Body": "Il vous suffira de remplir les différentes colonnes pour importer les données sur Elvis. Le fichier CSV est déjà complété avec des exemples pour comprendre comment bien le remplir. Vous pouvez les supprimer, ce ne sont que des exemples.",
+        "downloadTemplate": "Télécharger le fichier CSV type",
+        "step2Title": "Remplissez les cellules de votre fichier CSV",
+        "step2IntroPrefix": "Ajoutez les personnes que vous souhaitez importer. Avant de commencer, voici la règle d’or : ",
+        "step2GoldRule": "1 ligne = 1 personne",
+        "step2RequiredPrefix": "Les champs obligatoires sont : ",
+        "step2RequiredFields": "le nom, le prénom, le mail et la date de naissance",
+        "step2Roles": "Les rôles correspondent au compte professeur ou administrateur. Si vous souhaitez ajouter des professeurs ou des administrateurs, indiquez-le dans la colonne « Rôle ». Les interfaces seront différentes en fonction de ces rôles.",
+        "step3Title": "Importez votre fichier CSV",
+        "step3Body": "Choisissez le fichier CSV préalablement rempli.",
+        "chooseFile": "Choisir un fichier",
+        "change": "Changer",
+        "remove": "Supprimer",
+        "import": "Importer",
+        "importedAlert_one": "Le fichier a bien été importé ({{count}} utilisateur)",
+        "importedAlert_other": "Le fichier a bien été importé ({{count}} utilisateurs)",
+        "warning": "Attention",
+        "fixAndRetry": "Veuillez modifier le fichier et réessayer.",
+        "rowNumberSingle": "Ligne {{lines}} : ",
+        "rowNumberMultiple": "Lignes {{lines}} : ",
+        "successTitle": "Bravo !",
+        "successBody": "<p>Toute votre communauté a bien été importée</p><p>Vous allez être redirigé vers la liste de vos membres</p>",
+        "errorTitle": "Erreur",
+        "errorBody": "<p>Une erreur est survenue lors de l’import. Veuillez réessayer.</p>"
     }
 }

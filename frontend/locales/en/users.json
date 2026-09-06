@@ -368,5 +368,33 @@
         "chooseStudent": "Choose this student",
         "membershipFor": "Membership for {{name}}",
         "validityStartDate": "Validity start date"
+    },
+    "importCsv": {
+        "stepsIntro": "To carry out your import, here are the steps to follow:",
+        "step1Title": "Download our CSV template file",
+        "step1Body": "You just need to fill in the various columns to import the data into Elvis. The CSV file is already filled with examples so you can understand how to fill it in correctly. You can delete them, they are only examples.",
+        "downloadTemplate": "Download the CSV template file",
+        "step2Title": "Fill in the cells of your CSV file",
+        "step2IntroPrefix": "Add the people you want to import. Before you start, here is the golden rule: ",
+        "step2GoldRule": "1 row = 1 person",
+        "step2RequiredPrefix": "The required fields are: ",
+        "step2RequiredFields": "last name, first name, email and date of birth",
+        "step2Roles": "Roles correspond to the teacher or administrator account. If you want to add teachers or administrators, indicate it in the \"Role\" column. The interfaces will differ depending on these roles.",
+        "step3Title": "Import your CSV file",
+        "step3Body": "Choose the CSV file you filled in beforehand.",
+        "chooseFile": "Choose a file",
+        "change": "Change",
+        "remove": "Remove",
+        "import": "Import",
+        "importedAlert_one": "The file was imported successfully ({{count}} user)",
+        "importedAlert_other": "The file was imported successfully ({{count}} users)",
+        "warning": "Warning",
+        "fixAndRetry": "Please edit the file and try again.",
+        "rowNumberSingle": "Row {{lines}}: ",
+        "rowNumberMultiple": "Rows {{lines}}: ",
+        "successTitle": "Well done!",
+        "successBody": "<p>Your whole community has been imported</p><p>You will be redirected to the list of your members</p>",
+        "errorTitle": "Error",
+        "errorBody": "<p>An error occurred during the import. Please try again.</p>"
     }
 }
