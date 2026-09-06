@@ -1,7 +1,7 @@
 import type { EntityName, Entity, Activity, User } from "../types";
 
-const DEFAULT_VALUE_ACCESSOR = (d: Entity) => d.id;
-const DEFAULT_LABEL_ACCESSOR = (d: Entity) => d.label;
+export const DEFAULT_VALUE_ACCESSOR = (d: Entity) => d.id.toString();
+export const DEFAULT_LABEL_ACCESSOR = (d: Entity) => d.label;
 
 function targetFactory<T extends Entity>({
     label = "NOM",
@@ -11,12 +11,12 @@ function targetFactory<T extends Entity>({
 }: {
     label?: string;
     setName: EntityName;
-    valueAccessor?: (d: T) => number;
+    valueAccessor?: (d: T) => string;
     labelAccessor?: (d: T) => string;
 }): {
     setName: EntityName;
     label?: string;
-    valueAccessor: (d: T) => number;
+    valueAccessor: (d: T) => string;
     labelAccessor: (d: T) => string;
 } {
     return {
