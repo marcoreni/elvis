@@ -8,6 +8,7 @@
     "send": "Send",
     "add": "Add",
     "create": "Create",
+    "edit": "Edit",
     "close": "Close"
   },
   "loading": "Loading...",
