@@ -114,13 +114,13 @@ fr:
                 name: Nom
             season:
                 label: Nom de la saison
-                nb_lessons: Nombre de leçons (prorata par défaut)
+                nb_lessons: Nombre de leçons
                 start: Début
                 end: Fin
                 opening_date_for_applications: Date d'ouverture des ré-inscriptions
                 opening_date_for_new_applications: Date d'ouverture des nouvelles inscriptions
                 closing_date_for_applications: Date de clôture des inscriptions
-                date_for_teacher_planning_validation: Date de validation de planning par les professeurs
+                date_for_teacher_planning_validation: Date de validation du planning par les professeurs
                 is_current: Saison en cours
                 next_season_id: Saison suivante
         errors:
@@ -629,7 +629,7 @@ fr:
             edit:
                 heading: 'Éditer "%{label}"'
                 warning: Attention
-                autosave_notice: Toutes modifications sur le tableau seront directement enregistrées, même sans appuyer sur les boutons de sauvegarde.
+                autosave_notice: Toutes les modifications sur le tableau seront directement enregistrées, même sans appuyer sur les boutons de sauvegarde.
             form:
                 save_error_title: Impossible de sauvegarder la saison.
                 save_error_body: Veuillez corriger les champs en rouge ci-dessous.

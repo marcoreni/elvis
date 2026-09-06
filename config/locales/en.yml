@@ -111,13 +111,13 @@ en:
                 name: Name
             season:
                 label: Season name
-                nb_lessons: Number of lessons (default proration)
+                nb_lessons: Number of lessons
                 start: Start
                 end: End
                 opening_date_for_applications: Re-enrollment opening date
                 opening_date_for_new_applications: New enrollment opening date
                 closing_date_for_applications: Enrollment closing date
-                date_for_teacher_planning_validation: Teacher schedule validation date
+                date_for_teacher_planning_validation: Teacher planning validation date
                 is_current: Current season
                 next_season_id: Next season
         errors:
