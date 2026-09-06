@@ -26,6 +26,46 @@ en:
         confirm:
             sure: Are you sure?
 
+    menu:
+        plugins: Plugins
+        plugins_list: Plugin list
+        users: Users
+        inscriptions: Registrations
+        adhesions: Memberships
+        applications: Enrollment requests
+        packs: Packs
+        new_application: New registration
+        params: Settings
+        plannings: Plannings
+        presences: Attendance
+        seasons: Season management
+        courses_list: Course list
+        planning_teachers: Teachers
+        planning_rooms: Classrooms
+        replicate_courses: Replicate courses
+        monitoring: Monitoring
+        absences: Absence tracking
+        payments: Payments
+        rooms_sites: Rooms and sites
+        activities: Music activities
+        activity_families: Activity families
+        instruments: Instruments
+        activity_refs: Activities
+        formulas: Packages
+        evaluations: Evaluation
+        evaluations_summary: Evaluation summary
+        evaluations_management: Evaluation management
+        students_without_slots: Students without slots
+        parameters: Settings
+        my_planning: My planning
+        my_availabilities: My availability
+        my_evaluations: My evaluations
+        planning_simulation: Schedule simulation
+        home: Home
+        my_applications: My enrollment requests
+        my_profile: My profile
+        logout: Sign out
+
     activerecord:
         attributes:
             user:
@@ -54,6 +94,27 @@ en:
                             confirmation: "Password confirmation doesn't match."
 
     views:
+        layouts:
+            application:
+                my_planning: My planning
+                version_dev: dev version
+                version: version %{number}
+                powered_by: powered by
+                other_accounts: "Other accounts:"
+                help_center: Help center
+                terms_link: Privacy policy (Terms of Use)
+                base_seasons_created:
+                    title: Message
+                    text: 3 seasons were created by default based on the current date
+            static_pages:
+                sign_in: Sign in
+                sign_up: Sign up
+                read_more: READ MORE
+                toggle_navigation: Toggle navigation
+                previous: Previous
+                next: Next
+                headline_1_html: Management<br/> software
+                headline_2_html: Group classes <br/> Workshops
         devise:
             sessions:
                 new:

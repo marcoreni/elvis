@@ -118,14 +118,14 @@ class Plugin < ApplicationRecord
         :plugins,
         "plugins",
         "",
-        { caption: "Plugins", icon: "fa-puzzle-piece", user_role: "admin", position: 8 }
+        { caption: :"menu.plugins", icon: "fa-puzzle-piece", user_role: "admin", position: 8 }
       )
 
       plugin_list = Elvis::MenuManager::MenuItem.new(
         :plugins_list,
         "plugins",
         "index",
-        { caption: "Liste des plugins" }
+        { caption: :"menu.plugins_list" }
       )
 
       parent_menu.add plugin_list
