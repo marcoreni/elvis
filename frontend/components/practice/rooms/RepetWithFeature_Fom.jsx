@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 
 import _ from "lodash";
+import { withTranslation } from "react-i18next";
 import SelectMultiple from "../../common/SelectMultiple";
 
 class RepetWithFeature_Fom extends React.Component {
@@ -14,10 +15,14 @@ class RepetWithFeature_Fom extends React.Component {
     }
 
     render() {
+        const { t } = this.props;
+
         return (
             <div>
                 <div className="form-group">
-                    <label>Salle de répétition ?</label>
+                    <label>
+                        {t("parameters:practice.roomForm.isPracticeRoom")}
+                    </label>
                     <br />
                     <div className="onoffswitch">
                         <input
@@ -51,7 +56,9 @@ class RepetWithFeature_Fom extends React.Component {
                             all_features={this.props.all_features}
                             features={this.state.features}
                             name="features"
-                            title="Features"
+                            title={t(
+                                "parameters:practice.roomForm.featuresTitle"
+                            )}
                         />
                     </div>
                 ) : (
@@ -62,4 +69,4 @@ class RepetWithFeature_Fom extends React.Component {
     }
 }
 
-export default RepetWithFeature_Fom;
+export default withTranslation("parameters")(RepetWithFeature_Fom);

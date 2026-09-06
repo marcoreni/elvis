@@ -218,6 +218,40 @@
             "instrument": "Do you really want to delete the instrument '{{name}}'?",
             "material": "Do you really want to delete the equipment '{{name}}'?",
             "musicGenre": "Do you really want to delete the music genre '{{name}}'?"
+        },
+        "bandForm": {
+            "name": "Name",
+            "blacklist": "Blacklist the band",
+            "type": "Type",
+            "genre": "Genre",
+            "otherGenreOption": "OTHER (create)",
+            "genreName": "Genre name",
+            "members": "Members",
+            "formerMembers": "Former member(s)",
+            "instrumentPrompt": "Instrument…",
+            "viewProfile": "view profile",
+            "removeMember": "Remove member",
+            "addMember": "Add a member"
+        },
+        "bandUser": {
+            "title": "New member",
+            "firstName": "First name",
+            "lastName": "Last name",
+            "email": "Email",
+            "emailPlaceholder": "(optional)",
+            "search": "Search",
+            "createNew": "Create a new one",
+            "select": "Select",
+            "noUserFound": "No user found"
+        },
+        "bandEdit": {
+            "title": "Editing band:",
+            "tabInfo": "Information",
+            "tabBookings": "Bookings"
+        },
+        "roomForm": {
+            "isPracticeRoom": "Practice room?",
+            "featuresTitle": "Features"
         }
     },
     "rooms": {

@@ -218,6 +218,40 @@
             "instrument": "Voulez-vous vraiment supprimer l'instrument '{{name}}' ?",
             "material": "Voulez-vous vraiment supprimer le matériel '{{name}}' ?",
             "musicGenre": "Voulez-vous vraiment supprimer le genre '{{name}}' ?"
+        },
+        "bandForm": {
+            "name": "Nom",
+            "blacklist": "Blacklister le groupe",
+            "type": "Type",
+            "genre": "Genre",
+            "otherGenreOption": "AUTRE (création)",
+            "genreName": "Nom du genre",
+            "members": "Membres",
+            "formerMembers": "Ancien(s) membre(s)",
+            "instrumentPrompt": "Instrument…",
+            "viewProfile": "voir le profil",
+            "removeMember": "Retirer le membre",
+            "addMember": "Ajouter un membre"
+        },
+        "bandUser": {
+            "title": "Nouveau membre",
+            "firstName": "Prénom",
+            "lastName": "Nom",
+            "email": "E-mail",
+            "emailPlaceholder": "(optionnel)",
+            "search": "Rechercher",
+            "createNew": "Créer un nouveau",
+            "select": "Sélectionner",
+            "noUserFound": "Pas d'utilisateur trouvé"
+        },
+        "bandEdit": {
+            "title": "Édition du groupe :",
+            "tabInfo": "Informations",
+            "tabBookings": "Réservations"
+        },
+        "roomForm": {
+            "isPracticeRoom": "Salle de répétition ?",
+            "featuresTitle": "Caractéristiques"
         }
     },
     "rooms": {
