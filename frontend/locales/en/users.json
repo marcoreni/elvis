@@ -336,5 +336,37 @@
             "linkCopied": "Link copied!",
             "copyError": "Error while copying"
         }
+    },
+    "detachAccount": {
+        "notFound": "Unable to find the user",
+        "success": "The account has been detached",
+        "errorTitle": "Error",
+        "genericError": "An error occurred",
+        "detach": "Detach",
+        "contentLabel": "Detach the account",
+        "question": "Do you want to detach the user {{name}}?",
+        "explanation1": "They will become independent, meaning they will be able to log in and manage their account. You can still manage their account if you create a family link with them.",
+        "explanation2": "To detach an account, you must add an email address to it (if it does not already have one). The link allowing them to log in will be sent to this address. NB: this new email must not already be assigned to another user.",
+        "emailLabel": "email",
+        "sendNotification": "Send the notification email"
+    },
+    "attachAccount": {
+        "memberNumber": "Member #{{number}}",
+        "emailMayBeEmpty": "email (may be empty):",
+        "emailPlaceholder": "email",
+        "selectParentAccount": "Select the parent account to associate users with",
+        "confirmText": "Do you really want to attach these users to the parent account? This will remove the password of the attached accounts. They will therefore no longer be able to log in.",
+        "successTitle": "Accounts attached",
+        "successText": "The accounts have been attached",
+        "errorTitle": "Error",
+        "errorText": "An error occurred while attaching the accounts",
+        "associateUsers": "Associate users with the parent account ({{name}})",
+        "selectedUsers": "Selected users",
+        "attachAccounts": "Attach the accounts"
+    },
+    "adhesion": {
+        "chooseStudent": "Choose this student",
+        "membershipFor": "Membership for {{name}}",
+        "validityStartDate": "Validity start date"
     }
 }

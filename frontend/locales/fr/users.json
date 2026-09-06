@@ -336,5 +336,37 @@
             "linkCopied": "Lien copié !",
             "copyError": "Erreur lors de la copie"
         }
+    },
+    "detachAccount": {
+        "notFound": "Impossible de trouver l'utilisateur",
+        "success": "Le compte a bien été détaché",
+        "errorTitle": "Erreur",
+        "genericError": "Une erreur est survenue",
+        "detach": "Détacher",
+        "contentLabel": "Détacher le compte",
+        "question": "Voulez-vous détacher l'utilisateur·rice {{name}} ?",
+        "explanation1": "Ce dernier deviendra indépendant, c'est-à-dire qu'il pourra se connecter et gérer son compte. Il vous est cependant toujours possible de gérer son compte si vous créez un lien familial avec lui.",
+        "explanation2": "Pour détacher un compte, vous devez lui ajouter une adresse email (s'il n'en a pas déjà une). C'est à cette adresse que sera envoyé le lien lui permettant de se connecter. NB : ce nouvel email ne doit pas être déjà affecté à un autre utilisateur.",
+        "emailLabel": "email",
+        "sendNotification": "Envoyer l'email de notification"
+    },
+    "attachAccount": {
+        "memberNumber": "Adhérent #{{number}}",
+        "emailMayBeEmpty": "email (peut être vide) :",
+        "emailPlaceholder": "email",
+        "selectParentAccount": "Sélectionner le compte de rattachement auquel associer des utilisateurs",
+        "confirmText": "Voulez-vous vraiment attacher ces utilisateurs au compte de rattachement ? Cela va supprimer le mot de passe des comptes rattachés. Ces derniers ne pourront donc plus se connecter.",
+        "successTitle": "Comptes attachés",
+        "successText": "Les comptes ont bien été attachés",
+        "errorTitle": "Erreur",
+        "errorText": "Une erreur est survenue lors de l'attachement des comptes",
+        "associateUsers": "Associer des utilisateurs au compte de rattachement ({{name}})",
+        "selectedUsers": "Utilisateurs sélectionnés",
+        "attachAccounts": "Attacher les comptes"
+    },
+    "adhesion": {
+        "chooseStudent": "Choisir cet élève",
+        "membershipFor": "Adhésion pour {{name}}",
+        "validityStartDate": "Date de début de validité"
     }
 }

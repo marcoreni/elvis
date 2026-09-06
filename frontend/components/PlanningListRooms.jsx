@@ -3,6 +3,7 @@ import PropTypes from "prop-types";
 import moment from "moment";
 
 import ReactTable from "react-table";
+import { withTranslation } from "react-i18next";
 
 class PlanningListRooms extends React.Component {
     constructor(props) {
@@ -10,6 +11,7 @@ class PlanningListRooms extends React.Component {
     }
 
     render() {
+        const { t } = this.props;
         const columns = [
             {
                 Header: "#",
@@ -17,7 +19,7 @@ class PlanningListRooms extends React.Component {
                 width: 50,
             },
             {
-                Header: "Salle",
+                Header: t("planning:plannings.columns.room"),
                 id: "room",
                 accessor: r => r.label,
                 sortMethod: (a, b) => {
@@ -27,12 +29,12 @@ class PlanningListRooms extends React.Component {
             },
             {
                 id: "actions",
-                Header: "Actions",
+                Header: t("planning:plannings.columns.actions"),
                 Cell: props => {
                     return (
                         <a href={`/rooms/${props.original.id}/planning`}>
                             <button className="btn btn-xs btn-primary ">
-                                Voir Planning
+                                {t("planning:plannings.viewPlanning")}
                             </button>
                         </a>
                     );
@@ -47,17 +49,17 @@ class PlanningListRooms extends React.Component {
                 columns={columns}
                 defaultSorted={[{ id: "room", desc: false }]}
                 resizable={false}
-                previousText="Précedent"
-                nextText="Suivant"
-                loadingText="Chargement..."
-                noDataText="Aucune donnée"
-                pageText="Page"
-                ofText="sur"
-                rowsText="résultats"
+                previousText={t("common:reactTable.previousText")}
+                nextText={t("common:reactTable.nextText")}
+                loadingText={t("common:reactTable.loadingText")}
+                noDataText={t("common:reactTable.noDataText")}
+                pageText={t("common:reactTable.pageText")}
+                ofText={t("common:reactTable.ofText")}
+                rowsText={t("common:reactTable.rowsText")}
                 minRows={1}
             />
         );
     }
 }
 
-export default PlanningListRooms;
+export default withTranslation("planning")(PlanningListRooms);

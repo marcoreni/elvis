@@ -393,5 +393,16 @@
             "noAlternative": "Aucune alternative ne peut vous être proposée.",
             "stopAllQuestion": "Souhaitez-vous arrêter toute activité musicale et quitter l'école ?"
         }
+    },
+    "dashboard": {
+        "totalMembersRequests": "Total adhérents / demandes",
+        "awaitingProcessing": "En attente de traitement",
+        "inProcessing": "En cours de traitement",
+        "processedRequests": "Demandes traitées"
+    },
+    "childSelection": {
+        "studentForAwakening": "Élève pour l'Éveil n° {{n}}",
+        "chooseStudent": "Choisir un élève",
+        "title": "Choix des élèves supplémentaires / accompagnants"
     }
 }

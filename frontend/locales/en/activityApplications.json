@@ -393,5 +393,16 @@
             "noAlternative": "No alternative can be offered to you.",
             "stopAllQuestion": "Do you want to stop all musical activity and leave the school?"
         }
+    },
+    "dashboard": {
+        "totalMembersRequests": "Total members / requests",
+        "awaitingProcessing": "Awaiting processing",
+        "inProcessing": "In processing",
+        "processedRequests": "Processed requests"
+    },
+    "childSelection": {
+        "studentForAwakening": "Student for Awakening no. {{n}}",
+        "chooseStudent": "Choose a student",
+        "title": "Additional students / companions selection"
     }
 }

@@ -9,6 +9,7 @@
     "add": "Add",
     "create": "Create",
     "edit": "Edit",
+    "update": "Update",
     "close": "Close"
   },
   "loading": "Loading...",
@@ -182,5 +183,20 @@
     "year": "Year",
     "month": "Month",
     "day": "Day"
+  },
+  "jobProgress": {
+    "errorTitle": "Error",
+    "inProgress": "In progress",
+    "completed": "Completed",
+    "failed": "Failed",
+    "errorCount_one": "{{count}} error…",
+    "errorCount_other": "{{count}} errors…",
+    "errorLine": "Line: {{line}}, Message: {{message}}"
+  },
+  "userAvatar": {
+    "alt": "avatar"
+  },
+  "passwordInput": {
+    "minChars": "({{n}} characters minimum)"
   }
 }

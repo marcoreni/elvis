@@ -371,5 +371,17 @@
     },
     "availabilityCommentModal": {
         "title": "Comment"
+    },
+    "plannings": {
+        "columns": {
+            "lastModified": "Last modified",
+            "lastName": "Last name",
+            "firstName": "First name",
+            "actions": "Actions",
+            "room": "Room"
+        },
+        "profile": "Profile",
+        "groupSimulation": "Group simulation",
+        "viewPlanning": "View planning"
     }
 }
