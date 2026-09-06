@@ -312,5 +312,19 @@
         "infoLabel": "Infos :",
         "applicationStatus": "Statut de la demande",
         "activityStopDate": "Date d'arrêt de l'activité"
+    },
+    "supplementaryPreferences": {
+        "title": "Préférences annexes",
+        "teacher": "Professeur",
+        "locations": "Lieux"
+    },
+    "personChoice": {
+        "title": "Première étape",
+        "myself": "Je m'inscris",
+        "other": "J'inscris une autre personne"
+    },
+    "evaluationIntervalChoice": {
+        "availableSlotsFor": "Créneaux d'évaluation disponibles pour {{activityName}}",
+        "noSlots": "Aucun créneau d'évaluation disponible actuellement, nous reviendrons vers vous très vite pour vous en proposer un."
     }
 }

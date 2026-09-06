@@ -302,5 +302,12 @@
         "hasUpcomingLessons": "Ce professeur a {{n}} séances de cours à venir dans le planning.<br/>Que souhaitez-vous faire ?",
         "deleteThem": "Les supprimer",
         "cancelAndView": "Annuler et voir les séances"
+    },
+    "advancedSearch": {
+        "age": "Âge",
+        "handicap": "Situation de handicap",
+        "yes": "oui",
+        "no": "non",
+        "title": "Recherche avancée"
     }
 }

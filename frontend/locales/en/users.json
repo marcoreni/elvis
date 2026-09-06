@@ -302,5 +302,12 @@
         "hasUpcomingLessons": "This teacher has {{n}} upcoming course sessions in the schedule.<br/>What do you want to do?",
         "deleteThem": "Delete them",
         "cancelAndView": "Cancel and view the sessions"
+    },
+    "advancedSearch": {
+        "age": "Age",
+        "handicap": "Disability situation",
+        "yes": "yes",
+        "no": "no",
+        "title": "Advanced search"
     }
 }
