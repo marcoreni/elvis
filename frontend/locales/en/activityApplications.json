@@ -502,5 +502,30 @@
             "description": "Make an enrolment request and select one of our activities",
             "enrolCta": "I enrol"
         }
+    },
+    "preApplication": {
+        "familyTitle": "Family enrollment requests",
+        "myTitle": "My enrollment requests",
+        "newApplicationNotStarted": "The registration period for new activities has not started",
+        "newApplication": "New request",
+        "activitiesRegistrationFor": "Registration for the activities of {{season}}",
+        "reRegistrationPeriod": "Re-registration period",
+        "closesOn": "Closes on {{date}}",
+        "opensOn": "Opens on {{date}}",
+        "registrationPeriod": "Registration period",
+        "open": "open",
+        "closed": "closed",
+        "backToMyProfile": "Back to my profile",
+        "backToProfile": "Back to the profile",
+        "currentActivitiesMyAccount": "Current activities for my account (and my attached accounts) - season {{range}}",
+        "currentActivitiesAccount": "Current activities for the account (and its attached accounts) - season {{range}}",
+        "currentActivitiesWithSeason": "Current activities (season {{range}})",
+        "colActivity": "Activity",
+        "colMember": "Member",
+        "myRequestsFor": "My requests for {{name}}",
+        "noPendingApplications": "{{name}} has no pending enrollment request",
+        "otherFamilyRegistrations": "Other registrations in the family",
+        "requestsOf": "Requests for {{name}}",
+        "manageRegistration": "Manage their registration"
     }
 }

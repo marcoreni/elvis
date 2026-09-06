@@ -502,5 +502,30 @@
             "description": "Réalise une demande d'inscription et sélectionne une de nos activités",
             "enrolCta": "Je m'inscris"
         }
+    },
+    "preApplication": {
+        "familyTitle": "Demandes d'inscription de la famille",
+        "myTitle": "Mes demandes d'inscription",
+        "newApplicationNotStarted": "La période d'inscription aux nouvelles activités n'a pas commencé",
+        "newApplication": "Nouvelle demande",
+        "activitiesRegistrationFor": "Inscription aux activités de la {{season}}",
+        "reRegistrationPeriod": "Période de ré-inscription",
+        "closesOn": "Ferme le {{date}}",
+        "opensOn": "Ouvre le {{date}}",
+        "registrationPeriod": "Période d'inscription",
+        "open": "ouverte",
+        "closed": "fermée",
+        "backToMyProfile": "Retour vers mon profil",
+        "backToProfile": "Retour vers le profil",
+        "currentActivitiesMyAccount": "Activités actuelles pour mon compte (et mes comptes rattachés) - saison {{range}}",
+        "currentActivitiesAccount": "Activités actuelles pour le compte (et ses comptes rattachés) - saison {{range}}",
+        "currentActivitiesWithSeason": "Activités actuelles (saison {{range}})",
+        "colActivity": "Activité",
+        "colMember": "Membre",
+        "myRequestsFor": "Mes demandes pour {{name}}",
+        "noPendingApplications": "{{name}} n'a aucune demande d'inscription en cours",
+        "otherFamilyRegistrations": "Autres inscriptions dans la famille",
+        "requestsOf": "Demandes de {{name}}",
+        "manageRegistration": "Gérer son inscription"
     }
 }
