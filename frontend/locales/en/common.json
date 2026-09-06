@@ -150,5 +150,26 @@
     "monthly": "Every month",
     "bimonthly": "Every two months",
     "yearly": "Every year"
+  },
+  "yesNo": {
+    "yes": "Yes",
+    "no": "No"
+  },
+  "userWithInfos": {
+    "profile": "Profile",
+    "payments": "Payments",
+    "email": "Email",
+    "phones": "Phone(s)",
+    "none": "None",
+    "family": "Family",
+    "toCallFirst": "To contact first",
+    "payer": "Payer",
+    "legalGuardian": "Legal guardian"
+  },
+  "listPreferences": {
+    "title": "List preferences",
+    "enabled": "Enabled",
+    "disabled": "Disabled",
+    "reset": "Reset"
   }
 }

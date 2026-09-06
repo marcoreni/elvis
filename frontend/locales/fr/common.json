@@ -150,5 +150,26 @@
     "monthly": "Tous les mois",
     "bimonthly": "Tous les deux mois",
     "yearly": "Tous les ans"
+  },
+  "yesNo": {
+    "yes": "Oui",
+    "no": "Non"
+  },
+  "userWithInfos": {
+    "profile": "Profil",
+    "payments": "Règlements",
+    "email": "Mail",
+    "phones": "Téléphone(s)",
+    "none": "Aucun",
+    "family": "Famille",
+    "toCallFirst": "À contacter en premier",
+    "payer": "Payeur",
+    "legalGuardian": "Représentant légal"
+  },
+  "listPreferences": {
+    "title": "Préférences de la liste",
+    "enabled": "Activées",
+    "disabled": "Désactivées",
+    "reset": "Réinitialiser"
   }
 }
