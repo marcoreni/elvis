@@ -420,5 +420,87 @@
         "heading_other": "Liste des arrêts ({{count}} trouvés)",
         "season": "Saison",
         "all": "TOUTES"
+    },
+    "packs": {
+        "studentTracking": "Suivi des élèves",
+        "loadingData": "Chargement des données en cours...",
+        "totalStudents": "{{n}} élèves au total",
+        "filters": {
+            "teachers": "Professeurs",
+            "activities": "Activités",
+            "selectSeason": "Sélectionner une saison"
+        },
+        "columns": {
+            "number": "#",
+            "name": "Nom",
+            "firstName": "Prénom",
+            "remainingLessons": "Nombre de cours restants",
+            "activity": "Activité"
+        },
+        "remainingLessonsOf": "{{remaining}} cours restants sur {{total}}",
+        "fetchError": "Une erreur est survenue lors de la récupération des données",
+        "booking": {
+            "title": "Réserver des séances de cours",
+            "selectSlots": "Sélectionner les créneaux de cours que vous souhaitez",
+            "tabUpcoming": "À venir",
+            "tabMySessions": "Mes séances",
+            "book": "Réserver",
+            "tooManySlotsTitle": "Nombre de séances dépassé",
+            "tooManySlotsText": "Vous avez déjà sélectionné toutes vos séances",
+            "noneSelectedTitle": "Aucune activité sélectionnée",
+            "noneSelectedText": "Veuillez sélectionner au moins une activité",
+            "wishesSaved": "Vos souhaits ont bien été enregistrés",
+            "unregisterTitle": "Attention",
+            "unregisterText": "Voulez-vous vraiment vous désinscrire de cette séance ?",
+            "confirm": "Je confirme",
+            "unregisterSuccess": "Désinscription réussie",
+            "unregisterError": "Une erreur est survenue lors de la désinscription"
+        },
+        "bookingList": {
+            "noActivitiesTitle": "Aucune activité disponible pour le moment",
+            "noActivitiesText": "Le professeur n'a pas encore publié ses créneaux de cours pour cette activité",
+            "remainingReminder": "Pour rappel, il vous reste <bold>{{count}} séances à réserver pour le cours de {{label}}</bold>",
+            "allBooked": "Toutes les séances pour le cours de <bold>{{label}}</bold> ont été réservées."
+        },
+        "bookedList": {
+            "title": "Mes séances",
+            "noneTitle": "Vous n'avez pas encore réservé de séances",
+            "noneText": "Les séances réservées s'afficheront ici."
+        },
+        "card": {
+            "remainingSession_one": "{{count}} séance restante",
+            "remainingSession_other": "{{count}} séances restantes",
+            "multipleRooms": "Plusieurs salles",
+            "noRoom": "Aucune salle",
+            "multipleTeachers": "Plusieurs professeurs",
+            "noTeacher": "Aucun professeur",
+            "book": "Réserver",
+            "annual": "Annuel",
+            "hoursUndefined": "Heures non définies",
+            "full": "COMPLET",
+            "past": "PASSÉ",
+            "cardImageAlt": "image de la carte",
+            "teacherPictureAlt": "photo du professeur"
+        },
+        "upcoming": {
+            "loading": "Chargement...",
+            "noneTitle": "Vous n'avez pas de cours prévus",
+            "noneText": "Pas encore inscrit ? Réalisez une demande d'inscription pour une ou plusieurs activités",
+            "enrol": "S'inscrire"
+        },
+        "myActivities": {
+            "hello": "Bonjour {{name}}",
+            "myActivities": "Mes activités",
+            "myNextCourses": "Mes prochains cours",
+            "viewMyPlanning": "Voir mon planning",
+            "reEnrol": "Se réinscrire",
+            "noCoursesForSeason": "Vous n'avez pas de cours pour la saison sélectionnée",
+            "selectSeason": "Sélectionner une saison"
+        },
+        "placeholder": {
+            "notEnrolledYet": "Pas encore inscrit ?",
+            "description": "Réalise une demande d'inscription et sélectionne une de nos activités",
+            "enrolCta": "Je m'inscris"
+        }
     }
 }

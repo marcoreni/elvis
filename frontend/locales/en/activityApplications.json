@@ -420,5 +420,87 @@
         "heading_other": "Stop list ({{count}} found)",
         "season": "Season",
         "all": "ALL"
+    },
+    "packs": {
+        "studentTracking": "Student tracking",
+        "loadingData": "Loading data...",
+        "totalStudents": "{{n}} students in total",
+        "filters": {
+            "teachers": "Teachers",
+            "activities": "Activities",
+            "selectSeason": "Select a season"
+        },
+        "columns": {
+            "number": "#",
+            "name": "Name",
+            "firstName": "First name",
+            "remainingLessons": "Number of remaining lessons",
+            "activity": "Activity"
+        },
+        "remainingLessonsOf": "{{remaining}} lessons remaining out of {{total}}",
+        "fetchError": "An error occurred while retrieving the data",
+        "booking": {
+            "title": "Book course sessions",
+            "selectSlots": "Select the course slots you want",
+            "tabUpcoming": "Upcoming",
+            "tabMySessions": "My sessions",
+            "book": "Book",
+            "tooManySlotsTitle": "Number of sessions exceeded",
+            "tooManySlotsText": "You have already selected all your sessions",
+            "noneSelectedTitle": "No activity selected",
+            "noneSelectedText": "Please select at least one activity",
+            "wishesSaved": "Your wishes have been saved",
+            "unregisterTitle": "Warning",
+            "unregisterText": "Do you really want to unregister from this session?",
+            "confirm": "I confirm",
+            "unregisterSuccess": "Unregistration successful",
+            "unregisterError": "An error occurred during unregistration"
+        },
+        "bookingList": {
+            "noActivitiesTitle": "No activity available at the moment",
+            "noActivitiesText": "The teacher has not yet published their course slots for this activity",
+            "remainingReminder": "As a reminder, you have <bold>{{count}} sessions left to book for the {{label}} course</bold>",
+            "allBooked": "All sessions for the <bold>{{label}}</bold> course have been booked."
+        },
+        "bookedList": {
+            "title": "My sessions",
+            "noneTitle": "You have not booked any sessions yet",
+            "noneText": "Booked sessions will appear here."
+        },
+        "card": {
+            "remainingSession_one": "{{count}} session remaining",
+            "remainingSession_other": "{{count}} sessions remaining",
+            "multipleRooms": "Multiple rooms",
+            "noRoom": "No room",
+            "multipleTeachers": "Multiple teachers",
+            "noTeacher": "No teacher",
+            "book": "Book",
+            "annual": "Annual",
+            "hoursUndefined": "Hours undefined",
+            "full": "FULL",
+            "past": "PAST",
+            "cardImageAlt": "card image",
+            "teacherPictureAlt": "teacher picture"
+        },
+        "upcoming": {
+            "loading": "Loading...",
+            "noneTitle": "You have no scheduled courses",
+            "noneText": "Not enrolled yet? Make an enrolment request for one or more activities",
+            "enrol": "Enrol"
+        },
+        "myActivities": {
+            "hello": "Hello {{name}}",
+            "myActivities": "My activities",
+            "myNextCourses": "My next courses",
+            "viewMyPlanning": "View my planning",
+            "reEnrol": "Re-enrol",
+            "noCoursesForSeason": "You have no courses for the selected season",
+            "selectSeason": "Select a season"
+        },
+        "placeholder": {
+            "notEnrolledYet": "Not enrolled yet?",
+            "description": "Make an enrolment request and select one of our activities",
+            "enrolCta": "I enrol"
+        }
     }
 }
