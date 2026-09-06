@@ -508,5 +508,37 @@
             "justified": "Justifiée",
             "unjustified": "Injustifiée"
         }
+    },
+    "mergeUsers": {
+        "switchDelete": "Supprimer l'ancien utilisateur (rouge)",
+        "switchKeep": "Garder l'ancien utilisateur (rouge)",
+        "keepNewUserData": "Garder toutes les données de base * du nouvel utilisateur (bleu)",
+        "keepOldUserData": "Garder toutes les données de base * de l'ancien utilisateur (rouge)",
+        "selectOldUserData": "Sélectionner les données de base * de l'ancien utilisateur à garder.",
+        "fields": {
+            "firstName": "Prénom",
+            "lastName": "Nom",
+            "email": "E-Mail",
+            "birthday": "Date de naissance",
+            "address": "Adresse",
+            "teacherRole": "Rôle du professeur"
+        },
+        "footnoteLine1": "* de base = Toutes les données contenues directement dans un utilisateur (nom, prénom, email, adresse, date de naissance).",
+        "footnoteLine2": "Peu importe le choix effectué, les données liées seront transférées (liens familiaux, paiements, cours, etc.)",
+        "confirmTitle": "Fusionner les deux utilisateurs sélectionnés ?",
+        "confirmDeleteText": "L'utilisateur en rouge sera supprimé.",
+        "yes": "oui",
+        "no": "non",
+        "successTitle": "Fusion effectuée",
+        "errorTitle": "Une erreur est survenue.",
+        "ok": "Ok",
+        "search": {
+            "title": "Chercher des utilisateurs",
+            "lastName": "Nom",
+            "firstName": "Prénom",
+            "results": "Résultats",
+            "bornOn": "né(e) le {{date}}, Adhérent #{{number}}",
+            "reset": "Réinitialiser"
+        }
     }
 }

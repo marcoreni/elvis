@@ -508,5 +508,37 @@
             "justified": "Justified",
             "unjustified": "Unjustified"
         }
+    },
+    "mergeUsers": {
+        "switchDelete": "Delete the old user (red)",
+        "switchKeep": "Keep the old user (red)",
+        "keepNewUserData": "Keep all the base data * of the new user (blue)",
+        "keepOldUserData": "Keep all the base data * of the old user (red)",
+        "selectOldUserData": "Select the base data * of the old user to keep.",
+        "fields": {
+            "firstName": "First name",
+            "lastName": "Last name",
+            "email": "E-mail",
+            "birthday": "Date of birth",
+            "address": "Address",
+            "teacherRole": "Teacher role"
+        },
+        "footnoteLine1": "* base = All the data contained directly in a user (last name, first name, email, address, date of birth).",
+        "footnoteLine2": "Whatever the choice made, the linked data will be transferred (family links, payments, courses, etc.)",
+        "confirmTitle": "Merge the two selected users?",
+        "confirmDeleteText": "The user in red will be deleted.",
+        "yes": "yes",
+        "no": "no",
+        "successTitle": "Merge completed",
+        "errorTitle": "An error occurred.",
+        "ok": "Ok",
+        "search": {
+            "title": "Search for users",
+            "lastName": "Last name",
+            "firstName": "First name",
+            "results": "Results",
+            "bornOn": "born {{date}}, Member #{{number}}",
+            "reset": "Reset"
+        }
     }
 }
