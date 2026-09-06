@@ -28,7 +28,7 @@ export function parseValues(radioValues: string): string[][] {
 }
 
 export function checkCondition(
-    condition: "!=" | "=",
+    condition: `${string}${"!=" | "="}${string}`,
     questions: TQuestion[],
     answers: Answers
 ): boolean | undefined {
@@ -51,9 +51,7 @@ export function checkCondition(
         return false;
     }
 
-    const answer = Object.keys(answers).find(
-        (k) => parseInt(k) === question.id
-    );
+    const answer = answers[question.id];
 
     if (answer === undefined) {
         return false;

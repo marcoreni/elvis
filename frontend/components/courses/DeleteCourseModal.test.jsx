@@ -11,7 +11,7 @@
 // to be safe.
 
 import React from "react";
-import {render, screen, waitFor, fireEvent} from "@testing-library/react";
+import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import moment from "moment";
 import i18n from "../../i18n";
 import swal from "sweetalert2";
@@ -21,12 +21,19 @@ vi.mock("../planning/YearlyCalendar", () => ({
     default: () => <div data-testid="yearly-calendar-stub" />,
 }));
 
-vi.mock("sweetalert2", () => ({default: {fire: vi.fn()}}));
+vi.mock("sweetalert2", () => ({
+    default: Object.assign(
+        vi.fn(() => Promise.resolve({})),
+        { fire: vi.fn(() => Promise.resolve({})) }
+    ),
+}));
 
-const okJson = body =>
+const okJson = (body) =>
     vi.fn().mockResolvedValue({
         ok: true,
-        headers: {get: h => (h === "Content-type" ? "application/json" : null)},
+        headers: {
+            get: (h) => (h === "Content-type" ? "application/json" : null),
+        },
         json: () => Promise.resolve(body),
     });
 
@@ -40,7 +47,7 @@ afterEach(async () => {
 });
 
 const makeProps = () => ({
-    activity: {id: 1},
+    activity: { id: 1 },
     startTime: moment("2025-09-01T08:00"),
     seasons: [],
     onSubmit: () => {},
@@ -63,7 +70,7 @@ describe("DeleteCourseModal — i18n", () => {
         render(<DeleteCourseModal {...makeProps()} />);
 
         expect(
-            screen.getByRole("heading", {name: "Supprimer un cours"})
+            screen.getByRole("heading", { name: "Supprimer un cours" })
         ).toBeInTheDocument();
         expect(screen.getByText("Souhaitez-vous :")).toBeInTheDocument();
         expect(
@@ -72,8 +79,12 @@ describe("DeleteCourseModal — i18n", () => {
         expect(
             screen.getByText("Sélectionner les récurrences à supprimer.")
         ).toBeInTheDocument();
-        expect(screen.getByRole("button", {name: "Annuler"})).toBeInTheDocument();
-        expect(screen.getByRole("button", {name: "Valider"})).toBeInTheDocument();
+        expect(
+            screen.getByRole("button", { name: "Annuler" })
+        ).toBeInTheDocument();
+        expect(
+            screen.getByRole("button", { name: "Valider" })
+        ).toBeInTheDocument();
 
         await waitFor(() => expect(global.fetch).toHaveBeenCalled());
     });
@@ -83,7 +94,7 @@ describe("DeleteCourseModal — i18n", () => {
         render(<DeleteCourseModal {...makeProps()} />);
 
         expect(
-            screen.getByRole("heading", {name: "Delete a course"})
+            screen.getByRole("heading", { name: "Delete a course" })
         ).toBeInTheDocument();
         expect(screen.getByText("Would you like to:")).toBeInTheDocument();
         expect(
@@ -92,9 +103,13 @@ describe("DeleteCourseModal — i18n", () => {
         expect(
             screen.getByText("Select the recurrences to delete.")
         ).toBeInTheDocument();
-        expect(screen.getByRole("button", {name: "Cancel"})).toBeInTheDocument();
+        expect(
+            screen.getByRole("button", { name: "Cancel" })
+        ).toBeInTheDocument();
         // common:actions.validate — EN copy is "Submit" (not "Validate"); assert the real string.
-        expect(screen.getByRole("button", {name: "Submit"})).toBeInTheDocument();
+        expect(
+            screen.getByRole("button", { name: "Submit" })
+        ).toBeInTheDocument();
 
         await waitFor(() => expect(global.fetch).toHaveBeenCalled());
     });
@@ -112,7 +127,7 @@ describe("DeleteCourseModal — i18n", () => {
         fireEvent.click(
             screen.getByText("Supprimer toutes les récurrences de ce cours.")
         );
-        fireEvent.click(screen.getByRole("button", {name: "Valider"}));
+        fireEvent.click(screen.getByRole("button", { name: "Valider" }));
 
         await waitFor(() => expect(swal).toHaveBeenCalled());
         expect(swal).toHaveBeenCalledWith(

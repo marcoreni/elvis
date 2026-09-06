@@ -27,7 +27,7 @@ export type Question = RadioQuestion | BaseQuestion | SelectQuestion;
 
 export type AnswerValue = string | number | boolean | string[];
 
-export type Answers = Record<string, AnswerValue>;
+export type Answers = Record<number, AnswerValue>;
 
 // FIXME: move elsewhere
 export interface Entity {
