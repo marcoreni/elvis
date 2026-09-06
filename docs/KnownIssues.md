@@ -566,3 +566,20 @@ before any `{...props}` spread onto a DOM node.
   `render :new`/`:edit` land on those. Its bare `<%= form.submit %>` (no arg) would render the
   English Rails default "Create Band" if ever revived. Left in place (don't-delete-on-looks-dead);
   its `activerecord.attributes.band.*` keys stay reachable via `band.errors.full_messages`.
+
+## Pre-existing bugs surfaced during Phase 07 P4 (activity-catalogue + member-facing ERB)
+
+- **`app/views/activity_application_statuses/_activity_application_status_form.html.erb` label `for:`
+  targets are stale.** The `is_stopping` / `is_active` labels carry `for: "is_stopping"` /
+  `for: "is_active"`, but `f.check_box :is_stopping` / `:is_active` emit ids
+  `activity_application_status_is_stopping` / `..._is_active`, so clicking the label does not toggle
+  the box. Pre-existing (predates the P4 i18n pass, which only swapped the label text to
+  `f.label :attr` + `activerecord.attributes.activity_application_status.*` and left `for:`
+  untouched). Fix: drop the `for:` overrides so Rails auto-matches, or give the check boxes
+  `id: "is_stopping"` / `id: "is_active"`.
+- **Rails scaffold placeholder views still present** (English `<h1>Model#action</h1><p>Find me in ...</p>`
+  stubs, no route reaching them for a real render): `activity/remove.html.erb`,
+  `activity_instance/{delete,update}.html.erb`, `activity_ref/{create,update}.html.erb`,
+  `activities_applications/create.html.erb`, `comments/{create,update,destroy}.html.erb`,
+  `time_interval/validate.html.erb`, `family_members/destroy.html.erb`,
+  `family_member_users/destroy.html.erb`. Left in place (don't-delete-on-looks-dead); not extracted.

@@ -25,6 +25,8 @@ en:
             actions: Actions
             active: Active
             inactive: Inactive
+            "yes": Yes
+            "no": No
         confirm:
             sure: Are you sure?
 
@@ -70,6 +72,10 @@ en:
 
     activerecord:
         attributes:
+            activity_application_status:
+                label: Label
+                is_stopping: Stopping?
+                is_active: Active
             user:
                 last_name: Last name
                 first_name: First name
@@ -109,6 +115,17 @@ en:
                 name: Name
             room_features:
                 name: Name
+            season:
+                label: Season name
+                nb_lessons: Number of lessons
+                start: Start
+                end: End
+                opening_date_for_applications: Re-enrollment opening date
+                opening_date_for_new_applications: New enrollment opening date
+                closing_date_for_applications: Enrollment closing date
+                date_for_teacher_planning_validation: Teacher planning validation date
+                is_current: Current season
+                next_season_id: Next season
         errors:
             models:
                 user:
@@ -313,6 +330,12 @@ en:
                 error_title: Error
             upload_csv:
                 heading: Import your community
+        adhesion:
+            index:
+                heading: Membership list
+                create: New membership
+            new:
+                heading: Create a membership
         activity:
             index:
                 title: Course list
@@ -321,6 +344,19 @@ en:
             index:
                 title: Enrollment requests
                 create: Create an enrollment
+        activity_application_statuses:
+            index:
+                heading: Enrollment status list
+                new_button: New status
+                error_title: Error
+                message_title: Message
+                cols:
+                    label: Label
+                    stopping: Stopping?
+            new:
+                title: Create an enrollment status
+            edit:
+                title: Edit an enrollment status
         activity_ref:
             index:
                 heading: Activities reference list
@@ -600,6 +636,32 @@ en:
                 title: "Edit room \"%{label}\""
             edit_activities:
                 title: "Room activities: %{label}"
+        seasons:
+            index:
+                heading: Season management
+                create: Create a new season
+            new:
+                heading: New season
+            edit:
+                heading: 'Edit "%{label}"'
+                warning: 'Warning:'
+                autosave_notice: Any change made to the table is saved immediately, even without pressing the save buttons.
+            form:
+                save_error_title: Unable to save the season.
+                save_error_body: Please correct the fields highlighted in red below.
+                for_the_season: For the season
+                no_next_season: "<none>"
+        teachers:
+            index:
+                heading: Teacher information
+        students:
+            index:
+                title: "%{teacher}'s course list"
+                lesson_slot: "%{day} from %{start} to %{end}: %{activity} lesson"
+                group: "group %{name}"
+                room: "room %{name}"
+                from_date: "from %{date}"
+                until_date: "until %{date}"
         shared:
             form_errors:
                 heading: "%{count} error(s) prevented this record from being saved:"

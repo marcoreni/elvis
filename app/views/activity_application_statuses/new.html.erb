@@ -2,7 +2,7 @@
     <div class="col-lg-4 col-sm-12">
         <div class="ibox">
             <div class="ibox-title">
-                <h1>Créer un statut d'inscription</h1>
+                <h1><%= t("views.activity_application_statuses.new.title") %></h1>
             </div>
             <div class="ibox-content">
                         <%= render partial: "activity_application_status_form", object: ActivityApplicationStatus.new, as: :status %>
