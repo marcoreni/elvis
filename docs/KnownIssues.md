@@ -589,3 +589,47 @@ before any `{...props}` spread onto a DOM node.
   headings sit above (set in the controller's create/update/destroy actions) is still a French string
   literal — so an EN user sees a translated heading over untranslated body text. Controller-layer
   strings are Phase 07 P6 scope; noted here so P6 picks it up.
+
+## Phase 07 P5 (React-tail extraction) — pre-existing bugs surfaced, and things deliberately left
+
+- **`frontend/components/AdditionalStudentSelection.jsx` builds its `<label>` text with `key + 1`
+  where `key` is a string object-key.** `_.map(this.props.additionalStudents, (p, i) => …)` passes
+  `i` as the object key ("0", "1", …); `renderParentSelection(key)` then does `{{ n: key + 1 }}`,
+  which string-concatenates to `"01"`, `"11"`, … rather than `1`, `2`. The P5 pass keyed the label
+  (`activityApplications:childSelection.studentForAwakening`) but preserved the existing `key + 1`
+  behaviour verbatim. Fix: `parseInt(key, 10) + 1` (or iterate with `_.map(..., (p, i) => …, )` where
+  `i` is a real index).
+- **`frontend/components/AttachAccount.jsx` `UserListItem` rendered a literal `${…}` in JSX text**
+  (`Adhérent #${user.adherent_number}` inside a JSX text node — the template-literal syntax was
+  never evaluated, so the UI showed a dollar-brace). Fixed while extracting: now
+  `t("users:attachAccount.memberNumber", { number: user.adherent_number })`.
+- **`frontend/components/WorkGroupTemplateEditor.jsx` (root-level `WorkGroupEditor`) is dead code.**
+  It is superseded by the already-i18n'd `frontend/components/activityRef/WorkGroupTemplateEditor.jsx`
+  (the only import site — `activityRef/ActivityRefContainer.jsx`), and is not mounted via any
+  `react_component`. Left untouched (don't-delete-on-looks-dead); NOT extracted. Its broken sentence
+  `"Aucun instrument sauvegardé Vous pouvez en suivant ce <a>lien</a>"` (missing punctuation/verb) is
+  already fixed in the live `activityRef` copy's `activities:workGroup.noInstruments` key.
+- **Constant-module label dictionaries NOT extracted in P5** (they read as id-constant / enum-value
+  modules per the P5 exclusion list, and several feed backend-keyed comparisons):
+  `frontend/components/utils/StopReasons.js` (`STOP_REASONS` — the stop-reason `<select>` options in
+  `CurrentActivityItem` / `StopList`); `frontend/components/mailTemplates/MergeTags.jsx` (~35
+  merge-tag `name`/`sample` pairs consumed by the WYSIWYG's `setMergeTags()`, where `name` may be a
+  load-bearing key); `frontend/components/advancedSearch/utils.js` (a verbatim vendored
+  jQuery-QueryBuilder French language pack + a `PAYMENT_SCHEDULE_OPTIONS_PAYMENTS_NUMBERS` label
+  array). Each is a candidate for a dedicated constants-i18n follow-up.
+- **`frontend/components/utils/DateFilter.jsx` `RangedSelect` throws `"the arguments need to be
+  integers"` under some props** (visible as loud stderr in the Vitest run, inside otherwise-passing
+  tests). Pre-existing; the P5 pass only keyed the three placeholders and did not touch the guard.
+- **`common.json` (`frontend/locales/{fr,en}/common.json`) is committed 2-space-indented and does
+  NOT satisfy `.prettierrc` (`tabWidth: 4`).** This predates P5 (every prior i18n PR added keys the
+  same way). P5 kept matching the existing 2-space style for its `common.json` additions rather than
+  reformatting the whole file; a one-off `prettier --write` normalisation of `common.json` is its
+  own tiny chore.
+- **`frontend/components/{StopList,eventsRules/EventsRules,mailTemplates/TemplateIndex}.jsx` and
+  a few others build react-table `columns` at module scope / in a plain `const` inside `render()`.**
+  Where the array was module-level (`StopList`'s `TABLE_COLUMNS`), P5 converted it to a
+  `getTableColumns(t)` factory called at render time, so headers follow the active locale. Where the
+  array was already inside `render()` (`SeasonsList`, `PlanningList*`, `TemplateIndex`, `EventsRules`,
+  `PackUtilization`), no change was needed — same rationale as the frozen-at-construct section above.
+  `Holidays.jsx` had its `columns` class-field moved to a `getColumns()` render-time getter for the
+  same reason.
