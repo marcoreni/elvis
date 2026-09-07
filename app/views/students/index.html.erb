@@ -9,7 +9,7 @@
 </div>
 
 <h1>
-  Liste des cours de <%= teacher.first_name %> <%= teacher.last_name %>
+  <%= t("views.students.index.title", teacher: "#{teacher.first_name} #{teacher.last_name}") %>
 </h1>
 
 
@@ -36,15 +36,15 @@
 %>
 
   <h2>
-    <%= start_day %> de <%= start_hour %> à <%= end_hour %> : cours de <%= activity_ref %>
+    <%= t("views.students.index.lesson_slot", day: start_day, start: start_hour, end: end_hour, activity: activity_ref) %>
 
     <% if group_name.present? || room.present? %>
       (
       <% if group_name.present? %>
-        groupe <%= group_name %>,
+        <%= t("views.students.index.group", name: group_name) %>,
       <% end %>
       <% if room.present? %>
-        salle <%= room %>
+        <%= t("views.students.index.room", name: room) %>
       <% end %>
       )
     <% end %>
@@ -69,8 +69,8 @@
         <td>
           &nbsp;
         <td>
-          <%= begin_at ? "à partir du #{begin_at}" : "" %>
-          <%= stopped_at ? "jusqu'au #{stopped_at}" : "" %>
+          <%= begin_at ? t("views.students.index.from_date", date: begin_at) : "" %>
+          <%= stopped_at ? t("views.students.index.until_date", date: stopped_at) : "" %>
         </td>
       </tr>
     <%

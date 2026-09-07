@@ -123,6 +123,15 @@ ignore_unused:
   - "activerecord.attributes.season.date_for_teacher_planning_validation"
   - "activerecord.attributes.season.is_current"
   - "activerecord.attributes.season.next_season_id"
+  # Phase 07 P4 (feat/i18n-p4-activity-catalogue-member-erb): the activity_application_statuses
+  # form (app/views/activity_application_statuses/_activity_application_status_form.html.erb)
+  # labels its fields with bare `f.label :attr` on a `form_with model: status` builder, so Rails
+  # resolves each caption through `ActivityApplicationStatus.human_attribute_name(:attr)` at render
+  # time — not a literal `t(...)` the static scan can credit. Leaf-listed like the practice/season
+  # sets above so a genuine orphan would still surface.
+  - "activerecord.attributes.activity_application_status.label"
+  - "activerecord.attributes.activity_application_status.is_stopping"
+  - "activerecord.attributes.activity_application_status.is_active"
   - "devise.**"
   # Side/profile navigation captions. config/initializers/20-menu_generator.rb sets each menu
   # item's `caption:` to a `:"menu.<key>"` Symbol; lib/elvis/menu_manager.rb#caption then does
