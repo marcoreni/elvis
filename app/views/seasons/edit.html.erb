@@ -1,6 +1,6 @@
 
 <div class="row wrapper border-bottom white-bg page-heading">
-    <h2>Editer "<%= @season.label %>"</h2>
+    <h2><%= t("views.seasons.edit.heading", label: @season.label) %></h2>
 </div>
 
 <div class="row">
@@ -14,8 +14,8 @@
 
         <div class="form-group">
           <div class="m-t h-auto bg-green rounded p-sm text-white">
-            Attention: <br/>
-            Toutes modifications sur le tableau seront directement enregistrées, même sans appuyer sur les boutons de sauvegarde.
+            <%= t("views.seasons.edit.warning") %><br/>
+            <%= t("views.seasons.edit.autosave_notice") %>
           </div>
         </div>
       </div>

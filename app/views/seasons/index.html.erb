@@ -1,7 +1,7 @@
 <div class="row wrapper border-bottom white-bg page-heading m-b-md">
-    <h2>Gestion des saisons
+    <h2><%= t("views.seasons.index.heading") %>
         <%= link_to new_season_path do %>
-            <button class="btn btn-primary btn-sm pull-right" ><i class="fas fa-plus"></i> Créer une nouvelle saison</button>
+            <button class="btn btn-primary btn-sm pull-right" ><i class="fas fa-plus"></i> <%= t("views.seasons.index.create") %></button>
         <% end %>
     </h2>
 </div>

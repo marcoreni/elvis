@@ -112,6 +112,17 @@ fr:
                 name: Nom
             room_features:
                 name: Nom
+            season:
+                label: Nom de la saison
+                nb_lessons: Nombre de leçons
+                start: Début
+                end: Fin
+                opening_date_for_applications: Date d'ouverture des ré-inscriptions
+                opening_date_for_new_applications: Date d'ouverture des nouvelles inscriptions
+                closing_date_for_applications: Date de clôture des inscriptions
+                date_for_teacher_planning_validation: Date de validation du planning par les professeurs
+                is_current: Saison en cours
+                next_season_id: Saison suivante
         errors:
             models:
                 user:
@@ -316,6 +327,12 @@ fr:
                 error_title: Erreur
             upload_csv:
                 heading: Import de votre communauté
+        adhesion:
+            index:
+                heading: Liste des adhésions
+                create: Nouvelle adhésion
+            new:
+                heading: Créer une adhésion
         activity:
             index:
                 title: Liste des cours
@@ -603,6 +620,21 @@ fr:
                 title: "Éditer la salle \"%{label}\""
             edit_activities:
                 title: "Activités de la salle %{label}"
+        seasons:
+            index:
+                heading: Gestion des saisons
+                create: Créer une nouvelle saison
+            new:
+                heading: Nouvelle saison
+            edit:
+                heading: 'Éditer "%{label}"'
+                warning: 'Attention :'
+                autosave_notice: Toutes les modifications sur le tableau seront directement enregistrées, même sans appuyer sur les boutons de sauvegarde.
+            form:
+                save_error_title: Impossible de sauvegarder la saison.
+                save_error_body: Veuillez corriger les champs en rouge ci-dessous.
+                for_the_season: Pour la saison
+                no_next_season: "<aucune>"
         shared:
             form_errors:
                 heading: "%{count} erreur(s) empêchent l'enregistrement :"

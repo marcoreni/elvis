@@ -1,7 +1,7 @@
 <%= form_with(model: ps, local: true) do |form| %>
   <% if ps.errors.any? %>
     <div id="error_explanation">
-      <h2><%= pluralize(ps.errors.count, "error") %> prohibited this payment_status from being saved:</h2>
+      <h2><%= t("views.shared.form_errors.heading", count: ps.errors.count) %></h2>
 
       <ul>
         <% ps.errors.full_messages.each do |message| %>
