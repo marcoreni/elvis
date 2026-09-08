@@ -98,6 +98,29 @@ describe.each([
             expect(help).toHaveClass("help-block");
         });
 
+        // i18n Phase 07 P5 (React-tail extraction): commit 83a1ff97 moved this
+        // component's family-link section copy onto the `users:contactForm.*`
+        // subtree via withTranslation("users"). The <h3> label that was the literal
+        // "Lien familial" is now t("users:contactForm.familyLink"); check it
+        // resolves on both locales with no fallback marker / raw dotted-key leak.
+        test.each([
+            ["fr", "Lien familial"],
+            ["en", "Family link"],
+        ])(
+            "%s: the family-link heading uses the extracted users:contactForm key",
+            async (lng, expected) => {
+                await i18n.changeLanguage(lng);
+                const { container } = render(<Component {...baseProps()} />);
+
+                expect(screen.getByText(expected)).toBeInTheDocument();
+                expect(container.textContent).not.toMatch(
+                    /translation missing/i
+                );
+                expect(container.textContent).not.toMatch(/contactForm\.\w+/);
+                expect(container.innerHTML).not.toMatch(/users:contactForm\./);
+            }
+        );
+
         test("selecting a value clears the error", async () => {
             await i18n.changeLanguage("fr");
             const { container } = render(<Component {...baseProps()} />);
