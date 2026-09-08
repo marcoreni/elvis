@@ -51,6 +51,11 @@ describe("frontend/i18n P5 namespace parity", () => {
             flattenLeaves(i18n.getResourceBundle("en", ns) || {})
         );
 
+        test("the namespace actually loaded (guards against a vacuous pass)", () => {
+            expect(Object.keys(fr).length).toBeGreaterThan(0);
+            expect(Object.keys(en).length).toBeGreaterThan(0);
+        });
+
         test("fr and en define the identical set of leaf key paths", () => {
             expect(Object.keys(en).sort()).toEqual(Object.keys(fr).sort());
         });

@@ -233,5 +233,9 @@
             "room": "Salle",
             "practiceRoom": "Salle de répétition"
         }
+    },
+    "selectMultiple": {
+        "confirmClearAll": "Êtes-vous sûr de supprimer toutes les {{title}} ?",
+        "addAllLabel": "Ajouter toutes les {{title}}"
     }
 }

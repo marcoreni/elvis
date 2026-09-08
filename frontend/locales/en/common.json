@@ -233,5 +233,9 @@
             "room": "Room",
             "practiceRoom": "Practice room"
         }
+    },
+    "selectMultiple": {
+        "confirmClearAll": "Are you sure you want to remove all {{title}}?",
+        "addAllLabel": "Add all {{title}}"
     }
 }

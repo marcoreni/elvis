@@ -440,7 +440,7 @@ class ActivitiesApplicationsList extends React.Component {
                                 {t(
                                     "activityApplications:list.selectRemaining",
                                     {
-                                        count:
+                                        n:
                                             this.state.total -
                                             this.state.bulkTargets.length,
                                     }
@@ -1058,9 +1058,7 @@ class ActivitiesApplicationsList extends React.Component {
                                         {t(
                                             "activityApplications:list.pendingHeading",
                                             {
-                                                count:
-                                                    this.state.pendingTotal ||
-                                                    0,
+                                                n: this.state.pendingTotal || 0,
                                             }
                                         )}
                                     </h3>

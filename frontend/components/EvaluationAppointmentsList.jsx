@@ -410,13 +410,13 @@ class TimeIntervalSelectionBase extends React.Component {
 
         if (filterByActivity) {
             const appropriateTeachersIds = teachers
-                .filter(t =>
-                    t.teachers_activity_refs.find(
+                .filter(teacher =>
+                    teacher.teachers_activity_refs.find(
                         tar =>
                             tar.activity_ref.kind === student.activity_ref.kind
                     )
                 )
-                .map(t => t.id);
+                .map(teacher => teacher.id);
 
             filteredIntervals = filteredIntervals.filter(interval =>
                 appropriateTeachersIds.includes(

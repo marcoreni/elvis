@@ -459,7 +459,8 @@
         "bookingList": {
             "noActivitiesTitle": "No activity available at the moment",
             "noActivitiesText": "The teacher has not yet published their course slots for this activity",
-            "remainingReminder": "As a reminder, you have <bold>{{count}} sessions left to book for the {{label}} course</bold>",
+            "remainingReminder_one": "As a reminder, you have <bold>{{count}} session left to book for the {{label}} course</bold>",
+            "remainingReminder_other": "As a reminder, you have <bold>{{count}} sessions left to book for the {{label}} course</bold>",
             "allBooked": "All sessions for the <bold>{{label}}</bold> course have been booked."
         },
         "bookedList": {
@@ -539,7 +540,7 @@
         "deleteConfirmBody_other": "Do you want to delete the {{count}} selected enrollment requests?",
         "selectedInfo_one": "You have selected {{count}} request",
         "selectedInfo_other": "You have selected {{count}} requests",
-        "selectRemaining": "Select the {{count}} remaining",
+        "selectRemaining": "Select the {{n}} remaining",
         "groupMailTooltip": "Group confirmation email send",
         "bulkEdit": "Bulk edit",
         "notifyStudentTitle": "Notify the student",
@@ -573,7 +574,7 @@
             "showNoAvailability": "Show students with no availability entered",
             "stats": "Enrollment statistics"
         },
-        "pendingHeading": "Pending processing ({{count}})",
+        "pendingHeading": "Pending processing ({{n}})",
         "totalCount_one": "{{count}} enrollment request in total",
         "totalCount_other": "{{count}} enrollment requests in total",
         "modalTitle": "Bulk edit of requests",

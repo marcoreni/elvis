@@ -459,7 +459,8 @@
         "bookingList": {
             "noActivitiesTitle": "Aucune activité disponible pour le moment",
             "noActivitiesText": "Le professeur n'a pas encore publié ses créneaux de cours pour cette activité",
-            "remainingReminder": "Pour rappel, il vous reste <bold>{{count}} séances à réserver pour le cours de {{label}}</bold>",
+            "remainingReminder_one": "Pour rappel, il vous reste <bold>{{count}} séance à réserver pour le cours de {{label}}</bold>",
+            "remainingReminder_other": "Pour rappel, il vous reste <bold>{{count}} séances à réserver pour le cours de {{label}}</bold>",
             "allBooked": "Toutes les séances pour le cours de <bold>{{label}}</bold> ont été réservées."
         },
         "bookedList": {
@@ -539,7 +540,7 @@
         "deleteConfirmBody_other": "Voulez-vous supprimer les {{count}} demandes d'inscription sélectionnées ?",
         "selectedInfo_one": "Vous avez sélectionné {{count}} demande",
         "selectedInfo_other": "Vous avez sélectionné {{count}} demandes",
-        "selectRemaining": "Sélectionner les {{count}} restantes",
+        "selectRemaining": "Sélectionner les {{n}} restantes",
         "groupMailTooltip": "Envoi groupé mail confirmation",
         "bulkEdit": "Édition de masse",
         "notifyStudentTitle": "Notifier l'élève",
@@ -573,7 +574,7 @@
             "showNoAvailability": "Afficher les élèves sans disponibilités renseignées",
             "stats": "Statistiques d'inscriptions"
         },
-        "pendingHeading": "En attente de traitement ({{count}})",
+        "pendingHeading": "En attente de traitement ({{n}})",
         "totalCount_one": "{{count}} demande d'inscription au total",
         "totalCount_other": "{{count}} demandes d'inscription au total",
         "modalTitle": "Édition de masse des demandes",

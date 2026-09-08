@@ -1,5 +1,6 @@
 import React from "react";
 import PropTypes from "prop-types";
+import { withTranslation } from "react-i18next";
 
 import _ from "lodash";
 import CreatableSelect from "react-select/creatable";
@@ -36,7 +37,7 @@ const SELECT_ALL_VALUE = "__select_all__";
  *  </li>
  * </ul>
  */
-export default class SelectMultiple extends React.Component {
+class SelectMultiple extends React.Component {
     constructor(props) {
         super(props);
 
@@ -66,6 +67,8 @@ export default class SelectMultiple extends React.Component {
     }
 
     handleChange(values, actionMeta) {
+        const { t } = this.props;
+
         if (actionMeta.action === "select-option") {
             const newFeature = this.props.isMulti ? _.last(values) : values;
 
@@ -130,12 +133,12 @@ export default class SelectMultiple extends React.Component {
 
             if (confirm) {
                 swal({
-                    title:
-                        "Êtes vous sûr de supprimer toutes les " +
-                        this.props.title,
+                    title: t("common:selectMultiple.confirmClearAll", {
+                        title: this.props.title,
+                    }),
                     type: "warning",
-                    confirmButtonText: "Oui !",
-                    cancelButtonText: "Non",
+                    confirmButtonText: t("common:yesNo.yes"),
+                    cancelButtonText: t("common:yesNo.no"),
                     showCancelButton: true,
                 }).then(willDelete => {
                     if (willDelete.value) clear();
@@ -165,6 +168,8 @@ export default class SelectMultiple extends React.Component {
     }
 
     render() {
+        const { t } = this.props;
+
         const canSelectAll =
             this.props.allowSelectAll &&
             this.props.isMulti &&
@@ -175,7 +180,9 @@ export default class SelectMultiple extends React.Component {
                   {
                       label:
                           this.props.selectAllLabel ||
-                          `Ajouter toutes les ${this.props.title.toLowerCase()}`,
+                          t("common:selectMultiple.addAllLabel", {
+                              title: this.props.title.toLowerCase(),
+                          }),
                       value: SELECT_ALL_VALUE,
                   },
                   ...this.state.features,
@@ -222,3 +229,5 @@ SelectMultiple.propTypes = {
     allowSelectAll: PropTypes.bool,
     selectAllLabel: PropTypes.string,
 };
+
+export default withTranslation("common")(SelectMultiple);
