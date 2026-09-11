@@ -1,7 +1,8 @@
-import React, {Fragment} from "react";
+import React, { Fragment } from "react";
 import _ from "lodash";
+import { withTranslation } from "react-i18next";
 import * as ActivityApplicationStatus from "../utils/ActivityApplicationsStatuses";
-import {csrfToken} from "../utils";
+import { csrfToken } from "../utils";
 import swal from "sweetalert2";
 import moment from "moment/moment";
 import Modal from "react-modal";
@@ -17,45 +18,53 @@ class RenewActivityItem extends React.Component {
     constructor(props) {
         super(props);
 
-        const activity_application_status_id = _.get(this.props, "pre_application_activity.activity_application.activity_application_status_id");
+        const activity_application_status_id = _.get(
+            this.props,
+            "pre_application_activity.activity_application.activity_application_status_id"
+        );
 
         this.state = {
             preApplicationActivity: this.props.pre_application_activity,
             isAssignationRefusedModalOpen: false,
             isAssignationAcceptedModalOpen: false,
             reasonOfRefusal: "",
-            proposalAnswered: (activity_application_status_id === ActivityApplicationStatus.PROPOSAL_ACCEPTED_ID
-                || activity_application_status_id === ActivityApplicationStatus.PROPOSAL_REFUSED_ID)
+            proposalAnswered:
+                activity_application_status_id ===
+                    ActivityApplicationStatus.PROPOSAL_ACCEPTED_ID ||
+                activity_application_status_id ===
+                    ActivityApplicationStatus.PROPOSAL_REFUSED_ID,
         };
         this.updateReasonRefused = this.updateReasonRefused.bind(this);
     }
 
     openAssignationRefusedModal() {
-        this.setState({isAssignationRefusedModalOpen: true});
+        this.setState({ isAssignationRefusedModalOpen: true });
     }
 
     closeAssignationRefusedModal() {
-        this.setState({isAssignationRefusedModalOpen: false});
+        this.setState({ isAssignationRefusedModalOpen: false });
     }
 
     openAssignationAcceptedModal() {
-        this.setState({isAssignationAcceptedModalOpen: true});
+        this.setState({ isAssignationAcceptedModalOpen: true });
     }
 
     closeAssignationAcceptedModal() {
-        this.setState({isAssignationAcceptedModalOpen: false});
+        this.setState({ isAssignationAcceptedModalOpen: false });
     }
 
     updateReasonRefused(event) {
-        this.setState({reasonOfRefusal: event.target.value});
+        this.setState({ reasonOfRefusal: event.target.value });
     }
 
     handleProcessRefusedAssignationActivity() {
+        const { t } = this.props;
         this.closeAssignationRefusedModal();
 
         let application = {
-            activity_application_status_id: ActivityApplicationStatus.PROPOSAL_REFUSED_ID
-        }
+            activity_application_status_id:
+                ActivityApplicationStatus.PROPOSAL_REFUSED_ID,
+        };
 
         fetch(
             `/inscriptions/${this.props.pre_application_activity.activity_application_id}`,
@@ -70,28 +79,54 @@ class RenewActivityItem extends React.Component {
 
                 body: JSON.stringify({
                     application: application,
-                    id: this.props.pre_application_activity.activity_application_id,
-                    activity_application: this.props.pre_application_activity.activity_application,
-                    reason_of_refusal: this.state.reasonOfRefusal
+                    id: this.props.pre_application_activity
+                        .activity_application_id,
+                    activity_application: this.props.pre_application_activity
+                        .activity_application,
+                    reason_of_refusal: this.state.reasonOfRefusal,
                 }),
             }
-        ).then(response => {
-            if (!response.ok)
-                swal("Erreur", "Erreur lors de l'acheminement", "error")
+        )
+            .then(response => {
+                if (!response.ok)
+                    swal(
+                        t(
+                            "activityApplications:activityItems.toasts.errorTitle"
+                        ),
+                        t(
+                            "activityApplications:activityItems.toasts.routingError"
+                        ),
+                        "error"
+                    );
 
-            return response.json()
-        }).then(json => {
-            this.setState({proposalAnswered: json.activity_application_status_id === ActivityApplicationStatus.PROPOSAL_REFUSED_ID});
-            swal("Proposition refusée", "Les raisons ont été communiquées", "info")
-        });
+                return response.json();
+            })
+            .then(json => {
+                this.setState({
+                    proposalAnswered:
+                        json.activity_application_status_id ===
+                        ActivityApplicationStatus.PROPOSAL_REFUSED_ID,
+                });
+                swal(
+                    t(
+                        "activityApplications:activityItems.toasts.proposalRefusedTitle"
+                    ),
+                    t(
+                        "activityApplications:activityItems.toasts.reasonsCommunicated"
+                    ),
+                    "info"
+                );
+            });
     }
 
     handleProcessAcceptedAssignationActivity() {
+        const { t } = this.props;
         this.closeAssignationAcceptedModal();
 
         let application = {
-            activity_application_status_id: ActivityApplicationStatus.PROPOSAL_ACCEPTED_ID
-        }
+            activity_application_status_id:
+                ActivityApplicationStatus.PROPOSAL_ACCEPTED_ID,
+        };
 
         fetch(
             `/inscriptions/${this.props.pre_application_activity.activity_application_id}`,
@@ -106,60 +141,106 @@ class RenewActivityItem extends React.Component {
 
                 body: JSON.stringify({
                     application: application,
-                    id: this.props.pre_application_activity.activity_application_id,
-                    activity_application: this.props.pre_application_activity.activity_application
+                    id: this.props.pre_application_activity
+                        .activity_application_id,
+                    activity_application: this.props.pre_application_activity
+                        .activity_application,
                 }),
             }
-        ).then(response => {
-            if (!response.ok)
-                swal("Erreur", "Erreur lors de l'acheminement", "error")
+        )
+            .then(response => {
+                if (!response.ok)
+                    swal(
+                        t(
+                            "activityApplications:activityItems.toasts.errorTitle"
+                        ),
+                        t(
+                            "activityApplications:activityItems.toasts.routingError"
+                        ),
+                        "error"
+                    );
 
-            return response.json()
-        }).then(json => {
-            this.setState({proposalAnswered: json.activity_application_status_id === ActivityApplicationStatus.PROPOSAL_ACCEPTED_ID});
-            swal("Réussite", "Proposition acceptée", "success");
-        });
+                return response.json();
+            })
+            .then(json => {
+                this.setState({
+                    proposalAnswered:
+                        json.activity_application_status_id ===
+                        ActivityApplicationStatus.PROPOSAL_ACCEPTED_ID,
+                });
+                swal(
+                    t("activityApplications:activityItems.toasts.successTitle"),
+                    t(
+                        "activityApplications:activityItems.toasts.proposalAccepted"
+                    ),
+                    "success"
+                );
+            });
     }
 
     handleProcessModifyApplication(content) {
+        const { t } = this.props;
         api.set()
             .error(() => {
                 swal({
-                    title: "Erreur lors de l'envoi du commentaire",
+                    title: t(
+                        "activityApplications:activityItems.toasts.commentSendError"
+                    ),
                     type: "error",
                 });
             })
-            .post("/comments", {
-                commentable_id: this.state.preApplicationActivity.activity_application_id,
-                commentable_type: "ActivityApplication",
-                user_id: this.props.current_user.id,
-                content: content,
-            }, {});
+            .post(
+                "/comments",
+                {
+                    commentable_id: this.state.preApplicationActivity
+                        .activity_application_id,
+                    commentable_type: "ActivityApplication",
+                    user_id: this.props.current_user.id,
+                    content: content,
+                },
+                {}
+            );
     }
 
     render() {
-        const {
-            pre_application_activity,
-            user,
-        } = this.props;
+        const { t, pre_application_activity, user } = this.props;
 
         let actionLabel = "";
-        if (this.state.preApplicationActivity.activity_application &&
-            this.state.preApplicationActivity.activity_application.activity_application_status &&
+        if (
+            this.state.preApplicationActivity.activity_application &&
+            this.state.preApplicationActivity.activity_application
+                .activity_application_status &&
             _.includes(
-                ["Cours attribué", "Cours en attente", "Proposition acceptée", "Proposition refusée", "Cours proposé"],
-                this.state.preApplicationActivity.activity_application.activity_application_status.label
+                [
+                    "Cours attribué",
+                    "Cours en attente",
+                    "Proposition acceptée",
+                    "Proposition refusée",
+                    "Cours proposé",
+                ],
+                this.state.preApplicationActivity.activity_application
+                    .activity_application_status.label
             )
         ) {
             actionLabel = "Traitée";
 
-            if (this.state.preApplicationActivity.activity_application.activity_application_status.label === "Proposition acceptée")
+            if (
+                this.state.preApplicationActivity.activity_application
+                    .activity_application_status.label ===
+                "Proposition acceptée"
+            )
                 actionLabel = "Proposition acceptée";
 
-            if (this.state.preApplicationActivity.activity_application.activity_application_status.label === "Proposition refusée")
+            if (
+                this.state.preApplicationActivity.activity_application
+                    .activity_application_status.label === "Proposition refusée"
+            )
                 actionLabel = "Proposition refusée";
 
-            if (this.state.preApplicationActivity.activity_application.activity_application_status.label === "Cours proposé")
+            if (
+                this.state.preApplicationActivity.activity_application
+                    .activity_application_status.label === "Cours proposé"
+            )
                 actionLabel = "Cours proposé";
         } else {
             actionLabel = "En attente";
@@ -167,85 +248,146 @@ class RenewActivityItem extends React.Component {
             if (this.state.preApplicationActivity.action) {
                 if (this.state.preApplicationActivity.action === "stop")
                     actionLabel = "Arrêt";
-                else
-                    actionLabel = "En traitement";
+                else actionLabel = "En traitement";
             }
 
-            if (this.state.preApplicationActivity.activity_application.activity_application_status.label === "Sur liste d'attente")
-                actionLabel = "Sur liste d'attente"
+            if (
+                this.state.preApplicationActivity.activity_application
+                    .activity_application_status.label === "Sur liste d'attente"
+            )
+                actionLabel = "Sur liste d'attente";
         }
 
         /**
          *  Affichage du créneau
          */
         let activityDetails = "";
-        let activityState = _.get(this.props, "pre_application_activity.next_activity");
+        let activityState = _.get(
+            this.props,
+            "pre_application_activity.next_activity"
+        );
 
         if (activityState !== undefined && activityState !== null) {
-            let dayLabel = moment(activityState.time_interval.start).format('dddd')
-            activityDetails = <React.Fragment>
-                <p style={{color: "#00283B"}}>
-                    {dayLabel.charAt(0).toUpperCase() + dayLabel.slice(1)} de&nbsp;
-                    {moment(activityState.time_interval.start).format('HH:mm')} à&nbsp;
-                    {moment(activityState.time_interval.end).format('HH:mm')}
-                </p>
-                <p style={{color: "#8AA4B1"}}>Avec {activityState.teacher.firstname} {activityState.teacher.lastname}</p>
-            </React.Fragment>;
+            let dayLabel = moment(activityState.time_interval.start).format(
+                "dddd"
+            );
+            activityDetails = (
+                <React.Fragment>
+                    <p style={{ color: "#00283B" }}>
+                        {t("activityApplications:activityItems.dayTimeRange", {
+                            day:
+                                dayLabel.charAt(0).toUpperCase() +
+                                dayLabel.slice(1),
+                            start: moment(
+                                activityState.time_interval.start
+                            ).format("HH:mm"),
+                            end: moment(activityState.time_interval.end).format(
+                                "HH:mm"
+                            ),
+                        })}
+                    </p>
+                    <p style={{ color: "#8AA4B1" }}>
+                        {t("activityApplications:activityItems.with", {
+                            teacher: `${activityState.teacher.firstname} ${activityState.teacher.lastname}`,
+                        })}
+                    </p>
+                </React.Fragment>
+            );
         }
 
-        let activity_application_status_id = _.get(this.state, "preApplicationActivity.activity_application.activity_application_status_id");
+        let activity_application_status_id = _.get(
+            this.state,
+            "preApplicationActivity.activity_application.activity_application_status_id"
+        );
 
         let activityApplicationId = this.state.preApplicationActivity.activity_application.id.toString();
-        let paddedActivityApplicationId = activityApplicationId.padStart(3, '0');
+        let paddedActivityApplicationId = activityApplicationId.padStart(
+            3,
+            "0"
+        );
 
         /**
          *  Affichage du nom de l'activité
          */
-        const desired_activities = _.get(this.props, "pre_application_activity.activity_application.desired_activities") || [];
-        let activityDisplayName = "Activité inconnue";
+        const desired_activities =
+            _.get(
+                this.props,
+                "pre_application_activity.activity_application.desired_activities"
+            ) || [];
+        let activityDisplayName = t(
+            "activityApplications:activityItems.unknownActivity"
+        );
 
         if (activityState && activityState.activity_ref_id) {
-            const desiredActivity = desired_activities.find(d => d.activity_ref_id === activityState.activity_ref_id);
-            activityDisplayName = desiredActivity ? desiredActivity.activity_ref.display_name : "Activité inconnue";
+            const desiredActivity = desired_activities.find(
+                d => d.activity_ref_id === activityState.activity_ref_id
+            );
+            activityDisplayName = desiredActivity
+                ? desiredActivity.activity_ref.display_name
+                : t("activityApplications:activityItems.unknownActivity");
         } else if (desired_activities[0]) {
-            activityDisplayName = desired_activities[0].activity_ref.display_name;
+            activityDisplayName =
+                desired_activities[0].activity_ref.display_name;
         }
         return (
             <React.Fragment>
-                <div className="card p-4 pt-0 col-md-12 col-lg-6 mr-4 mb-4"
-                     style={{border: "none", borderRadius: "12px", color: "#00283B"}}>
-                    <div className='d-inline-flex align-items-top pt-0 row'>
+                <div
+                    className="card p-4 pt-0 col-md-12 col-lg-6 mr-4 mb-4"
+                    style={{
+                        border: "none",
+                        borderRadius: "12px",
+                        color: "#00283B",
+                    }}
+                >
+                    <div className="d-inline-flex align-items-top pt-0 row">
                         <div className="col-sm-6">
-                            {(this.props.current_user || {}).is_admin ? <a href={`/inscriptions/${this.state.preApplicationActivity.activity_application.id}`}>{`#${paddedActivityApplicationId}`}</a> : null}
-                            <h3 className="font-weight-bold">{activityDisplayName}</h3>
+                            {(this.props.current_user || {}).is_admin ? (
+                                <a
+                                    href={`/inscriptions/${this.state.preApplicationActivity.activity_application.id}`}
+                                >{`#${paddedActivityApplicationId}`}</a>
+                            ) : null}
+                            <h3 className="font-weight-bold">
+                                {activityDisplayName}
+                            </h3>
                             <div>{activityDetails}</div>
                         </div>
                         <div className="col-sm-6 text-right">
-                            {renderActivityAction(actionLabel)}
+                            {renderActivityAction(actionLabel, t)}
                         </div>
                     </div>
-
 
                     <div className="col-sm-12 d-inline-flex justify-content-between p-0">
                         <div>
                             <AnswerProposal
-                                activity_application_status_id={activity_application_status_id}
+                                activity_application_status_id={
+                                    activity_application_status_id
+                                }
                                 proposalAnswered={this.state.proposalAnswered}
-                                openAssignationRefusedModal={() => this.openAssignationRefusedModal()}
-                                openAssignationAcceptedModal={() => this.openAssignationAcceptedModal()}
+                                openAssignationRefusedModal={() =>
+                                    this.openAssignationRefusedModal()
+                                }
+                                openAssignationAcceptedModal={() =>
+                                    this.openAssignationAcceptedModal()
+                                }
                             />
                         </div>
 
-
-                        {activity_application_status_id === this.props.default_activity_status_id &&
+                        {activity_application_status_id ===
+                            this.props.default_activity_status_id && (
                             <div>
                                 <CancelApplication
-                                    activityApplicationId={this.state.preApplicationActivity.activity_application_id}
+                                    activityApplicationId={
+                                        this.state.preApplicationActivity
+                                            .activity_application_id
+                                    }
                                 />
                                 <EditApplication
-                                    handleProcessModifyApplication={this.handleProcessModifyApplication.bind(this)}
+                                    handleProcessModifyApplication={this.handleProcessModifyApplication.bind(
+                                        this
+                                    )}
                                 />
-                            </div>}
+                            </div>
+                        )}
                     </div>
                 </div>
 
@@ -254,17 +396,24 @@ class RenewActivityItem extends React.Component {
                     onRequestClose={() => this.closeAssignationRefusedModal()}
                     className="activity-modal"
                     ariaHideApp={false}
-                    contentLabel="Inscription Activité"
+                    contentLabel={t(
+                        "activityApplications:activityItems.activityContentLabel"
+                    )}
                 >
                     <h2 className="modal-header">
-                        Refus de l'activité
+                        {t("activityApplications:activityItems.refuseTitle")}
                     </h2>
                     <div className="content">
                         <div className="form-group">
-                            <textarea name="reason" rows="4" cols="50"
-                                      className={"form-control"}
-                                      placeholder={"Pouvez vous nous indiquer les raisons de ce refus ?"}
-                                      onChange={this.updateReasonRefused}
+                            <textarea
+                                name="reason"
+                                rows="4"
+                                cols="50"
+                                className={"form-control"}
+                                placeholder={t(
+                                    "activityApplications:activityItems.refuseReasonPlaceholder"
+                                )}
+                                onChange={this.updateReasonRefused}
                             />
                         </div>
                     </div>
@@ -272,7 +421,7 @@ class RenewActivityItem extends React.Component {
                         onClick={() => this.closeAssignationRefusedModal()}
                         className="btn btn-white"
                     >
-                        Retour
+                        {t("activityApplications:activityItems.back")}
                     </button>
                     <button
                         onClick={() =>
@@ -280,7 +429,7 @@ class RenewActivityItem extends React.Component {
                         }
                         className="btn btn-primary pull-right"
                     >
-                        Je confirme
+                        {t("activityApplications:activityItems.confirm")}
                     </button>
                 </Modal>
 
@@ -289,23 +438,31 @@ class RenewActivityItem extends React.Component {
                     onRequestClose={() => this.closeAssignationAcceptedModal()}
                     className="modal-sm"
                     ariaHideApp={false}
-                    contentLabel="Inscription Activité"
+                    contentLabel={t(
+                        "activityApplications:activityItems.activityContentLabel"
+                    )}
                 >
                     <h2 className="modal-header">
-                        Êtes vous sûr d'accepter la proposition ?
+                        {t(
+                            "activityApplications:activityItems.acceptConfirmTitle"
+                        )}
                     </h2>
                     <div className="content">
                         <div className="form-group">
-                            {this.props.confirm_activity_text ?
-                                <p className="mt-5 text-justify">{this.props.confirm_activity_text}</p> : ""
-                            }
+                            {this.props.confirm_activity_text ? (
+                                <p className="mt-5 text-justify">
+                                    {this.props.confirm_activity_text}
+                                </p>
+                            ) : (
+                                ""
+                            )}
                         </div>
                     </div>
                     <button
                         onClick={() => this.closeAssignationAcceptedModal()}
                         className="btn btn-white"
                     >
-                        Retour
+                        {t("activityApplications:activityItems.back")}
                     </button>
                     <button
                         onClick={() =>
@@ -313,13 +470,12 @@ class RenewActivityItem extends React.Component {
                         }
                         className="btn btn-primary pull-right"
                     >
-                        Je confirme
+                        {t("activityApplications:activityItems.confirm")}
                     </button>
                 </Modal>
-
             </React.Fragment>
         );
     }
 }
 
-export default RenewActivityItem;
+export default withTranslation("activityApplications")(RenewActivityItem);

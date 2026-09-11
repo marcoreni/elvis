@@ -218,6 +218,40 @@
             "instrument": "Voulez-vous vraiment supprimer l'instrument '{{name}}' ?",
             "material": "Voulez-vous vraiment supprimer le matériel '{{name}}' ?",
             "musicGenre": "Voulez-vous vraiment supprimer le genre '{{name}}' ?"
+        },
+        "bandForm": {
+            "name": "Nom",
+            "blacklist": "Blacklister le groupe",
+            "type": "Type",
+            "genre": "Genre",
+            "otherGenreOption": "AUTRE (création)",
+            "genreName": "Nom du genre",
+            "members": "Membres",
+            "formerMembers": "Ancien(s) membre(s)",
+            "instrumentPrompt": "Instrument…",
+            "viewProfile": "voir le profil",
+            "removeMember": "Retirer le membre",
+            "addMember": "Ajouter un membre"
+        },
+        "bandUser": {
+            "title": "Nouveau membre",
+            "firstName": "Prénom",
+            "lastName": "Nom",
+            "email": "E-mail",
+            "emailPlaceholder": "(optionnel)",
+            "search": "Rechercher",
+            "createNew": "Créer un nouveau",
+            "select": "Sélectionner",
+            "noUserFound": "Pas d'utilisateur trouvé"
+        },
+        "bandEdit": {
+            "title": "Édition du groupe :",
+            "tabInfo": "Informations",
+            "tabBookings": "Réservations"
+        },
+        "roomForm": {
+            "isPracticeRoom": "Salle de répétition ?",
+            "featuresTitle": "Caractéristiques"
         }
     },
     "rooms": {
@@ -333,5 +367,86 @@
             "vatExempt": "Exonéré",
             "activitiesNotVatLabel": "Les activités musicales <1>ne sont pas assujetties</1> à la TVA"
         }
+    },
+    "mailTemplates": {
+        "listTitle": "Édition des templates emails",
+        "columns": {
+            "name": "Nom du template",
+            "path": "Chemin",
+            "actions": "Actions"
+        },
+        "backToList": "Revenir à la liste",
+        "backToEdit": "Revenir à l'édition",
+        "createTitle": "Création de templates",
+        "nameLabel": "Nom du template",
+        "pathLabel": "Chemin (Path)",
+        "editTemplate": "Modifier le template",
+        "deleteConfirm": "Êtes-vous sûr de supprimer ce template ?",
+        "deleteYes": "Oui !",
+        "toasts": {
+            "fetchError": "Une erreur est survenue lors de la récupération des templates",
+            "errorTitle": "Erreur",
+            "fetchErrorText": "Impossible de récupérer les templates.",
+            "routingError": "Erreur lors de l'acheminement",
+            "successTitle": "Réussite",
+            "created": "Template créé",
+            "modified": "Template modifié",
+            "deleted": "Template supprimé"
+        }
+    },
+    "eventsRules": {
+        "columns": {
+            "name": "Nom de la règle",
+            "event": "Lors de l'évènement",
+            "actions": "Actions"
+        },
+        "deleteConfirm": "Êtes-vous sûr de vouloir supprimer cette règle ?",
+        "deleteYes": "Oui !",
+        "addRule": "Ajouter une règle",
+        "addContentLabel": "Ajout d'un évènement",
+        "addRuleTitle": "Ajouter une règle",
+        "editRuleTitle": "Modifier la règle",
+        "nameLabel": "Nom de la règle",
+        "addConditionLabel": "Ajout d'une condition",
+        "addActionLabel": "Ajout d'une action",
+        "conditionLabel": "Condition",
+        "actionLabel": "Action",
+        "templateLabel": "Template",
+        "sendCopyLabel": "Envoyer une copie du mail",
+        "back": "Retour",
+        "confirm": "Je confirme",
+        "events": {
+            "user_created": "un utilisateur est créé",
+            "activity_accepted": "une proposition d'activité est acceptée",
+            "activity_assigned": "une activité est assignée",
+            "application_created": "une demande d'inscription est créée"
+        },
+        "actions": {
+            "sendSMS": "Envoyer un SMS",
+            "sendMail": "Envoyer un mail"
+        },
+        "sendOptions": {
+            "is_admin": "Aux administrateurs",
+            "is_teacher": "Aux professeurs",
+            "is_paying": "Aux payeurs"
+        },
+        "toasts": {
+            "errorTitle": "Erreur",
+            "routingError": "Erreur lors de l'acheminement",
+            "successTitle": "Réussite",
+            "ruleCreated": "Règle créée",
+            "ruleAlreadyExists": "L'évènement « {{event}} » a déjà une règle",
+            "missingFields": "Veuillez spécifier tous les champs",
+            "ruleUpdated": "Règle mise à jour",
+            "ruleDeleted": "Règle supprimée"
+        }
+    },
+    "errorHistory": {
+        "title": "Historique des 20 dernières erreurs",
+        "relatedObjects": "Objets ActiveRecord reliés",
+        "variableName": "Nom de la variable",
+        "class": "Classe",
+        "id": "Id",
+        "stackTrace": "Trace d'appel"
     }
 }

@@ -1,18 +1,19 @@
 import React from "react";
+import { withTranslation } from "react-i18next";
 import BandForm from "./BandForm";
 
 import * as api from "../../tools/api";
-import {redirectTo} from "../../tools/url";
-import {infosFromBand} from "../../tools/obj";
+import { redirectTo } from "../../tools/url";
+import { infosFromBand } from "../../tools/obj";
 
-export default class BandEdit extends React.Component {
+class BandEdit extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
             isOtherGenre: false,
             addMember: false,
             previousValues: {},
-            infos: infosFromBand(this.props.band)
+            infos: infosFromBand(this.props.band),
         };
     }
 
@@ -22,16 +23,23 @@ export default class BandEdit extends React.Component {
             .patch(`/practice/bands/${this.props.band.id}`, values);
     }
 
-
     render() {
-        const { band, musicGenres, bandTypes, instruments, season } = this.props;
+        const {
+            t,
+            band,
+            musicGenres,
+            bandTypes,
+            instruments,
+            season,
+        } = this.props;
         const { isOtherGenre, addMember } = this.state;
 
         return (
             <React.Fragment>
                 <div className="row wrapper border-bottom white-bg page-heading">
                     <h2>
-                        Edition du groupe : <b>{this.props.band.name}</b>
+                        {t("parameters:practice.bandEdit.title")}{" "}
+                        <b>{this.props.band.name}</b>
                     </h2>
                 </div>
 
@@ -43,7 +51,7 @@ export default class BandEdit extends React.Component {
                                 href="#tab-1"
                                 className="nav-link active show"
                             >
-                                Informations
+                                {t("parameters:practice.bandEdit.tabInfo")}
                             </a>
                         </li>
                         <li>
@@ -52,7 +60,7 @@ export default class BandEdit extends React.Component {
                                 href="#tab-2"
                                 className="nav-link"
                             >
-                                Réservations
+                                {t("parameters:practice.bandEdit.tabBookings")}
                             </a>
                         </li>
                     </ul>
@@ -60,7 +68,7 @@ export default class BandEdit extends React.Component {
                     {/* Content */}
                     <div className="tab-content p-md border-bottom border-left-right border-danger">
                         <div id="tab-1" className="tab-pane active">
-                        <BandForm                             
+                            <BandForm
                                 initialValues={this.state.infos}
                                 musicGenres={musicGenres}
                                 bandTypes={bandTypes}
@@ -72,12 +80,12 @@ export default class BandEdit extends React.Component {
                             />
                         </div>
 
-                        <div id="tab-2" className="tab-pane">
-                            
-                        </div>
+                        <div id="tab-2" className="tab-pane"></div>
                     </div>
                 </div>
             </React.Fragment>
         );
     }
 }
+
+export default withTranslation("parameters")(BandEdit);

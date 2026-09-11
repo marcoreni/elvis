@@ -1,5 +1,6 @@
 import React from "react";
 import PropTypes from "prop-types";
+import { withTranslation } from "react-i18next";
 
 import _ from "lodash";
 import CreatableSelect from "react-select/creatable";
@@ -36,13 +37,13 @@ const SELECT_ALL_VALUE = "__select_all__";
  *  </li>
  * </ul>
  */
-export default class SelectMultiple extends React.Component {
+class SelectMultiple extends React.Component {
     constructor(props) {
         super(props);
 
         this.state = {
             selectedFeatures: [],
-            features: this.props.all_features.map((f) => ({
+            features: this.props.all_features.map(f => ({
                 label: f[0],
                 value: f[1],
             })),
@@ -52,7 +53,7 @@ export default class SelectMultiple extends React.Component {
             this.props.features !== undefined &&
             this.props.features.length > 0
         ) {
-            this.state.selectedFeatures = this.state.features.filter((f) =>
+            this.state.selectedFeatures = this.state.features.filter(f =>
                 this.props.features.includes(f.value)
             );
             _.remove(this.state.features, this.state.selectedFeatures);
@@ -66,6 +67,8 @@ export default class SelectMultiple extends React.Component {
     }
 
     handleChange(values, actionMeta) {
+        const { t } = this.props;
+
         if (actionMeta.action === "select-option") {
             const newFeature = this.props.isMulti ? _.last(values) : values;
 
@@ -109,7 +112,7 @@ export default class SelectMultiple extends React.Component {
             const clear = () => {
                 this.state.features.push(
                     ...this.state.selectedFeatures.filter(
-                        (f) => !this.state.features.includes(f)
+                        f => !this.state.features.includes(f)
                     )
                 );
 
@@ -130,14 +133,14 @@ export default class SelectMultiple extends React.Component {
 
             if (confirm) {
                 swal({
-                    title:
-                        "Êtes vous sûr de supprimer toutes les " +
-                        this.props.title,
+                    title: t("common:selectMultiple.confirmClearAll", {
+                        title: this.props.title,
+                    }),
                     type: "warning",
-                    confirmButtonText: "Oui !",
-                    cancelButtonText: "Non",
+                    confirmButtonText: t("common:yesNo.yes"),
+                    cancelButtonText: t("common:yesNo.no"),
                     showCancelButton: true,
-                }).then((willDelete) => {
+                }).then(willDelete => {
                     if (willDelete.value) clear();
                 });
             } else {
@@ -165,6 +168,8 @@ export default class SelectMultiple extends React.Component {
     }
 
     render() {
+        const { t } = this.props;
+
         const canSelectAll =
             this.props.allowSelectAll &&
             this.props.isMulti &&
@@ -175,7 +180,9 @@ export default class SelectMultiple extends React.Component {
                   {
                       label:
                           this.props.selectAllLabel ||
-                          `Ajouter toutes les ${this.props.title.toLowerCase()}`,
+                          t("common:selectMultiple.addAllLabel", {
+                              title: this.props.title.toLowerCase(),
+                          }),
                       value: SELECT_ALL_VALUE,
                   },
                   ...this.state.features,
@@ -189,7 +196,7 @@ export default class SelectMultiple extends React.Component {
                     name={this.props.name}
                     value={
                         this.props.isMulti
-                            ? this.state.selectedFeatures.map((f) => f.value)
+                            ? this.state.selectedFeatures.map(f => f.value)
                             : (this.state.selectedFeatures[0] || {}).value || ""
                     }
                     style={{ display: "none" }}
@@ -222,3 +229,5 @@ SelectMultiple.propTypes = {
     allowSelectAll: PropTypes.bool,
     selectAllLabel: PropTypes.string,
 };
+
+export default withTranslation("common")(SelectMultiple);

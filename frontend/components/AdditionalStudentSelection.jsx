@@ -1,5 +1,6 @@
 import React from "react";
 import _ from "lodash";
+import { withTranslation } from "react-i18next";
 
 class ChildSelection extends React.Component {
     constructor(props) {
@@ -7,6 +8,7 @@ class ChildSelection extends React.Component {
     }
 
     renderParentSelection(key) {
+        const { t } = this.props;
         const renderParentsOptions = _.chain(this.props.family)
             .map((parent, id) => {
                 return (
@@ -23,19 +25,24 @@ class ChildSelection extends React.Component {
 
         return (
             <form>
-                <label htmlFor="o">{`Elève pour l'Eveil n° ${key + 1}`}</label>
+                <label htmlFor="o">
+                    {t(
+                        "activityApplications:childSelection.studentForAwakening",
+                        { n: key + 1 }
+                    )}
+                </label>
                 <select
                     id={key}
                     onChange={e => {
                         return this.props.handleChangeAdditionalStudent(
                             key,
-                            e.target.value,
+                            e.target.value
                         );
                     }}
                     className="form-control"
                 >
                     <option value={0} selected disabled>
-                        Choisir un élève
+                        {t("activityApplications:childSelection.chooseStudent")}
                     </option>
                     {renderParentsOptions}
                 </select>
@@ -44,12 +51,13 @@ class ChildSelection extends React.Component {
     }
 
     render() {
+        const { t } = this.props;
         return (
             <div className="ibox float-e-margins">
                 <div className="ibox-content">
                     <div className="form form-horizontal ">
                         <h2>
-                            Choix des élèves supplémentaires / accompagnants
+                            {t("activityApplications:childSelection.title")}
                         </h2>
                         {_.map(this.props.additionalStudents, (p, i) => (
                             <div key={i}>{this.renderParentSelection(i)}</div>
@@ -61,4 +69,4 @@ class ChildSelection extends React.Component {
     }
 }
 
-export default ChildSelection;
+export default withTranslation("activityApplications")(ChildSelection);

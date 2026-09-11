@@ -1,25 +1,26 @@
 import React from "react";
+import { withTranslation } from "react-i18next";
 import { initializeElasticPlugin, initializeLang } from "./utils.js";
 import { csrfToken } from "../utils";
 import _ from "lodash";
 
-const initializeQueryBuilder = element => {
+const initializeQueryBuilder = (element, t) => {
     const filters = [
         {
             id: "first_name",
-            label: "Prénom",
+            label: t("users:userForm.fields.firstName"),
             type: "string",
             operators: ["equal", "not_equal"],
         },
         {
             id: "last_name",
-            label: "Nom",
+            label: t("users:userForm.fields.lastName"),
             type: "string",
             operators: ["equal", "not_equal"],
         },
         {
             id: "age",
-            label: "Age",
+            label: t("users:advancedSearch.age"),
             type: "integer",
             operators: [
                 "equal",
@@ -34,24 +35,24 @@ const initializeQueryBuilder = element => {
         },
         {
             id: "sex",
-            label: "Sexe",
+            label: t("users:userForm.fields.sex"),
             type: "string",
             input: "checkbox",
             values: {
-                m: "Masculin",
-                f: "Feminin",
-                a: "Autre",
+                m: t("users:userForm.sexes.M"),
+                f: t("users:userForm.sexes.F"),
+                a: t("users:userForm.sexes.A"),
             },
             operators: ["in", "not_in"],
         },
         {
             id: "handicap",
-            label: "Situation handicap",
+            label: t("users:advancedSearch.handicap"),
             type: "boolean",
             input: "radio",
             values: {
-                true: "oui",
-                false: "non",
+                true: t("users:advancedSearch.yes"),
+                false: t("users:advancedSearch.no"),
             },
             operators: ["equal", "not_equal"],
         },
@@ -87,7 +88,7 @@ class AdvancedSearch extends React.Component {
     componentDidMount() {
         initializeElasticPlugin();
         initializeLang();
-        initializeQueryBuilder(this.queryBuilder);
+        initializeQueryBuilder(this.queryBuilder, this.props.t);
     }
 
     componentWillUnmount() {
@@ -108,7 +109,7 @@ class AdvancedSearch extends React.Component {
     handleGetRulesClick() {
         const rules = $(this.queryBuilder).queryBuilder("getESBool");
 
-        fetch('/advanced_query', {
+        fetch("/advanced_query", {
             method: "POST",
             credentials: "same-origin",
             headers: {
@@ -130,9 +131,11 @@ class AdvancedSearch extends React.Component {
     }
 
     render() {
-        return <React.Fragment>
+        const { t } = this.props;
+        return (
+            <React.Fragment>
                 <div className="row wrapper border-bottom white-bg page-heading m-b-md">
-                    <h2>Recherche Avancée</h2>
+                    <h2>{t("users:advancedSearch.title")}</h2>
                 </div>
                 <div
                     className="query-container"
@@ -168,7 +171,8 @@ class AdvancedSearch extends React.Component {
                     {JSON.stringify(this.state.rules, undefined, 2)}
                 </pre>
             </React.Fragment>
+        );
     }
 }
 
-export default AdvancedSearch;
+export default withTranslation("users")(AdvancedSearch);

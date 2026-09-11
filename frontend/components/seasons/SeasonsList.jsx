@@ -1,8 +1,8 @@
 import React from "react";
 import swal from "sweetalert2";
 
-
 import ReactTable from "react-table";
+import { withTranslation } from "react-i18next";
 import { csrfToken } from "../utils";
 import RemoveComponent from "../RemoveComponent";
 import SeasonActivationModal from "./SeasonActivationModal";
@@ -17,27 +17,26 @@ class SeasonsList extends React.Component {
         };
     }
 
-    deleteSeason(id)
-    {
+    deleteSeason(id) {
+        const { t } = this.props;
         const selectedSeason = this.state.seasons.find(s => s.id == id);
 
-        if (selectedSeason.is_current)
-        {
+        if (selectedSeason.is_current) {
             swal({
-                type: 'error',
-                title: 'Impossible de supprimer la saison en cours',
-                text: 'Vous devez d\'abord définir une autre saison comme "en cours"',
+                type: "error",
+                title: t("planning:seasonsList.cannotDeleteCurrentTitle"),
+                text: t("planning:seasonsList.cannotDeleteCurrentText"),
             });
             return;
         }
 
         swal({
-            title: "Suppression de la saison",
-            text: "Êtes-vous sûr ?",
+            title: t("planning:seasonsList.deleteTitle"),
+            text: t("common:confirm.sure"),
             type: "warning",
             showCancelButton: true,
-            cancelButtonText: "Annuler",
-            confirmButtonText: "Confirmer",
+            cancelButtonText: t("common:actions.cancel"),
+            confirmButtonText: t("common:actions.confirm"),
         }).then(a => {
             if (a.value) {
                 fetch(`/seasons/${id}`, {
@@ -46,24 +45,27 @@ class SeasonsList extends React.Component {
                         "X-CSRF-Token": csrfToken,
                     },
                 }).then(res => {
-                    if (res.ok)
-                    {
-                        const previous = this.state.seasons
-                            .find(s => s.next_season_id == id);
+                    if (res.ok) {
+                        const previous = this.state.seasons.find(
+                            s => s.next_season_id == id
+                        );
 
-                        if (previous)
-                        {
+                        if (previous) {
                             previous.next_season_id = null;
                             previous.next_season = null;
                         }
 
                         this.setState({
                             seasons: this.state.seasons.filter(
-                                c => c.id !== id,
+                                c => c.id !== id
                             ),
                         });
 
-                        swal("Réussite", "Suppression réussie", "success");
+                        swal(
+                            t("planning:seasonsList.deleteSuccessTitle"),
+                            t("planning:seasonsList.deleteSuccessText"),
+                            "success"
+                        );
                     }
                 });
             }
@@ -76,8 +78,8 @@ class SeasonsList extends React.Component {
         }
     }
 
-    onActivationSuccess = (data) => {
-        this.setState(function (previousState) {
+    onActivationSuccess = data => {
+        this.setState(function(previousState) {
             const state = Object.assign({}, previousState);
             const currentSeason = state.seasons.find(s => s.is_current);
             if (currentSeason) {
@@ -101,6 +103,8 @@ class SeasonsList extends React.Component {
     };
 
     render() {
+        const { t } = this.props;
+
         const columns = [
             // {
             //     id: "id",
@@ -111,55 +115,61 @@ class SeasonsList extends React.Component {
             // },
             {
                 id: "label",
-                Header: "Label",
+                Header: t("planning:seasonsList.columns.label"),
                 accessor: d => d.label,
             },
             {
                 id: "start",
-                Header: "Début",
+                Header: t("planning:seasonsList.columns.start"),
                 accessor: d => d.start,
                 Cell: props => {
-                    return (props.original.start_formatted)
-                }
+                    return props.original.start_formatted;
+                },
             },
             {
                 id: "end",
-                Header: "Fin",
+                Header: t("planning:seasonsList.columns.end"),
                 accessor: d => d.end,
                 Cell: props => {
-                    return (props.original.end_formatted)
-                }
+                    return props.original.end_formatted;
+                },
             },
             {
                 id: "is_current",
-                Header: "Statut",
+                Header: t("planning:seasonsList.columns.status"),
                 accessor: d => d.is_current,
                 Cell: props => {
                     if (props.original.is_current) {
                         return (
-                            <div style={{ 'textAlign': 'center' }}>
-                                <span style={{
-                                    backgroundColor: '#27ae60',
-                                    color: 'white',
-                                    padding: '6px 12px',
-                                    borderRadius: '4px',
-                                    fontSize: '12px',
-                                    fontWeight: 'bold',
-                                    display: 'inline-block'
-                                }}>
-                                    <i className="fas fa-check-circle"></i> Active
+                            <div style={{ textAlign: "center" }}>
+                                <span
+                                    style={{
+                                        backgroundColor: "#27ae60",
+                                        color: "white",
+                                        padding: "6px 12px",
+                                        borderRadius: "4px",
+                                        fontSize: "12px",
+                                        fontWeight: "bold",
+                                        display: "inline-block",
+                                    }}
+                                >
+                                    <i className="fas fa-check-circle"></i>{" "}
+                                    {t("planning:seasonsList.active")}
                                 </span>
                             </div>
                         );
                     }
 
                     return (
-                        <div style={{ 'textAlign': 'center' }}>
+                        <div style={{ textAlign: "center" }}>
                             <button
                                 className="btn btn-xs btn-info"
-                                onClick={() => this.switchToSeason(props.original.id)}
+                                onClick={() =>
+                                    this.switchToSeason(props.original.id)
+                                }
                             >
-                                <i className="fas fa-play-circle"></i> Activer
+                                <i className="fas fa-play-circle"></i>{" "}
+                                {t("planning:seasonsList.activate")}
                             </button>
                         </div>
                     );
@@ -169,8 +179,8 @@ class SeasonsList extends React.Component {
             },
             {
                 id: "next",
-                Header: "Suivante",
-                accessor: d => d.next_season_id ? d.next_season.label : "-",
+                Header: t("planning:seasonsList.columns.next"),
+                accessor: d => (d.next_season_id ? d.next_season.label : "-"),
             },
             // {
             //     id: "is_off",
@@ -181,7 +191,7 @@ class SeasonsList extends React.Component {
             // },
             {
                 id: "actions",
-                Header: "Actions",
+                Header: t("planning:seasonsList.columns.actions"),
                 Cell: props => {
                     return (
                         <div>
@@ -191,7 +201,7 @@ class SeasonsList extends React.Component {
                             >
                                 <button className="btn btn-xs btn-primary ">
                                     <i className="fas fa-edit" />
-                                    &nbsp; Editer
+                                    &nbsp; {t("common:actions.edit")}
                                 </button>
                             </a>
                             {/*<button*/}
@@ -209,25 +219,35 @@ class SeasonsList extends React.Component {
                                 btnProps={{
                                     className: "btn btn-xs btn-warning",
                                 }}
-                                onSuccess={(data) =>
-                                {
-                                    const previous = this.state.seasons
-                                        .find(s => s.next_season_id == props.original.id);
+                                onSuccess={data => {
+                                    const previous = this.state.seasons.find(
+                                        s =>
+                                            s.next_season_id ==
+                                            props.original.id
+                                    );
 
-                                    if (previous)
-                                    {
+                                    if (previous) {
                                         previous.next_season_id = null;
                                         previous.next_season = null;
                                     }
 
                                     this.setState({
                                         seasons: this.state.seasons.filter(
-                                            c => c.id !== props.original.id,
+                                            c => c.id !== props.original.id
                                         ),
                                     });
 
-                                    swal("Réussite", "Suppression réussie", "success");
-                                }}>
+                                    swal(
+                                        t(
+                                            "planning:seasonsList.deleteSuccessTitle"
+                                        ),
+                                        t(
+                                            "planning:seasonsList.deleteSuccessText"
+                                        ),
+                                        "success"
+                                    );
+                                }}
+                            >
                                 <i className="fas fa-trash" />
                             </RemoveComponent>
                         </div>
@@ -257,13 +277,13 @@ class SeasonsList extends React.Component {
                     //     }
                     // }}
                     resizable={false}
-                    previousText="Précédent"
-                    nextText="Suivant"
-                    loadingText="Chargement..."
-                    noDataText="Aucune donnée"
-                    pageText="Page"
-                    ofText="sur"
-                    rowsText="résultats"
+                    previousText={t("common:reactTable.previousText")}
+                    nextText={t("common:reactTable.nextText")}
+                    loadingText={t("common:reactTable.loadingText")}
+                    noDataText={t("common:reactTable.noDataText")}
+                    pageText={t("common:reactTable.pageText")}
+                    ofText={t("common:reactTable.ofText")}
+                    rowsText={t("common:reactTable.rowsText")}
                     minRows={1}
                 />
             </div>
@@ -271,4 +291,4 @@ class SeasonsList extends React.Component {
     }
 }
 
-export default SeasonsList;
+export default withTranslation("planning")(SeasonsList);

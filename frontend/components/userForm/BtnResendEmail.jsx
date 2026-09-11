@@ -1,43 +1,44 @@
-import React from 'react';
+import React from "react";
+import { useTranslation } from "react-i18next";
 import * as api from "../../tools/api";
 import swal from "sweetalert2";
 
-const BtnResendEmail = ({ user_id }) =>
-{
-    const resendEmail = () =>
-    {
-        api.set()
-            .success((data) => {
+const BtnResendEmail = ({ user_id }) => {
+    const { t } = useTranslation("users");
 
-                if(!data || data.length === 0)
-                {
+    const resendEmail = () => {
+        api.set()
+            .success(data => {
+                if (!data || data.length === 0) {
                     swal({
-                        title: "error",
+                        title: t("users:resendEmail.errorTitle"),
                         type: "error",
-                        text: "Compte déjà configuré"
+                        text: t("users:resendEmail.alreadyConfigured"),
                     });
                     return;
                 }
 
                 swal({
-                    title: "Email envoyé",
+                    title: t("users:resendEmail.sentTitle"),
                     type: "success",
-                    text: "Un email de confirmation a été envoyé à l'utilisateur."
+                    text: t("users:resendEmail.sentText"),
                 });
             })
-            .error((res) => {
+            .error(res => {
                 swal({
-                    title: "error",
+                    title: t("users:resendEmail.errorTitle"),
                     type: "error",
-                    text: "Une erreur est survenue lors de l'envoi de l'email."
+                    text: t("users:resendEmail.errorText"),
                 });
             })
-            .post(`/users/resend_confirmation`, {ids: [user_id]});
+            .post(`/users/resend_confirmation`, { ids: [user_id] });
     };
 
-    return <button onClick={resendEmail} className="btn btn-warning btn-block">
-        Renvoyer l'email de confirmation
-    </button>
-}
+    return (
+        <button onClick={resendEmail} className="btn btn-warning btn-block">
+            {t("users:resendEmail.button")}
+        </button>
+    );
+};
 
 export default BtnResendEmail;

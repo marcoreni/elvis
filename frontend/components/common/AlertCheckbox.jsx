@@ -8,7 +8,7 @@ const AlertCheckbox = props => {
 
     return (
         <Fragment>
-            <label 
+            <label
                 className={`flex flex-start-justified flex-start-aligned p-0 alert alert-${alertType}`}
             >
                 <input

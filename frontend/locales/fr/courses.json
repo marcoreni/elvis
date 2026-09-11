@@ -160,5 +160,23 @@
             "notSpecified": "NON INDIQUÉ",
             "ageYears": "{{age}} ans"
         }
+    },
+    "replicateActivities": {
+        "selectDate": "Sélectionnez une date",
+        "add": "Ajouter",
+        "selectedDates": "Dates sélectionnées :",
+        "noDatesSelected": "Aucune date sélectionnée",
+        "delete": "Supprimer",
+        "byPreviousWeek": "Répliquer par rapport aux activités de la semaine précédente",
+        "byFirstWeek": "Répliquer par rapport aux activités de la première semaine de la saison",
+        "replicateOnHolidays": "Répliquer sur les vacances",
+        "doneTitle": "Réplication effectuée !",
+        "ok": "Ok",
+        "errorTitle": "Erreur",
+        "refWeek": "Semaine à utiliser comme modèle pour la réplication",
+        "refWeekHint": "(sélectionnez une date quelconque de la semaine)",
+        "startDate": "Date de début de réplication",
+        "endDate": "Date de fin de réplication",
+        "jobProgressTitle": "Suivi de la réplication"
     }
 }

@@ -1,5 +1,6 @@
 import React from "react";
 import _ from "lodash";
+import { useTranslation } from "react-i18next";
 
 const ActivitiesApplicationsDashboard = ({
     adherentCount,
@@ -7,28 +8,33 @@ const ActivitiesApplicationsDashboard = ({
     processedApplicationsCount,
     processingApplicationsCount,
 }) => {
+    const { t } = useTranslation("activityApplications");
     return (
         <div className="m-b-sm signup-widget-list">
             <Widget
-                title="Total adhérents / demandes"
+                title={t("activityApplications:dashboard.totalMembersRequests")}
                 value={`${adherentCount} / ${applicationCount}`}
-                small={true} />
+                small={true}
+            />
             <Widget
-                title="En attente de traitement"
+                title={t("activityApplications:dashboard.awaitingProcessing")}
                 value={
                     applicationCount -
                     processedApplicationsCount -
                     processingApplicationsCount
                 }
-                icon="clock" />
+                icon="clock"
+            />
             <Widget
-                title="En cours de traitement"
+                title={t("activityApplications:dashboard.inProcessing")}
                 value={processingApplicationsCount}
-                icon="hourglass-half" />
+                icon="hourglass-half"
+            />
             <Widget
-                title="Demandes traitées"
+                title={t("activityApplications:dashboard.processedRequests")}
                 value={processedApplicationsCount}
-                icon="check" />
+                icon="check"
+            />
         </div>
     );
 };

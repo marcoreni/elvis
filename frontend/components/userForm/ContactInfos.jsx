@@ -1,6 +1,7 @@
 import React, { Fragment } from "react";
 import { Field, FormSpy } from "react-final-form";
 import { FieldArray } from "react-final-form-arrays";
+import { withTranslation } from "react-i18next";
 import { required } from "../../tools/validators";
 import Input from "../common/Input";
 import { TelephoneFields, AddressFields } from "./Fields";
@@ -15,30 +16,30 @@ class ContactInfos extends React.PureComponent {
         super(props);
     }
 
-    handleChangeInfos({ values: {
-        telephones,
-    } }) {
+    handleChangeInfos({ values: { telephones } }) {
         const { mutators } = this.props;
 
-        telephones && telephones.forEach(({ number, label } = {}, index) => {
-            if (!number)
-                return;
+        telephones &&
+            telephones.forEach(({ number, label } = {}, index) => {
+                if (!number) return;
 
-            const normalizedNumber = toRawPhoneNumber(number);
-            let detectedPhoneType = null;
+                const normalizedNumber = toRawPhoneNumber(number);
+                let detectedPhoneType = null;
 
-            if (normalizedNumber.match(/^0[67]\d{8}$/))
-                detectedPhoneType = "portable";
-            else if (normalizedNumber.match(/^0([1-5]|9)\d{8}$/))
-                detectedPhoneType = "domicile";
+                if (normalizedNumber.match(/^0[67]\d{8}$/))
+                    detectedPhoneType = "portable";
+                else if (normalizedNumber.match(/^0([1-5]|9)\d{8}$/))
+                    detectedPhoneType = "domicile";
 
-            if (detectedPhoneType && label !== detectedPhoneType)
-                detectedPhoneType && mutators.selectPhoneType(index, detectedPhoneType);
-        });
+                if (detectedPhoneType && label !== detectedPhoneType)
+                    detectedPhoneType &&
+                        mutators.selectPhoneType(index, detectedPhoneType);
+            });
     }
 
     render() {
         const {
+            t,
             canAddContacts,
             currentUser,
             onContactAdd,
@@ -56,24 +57,32 @@ class ContactInfos extends React.PureComponent {
             <div className="mt-4">
                 <FormSpy
                     subscription={{ values: true }}
-                    onChange={props => this.handleChangeInfos(props)} />
+                    onChange={props => this.handleChangeInfos(props)}
+                />
 
-                <h3 className="pb-3" style={{color: "#8AA4B1"}}>Coordonnées personnelles du demandeur</h3>
+                <h3 className="pb-3" style={{ color: "#8AA4B1" }}>
+                    {t("users:userForm.personalCoordinates")}
+                </h3>
 
                 <div className="col p-0 mb-5">
                     <FieldArray
                         name="addresses"
-                        render={props => <AddressFields {...props} ignoreValidate={ignoreValidate} />}
+                        render={props => (
+                            <AddressFields
+                                {...props}
+                                ignoreValidate={ignoreValidate}
+                            />
+                        )}
                         family={displaySameAs ? values.family : undefined}
                         validate={!ignoreValidate && required}
                         setSameAs={
                             displaySameAs
                                 ? (i, value) =>
-                                    update(
-                                        "addresses",
-                                        i,
-                                        value ? JSON.parse(value) : undefined
-                                    )
+                                      update(
+                                          "addresses",
+                                          i,
+                                          value ? JSON.parse(value) : undefined
+                                      )
                                 : undefined
                         }
                         currentUser={currentUser}
@@ -82,57 +91,72 @@ class ContactInfos extends React.PureComponent {
                     <button
                         type="button"
                         className="btn btn-primary btn-sm"
-                        style={{backgroundColor: "#00334A",borderRadius: "12px"}}
+                        style={{
+                            backgroundColor: "#00334A",
+                            borderRadius: "12px",
+                        }}
                         onClick={() => push("addresses", { isNew: true })}
                     >
-                        <i className="fas fa-plus" /> {"Ajouter une adresse"}
+                        <i className="fas fa-plus" />{" "}
+                        {t("users:userForm.addAddress")}
                     </button>
                 </div>
 
                 <div className="row">
                     <div className="col-xs-12 col-md-8 col-lg-6 col-xl-4">
-                        {displaySameAs && <Fragment>
-                            {Array.isArray(values.family) &&
-                                values.family.length > 0 && (
-                                    <SelectSameAs
-                                        family={values.family}
-                                        format={obj => `${obj}`}
-                                        accessor="email"
-                                        setSameAs={value =>
-                                            form.change(
-                                                "email",
-                                                value ? JSON.parse(value) : "",
-                                            )
-                                        }
-                                        currentUser={currentUser}
-                                    />
-                                )}
-                        </Fragment>}
+                        {displaySameAs && (
+                            <Fragment>
+                                {Array.isArray(values.family) &&
+                                    values.family.length > 0 && (
+                                        <SelectSameAs
+                                            family={values.family}
+                                            format={obj => `${obj}`}
+                                            accessor="email"
+                                            setSameAs={value =>
+                                                form.change(
+                                                    "email",
+                                                    value
+                                                        ? JSON.parse(value)
+                                                        : ""
+                                                )
+                                            }
+                                            currentUser={currentUser}
+                                        />
+                                    )}
+                            </Fragment>
+                        )}
                         <Field
-                            label={"Email"}
+                            label={t("users:userForm.fields.email")}
                             name="email"
                             type="email"
                             render={Input}
                             validate={!ignoreValidate && required}
-                            required={!currentUser.is_attached && !ignoreValidate}
+                            required={
+                                !currentUser.is_attached && !ignoreValidate
+                            }
                         />
                     </div>
                 </div>
 
-                <div className="m-b-md" style={{maxWidth: "600px"}}>
+                <div className="m-b-md" style={{ maxWidth: "600px" }}>
                     <FieldArray
                         name="telephones"
-                        render={(props) => <TelephoneFields {...props} ignoreValidate={ignoreValidate} />}
+                        render={props => (
+                            <TelephoneFields
+                                {...props}
+                                ignoreValidate={ignoreValidate}
+                            />
+                        )}
                         family={displaySameAs ? values.family : undefined}
                         validate={!ignoreValidate && required}
                         setSameAs={
                             displaySameAs
                                 ? (i, value) =>
-                                    update(
-                                        "telephones",
-                                        i,
-                                        value ? JSON.parse(value) : undefined,
-                                    )
+                                      update(
+                                          "telephones",
+                                          i,
+                                          value ? JSON.parse(value) : undefined
+                                      )
                                 : undefined
                         }
                         currentUser={currentUser}
@@ -141,10 +165,14 @@ class ContactInfos extends React.PureComponent {
                     <button
                         type="button"
                         className="btn btn-primary btn-sm"
-                        style={{ backgroundColor: "#00334A", borderRadius: "12px" }}
+                        style={{
+                            backgroundColor: "#00334A",
+                            borderRadius: "12px",
+                        }}
                         onClick={() => push("telephones", undefined)}
                     >
-                        <i className="fas fa-plus" /> {"Ajouter un téléphone"}
+                        <i className="fas fa-plus" />{" "}
+                        {t("users:userForm.addPhone")}
                     </button>
                 </div>
             </div>
@@ -152,4 +180,4 @@ class ContactInfos extends React.PureComponent {
     }
 }
 
-export default ContactInfos;
+export default withTranslation("users")(ContactInfos);

@@ -2,16 +2,7 @@ import React from "react";
 import { MESSAGES } from "../../tools/constants";
 
 const InputColor = props => {
-    const {
-        input,
-        label,
-        meta,
-        required,
-        help,
-        tooltip,
-        disabled,
-    } = props;
-
+    const { input, label, meta, required, help, tooltip, disabled } = props;
 
     const colorValue = input.value || "#E96469";
 
@@ -20,7 +11,10 @@ const InputColor = props => {
     return (
         <div className={`form-group ${hasError ? "has-error" : ""}`}>
             {label && (
-                <label className="small d-block mb-1" style={{ color: "#003E5C" }}>
+                <label
+                    className="small d-block mb-1"
+                    style={{ color: "#003E5C" }}
+                >
                     {label}
                     {required && <span className="text-danger">{" *"}</span>}
                     {tooltip && (
@@ -32,9 +26,6 @@ const InputColor = props => {
                     )}
                 </label>
             )}
-
-
-
 
             <input
                 type="color"
@@ -51,7 +42,11 @@ const InputColor = props => {
             />
 
             {help && !hasError && <p className="help-block">{help}</p>}
-            {hasError && <p className="help-block">{MESSAGES[meta.error] || meta.error}</p>}
+            {hasError && (
+                <p className="help-block">
+                    {MESSAGES[meta.error] || meta.error}
+                </p>
+            )}
         </div>
     );
 };

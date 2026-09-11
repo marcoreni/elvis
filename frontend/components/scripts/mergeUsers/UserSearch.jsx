@@ -1,4 +1,5 @@
 import React from "react";
+import { withTranslation } from "react-i18next";
 import Input from "../../common/Input";
 import { isEmpty } from "../../../tools/validators";
 import { fullname, toDate, toLocaleDate } from "../../../tools/format";
@@ -11,7 +12,7 @@ class UserSearch extends React.PureComponent {
     constructor(props) {
         super(props);
 
-        const tmp = () => { };
+        const tmp = () => {};
 
         this.state = {
             last_name: "",
@@ -20,7 +21,7 @@ class UserSearch extends React.PureComponent {
             selectedUser: null,
             idx: -1,
             firstSelectedId: -1,
-            resetSelection: this.props.resetSelection || tmp
+            resetSelection: this.props.resetSelection || tmp,
         };
 
         this.handleChange = this.handleChange.bind(this);
@@ -33,41 +34,46 @@ class UserSearch extends React.PureComponent {
 
         this.props.onSelect(selectedUser);
 
-        let sid = this.state.firstSelectedId === -1 ? i : this.state.firstSelectedId;
+        let sid =
+            this.state.firstSelectedId === -1 ? i : this.state.firstSelectedId;
 
-        if (!this.props.saveFirstSelect)
-            sid = -1;
+        if (!this.props.saveFirstSelect) sid = -1;
 
         this.setState({
             selectedUser,
             idx: i,
-            firstSelectedId: sid
+            firstSelectedId: sid,
         });
     }
 
     handleChange(evt) {
-        this.setState({ [evt.target.name]: evt.target.value, firstSelectedId: -1 });
+        this.setState({
+            [evt.target.name]: evt.target.value,
+            firstSelectedId: -1,
+        });
         this.state.resetSelection();
 
         if (debounce) {
             clearTimeout(debounce);
         }
 
-        if ( this.state.first_name.length >= 2 || this.state.last_name.length >= 2){
+        if (
+            this.state.first_name.length >= 2 ||
+            this.state.last_name.length >= 2
+        ) {
             debounce = setTimeout(() => {
                 api.set()
-                    .before(() => this.setState({ selectedUser: null, idx: -1 }))
+                    .before(() =>
+                        this.setState({ selectedUser: null, idx: -1 })
+                    )
                     .success(data => this.setState({ possibleMatches: data }))
                     .error(() => this.setState({ possibleMatches: [] }))
-                    .post(
-                        "/users/search_for_admin",
-                        {
-                            first_name: this.state.first_name,
-                            last_name: this.state.last_name,
-                            season_id: this.props.season.id,
-                            hideAttachedAccounts: this.props.hideAttachedAccounts
-                        }
-                    );
+                    .post("/users/search_for_admin", {
+                        first_name: this.state.first_name,
+                        last_name: this.state.last_name,
+                        season_id: this.props.season.id,
+                        hideAttachedAccounts: this.props.hideAttachedAccounts,
+                    });
 
                 debounce = null;
             }, 400);
@@ -75,19 +81,20 @@ class UserSearch extends React.PureComponent {
     }
 
     render() {
+        const { t } = this.props;
         const { last_name, first_name, possibleMatches, idx } = this.state;
 
         return (
             <div className="ibox">
                 <div className="ibox-title">
-                    <h3>{"Chercher des utilisateurs"}</h3>
+                    <h3>{t("users:mergeUsers.search.title")}</h3>
                 </div>
 
                 <div className="ibox-content">
                     <div className="row">
                         <div className="col-sm-6">
                             <Input
-                                label="Nom"
+                                label={t("users:mergeUsers.search.lastName")}
                                 input={{
                                     type: "text",
                                     name: "last_name",
@@ -100,7 +107,7 @@ class UserSearch extends React.PureComponent {
 
                         <div className="col-sm-6">
                             <Input
-                                label="Prénom"
+                                label={t("users:mergeUsers.search.firstName")}
                                 input={{
                                     type: "text",
                                     name: "first_name",
@@ -114,19 +121,34 @@ class UserSearch extends React.PureComponent {
 
                     {possibleMatches.length > 0 ? (
                         <div>
-                            <h4>{"Résultats"}</h4>
+                            <h4>{t("users:mergeUsers.search.results")}</h4>
                             <div className="list-group">
                                 {_.map(possibleMatches, (m, i) => {
                                     return (
                                         <button
                                             key={i}
                                             type="button"
-                                            className={`list-group-item ${i === this.state.firstSelectedId ? "btn-danger active" : i === idx ? "active" : ""}`}
-                                            onClick={() => this.handleUserSelect(i)}>
-                                            <b>{fullname(m)}</b>({m.id})
-                                            {` né(e) le ${toLocaleDate(
-                                                toDate(m.birthday)
-                                            )}, Adhérent #${m.adherent_number}`}
+                                            className={`list-group-item ${
+                                                i === this.state.firstSelectedId
+                                                    ? "btn-danger active"
+                                                    : i === idx
+                                                    ? "active"
+                                                    : ""
+                                            }`}
+                                            onClick={() =>
+                                                this.handleUserSelect(i)
+                                            }
+                                        >
+                                            <b>{fullname(m)}</b>({m.id}){" "}
+                                            {t(
+                                                "users:mergeUsers.search.bornOn",
+                                                {
+                                                    date: toLocaleDate(
+                                                        toDate(m.birthday)
+                                                    ),
+                                                    number: m.adherent_number,
+                                                }
+                                            )}
                                         </button>
                                     );
                                 })}
@@ -134,17 +156,30 @@ class UserSearch extends React.PureComponent {
                         </div>
                     ) : null}
 
-                    {this.state.firstSelectedId > -1 ? <div className="text-right">
-                        <button type="button" className="btn btn-warning" onClick={() => {
-                            this.state.resetSelection();
+                    {this.state.firstSelectedId > -1 ? (
+                        <div className="text-right">
+                            <button
+                                type="button"
+                                className="btn btn-warning"
+                                onClick={() => {
+                                    this.state.resetSelection();
 
-                            this.setState({ firstSelectedId: -1, idx: -1 });
-                        }}>Reset</button>
-                    </div> : ""}
+                                    this.setState({
+                                        firstSelectedId: -1,
+                                        idx: -1,
+                                    });
+                                }}
+                            >
+                                {t("users:mergeUsers.search.reset")}
+                            </button>
+                        </div>
+                    ) : (
+                        ""
+                    )}
                 </div>
             </div>
         );
     }
 }
 
-export default UserSearch;
+export default withTranslation("users")(UserSearch);

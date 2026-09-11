@@ -2,131 +2,128 @@ export const APPLICATION_TAGS = {
     first_name: {
         name: "Prénom de l'utilisateur",
         value: "{{first_name}}",
-        sample: "Prénom"
+        sample: "Prénom",
     },
 
     last_name: {
         name: "Nom de l'utilisateur",
         value: "{{last_name}}",
-        sample: "Nom"
+        sample: "Nom",
     },
 
     applicationId: {
         name: "ID de la demande d'inscription",
         value: "{{application.id}}",
-        sample: "ID de la demande d'inscription"
+        sample: "ID de la demande d'inscription",
     },
-    
+
     application_season_label: {
         name: "Saison de la demande d'inscription",
         value: "{{application.season_label}}",
-        sample: "Saison de la demande d'inscription"
+        sample: "Saison de la demande d'inscription",
     },
 
     application_total_all_due_payments: {
         name: "Total des paiements dus",
         value: "{{application.total_all_due_payments}}",
-        sample: "Total des paiements dus"
+        sample: "Total des paiements dus",
     },
 
     application_total_pending_due_payments: {
         name: "Total des paiements dus restants",
         value: "{{application.total_pending_due_payments}}",
-        sample: "Total des paiements dus restants"
+        sample: "Total des paiements dus restants",
     },
-}
+};
 
 export const ACTIVITY_TAGS = {
     activity_day_in_week: {
         name: "Jour de la semaine de l'activité",
         value: "{{activity.day_in_week}}",
-        sample: "Jour de la semaine de l'activité"
+        sample: "Jour de la semaine de l'activité",
     },
 
     activity_start_date: {
         name: "Date de début de l'activité",
         value: "{{activity.startDate}}",
-        sample: "Date de début de l'activité"
+        sample: "Date de début de l'activité",
     },
 
     activity_start_hour: {
         name: "Heure de début de l'activité",
         value: "{{activity.activity_start}}",
-        sample: "Heure de début de l'activité"
+        sample: "Heure de début de l'activité",
     },
 
     activity_end: {
         name: "Heure de fin de l'activité",
         value: "{{activity.activity_end}}",
-        sample: "Heure de fin de l'activité"
+        sample: "Heure de fin de l'activité",
     },
 
     activity_label: {
         name: "Nom de l'activité",
         value: "{{activity.display_name}}",
-        sample: "Nom de l'activité"
+        sample: "Nom de l'activité",
     },
 
     activity_teacher_first_name: {
         name: "Prénom du professeur",
         value: "{{activity.teacher_first_name}}",
-        sample: "Prénom du professeur"
+        sample: "Prénom du professeur",
     },
 
     activity_teacher_last_name: {
         name: "Nom du professeur",
         value: "{{activity.teacher_last_name}}",
-        sample: "Nom du professeur"
+        sample: "Nom du professeur",
     },
 
     activity_display_price: {
         name: "Prix de l'activité",
         value: "{{activity.display_price}}",
-        sample: "Prix de l'activité"
+        sample: "Prix de l'activité",
     },
-
-}
+};
 export const ACTIVITY_INSTANCE_TAGS = {
-
     activity_day_in_week: {
         name: "Jour de la semaine de l'activité",
         value: "{{activity.day_in_week}}",
-        sample: "Jour de la semaine de l'activité"
+        sample: "Jour de la semaine de l'activité",
     },
 
     activity_start_date: {
         name: "Date de début de la séance",
         value: "{{activity_instance.start_date}}",
-        sample: "Date de début de la séance"
+        sample: "Date de début de la séance",
     },
 
     activity_start_hour: {
         name: "Heure de début de la séance",
         value: "{{activity_instance.activity_start}}",
-        sample: "Heure de début de la séance"
+        sample: "Heure de début de la séance",
     },
 
     activity_end: {
         name: "Heure de fin de la séance",
         value: "{{activity_instance.activity_end}}",
-        sample: "Heure de fin de la séance"
+        sample: "Heure de fin de la séance",
     },
 
     activity_teacher_first_name: {
         name: "Prénom du professeur",
         value: "{{activity_instance.teacher_first_name}}",
-        sample: "Prénom du professeur"
+        sample: "Prénom du professeur",
     },
 
     activity_teacher_last_name: {
         name: "Nom du professeur",
         value: "{{activity_instance.teacher_last_name}}",
-        sample: "Nom du professeur"
-    }
-}
+        sample: "Nom du professeur",
+    },
+};
 
 export const PAYMENT_TAGS = {
-
     // payment_schedule_id: {
     //     name: "payment_schedule_id",
     //     value: "{{payments.payment_schedule_id}}",
@@ -136,38 +133,38 @@ export const PAYMENT_TAGS = {
     season_label: {
         name: "Saison du paiement",
         value: "{{payments.season_of_payment}}",
-        sample: "Saison du paiement"
+        sample: "Saison du paiement",
     },
 
     previsional_date: {
         name: "Date du paiement",
         value: "{{payment.previsional_date}}",
-        sample: "Date du paiement"
+        sample: "Date du paiement",
     },
 
     amount: {
         name: "Montant du paiement",
         value: "{{payment.amount}}",
-        sample: "Montant du paiement"
+        sample: "Montant du paiement",
     },
 
     status: {
         name: "Statut du paiement",
         value: "{{payment.status}}",
-        sample: "Statut du paiement"
+        sample: "Statut du paiement",
     },
 
     paymentsLoop: {
-        name : "Paiements",
+        name: "Paiements",
         rules: {
             repeat: {
                 name: "Répeter pour chaque paiement",
                 before: "{% for payment in due_payments %}",
-                after: "{% endfor %}"
-            }
-        }
-    }
-}
+                after: "{% endfor %}",
+            },
+        },
+    },
+};
 
 export const REGLEMENTS_TAGS = {
     //
@@ -186,51 +183,51 @@ export const REGLEMENTS_TAGS = {
     reglement_reception_date: {
         name: "Date de réception du règlement",
         value: "{{reglements.reglement_reception_date}}",
-        sample: "Date de réception du règlement"
+        sample: "Date de réception du règlement",
     },
 
     reglement_cashing_date: {
         name: "Date d'encaissement du règlement",
         value: "{{reglement.['cashing_date']}}",
-        sample: "Date d'encaissement du règlement"
+        sample: "Date d'encaissement du règlement",
     },
 
     reglement_amount: {
         name: "Montant du règlement",
         value: "{{reglement['amount']}}",
-        sample: "Montant du règlement"
+        sample: "Montant du règlement",
     },
 
     reglement_status: {
         name: "Statut du règlement",
         value: "{{reglement['status']}}",
-        sample: "Statut du règlement"
+        sample: "Statut du règlement",
     },
 
     reglementsLoop: {
-        name : "Règlements",
+        name: "Règlements",
         rules: {
             repeat: {
                 name: "Répeter pour chaque règlement",
                 before: "{% for reglement in reglements %}",
-                after: "{% endfor %}"
-            }
-        }
-    }
-}
+                after: "{% endfor %}",
+            },
+        },
+    },
+};
 
 export const UTILS_TAGS = {
     button_school_link: {
         name: "Bouton vers le site de l'école",
         value: "{{school_link}}",
-        sample: "Bouton vers le site de l'école"
+        sample: "Bouton vers le site de l'école",
     },
-}
+};
 
 export const SCHOOL_LOGO_TAGS = {
     img_school_logo: {
         name: "Logo de l'école",
         value: "{{school_logo}}",
-        sample: "Logo de l'école"
+        sample: "Logo de l'école",
     },
-}
+};

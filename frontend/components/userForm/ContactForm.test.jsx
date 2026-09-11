@@ -18,9 +18,15 @@ import i18n from "../../i18n";
 import ContactForm from "./ContactForm";
 import WizardContactForm from "./WizardContactForm";
 
-vi.mock("./GeneralInfos", () => ({ default: () => <div data-testid="general-infos" /> }));
-vi.mock("./ContactInfos", () => ({ default: () => <div data-testid="contact-infos" /> }));
-vi.mock("../common/InlineYesNoRadio", () => ({ default: () => <div data-testid="yes-no" /> }));
+vi.mock("./GeneralInfos", () => ({
+    default: () => <div data-testid="general-infos" />,
+}));
+vi.mock("./ContactInfos", () => ({
+    default: () => <div data-testid="contact-infos" />,
+}));
+vi.mock("../common/InlineYesNoRadio", () => ({
+    default: () => <div data-testid="yes-no" />,
+}));
 vi.mock("../../tools/api", () => ({
     set: () => ({ success: () => ({ post: () => undefined }) }),
 }));
@@ -51,50 +57,84 @@ function baseProps() {
 describe.each([
     ["ContactForm", ContactForm],
     ["WizardContactForm", WizardContactForm],
-])("%s — family-link required error renders instead of crashing (Bug 2)", (name, Component) => {
-    test("the family-link section mounts (isUserSearchOver path)", async () => {
-        await i18n.changeLanguage("fr");
-        const { container } = render(<Component {...baseProps()} />);
+])(
+    "%s — family-link required error renders instead of crashing (Bug 2)",
+    (name, Component) => {
+        test("the family-link section mounts (isUserSearchOver path)", async () => {
+            await i18n.changeLanguage("fr");
+            const { container } = render(<Component {...baseProps()} />);
 
-        expect(screen.getByText("Lien familial")).toBeInTheDocument();
-        expect(container.querySelector("select.form-control")).toBeTruthy();
-        // no error shown before the field is touched
-        expect(container.querySelector("p.help-block")).toBeNull();
-    });
+            expect(screen.getByText("Lien familial")).toBeInTheDocument();
+            expect(container.querySelector("select.form-control")).toBeTruthy();
+            // no error shown before the field is touched
+            expect(container.querySelector("p.help-block")).toBeNull();
+        });
 
-    test("fr: blurring the empty <select> shows the translated errRequired copy, no ReferenceError", async () => {
-        await i18n.changeLanguage("fr");
-        const { container } = render(<Component {...baseProps()} />);
+        test("fr: blurring the empty <select> shows the translated errRequired copy, no ReferenceError", async () => {
+            await i18n.changeLanguage("fr");
+            const { container } = render(<Component {...baseProps()} />);
 
-        const select = container.querySelector("select.form-control");
-        fireEvent.blur(select);
+            const select = container.querySelector("select.form-control");
+            fireEvent.blur(select);
 
-        const help = await screen.findByText("Cette information est requise.");
-        expect(help).toBeInTheDocument();
-        expect(help).toHaveClass("help-block");
-    });
+            const help = await screen.findByText(
+                "Cette information est requise."
+            );
+            expect(help).toBeInTheDocument();
+            expect(help).toHaveClass("help-block");
+        });
 
-    test("en: the same path renders the English errRequired copy", async () => {
-        await i18n.changeLanguage("en");
-        const { container } = render(<Component {...baseProps()} />);
+        test("en: the same path renders the English errRequired copy", async () => {
+            await i18n.changeLanguage("en");
+            const { container } = render(<Component {...baseProps()} />);
 
-        const select = container.querySelector("select.form-control");
-        fireEvent.blur(select);
+            const select = container.querySelector("select.form-control");
+            fireEvent.blur(select);
 
-        const help = await screen.findByText("This information is required.");
-        expect(help).toBeInTheDocument();
-        expect(help).toHaveClass("help-block");
-    });
+            const help = await screen.findByText(
+                "This information is required."
+            );
+            expect(help).toBeInTheDocument();
+            expect(help).toHaveClass("help-block");
+        });
 
-    test("selecting a value clears the error", async () => {
-        await i18n.changeLanguage("fr");
-        const { container } = render(<Component {...baseProps()} />);
+        // i18n Phase 07 P5 (React-tail extraction): commit 83a1ff97 moved this
+        // component's family-link section copy onto the `users:contactForm.*`
+        // subtree via withTranslation("users"). The <h3> label that was the literal
+        // "Lien familial" is now t("users:contactForm.familyLink"); check it
+        // resolves on both locales with no fallback marker / raw dotted-key leak.
+        test.each([
+            ["fr", "Lien familial"],
+            ["en", "Family link"],
+        ])(
+            "%s: the family-link heading uses the extracted users:contactForm key",
+            async (lng, expected) => {
+                await i18n.changeLanguage(lng);
+                const { container } = render(<Component {...baseProps()} />);
 
-        const select = container.querySelector("select.form-control");
-        fireEvent.blur(select);
-        expect(await screen.findByText("Cette information est requise.")).toBeInTheDocument();
+                expect(screen.getByText(expected)).toBeInTheDocument();
+                expect(container.textContent).not.toMatch(
+                    /translation missing/i
+                );
+                expect(container.textContent).not.toMatch(/contactForm\.\w+/);
+                expect(container.innerHTML).not.toMatch(/users:contactForm\./);
+            }
+        );
 
-        fireEvent.change(select, { target: { value: "mère" } });
-        expect(screen.queryByText("Cette information est requise.")).toBeNull();
-    });
-});
+        test("selecting a value clears the error", async () => {
+            await i18n.changeLanguage("fr");
+            const { container } = render(<Component {...baseProps()} />);
+
+            const select = container.querySelector("select.form-control");
+            fireEvent.blur(select);
+            expect(
+                await screen.findByText("Cette information est requise.")
+            ).toBeInTheDocument();
+
+            fireEvent.change(select, { target: { value: "mère" } });
+            expect(
+                screen.queryByText("Cette information est requise.")
+            ).toBeNull();
+        });
+    }
+);

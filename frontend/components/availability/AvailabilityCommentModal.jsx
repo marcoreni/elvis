@@ -1,10 +1,11 @@
 import React, { PureComponent } from "react";
 import Modal from "react-modal";
 import _ from "lodash";
+import { withTranslation } from "react-i18next";
 import * as api from "../../tools/api";
 import { toast } from "react-toastify";
 
-export default class AvailabilityCommentModal extends PureComponent {
+class AvailabilityCommentModal extends PureComponent {
     constructor(props) {
         super(props);
 
@@ -44,64 +45,76 @@ export default class AvailabilityCommentModal extends PureComponent {
             .error(toast.error);
 
         // Update or create comment
-        if(commentId){
+        if (commentId) {
             request.patch(`/comments/${commentId}`, body);
-        }
-        else
-            request.post("/comments", body);
+        } else request.post("/comments", body);
     }
 
     handleDeleteComment() {
         const commentId = _.get(this.props.availability, "comment.id");
 
-        api
-            .set()
-            .success(() => this.props.onSaved({...this.props.availability, comment: null}))
+        api.set()
+            .success(() =>
+                this.props.onSaved({
+                    ...this.props.availability,
+                    comment: null,
+                })
+            )
             .error(toast.error)
             .del(`/comments/${commentId}`);
     }
 
     render() {
+        const { t } = this.props;
         const commentExists = _.has(this.props.availability, "comment.id");
 
-        return <Modal
-            isOpen
-            ariaHideApp={false}
-            className="col-xs-12 col-lg-3 flex-column"
-            onRequestClose={this.props.onClose}>
-            <h3>Commentaire</h3>
-            <textarea
-                className="form-control"
-                placeholder="Vous pouvez renseigner quelques précisions ici..."
-                onChange={e => this.updateCommentValue(e.target.value)}
-                value={this.state.commentValue}>
-            </textarea>
-            <div className="flex flex-space-between-justified m-t">
-                <button
-                    className="btn"
-                    style={{marginRight: "auto"}}
-                    type="button"
-                    onClick={this.props.onClose}>
-                    <i className="fas fa-times m-r-sm"></i>
-                    Annuler
-                </button>
-                <div>
-                    {
-                        commentExists &&
-                        <button
-                            onClick={() => this.handleDeleteComment()}
-                            className="btn btn-warning m-r-sm">
-                            <i className="fas fa-trash"></i>
-                        </button>
-                    }
+        return (
+            <Modal
+                isOpen
+                ariaHideApp={false}
+                className="col-xs-12 col-lg-3 flex-column"
+                onRequestClose={this.props.onClose}
+            >
+                <h3>{t("planning:availabilityCommentModal.title")}</h3>
+                <textarea
+                    className="form-control"
+                    placeholder={t(
+                        "planning:availabilityInput.commentPlaceholder"
+                    )}
+                    onChange={e => this.updateCommentValue(e.target.value)}
+                    value={this.state.commentValue}
+                ></textarea>
+                <div className="flex flex-space-between-justified m-t">
                     <button
-                        className="btn btn-primary"
-                        onClick={() => this.handleSaveComment()}>
-                        <i className="fas fa-save"></i> Enregistrer
+                        className="btn"
+                        style={{ marginRight: "auto" }}
+                        type="button"
+                        onClick={this.props.onClose}
+                    >
+                        <i className="fas fa-times m-r-sm"></i>
+                        {t("common:actions.cancel")}
                     </button>
+                    <div>
+                        {commentExists && (
+                            <button
+                                onClick={() => this.handleDeleteComment()}
+                                className="btn btn-warning m-r-sm"
+                            >
+                                <i className="fas fa-trash"></i>
+                            </button>
+                        )}
+                        <button
+                            className="btn btn-primary"
+                            onClick={() => this.handleSaveComment()}
+                        >
+                            <i className="fas fa-save"></i>{" "}
+                            {t("common:actions.save")}
+                        </button>
+                    </div>
                 </div>
-                
-            </div>
-        </Modal>;
+            </Modal>
+        );
     }
 }
+
+export default withTranslation("planning")(AvailabilityCommentModal);

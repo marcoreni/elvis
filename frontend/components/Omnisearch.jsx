@@ -1,5 +1,6 @@
 import React from "react";
 import _ from "lodash";
+import { withTranslation } from "react-i18next";
 import { csrfToken } from "./utils";
 
 class Omnisearch extends React.Component {
@@ -56,6 +57,7 @@ class Omnisearch extends React.Component {
     }
 
     render() {
+        const { t } = this.props;
         if (this.state.isSearchOpen) {
             this.searchInput.focus();
         }
@@ -63,37 +65,43 @@ class Omnisearch extends React.Component {
         return (
             <div>
                 <div
-                    className={`navbar-form-custom school-omnisearch ${this.state.isSearchOpen ? "btn--hidden" : ""
-                        }`}
-                    onClick={() => this.openSearch()}>
+                    className={`navbar-form-custom school-omnisearch ${
+                        this.state.isSearchOpen ? "btn--hidden" : ""
+                    }`}
+                    onClick={() => this.openSearch()}
+                >
                     <i className="fas fa-search search-icon" />
                     <input
                         type="text"
-                        placeholder="Rechercher"
+                        placeholder={t("common:omnisearch.search")}
                         className="form-control"
                     />
                 </div>
 
                 <div
-                    className={`omnisearch ${this.state.isSearchOpen ? "open" : ""
-                        }`}
+                    className={`omnisearch ${
+                        this.state.isSearchOpen ? "open" : ""
+                    }`}
                 >
                     <main
-                        className={`main-wrap ${this.state.isSearchOpen ? "main-wrap--overlay" : ""
-                            }`}
+                        className={`main-wrap ${
+                            this.state.isSearchOpen ? "main-wrap--overlay" : ""
+                        }`}
                     >
                         <button
                             id="btn-search-close"
-                            className={`btn btn--search-close ${this.state.isSearchOpen ? "" : "btn--hidden"
-                                }`}
-                            aria-label="Close search form"
+                            className={`btn btn--search-close ${
+                                this.state.isSearchOpen ? "" : "btn--hidden"
+                            }`}
+                            aria-label={t("common:omnisearch.closeSearchForm")}
                             onClick={() => this.closeSearch()}
                         >
                             <i className="fas fa-times" />
                         </button>
                         <div
-                            className={`search ${this.state.isSearchOpen ? "search--open" : ""
-                                }`}
+                            className={`search ${
+                                this.state.isSearchOpen ? "search--open" : ""
+                            }`}
                         >
                             <div className="search__inner">
                                 <form className="search__form" action="">
@@ -101,7 +109,9 @@ class Omnisearch extends React.Component {
                                         className="search__input"
                                         name="search"
                                         type="search"
-                                        placeholder="Recherche"
+                                        placeholder={t(
+                                            "common:omnisearch.searchNoun"
+                                        )}
                                         autoFocus={true}
                                         ref={input =>
                                             (this.searchInput = input)
@@ -116,8 +126,11 @@ class Omnisearch extends React.Component {
                                 </form>
 
                                 {this.state.inputSearch ? (
-                                    <h3>{`${this.state.total ||
-                                        0} Trouvé.e.s au total`}</h3>
+                                    <h3>
+                                        {t("common:omnisearch.foundTotal", {
+                                            count: this.state.total || 0,
+                                        })}
+                                    </h3>
                                 ) : null}
 
                                 <ul className="search__results">
@@ -127,6 +140,7 @@ class Omnisearch extends React.Component {
                                                 return (
                                                     <UserResult
                                                         key={i}
+                                                        t={t}
                                                         infos={o}
                                                     />
                                                 );
@@ -134,6 +148,7 @@ class Omnisearch extends React.Component {
                                                 return (
                                                     <ActivityApplicationResult
                                                         key={i}
+                                                        t={t}
                                                         infos={o}
                                                     />
                                                 );
@@ -141,11 +156,26 @@ class Omnisearch extends React.Component {
                                                 return (
                                                     <AdhesionResult
                                                         key={i}
+                                                        t={t}
                                                         infos={o}
                                                     />
                                                 );
-                                            case "activityref": return <ActivityResult key={i} infos={o} />
-                                            case "room": return <RoomResult key={i} infos={o} />
+                                            case "activityref":
+                                                return (
+                                                    <ActivityResult
+                                                        key={i}
+                                                        t={t}
+                                                        infos={o}
+                                                    />
+                                                );
+                                            case "room":
+                                                return (
+                                                    <RoomResult
+                                                        key={i}
+                                                        t={t}
+                                                        infos={o}
+                                                    />
+                                                );
                                         }
                                     })}
                                 </ul>
@@ -158,69 +188,69 @@ class Omnisearch extends React.Component {
     }
 }
 
-const UserResult = ({ infos }) => {
+const UserResult = ({ t, infos }) => {
     return (
         <li>
-            <small>Utilisateur</small>
+            <small>{t("common:omnisearch.kinds.user")}</small>
             <a href={`/users/${infos.attributes.user_id}`}>
-                {`${infos.attributes.user_adherent_number}: ${infos.attributes.user_first_name
-                    } ${infos.attributes.user_last_name}`}
+                {`${infos.attributes.user_adherent_number}: ${infos.attributes.user_first_name} ${infos.attributes.user_last_name}`}
             </a>
         </li>
     );
 };
 
-const ActivityResult = ({ infos }) => {
-    return <li>
-        <small>Activitée</small>
-        <a href={`/activity_ref/${infos.attributes.activity_id}/edit`}>
-            {
-                `${infos.attributes.activity_name}`
-            }
-        </a>
-    </li>
+const ActivityResult = ({ t, infos }) => {
+    return (
+        <li>
+            <small>{t("common:omnisearch.kinds.activity")}</small>
+            <a href={`/activity_ref/${infos.attributes.activity_id}/edit`}>
+                {`${infos.attributes.activity_name}`}
+            </a>
+        </li>
+    );
 };
 
-const ActivityApplicationResult = ({ infos }) => {
+const ActivityApplicationResult = ({ t, infos }) => {
     return (
         <li>
             <a href={`/inscriptions/${infos.attributes.application_id}`}>
-                <small>Demande d'inscription</small>
-                {`${infos.attributes.application_id}: ${infos.attributes.application_first_name
-                    } ${infos.attributes.application_last_name}`}
+                <small>{t("common:omnisearch.kinds.application")}</small>
+                {`${infos.attributes.application_id}: ${infos.attributes.application_first_name} ${infos.attributes.application_last_name}`}
                 <p>{infos.attributes.application_status}</p>
             </a>
         </li>
     );
 };
 
-const AdhesionResult = ({ infos }) => {
+const AdhesionResult = ({ t, infos }) => {
     return (
         <li>
             <a
-                href={`/users/${infos.attributes.adhesion_user_id
-                    }/adherent_card`}
+                href={`/users/${infos.attributes.adhesion_user_id}/adherent_card`}
             >
-                <small>Adhésion</small>
-                {`${infos.attributes.adhesion_adherent_number}: ${infos.attributes.adhesion_first_name
-                    } ${infos.attributes.adhesion_last_name}`}
+                <small>{t("common:omnisearch.kinds.adhesion")}</small>
+                {`${infos.attributes.adhesion_adherent_number}: ${infos.attributes.adhesion_first_name} ${infos.attributes.adhesion_last_name}`}
             </a>
         </li>
     );
 };
 
-const RoomResult = ({ infos }) => {
+const RoomResult = ({ t, infos }) => {
     return (
         <li>
-            <a
-                href={`/rooms/${infos.attributes.room_id
-                    }/edit`}
-            >
-                <small>{infos.attributes.is_practice_room ? "Practice r" : "R"}oom</small>
-                {`${infos.attributes.room_name} (floor: ${infos.attributes.room_floor})`}
+            <a href={`/rooms/${infos.attributes.room_id}/edit`}>
+                <small>
+                    {infos.attributes.is_practice_room
+                        ? t("common:omnisearch.kinds.practiceRoom")
+                        : t("common:omnisearch.kinds.room")}
+                </small>
+                {t("common:omnisearch.roomWithFloor", {
+                    name: infos.attributes.room_name,
+                    floor: infos.attributes.room_floor,
+                })}
             </a>
         </li>
     );
 };
 
-export default Omnisearch;
+export default withTranslation("common")(Omnisearch);

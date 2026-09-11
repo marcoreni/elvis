@@ -16,7 +16,7 @@ class ValidationErrorList extends React.PureComponent {
         }
 
         if (Array.isArray(error)) {
-            return <ErrorList errors={error.map(err => MESSAGES[err])} />
+            return <ErrorList errors={error.map(err => MESSAGES[err])} />;
         }
 
         return <ErrorList errors={[MESSAGES[error]]} />;

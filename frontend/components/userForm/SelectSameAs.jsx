@@ -1,38 +1,38 @@
 import React, { Fragment } from "react";
+import { useTranslation } from "react-i18next";
 import { fullname } from "../../tools/format";
 import Input from "../common/Input";
 
-
 const SelectSameAs = ({ setSameAs, family, accessor, format, currentUser }) => {
+    const { t } = useTranslation("users");
 
-    family = family.filter(f => !Array.isArray(f[accessor])  || (Array.isArray(f[accessor]) && format(f[accessor]) != undefined))
+    family = family.filter(
+        f =>
+            !Array.isArray(f[accessor]) ||
+            (Array.isArray(f[accessor]) && format(f[accessor]) != undefined)
+    );
 
-    const currentValue = () =>{
-        for(let member of family){
-            if(Array.isArray(member[accessor])){
-
-                for(let option of member[accessor]){
-                    for(let element of currentUser[accessor]){
-                        if(element.id === option.id)
-                            return JSON.stringify(option)
+    const currentValue = () => {
+        for (let member of family) {
+            if (Array.isArray(member[accessor])) {
+                for (let option of member[accessor]) {
+                    for (let element of currentUser[accessor]) {
+                        if (element.id === option.id)
+                            return JSON.stringify(option);
                     }
                 }
-            }
-            else{
-                if(member[accessor] === currentUser[accessor])
-                    return JSON.stringify(member[accessor])
+            } else {
+                if (member[accessor] === currentUser[accessor])
+                    return JSON.stringify(member[accessor]);
             }
         }
 
-        return ""
+        return "";
+    };
 
-    }
-        
-    const options = 
-    family.map((f, fIndex) => (
+    const options = family.map((f, fIndex) => (
         <Fragment key={fIndex}>
             {Array.isArray(f[accessor]) ? (
-                
                 f[accessor].map((obj, index) => (
                     <option
                         key={`${fIndex}.${index}`}
@@ -42,7 +42,6 @@ const SelectSameAs = ({ setSameAs, family, accessor, format, currentUser }) => {
                     </option>
                 ))
             ) : (
-                
                 <option value={JSON.stringify(f[accessor])}>
                     {`${fullname(f)}, ${format(f[accessor])}`}
                 </option>
@@ -53,14 +52,19 @@ const SelectSameAs = ({ setSameAs, family, accessor, format, currentUser }) => {
     return (
         <div className="row">
             <div className="col-md-6 form-group pr-0 m-0 d-inline-flex align-items-baseline">
-                <label className="small col-2 p-0" style={{color: "rgb(138, 164, 177)"}}>Identique à</label>
+                <label
+                    className="small col-2 p-0"
+                    style={{ color: "rgb(138, 164, 177)" }}
+                >
+                    {t("users:selectSameAs.label")}
+                </label>
                 <select
                     defaultValue={currentValue()}
                     className="small col pl-2"
                     onChange={e => setSameAs(e.target.value)}
-                    disabled={options.length == 0} 
+                    disabled={options.length == 0}
                 >
-                    <option value="">Personne</option>
+                    <option value="">{t("users:selectSameAs.none")}</option>
                     {options}
                 </select>
             </div>

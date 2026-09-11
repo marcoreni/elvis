@@ -1,6 +1,14 @@
-import React, {useState} from 'react';
+import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 
-export default function PasswordInput({id, name, label, error, additional_attr = {}}) {
+export default function PasswordInput({
+    id,
+    name,
+    label,
+    error,
+    additional_attr = {},
+}) {
+    const { t } = useTranslation("common");
     const [passwordVisible, setPasswordVisible] = useState(false);
 
     const togglePasswordVisibility = () => {
@@ -9,7 +17,8 @@ export default function PasswordInput({id, name, label, error, additional_attr =
 
     return (
         <div className="form-group text-left">
-            <label htmlFor={id}>{label}</label><br/>
+            <label htmlFor={id}>{label}</label>
+            <br />
             <div className="d-inline-flex w-100">
                 <input
                     type={passwordVisible ? "text" : "password"}
@@ -23,12 +32,21 @@ export default function PasswordInput({id, name, label, error, additional_attr =
                     className="btn btn-icon"
                     onClick={togglePasswordVisibility}
                 >
-                    <i className={`fas fa-eye${passwordVisible ? '-slash' : ''}`}></i>
+                    <i
+                        className={`fas fa-eye${
+                            passwordVisible ? "-slash" : ""
+                        }`}
+                    ></i>
                 </button>
             </div>
-            {additional_attr.minLength && <p className="form-text text-muted">({additional_attr.minLength} caractères minimum)</p>}
+            {additional_attr.minLength && (
+                <p className="form-text text-muted">
+                    {t("common:passwordInput.minChars", {
+                        n: additional_attr.minLength,
+                    })}
+                </p>
+            )}
             {error && <div className="alert alert-danger">{error}</div>}
         </div>
     );
-};
-
+}

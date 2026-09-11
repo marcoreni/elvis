@@ -1,5 +1,6 @@
 import React from "react";
 import { Form, Field, FormSpy } from "react-final-form";
+import { Trans, withTranslation } from "react-i18next";
 import arrayMutators from "final-form-arrays";
 import Switch from "react-switch";
 import _, { values } from "lodash";
@@ -13,7 +14,12 @@ import * as api from "../../tools/api";
 import { required } from "../../tools/validators";
 import { MESSAGES } from "../../tools/constants";
 import { fullname, toLocaleDate, toDate } from "../../tools/format";
-import { changeUser, selectPhoneType, changeRelationshipDirection, changeBirthDate } from "../../tools/mutators";
+import {
+    changeUser,
+    selectPhoneType,
+    changeRelationshipDirection,
+    changeBirthDate,
+} from "../../tools/mutators";
 import InlineYesNoRadio from "../common/InlineYesNoRadio";
 import Checkbox from "../common/Checkbox";
 
@@ -30,7 +36,12 @@ export const familyLinks = [
     "autre",
 ];
 
-const YES_NO_FIELDS = ["is_paying_for", "is_legal_referent", "is_accompanying", "is_to_call"];
+const YES_NO_FIELDS = [
+    "is_paying_for",
+    "is_legal_referent",
+    "is_accompanying",
+    "is_to_call",
+];
 
 function formatRadioValue(v) {
     switch (v) {
@@ -47,12 +58,17 @@ class ContactForm extends React.PureComponent {
     constructor(props) {
         super(props);
 
-        this.handleContactInfosChange = _.debounce(this.handleContactInfosChange, 300);
+        this.handleContactInfosChange = _.debounce(
+            this.handleContactInfosChange,
+            300
+        );
 
         this.state = {
             suggestedUsers: null,
             selectedUserMatch: null,
-            isUserSearchOver: props.initialValues.id !== null && props.initialValues.id !== undefined,
+            isUserSearchOver:
+                props.initialValues.id !== null &&
+                props.initialValues.id !== undefined,
             first_name: props.initialValues.first_name,
             last_name: props.initialValues.last_name,
             birthday: props.initialValues.birthday,
@@ -60,20 +76,19 @@ class ContactForm extends React.PureComponent {
             is_attached: props.initialValues.is_attached,
         };
 
-        this.showFamilyLinkInfos = props.showFamilyLinkInfos == undefined ? true : props.showFamilyLinkInfos;
+        this.showFamilyLinkInfos =
+            props.showFamilyLinkInfos == undefined
+                ? true
+                : props.showFamilyLinkInfos;
     }
 
-    handleContactInfosChange({ values: {
-        first_name,
-        last_name,
-        birthday,
-    } }) {
+    handleContactInfosChange({ values: { first_name, last_name, birthday } }) {
         this.setState({
             ...this.state,
             first_name,
             last_name,
             birthday,
-        })
+        });
 
         /*this.props.initialValues.first_name = first_name;
         this.props.initialValues.last_name = last_name;
@@ -84,17 +99,29 @@ class ContactForm extends React.PureComponent {
 
         // Admin must enter at least 2 characters for last_name or first_name to trigger search
         // Simple user must give input for first_name, last_name and birthday fields
-        if (isUserSearchOver ||
-            (current_user && current_user.is_admin && (!first_name || first_name.length < 2) && (!last_name || last_name.length < 2)) ||
-            ((!current_user || !current_user.is_admin) && (!first_name || !last_name || !birthday)))
+        if (
+            isUserSearchOver ||
+            (current_user &&
+                current_user.is_admin &&
+                (!first_name || first_name.length < 2) &&
+                (!last_name || last_name.length < 2)) ||
+            ((!current_user || !current_user.is_admin) &&
+                (!first_name || !last_name || !birthday))
+        )
             return;
 
         // There are enough infos for admin search
         // Now check if the three fields were given, it means that search is over
-        if (current_user && current_user.is_admin && (first_name && first_name.length > 0) && (last_name && last_name.length > 0) && birthday) {
+        if (
+            current_user &&
+            current_user.is_admin &&
+            first_name && first_name.length > 0 &&
+            last_name && last_name.length > 0 &&
+            birthday
+        ) {
             this.setState({
                 isUserSearchOver: true,
-                is_attached: true
+                is_attached: true,
             });
 
             this.mutators.changeUser({
@@ -108,12 +135,11 @@ class ContactForm extends React.PureComponent {
             return;
         }
 
-        api
-            .set()
+        api.set()
             .success(suggestedUsers => {
                 this.setState({
                     suggestedUsers: suggestedUsers,
-                    selectUserMatch: null
+                    selectUserMatch: null,
                 });
             })
             .post("/users/search", {
@@ -130,12 +156,14 @@ class ContactForm extends React.PureComponent {
     }
 
     validateUserMatch() {
-        const selectedUser = this.state.suggestedUsers[this.state.selectedUserMatch];
+        const selectedUser = this.state.suggestedUsers[
+            this.state.selectedUserMatch
+        ];
 
         this.mutators.changeUser({
             ...selectedUser,
             is_inverse: this.state.is_inverse,
-            is_attached: false
+            is_attached: false,
         });
         this.setState({
             isUserSearchOver: true,
@@ -144,20 +172,26 @@ class ContactForm extends React.PureComponent {
         });
     }
 
-    disabledUserSearch()
-    {
+    disabledUserSearch() {
         this.mutators.changeUser({
             ...this.props.initialValues,
             first_name: this.state.first_name,
             last_name: this.state.last_name,
             birthday: this.state.birthday,
             is_attached: true, //this.state.is_attached, // 12/03/24 ==> attached by default if no user match
-        })
+        });
         this.setState({ isUserSearchOver: true, is_attached: true });
     }
 
     render() {
-        const { initialValues, onSubmit, user_linked, current_user, onClose } = this.props;
+        const {
+            t,
+            initialValues,
+            onSubmit,
+            user_linked,
+            current_user,
+            onClose,
+        } = this.props;
         const {
             suggestedUsers,
             isUserSearchOver,
@@ -168,24 +202,47 @@ class ContactForm extends React.PureComponent {
             ...initialValues,
         };
 
-        let [user_fname, user_lname, member_fname, member_lname] = this.state.is_inverse ?
-            [(user_linked||{}).first_name, [user_linked||{}].last_name, this.state.first_name, this.state.last_name]
-            : [this.state.first_name, this.state.last_name, [user_linked||{}].first_name, [user_linked||{}].last_name]
+        let [user_fname, user_lname, member_fname, member_lname] = this.state
+            .is_inverse
+            ? [
+                  (user_linked || {}).first_name,
+                  [user_linked || {}].last_name,
+                  this.state.first_name,
+                  this.state.last_name,
+              ]
+            : [
+                  this.state.first_name,
+                  this.state.last_name,
+                  [user_linked || {}].first_name,
+                  [user_linked || {}].last_name,
+              ];
 
-        const FamilyLinkInputSelect = (props) => {
+        const FamilyLinkInputSelect = props => {
             const { input, meta, required, label, options } = props;
             const hasError = meta.error && meta.touched;
 
             return (
-                <div className={`col-xs-12 form-group ${hasError ? "has-error" : ""}`}>
+                <div
+                    className={`col-xs-12 form-group ${
+                        hasError ? "has-error" : ""
+                    }`}
+                >
                     <h3>
-                        Lien familial
-                        {required && <span className="text-danger">{" *"}</span>}
+                        {t("users:contactForm.familyLink")}
+                        {required && (
+                            <span className="text-danger">{" *"}</span>
+                        )}
                     </h3>
 
                     <div className="row">
                         <div className="col-sm-3">
-                            <p className="h5"><b>{this.state.first_name} {this.state.last_name}</b> est </p>
+                            <p className="h5">
+                                <b>
+                                    {this.state.first_name}{" "}
+                                    {this.state.last_name}
+                                </b>{" "}
+                                {t("users:contactForm.is")}{" "}
+                            </p>
                         </div>
                         <div className="col-sm-3">
                             <select className="form-control" {...input}>
@@ -198,60 +255,93 @@ class ContactForm extends React.PureComponent {
                             </select>
                         </div>
                         <div className="col-sm-3">
-                            <p className="h5 text-center">de <b>{user_linked.first_name} {user_linked.last_name}</b></p>
+                            <p className="h5 text-center">
+                                {t("users:contactForm.of")}{" "}
+                                <b>
+                                    {user_linked.first_name}{" "}
+                                    {user_linked.last_name}
+                                </b>
+                            </p>
                         </div>
-                        {hasError && <p className="help-block">{MESSAGES[meta.error]}</p>}
+                        {hasError && (
+                            <p className="help-block">{MESSAGES[meta.error]}</p>
+                        )}
                     </div>
                 </div>
             );
-        }
+        };
 
-        const FamilyIsInverseButton = (props) => {
-            const { input, meta, onChange } = props
-            return <div
-                className="col-sm-12 m-b-sm"
-                style={current_user.is_admin ? {} : {
-                    display: 'none',
-                }}
-                onClick={(val, prevVal) => {
-                    onChange(val, prevVal)
-                }}
-            >
+        const FamilyIsInverseButton = props => {
+            const { input, meta, onChange } = props;
+            return (
+                <div
+                    className="col-sm-12 m-b-sm"
+                    style={
+                        current_user.is_admin
+                            ? {}
+                            : {
+                                  display: "none",
+                              }
+                    }
+                    onClick={(val, prevVal) => {
+                        onChange(val, prevVal);
+                    }}
+                >
+                    <p style={{ cursor: "pointer" }}>
+                        {t("users:contactForm.changeRelationDirection")} &nbsp;
+                        <span className="btn m-r-sm btn-primary">
+                            <i className="fas fa-solid fa-arrow-left"></i>
+                            <i className="fas fa-arrow-right"></i>
+                        </span>
+                    </p>
+                </div>
+            );
+        };
 
-                <p style={{ cursor: 'pointer' }}>Vous pouvez modifier le sens de la relation &nbsp;
-                    <span className="btn m-r-sm btn-primary"><i className="fas fa-solid fa-arrow-left" ></i><i className="fas fa-arrow-right"></i>
-                    </span>
-                </p>
-            </div>
-        }
-
-        YES_NO_FIELDS.forEach(f => _.set(formattedInitialValues, f, formatRadioValue(_.get(formattedInitialValues, f))));
+        YES_NO_FIELDS.forEach(f =>
+            _.set(
+                formattedInitialValues,
+                f,
+                formatRadioValue(_.get(formattedInitialValues, f))
+            )
+        );
 
         return (
             <div>
                 <hr />
                 <Form
                     onSubmit={onSubmit}
-                    mutators={{ ...arrayMutators, changeUser, selectPhoneType, changeRelationshipDirection, changeBirthDate}}
+                    mutators={{
+                        ...arrayMutators,
+                        changeUser,
+                        selectPhoneType,
+                        changeRelationshipDirection,
+                        changeBirthDate,
+                    }}
                     initialValues={formattedInitialValues || {}}
                 >
-                    {({ handleSubmit, form , errors, values}) => {
-                        this.mutators = form.mutators
+                    {({ handleSubmit, form, errors, values }) => {
+                        this.mutators = form.mutators;
 
-                        return <form onSubmit={handleSubmit} className="user-form">
-                            <FormSpy
-                                subscription={{ values: true }}
-                                onChange={props => this.handleContactInfosChange(props)} />
+                        return (
+                            <form onSubmit={handleSubmit} className="user-form">
+                                <FormSpy
+                                    subscription={{ values: true }}
+                                    onChange={props =>
+                                        this.handleContactInfosChange(props)
+                                    }
+                                />
 
-                            <GeneralInfos
-                                ignoreValidate={false}
-                                formErrors={errors}
-                                mutators={form.mutators}
-                                birthday={values.birthday}
-                                // displayGender
-                                displayBirthday />
+                                <GeneralInfos
+                                    ignoreValidate={false}
+                                    formErrors={errors}
+                                    mutators={form.mutators}
+                                    birthday={values.birthday}
+                                    // displayGender
+                                    displayBirthday
+                                />
 
-                            {/* user_linked && !form.getState().values.id && <div>
+                                {/* user_linked && !form.getState().values.id && <div>
                                 <Checkbox
                                     name="is_attached"
                                     id="is_attached"
@@ -271,149 +361,296 @@ class ContactForm extends React.PureComponent {
                                     }} />
                             </div>*/}
 
-                            <hr />
+                                <hr />
 
-                            {
-                                !isUserSearchOver && suggestedUsers && <div>
-                                    {
-                                        suggestedUsers.length ? <div>
+                                {!isUserSearchOver && suggestedUsers && (
+                                    <div>
+                                        {suggestedUsers.length ? (
+                                            <div>
                                                 <div className="alert alert-info m-b-sm">
-                                                    Nous avons trouvé des profils correspondant aux informations saisies
+                                                    {t(
+                                                        "users:contactForm.matchesFound"
+                                                    )}
                                                 </div>
                                                 <div className="list-group">
-                                                    {suggestedUsers.map((u, i) => <button
-                                                        type="button"
-                                                        onClick={() => this.selectUserMatch(i)} key={i}
-                                                        className={`list-group-item ${i === selectedUserMatch ? "active" : ""
-                                                        }`}>
-                                                        <b>{fullname(u)}</b>
-                                                        {` né(e) le ${toLocaleDate(
-                                                            toDate(u.birthday)
-                                                        )}, Adhérent #${u.adherent_number}`}
-                                                    </button>)}
+                                                    {suggestedUsers.map(
+                                                        (u, i) => (
+                                                            <button
+                                                                type="button"
+                                                                onClick={() =>
+                                                                    this.selectUserMatch(
+                                                                        i
+                                                                    )
+                                                                }
+                                                                key={i}
+                                                                className={`list-group-item ${
+                                                                    i ===
+                                                                    selectedUserMatch
+                                                                        ? "active"
+                                                                        : ""
+                                                                }`}
+                                                            >
+                                                                <b>
+                                                                    {fullname(
+                                                                        u
+                                                                    )}
+                                                                </b>
+                                                                {" " +
+                                                                    t(
+                                                                        "users:contactForm.matchLine",
+                                                                        {
+                                                                            date: toLocaleDate(
+                                                                                toDate(
+                                                                                    u.birthday
+                                                                                )
+                                                                            ),
+                                                                            number:
+                                                                                u.adherent_number,
+                                                                        }
+                                                                    )}
+                                                            </button>
+                                                        )
+                                                    )}
                                                 </div>
-                                            </div> :
-                                            <div className="alert alert-warning m-b-sm">
-                                                <strong>Aucun profil existant retrouvé selon ces coordonnées.</strong><br />
-                                                Si l'utilisateur est déjà enregistré,
-                                                vérifiez que les bonnes coordonnées soient saisies.<br />
-                                                Sinon <em>continuez votre saisie</em>.
                                             </div>
-                                    }
+                                        ) : (
+                                            <div className="alert alert-warning m-b-sm">
+                                                <strong>
+                                                    {t(
+                                                        "users:contactForm.noMatchTitle"
+                                                    )}
+                                                </strong>
+                                                <br />
+                                                {t(
+                                                    "users:contactForm.noMatchLine1"
+                                                )}
+                                                <br />
+                                                <Trans
+                                                    t={t}
+                                                    i18nKey="users:contactForm.noMatchLine2"
+                                                    components={{ em: <em /> }}
+                                                />
+                                            </div>
+                                        )}
 
-                                    <div className="flex" style={{ marginBottom: "20px"}}>
-                                        <button type="button" className="btn btn-primary btn-outline" onClick={() => this.disabledUserSearch()} style={{ marginRight: "auto"}}>
-                                            Continuer ma saisie
-                                        </button>
-                                        <button type="button" className="btn btn-primary" onClick={() => this.validateUserMatch()} disabled={selectedUserMatch === null}>
-                                            Utiliser ce profil
-                                        </button>
+                                        <div
+                                            className="flex"
+                                            style={{ marginBottom: "20px" }}
+                                        >
+                                            <button
+                                                type="button"
+                                                className="btn btn-primary btn-outline"
+                                                onClick={() =>
+                                                    this.disabledUserSearch()
+                                                }
+                                                style={{ marginRight: "auto" }}
+                                            >
+                                                {t(
+                                                    "users:contactForm.continueEntry"
+                                                )}
+                                            </button>
+                                            <button
+                                                type="button"
+                                                className="btn btn-primary"
+                                                onClick={() =>
+                                                    this.validateUserMatch()
+                                                }
+                                                disabled={
+                                                    selectedUserMatch === null
+                                                }
+                                            >
+                                                {t(
+                                                    "users:contactForm.useThisProfile"
+                                                )}
+                                            </button>
+                                        </div>
                                     </div>
-                                </div>
-                            }
+                                )}
 
-                            {
-                                isUserSearchOver && this.showFamilyLinkInfos && <React.Fragment>
-                                    <div className="row">
-                                        <Field
-                                            name="link"
-                                            type="select"
-                                            render={FamilyLinkInputSelect}
-                                            required={!current_user.is_admin}
-                                            validate={!current_user.is_admin && required}
-                                            options={familyLinks.map(link => ({
-                                                value: link,
-                                                label: _.capitalize(link),
-                                            }))} />
-                                    </div>
+                                {isUserSearchOver && this.showFamilyLinkInfos && (
+                                    <React.Fragment>
+                                        <div className="row">
+                                            <Field
+                                                name="link"
+                                                type="select"
+                                                render={FamilyLinkInputSelect}
+                                                required={
+                                                    !current_user.is_admin
+                                                }
+                                                validate={
+                                                    !current_user.is_admin &&
+                                                    required
+                                                }
+                                                options={familyLinks.map(
+                                                    link => ({
+                                                        value: link,
+                                                        label: t(
+                                                            `users:familyLinks.${link}`
+                                                        ),
+                                                    })
+                                                )}
+                                            />
+                                        </div>
 
-                                    <hr />
-                                    <div className="row">
-                                        <h3 className="col-sm-12 m-b-sm">
-                                            Relation avec {user_linked.first_name} {user_linked.last_name}
-                                        </h3>
-                                        <Field
-                                            name="is_inverse"
-                                            render={FamilyIsInverseButton}
-                                            type="checkbox"
-                                            onChange={(e) => {
-                                                this.setState({ is_inverse: !this.state.is_inverse });
-                                                this.mutators.changeRelationshipDirection(!this.state.is_inverse);
+                                        <hr />
+                                        <div className="row">
+                                            <h3 className="col-sm-12 m-b-sm">
+                                                {t(
+                                                    "users:contactForm.relationWith",
+                                                    {
+                                                        name: `${user_linked.first_name} ${user_linked.last_name}`,
+                                                    }
+                                                )}
+                                            </h3>
+                                            <Field
+                                                name="is_inverse"
+                                                render={FamilyIsInverseButton}
+                                                type="checkbox"
+                                                onChange={e => {
+                                                    this.setState({
+                                                        is_inverse: !this.state
+                                                            .is_inverse,
+                                                    });
+                                                    this.mutators.changeRelationshipDirection(
+                                                        !this.state.is_inverse
+                                                    );
+                                                }}
+                                            />
+                                        </div>
+
+                                        <div className="row">
+                                            <InlineYesNoRadio
+                                                label={
+                                                    <p>
+                                                        {t(
+                                                            "users:contactForm.isPayingFor",
+                                                            {
+                                                                a: `${user_fname} ${user_lname}`,
+                                                                b: `${member_fname} ${member_lname}`,
+                                                            }
+                                                        )}
+                                                    </p>
+                                                }
+                                                name="is_paying_for"
+                                                validate={
+                                                    !user_linked.is_admin &&
+                                                    required
+                                                }
+                                            />
+                                        </div>
+
+                                        <div className="row">
+                                            <InlineYesNoRadio
+                                                label={
+                                                    <p>
+                                                        {t(
+                                                            "users:contactForm.isLegalReferent",
+                                                            {
+                                                                a: `${user_fname} ${user_lname}`,
+                                                                b: `${member_fname} ${member_lname}`,
+                                                            }
+                                                        )}
+                                                    </p>
+                                                }
+                                                name="is_legal_referent"
+                                                validate={
+                                                    !current_user.is_admin &&
+                                                    required
+                                                }
+                                            />
+                                        </div>
+                                        {current_user.is_admin && (
+                                            <div className="row">
+                                                <InlineYesNoRadio
+                                                    label={
+                                                        <p>
+                                                            {t(
+                                                                "users:contactForm.isToCall",
+                                                                {
+                                                                    a: `${user_fname} ${user_lname}`,
+                                                                    b: `${member_fname} ${member_lname}`,
+                                                                }
+                                                            )}
+                                                        </p>
+                                                    }
+                                                    name="is_to_call"
+                                                    validate={
+                                                        !current_user.is_admin &&
+                                                        required
+                                                    }
+                                                />
+                                            </div>
+                                        )}
+                                        {current_user.is_admin && (
+                                            <div className="row">
+                                                <InlineYesNoRadio
+                                                    label={
+                                                        <p>
+                                                            {t(
+                                                                "users:contactForm.isAccompanying",
+                                                                {
+                                                                    a: `${user_fname} ${user_lname}`,
+                                                                    b: `${member_fname} ${member_lname}`,
+                                                                }
+                                                            )}
+                                                        </p>
+                                                    }
+                                                    name="is_accompanying"
+                                                    validate={
+                                                        !current_user.is_admin &&
+                                                        required
+                                                    }
+                                                />
+                                            </div>
+                                        )}
+
+                                        <hr />
+
+                                        <ContactInfos
+                                            ignoreValidate={
+                                                current_user.is_admin
+                                            }
+                                            mutators={form.mutators}
+                                            canAddContacts={false}
+                                            displaySameAs
+                                            values={{
+                                                family: [
+                                                    ...user_linked.family_links_with_user,
+                                                ],
                                             }}
+                                            form={form}
+                                            currentUser={{ ...initialValues }}
+                                            // suggestedUsers={!ignoreUserSearch && suggestedUsers}
+                                            // selectedUserMatch={selectedUserMatch}
+                                            // selectUserMatch={i => this.selectUserMatch(i)}
+                                            // validateUserMatch={() => this.validateUserMatch()}
+                                            // disabledUserSearch={() => this.disabledUserSearch()}
                                         />
-                                    </div>
 
-
-                                    <div className="row">
-                                        <InlineYesNoRadio
-                                            label={<p>{user_fname}  {user_lname} est payeur pour {member_fname} {member_lname}</p>}
-                                            name="is_paying_for"
-                                            validate={!user_linked.is_admin && required} />
-                                    </div>
-
-                                    <div className="row">
-                                        <InlineYesNoRadio
-                                            label={<p>{user_fname}  {user_lname} est représentant légal de {member_fname} {member_lname}</p>}
-                                            name="is_legal_referent"
-                                            validate={!current_user.is_admin && required} />
-                                    </div>
-                                    {current_user.is_admin && <div className="row">
-                                        <InlineYesNoRadio
-                                            label={<p>{user_fname}  {user_lname} est la première personne à contacter pour {member_fname} {member_lname}</p>}
-                                            name="is_to_call"
-                                            validate={!current_user.is_admin && required} />
-                                    </div>}
-                                    {current_user.is_admin && <div className="row">
-                                        <InlineYesNoRadio
-                                            label={<p>{user_fname}  {user_lname} accompagne à l'école {member_fname} {member_lname}</p>}
-                                            name="is_accompanying"
-                                            validate={!current_user.is_admin && required} />
-                                    </div>}
-
-                                    <hr />
-
-                                    <ContactInfos
-                                        ignoreValidate={current_user.is_admin}
-                                        mutators={form.mutators}
-                                        canAddContacts={false}
-                                        displaySameAs
-                                        values={{
-                                            family: [
-                                                ...user_linked.family_links_with_user,
-                                            ]
-                                        }}
-                                        form={form}
-                                        currentUser={{ ...initialValues }}
-                                        // suggestedUsers={!ignoreUserSearch && suggestedUsers}
-                                        // selectedUserMatch={selectedUserMatch}
-                                        // selectUserMatch={i => this.selectUserMatch(i)}
-                                        // validateUserMatch={() => this.validateUserMatch()}
-                                        // disabledUserSearch={() => this.disabledUserSearch()}
-                                    />
-
-                                    <hr />
-
-                                </React.Fragment>
-                            }
-                            <div className="flex flex-space-between-justified">
-                                <button
-                                    onClick={onClose}
-                                    type="button"
-                                    className="btn btn-sm">
-                                    <i className="fas fa-times m-r-sm"></i>
-                                    Annuler
-                                </button>
-                                {
-                                    isUserSearchOver &&
+                                        <hr />
+                                    </React.Fragment>
+                                )}
+                                <div className="flex flex-space-between-justified">
                                     <button
-                                        type="submit"
-                                        className="btn btn-sm btn-primary">
-                                        <i className="fas fa-check m-r-sm"></i>
-                                        {"Valider"}
+                                        onClick={onClose}
+                                        type="button"
+                                        className="btn btn-sm"
+                                    >
+                                        <i className="fas fa-times m-r-sm"></i>
+                                        {t("common:actions.cancel")}
                                     </button>
-                                }
-                            </div>
-                        </form>
+                                    {isUserSearchOver && (
+                                        <button
+                                            type="submit"
+                                            className="btn btn-sm btn-primary"
+                                        >
+                                            <i className="fas fa-check m-r-sm"></i>
+                                            {t("common:actions.validate")}
+                                        </button>
+                                    )}
+                                </div>
+                            </form>
+                        );
                     }}
                 </Form>
             </div>
@@ -421,4 +658,4 @@ class ContactForm extends React.PureComponent {
     }
 }
 
-export default ContactForm;
+export default withTranslation("users")(ContactForm);

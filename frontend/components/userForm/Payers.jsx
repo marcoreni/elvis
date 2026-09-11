@@ -1,9 +1,10 @@
 import Resct, { Fragment } from "react";
+import { useTranslation } from "react-i18next";
 import SelectMultiple from "../common/SelectMultiple";
 import React from "react";
 
-export default function Payers({values, mutators, currentUser})
-{
+export default function Payers({ values, mutators, currentUser }) {
+    const { t } = useTranslation("users");
     const family_links_with_user = [...(values.family_links_with_user || [])];
 
     // Add the current user to the list of family members users to define is_paying column
@@ -11,34 +12,42 @@ export default function Payers({values, mutators, currentUser})
         id: currentUser.id,
         first_name: currentUser.first_name,
         last_name: currentUser.last_name,
-        is_paying_for: currentUser.is_paying
-
+        is_paying_for: currentUser.is_paying,
     });
 
-    if(values.payers && values.payers.length > 0)
-    {
+    if (values.payers && values.payers.length > 0) {
         values.payers.forEach(payer => {
-            const payerUser = family_links_with_user.find(flu => flu.id === payer);
-            if(payerUser)
-            {
+            const payerUser = family_links_with_user.find(
+                flu => flu.id === payer
+            );
+            if (payerUser) {
                 payerUser.is_paying_for = true;
             }
         });
     }
 
-    const select_payers_all_features = family_links_with_user.map(flwu => [`${flwu.first_name} ${flwu.last_name}`, flwu.id]);
-    const select_payers_selected_features = family_links_with_user.filter(flwu => flwu.is_paying_for).map(f => f.is_inverse ? f.id : f.member_id);
+    const select_payers_all_features = family_links_with_user.map(flwu => [
+        `${flwu.first_name} ${flwu.last_name}`,
+        flwu.id,
+    ]);
+    const select_payers_selected_features = family_links_with_user
+        .filter(flwu => flwu.is_paying_for)
+        .map(f => (f.is_inverse ? f.id : f.member_id));
 
-    return <Fragment>
-        <h3 className="mb-0">Payeurs</h3>
+    return (
+        <Fragment>
+            <h3 className="mb-0">{t("users:payers.title")}</h3>
 
-        {values.id > 0 && <SelectMultiple
-            title=""
-            name="payers"
-            isMulti
-            mutators={mutators}
-            all_features={select_payers_all_features}
-            features={select_payers_selected_features}
-        />}
-    </Fragment>
+            {values.id > 0 && (
+                <SelectMultiple
+                    title=""
+                    name="payers"
+                    isMulti
+                    mutators={mutators}
+                    all_features={select_payers_all_features}
+                    features={select_payers_selected_features}
+                />
+            )}
+        </Fragment>
+    );
 }

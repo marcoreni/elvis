@@ -17,5 +17,56 @@
         "changesCount": "Nombre changements",
         "informedCount": "Nombre élèves/parents prévenus",
         "completionRate": "% d'évaluations complétées"
+    },
+    "appointments": {
+        "title": "Gestion des évaluations",
+        "noAvailabilities": "Pour le moment, aucun professeur n'a mis de disponibilité pour des évaluations",
+        "editor": {
+            "validatedTitle": "Rendez-vous validés",
+            "noneYet": "Aucun rendez-vous validé pour le moment.",
+            "newTitle": "Nouveau rendez-vous",
+            "start": "Début",
+            "end": "Fin",
+            "overlap": "Un créneau existe déjà sur ces horaires ({{start}} - {{end}})",
+            "activity": "Activité",
+            "room": "Salle",
+            "selectActivity": "Sélectionnez une activité",
+            "selectRoom": "Sélectionnez une salle",
+            "table": {
+                "schedule": "Horaires",
+                "activity": "Activité",
+                "room": "Salle",
+                "student": "Élève",
+                "noStudent": "Aucun"
+            }
+        }
+    },
+    "previsionalGroups": {
+        "globalLevelRequired": "NIVEAU GLOBAL REQUIS",
+        "evaluationSheet": "Fiche d'évaluation",
+        "actionRequired": "Une action est requise de votre part",
+        "assignLevelPrompt": "Veuillez attribuer un niveau pour les cours suivants",
+        "noLevel": "PAS DE NIVEAU",
+        "assignGlobalLevel": "Affecter un niveau global"
+    },
+    "appointmentsList": {
+        "colAppointment": "Rendez-vous",
+        "colStudent": "Élève",
+        "colActivity": "Activité",
+        "colSlot": "Créneau",
+        "colTeacher": "Professeur",
+        "colRoom": "Salle",
+        "colActions": "Actions",
+        "searchStudent": "Rechercher un élève",
+        "searchByActivity": "Rechercher par activité",
+        "empty": "Aucun·e élève sans créneau",
+        "studentNamePlaceholder": "Nom de l'élève",
+        "search": "Rechercher",
+        "room": "Salle {{label}}",
+        "intervalDisplay": "Le {{date}}, de {{startTime}} à {{endTime}}",
+        "intervalDisplayWithTeacher": "Le {{date}}, de {{startTime}} à {{endTime}}, avec {{teacher}}",
+        "intervalOption": "{{teacher}}, Salle {{room}}, {{interval}}",
+        "refreshHint": "Veuillez rafraîchir pour avoir la liste à jour",
+        "onlyKindSlots": "Seulement créneaux de {{kind}}"
     }
 }

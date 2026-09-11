@@ -231,5 +231,185 @@
         "notIndicated": "NOT SPECIFIED",
         "toSpecify": "TO BE SPECIFIED"
     },
-    "ageYears": "{{age}} years old"
+    "ageYears": "{{age}} years old",
+    "seasonActivation": {
+        "title": "Season activation",
+        "stepLabel": "Step {{n}}",
+        "loadingData": "Loading data...",
+        "step1": {
+            "title": "Step 1: holiday configuration",
+            "intro": "Do you want to import holidays from the API or configure them manually?",
+            "apiHint": "Importing holidays from the API ensures you have the correct dates. However, you can also configure them manually if you prefer.",
+            "importButton": "Import holidays",
+            "addManuallyButton": "Add manually",
+            "manualFormTitle": "Add holidays manually",
+            "nameLabel": "Holiday name",
+            "namePlaceholder": "E.g. winter break",
+            "startLabel": "Start date",
+            "endLabel": "End date",
+            "addButton": "Add"
+        },
+        "summary": {
+            "title": "Holiday & public holiday summary",
+            "impact_one": "{{count}} period • impact: ~{{lessons}} lessons",
+            "impact_other": "{{count}} periods • impact: ~{{lessons}} lessons",
+            "empty": "No holiday period configured yet"
+        },
+        "step2": {
+            "title": "Step 2: season dates",
+            "calendar": "Calendar for season {{label}}",
+            "startLabel": "Season start",
+            "endLabel": "Season end",
+            "reopenLabel": "Re-enrolment opening",
+            "openNewLabel": "New enrolment opening",
+            "closeLabel": "Enrolment closing",
+            "lessonCountLabel": "Number of lessons (auto-calculated)",
+            "lockButton": "Lock",
+            "editButton": "Edit",
+            "holidaysTitle": "Holidays & public holidays",
+            "importButton": "Import",
+            "addButton": "Add",
+            "namePlaceholder": "Name"
+        },
+        "footer": {
+            "previous": "Previous",
+            "next": "Next",
+            "activating": "Activating...",
+            "activate": "Activate season"
+        },
+        "confirmNoHolidays": {
+            "title": "No holiday configured",
+            "text": "You have not configured any holidays for this season. Do you want to continue anyway?",
+            "confirm": "Yes, continue",
+            "cancel": "No, go back"
+        },
+        "errors": {
+            "allFieldsRequired": "All fields are required",
+            "startAfterEnd": "The start date must be before the end date",
+            "fetchHolidaysFailed": "Error while fetching holidays",
+            "addHolidaysFailed": "Error while adding holidays",
+            "deleteHolidaysFailed": "Error while deleting holidays",
+            "activationFailed": "Error while activating the season",
+            "generic": "An error occurred",
+            "loadSeasonFailed": "Unable to load the season data"
+        },
+        "toast": {
+            "errorTitle": "Error",
+            "successTitle": "Success",
+            "infoTitle": "Information",
+            "holidaysImported": "Holidays were imported successfully",
+            "holidaysAdded": "Holidays were added",
+            "holidaysDeleted": "Holidays were deleted",
+            "seasonActivated": "The season was activated successfully",
+            "nextSeasonCreated": "Since you set this season as “current” and there is no next season, the next season was created automatically. You can edit it if needed."
+        }
+    },
+    "holidays": {
+        "sectionTitle": "Holidays & public holidays",
+        "import": "Import",
+        "noData": "No holiday",
+        "dateHint": "dd/mm/yyyy",
+        "columns": {
+            "label": "Label",
+            "start": "Start date",
+            "end": "End date",
+            "action": "Action"
+        },
+        "addModal": {
+            "title": "New holiday or public holiday",
+            "startLabel": "Start date",
+            "endLabel": "End date",
+            "labelLabel": "Label",
+            "errEmptyField": "One of the fields is empty.",
+            "errStartAfterEnd": "The start date cannot be after the end date.",
+            "errTooLong": "A duration longer than 3 months is not reasonable for a holiday…"
+        },
+        "fetchModal": {
+            "title": "Import holidays and public holidays?"
+        },
+        "deleteModal": {
+            "title": "Do you confirm the deletion of “{{label}}”?"
+        }
+    },
+    "seasonsList": {
+        "cannotDeleteCurrentTitle": "Cannot delete the current season",
+        "cannotDeleteCurrentText": "You must first set another season as “current”",
+        "deleteTitle": "Season deletion",
+        "deleteSuccessTitle": "Success",
+        "deleteSuccessText": "Deletion successful",
+        "active": "Active",
+        "activate": "Activate",
+        "columns": {
+            "label": "Label",
+            "start": "Start",
+            "end": "End",
+            "status": "Status",
+            "next": "Next",
+            "actions": "Actions"
+        }
+    },
+    "availabilityInput": {
+        "titleSingle": "Time preferences for the activity {{label}}",
+        "titleMulti": "Time preferences for the activities ({{labels}})",
+        "day": "Day",
+        "from": "From",
+        "to": "to",
+        "comment": "Comment",
+        "commentPlaceholder": "You can add a few details here...",
+        "create": "Create availability"
+    },
+    "availabilityList": {
+        "commentSaved": "Comment entered",
+        "editComment": "Enter or edit a comment",
+        "deleteAllConfirm": "Do you really want to delete the {{day}} slots?",
+        "title": "My availabilities",
+        "empty": "No availability"
+    },
+    "availabilityManager": {
+        "weekChoice": "Week selection",
+        "change": "Change"
+    },
+    "availabilityCommentModal": {
+        "title": "Comment"
+    },
+    "plannings": {
+        "columns": {
+            "lastModified": "Last modified",
+            "lastName": "Last name",
+            "firstName": "First name",
+            "actions": "Actions",
+            "room": "Room"
+        },
+        "profile": "Profile",
+        "groupSimulation": "Group simulation",
+        "viewPlanning": "View planning"
+    },
+    "presenceSheet": {
+        "noCourse": "No course",
+        "allCourses": "All courses",
+        "allStudents": "All students",
+        "room": "Room {{label}}",
+        "updateError": "Error while updating this attendance record",
+        "bulkUpdateError": "Error during the bulk update",
+        "attendance": {
+            "absent": "Absent",
+            "absentFemale": "Absent",
+            "justifiedAbsence": "Justified absence",
+            "present": "Present",
+            "presentFemale": "Present"
+        }
+    },
+    "hoursSheet": {
+        "titlePrefix": "Timesheet for",
+        "monthlyTitle": "Timesheet {{month}} {{year}}",
+        "colWeek": "WEEK",
+        "colTotal": "TOTAL",
+        "colCovering": "SUBSTITUTE",
+        "colCovered": "SUBSTITUTED",
+        "rowTotals": "TOTALS",
+        "coveringHours": "{{hours}} as substitute",
+        "coveredHours": "{{hours}} substituted",
+        "countedHours": "({{hours}} counted)",
+        "footnote": "*These hours are included in the activities count"
+    }
 }

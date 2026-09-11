@@ -75,7 +75,7 @@ class WeekSelector extends React.PureComponent {
                 this.setState({
                     list: data,
                     isFetching: false,
-                    selected: this.props.day || getFirstWeek(data)
+                    selected: this.props.day || getFirstWeek(data),
                 });
             }
         });

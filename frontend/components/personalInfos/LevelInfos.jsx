@@ -1,6 +1,7 @@
 import React from "react";
 
 import _ from "lodash";
+import { withTranslation } from "react-i18next";
 import { optionMapper, hasKeys } from "../utils";
 
 class LevelInfos extends React.Component {
@@ -27,6 +28,7 @@ class LevelInfos extends React.Component {
     }
 
     render() {
+        const { t } = this.props;
         return (
             <div id="tab-2" className="tab-pane">
                 <div className="form form-horizontal m-t-lg">
@@ -45,7 +47,11 @@ class LevelInfos extends React.Component {
                             return (
                                 <div key={seasonId}>
                                     <h2>
-                                        {season ? season.label : "Non précisée"}
+                                        {season
+                                            ? season.label
+                                            : t(
+                                                  "users:personalInfos.levels.unspecifiedSeason"
+                                              )}
                                     </h2>
                                     <div className="row">
                                         {levels.map((level, i) => (
@@ -63,9 +69,16 @@ class LevelInfos extends React.Component {
                                                 >
                                                     <div className="panel-heading flex flex-center-aligned flex-space-between-justified">
                                                         <h3>
-                                                            {
-                                                                _.get(_.find(this.props.activityRefs, ref => ref.id == level.activity_ref_id), "label") || ""
-                                                            }
+                                                            {_.get(
+                                                                _.find(
+                                                                    this.props
+                                                                        .activityRefs,
+                                                                    ref =>
+                                                                        ref.id ==
+                                                                        level.activity_ref_id
+                                                                ),
+                                                                "label"
+                                                            ) || ""}
                                                         </h3>
                                                         <button
                                                             onClick={() =>
@@ -85,7 +98,9 @@ class LevelInfos extends React.Component {
                                                     <div className="panel-body">
                                                         <div className="flex flex-center-aligned m-b-sm">
                                                             <h4 className="m-n m-r-sm">
-                                                                Peut continuer
+                                                                {t(
+                                                                    "users:personalInfos.levels.canContinue"
+                                                                )}
                                                             </h4>
                                                             <input
                                                                 type="checkbox"
@@ -128,8 +143,9 @@ class LevelInfos extends React.Component {
                                                                 disabled
                                                                 value="0"
                                                             >
-                                                                Choisir un
-                                                                niveau
+                                                                {t(
+                                                                    "users:personalInfos.levels.chooseLevel"
+                                                                )}
                                                             </option>
                                                             {_.chain(
                                                                 this.props
@@ -177,7 +193,9 @@ class LevelInfos extends React.Component {
                                                             value=""
                                                             disabled
                                                         >
-                                                            ACTIVITÉ
+                                                            {t(
+                                                                "users:personalInfos.levels.activity"
+                                                            )}
                                                         </option>
                                                         {_(
                                                             this.props
@@ -191,7 +209,9 @@ class LevelInfos extends React.Component {
                                                 <div className="panel-body">
                                                     <div className="flex flex-center-aligned m-b-sm">
                                                         <h4 className="m-n m-r-sm">
-                                                            Peut continuer
+                                                            {t(
+                                                                "users:personalInfos.levels.canContinue"
+                                                            )}
                                                         </h4>
                                                         <input
                                                             type="checkbox"
@@ -245,7 +265,9 @@ class LevelInfos extends React.Component {
                                                                 disabled
                                                                 value=""
                                                             >
-                                                                NIVEAU
+                                                                {t(
+                                                                    "users:personalInfos.levels.level"
+                                                                )}
                                                             </option>
                                                             {_.chain(
                                                                 this.props
@@ -314,7 +336,7 @@ class LevelInfos extends React.Component {
                             className="btn btn-primary pull-right m-r-sm"
                             onClick={() => this.props.handleSaveInfos()}
                         >
-                            Confirmer
+                            {t("common:actions.confirm")}
                         </button>
                     </div>
                 </div>
@@ -323,4 +345,4 @@ class LevelInfos extends React.Component {
     }
 }
 
-export default LevelInfos;
+export default withTranslation("users")(LevelInfos);

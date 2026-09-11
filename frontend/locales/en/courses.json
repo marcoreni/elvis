@@ -160,5 +160,23 @@
             "notSpecified": "NOT SPECIFIED",
             "ageYears": "{{age}} years old"
         }
+    },
+    "replicateActivities": {
+        "selectDate": "Select a date",
+        "add": "Add",
+        "selectedDates": "Selected dates:",
+        "noDatesSelected": "No date selected",
+        "delete": "Delete",
+        "byPreviousWeek": "Replicate based on the previous week's activities",
+        "byFirstWeek": "Replicate based on the first week of the season's activities",
+        "replicateOnHolidays": "Replicate over the holidays",
+        "doneTitle": "Replication completed!",
+        "ok": "Ok",
+        "errorTitle": "Error",
+        "refWeek": "Week to use as a template for the replication",
+        "refWeekHint": "(select any date within the week)",
+        "startDate": "Replication start date",
+        "endDate": "Replication end date",
+        "jobProgressTitle": "Replication tracking"
     }
 }

@@ -1,10 +1,12 @@
 import React, { Fragment } from "react";
-import {useState} from "react";
+import { useState } from "react";
 import swal from "sweetalert2";
 import Modal from "react-modal";
+import { useTranslation } from "react-i18next";
 import * as api from "../../tools/api";
 
-export default function CancelApplication({activityApplicationId}) {
+export default function CancelApplication({ activityApplicationId }) {
+    const { t } = useTranslation("activityApplications");
     const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
     const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
 
@@ -19,15 +21,15 @@ export default function CancelApplication({activityApplicationId}) {
     function handleProcessCancelApplication() {
         api.set()
             .useLoading()
-            .success(() =>
-            {
+            .success(() => {
                 handleModal("confirm");
                 handleModal("success");
-
             })
             .error(() => {
                 swal({
-                    title: "Erreur lors de l'annulation de l'inscription",
+                    title: t(
+                        "activityApplications:activityItems.cancelApplication.error"
+                    ),
                     type: "error",
                 }).then(() => handleModal("confirm"));
             })
@@ -36,16 +38,18 @@ export default function CancelApplication({activityApplicationId}) {
 
     return (
         <Fragment>
-            <button className="btn btn-sm mr-2"
-                    style={{
-                        color: "#00334A",
-                        borderRadius: "8px",
-                        fontWeight: "bold"
-                    }}
-                    onClick={() => {
-                        handleModal("confirm");
-                    }}>
-                Annuler
+            <button
+                className="btn btn-sm mr-2"
+                style={{
+                    color: "#00334A",
+                    borderRadius: "8px",
+                    fontWeight: "bold",
+                }}
+                onClick={() => {
+                    handleModal("confirm");
+                }}
+            >
+                {t("common:actions.cancel")}
             </button>
 
             <Modal
@@ -53,51 +57,55 @@ export default function CancelApplication({activityApplicationId}) {
                 onRequestClose={() => handleModal("confirm")}
                 className="modal-xl"
                 ariaHideApp={false}
-                contentLabel="Confirmation de l'annulation de l'inscription"
+                contentLabel={t(
+                    "activityApplications:activityItems.cancelApplication.confirmContentLabel"
+                )}
                 style={{
                     content: {
-                        width: "700px" // Agrandir la modal à 700px
-                    }
+                        width: "700px", // Agrandir la modal à 700px
+                    },
                 }}
             >
                 <div className="m-5">
-                    <h2 className="modal-header mb-3" style={{color: "#00334A", textAlign: "left"}}>
-                        Cela annulera votre demande d'inscription. Êtes-vous sûr ?
+                    <h2
+                        className="modal-header mb-3"
+                        style={{ color: "#00334A", textAlign: "left" }}
+                    >
+                        {t(
+                            "activityApplications:activityItems.cancelApplication.confirmTitle"
+                        )}
                     </h2>
 
                     <div className="d-flex justify-content-end mt-5 btn-secondary">
-                        <button className="btn mr-2"
-                                style={{
-                                    borderRadius: "8px",
-                                    fontWeight: "bold",
-                                }}
-
-                                onClick={() => {
-                                    handleModal("confirm");
-                                }}
+                        <button
+                            className="btn mr-2"
+                            style={{
+                                borderRadius: "8px",
+                                fontWeight: "bold",
+                            }}
+                            onClick={() => {
+                                handleModal("confirm");
+                            }}
                         >
-                            Non
+                            {t("activityApplications:activityItems.no")}
                         </button>
 
-                        <button className="btn text-white"
-                                style={{
-                                    backgroundColor: "#00334A",
-                                    borderRadius: "8px",
-                                    fontWeight: "bold",
-                                }}
-
-                                onClick={() => {
-                                    handleProcessCancelApplication();
-                                }}
+                        <button
+                            className="btn text-white"
+                            style={{
+                                backgroundColor: "#00334A",
+                                borderRadius: "8px",
+                                fontWeight: "bold",
+                            }}
+                            onClick={() => {
+                                handleProcessCancelApplication();
+                            }}
                         >
-                            Oui
+                            {t("activityApplications:activityItems.yes")}
                         </button>
                     </div>
                 </div>
-
-
             </Modal>
-
 
             {/** Modal de success */}
             <Modal
@@ -108,7 +116,9 @@ export default function CancelApplication({activityApplicationId}) {
                 }}
                 className="modal-xl"
                 ariaHideApp={false}
-                contentLabel="Inscription annulée"
+                contentLabel={t(
+                    "activityApplications:activityItems.cancelApplication.canceledContentLabel"
+                )}
                 style={{
                     content: {
                         width: "700px", // Agrandir la modal à 700px
@@ -116,32 +126,39 @@ export default function CancelApplication({activityApplicationId}) {
                 }}
             >
                 <div className="m-5">
-                    <h2 className="modal-header mb-3" style={{color: "#00334A", textAlign: "left"}}>
-                        Votre demande d'inscription est annulée
+                    <h2
+                        className="modal-header mb-3"
+                        style={{ color: "#00334A", textAlign: "left" }}
+                    >
+                        {t(
+                            "activityApplications:activityItems.cancelApplication.canceledTitle"
+                        )}
                     </h2>
-                    <p className="h4 mb-5">Vous pouvez procéder à une nouvelle demande d'inscription</p>
+                    <p className="h4 mb-5">
+                        {t(
+                            "activityApplications:activityItems.cancelApplication.canceledBody"
+                        )}
+                    </p>
                     <div className="d-flex justify-content-end mt-5">
-                        <button className="btn text-white"
-                                style={{
-                                    backgroundColor: "#00334A",
-                                    borderRadius: "8px",
-                                    fontWeight: "bold"
-                                }}
-
-                                onClick={() => {
-                                    handleModal("success")
-                                    window.location.reload()
-                                }}
+                        <button
+                            className="btn text-white"
+                            style={{
+                                backgroundColor: "#00334A",
+                                borderRadius: "8px",
+                                fontWeight: "bold",
+                            }}
+                            onClick={() => {
+                                handleModal("success");
+                                window.location.reload();
+                            }}
                         >
-                            Voir mes demandes
+                            {t(
+                                "activityApplications:activityItems.viewMyRequests"
+                            )}
                         </button>
                     </div>
                 </div>
-
-
             </Modal>
-
         </Fragment>
-
-    )
+    );
 }
