@@ -1890,12 +1890,12 @@ end
   def users_list_csv(query)
     CSV.generate nil, col_sep: ";" do |csv|
       csv << [
-        "N° adhérent",
-        "Nom",
-        "Prénom",
-        "Email",
-        "N° de téléphone",
-        "Date de naissance"
+        t("csv_exports.users_list.adherent_number"),
+        t("csv_exports.users_list.last_name"),
+        t("csv_exports.users_list.first_name"),
+        t("csv_exports.users_list.email"),
+        t("csv_exports.users_list.phone"),
+        t("csv_exports.users_list.birthday")
       ]
 
       query

@@ -643,17 +643,17 @@ class ActivityController < ApplicationController
   def users_list_csv(users)
     CSV.generate nil, col_sep: ";" do |csv|
       csv << [
-        "N° adhérent de l'élève",
-        "Nom de l'élève",
-        "Prénom de l'élève",
-        "Sexe de l'élève",
-        "Âge de l'élève",
-        "Adresse mail de l'élève",
-        "Adresse postale de l'élève",
-        "N° de téléphone de l'élève",
-        "Prénom du responsable légal",
-        "Nom du responsable légal",
-        "N° de téléphone du responsable légal"
+        t("csv_exports.student_columns.adherent_number"),
+        t("csv_exports.student_columns.last_name"),
+        t("csv_exports.student_columns.first_name"),
+        t("csv_exports.student_columns.gender"),
+        t("csv_exports.student_columns.age"),
+        t("csv_exports.student_columns.email"),
+        t("csv_exports.student_columns.address"),
+        t("csv_exports.student_columns.phone"),
+        t("csv_exports.student_columns.guardian_first_name"),
+        t("csv_exports.student_columns.guardian_last_name"),
+        t("csv_exports.student_columns.guardian_phone")
       ]
 
       users.each do |user|

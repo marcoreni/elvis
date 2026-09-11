@@ -886,3 +886,58 @@ fr:
         pre_application:
             undeletable_instruction:
                 pre_registered: "L'utilisateur s'est pré-inscrit. Il ne vous est pas possible de supprimer cette donnée."
+
+    csv_exports:
+        student_columns:
+            adherent_number: "N° adhérent de l'élève"
+            last_name: "Nom de l'élève"
+            first_name: "Prénom de l'élève"
+            gender: "Sexe de l'élève"
+            age: "Âge de l'élève"
+            email: "Adresse mail de l'élève"
+            address: "Adresse postale de l'élève"
+            phone: "N° de téléphone de l'élève"
+            guardian_first_name: "Prénom du responsable légal"
+            guardian_last_name: "Nom du responsable légal"
+            guardian_phone: "N° de téléphone du responsable légal"
+        applications_list:
+            request_number: "N° demande"
+            activities: "Activité.s"
+            level: Niveau
+            action: Action
+            status: Statut
+            season: Saison
+            availabilities: Disponibilités
+            comments: Commentaires
+        users_list:
+            adherent_number: "N° adhérent"
+            last_name: Nom
+            first_name: Prénom
+            email: Email
+            phone: "N° de téléphone"
+            birthday: Date de naissance
+        absences_export:
+            student: Élève
+            adherent_number: "N° adhérent"
+            day: Jour
+            activity: "Cours / activité"
+            teacher: Professeur
+            date: Date
+            type: Type
+            remark: Remarque
+            justified: Justifiée
+            unjustified: Injustifiée
+
+    jobs:
+        csv_importer:
+            initializing: Initialisation
+            handler_not_found: "Le handler spécifié est introuvable."
+            handler_init_error: "Une erreur est survenue lors de l'initialisation du handler."
+            invalid_format: "Le format du fichier ne convient pas. Veuillez importer un fichier au format CSV."
+            unexpected_headers: "Le fichier CSV n'a pas les en-têtes attendus."
+            progress: "%{count} lignes traitées"
+            completed: "%{count} lignes traitées - %{created} inscriptions créées et %{ignored} inscriptions existantes ignorées."
+
+    services:
+        tes_import_handler:
+            activity_not_identified: "Impossible d'identifier l'activité demandée par l'élève dans le référentiel d'activités (%{activity} / %{instrument})"

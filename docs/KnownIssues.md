@@ -610,3 +610,21 @@ before any `{...props}` spread onto a DOM node.
   load and are admin-editable at runtime (the settings UI lets a school add custom statuses/methods
   alongside the built-ins) — closer to `Parameter`/`NotificationTemplate` per-instance content than
   to static UI chrome, so left untranslated for the same reason those are out of scope.
+- **`AbsencesController::DAYS_FR` (French day names) is intentionally still hardcoded**, unlike every
+  other CSV export header touched by P6. `frontend/components/AbsencesTracking.jsx`'s `DAYS_ORDER` /
+  `dayIndex()` (line 4) sort the grouped-by-day UI by exact-matching this string against the `day`
+  field `AbsencesController#serialize_absences` puts in both the `data` JSON endpoint and the CSV
+  export row content. Localizing the backend value alone would silently break that sort for any
+  non-`fr` locale (frontend never told to expect anything but the 7 French names) — a paired
+  frontend change (translate `DAYS_ORDER` too, or send a stable day index instead of a name) is
+  needed first. Backend-only P6 batch leaves it alone; noted for whoever picks up the React side.
+- **Background job status/error text (`ActiveJob`/`ActiveJob::Status`, e.g. `CsvImporterJob`) always
+  renders in the default locale.** `I18n.locale` is set per-request by `ApplicationController`'s
+  `switch_locale`, but nothing propagates the enqueuing request's locale into the job's execution
+  thread (`app/jobs/application_job.rb` has no `around_perform` for it), so `I18n.t` calls added in
+  P6 (`jobs.csv_importer.*`) always resolve against the default locale (`:fr`) regardless of which
+  language the uploading user has selected. This matches today's actual behavior (the strings were
+  hardcoded French before), so it's not a regression, but it means the CSV importer's progress/error
+  text won't follow an English-locale user the way a controller/view string does. A general fix
+  (capture `I18n.locale` at enqueue time, pass it through as a job argument, wrap `perform` in
+  `I18n.with_locale`) would apply to any future job that renders user-facing text, not just this one.

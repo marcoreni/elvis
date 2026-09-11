@@ -1,6 +1,10 @@
 require "csv"
 
 class AbsencesController < ApplicationController
+  # NOTE(i18n P6): kept as literal French - frontend/components/AbsencesTracking.jsx's
+  # DAYS_ORDER / dayIndex() sort the grouped-by-day UI by matching this exact French string
+  # (see docs/KnownIssues.md). Localizing it here would silently break that sort for non-fr
+  # locales without a paired frontend change, which is out of this backend-only batch's scope.
   DAYS_FR = %w[Dimanche Lundi Mardi Mercredi Jeudi Vendredi Samedi].freeze
 
   # Global absence tracking page ("Suivi des absences")
@@ -40,7 +44,16 @@ class AbsencesController < ApplicationController
     rows = season.nil? ? [] : serialize_absences(absences_scope(season, range_start, range_end))
 
     csv = CSV.generate(headers: true, col_sep: ";") do |out|
-      out << ["Élève", "N° adhérent", "Jour", "Cours / activité", "Professeur", "Date", "Type", "Remarque"]
+      out << [
+        t("csv_exports.absences_export.student"),
+        t("csv_exports.absences_export.adherent_number"),
+        t("csv_exports.absences_export.day"),
+        t("csv_exports.absences_export.activity"),
+        t("csv_exports.absences_export.teacher"),
+        t("csv_exports.absences_export.date"),
+        t("csv_exports.absences_export.type"),
+        t("csv_exports.absences_export.remark")
+      ]
       rows.each do |a|
         out << [
           a[:student][:full_name],
@@ -49,7 +62,7 @@ class AbsencesController < ApplicationController
           a[:activity],
           a[:teacher],
           a[:date],
-          a[:justified] ? "Justifiée" : "Injustifiée",
+          a[:justified] ? t("csv_exports.absences_export.justified") : t("csv_exports.absences_export.unjustified"),
           a[:remarks],
         ]
       end

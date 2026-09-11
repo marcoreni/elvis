@@ -883,3 +883,58 @@ en:
         pre_application:
             undeletable_instruction:
                 pre_registered: "This user has pre-registered. It is not possible to delete this data."
+
+    csv_exports:
+        student_columns:
+            adherent_number: Student member number
+            last_name: Student last name
+            first_name: Student first name
+            gender: Student gender
+            age: Student age
+            email: Student email address
+            address: Student postal address
+            phone: Student phone number
+            guardian_first_name: Guardian first name
+            guardian_last_name: Guardian last name
+            guardian_phone: Guardian phone number
+        applications_list:
+            request_number: "Request #"
+            activities: Activity/ies
+            level: Level
+            action: Action
+            status: Status
+            season: Season
+            availabilities: Availabilities
+            comments: Comments
+        users_list:
+            adherent_number: Member number
+            last_name: Last name
+            first_name: First name
+            email: Email
+            phone: Phone number
+            birthday: Date of birth
+        absences_export:
+            student: Student
+            adherent_number: Member number
+            day: Day
+            activity: Class / activity
+            teacher: Teacher
+            date: Date
+            type: Type
+            remark: Remark
+            justified: Justified
+            unjustified: Unjustified
+
+    jobs:
+        csv_importer:
+            initializing: Initializing
+            handler_not_found: "The specified handler could not be found."
+            handler_init_error: "An error occurred while initializing the handler."
+            invalid_format: "The file format is not suitable. Please import a CSV file."
+            unexpected_headers: "The CSV file does not have the expected headers."
+            progress: "%{count} rows processed"
+            completed: "%{count} rows processed - %{created} registrations created and %{ignored} existing registrations ignored."
+
+    services:
+        tes_import_handler:
+            activity_not_identified: "Unable to identify the activity requested by the student in the activity catalogue (%{activity} / %{instrument})"
