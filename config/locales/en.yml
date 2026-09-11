@@ -152,7 +152,7 @@ en:
                         password_confirmation:
                             confirmation: "Password confirmation doesn't match."
                         base:
-                            duplicate_identity: "An account already exists with this last name - first name - date of birth combination."
+                            duplicate_identity: "An account already exists with this combination of last name, first name, and date of birth."
                             duplicate_email: "An account already exists with this email."
                 adhesion_price:
                     attributes:
@@ -186,9 +186,9 @@ en:
                 activity_ref:
                     attributes:
                         to_age:
-                            greater_than_from_age: must be greater than from_age
+                            greater_than_from_age: must be greater than the minimum age
                         occupation_hard_limit:
-                            greater_than_occupation_limit: must be greater than occupation_limit
+                            greater_than_occupation_limit: must be greater than the number of spots
                 formule:
                     attributes:
                         number_of_items:
@@ -202,7 +202,7 @@ en:
                 payer_payment_terms:
                     attributes:
                         base:
-                            duplicate: "Payment terms already exist for season %{season}, payer %{payer} - please update them"
+                            duplicate: "Payment terms already exist for season %{season} and payer %{payer}: please update them"
 
     views:
         layouts:
@@ -279,9 +279,9 @@ en:
         activity_assigned_mailer:
             activity_assigned:
                 greeting_html: "Hello <strong>%{name}</strong>,"
-                proposed_slot_html: "A time slot has been offered to you for the class <br />\n<strong>\"%{activity}\"</strong>."
+                proposed_slot_html: "A time slot has been offered to you for the course <br />\n<strong>\"%{activity}\"</strong>."
                 request_info_html: "Request #<span style=\"color:#0079bf\">%{id}</span> concerning %{first_name} %{last_name}"
-                schedule_info_html: "For the <strong>%{season}</strong> season, the class will take place on: <br />\n<strong>%{day}</strong> <br />\nfrom <strong>%{start_time}</strong>\nto <strong>%{end_time} <br />\n</strong> with teacher <strong>%{teacher}</strong>"
+                schedule_info_html: "For the <strong>%{season}</strong> season, the course will take place on: <br />\n<strong>%{day}</strong> <br />\nfrom <strong>%{start_time}</strong>\nto <strong>%{end_time}</strong> <br />\nwith teacher <strong>%{teacher}</strong>"
                 validate_or_refuse: Accept or decline the offer by clicking the button below.
                 cta_button: "Go to %{name}"
         adhesion_mailer:
@@ -766,19 +766,19 @@ en:
     # hence these live as flat top-level nodes rather than nested under `views`.
     activity_accepted_mailer:
         activity_accepted:
-            subject: "%{name} - Application accepted"
+            subject: "%{name} - Course proposal accepted"
     activity_assigned_mailer:
         activity_assigned:
-            subject: "%{name} - Class assignment confirmation"
+            subject: "%{name} - Course assignment confirmation"
     activity_proposed_mailer:
         activity_proposed:
-            subject: "%{name} - Pending class proposal"
+            subject: "%{name} - Pending course proposal"
     adhesion_mailer:
         reminder_email:
             subject: "%{name} - Your membership will expire soon"
     admin_cancelled_attendance_mailer:
         cancelled_attendance:
-            subject: "%{name} - Class cancelled by a student"
+            subject: "%{name} - Course cancelled by a student"
     application_mailer:
         notify_new_application:
             subject: "%{name} - Registration request confirmation"
@@ -794,7 +794,7 @@ en:
             subject: "%{name} - Upcoming payment"
     user_cancelled_attendance_mailer:
         cancelled_attendance:
-            subject: "%{name} - Class cancellation confirmation"
+            subject: "%{name} - Course cancellation confirmation"
 
     controllers:
         settings:
@@ -812,7 +812,7 @@ en:
                     success: The band was successfully deleted.
         locations:
             destroy:
-                linked_data_error: "This location is linked to other data (classes, for example)"
+                linked_data_error: "This location is linked to other data (courses, for example)"
         adhesion:
             create:
                 failure: Unable to create the membership
@@ -839,7 +839,7 @@ en:
         activities_applications:
             send_all_confirmation_mail:
                 no_users_selected: "You have not selected any users"
-                already_processed: "The selected users have already received the email or are not in an assigned/proposed class status"
+                already_processed: "The selected users have already received the email or are not in an assigned/proposed course status"
         formules:
             destroy:
                 in_use_error: "This package is used by one or more registrations: it cannot be deleted."
@@ -916,7 +916,7 @@ en:
             guardian_phone: Guardian phone number
         applications_list:
             request_number: "Request #"
-            activities: Activity/ies
+            activities: Activities
             level: Level
             action: Action
             status: Status
@@ -934,7 +934,7 @@ en:
             student: Student
             adherent_number: Member number
             day: Day
-            activity: Class / activity
+            activity: Course / activity
             teacher: Teacher
             date: Date
             type: Type
@@ -949,9 +949,11 @@ en:
             handler_init_error: "An error occurred while initializing the handler."
             invalid_format: "The file format is not suitable. Please import a CSV file."
             unexpected_headers: "The CSV file does not have the expected headers."
-            progress: "%{count} rows processed"
+            progress:
+                one: "%{count} row processed"
+                other: "%{count} rows processed"
             completed: "%{count} rows processed - %{created} registrations created and %{ignored} existing registrations ignored."
 
     services:
         tes_import_handler:
-            activity_not_identified: "Unable to identify the activity requested by the student in the activity catalogue (%{activity} / %{instrument})"
+            activity_not_identified: "Unable to identify the activity requested by the student in the activity catalog (%{activity} / %{instrument})"

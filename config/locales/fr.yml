@@ -153,7 +153,7 @@ fr:
                         password_confirmation:
                             confirmation: "Le mot de passe ne concorde pas."
                         base:
-                            duplicate_identity: "Un compte existe déjà avec cette combinaison Nom - Prénom - Date de Naissance."
+                            duplicate_identity: "Un compte existe déjà avec cette combinaison nom - prénom - date de naissance."
                             duplicate_email: "Un compte existe déjà avec cet email."
                 adhesion_price:
                     attributes:
@@ -187,9 +187,9 @@ fr:
                 activity_ref:
                     attributes:
                         to_age:
-                            greater_than_from_age: doit être supérieur à from_age
+                            greater_than_from_age: doit être supérieur à l'âge min
                         occupation_hard_limit:
-                            greater_than_occupation_limit: doit être supérieur à occupation_limit
+                            greater_than_occupation_limit: doit être supérieur au nombre de places
                 formule:
                     attributes:
                         number_of_items:
@@ -203,7 +203,7 @@ fr:
                 payer_payment_terms:
                     attributes:
                         base:
-                            duplicate: "Des modalités de paiement existent déjà pour la saison %{season}, le payeur %{payer}, veuillez faire une mise à jour"
+                            duplicate: "Des modalités de paiement existent déjà pour la saison %{season} et le payeur %{payer} : veuillez faire une mise à jour"
 
     views:
         layouts:
@@ -282,19 +282,19 @@ fr:
                 greeting_html: "Bonjour <strong>%{name}</strong>,"
                 proposed_slot_html: "Un créneau vous a été proposé pour le cours <br />\n<strong>\"%{activity}\"</strong>."
                 request_info_html: "Demande n°<span style=\"color:#0079bf\">%{id}</span> concernant %{first_name} %{last_name}"
-                schedule_info_html: "Pour la <strong>%{season}</strong>, le cours se déroulera le : <br />\n<strong>%{day}</strong> <br />\nde <strong>%{start_time}</strong>\nà <strong>%{end_time} <br />\n</strong> avec le professeur <strong>%{teacher}</strong>"
+                schedule_info_html: "Pour la <strong>%{season}</strong>, le cours se déroulera le : <br />\n<strong>%{day}</strong> <br />\nde <strong>%{start_time}</strong>\nà <strong>%{end_time}</strong> <br />\navec le professeur <strong>%{teacher}</strong>"
                 validate_or_refuse: Valider ou refuser la proposition en cliquant sur le bouton ci-dessous.
                 cta_button: "Se rendre sur %{name}"
         adhesion_mailer:
             reminder_email:
                 greeting_html: "Bonjour <strong>%{name}</strong>,"
                 expiring_notice: Votre adhésion se termine dans 30 jours.
-                login_link: Connectez vous
+                login_link: Connectez-vous
                 subscribe_notice: pour adhérer à une nouvelle activité.
         application_mailer:
             notify_new_application:
                 greeting: Bonjour,
-                acknowledgement_html: "Nous accusons réception de votre demande d'inscription pour la <strong>%{season},</strong> pour l'élève <strong>%{student}</strong>\nà l'activité <strong>%{activities}</strong>"
+                acknowledgement_html: "Nous accusons réception de votre demande d'inscription pour la saison <strong>%{season}</strong>, pour l'élève <strong>%{student}</strong>\nà l'activité <strong>%{activities}</strong>"
                 application_number_html: "Voici son numéro de demande : <span style=\"color: darkred\">%{id}</span>"
         partials:
             mailer:
@@ -821,7 +821,7 @@ fr:
             destroy:
                 linked_applications:
                     one: "Ce statut est lié à %{count} demande d'inscription, vous ne pouvez donc pas le supprimer."
-                    other: "Ce statut est lié à %{count} demandes d'inscriptions, vous ne pouvez donc pas le supprimer."
+                    other: "Ce statut est lié à %{count} demandes d'inscription, vous ne pouvez donc pas le supprimer."
                 success: La suppression s'est déroulée avec succès.
         remove:
             no_elements: Aucun élément à supprimer
@@ -836,7 +836,7 @@ fr:
             update_from_user:
                 failure: "Le numéro de TVA n'a pas été mis à jour."
         planning:
-            no_default_planning: "Pas de planning par défaut de saisie par l'école"
+            no_default_planning: "Aucun planning par défaut n'a été défini par l'école"
         activities_applications:
             send_all_confirmation_mail:
                 no_users_selected: "Vous n'avez pas sélectionné d'utilisateurs"
@@ -885,7 +885,7 @@ fr:
             undeletable_instruction:
                 default: "supprimer la demande d'inscription numéro %{id}"
             pre_destroy:
-                processing_error: "La demande d'inscription ne peut être supprimée, car l'administration traite ou à traiter cette demande."
+                processing_error: "La demande d'inscription ne peut être supprimée, car l'administration est en train de la traiter ou doit encore le faire."
         season:
             pre_destroy:
                 current_season_error: Impossible de supprimer la saison en cours
@@ -917,7 +917,7 @@ fr:
             guardian_phone: "N° de téléphone du responsable légal"
         applications_list:
             request_number: "N° demande"
-            activities: "Activité.s"
+            activities: "Activité(s)"
             level: Niveau
             action: Action
             status: Statut
@@ -950,7 +950,9 @@ fr:
             handler_init_error: "Une erreur est survenue lors de l'initialisation du handler."
             invalid_format: "Le format du fichier ne convient pas. Veuillez importer un fichier au format CSV."
             unexpected_headers: "Le fichier CSV n'a pas les en-têtes attendus."
-            progress: "%{count} lignes traitées"
+            progress:
+                one: "%{count} ligne traitée"
+                other: "%{count} lignes traitées"
             completed: "%{count} lignes traitées - %{created} inscriptions créées et %{ignored} inscriptions existantes ignorées."
 
     services:
