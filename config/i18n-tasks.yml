@@ -156,3 +156,32 @@ ignore_unused:
   - "reglement_reminder_mailer.send_reglement_reminder.subject"
   - "upcoming_payment_mailer.upcoming_payment.subject"
   - "user_cancelled_attendance_mailer.cancelled_attendance.subject"
+  # Phase 07 P6 (feat/i18n-p6-backend-strings): model-layer validation messages passed as a
+  # Symbol (`errors.add(:attr, :key)` / `validates ..., message: :key`) rather than a literal
+  # string, same "not a literal t()/I18n.t() call" reasoning as the pre-existing
+  # activerecord.errors.models.user.attributes.password_confirmation.confirmation entry above —
+  # ActiveModel resolves these through `activerecord.errors.models.<model>.attributes.<attr>.<key>`
+  # (falling back to `activerecord.errors.messages.<key>` / `errors.messages.<key>`) at validation
+  # time, which the static scan can't see.
+  - "activerecord.errors.models.adhesion_price.attributes.label.blank"
+  - "activerecord.errors.models.adhesion_price.attributes.price.blank"
+  - "activerecord.errors.models.adhesion_price.attributes.price.greater_than_or_equal_to"
+  - "activerecord.errors.models.adhesion_price.attributes.season_id.taken"
+  - "activerecord.errors.models.activity_ref_kind.attributes.name.blank"
+  - "activerecord.errors.models.activity_ref_kind.attributes.name.taken"
+  - "activerecord.errors.models.activity_ref_kind.attributes.default_activity_ref.same_family"
+  - "activerecord.errors.models.season.attributes.end.after_start"
+  - "activerecord.errors.models.season.attributes.opening_date_for_applications.before_season_start"
+  - "activerecord.errors.models.season.attributes.opening_date_for_applications.after_previous_season_closing"
+  - "activerecord.errors.models.season.attributes.opening_date_for_new_applications.after_applications_opening"
+  - "activerecord.errors.models.season.attributes.opening_date_for_new_applications.before_applications_closing"
+  - "activerecord.errors.models.season.attributes.opening_date_for_new_applications.after_previous_season_closing"
+  - "activerecord.errors.models.season.attributes.closing_date_for_applications.before_season_end"
+  - "activerecord.errors.models.activity_ref.attributes.to_age.greater_than_from_age"
+  - "activerecord.errors.models.activity_ref.attributes.occupation_hard_limit.greater_than_occupation_limit"
+  - "activerecord.errors.models.formule.attributes.number_of_items.exceeds_available_activities"
+  - "activerecord.errors.models.formule.attributes.base.at_least_one_activity"
+  - "activerecord.errors.models.user.attributes.base.duplicate_identity"
+  - "activerecord.errors.models.user.attributes.base.duplicate_email"
+  - "activerecord.errors.models.level.attributes.base.duplicate"
+  - "activerecord.errors.models.payer_payment_terms.attributes.base.duplicate"

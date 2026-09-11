@@ -151,7 +151,7 @@ class ActivityApplication < ApplicationRecord
   def undeletable_instruction(source_object = nil)
     case source_object.class.to_s
     when User.to_s
-      { instruction: "supprimer la demande d'inscription numéro #{id} ", possible: true }
+      { instruction: I18n.t("models.activity_application.undeletable_instruction.default", id: id), possible: true }
     else
       super
     end
@@ -181,7 +181,7 @@ class ActivityApplication < ApplicationRecord
 
       default_activity_status_id = set_status&.parse&.positive? ? set_status.parse : ActivityApplicationStatus::TREATMENT_PENDING_ID
 
-      raise "La demande d'inscription ne peut être supprimée, car l'administration traite ou à traiter cette demande." if self.activity_application_status_id != default_activity_status_id
+      raise I18n.t("models.activity_application.pre_destroy.processing_error") if self.activity_application_status_id != default_activity_status_id
     end
 
     self.pre_application_activity.reset if self.pre_application_activity

@@ -41,7 +41,6 @@ class Level < ApplicationRecord
 
     return unless query.any?
 
-    errors.add(:base,
-               "Ce niveau existe déjà pour la saison #{season.label}, l'activité #{activity_ref.label} et l'utilisateur #{user.full_name}")
+    errors.add(:base, :duplicate, season: season.label, activity: activity_ref.label, user: user.full_name)
   end
 end

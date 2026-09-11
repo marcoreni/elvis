@@ -140,7 +140,7 @@ class Season < ApplicationRecord
 
   def check_start_end
     if start.present? && self.end.present? && start > self.end
-      errors.add(:end, "doit être postérieur au début de saison")
+      errors.add(:end, :after_start)
     end
   end
 
@@ -148,27 +148,27 @@ class Season < ApplicationRecord
     previous = self.previous
 
     if start.present? && opening_date_for_applications.present? && start <= opening_date_for_applications
-      errors.add(:opening_date_for_applications, "doit être antérieur au début de saison")
+      errors.add(:opening_date_for_applications, :before_season_start)
     end
 
     if opening_date_for_new_applications.present? && opening_date_for_applications.present? && opening_date_for_new_applications < opening_date_for_applications
-      errors.add(:opening_date_for_new_applications, "doit être postérieur à la date d'ouverture des ré-inscriptions")
+      errors.add(:opening_date_for_new_applications, :after_applications_opening)
     end
 
     if opening_date_for_new_applications.present? && closing_date_for_applications.present? && opening_date_for_new_applications > closing_date_for_applications
-      errors.add(:opening_date_for_new_applications, "doit être antérieur à la date de clôture des inscriptions")
+      errors.add(:opening_date_for_new_applications, :before_applications_closing)
     end
 
     if self.end.present? && closing_date_for_applications.present? && self.end < closing_date_for_applications
-      errors.add(:closing_date_for_applications, "doit être antérieur à la fin de saison")
+      errors.add(:closing_date_for_applications, :before_season_end)
     end
 
     if previous.present? && opening_date_for_applications.present? && previous.closing_date_for_applications > opening_date_for_applications
-      errors.add(:opening_date_for_applications, "doit être postérieur à la date de clôture des inscriptions de la saison précédente")
+      errors.add(:opening_date_for_applications, :after_previous_season_closing)
     end
 
     if previous.present? && opening_date_for_new_applications.present? && previous.closing_date_for_applications > opening_date_for_new_applications
-      errors.add(:opening_date_for_new_applications, "doit être postérieur à la date de clôture des inscriptions de la saison précédente")
+      errors.add(:opening_date_for_new_applications, :after_previous_season_closing)
     end
   end
 
@@ -198,7 +198,7 @@ class Season < ApplicationRecord
   end
 
   def pre_destroy
-    raise "Impossible de supprimer la saison en cours" if is_current
+    raise I18n.t("models.season.pre_destroy.current_season_error") if is_current
 
     previous_season = self.previous
 

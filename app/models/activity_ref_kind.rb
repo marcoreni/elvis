@@ -13,8 +13,8 @@ class ActivityRefKind < ApplicationRecord
 
   acts_as_paranoid
 
-  validates_presence_of :name, message: "ne peut être vide"
-  validates_uniqueness_of :name, message: "existe déjà", conditions: -> { where(deleted_at: nil) }
+  validates_presence_of :name, message: :blank
+  validates_uniqueness_of :name, message: :taken, conditions: -> { where(deleted_at: nil) }
 
   has_many :activity_refs
 
@@ -45,7 +45,7 @@ class ActivityRefKind < ApplicationRecord
 
   def verify_default_activity_ref_is_for_same_activity_ref_kind
     if default_activity_ref && default_activity_ref.activity_ref_kind != self
-      errors.add(:default_activity_ref, "doit être de la même famille d'activité")
+      errors.add(:default_activity_ref, :same_family)
     end
   end
 end

@@ -134,6 +134,58 @@ en:
                     attributes:
                         password_confirmation:
                             confirmation: "Password confirmation doesn't match."
+                        base:
+                            duplicate_identity: "An account already exists with this last name - first name - date of birth combination."
+                            duplicate_email: "An account already exists with this email."
+                adhesion_price:
+                    attributes:
+                        label:
+                            blank: The label is required
+                        price:
+                            blank: The price is required
+                            greater_than_or_equal_to: "The price must be greater than or equal to %{count}"
+                        season_id:
+                            taken: A price already exists for this season
+                activity_ref_kind:
+                    attributes:
+                        name:
+                            blank: cannot be empty
+                            taken: already exists
+                        default_activity_ref:
+                            same_family: must belong to the same activity family
+                season:
+                    attributes:
+                        end:
+                            after_start: must be after the season start
+                        opening_date_for_applications:
+                            before_season_start: must be before the season start
+                            after_previous_season_closing: "must be after the previous season's enrollment closing date"
+                        opening_date_for_new_applications:
+                            after_applications_opening: must be after the re-enrollment opening date
+                            before_applications_closing: must be before the enrollment closing date
+                            after_previous_season_closing: "must be after the previous season's enrollment closing date"
+                        closing_date_for_applications:
+                            before_season_end: must be before the season end
+                activity_ref:
+                    attributes:
+                        to_age:
+                            greater_than_from_age: must be greater than from_age
+                        occupation_hard_limit:
+                            greater_than_occupation_limit: must be greater than occupation_limit
+                formule:
+                    attributes:
+                        number_of_items:
+                            exceeds_available_activities: "cannot exceed the total number of available activities (%{count})"
+                        base:
+                            at_least_one_activity: "The package must contain at least one activity or activity family"
+                level:
+                    attributes:
+                        base:
+                            duplicate: "This level already exists for season %{season}, activity %{activity} and user %{user}"
+                payer_payment_terms:
+                    attributes:
+                        base:
+                            duplicate: "Payment terms already exist for season %{season}, payer %{payer} - please update them"
 
     views:
         layouts:
@@ -792,3 +844,42 @@ en:
                 success: Payment schedule option created
             update:
                 success: Payment schedule option updated
+
+    models:
+        application_record:
+            build_subject:
+                vowel: "the %{name}"
+                feminine: "the %{name}"
+                masculine: "the %{name}"
+                plural: "the %{name}"
+            success_message: "%{subject} was successfully deleted%{suffix}"
+            destroy_params:
+                undeletable_message: "Cannot be deleted because: <br/>"
+                deletable_message: "You must first: <br/>"
+            undeletable_instruction:
+                default: "delete (if possible) the linked \"%{class_name}\""
+        user:
+            destroy_params:
+                undeletable_message: "The user cannot be deleted because: <br/>"
+            pre_destroy:
+                detach_error: "Unable to detach user %{name}. Please do it manually or contact an administrator."
+        activity_application:
+            undeletable_instruction:
+                default: "delete registration request number %{id}"
+            pre_destroy:
+                processing_error: "This registration request cannot be deleted, because the administration is processing or has yet to process it."
+        season:
+            pre_destroy:
+                current_season_error: Cannot delete the current season
+        payment:
+            undeletable_instruction:
+                has_payments: They have already made payments
+        adhesion:
+            undeletable_instruction:
+                default: "delete %{name}'s membership"
+        payment_schedule:
+            undeletable_instruction:
+                linked_payments: payments are linked to this season
+        pre_application:
+            undeletable_instruction:
+                pre_registered: "This user has pre-registered. It is not possible to delete this data."

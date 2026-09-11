@@ -74,7 +74,7 @@ class Payment < ApplicationRecord
   def undeletable_instruction(source_object = nil)
     case source_object
     when User
-      { instruction: "Il a déjà effectué des paiements", possible: false }
+      { instruction: I18n.t("models.payment.undeletable_instruction.has_payments"), possible: false }
     else
       super
     end

@@ -137,6 +137,58 @@ fr:
                     attributes:
                         password_confirmation:
                             confirmation: "Le mot de passe ne concorde pas."
+                        base:
+                            duplicate_identity: "Un compte existe déjà avec cette combinaison Nom - Prénom - Date de Naissance."
+                            duplicate_email: "Un compte existe déjà avec cet email."
+                adhesion_price:
+                    attributes:
+                        label:
+                            blank: Le libellé est obligatoire
+                        price:
+                            blank: Le prix est obligatoire
+                            greater_than_or_equal_to: "Le prix doit être supérieur ou égal à %{count}"
+                        season_id:
+                            taken: Il existe déjà un tarif pour cette saison
+                activity_ref_kind:
+                    attributes:
+                        name:
+                            blank: ne peut être vide
+                            taken: existe déjà
+                        default_activity_ref:
+                            same_family: doit être de la même famille d'activité
+                season:
+                    attributes:
+                        end:
+                            after_start: doit être postérieur au début de saison
+                        opening_date_for_applications:
+                            before_season_start: doit être antérieur au début de saison
+                            after_previous_season_closing: "doit être postérieur à la date de clôture des inscriptions de la saison précédente"
+                        opening_date_for_new_applications:
+                            after_applications_opening: "doit être postérieur à la date d'ouverture des ré-inscriptions"
+                            before_applications_closing: doit être antérieur à la date de clôture des inscriptions
+                            after_previous_season_closing: "doit être postérieur à la date de clôture des inscriptions de la saison précédente"
+                        closing_date_for_applications:
+                            before_season_end: doit être antérieur à la fin de saison
+                activity_ref:
+                    attributes:
+                        to_age:
+                            greater_than_from_age: doit être supérieur à from_age
+                        occupation_hard_limit:
+                            greater_than_occupation_limit: doit être supérieur à occupation_limit
+                formule:
+                    attributes:
+                        number_of_items:
+                            exceeds_available_activities: "ne peut pas dépasser le nombre total d'activités disponibles (%{count})"
+                        base:
+                            at_least_one_activity: "La formule doit contenir au moins une activité ou famille d'activités"
+                level:
+                    attributes:
+                        base:
+                            duplicate: "Ce niveau existe déjà pour la saison %{season}, l'activité %{activity} et l'utilisateur %{user}"
+                payer_payment_terms:
+                    attributes:
+                        base:
+                            duplicate: "Des modalités de paiement existent déjà pour la saison %{season}, le payeur %{payer}, veuillez faire une mise à jour"
 
     views:
         layouts:
@@ -795,3 +847,42 @@ fr:
                 success: Option d'échéancier de paiement créée
             update:
                 success: Option d'échéancier de paiement mise à jour
+
+    models:
+        application_record:
+            build_subject:
+                vowel: "l'%{name}"
+                feminine: "la %{name}"
+                masculine: "le %{name}"
+                plural: "les %{name}"
+            success_message: "%{subject} a bien été supprimé%{suffix}"
+            destroy_params:
+                undeletable_message: "Impossible de supprimer parce que : <br/>"
+                deletable_message: "Il faut d'abord : <br/>"
+            undeletable_instruction:
+                default: "supprimer (si possible) les \"%{class_name}\" relié(e)s"
+        user:
+            destroy_params:
+                undeletable_message: "L'utilisateur ne peut pas être supprimé parce que : <br/>"
+            pre_destroy:
+                detach_error: "Impossible de détacher l'utilisateur %{name}. Veuillez le faire manuellement ou contacter un administrateur."
+        activity_application:
+            undeletable_instruction:
+                default: "supprimer la demande d'inscription numéro %{id}"
+            pre_destroy:
+                processing_error: "La demande d'inscription ne peut être supprimée, car l'administration traite ou à traiter cette demande."
+        season:
+            pre_destroy:
+                current_season_error: Impossible de supprimer la saison en cours
+        payment:
+            undeletable_instruction:
+                has_payments: Il a déjà effectué des paiements
+        adhesion:
+            undeletable_instruction:
+                default: "supprimer l'adhésion de %{name}"
+        payment_schedule:
+            undeletable_instruction:
+                linked_payments: des paiements sont reliés à cette saison
+        pre_application:
+            undeletable_instruction:
+                pre_registered: "L'utilisateur s'est pré-inscrit. Il ne vous est pas possible de supprimer cette donnée."

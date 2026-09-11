@@ -65,7 +65,7 @@ class Adhesion < ApplicationRecord
   def undeletable_instruction(source_object = nil)
     case source_object
     when Season
-      { instruction: "supprimer l'adhésion de #{user.full_name}", possible: true }
+      { instruction: I18n.t("models.adhesion.undeletable_instruction.default", name: user.full_name), possible: true }
     else
       super
     end
