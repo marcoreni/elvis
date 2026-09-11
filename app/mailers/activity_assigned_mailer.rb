@@ -28,7 +28,7 @@ class ActivityAssignedMailer < LayoutMailer
       time_interval: {}
     }))
 
-    mail(to: @user.email, subject: "#{name} - Confirmation d'attribution de cours")
+    mail(to: @user.email, subject: default_i18n_subject(name: name))
   end
 
   def liquid_assigns

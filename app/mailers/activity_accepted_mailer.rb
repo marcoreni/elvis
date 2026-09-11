@@ -10,7 +10,7 @@ class ActivityAcceptedMailer < LayoutMailer
     @confirmation_token = token
     @activity = LiquidDrops::ActivityDrop.new(activity.as_json(include: {activity_ref: {}, teacher: {}, room: {}, time_interval: {}}))
 
-    mail(to: record.email, subject: "#{name} - Proposition acceptée")
+    mail(to: record.email, subject: default_i18n_subject(name: name))
   end
 
   def liquid_assigns

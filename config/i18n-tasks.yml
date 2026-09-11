@@ -138,3 +138,21 @@ ignore_unused:
   # `I18n.t(@caption)` at render time. Neither the Symbol literal nor the dynamic `I18n.t` call
   # is a static `t("menu.…")` the scan can credit, so every menu key reads as unused.
   - "menu.*"
+  # Phase 07 P6 (feat/i18n-p6-backend-strings): non-Devise mailer subjects. Each of these mailer
+  # actions omits `subject:` from its `mail(...)` call and instead calls
+  # `default_i18n_subject(name: ...)` (ActionMailer::Base's own subject-auto-resolution helper,
+  # the same convention devise-i18n's `devise.mailer.*.subject` keys rely on) so the subject can
+  # keep interpolating the school name. That helper's i18n scope is
+  # `[self.class.mailer_name, action_name]` with no "views"/"mailers" wrapper — there is no
+  # literal `t("activity_accepted_mailer...")` call anywhere for the static scan to credit, so
+  # every one of these top-level nodes reads as unused despite being resolved at send time.
+  - "activity_accepted_mailer.activity_accepted.subject"
+  - "activity_assigned_mailer.activity_assigned.subject"
+  - "activity_proposed_mailer.activity_proposed.subject"
+  - "adhesion_mailer.reminder_email.subject"
+  - "admin_cancelled_attendance_mailer.cancelled_attendance.subject"
+  - "application_mailer.notify_new_application.subject"
+  - "payment_reminder_mailer.send_payment_reminder.subject"
+  - "reglement_reminder_mailer.send_reglement_reminder.subject"
+  - "upcoming_payment_mailer.upcoming_payment.subject"
+  - "user_cancelled_attendance_mailer.cancelled_attendance.subject"

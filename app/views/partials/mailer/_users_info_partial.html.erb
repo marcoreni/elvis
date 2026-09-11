@@ -2,8 +2,8 @@
 <% if (@user || user)&.adherent_number? %>
 <div style="text-align: center; font-size: 14px">
     <i>
-        <p>Votre numéro d'identification: <b><%= (@user || user).adherent_number %></b></p>
-        <p>Ce numéro vous permet de vous authentifier sur <%= Parameter.get_value("app.name") || "Elvis" %></p>
+        <p><%= t("views.partials.mailer.users_info_partial.adherent_number_html", number: (@user || user).adherent_number) %></p>
+        <p><%= t("views.partials.mailer.users_info_partial.adherent_number_hint_html", app_name: Parameter.get_value("app.name") || "Elvis") %></p>
     </i>
 </div>
 <% end %>

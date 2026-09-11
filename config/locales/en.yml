@@ -205,6 +205,30 @@ en:
                     greeting_html: "Hello <strong>%{name}</strong>,"
                     instruction: "You requested to reset your password. To change it, click the button below:"
                     instruction_2: "If you did not make this request, you can ignore this email. Your password will remain unchanged until you click the link."
+        activity_assigned_mailer:
+            activity_assigned:
+                greeting_html: "Hello <strong>%{name}</strong>,"
+                proposed_slot_html: "A time slot has been offered to you for the class <br />\n<strong>\"%{activity}\"</strong>."
+                request_info_html: "Request #<span style=\"color:#0079bf\">%{id}</span> concerning %{first_name} %{last_name}"
+                schedule_info_html: "For the <strong>%{season}</strong> season, the class will take place on: <br />\n<strong>%{day}</strong> <br />\nfrom <strong>%{start_time}</strong>\nto <strong>%{end_time} <br />\n</strong> with teacher <strong>%{teacher}</strong>"
+                validate_or_refuse: Accept or decline the offer by clicking the button below.
+                cta_button: "Go to %{name}"
+        adhesion_mailer:
+            reminder_email:
+                greeting_html: "Hello <strong>%{name}</strong>,"
+                expiring_notice: Your membership ends in 30 days.
+                login_link: Sign in
+                subscribe_notice: to join a new activity.
+        application_mailer:
+            notify_new_application:
+                greeting: Hello,
+                acknowledgement_html: "We acknowledge receipt of your registration request for the <strong>%{season}</strong> season, for student <strong>%{student}</strong>\nfor the activity <strong>%{activities}</strong>"
+                application_number_html: "Here is the request number: <span style=\"color: darkred\">%{id}</span>"
+        partials:
+            mailer:
+                users_info_partial:
+                    adherent_number_html: "Your identification number: <b>%{number}</b>"
+                    adherent_number_hint_html: "This number lets you sign in to %{app_name}"
         sessions:
             pick_user:
                 title_html: "Choose the account for %{email}"
@@ -665,3 +689,38 @@ en:
         shared:
             form_errors:
                 heading: "%{count} error(s) prevented this record from being saved:"
+    # Mailer subjects below are picked up by ActionMailer's own auto-resolution
+    # convention (Mailer#default_i18n_subject), whose i18n scope is
+    # [mailer_name, action_name] with no extra "views"/"mailers" wrapper -
+    # hence these live as flat top-level nodes rather than nested under `views`.
+    activity_accepted_mailer:
+        activity_accepted:
+            subject: "%{name} - Application accepted"
+    activity_assigned_mailer:
+        activity_assigned:
+            subject: "%{name} - Class assignment confirmation"
+    activity_proposed_mailer:
+        activity_proposed:
+            subject: "%{name} - Pending class proposal"
+    adhesion_mailer:
+        reminder_email:
+            subject: "%{name} - Your membership will expire soon"
+    admin_cancelled_attendance_mailer:
+        cancelled_attendance:
+            subject: "%{name} - Class cancelled by a student"
+    application_mailer:
+        notify_new_application:
+            subject: "%{name} - Registration request confirmation"
+            subject_no_school: Registration request confirmation
+    payment_reminder_mailer:
+        send_payment_reminder:
+            subject: "%{name} - Payment reminder"
+    reglement_reminder_mailer:
+        send_reglement_reminder:
+            subject: "%{name} - Payment reminder"
+    upcoming_payment_mailer:
+        upcoming_payment:
+            subject: "%{name} - Upcoming payment"
+    user_cancelled_attendance_mailer:
+        cancelled_attendance:
+            subject: "%{name} - Class cancellation confirmation"

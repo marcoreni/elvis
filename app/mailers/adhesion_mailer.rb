@@ -12,7 +12,7 @@ class AdhesionMailer < LayoutMailer
     name = School.first.name
 
     logger.info "About to send an email to #{emails} from "
-    mail(to: emails, subject: "#{name} - Votre adhésion va bientôt expirer")
+    mail(to: emails, subject: default_i18n_subject(name: name))
   end
 
   def liquid_assigns

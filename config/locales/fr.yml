@@ -208,6 +208,30 @@ fr:
                     greeting_html: "Bonjour <strong>%{name}</strong>,"
                     instruction: "Vous avez demandé à réinitialiser votre mot de passe. Pour le modifier, cliquez sur le bouton ci-dessous :"
                     instruction_2: "Si vous n’êtes pas à l’origine de cette demande, vous pouvez ignorer cet email. Votre mot de passe restera inchangé tant que vous ne cliquez pas sur le lien."
+        activity_assigned_mailer:
+            activity_assigned:
+                greeting_html: "Bonjour <strong>%{name}</strong>,"
+                proposed_slot_html: "Un créneau vous a été proposé pour le cours <br />\n<strong>\"%{activity}\"</strong>."
+                request_info_html: "Demande n°<span style=\"color:#0079bf\">%{id}</span> concernant %{first_name} %{last_name}"
+                schedule_info_html: "Pour la <strong>%{season}</strong>, le cours se déroulera le : <br />\n<strong>%{day}</strong> <br />\nde <strong>%{start_time}</strong>\nà <strong>%{end_time} <br />\n</strong> avec le professeur <strong>%{teacher}</strong>"
+                validate_or_refuse: Valider ou refuser la proposition en cliquant sur le bouton ci-dessous.
+                cta_button: "Se rendre sur %{name}"
+        adhesion_mailer:
+            reminder_email:
+                greeting_html: "Bonjour <strong>%{name}</strong>,"
+                expiring_notice: Votre adhésion se termine dans 30 jours.
+                login_link: Connectez vous
+                subscribe_notice: pour adhérer à une nouvelle activité.
+        application_mailer:
+            notify_new_application:
+                greeting: Bonjour,
+                acknowledgement_html: "Nous accusons réception de votre demande d'inscription pour la <strong>%{season},</strong> pour l'élève <strong>%{student}</strong>\nà l'activité <strong>%{activities}</strong>"
+                application_number_html: "Voici son numéro de demande : <span style=\"color: darkred\">%{id}</span>"
+        partials:
+            mailer:
+                users_info_partial:
+                    adherent_number_html: "Votre numéro d'identification : <b>%{number}</b>"
+                    adherent_number_hint_html: "Ce numéro vous permet de vous authentifier sur %{app_name}"
         sessions:
             pick_user:
                 title_html: "Choisissez le compte pour %{email}"
@@ -668,3 +692,38 @@ fr:
         shared:
             form_errors:
                 heading: "%{count} erreur(s) empêchent l'enregistrement :"
+    # Mailer subjects below are picked up by ActionMailer's own auto-resolution
+    # convention (Mailer#default_i18n_subject), whose i18n scope is
+    # [mailer_name, action_name] with no extra "views"/"mailers" wrapper -
+    # hence these live as flat top-level nodes rather than nested under `views`.
+    activity_accepted_mailer:
+        activity_accepted:
+            subject: "%{name} - Proposition acceptée"
+    activity_assigned_mailer:
+        activity_assigned:
+            subject: "%{name} - Confirmation d'attribution de cours"
+    activity_proposed_mailer:
+        activity_proposed:
+            subject: "%{name} - Proposition de cours en attente"
+    adhesion_mailer:
+        reminder_email:
+            subject: "%{name} - Votre adhésion va bientôt expirer"
+    admin_cancelled_attendance_mailer:
+        cancelled_attendance:
+            subject: "%{name} - Annulation de cours par un élève"
+    application_mailer:
+        notify_new_application:
+            subject: "%{name} - Confirmation de demande d'inscription"
+            subject_no_school: Confirmation de demande d'inscription
+    payment_reminder_mailer:
+        send_payment_reminder:
+            subject: "%{name} - Rappel de paiement"
+    reglement_reminder_mailer:
+        send_reglement_reminder:
+            subject: "%{name} - Rappel de paiement"
+    upcoming_payment_mailer:
+        upcoming_payment:
+            subject: "%{name} - Paiement à venir"
+    user_cancelled_attendance_mailer:
+        cancelled_attendance:
+            subject: "%{name} - Confirmation d'annulation de cours"
