@@ -1190,7 +1190,10 @@ class ActivitiesApplicationsController < ApplicationController
     season = filtered_season_id.nil? || filtered_season_id == "all" ? Season.current_apps_season : Season.find(filtered_season_id)
 
     if params[:targets].length == 0
-      render json: { success: false, message: "Vous n'avez pas selectionné d'utilisateurs" }, status: 400 and return
+      render json: {
+        success: false,
+        message: t("controllers.activities_applications.send_all_confirmation_mail.no_users_selected")
+      }, status: 400 and return
     end
 
     # get same query from user view
@@ -1217,7 +1220,7 @@ class ActivitiesApplicationsController < ApplicationController
     end
 
     if mails_to_send.length == 0
-      render json: { success: false, message: "Les utilisateurs selectionnés ont déjà reçu le mail ou ne sont pas en cours attribué / cours proposé" }, status: 400 and return
+      render json: { success: false, message: t("controllers.activities_applications.send_all_confirmation_mail.already_processed") }, status: 400 and return
     end
 
     NotifyUsersOfApplicationStateJob.perform_later(applications_ids: mails_to_send.ids, current_user_id: current_user.id)

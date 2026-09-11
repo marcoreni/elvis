@@ -30,7 +30,7 @@ class PaymentScheduleOptionsController < ApplicationController
     @payment_schedule_option.destroy!
 
     respond_to do |format|
-      format.json { render json: { message: "Payment schedule option deleted" }, status: :ok }
+      format.json { render json: { message: t("controllers.payment_schedule_options.destroy.success") }, status: :ok }
     end
 
   rescue StandardError => e
@@ -48,7 +48,7 @@ class PaymentScheduleOptionsController < ApplicationController
     @payment_schedule_option.save!
 
     respond_to do |format|
-      format.json { render json: { message: "Payment schedule option created" }, status: :ok }
+      format.json { render json: { message: t("controllers.payment_schedule_options.create.success") }, status: :ok }
     end
 
   rescue StandardError => e
@@ -68,7 +68,7 @@ class PaymentScheduleOptionsController < ApplicationController
     @payment_schedule_option.update!(payment_schedule_option_params)
 
     respond_to do |format|
-      format.json { render json: { message: "Payment schedule option updated" }, status: :ok }
+      format.json { render json: { message: t("controllers.payment_schedule_options.update.success") }, status: :ok }
     end
 
   rescue StandardError => e

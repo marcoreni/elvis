@@ -15,11 +15,11 @@ class OrganizationsController < ApplicationController
         render json: {}, status: 200 and return
       else
         Rails.logger.error "L'enregistrement en base a échoué (création d'une organisation)"
-        render json: { message: "L'organisation n'a pas été créé." }, status: 500 and return
+        render json: { message: t("controllers.organizations.create.failure") }, status: 500 and return
       end
     else
       Rails.logger.error "Les données ne sont pas valides (création d'une organisation)"
-      render json: { message: "L'organisation n'a pas été créé." }, status: 500
+      render json: { message: t("controllers.organizations.create.failure") }, status: 500
     end
   end
 
@@ -35,7 +35,7 @@ class OrganizationsController < ApplicationController
       render json: {}, status: 200 and return
     else
       Rails.logger.error "La mise à jour n'a pas été effectué (modifier une organization)"
-      render json: { message: "Le numéro de TVA n'a pas été mise à jour" }, status: 500 and return
+      render json: { message: t("controllers.organizations.update_from_user.failure") }, status: 500 and return
     end
 
   end

@@ -42,7 +42,7 @@ class RemoveController < ApplicationController
     # @type [Array<ApplicationRecord>]
     elements = ids.length > 0 ? @classname.where(id: ids).accessible_by(current_ability, :destroy).to_a : []
 
-    return render json: { message: "Aucun élément à supprimer", success: false }, status: :not_found if elements.empty?
+    return render json: { message: t("controllers.remove.no_elements"), success: false }, status: :not_found if elements.empty?
 
     EventHandler.send("#{@classname.name}").destroy_ended
 
@@ -79,7 +79,7 @@ class RemoveController < ApplicationController
     end
 
     render json: {
-      message: "Suppression terminée",
+      message: t("controllers.remove.destroy_multiple.success"),
       success: endedDestroyElements.filter { |el| el[:data][:success] }.map { |el| el[:id] },
       failed: endedDestroyElements.filter { |el| !el[:data][:success] },
     }
@@ -124,24 +124,30 @@ class RemoveController < ApplicationController
     Rails.logger.error("La classe n'a pas été trouvée: #{e.message}\n#{(e.backtrace || []).join("\n")}")
 
     respond_to do |format|
-      format.html { flash[:destroy_error] = "La classe n'a pas été trouvée."; redirect_to request.referer }
-      format.json { render json: { message: "La classe n'a pas été trouvée.", success: false }, status: :not_found }
+      format.html { flash[:destroy_error] = t("controllers.remove.class_not_found"); redirect_to request.referer }
+      format.json do
+        render json: { message: t("controllers.remove.class_not_found"), success: false }, status: :not_found
+      end
     end
 
   rescue ActiveRecord::RecordNotFound => e
     Rails.logger.error("L'objet n'a pas été trouvé: #{e.message}\n#{(e.backtrace || []).join("\n")}")
 
     respond_to do |format|
-      format.html { flash[:destroy_error] = "L'objet n'a pas été trouvé."; redirect_to request.referer }
-      format.json { render json: { message: "L'objet n'a pas été trouvé.", success: false }, status: :not_found }
+      format.html { flash[:destroy_error] = t("controllers.remove.object_not_found"); redirect_to request.referer }
+      format.json do
+        render json: { message: t("controllers.remove.object_not_found"), success: false }, status: :not_found
+      end
     end
 
   rescue StandardError => e
     Rails.logger.error("Une erreur est survenue lors de la suppression de l'objet. #{e.message}\n#{(e.backtrace || []).join("\n")}")
 
     respond_to do |format|
-      format.html { flash[:destroy_error] = "Une erreur est survenue lors de la suppression de l'objet."; redirect_to request.referer }
-      format.json { render json: { message: "Une erreur est survenue lors de la suppression de l'objet.", success: false }, status: :internal_server_error }
+      format.html { flash[:destroy_error] = t("controllers.remove.generic_error"); redirect_to request.referer }
+      format.json do
+        render json: { message: t("controllers.remove.generic_error"), success: false }, status: :internal_server_error
+      end
     end
   end
 end

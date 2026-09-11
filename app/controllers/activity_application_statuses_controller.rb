@@ -34,19 +34,19 @@ class ActivityApplicationStatusesController < ApplicationController
         respond_to do |format|
             format.json do
                 if linked_applications.any?
-                    render json: "Ce statut est lié à #{linked_applications.count} demandes d'inscriptions, vous ne pouvez donc pas le supprimer.", status: :unprocessable_entity
+                    render json: t("controllers.activity_application_statuses.destroy.linked_applications", count: linked_applications.count), status: :unprocessable_entity
                 else
                     status.destroy
-                    render json: "La suppression s'est déroulée avec succès."
+                    render json: t("controllers.activity_application_statuses.destroy.success")
                 end
             end
 
             format.html do
                 if linked_applications.any?
-                    flash[:error] = "Ce statut est lié à #{linked_applications.count} demandes d'inscriptions, vous ne pouvez donc pas le supprimer."
+                    flash[:error] = t("controllers.activity_application_statuses.destroy.linked_applications", count: linked_applications.count)
                 else
                     status.destroy
-                    flash[:message] = "La suppression s'est déroulée avec succès."
+                    flash[:message] = t("controllers.activity_application_statuses.destroy.success")
                 end
 
                 redirect_to activity_application_statuses_path

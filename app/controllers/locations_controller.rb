@@ -72,7 +72,7 @@ class LocationsController < ApplicationController
     begin
       location.destroy
     rescue StandardError
-      flash[:error] = "La localisation est reliée à d'autres données (des cours par exemple)"
+      flash[:error] = t("controllers.locations.destroy.linked_data_error")
       is_error = true
     end
 

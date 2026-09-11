@@ -58,7 +58,9 @@ class Practice::MusicGenresController < ApplicationController
     authorize! :manage, @music_genre
     @music_genre.destroy!
     respond_to do |format|
-      format.html { redirect_to practice_music_genres_path, notice: "Music genre was successfully destroyed." }
+      format.html do
+        redirect_to practice_music_genres_path, notice: t("controllers.practice.music_genres.destroy.success")
+      end
       format.json { render json: @music_genre, status: :ok }
     end
   end

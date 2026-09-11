@@ -123,13 +123,13 @@ class FormulesController < ApplicationController
 
     if formule.used?
       render json: {
-        error: "Cette formule est utilisée par une ou plusieurs inscriptions : elle ne peut pas être supprimée."
+        error: t("controllers.formules.destroy.in_use_error")
       }, status: :unprocessable_entity
       return
     end
 
     formule.destroy
-    render json: { message: "Formule deleted" }
+    render json: { message: t("controllers.formules.destroy.success") }
   end
 
   # Archive / désarchive une formule. Une formule archivée n'est plus proposée

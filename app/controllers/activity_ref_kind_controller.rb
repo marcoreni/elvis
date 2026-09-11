@@ -65,7 +65,7 @@ class ActivityRefKindController < ApplicationController
         activities_ref = activities_ref.take(2).join(", ") + "..." if activities_ref.length > 2
 
         respond_to do |format|
-          format.json { render json: { message: "Vous ne pouvez pas supprimer cette famille car des activités y sont attachées", activities: activities_ref}, status: :internal_server_error }
+          format.json { render json: { message: t("controllers.activity_ref_kind.destroy.linked_activities"), activities: activities_ref}, status: :internal_server_error }
           end
       end
     rescue StandardError => e

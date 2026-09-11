@@ -29,6 +29,8 @@ en:
             "no": "No"
         confirm:
             sure: Are you sure?
+        errors:
+            access_denied: You are not allowed to do that
 
     menu:
         plugins: Plugins
@@ -724,3 +726,69 @@ en:
     user_cancelled_attendance_mailer:
         cancelled_attendance:
             subject: "%{name} - Class cancellation confirmation"
+
+    controllers:
+        settings:
+            plugin:
+                update_success: Update successful
+        practice:
+            band_types:
+                destroy:
+                    success: The band type was successfully deleted.
+            music_genres:
+                destroy:
+                    success: The music genre was successfully deleted.
+            bands:
+                destroy:
+                    success: The band was successfully deleted.
+        locations:
+            destroy:
+                linked_data_error: "This location is linked to other data (classes, for example)"
+        adhesion:
+            create:
+                failure: Unable to create the membership
+        activity_application_statuses:
+            destroy:
+                linked_applications:
+                    one: "This status is linked to %{count} registration request, so it cannot be deleted."
+                    other: "This status is linked to %{count} registration requests, so it cannot be deleted."
+                success: Deletion completed successfully.
+        remove:
+            no_elements: No item to delete
+            class_not_found: The class could not be found.
+            object_not_found: The object could not be found.
+            generic_error: An error occurred while deleting the object.
+            destroy_multiple:
+                success: Deletion complete
+        organizations:
+            create:
+                failure: "The organization could not be created."
+            update_from_user:
+                failure: "The VAT number could not be updated."
+        planning:
+            no_default_planning: "No default schedule set by the school"
+        activities_applications:
+            send_all_confirmation_mail:
+                no_users_selected: "You have not selected any users"
+                already_processed: "The selected users have already received the email or are not in an assigned/proposed class status"
+        formules:
+            destroy:
+                in_use_error: "This package is used by one or more registrations: it cannot be deleted."
+                success: Package deleted
+        users:
+            reset_password:
+                email_sent: Email sent
+            attach_users:
+                main_account_not_found: Main account not found
+            detach_user:
+                not_found: User not found
+        activity_ref_kind:
+            destroy:
+                linked_activities: "You cannot delete this family because activities are attached to it"
+        payment_schedule_options:
+            destroy:
+                success: Payment schedule option deleted
+            create:
+                success: Payment schedule option created
+            update:
+                success: Payment schedule option updated

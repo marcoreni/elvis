@@ -73,7 +73,7 @@ class SettingsController < ApplicationController
     if request.post?
       setting = params[:settings] ? params[:settings].permit!.to_h : {}
       Setting.send "#{@plugin.name}=", setting
-      flash[:notice] = "Mise à jour réussie"
+      flash[:notice] = t("controllers.settings.plugin.update_success")
       redirect_to plugin_settings_path(name: @plugin.name)
     else
       @partial = @plugin.partial

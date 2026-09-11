@@ -1776,7 +1776,7 @@ end
 
     if params[:send_email] == "true"
       DeviseMailer.reset_password_instructions(user, token).deliver_later
-      render json: { message: "Email envoyé" }, status: :ok
+      render json: { message: t("controllers.users.reset_password.email_sent") }, status: :ok
     else
       render json: {
         reset_link: reset_link,
@@ -1797,7 +1797,10 @@ end
   def attach_users
     user = User.find(params[:id])
 
-    render json: {message: "compte de rattachement introuvable"}, status: :not_found and return if user.nil?
+    if user.nil?
+      render json: { message: t("controllers.users.attach_users.main_account_not_found") }, status: :not_found
+      return
+    end
 
     ActiveRecord::Base.transaction do
       (params[:users] || []).each do |u|
@@ -1820,7 +1823,10 @@ end
 
     raise CanCan::AccessDenied unless current_user.admin? || current_user == user_to_detach.attached_to
 
-    render json: {message: "user not found"}, status: :not_found and return if user_to_detach.nil?
+    if user_to_detach.nil?
+      render json: { message: t("controllers.users.detach_user.not_found") }, status: :not_found
+      return
+    end
 
     old_main_user = user_to_detach.attached_to
 
