@@ -1,5 +1,5 @@
 import moment from "moment";
-import type { Entity, User } from "../evaluation/types";
+import type { Entity, User } from "../utils/entities";
 import {
     DEFAULT_LABEL_ACCESSOR,
     DEFAULT_VALUE_ACCESSOR,
@@ -22,8 +22,8 @@ export function indexById<T>(arr: T[]): Record<string, T> {
 }
 
 interface CreatorOptions<T extends Entity> {
-    id?: (d: T, i: number, arr: T[]) => string;
-    label?: (d: T, i: number, arr: T[]) => string;
+    id?: (d: T, i: number, arr: T[]) => string | undefined;
+    label?: (d: T, i: number, arr: T[]) => string | undefined;
 }
 
 // DRY option creator
@@ -37,14 +37,13 @@ function optionCreator<T extends Entity>(
     data: T,
     i: number,
     arr: T[],
-    {
-        id = DEFAULT_VALUE_ACCESSOR,
-        label = DEFAULT_LABEL_ACCESSOR,
-    }: CreatorOptions<T>
+    opts?: CreatorOptions<T>
 ) {
+    const id = (opts?.id ?? DEFAULT_VALUE_ACCESSOR)(data, i, arr);
+    const label = (opts?.label ?? DEFAULT_LABEL_ACCESSOR)(data, i, arr);
     return (
-        <option key={id(data, i, arr)} value={id(data, i, arr)}>
-            {label(data, i, arr)}
+        <option key={id} value={id}>
+            {label}
         </option>
     );
 }

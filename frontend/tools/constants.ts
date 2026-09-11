@@ -6,7 +6,7 @@ export const PRE_APPLICATION_ACTIONS = {
     CHANGE: 2,
     STOP: 3,
     PURSUE_CHILDHOOD: 4,
-    CHAM: 5
+    CHAM: 5,
 };
 
 export const INTERVAL_KINDS = {
@@ -30,10 +30,30 @@ export const INTERVAL_KINDS = {
 // fallback: a missing key there just renders as the raw i18next key string in that one message,
 // not a whole-object failure, so it isn't worth doubling every string as a hardcoded duplicate.
 
-const _WEEKDAYS_FR = ["Dimanche", "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"];
-const _MONTHS_FR = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août",
-    "Septembre", "Octobre", "Novembre", "Décembre"];
-const _loadArray = (key, fallback) => {
+const _WEEKDAYS_FR = [
+    "Dimanche",
+    "Lundi",
+    "Mardi",
+    "Mercredi",
+    "Jeudi",
+    "Vendredi",
+    "Samedi",
+];
+const _MONTHS_FR = [
+    "Janvier",
+    "Février",
+    "Mars",
+    "Avril",
+    "Mai",
+    "Juin",
+    "Juillet",
+    "Août",
+    "Septembre",
+    "Octobre",
+    "Novembre",
+    "Décembre",
+];
+const _loadArray = (key: string, fallback: string[]) => {
     const value = i18n.t(key, { returnObjects: true });
     return Array.isArray(value) ? value : fallback;
 };
@@ -47,16 +67,22 @@ export let MONTHS = _loadMonths();
 // API_ERRORS_MESSAGES: server error-code -> display text. Keys stay the original snake_case
 // identifiers (tools/api.js looks them up as `API_ERRORS_MESSAGES[err]`, where `err` is a
 // server-supplied error code, not a UI string) — only the *values* are localized.
-const _loadApiErrorsMessages = () => ({
+const _loadApiErrorsMessages = (): Record<string, string> => ({
     default: i18n.t("common:apiErrors.default"),
     err_interval_validated: i18n.t("common:apiErrors.errIntervalValidated"),
-    err_interval_creation_failed: i18n.t("common:apiErrors.errIntervalCreationFailed"),
-    err_interval_creation_partial: i18n.t("common:apiErrors.errIntervalCreationPartial"),
+    err_interval_creation_failed: i18n.t(
+        "common:apiErrors.errIntervalCreationFailed"
+    ),
+    err_interval_creation_partial: i18n.t(
+        "common:apiErrors.errIntervalCreationPartial"
+    ),
     err_interval_bounds: i18n.t("common:apiErrors.errIntervalBounds"),
     err_interval_not_found: i18n.t("common:apiErrors.errIntervalNotFound"),
     err_group_name_exists: i18n.t("common:apiErrors.errGroupNameExists"),
     err_group_name_empty: i18n.t("common:apiErrors.errGroupNameEmpty"),
-    err_evaluation_interval_already_taken: i18n.t("common:apiErrors.errEvaluationIntervalAlreadyTaken"),
+    err_evaluation_interval_already_taken: i18n.t(
+        "common:apiErrors.errEvaluationIntervalAlreadyTaken"
+    ),
 });
 
 export let API_ERRORS_MESSAGES = _loadApiErrorsMessages();
@@ -71,9 +97,11 @@ export let API_ERRORS_MESSAGES = _loadApiErrorsMessages();
 // and return the localized string immediately, bypassing that lookup.
 const _loadMessages = () => ({
     no_answer: i18n.t("common:messages.noAnswer"),
-    err_min_length: length => i18n.t("common:messages.errMinLength", { length }),
-    err_exact_length: length => i18n.t("common:messages.errExactLength", { length }),
-    err_starts_with: str => i18n.t("common:messages.errStartsWith"),
+    err_min_length: (length: number) =>
+        i18n.t("common:messages.errMinLength", { length }),
+    err_exact_length: (length: number) =>
+        i18n.t("common:messages.errExactLength", { length }),
+    err_starts_with: (str: string) => i18n.t("common:messages.errStartsWith"),
     err_required: i18n.t("common:messages.errRequired"),
     err_is_invalid: i18n.t("common:messages.errIsInvalid"),
     err_is_invalid_id: i18n.t("common:messages.errIsInvalidId"),
@@ -98,15 +126,21 @@ const _loadMessages = () => ({
     err_invalid_email: i18n.t("common:messages.errInvalidEmail"),
     err_links_missing: i18n.t("common:messages.errLinksMissing"),
     err_interval_integrity: i18n.t("common:messages.errIntervalIntegrity"),
-    err_ord_gte: mark => i18n.t("common:messages.errOrdGte", { mark }),
-    err_ord_gt: mark => i18n.t("common:messages.errOrdGt", { mark }),
-    err_ord_lte: mark => i18n.t("common:messages.errOrdLte", { mark }),
-    err_ord_lt: mark => i18n.t("common:messages.errOrdLt", { mark }),
+    err_ord_gte: (mark: string) =>
+        i18n.t("common:messages.errOrdGte", { mark }),
+    err_ord_gt: (mark: string) => i18n.t("common:messages.errOrdGt", { mark }),
+    err_ord_lte: (mark: string) =>
+        i18n.t("common:messages.errOrdLte", { mark }),
+    err_ord_lt: (mark: string) => i18n.t("common:messages.errOrdLt", { mark }),
     err_must_check_consent: i18n.t("common:messages.errMustCheckConsent"),
     err_must_respond: i18n.t("common:messages.errMustRespond"),
     err_must_select_price: i18n.t("common:messages.errMustSelectPrice"),
-    err_cannot_duplicate_price: i18n.t("common:messages.errCannotDuplicatePrice"),
-    err_must_select_payment_terms: i18n.t("common:messages.errMustSelectPaymentTerms"),
+    err_cannot_duplicate_price: i18n.t(
+        "common:messages.errCannotDuplicatePrice"
+    ),
+    err_must_select_payment_terms: i18n.t(
+        "common:messages.errMustSelectPaymentTerms"
+    ),
 });
 
 export let MESSAGES = _loadMessages();
@@ -132,7 +166,9 @@ const _loadPreApplicationActionLabels = () => ({
     renew: i18n.t("common:preApplicationActionLabels.renew"),
     change: i18n.t("common:preApplicationActionLabels.change"),
     stop: i18n.t("common:preApplicationActionLabels.stop"),
-    pursue_childhood: i18n.t("common:preApplicationActionLabels.pursueChildhood"),
+    pursue_childhood: i18n.t(
+        "common:preApplicationActionLabels.pursueChildhood"
+    ),
     cham: i18n.t("common:preApplicationActionLabels.cham"),
 });
 
@@ -167,7 +203,7 @@ export const RECURRENCE_TYPES = {
     MONTHLY: "monthly",
     BIMONTHLY: "bimonthly",
     YEARLY: "yearly",
-    toString: function (type) {
+    toString: function (type: string) {
         return {
             [this.DAILY]: i18n.t("common:recurrenceTypes.daily"),
             [this.WEEKLY]: i18n.t("common:recurrenceTypes.weekly"),
@@ -177,9 +213,13 @@ export const RECURRENCE_TYPES = {
             [this.YEARLY]: i18n.t("common:recurrenceTypes.yearly"),
         }[type];
     },
-    getDefault: function () {return this.WEEKLY},
-    getAll: function () {return Object.values(this).filter(v => typeof v === "string")},
-}
+    getDefault: function () {
+        return this.WEEKLY;
+    },
+    getAll: function (): string[] {
+        return Object.values(this).filter((v) => typeof v === "string");
+    },
+};
 
 export const modalStyle = {
     overlay: {

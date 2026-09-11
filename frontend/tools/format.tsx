@@ -2,7 +2,7 @@ import moment from "moment";
 import { retrieveUserLevel } from "./obj";
 import { WEEKDAYS } from "./constants";
 import i18n from "../i18n";
-import { Activity, TimeInterval, User } from "../components/evaluation/types";
+import { Activity, TimeInterval, User } from "../components/utils/entities";
 
 export const twoDigits = (n: number) => (n < 10 ? `0${n}` : `${n}`);
 

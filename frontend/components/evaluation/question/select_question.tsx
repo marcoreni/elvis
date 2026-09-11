@@ -4,14 +4,8 @@ import Select from "react-select";
 import { MESSAGES } from "../../../tools/constants";
 import { parseValues } from ".";
 import { fullname } from "../../../tools/format";
-import type {
-    Activity,
-    AnswerValue,
-    Entity,
-    EntityName,
-    ReferenceData,
-    SelectQuestion as TSelectQuestion,
-} from "../types";
+import type { Activity, EntityName, ReferenceData } from "../../utils/entities";
+import type { AnswerValue, SelectQuestion as TSelectQuestion } from "../types";
 
 function createTargetOptions(
     selectTarget: EntityName,
@@ -36,7 +30,7 @@ function createTargetOptions(
 
 interface Option {
     value?: string;
-    label: string;
+    label?: string;
 }
 function createStaticOptions(options: string): Option[] {
     return parseValues(options).map(([label, value]) => ({

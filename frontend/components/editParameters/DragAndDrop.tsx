@@ -1,9 +1,9 @@
-import React, { useCallback, useState } from "react";
+import { CSSProperties, useCallback, useState } from "react";
 import Dropzone from "react-dropzone";
 import PropTypes from "prop-types";
 import { useTranslation } from "react-i18next";
 
-const baseStyle = {
+const baseStyle: CSSProperties = {
     display: "flex",
     flexDirection: "column",
     alignItems: "center",
@@ -35,12 +35,20 @@ const rejectStyle = {
     borderColor: "#ff1744",
 };
 
-function DragAndDrop(props) {
+function DragAndDrop(props: {
+    file_url: string;
+    setFile: (file: File | undefined) => void;
+    onClearedFile?: () => void;
+    acceptedTypes: string;
+    textDisplayed: string;
+    fileLabel?: string;
+    fileTitle?: string;
+}) {
     const { t } = useTranslation("common");
-    const [file, setFile] = useState(undefined);
-    const [url, setUrl] = useState(props.file_url);
+    const [file, setFile] = useState<File | undefined>(undefined);
+    const [url, setUrl] = useState<string | undefined>(props.file_url);
 
-    const onDrop = useCallback(acceptedFiles => {
+    const onDrop = useCallback((acceptedFiles: File[]) => {
         if (acceptedFiles.length !== 0) {
             setFile(acceptedFiles[0]);
             setUrl(URL.createObjectURL(acceptedFiles[0]));
@@ -50,9 +58,11 @@ function DragAndDrop(props) {
             let reader = new FileReader();
 
             if (acceptedFiles[0].type.includes("image")) {
-                reader.onloadend = function() {
+                reader.onloadend = function () {
                     let output = document.getElementById("output");
-                    output.src = reader.result;
+                    if (output) {
+                        (output as any).src = reader.result;
+                    }
                 };
             }
 
@@ -62,14 +72,16 @@ function DragAndDrop(props) {
 
     const isImage = props.acceptedTypes.includes("image");
 
-    function handleDropRejected(fileRejections) {
+    function handleDropRejected(
+        fileRejections: { errors: { code: string }[] }[]
+    ) {
         let div = document.getElementById("error");
-        if (fileRejections[0].errors[0].code === "file-invalid-type") {
+        if (div && fileRejections[0].errors[0].code === "file-invalid-type") {
             div.classList.remove("d-none");
             div.textContent = t("dragAndDrop.invalidType");
         }
 
-        if (fileRejections[0].errors[0].code === "too-many-files") {
+        if (div && fileRejections[0].errors[0].code === "too-many-files") {
             div.classList.remove("d-none");
             div.textContent = t("dragAndDrop.tooManyFiles");
         }
@@ -80,7 +92,9 @@ function DragAndDrop(props) {
         props.setFile(undefined);
         setUrl(undefined);
 
-        if (typeof props.onClearedFile === "function") props.onClearedFile();
+        if (typeof props.onClearedFile === "function") {
+            props.onClearedFile();
+        }
     }
 
     return file == undefined && url == undefined ? (
@@ -144,11 +158,7 @@ function DragAndDrop(props) {
                 </button>
             ) : null}
             <div
-                style={
-                    isImage
-                        ? { textAlign: "-webkit-center" }
-                        : { padding: "10px" }
-                }
+                style={isImage ? { textAlign: "center" } : { padding: "10px" }}
             >
                 {(() => {
                     if (isImage) {
@@ -165,7 +175,7 @@ function DragAndDrop(props) {
                         return url ? (
                             <div className="row">
                                 <div className="col-sm-11">
-                                    {props.fileLabel}
+                                    {props.fileLabel ?? ""}
                                     <a href={url} target="_blank">
                                         <strong>
                                             {props.fileTitle ||

@@ -3,7 +3,8 @@ import EvaluationForm from "../evaluation/EvaluationForm";
 import Modal from "react-modal";
 import { getAnswersObject } from "../evaluation/Evaluation";
 import { fullname } from "../../tools/format";
-import type { Question, ReferenceData, User } from "../evaluation/types";
+import type { Question } from "../evaluation/types";
+import type { User, ReferenceData } from "../utils/entities";
 
 const QuestionnaireModal = ({
     student,

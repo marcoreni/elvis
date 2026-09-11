@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import type { User } from "../evaluation/types";
+import type { User } from "../utils/entities";
 
 export default function SelectTeachers({
     listTeacher,

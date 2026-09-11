@@ -8,8 +8,8 @@ import type {
     RadioQuestion as TRadioQuestion,
     Question as TQuestion,
     SelectQuestion as TSelectQuestion,
-    ReferenceData,
 } from "../types";
+import type { ReferenceData } from "../../utils/entities";
 
 const VALUES_SEPARATOR = ";";
 const PROPS_SEPARATOR = ":";

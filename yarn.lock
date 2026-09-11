@@ -4152,10 +4152,10 @@ react-final-form@7.0.1:
   dependencies:
     "@babel/runtime" "^7.15.4"
 
-react-hook-form@7.27.1:
-  version "7.27.1"
-  resolved "https://registry.yarnpkg.com/react-hook-form/-/react-hook-form-7.27.1.tgz#fe5fbcb6bf58751f66d9569e998d671480cc57f6"
-  integrity sha512-N3a7A6zIQ8DJeThisVZGtOUabTbJw+7DHJidmB9w8m3chckv2ZWKb5MHps9d2pPJqmCDoWe53Bos56bYmJms5w==
+react-hook-form@7.87.0:
+  version "7.87.0"
+  resolved "https://registry.yarnpkg.com/react-hook-form/-/react-hook-form-7.87.0.tgz#a9dde90aa71f1e303842d2b8de942160de618b61"
+  integrity sha512-zhFzWvLxNHH+8839OnZcUxgMZw88ah2jZWDWvKWgF3Tpbnd0vKL+dlcuU3nZVWESZQjd81EW8K+wU+cYfYAc0w==
 
 react-i18next@^17.0.12:
   version "17.0.12"

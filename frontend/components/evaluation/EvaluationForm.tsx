@@ -3,12 +3,8 @@ import { useState } from "react";
 
 import { useTranslation } from "react-i18next";
 import Question, { checkCondition } from "./question";
-import type {
-    Answers,
-    AnswerValue,
-    ReferenceData,
-    Question as TQuestion,
-} from "./types";
+import type { Answers, AnswerValue, Question as TQuestion } from "./types";
+import type { ReferenceData } from "../utils/entities";
 
 export function filterQuestionsByCondition(
     questions: TQuestion[],
