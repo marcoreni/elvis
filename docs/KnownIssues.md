@@ -583,9 +583,30 @@ before any `{...props}` spread onto a DOM node.
   `activities_applications/create.html.erb`, `comments/{create,update,destroy}.html.erb`,
   `time_interval/validate.html.erb`, `family_members/destroy.html.erb`,
   `family_member_users/destroy.html.erb`. Left in place (don't-delete-on-looks-dead); not extracted.
-- **`app/controllers/activity_application_statuses_controller.rb` flash bodies still hardcoded French.**
-  P4 extracted the `Erreur` / `Message` alert *headings* in `index.html.erb` to
-  `views.activity_application_statuses.index.{error_title,message_title}`, but the flash text those
-  headings sit above (set in the controller's create/update/destroy actions) is still a French string
-  literal — so an EN user sees a translated heading over untranslated body text. Controller-layer
-  strings are Phase 07 P6 scope; noted here so P6 picks it up.
+
+## Pre-existing bugs surfaced during Phase 07 P6 (backend strings: mailers, controllers, models)
+
+- **`RemoveController#get_references` checks the wrong method name, so ~80 models'
+  `display_class_name` overrides never reach the destroy-confirmation UI.** It does
+  `ref.class.respond_to?(:display_name) ? ref.class.display_name : ref.class.name` (`app/controllers/
+  remove_controller.rb:95`), but no model anywhere defines a class-level `display_name` — the actual
+  method every model overrides is `display_class_name` (see `app/models/application_record.rb:11`,
+  used correctly by `application_record.rb`'s own `undeletable_instruction`/`build_subject`). Since
+  `respond_to?(:display_name)` is always false, the `references[].display_name` field this action
+  returns is always the raw Ruby class name (e.g. `"ActivityRefPricing"` instead of `"Tarif"`) for
+  every dependent-object list the destroy-confirmation UI shows. Not fixed here: swapping the method
+  name is a one-line fix, but auditing whether the frontend `RemoveComponent` already special-cases
+  the raw-class-name fallback (and whether ~80 models' French singular/plural strings are even ready
+  to reach a French+English UI once wired up — see below) is bigger than this lean i18n batch.
+  Flagging so a follow-up either fixes the method name or removes the dead `display_name` branch.
+- **`display_class_name` (~80 models) and the seeded `label` columns on `PaymentStatus` /
+  `DuePaymentStatus` / `ActivityApplicationStatus` / `PaymentMethod` / `EvaluationLevelRef` remain
+  hardcoded French, deliberately out of scope for P6.** `display_class_name` is a uniform
+  singular/plural-name pattern repeated across almost every model (`Tarif`/`Tarifs`,
+  `Statut d'inscription`/`Statuts d'inscription`, ...) — converting all of them to Rails' native
+  `model_name.human(count:)` i18n convention is a mechanical but much larger follow-up (~80 files) on
+  top of the RemoveController bug above, not attempted here. The seeded status/method `label` values
+  (`"Validé"`, `"Echoué"`, `"En attente"`, ...) are DB rows created via `find_or_create_by!` at class
+  load and are admin-editable at runtime (the settings UI lets a school add custom statuses/methods
+  alongside the built-ins) — closer to `Parameter`/`NotificationTemplate` per-instance content than
+  to static UI chrome, so left untranslated for the same reason those are out of scope.
