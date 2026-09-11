@@ -185,3 +185,16 @@ ignore_unused:
   - "activerecord.errors.models.user.attributes.base.duplicate_email"
   - "activerecord.errors.models.level.attributes.base.duplicate"
   - "activerecord.errors.models.payer_payment_terms.attributes.base.duplicate"
+  # Phase 07 P6 (feat/i18n-p6-backend-strings), area I: number.currency.format.* is read by
+  # ActionView/ActiveSupport::NumberHelper#number_to_currency through its own i18n scope lookup
+  # (`number.currency.format`), not a literal `t(...)`/`I18n.t(...)` call anywhere in this repo -
+  # explicit here (mirroring rails-i18n's own fr.yml block, added to both locales so `en` gets EUR
+  # + French grouping instead of the gem's USD default) purely for self-documentation/robustness,
+  # so the static scan can't credit it as used.
+  - "number.currency.format.delimiter"
+  - "number.currency.format.format"
+  - "number.currency.format.precision"
+  - "number.currency.format.separator"
+  - "number.currency.format.significant"
+  - "number.currency.format.strip_insignificant_zeros"
+  - "number.currency.format.unit"

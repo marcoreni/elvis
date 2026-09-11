@@ -12,6 +12,23 @@ en:
     date:
         formats:
             date_month_concise: '%B %d, %Y'
+            long_date: '%B %e, %Y'
+
+    # This app always deals in EUR regardless of UI language (a French music school's fees don't
+    # change currency when an admin switches the interface to English), so number_to_currency
+    # keeps the € symbol and French grouping/decimal convention ("1 234,56 €") here too, matching
+    # rails-i18n's own fr.yml currency block verbatim rather than falling back to rails-i18n's
+    # en.yml default (which is USD-formatted: "$1,234.56").
+    number:
+        currency:
+            format:
+                delimiter: " "
+                format: "%n %u"
+                precision: 2
+                separator: ","
+                significant: false
+                strip_insignificant_zeros: false
+                unit: "€"
 
     common:
         actions:

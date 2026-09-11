@@ -8,6 +8,21 @@ fr:
     date:
         formats:
             date_month_concise: '%d %B %Y'
+            long_date: '%e %B %Y'
+
+    # Explicit override matching rails-i18n's own fr.yml currency block verbatim - the fr locale
+    # already got this for free from the gem, but writing it out here keeps fr and en symmetrical
+    # and self-documenting rather than leaving en's identical override look unexplained.
+    number:
+        currency:
+            format:
+                delimiter: " "
+                format: "%n %u"
+                precision: 2
+                separator: ","
+                significant: false
+                strip_insignificant_zeros: false
+                unit: "€"
 
     common:
         actions:
