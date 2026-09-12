@@ -1001,10 +1001,15 @@ en:
                 delete_disabled_title: "Activities are linked to this room; you cannot delete it. Please delete the activities first."
             new:
                 title: Add a room
+                location_title: Location
                 choose_image: Choose image
                 change_image: Change
+                activities_title: Activities
             edit:
                 title: "Edit room \"%{label}\""
+                location_title: Location
+                image_title: Image
+                activities_title: Activities
             edit_activities:
                 title: "Room activities: %{label}"
         seasons:

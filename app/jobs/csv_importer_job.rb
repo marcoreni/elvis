@@ -3,7 +3,12 @@
 class CsvImporterJob < ApplicationJob
   include ActiveJob::Status
 
-  def perform(file_path, handler_class_name)
+  # `locale:` is picked up by ApplicationJob's around_perform (see app/jobs/application_job.rb) to
+  # wrap this whole run in I18n.with_locale, so the status/error text below follows the enqueuing
+  # user's locale instead of always rendering in I18n.default_locale.
+  def perform(file_path, handler_class_name, locale: nil)
+    Rails.logger.debug { "CsvImporterJob##{job_id} running with locale=#{locale.inspect}" }
+
     status[:step] = I18n.t("jobs.csv_importer.initializing")
 
     setup file_path, handler_class_name

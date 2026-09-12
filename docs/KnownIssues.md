@@ -509,9 +509,6 @@ notes above, and harmless for the same reason (switching locale is a full server
 
 ## Pre-existing bugs surfaced during Phase 07 P2 (practice/rooms/locations extraction)
 
-- **`app/views/rooms/{new,edit}.html.erb` still render hardcoded French inside `react_component`
-  props** (`title: "Localisation"`, `title: "Activités"`, `title: 'Image'`). Deliberately left by
-  P2 ("React-mount props untouched"); belongs with the `rooms/` React components in a later lot.
 - **`app/views/practice/bands/_form.html.erb` is dead** — `bands` new/edit mount React
   (`practice/BandCreator` / `practice/BandEdit`) and the `create`/`update` failure paths
   `render :new`/`:edit` land on those. Its bare `<%= form.submit %>` (no arg) would render the
@@ -603,17 +600,6 @@ notes above, and harmless for the same reason (switching locale is a full server
   DB rows created via `find_or_create_by!` at class load and are admin-editable at runtime (the
   settings UI lets a school add custom statuses/methods alongside the built-ins) — closer to
   `Parameter`/`NotificationTemplate` per-instance content than to static UI chrome.
-- **Background job status/error text (`ActiveJob`/`ActiveJob::Status`, e.g. `CsvImporterJob`) always
-  renders in the default locale.** `I18n.locale` is set per-request by `ApplicationController`'s
-  `switch_locale`, but nothing propagates the enqueuing request's locale into the job's execution
-  thread (`app/jobs/application_job.rb` has no `around_perform` for it), so `I18n.t` calls added in
-  P6 (`jobs.csv_importer.*`) always resolve against the default locale (`:fr`) regardless of which
-  language the uploading user has selected. This matches today's actual behavior (the strings were
-  hardcoded French before), so it's not a regression, but it means the CSV importer's progress/error
-  text won't follow an English-locale user the way a controller/view string does. A general fix
-  (capture `I18n.locale` at enqueue time, pass it through as a job argument, wrap `perform` in
-  `I18n.with_locale`) would apply to any future job that renders user-facing text, not just this one.
-
 ## `StaticPagesController#landing`/`#about` and `AdminController`'s mail-settings view are unrouted dead code
 
 Found 2026-09-12 while extracting strings for Phase 07 P7 (`feat/i18n-p7-oauth-legal-pages`).
@@ -686,19 +672,3 @@ case), each passing individually. So the file-count-sensitivity bug is real and 
 now, but it is NOT masking a much larger pre-existing failure count - don't let a future run
 without a proper asset manifest be mistaken for "the baseline was always this broken."
 
-## `ApplicationRecord#build_subject`'s vowel-detection misses accented vowels
-
-Found 2026-09-12 during code review of `fix/remove-controller-display-class-name-i18n`.
-`app/models/application_record.rb`'s `build_subject` picks French `"un"`/`"une"`/`"le"`/`"la"`
-grammar based on `d_name[/^[aeiouyAEIOUY]/]` — a plain ASCII vowel-class regex that doesn't match
-an accented first letter (`é`, `è`, `à`, …). At least 6 models' `display_class_name` starts with an
-accented vowel — `student` ("Élève"), `school` ("École"), `due_payment`/`payment_schedule`
-("Échéance"/"Échéancier"), `additional_student` ("Élève supplémentaire"),
-`student_evaluation` ("Évaluation") — so `build_subject` renders "le élève"/"le école" instead of
-the correct elided "l'élève"/"l'école".
-
-Pre-existing, not introduced by the `display_class_name` i18n conversion: confirmed the one
-relevant accent fix made during that branch's translator-polish pass
-(`enchainement` → `enchaînement`) doesn't change this bug's first-character check, since `e` was
-already the first letter before and after. Fix (not applied here, out of scope for that fix): widen
-the regex to `/^[aeiouyàâäéèêëîïôöùûüAEIOUYÀÂÄÉÈÊËÎÏÔÖÙÛÜ]/` or use a proper French elision helper.

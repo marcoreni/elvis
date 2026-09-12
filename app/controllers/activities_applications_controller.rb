@@ -1121,7 +1121,7 @@ class ActivitiesApplicationsController < ApplicationController
       file_content = File.binread(params[:file].path).force_encoding("UTF-8")
       File.write(file_path, file_content)
 
-      job = CsvImporterJob.perform_later(file_path, handler_class_name)
+      job = CsvImporterJob.perform_later(file_path, handler_class_name, locale: I18n.locale.to_s)
     rescue StandardError, NoMemoryError => e
       render json: { errors: e }, status: 500
       return

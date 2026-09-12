@@ -23,7 +23,7 @@
         all_features: @locations,
         features: [@location_id],
         isMulti: false,
-        title: "Localisation",
+        title: t("views.rooms.new.location_title"),
         name: "room[location_id]",
       }) %>
     </div>
@@ -74,7 +74,7 @@
       <%= react_component("common/SelectMultiple", {
         all_features: ActivityRef.all.collect { |ar| [ar.label, ar.id] },
         name: "act_str",
-        title: "Activités",
+        title: t("views.rooms.new.activities_title"),
         features: @room.activity_refs.collect { |a| a.id },
         isMulti: true,
         allowSelectAll: true,

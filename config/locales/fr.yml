@@ -1002,10 +1002,15 @@ fr:
                 delete_disabled_title: "Des activités sont reliées à cette salle, vous ne pouvez pas la supprimer. Merci de supprimer les activités en amont."
             new:
                 title: Ajouter une salle
+                location_title: Localisation
                 choose_image: Choisir Image
                 change_image: Changer
+                activities_title: Activités
             edit:
                 title: "Éditer la salle \"%{label}\""
+                location_title: Localisation
+                image_title: Image
+                activities_title: Activités
             edit_activities:
                 title: "Activités de la salle %{label}"
         seasons:

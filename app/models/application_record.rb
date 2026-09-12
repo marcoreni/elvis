@@ -49,7 +49,7 @@ class ApplicationRecord < ActiveRecord::Base
     d_name = display_class_name(singular)
 
     if singular
-      if d_name[/^[aeiouyAEIOUY]/]
+      if d_name[/^[aeiouyàâäéèêëîïôöùûüAEIOUYÀÂÄÉÈÊËÎÏÔÖÙÛÜ]/]
         I18n.t("models.application_record.build_subject.vowel", name: d_name)
       elsif class_name_gender == :F
         I18n.t("models.application_record.build_subject.feminine", name: d_name)
