@@ -2,3 +2,10 @@ Metrics:
   Enabled: false
 Style/StringLiterals:
   EnforcedStyle: double_quotes
+
+# This repo's established convention (visible throughout the codebase) is to write no
+# top-level comments unless the *why* is genuinely non-obvious. Style/Documentation demands
+# a comment above every class/module, which conflicts with that convention — bulk-adding
+# boilerplate doc comments just to satisfy the cop would be noise, not a cleanup.
+Style/Documentation:
+  Enabled: false
