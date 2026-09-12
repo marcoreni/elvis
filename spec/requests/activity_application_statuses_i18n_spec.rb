@@ -91,6 +91,24 @@ RSpec.describe "Activity application statuses i18n", type: :request do
     expect(body).to include(I18n.t("activerecord.attributes.activity_application_status.is_active", locale: "fr"))
   end
 
+  # Regression test for a KnownIssues.md entry ("Pre-existing bugs surfaced during Phase 07 P4"):
+  # the is_stopping/is_active <label> for: attributes ("is_stopping"/"is_active") did not match any
+  # real id on the corresponding f.check_box, so clicking the label never toggled the checkbox.
+  # (This app runs `config.load_defaults 5.1` -- see config/application.rb -- so form_with does NOT
+  # auto-generate ids the way it would under 6.0+ defaults; f.check_box rendered with no id at all
+  # before this fix.) Fix gives each checkbox an explicit id: matching its label's for:, mirroring
+  # the sibling :label field's existing id: "label" / for: "label" pair in the same partial.
+  it "matches the is_stopping/is_active label for: attributes to the real checkbox ids" do
+    get "/activity_application_statuses/new"
+    expect(response).to have_http_status(:ok)
+
+    body = response.body
+    %w[is_stopping is_active].each do |attr|
+      expect(body).to match(/<label[^>]*for="#{attr}"[^>]*>/)
+      expect(body).to match(/<input[^>]*id="#{attr}"[^>]*type="checkbox"[^>]*>/)
+    end
+  end
+
   # Checkpoint coverage for Phase 07 P6 (feat/i18n-p6-backend-strings), area F: the destroy action's
   # "linked to N registration requests" flash used to be a hand-built French string with the count
   # spliced in via #{}, with no plural handling at all ("1 demandes" was always grammatically wrong
