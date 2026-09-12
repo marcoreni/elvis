@@ -99,6 +99,47 @@ describe("EditFormule", () => {
         expect(await screen.findByText("2025-26 > ...")).toBeInTheDocument();
     });
 
+    test("selectedSeasons pricing column falls back to '...' when from_season_id has no match, instead of throwing", async () => {
+        // Regression for the asymmetric guard: seasonEnd was hardened against a missing match,
+        // but the identical seasonStart.label access one line above stayed unguarded and threw
+        // "Cannot read property 'label' of undefined" (see docs/KnownIssues.md).
+        global.fetch = vi.fn(url => {
+            const u = String(url);
+            const body = u.includes("get_seasons_and_pricing_categories")
+                ? {
+                      seasons: [
+                          {id: 1, label: "2025-26"},
+                          {id: 2, label: "2026-27"},
+                      ],
+                      pricing_categories: [],
+                  }
+                : u.includes("/formule_pricings")
+                ? {
+                      data: [
+                          {
+                              id: 1,
+                              pricing_category: {name: "Tarif standard"},
+                              price: 50,
+                              from_season_id: 999,
+                              to_season_id: 2,
+                          },
+                      ],
+                      pages: 1,
+                  }
+                : [];
+            return Promise.resolve({
+                ok: true,
+                headers: {get: h => (h === "Content-type" ? "application/json" : null)},
+                json: () => Promise.resolve(body),
+            });
+        });
+
+        await i18n.changeLanguage("fr");
+        render(<EditFormule formule={formule}/>);
+
+        expect(await screen.findByText("... > 2026-27")).toBeInTheDocument();
+    });
+
     test("renders the English strings when the active language is en", async () => {
         await i18n.changeLanguage("en");
         render(<EditFormule formule={formule}/>);

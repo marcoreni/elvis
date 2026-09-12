@@ -331,21 +331,6 @@ inline HTML:
   `["br","strong","i","p"]` — `em`/`a`/`u` are not in it. Use the indexed `<1>…</1>` form.
 
 Non-i18n code bugs still open, surfaced while extracting these files (none are locale-file defects):
-- `ActivityRefBasics.jsx` / `formules/EditFormule.jsx:342-343` — the `Cell` that renders the
-  season range: the `seasonEnd` half was hardened in `fix/known-issues-easy-batch`, but the
-  identical `seasonStart.label` access one line up is still unguarded and throws if `from_season_id`
-  doesn't match any fetched season. Low reachability (`get_seasons_and_pricing_categories` returns
-  every season); the asymmetry is the visible part.
-- **`icon:` / sweetalert2-v7** — under the pinned `sweetalert2 ^7`, `icon:` is an unknown param
-  (no crash, just no icon styling; use `type:`). Open at: `editParameters/MailSettings.jsx:37,43`,
-  `editParameters/CsvSettings.jsx:30,36`, `planning/ActivityDetailsModal.jsx:918`,
-  `activityItems/EditApplication.jsx:60`, `userForm/Absences.jsx:92,97`. Sweep together, or when
-  `sweetalert2` is finally bumped (deps section).
-- **Bare `<ReactTable>` missing `common:reactTable.*` pagination props** → English defaults
-  ("Page", "of", "rows") in the FR UI: `frontend/components/ReactTableFullScreen.jsx`,
-  `frontend/components/StopList.jsx`, `frontend/components/FailedPaymentImportsPage.jsx`. Also
-  `parameters/Payments/PaymentsMethods.jsx:5` has a dead `ReactTable` import (extends the class
-  `BaseDataTable`, which passes the props).
 - `parameters/Payments/AdhesionSettings.jsx` / `AdhesionEditModal.jsx`: `initialValues.label`
   defaults to the translated string `t("payments.adhesion.modal.defaultLabel")`. If an EN-locale
   admin leaves the field untouched, that literal English string gets POSTed and persisted as data —
@@ -488,9 +473,7 @@ What's still open in this domain:
 - **Mixed-language side effect of planning lot 3c, `KindLegend` half resolved by constants-i18n
   lot 3**: `SimplePlanning.jsx` renders `<KindLegend>` right below the level line lot 3c
   localized — `tools/constants.js` `KINDS_LABEL` now follows the active language too (lot 3), so
-  that particular mismatch is gone. Still open: `ActivitiesApplicationsList.jsx`'s column headers
-  ("Niveau", "Âge", "Activité" and 10 more) are still hardcoded French next to its now-localized
-  level cell and Action column.
+  that particular mismatch is gone.
 
 Design note (`planning/TimeIntervalHelpers.jsx`, lot 3c — so a later reader doesn't "simplify" it):
 `levelDisplay()` / `levelDisplayForActivity()` keep returning the raw French sentinels
@@ -528,26 +511,6 @@ on screen until the next fetch resolves. Same frozen-translation class as the `c
 notes above, and harmless for the same reason (switching locale is a full server reload).
 
 
-## `frontend/components/utils/ui/tabs.jsx` — `setTabError` prop leaks onto DOM elements
-
-`TabbedComponent` (`tabs.jsx:70`) manually clones the active tab's body element and injects a
-`setTabError` callback into its props:
-`{ ...tab.body, props: { ...tab.body.props, setTabError: … } }`. This is unconditional — it does
-not check whether `tab.body.type` is a component or a DOM element, and it does not use
-`React.cloneElement`. When a tab body is a plain DOM element (or a component that forwards its
-unknown props onto a DOM node), `setTabError` lands on a real element and React logs
-*"React does not recognize the `setTabError` prop on a DOM element"*.
-
-Seen 2026-09-05 via `planning/ActivityDetailsModal.jsx`'s tabs (rendered inside `Planning.jsx`),
-but it is a `tabs.jsx` design issue, not specific to that caller. Dev-only warning, no functional
-effect. Pre-existing — predates the current session's work; surfaced when the activity-details
-modal's tab was opened.
-
-Fix (its own small PR + a `tabs.test.jsx` case): in `tabs.jsx:70` only inject `setTabError` when
-`typeof tab.body.type === "function"` (a real component), and switch the manual clone to
-`React.cloneElement`; for the body components that receive but never use `setTabError`, strip it
-before any `{...props}` spread onto a DOM node.
-
 ## Pre-existing bugs surfaced during Phase 07 P2 (practice/rooms/locations extraction)
 
 - **`app/views/rooms/{new,edit}.html.erb` still render hardcoded French inside `react_component`
@@ -570,13 +533,6 @@ before any `{...props}` spread onto a DOM node.
 
 ## Phase 07 P5 (React-tail extraction) — pre-existing bugs surfaced, and things deliberately left
 
-- **`frontend/components/AdditionalStudentSelection.jsx` builds its `<label>` text with `key + 1`
-  where `key` is a string object-key.** `_.map(this.props.additionalStudents, (p, i) => …)` passes
-  `i` as the object key ("0", "1", …); `renderParentSelection(key)` then does `{{ n: key + 1 }}`,
-  which string-concatenates to `"01"`, `"11"`, … rather than `1`, `2`. The P5 pass keyed the label
-  (`activityApplications:childSelection.studentForAwakening`) but preserved the existing `key + 1`
-  behaviour verbatim. Fix: `parseInt(key, 10) + 1` (or iterate with `_.map(..., (p, i) => …, )` where
-  `i` is a real index).
 - **`frontend/components/AttachAccount.jsx` `UserListItem` rendered a literal `${…}` in JSX text**
   (`Adhérent #${user.adherent_number}` inside a JSX text node — the template-literal syntax was
   never evaluated, so the UI showed a dollar-brace). Fixed while extracting: now
@@ -595,14 +551,25 @@ before any `{...props}` spread onto a DOM node.
   load-bearing key); `frontend/components/advancedSearch/utils.js` (a verbatim vendored
   jQuery-QueryBuilder French language pack + a `PAYMENT_SCHEDULE_OPTIONS_PAYMENTS_NUMBERS` label
   array). Each is a candidate for a dedicated constants-i18n follow-up.
-- **`frontend/components/utils/DateFilter.jsx` `RangedSelect` throws `"the arguments need to be
+- **`frontend/components/utils/DateFilter.tsx` `RangedSelect` throws `"the arguments need to be
   integers"` under some props** (visible as loud stderr in the Vitest run, inside otherwise-passing
-  tests). Pre-existing; the P5 pass only keyed the three placeholders and did not touch the guard.
-- **`common.json` (`frontend/locales/{fr,en}/common.json`) is committed 2-space-indented and does
-  NOT satisfy `.prettierrc` (`tabWidth: 4`).** This predates P5 (every prior i18n PR added keys the
-  same way). P5 kept matching the existing 2-space style for its `common.json` additions rather than
-  reformatting the whole file; a one-off `prettier --write` normalisation of `common.json` is its
-  own tiny chore.
+  tests). Investigated in `fix/known-issues-easy-frontend`: the only place this throw fires under
+  the current Vitest suite is `DateFilter.test.jsx`'s own "throws its own explicit guard" test,
+  which deliberately renders `<RangedSelect min="1" .../>` to assert the guard produces a clear
+  message instead of a lodash `ReferenceError`. React 16 dev mode captures a real stack trace for
+  errors thrown during render via a `dispatchEvent`-based trick (`invokeGuardedCallbackDev`), which
+  always logs to console/stderr even though the test's `expect(...).toThrow()` correctly catches
+  the error — so the "loud stderr" is React's own dev-mode logging of an intentional test case, not
+  evidence of a real caller hitting this path today. `RangedSelect`'s two production callers
+  (`DateFilter.tsx`'s own two internal uses, which run `min`/`max` through `moment(...).year()`
+  first) are safe; `HoursSheet.jsx` calls `RangedSelect` directly with
+  `max={this.props.maxYear + 1 || 2101}` / `min={this.props.minYear || 1975}`, which would trip the
+  same guard if `minYear`/`maxYear` ever arrived as numeric strings rather than numbers — not
+  currently reachable (`users_controller.rb`'s `@min_year`/`@max_year` come from `.year` on a Ruby
+  `Date`, always an `Integer`), but a fragile implicit contract. Left as-is: `HoursSheet.jsx` isn't
+  part of this item's listed scope, and hardening `RangedSelect`'s guard itself would conflict with
+  the existing test that deliberately relies on it staying strict. Fold a `HoursSheet.jsx`
+  `Number(...)` coercion into a future pass if `minYear`/`maxYear` ever start arriving as strings.
 - **`frontend/components/{StopList,eventsRules/EventsRules,mailTemplates/TemplateIndex}.jsx` and
   a few others build react-table `columns` at module scope / in a plain `const` inside `render()`.**
   Where the array was module-level (`StopList`'s `TABLE_COLUMNS`), P5 converted it to a

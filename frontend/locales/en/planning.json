@@ -372,6 +372,9 @@
     "availabilityCommentModal": {
         "title": "Comment"
     },
+    "weekSelector": {
+        "range": "From {{from}} to {{to}}"
+    },
     "plannings": {
         "columns": {
             "lastModified": "Last modified",
