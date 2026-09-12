@@ -28,7 +28,7 @@ class ChildSelection extends React.Component {
                 <label htmlFor="o">
                     {t(
                         "activityApplications:childSelection.studentForAwakening",
-                        { n: key + 1 }
+                        { n: parseInt(key, 10) + 1 }
                     )}
                 </label>
                 <select

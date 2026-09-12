@@ -915,7 +915,7 @@ class ActivityDetailsModal extends React.Component {
                                 swal({
                                     title: t("activityModal.errorTitle"),
                                     text: t("activityModal.editError"),
-                                    icon: "error"
+                                    type: "error"
                                 });
                             } finally {
                                 this.setState({ isEditing: false });

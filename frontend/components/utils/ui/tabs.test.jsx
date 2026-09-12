@@ -94,4 +94,32 @@ describe("TabbedComponent", () => {
         const tabItem = screen.getByText("Premier onglet").closest("li");
         expect(tabItem).toHaveAttribute("title", "Cet onglet n'est pas complètement rempli");
     });
+
+    test("a plain DOM element tab body renders without React warning about an unrecognized setTabError prop", () => {
+        // Regression: TabbedComponent used to unconditionally clone the active tab's body with a
+        // manual object spread injecting `setTabError` into `body.props`, even when `tab.body` was
+        // a plain DOM element (e.g. <div>) rather than a component — React then warns "React does
+        // not recognize the `setTabError` prop on a DOM element" because the prop lands on the
+        // rendered <div> itself. Only components (function/class, i.e. `typeof type === "function"`)
+        // should receive it now.
+        const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+
+        render(
+            <TabbedComponent
+                tabs={[
+                    {
+                        id: "tab_one",
+                        header: "Premier onglet",
+                        active: true,
+                        body: <div>Plain div body</div>,
+                    },
+                ]}
+            />
+        );
+
+        expect(screen.getByText("Plain div body")).toBeInTheDocument();
+        expect(consoleError).not.toHaveBeenCalled();
+
+        consoleError.mockRestore();
+    });
 });

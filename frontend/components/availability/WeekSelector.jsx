@@ -1,32 +1,26 @@
 import React, { Fragment } from "react";
+import { withTranslation } from "react-i18next";
 import * as api from "../../tools/api";
 import ErrorList from "../common/ErrorList";
-import { toDate, toMonthName, toDateStr } from "../../tools/format";
+import { toDate, toLocaleDate, toMonthName, toDateStr } from "../../tools/format";
 
-const locale = "fr-FR";
-const localeOptions = {
-    day: "numeric",
-    month: "numeric",
-    year: "numeric",
+const formatWeekBounds = (week, t) => {
+    const from = toLocaleDate(toDate(week.from));
+    const to = toLocaleDate(toDate(week.to));
+
+    return t("planning:weekSelector.range", { from, to });
 };
 
-const formatWeekBounds = week => {
-    const from = toDate(week.from).toLocaleString(locale, localeOptions);
-    const to = toDate(week.to).toLocaleString(locale, localeOptions);
-
-    return `Du ${from} au ${to}`;
-};
-
-const renderWeeks = weeks =>
+const renderWeeks = (weeks, t) =>
     weeks.map((week, i) => {
         return (
             <option key={i} value={week.from}>
-                {formatWeekBounds(week)}
+                {formatWeekBounds(week, t)}
             </option>
         );
     });
 
-const renderMonths = (months, year) =>
+const renderMonths = (months, year, t) =>
     Object.keys(months).map(month => {
         if (months[month].length === 0) {
             return null;
@@ -34,14 +28,16 @@ const renderMonths = (months, year) =>
 
         return (
             <optgroup key={month} label={`${toMonthName(month)} ${year}`}>
-                {renderWeeks(months[month])}
+                {renderWeeks(months[month], t)}
             </optgroup>
         );
     });
 
-const renderYears = data =>
+const renderYears = (data, t) =>
     Object.keys(data).map(year => {
-        return <Fragment key={year}>{renderMonths(data[year], year)}</Fragment>;
+        return (
+            <Fragment key={year}>{renderMonths(data[year], year, t)}</Fragment>
+        );
     });
 
 const getFirstWeek = data => {
@@ -86,7 +82,7 @@ class WeekSelector extends React.PureComponent {
     }
 
     render() {
-        const { buttonLabel, alignRight } = this.props;
+        const { buttonLabel, alignRight, t } = this.props;
         const { list, errors, selected } = this.state;
 
         return (
@@ -98,7 +94,7 @@ class WeekSelector extends React.PureComponent {
                     value={selected}
                     onChange={this.handleSelect}
                 >
-                    {renderYears(list)}
+                    {renderYears(list, t)}
                 </select>
 
                 <div className="clearfix">
@@ -118,4 +114,4 @@ class WeekSelector extends React.PureComponent {
     }
 }
 
-export default WeekSelector;
+export default withTranslation("planning")(WeekSelector);

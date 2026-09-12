@@ -5,7 +5,7 @@ import swal from "sweetalert2";
 import { EmailEditor } from "react-email-editor";
 
 export default function ElvisEditor(props) {
-    const { t } = useTranslation("parameters");
+    const { t, i18n } = useTranslation("parameters");
     const [json, setJson] = useState(JSON.parse(props.templateJson));
     const [html, setHtml] = useState(props.templateBody);
     const emailEditorRef = useRef();
@@ -130,7 +130,9 @@ export default function ElvisEditor(props) {
                 ref={emailEditorRef}
                 onLoad={onLoad}
                 onReady={onReady}
-                options={{ locale: "fr-FR" }}
+                options={{
+                    locale: i18n.language === "en" ? "en-US" : "fr-FR",
+                }}
             />
 
             <div className="mt-3">

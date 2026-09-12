@@ -17,10 +17,12 @@ require "rails_helper"
 # so this also exercises the view-side i18n keys as a bonus.
 #
 # UpcomingPaymentMailer#upcoming_payment is picked as a *second, independent* wiring proof, and
-# specifically to avoid a pre-existing bug elsewhere: several of the other 8 mailers'
-# extracted views call methods (`@application.user`, `@application.season`) that don't exist on
-# `LiquidDrops::ApplicationDrop` (it only defines `first_name`/`last_name`/`season_label` etc
-# directly) -- a latent bug independent of P6, out of scope here (see docs/KnownIssues.md).
+# specifically to sidestep the heavier fixture graph several of the other 8 mailers' extracted
+# views need (a real ActivityApplication/Activity/Season). See spec/mailers/application_drop_spec.rb
+# and spec/mailers/application_mailer_notify_new_application_spec.rb for coverage of
+# `LiquidDrops::ApplicationDrop#user`/`#season` (previously missing -- the fixed KnownIssues.md
+# entry "ActivityAssignedMailer / ApplicationMailer#notify_new_application file-based views call
+# undefined LiquidDrops::ApplicationDrop methods" has been removed now that this is fixed).
 # UpcomingPaymentMailer has no file-based view at all (only a DB-driven NotificationTemplate in
 # production); a minimal stub NotificationTemplate row is seeded here purely so `mail()` can
 # render *something* -- the row's body is irrelevant, only `subject` is under test.

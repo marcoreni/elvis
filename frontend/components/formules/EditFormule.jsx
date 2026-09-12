@@ -372,9 +372,11 @@ export default function EditFormule({ formule }) {
                               (s) => s.id === row.original.to_season_id
                           )
                         : null;
+                const seasonStartLabel =
+                    seasonStart != null ? seasonStart.label : "...";
                 return seasonEnd != null
-                    ? seasonStart.label + " > " + seasonEnd.label
-                    : seasonStart.label + " > ...";
+                    ? seasonStartLabel + " > " + seasonEnd.label
+                    : seasonStartLabel + " > ...";
             },
         },
     ];

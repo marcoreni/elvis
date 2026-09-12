@@ -83,7 +83,7 @@ class Parameters::PraticeParametersController < ApplicationController
               when "id"
                 query.where(id: filter[:value])
               when "active"
-                query.where(active: filter[:value] == "oui")
+                query.where(active: truthy_filter_value?(filter[:value]))
               when "prix"
                 query.where(prix: filter[:value])
               else
@@ -104,7 +104,7 @@ class Parameters::PraticeParametersController < ApplicationController
               when "id"
                 query.where(id: filter[:value])
               when "active"
-                query.where(active: filter[:value] == "oui")
+                query.where(active: truthy_filter_value?(filter[:value]))
               else
                 query.where("#{filter[:id]} ILIKE ?", "#{filter[:value]}%")
               end
@@ -141,6 +141,17 @@ class Parameters::PraticeParametersController < ApplicationController
   end
 
   private
+
+  # The "active"/"enable" boolean columns are filtered via a plain free-text react-table filter
+  # box (no locale-aware dropdown), so the typed value can legitimately be "oui" (fr UI) or "yes"
+  # (en UI), among other truthy spellings a user might type after seeing the localized Yes/No cell
+  # value. Hardcoding a single French token here made every non-"oui" value (including the English
+  # "yes") resolve to false.
+  TRUTHY_FILTER_VALUES = %w[oui yes true 1].freeze
+
+  def truthy_filter_value?(value)
+    TRUTHY_FILTER_VALUES.include?(value.to_s.strip.downcase)
+  end
 
   def list_json(query, params, json_include = {})
     sort_order = params[:sorted][:desc] ? :desc : :asc

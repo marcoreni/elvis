@@ -116,7 +116,7 @@ export default function Absences({ user_id, seasons = [] }) {
                 Swal.fire({
                     title: t("users:absences.toast.savedTitle"),
                     text: t("users:absences.toast.savedText"),
-                    icon: "success",
+                    type: "success",
                     timer: 2000,
                     showConfirmButton: false,
                     toast: true,
@@ -127,7 +127,7 @@ export default function Absences({ user_id, seasons = [] }) {
                 Swal.fire({
                     title: t("users:absences.toast.errorTitle"),
                     text: t("users:absences.toast.errorText"),
-                    icon: "error",
+                    type: "error",
                 });
             })
             .patch(`/student_attendances/${id}/update_remarks`, {

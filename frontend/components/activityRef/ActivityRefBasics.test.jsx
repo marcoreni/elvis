@@ -300,6 +300,22 @@ describe("ActivityRefBasics", () => {
             const result = Cell({original: {from_season_id: 1, to_season_id: 2}});
             expect(result).toBe("2025-26 > 2026-27");
         });
+
+        test("from_season_id not found among fetched seasons falls back to '...' instead of throwing", async () => {
+            // Regression for the asymmetric guard: seasonEnd was hardened against a missing
+            // match, but the identical seasonStart.label access one line above stayed
+            // unguarded and threw "Cannot read property 'label' of undefined".
+            await i18n.changeLanguage("fr");
+            renderBasics();
+            act(() => mockLastApiSuccess(twoSeasonsPayload));
+
+            const Cell = getSelectedSeasonsCell();
+            let result;
+            expect(() => {
+                result = Cell({original: {from_season_id: 999, to_season_id: 2}});
+            }).not.toThrow();
+            expect(result).toBe("... > 2026-27");
+        });
     });
 
     describe("fetchSeasonsAndPricings error path", () => {

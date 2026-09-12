@@ -2,7 +2,6 @@ import React, {Component, Fragment} from "react";
 import swal from "sweetalert2";
 import {csrfToken} from "../../utils";
 import {makeDebounce} from "../../../tools/inputs";
-import ReactTable from "react-table";
 import BaseDataTable from "../BaseDataTable";
 import {withTranslation} from "react-i18next";
 

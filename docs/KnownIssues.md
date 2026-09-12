@@ -331,25 +331,6 @@ inline HTML:
   `["br","strong","i","p"]` — `em`/`a`/`u` are not in it. Use the indexed `<1>…</1>` form.
 
 Non-i18n code bugs still open, surfaced while extracting these files (none are locale-file defects):
-- `ActivityRefBasics.jsx` / `formules/EditFormule.jsx:342-343` — the `Cell` that renders the
-  season range: the `seasonEnd` half was hardened in `fix/known-issues-easy-batch`, but the
-  identical `seasonStart.label` access one line up is still unguarded and throws if `from_season_id`
-  doesn't match any fetched season. Low reachability (`get_seasons_and_pricing_categories` returns
-  every season); the asymmetry is the visible part.
-- **Server-side `active` filter is hardcoded French** — `pratice_parameters_controller.rb:86` (and
-  `:107` for features): `query.where(active: filter[:value] == "oui")`. An EN-locale admin filtering
-  the "active" column gets `active: false` for anything other than the literal string `"oui"`.
-  Fold into the controller-strings pass (roadmap Phase 07 P6).
-- **`icon:` / sweetalert2-v7** — under the pinned `sweetalert2 ^7`, `icon:` is an unknown param
-  (no crash, just no icon styling; use `type:`). Open at: `editParameters/MailSettings.jsx:37,43`,
-  `editParameters/CsvSettings.jsx:30,36`, `planning/ActivityDetailsModal.jsx:918`,
-  `activityItems/EditApplication.jsx:60`, `userForm/Absences.jsx:92,97`. Sweep together, or when
-  `sweetalert2` is finally bumped (deps section).
-- **Bare `<ReactTable>` missing `common:reactTable.*` pagination props** → English defaults
-  ("Page", "of", "rows") in the FR UI: `frontend/components/ReactTableFullScreen.jsx`,
-  `frontend/components/StopList.jsx`, `frontend/components/FailedPaymentImportsPage.jsx`. Also
-  `parameters/Payments/PaymentsMethods.jsx:5` has a dead `ReactTable` import (extends the class
-  `BaseDataTable`, which passes the props).
 - `parameters/Payments/AdhesionSettings.jsx` / `AdhesionEditModal.jsx`: `initialValues.label`
   defaults to the translated string `t("payments.adhesion.modal.defaultLabel")`. If an EN-locale
   admin leaves the field untouched, that literal English string gets POSTed and persisted as data —
@@ -492,9 +473,7 @@ What's still open in this domain:
 - **Mixed-language side effect of planning lot 3c, `KindLegend` half resolved by constants-i18n
   lot 3**: `SimplePlanning.jsx` renders `<KindLegend>` right below the level line lot 3c
   localized — `tools/constants.js` `KINDS_LABEL` now follows the active language too (lot 3), so
-  that particular mismatch is gone. Still open: `ActivitiesApplicationsList.jsx`'s column headers
-  ("Niveau", "Âge", "Activité" and 10 more) are still hardcoded French next to its now-localized
-  level cell and Action column.
+  that particular mismatch is gone.
 
 Design note (`planning/TimeIntervalHelpers.jsx`, lot 3c — so a later reader doesn't "simplify" it):
 `levelDisplay()` / `levelDisplayForActivity()` keep returning the raw French sentinels
@@ -532,32 +511,8 @@ on screen until the next fetch resolves. Same frozen-translation class as the `c
 notes above, and harmless for the same reason (switching locale is a full server reload).
 
 
-## `frontend/components/utils/ui/tabs.jsx` — `setTabError` prop leaks onto DOM elements
-
-`TabbedComponent` (`tabs.jsx:70`) manually clones the active tab's body element and injects a
-`setTabError` callback into its props:
-`{ ...tab.body, props: { ...tab.body.props, setTabError: … } }`. This is unconditional — it does
-not check whether `tab.body.type` is a component or a DOM element, and it does not use
-`React.cloneElement`. When a tab body is a plain DOM element (or a component that forwards its
-unknown props onto a DOM node), `setTabError` lands on a real element and React logs
-*"React does not recognize the `setTabError` prop on a DOM element"*.
-
-Seen 2026-09-05 via `planning/ActivityDetailsModal.jsx`'s tabs (rendered inside `Planning.jsx`),
-but it is a `tabs.jsx` design issue, not specific to that caller. Dev-only warning, no functional
-effect. Pre-existing — predates the current session's work; surfaced when the activity-details
-modal's tab was opened.
-
-Fix (its own small PR + a `tabs.test.jsx` case): in `tabs.jsx:70` only inject `setTabError` when
-`typeof tab.body.type === "function"` (a real component), and switch the manual clone to
-`React.cloneElement`; for the body components that receive but never use `setTabError`, strip it
-before any `{...props}` spread onto a DOM node.
-
 ## Pre-existing bugs surfaced during Phase 07 P2 (practice/rooms/locations extraction)
 
-- **`locations_controller.rb:75` sets `flash[:error]` to a bare String**, but `locations/index.html.erb:32`
-  does `flash[:error].each` (and `locations/_form.html.erb:2` `&.any?`) — a `NoMethodError` on the
-  destroy-blocked path. The P2 diff touched the surrounding block (the `<h3>` heading) but not this;
-  fix is to make the controller set an array, or the views handle a scalar.
 - **`app/views/rooms/{new,edit}.html.erb` still render hardcoded French inside `react_component`
   props** (`title: "Localisation"`, `title: "Activités"`, `title: 'Image'`). Deliberately left by
   P2 ("React-mount props untouched"); belongs with the `rooms/` React components in a later lot.
@@ -569,14 +524,6 @@ before any `{...props}` spread onto a DOM node.
 
 ## Pre-existing bugs surfaced during Phase 07 P4 (activity-catalogue + member-facing ERB)
 
-- **`app/views/activity_application_statuses/_activity_application_status_form.html.erb` label `for:`
-  targets are stale.** The `is_stopping` / `is_active` labels carry `for: "is_stopping"` /
-  `for: "is_active"`, but `f.check_box :is_stopping` / `:is_active` emit ids
-  `activity_application_status_is_stopping` / `..._is_active`, so clicking the label does not toggle
-  the box. Pre-existing (predates the P4 i18n pass, which only swapped the label text to
-  `f.label :attr` + `activerecord.attributes.activity_application_status.*` and left `for:`
-  untouched). Fix: drop the `for:` overrides so Rails auto-matches, or give the check boxes
-  `id: "is_stopping"` / `id: "is_active"`.
 - **Rails scaffold placeholder views still present** (English `<h1>Model#action</h1><p>Find me in ...</p>`
   stubs, no route reaching them for a real render): `activity/remove.html.erb`,
   `activity_instance/{delete,update}.html.erb`, `activity_ref/{create,update}.html.erb`,
@@ -586,13 +533,6 @@ before any `{...props}` spread onto a DOM node.
 
 ## Phase 07 P5 (React-tail extraction) — pre-existing bugs surfaced, and things deliberately left
 
-- **`frontend/components/AdditionalStudentSelection.jsx` builds its `<label>` text with `key + 1`
-  where `key` is a string object-key.** `_.map(this.props.additionalStudents, (p, i) => …)` passes
-  `i` as the object key ("0", "1", …); `renderParentSelection(key)` then does `{{ n: key + 1 }}`,
-  which string-concatenates to `"01"`, `"11"`, … rather than `1`, `2`. The P5 pass keyed the label
-  (`activityApplications:childSelection.studentForAwakening`) but preserved the existing `key + 1`
-  behaviour verbatim. Fix: `parseInt(key, 10) + 1` (or iterate with `_.map(..., (p, i) => …, )` where
-  `i` is a real index).
 - **`frontend/components/AttachAccount.jsx` `UserListItem` rendered a literal `${…}` in JSX text**
   (`Adhérent #${user.adherent_number}` inside a JSX text node — the template-literal syntax was
   never evaluated, so the UI showed a dollar-brace). Fixed while extracting: now
@@ -611,14 +551,25 @@ before any `{...props}` spread onto a DOM node.
   load-bearing key); `frontend/components/advancedSearch/utils.js` (a verbatim vendored
   jQuery-QueryBuilder French language pack + a `PAYMENT_SCHEDULE_OPTIONS_PAYMENTS_NUMBERS` label
   array). Each is a candidate for a dedicated constants-i18n follow-up.
-- **`frontend/components/utils/DateFilter.jsx` `RangedSelect` throws `"the arguments need to be
+- **`frontend/components/utils/DateFilter.tsx` `RangedSelect` throws `"the arguments need to be
   integers"` under some props** (visible as loud stderr in the Vitest run, inside otherwise-passing
-  tests). Pre-existing; the P5 pass only keyed the three placeholders and did not touch the guard.
-- **`common.json` (`frontend/locales/{fr,en}/common.json`) is committed 2-space-indented and does
-  NOT satisfy `.prettierrc` (`tabWidth: 4`).** This predates P5 (every prior i18n PR added keys the
-  same way). P5 kept matching the existing 2-space style for its `common.json` additions rather than
-  reformatting the whole file; a one-off `prettier --write` normalisation of `common.json` is its
-  own tiny chore.
+  tests). Investigated in `fix/known-issues-easy-frontend`: the only place this throw fires under
+  the current Vitest suite is `DateFilter.test.jsx`'s own "throws its own explicit guard" test,
+  which deliberately renders `<RangedSelect min="1" .../>` to assert the guard produces a clear
+  message instead of a lodash `ReferenceError`. React 16 dev mode captures a real stack trace for
+  errors thrown during render via a `dispatchEvent`-based trick (`invokeGuardedCallbackDev`), which
+  always logs to console/stderr even though the test's `expect(...).toThrow()` correctly catches
+  the error — so the "loud stderr" is React's own dev-mode logging of an intentional test case, not
+  evidence of a real caller hitting this path today. `RangedSelect`'s two production callers
+  (`DateFilter.tsx`'s own two internal uses, which run `min`/`max` through `moment(...).year()`
+  first) are safe; `HoursSheet.jsx` calls `RangedSelect` directly with
+  `max={this.props.maxYear + 1 || 2101}` / `min={this.props.minYear || 1975}`, which would trip the
+  same guard if `minYear`/`maxYear` ever arrived as numeric strings rather than numbers — not
+  currently reachable (`users_controller.rb`'s `@min_year`/`@max_year` come from `.year` on a Ruby
+  `Date`, always an `Integer`), but a fragile implicit contract. Left as-is: `HoursSheet.jsx` isn't
+  part of this item's listed scope, and hardening `RangedSelect`'s guard itself would conflict with
+  the existing test that deliberately relies on it staying strict. Fold a `HoursSheet.jsx`
+  `Number(...)` coercion into a future pass if `minYear`/`maxYear` ever start arriving as strings.
 - **`frontend/components/{StopList,eventsRules/EventsRules,mailTemplates/TemplateIndex}.jsx` and
   a few others build react-table `columns` at module scope / in a plain `const` inside `render()`.**
   Where the array was module-level (`StopList`'s `TABLE_COLUMNS`), P5 converted it to a
@@ -673,21 +624,36 @@ before any `{...props}` spread onto a DOM node.
   (capture `I18n.locale` at enqueue time, pass it through as a job argument, wrap `perform` in
   `I18n.with_locale`) would apply to any future job that renders user-facing text, not just this one.
 
-## `ActivityAssignedMailer` / `ApplicationMailer#notify_new_application` file-based views call undefined `LiquidDrops::ApplicationDrop` methods
+## `ActivityAssignedMailer#activity_assigned`'s file-based view calls undefined `LiquidDrops::ActivityDrop` methods
 
-Found 2026-09-11 while adding a P6 mailer-subject checkpoint spec (`spec/mailers/i18n_p6_mailers_spec.rb`) — a fresh-test-DB run of either mailer's file-based view (no `NotificationTemplate` override present) raises `NoMethodError`. Pre-existing, not introduced by P6 (the offending calls were already there; P6 only wrapped the surrounding text in `t(...)`, see `git diff` on these views in commit `744d2c99`).
+Found 2026-09-12 while fixing/verifying the sibling `LiquidDrops::ApplicationDrop` bug (`user`/`season` accessors, now fixed — see `spec/mailers/application_drop_spec.rb` and `spec/mailers/application_mailer_notify_new_application_spec.rb`). `app/views/activity_assigned_mailer/activity_assigned.html.erb` also calls `@activity.activity_ref.label`, `@activity.time_interval.start`/`.end`, and `@activity.teachers.first.full_name` — but `@activity` is a `LiquidDrops::ActivityDrop` (`app/mailers/liquid_drops/activity_drop.rb`), which only defines flattened accessors (`label`, `activity_start`, `activity_end`, `teacher_first_name`, `teacher_last_name`, `room_label`, …), not `activity_ref`/`time_interval`/`teachers`. Any real render of this file-based view (no `NotificationTemplate` override present) raises `NoMethodError` on the first of these calls, independent of and in addition to the now-fixed `ApplicationDrop` issue.
 
-Both `ActivityAssignedMailer#activity_assigned` (`app/views/activity_assigned_mailer/activity_assigned.html.erb`) and `ApplicationMailer#notify_new_application` (`app/views/application_mailer/notify_new_application.html.erb` + the sibling `.mjml`) assign `@application = LiquidDrops::ApplicationDrop.new(application.as_json(...))`, then their views call `@application.user.first_name` / `@application.user.last_name` / `@application.season.label`. `LiquidDrops::ApplicationDrop` (`app/mailers/liquid_drops/application_drop.rb`) has no `user` or `season` method — only flattened accessors (`first_name`, `last_name`, `email`, `birthday`, `adherent_number`, `start`, …) that reach into the underlying `@application["user"]`/`["season"]` hash directly. Calling `.user` or `.season` on the drop raises `NoMethodError`.
+Same masking as the `ApplicationDrop` bug was: a DB-stored `NotificationTemplate` row for this mailer/action hides it in production. Fix would mirror the `ApplicationDrop` fix — either add `activity_ref`/`time_interval`/`teachers` accessors to `ActivityDrop` returning small drop objects, or change the view to use the existing flattened accessors (`@activity.label`, `@activity.activity_start`/`activity_end`, `@activity.teacher_first_name`/`teacher_last_name`). Not fixed here — found incidentally while verifying a different, already-scoped fix; left for a follow-up.
 
-In production this is masked whenever a DB-stored `NotificationTemplate` row exists for the action (`prepend_view_path NotificationTemplate.resolver` on both mailers renders that instead of the `.html.erb`), so the bug likely hasn't been noticed — but any installation missing that template row would hard-fail sending the mail. Fix is either: add `user`/`season` drop accessors to `ApplicationDrop` (or dedicated sub-drops), or change the views to use the drop's existing flattened accessors (`@application.first_name`, `@application.last_name`, and add a `season_label`-style accessor for the season name). Left unfixed here — a behavior/robustness fix, out of scope for an i18n string-extraction pass.
+## `db/migrate/20240924141831_add_upcoming_payment_notice_to_notification_templates.rb` fails on a genuinely fresh `db:migrate` replay — root cause is a stale `ActiveRecord` primary-key memoization, not `reset_pk_sequence!`
 
-## `Parameter` cache leaks across test examples/processes via `FileStore`, causing nondeterministic spec failures
+Investigated 2026-09-12 while triaging a backend bug batch that (incorrectly) assumed the culprit was this migration's `ActiveRecord::Base.connection.reset_pk_sequence!(:notification_templates)` call. **That hypothesis is wrong** — documented here in detail so nobody re-derives the wrong fix a second time.
 
-Root-caused 2026-09-12 while reviewing Phase 07 P6 (`feat/i18n-p6-backend-strings`) — `spec/controllers/{application,locale}_controller_spec.rb` fail nondeterministically, reproduced independent of the P6 diff (same failure on develop `810cb1c0` alone, one run in a batch, not the next with identical `--seed`/`--order`). Not a P6 regression; P6 only made it surface more often by adding 22 examples that reshuffle random-order placement.
+Reproduction: `RAILS_ENV=test bin/rails db:drop db:create db:migrate` against a genuinely empty database (not `db:prepare`/`db:setup` on an *absent* database — those call `db:schema:load`, which builds the final table shape directly from `db/schema.rb` and never executes this migration's Ruby code at all; the bug only fires when migrations are actually replayed one by one, e.g. `db:migrate` against an existing older-versioned DB, or `db:drop db:create db:migrate` as done here) fails at this migration:
+```
+PG::UndefinedColumn: ERROR:  column "id" does not exist
+LINE 1: ...son") VALUES ($1, $2, ...) RETURNING "id"
+```
 
-Mechanism: `config/environments/test.rb` configures `Rails.cache` as `ActiveSupport::Cache::FileStore` — a real on-disk cache, not cleared between examples or between separate `rspec` process invocations. `spec/controllers/application_controller_spec.rb:57` does `Parameter.create!(label: "app.localization.available_languages", value: ["en"].to_json)` inside a transactional example. `Parameter#expire_cache` (see `app/models/parameter.rb`) is registered as an `after_commit` callback, but RSpec's transactional fixtures roll the transaction back at the end of the example rather than committing it — so `expire_cache` never fires, and the previously-cached `parameter_app.localization.available_languages` key is never invalidated. The stale `["en"]` value then leaks into whatever example (in this run, or a later `rspec` invocation reading the same `tmp/cache` directory) next reads that Parameter through the cache.
+Root cause, confirmed by instrumenting the migration with `puts NotificationTemplate.primary_key`, `puts NotificationTemplate.columns.map(&:name)`, and `puts connection.primary_keys("notification_templates")` immediately before the failing `upsert`/`save!` call:
+- `notification_templates` originally had a normal `id` bigint primary key (`db/migrate/20230901084521_create_create_notification_templates.rb`).
+- Three earlier migrations (Sept–Oct 2023) call `NotificationTemplate.find_or_initialize_by(...).save!` while `id` still exists — the **first** access to `NotificationTemplate.primary_key` in the process happens here and memoizes `"id"` on the class object (`ActiveRecord::AttributeMethods::PrimaryKey#primary_key`: `@primary_key = reset_primary_key unless defined? @primary_key`).
+- `db/migrate/20231107102737_update_button_link_on_templates.rb` then drops the `id` column and makes `path` the primary key via raw SQL, and explicitly calls `NotificationTemplate.reset_column_information` right after — clearly *intending* to keep the model in sync.
+- **`reset_column_information` does not actually clear `@primary_key`.** In this Rails version (6.1.7.10), `reset_column_information` calls `reload_schema_from_cache`, which resets `@columns`, `@columns_hash`, `@attribute_types`, etc. — but never touches `@primary_key` (`active_record/model_schema.rb`, `reload_schema_from_cache`). So `NotificationTemplate.primary_key` keeps returning the stale `"id"` for the rest of the process, even though `connection.primary_keys("notification_templates")` (a live, uncached query) correctly returns `["path"]` the whole time.
+- Our migration's `upsert` calls `.save!` on a *new* `NotificationTemplate`, and ActiveRecord builds the INSERT's `RETURNING` clause from the (stale) `primary_key`, i.e. `RETURNING "id"` — a column that no longer exists.
 
-Fix would be a `before`/`around` hook clearing `Rails.cache` (or specifically the `parameter_*` keys) around specs that touch `Parameter`, or switching test env to `ActiveSupport::Cache::NullStore`/`MemoryStore` (verify nothing relies on cache persistence across requests within the same example first). Not fixed here — orthogonal to the i18n work that surfaced it.
+This only manifests when the *entire* migration history replays inside one Rails process (so the same `NotificationTemplate` class object survives from before the Nov 2023 id-drop to after it) — which is exactly what a genuinely fresh `db:migrate`/`rails db:create && rails db:migrate` does, but not what `db:prepare`/`db:setup` do against an absent database (schema-load path, migration code never runs), and not a `db:migrate` that resumes an already-migrated database in a fresh process (a fresh `NotificationTemplate` class object never had the chance to memoize the stale `"id"`).
+
+**`reset_pk_sequence!` is not involved.** Verified directly: it calls PostgreSQL's `pk_and_sequence_for`, finds `path` has no owning sequence (it's a string PK, not serial), logs a "has primary key path with no default sequence" warning, and returns — no exception, no interaction with ActiveRecord's model-level schema/primary-key cache whatsoever (`active_record/connection_adapters/postgresql/schema_statements.rb`). Removing the line does not fix the bug; **repeated empirical testing showed a `bin/rails db:migrate` "success" after removing that line was a false positive** caused by `db:drop` transiently failing (leaving a partially-migrated database that a later `db:create` silently reused via "already exists", so the migration replay never actually restarted from empty). A genuinely fresh `db:drop && db:create && db:migrate` reproduces the failure with or without the `reset_pk_sequence!` line — confirmed both ways, several times, with the debug instrumentation above.
+
+Real fix (not applied here — deeper than a one-line delete, and this migration's own `upsert`/data content was explicitly out of scope for the batch that surfaced this): either (a) have this migration call `NotificationTemplate.reset_column_information` *and* explicitly clear the memoized primary key (e.g. `NotificationTemplate.instance_variable_set(:@primary_key, nil)`, or reference `connection.schema_cache.clear!` plus re-deriving `primary_key`) before its own `upsert`, or (b) fix it at the source in `20231107102737_update_button_link_on_templates.rb` so `reset_column_information` there is paired with an explicit primary-key reset, so no migration after it can ever observe the stale value. (b) is more correct (fixes it for every migration after that point, not just this one) but touches an already-run, already-shipped migration, which needs a human call on whether that's safe for existing installations that already applied it.
+
+In the meantime, a practical workaround for a fresh dev/CI database (from the Phase 07 P7 pass, which independently hit this as a bare `rails db:prepare` failure without root-causing it): `rails db:environment:set` + `rails db:schema:load` skips replaying migration history entirely and gets a working database.
 
 ## `StaticPagesController#landing`/`#about` and `AdminController`'s mail-settings view are unrouted dead code
 
@@ -730,14 +696,8 @@ same policy — noting them here for consistency: `static_pages/about.html.erb`'
 Both are on the unrouted dead views above, so harmless in practice, but the fix pattern is
 identical to `base_renderer_error`'s and should have been called out the same way.
 
-## `db:prepare` fails on a pre-existing broken migration
+## A new spec file's mere presence (not its content) flips an unrelated, pre-existing `spec/controllers/application_controller_spec.rb` example
 
-Found 2026-09-12 setting up a fresh Postgres container to run the P7 review's RSpec suite.
-`db/migrate/20240924141831_add_upcoming_payment_notice_to_notification_templates.rb:42` raises
-`PG::UndefinedColumn: column "id" does not exist` when run against an empty database via
-`rails db:prepare` (i.e. `db:create` + `db:migrate` from scratch) — the migration assumes a
-column/table state that only exists if the schema was already loaded some other way first, so
-`db:prepare` is not a viable path to a working test database in a clean checkout. Worked around
-via `rails db:environment:set` + `rails db:schema:load` (skips replaying migration history
-entirely). Not investigated further or fixed here — orthogonal to the i18n work that surfaced it,
-but anyone bootstrapping a fresh dev/CI database from scratch will hit this.
+Found 2026-09-12 while running the full `bundle exec rspec` suite after adding `spec/mailers/application_mailer_notify_new_application_spec.rb` (part of the `LiquidDrops::ApplicationDrop` fix above). Bisected by excluding files: with that one file excluded from a `spec/controllers spec/mailers spec/models spec/requests spec/services` run, all 229 examples pass (module the separate `formule_i18n_spec.rb` flake below); with it included, `spec/controllers/application_controller_spec.rb`'s `"falls back to I18n.default_locale when the localization settings lookup raises"` example fails — `response.body` (rendered while `Parameter.get_values` is stubbed to raise) comes back `"en"` instead of the expected `"fr"`. The file's own content doesn't touch `I18n`, `Parameter`, or `Elvis::SUPPORTED_LOCALES` at all (it exercises `ApplicationMailer#notify_new_application` against a plain `ActivityApplication`/`Season`/`School` fixture) — its mere presence in the file list is enough to change example ordering/timing elsewhere in the run and surface a **pre-existing** fragility, not something this file's code causes. Both the implicated example and `application_mailer_notify_new_application_spec.rb` pass individually and pass together with `spec/controllers spec/mailers` alone (54 examples, 0 failures) — the interaction needs something in `spec/models`/`spec/requests`/`spec/services` to also be present.
+
+Not root-caused further here (would need the same kind of deep instrumentation as the migration issue above, and is unrelated to any of this batch's 6 scoped items). Given `resolve_locale`'s fallback path when `Parameter.get_values` raises hardcodes `I18n.default_locale.to_s` as the `default_language` candidate and `Elvis::SUPPORTED_LOCALES` (`%w[fr en].freeze`, `fr` first) as `available_languages`, the observed `"en"` result implies either `I18n.default_locale` or the effective `available_locales` ordering is transiently different from what a fresh boot has — worth a dedicated investigation, ideally with the same before/after `Rails.cache`-style global-state audit that resolved the `Parameter` cache-leak entry previously in this file. Left unfixed; not blocking this batch since it reproduces on develop with an unrelated new spec file present, not on any of the 6 fixes themselves.
