@@ -8,7 +8,7 @@ class ActivityProposedMailer < LayoutMailer
     @application = LiquidDrops::ApplicationDrop.new(application.as_json(include: {user: {}, season: {}}))
     @activity = LiquidDrops::ActivityDrop.new(activity.as_json(include: {activity_ref: {}, teacher: {}, room: {}, time_interval: {}}))
 
-    mail(to: @user.email, subject: "#{name} - Proposition de cours en attente")
+    mail(to: @user.email, subject: default_i18n_subject(name: name))
   end
 
   def liquid_assigns

@@ -45,7 +45,7 @@ class AdhesionController < ApplicationController
       Adhesions::CreateAdhesion.new(params[:user_id],params[:validity_start_date]).execute
     rescue ArgumentError => e
       Rails.logger.error e
-      flash[:error] = "Impossible de créer l'adhésion"
+      flash[:error] = t("controllers.adhesion.create.failure")
     end
 
     redirect_to controller: :adhesion, action: :index

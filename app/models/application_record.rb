@@ -42,21 +42,25 @@ class ApplicationRecord < ActiveRecord::Base
 
     if singular
       if d_name[/^[aeiouyAEIOUY]/]
-        "l'#{d_name}"
+        I18n.t("models.application_record.build_subject.vowel", name: d_name)
       else
         if class_name_gender == :F
-          "la #{d_name}"
+          I18n.t("models.application_record.build_subject.feminine", name: d_name)
         else
-          "le #{d_name}"
+          I18n.t("models.application_record.build_subject.masculine", name: d_name)
         end
       end
     else
-      "les #{d_name}"
+      I18n.t("models.application_record.build_subject.plural", name: d_name)
     end
   end
 
   def self.success_message
-    "#{build_subject.capitalize} a bien été supprimé#{class_name_gender == :F ? 'e' : ''}"
+    # the gender suffix only makes grammatical sense in French ("supprimée" vs "supprimé");
+    # other locales' success_message simply doesn't reference %{suffix}
+    suffix = I18n.locale == :fr && class_name_gender == :F ? "e" : ""
+
+    I18n.t("models.application_record.success_message", subject: build_subject.capitalize, suffix: suffix)
   end
 
   # Récupère les paramètres de suppression
@@ -65,8 +69,8 @@ class ApplicationRecord < ActiveRecord::Base
     {
       auto_deletable_references: [], # auto delete references before deleting object
       ignore_references: [], # ignore references and try to delete object
-      undeletable_message: "Impossible de supprimer parce que: <br/>",
-      deletable_message: "Il faut d'abord: <br/>",
+      undeletable_message: I18n.t("models.application_record.destroy_params.undeletable_message"),
+      deletable_message: I18n.t("models.application_record.destroy_params.deletable_message"),
       success_message: success_message,
     }
   end
@@ -91,7 +95,12 @@ class ApplicationRecord < ActiveRecord::Base
   # @param [ApplicationRecord] source_object objet qui a appelé la méthode
   # @return [{ instruction: String, possible: Boolean }]
   def undeletable_instruction(source_object = nil)
-    { instruction: "supprimer (si possible) les \"#{self.class.display_class_name}\" relié(e)s", possible: true }
+    instruction = I18n.t(
+      "models.application_record.undeletable_instruction.default",
+      class_name: self.class.display_class_name
+    )
+
+    { instruction: instruction, possible: true }
   end
 
   class AsyncExecutor

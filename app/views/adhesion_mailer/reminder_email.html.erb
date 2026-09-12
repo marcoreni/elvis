@@ -72,7 +72,7 @@
               <tr>
                 <td class="v-container-padding-padding" style="overflow-wrap:break-word;word-break:break-word;padding:25px 145px 10px;font-family:'Montserrat',sans-serif;" align="left">
                   <h2 class="v-font-size" style="margin: 0px; color: #000000; line-height: 130%; text-align: center; word-wrap: break-word; font-weight: normal; font-family: 'Montserrat',sans-serif; font-size: 20px;">
-                    Bonjour <strong><%= @user.first_name.capitalize %> <%= @user.last_name.capitalize %>,</strong>
+                    <%= t("views.adhesion_mailer.reminder_email.greeting_html", name: "#{@user.first_name.capitalize} #{@user.last_name.capitalize}") %>
                   </h2>
 
                 </td>
@@ -121,11 +121,11 @@
                   <div style="color: #000000; line-height: 180%; text-align: left; word-wrap: break-word;">
                     <p style="font-size: 14px; line-height: 180%; text-align: center;">
                         <span style="font-family: Montserrat, sans-serif; font-size: 16px; line-height: 28.8px;">
-                            Votre adhésion se termine dans 30 jours.<br/>
+                            <%= t("views.adhesion_mailer.reminder_email.expiring_notice") %><br/>
                         </span>
                       <br/>
-                      <a href="<%= Rails.env.kubernetes? ? "#{ApplicationMailer.application_url}":  "http://localhost:7212"%>" style="display: inline-block; padding: 10px 25px; border-radius: 3px; background: #86d69e; color: #000000; font-family: Arial; font-size: 13px; font-weight: normal; line-height: 120%; Margin: 0; text-decoration: none; text-transform: none;" target="_blank">Connectez vous</a><br/><br/>
-                        <span style="font-family: Montserrat, sans-serif; font-size: 16px; line-height: 28.8px;">pour adhérer à une nouvelle activité.</span>
+                      <a href="<%= Rails.env.kubernetes? ? "#{ApplicationMailer.application_url}":  "http://localhost:7212"%>" style="display: inline-block; padding: 10px 25px; border-radius: 3px; background: #86d69e; color: #000000; font-family: Arial; font-size: 13px; font-weight: normal; line-height: 120%; Margin: 0; text-decoration: none; text-transform: none;" target="_blank"><%= t("views.adhesion_mailer.reminder_email.login_link") %></a><br/><br/>
+                        <span style="font-family: Montserrat, sans-serif; font-size: 16px; line-height: 28.8px;"><%= t("views.adhesion_mailer.reminder_email.subscribe_notice") %></span>
                       <br/><br/>
                     </p>
                   </div>

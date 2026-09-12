@@ -583,12 +583,6 @@ before any `{...props}` spread onto a DOM node.
   `activities_applications/create.html.erb`, `comments/{create,update,destroy}.html.erb`,
   `time_interval/validate.html.erb`, `family_members/destroy.html.erb`,
   `family_member_users/destroy.html.erb`. Left in place (don't-delete-on-looks-dead); not extracted.
-- **`app/controllers/activity_application_statuses_controller.rb` flash bodies still hardcoded French.**
-  P4 extracted the `Erreur` / `Message` alert *headings* in `index.html.erb` to
-  `views.activity_application_statuses.index.{error_title,message_title}`, but the flash text those
-  headings sit above (set in the controller's create/update/destroy actions) is still a French string
-  literal — so an EN user sees a translated heading over untranslated body text. Controller-layer
-  strings are Phase 07 P6 scope; noted here so P6 picks it up.
 
 ## Phase 07 P5 (React-tail extraction) — pre-existing bugs surfaced, and things deliberately left
 
@@ -633,3 +627,64 @@ before any `{...props}` spread onto a DOM node.
   `PackUtilization`), no change was needed — same rationale as the frozen-at-construct section above.
   `Holidays.jsx` had its `columns` class-field moved to a `getColumns()` render-time getter for the
   same reason.
+
+## Pre-existing bugs surfaced during Phase 07 P6 (backend strings: mailers, controllers, models)
+
+- **`RemoveController#get_references` checks the wrong method name, so ~80 models'
+  `display_class_name` overrides never reach the destroy-confirmation UI.** It does
+  `ref.class.respond_to?(:display_name) ? ref.class.display_name : ref.class.name` (`app/controllers/
+  remove_controller.rb:95`), but no model anywhere defines a class-level `display_name` — the actual
+  method every model overrides is `display_class_name` (see `app/models/application_record.rb:11`,
+  used correctly by `application_record.rb`'s own `undeletable_instruction`/`build_subject`). Since
+  `respond_to?(:display_name)` is always false, the `references[].display_name` field this action
+  returns is always the raw Ruby class name (e.g. `"ActivityRefPricing"` instead of `"Tarif"`) for
+  every dependent-object list the destroy-confirmation UI shows. Not fixed here: swapping the method
+  name is a one-line fix, but auditing whether the frontend `RemoveComponent` already special-cases
+  the raw-class-name fallback (and whether ~80 models' French singular/plural strings are even ready
+  to reach a French+English UI once wired up — see below) is bigger than this lean i18n batch.
+  Flagging so a follow-up either fixes the method name or removes the dead `display_name` branch.
+- **`display_class_name` (~80 models) and the seeded `label` columns on `PaymentStatus` /
+  `DuePaymentStatus` / `ActivityApplicationStatus` / `PaymentMethod` / `EvaluationLevelRef` remain
+  hardcoded French, deliberately out of scope for P6.** `display_class_name` is a uniform
+  singular/plural-name pattern repeated across almost every model (`Tarif`/`Tarifs`,
+  `Statut d'inscription`/`Statuts d'inscription`, ...) — converting all of them to Rails' native
+  `model_name.human(count:)` i18n convention is a mechanical but much larger follow-up (~80 files) on
+  top of the RemoveController bug above, not attempted here. The seeded status/method `label` values
+  (`"Validé"`, `"Echoué"`, `"En attente"`, ...) are DB rows created via `find_or_create_by!` at class
+  load and are admin-editable at runtime (the settings UI lets a school add custom statuses/methods
+  alongside the built-ins) — closer to `Parameter`/`NotificationTemplate` per-instance content than
+  to static UI chrome, so left untranslated for the same reason those are out of scope.
+- **`AbsencesController::DAYS_FR` (French day names) is intentionally still hardcoded**, unlike every
+  other CSV export header touched by P6. `frontend/components/AbsencesTracking.jsx`'s `DAYS_ORDER` /
+  `dayIndex()` (line 4) sort the grouped-by-day UI by exact-matching this string against the `day`
+  field `AbsencesController#serialize_absences` puts in both the `data` JSON endpoint and the CSV
+  export row content. Localizing the backend value alone would silently break that sort for any
+  non-`fr` locale (frontend never told to expect anything but the 7 French names) — a paired
+  frontend change (translate `DAYS_ORDER` too, or send a stable day index instead of a name) is
+  needed first. Backend-only P6 batch leaves it alone; noted for whoever picks up the React side.
+- **Background job status/error text (`ActiveJob`/`ActiveJob::Status`, e.g. `CsvImporterJob`) always
+  renders in the default locale.** `I18n.locale` is set per-request by `ApplicationController`'s
+  `switch_locale`, but nothing propagates the enqueuing request's locale into the job's execution
+  thread (`app/jobs/application_job.rb` has no `around_perform` for it), so `I18n.t` calls added in
+  P6 (`jobs.csv_importer.*`) always resolve against the default locale (`:fr`) regardless of which
+  language the uploading user has selected. This matches today's actual behavior (the strings were
+  hardcoded French before), so it's not a regression, but it means the CSV importer's progress/error
+  text won't follow an English-locale user the way a controller/view string does. A general fix
+  (capture `I18n.locale` at enqueue time, pass it through as a job argument, wrap `perform` in
+  `I18n.with_locale`) would apply to any future job that renders user-facing text, not just this one.
+
+## `ActivityAssignedMailer` / `ApplicationMailer#notify_new_application` file-based views call undefined `LiquidDrops::ApplicationDrop` methods
+
+Found 2026-09-11 while adding a P6 mailer-subject checkpoint spec (`spec/mailers/i18n_p6_mailers_spec.rb`) — a fresh-test-DB run of either mailer's file-based view (no `NotificationTemplate` override present) raises `NoMethodError`. Pre-existing, not introduced by P6 (the offending calls were already there; P6 only wrapped the surrounding text in `t(...)`, see `git diff` on these views in commit `744d2c99`).
+
+Both `ActivityAssignedMailer#activity_assigned` (`app/views/activity_assigned_mailer/activity_assigned.html.erb`) and `ApplicationMailer#notify_new_application` (`app/views/application_mailer/notify_new_application.html.erb` + the sibling `.mjml`) assign `@application = LiquidDrops::ApplicationDrop.new(application.as_json(...))`, then their views call `@application.user.first_name` / `@application.user.last_name` / `@application.season.label`. `LiquidDrops::ApplicationDrop` (`app/mailers/liquid_drops/application_drop.rb`) has no `user` or `season` method — only flattened accessors (`first_name`, `last_name`, `email`, `birthday`, `adherent_number`, `start`, …) that reach into the underlying `@application["user"]`/`["season"]` hash directly. Calling `.user` or `.season` on the drop raises `NoMethodError`.
+
+In production this is masked whenever a DB-stored `NotificationTemplate` row exists for the action (`prepend_view_path NotificationTemplate.resolver` on both mailers renders that instead of the `.html.erb`), so the bug likely hasn't been noticed — but any installation missing that template row would hard-fail sending the mail. Fix is either: add `user`/`season` drop accessors to `ApplicationDrop` (or dedicated sub-drops), or change the views to use the drop's existing flattened accessors (`@application.first_name`, `@application.last_name`, and add a `season_label`-style accessor for the season name). Left unfixed here — a behavior/robustness fix, out of scope for an i18n string-extraction pass.
+
+## `Parameter` cache leaks across test examples/processes via `FileStore`, causing nondeterministic spec failures
+
+Root-caused 2026-09-12 while reviewing Phase 07 P6 (`feat/i18n-p6-backend-strings`) — `spec/controllers/{application,locale}_controller_spec.rb` fail nondeterministically, reproduced independent of the P6 diff (same failure on develop `810cb1c0` alone, one run in a batch, not the next with identical `--seed`/`--order`). Not a P6 regression; P6 only made it surface more often by adding 22 examples that reshuffle random-order placement.
+
+Mechanism: `config/environments/test.rb` configures `Rails.cache` as `ActiveSupport::Cache::FileStore` — a real on-disk cache, not cleared between examples or between separate `rspec` process invocations. `spec/controllers/application_controller_spec.rb:57` does `Parameter.create!(label: "app.localization.available_languages", value: ["en"].to_json)` inside a transactional example. `Parameter#expire_cache` (see `app/models/parameter.rb`) is registered as an `after_commit` callback, but RSpec's transactional fixtures roll the transaction back at the end of the example rather than committing it — so `expire_cache` never fires, and the previously-cached `parameter_app.localization.available_languages` key is never invalidated. The stale `["en"]` value then leaks into whatever example (in this run, or a later `rspec` invocation reading the same `tmp/cache` directory) next reads that Parameter through the cache.
+
+Fix would be a `before`/`around` hook clearing `Rails.cache` (or specifically the `parameter_*` keys) around specs that touch `Parameter`, or switching test env to `ActiveSupport::Cache::NullStore`/`MemoryStore` (verify nothing relies on cache persistence across requests within the same example first). Not fixed here — orthogonal to the i18n work that surfaced it.

@@ -138,3 +138,63 @@ ignore_unused:
   # `I18n.t(@caption)` at render time. Neither the Symbol literal nor the dynamic `I18n.t` call
   # is a static `t("menu.…")` the scan can credit, so every menu key reads as unused.
   - "menu.*"
+  # Phase 07 P6 (feat/i18n-p6-backend-strings): non-Devise mailer subjects. Each of these mailer
+  # actions omits `subject:` from its `mail(...)` call and instead calls
+  # `default_i18n_subject(name: ...)` (ActionMailer::Base's own subject-auto-resolution helper,
+  # the same convention devise-i18n's `devise.mailer.*.subject` keys rely on) so the subject can
+  # keep interpolating the school name. That helper's i18n scope is
+  # `[self.class.mailer_name, action_name]` with no "views"/"mailers" wrapper — there is no
+  # literal `t("activity_accepted_mailer...")` call anywhere for the static scan to credit, so
+  # every one of these top-level nodes reads as unused despite being resolved at send time.
+  - "activity_accepted_mailer.activity_accepted.subject"
+  - "activity_assigned_mailer.activity_assigned.subject"
+  - "activity_proposed_mailer.activity_proposed.subject"
+  - "adhesion_mailer.reminder_email.subject"
+  - "admin_cancelled_attendance_mailer.cancelled_attendance.subject"
+  - "application_mailer.notify_new_application.subject"
+  - "payment_reminder_mailer.send_payment_reminder.subject"
+  - "reglement_reminder_mailer.send_reglement_reminder.subject"
+  - "upcoming_payment_mailer.upcoming_payment.subject"
+  - "user_cancelled_attendance_mailer.cancelled_attendance.subject"
+  # Phase 07 P6 (feat/i18n-p6-backend-strings): model-layer validation messages passed as a
+  # Symbol (`errors.add(:attr, :key)` / `validates ..., message: :key`) rather than a literal
+  # string, same "not a literal t()/I18n.t() call" reasoning as the pre-existing
+  # activerecord.errors.models.user.attributes.password_confirmation.confirmation entry above —
+  # ActiveModel resolves these through `activerecord.errors.models.<model>.attributes.<attr>.<key>`
+  # (falling back to `activerecord.errors.messages.<key>` / `errors.messages.<key>`) at validation
+  # time, which the static scan can't see.
+  - "activerecord.errors.models.adhesion_price.attributes.label.blank"
+  - "activerecord.errors.models.adhesion_price.attributes.price.blank"
+  - "activerecord.errors.models.adhesion_price.attributes.price.greater_than_or_equal_to"
+  - "activerecord.errors.models.adhesion_price.attributes.season_id.taken"
+  - "activerecord.errors.models.activity_ref_kind.attributes.name.blank"
+  - "activerecord.errors.models.activity_ref_kind.attributes.name.taken"
+  - "activerecord.errors.models.activity_ref_kind.attributes.default_activity_ref.same_family"
+  - "activerecord.errors.models.season.attributes.end.after_start"
+  - "activerecord.errors.models.season.attributes.opening_date_for_applications.before_season_start"
+  - "activerecord.errors.models.season.attributes.opening_date_for_applications.after_previous_season_closing"
+  - "activerecord.errors.models.season.attributes.opening_date_for_new_applications.after_applications_opening"
+  - "activerecord.errors.models.season.attributes.opening_date_for_new_applications.before_applications_closing"
+  - "activerecord.errors.models.season.attributes.opening_date_for_new_applications.after_previous_season_closing"
+  - "activerecord.errors.models.season.attributes.closing_date_for_applications.before_season_end"
+  - "activerecord.errors.models.activity_ref.attributes.to_age.greater_than_from_age"
+  - "activerecord.errors.models.activity_ref.attributes.occupation_hard_limit.greater_than_occupation_limit"
+  - "activerecord.errors.models.formule.attributes.number_of_items.exceeds_available_activities"
+  - "activerecord.errors.models.formule.attributes.base.at_least_one_activity"
+  - "activerecord.errors.models.user.attributes.base.duplicate_identity"
+  - "activerecord.errors.models.user.attributes.base.duplicate_email"
+  - "activerecord.errors.models.level.attributes.base.duplicate"
+  - "activerecord.errors.models.payer_payment_terms.attributes.base.duplicate"
+  # Phase 07 P6 (feat/i18n-p6-backend-strings), area I: number.currency.format.* is read by
+  # ActionView/ActiveSupport::NumberHelper#number_to_currency through its own i18n scope lookup
+  # (`number.currency.format`), not a literal `t(...)`/`I18n.t(...)` call anywhere in this repo -
+  # explicit here (mirroring rails-i18n's own fr.yml block, added to both locales so `en` gets EUR
+  # + French grouping instead of the gem's USD default) purely for self-documentation/robustness,
+  # so the static scan can't credit it as used.
+  - "number.currency.format.delimiter"
+  - "number.currency.format.format"
+  - "number.currency.format.precision"
+  - "number.currency.format.separator"
+  - "number.currency.format.significant"
+  - "number.currency.format.strip_insignificant_zeros"
+  - "number.currency.format.unit"

@@ -90,4 +90,66 @@ RSpec.describe "Activity application statuses i18n", type: :request do
     expect(body).to include(I18n.t("activerecord.attributes.activity_application_status.is_stopping", locale: "fr"))
     expect(body).to include(I18n.t("activerecord.attributes.activity_application_status.is_active", locale: "fr"))
   end
+
+  # Checkpoint coverage for Phase 07 P6 (feat/i18n-p6-backend-strings), area F: the destroy action's
+  # "linked to N registration requests" flash used to be a hand-built French string with the count
+  # spliced in via #{}, with no plural handling at all ("1 demandes" was always grammatically wrong
+  # for a single linked application). It now calls `t(..., count: linked_applications.count)`,
+  # which picks the `one`/`other` key in config/locales/{fr,en}.yml
+  # (controllers.activity_application_statuses.destroy.linked_applications.{one,other}). This is a
+  # real behavior fix, not just extraction -- assert both the singular and plural wording, in both
+  # locales, render correctly instead of always using the plural (or singular) form.
+  describe "DELETE /activity_application_statuses/:id when applications are linked" do
+    def create_status_with_linked_applications(count)
+      status = ActivityApplicationStatus.create!(label: "Statut lié #{count}", is_stopping: false, is_active: true)
+      count.times do |i|
+        suffix = "#{status.id}-#{i}-#{SecureRandom.hex(4)}"
+        user = FactoryBot.create(
+          :user, email: "linked-app-#{suffix}@example.com",
+                 first_name: "Linked#{suffix}", last_name: "App#{suffix}"
+        )
+        ActivityApplication.create!(user: user, activity_application_status: status)
+      end
+      status
+    end
+
+    %w[fr en].each do |lng|
+      context "in #{lng}" do
+        before { cookies[:locale] = lng }
+
+        it "uses the singular wording when exactly 1 application is linked" do
+          status = create_status_with_linked_applications(1)
+
+          delete "/activity_application_statuses/#{status.id}"
+
+          expect(response).to redirect_to(activity_application_statuses_path)
+          expect(flash[:error]).to eq(
+            I18n.t("controllers.activity_application_statuses.destroy.linked_applications", count: 1, locale: lng)
+          )
+          expect(ActivityApplicationStatus.exists?(status.id)).to be(true)
+        end
+
+        it "uses the plural wording when several applications are linked" do
+          status = create_status_with_linked_applications(3)
+
+          delete "/activity_application_statuses/#{status.id}"
+
+          expect(response).to redirect_to(activity_application_statuses_path)
+          expect(flash[:error]).to eq(
+            I18n.t("controllers.activity_application_statuses.destroy.linked_applications", count: 3, locale: lng)
+          )
+          expect(ActivityApplicationStatus.exists?(status.id)).to be(true)
+        end
+      end
+    end
+
+    it "has genuinely distinct singular/plural wording within each locale (catches a missing plural key)" do
+      %w[fr en].each do |lng|
+        key = "controllers.activity_application_statuses.destroy.linked_applications"
+        singular = I18n.t(key, count: 1, locale: lng)
+        plural = I18n.t(key, count: 3, locale: lng)
+        expect(singular).not_to eq(plural)
+      end
+    end
+  end
 end

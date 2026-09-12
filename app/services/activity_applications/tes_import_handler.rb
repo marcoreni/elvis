@@ -71,7 +71,7 @@ module ActivityApplications
             activity_ref_id, instrument_names, is_workshop, level = activity_ref_and_level.values_at(:activity_ref_id, :instrument_names, :is_workshop, :level)
 
             if activity_ref_id.nil?
-              errors << { line: current_line, message: "Impossible d'identifier l'activité demandée par l'élève dans le référentiel d'activités (#{activite} / #{instrument})" }
+              errors << { line: current_line, message: I18n.t("services.tes_import_handler.activity_not_identified", activity: activite, instrument: instrument) }
               next
             end
 

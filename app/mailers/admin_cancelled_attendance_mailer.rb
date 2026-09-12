@@ -19,7 +19,7 @@ class AdminCancelledAttendanceMailer < ApplicationMailer
     }))
 
     User.where(is_admin: true).each do |admin|
-      mail(to: admin.email, subject: "#{name} - Annulation de cours par un élève")
+      mail(to: admin.email, subject: default_i18n_subject(name: name))
     end
   end
 

@@ -33,7 +33,7 @@ class ApplicationMailer < LayoutMailer
     @user = application.user
 
     name = School.first.name
-    name.nil? ? subject = "Confirmation de demande d'inscription" :  subject = "#{name} - Confirmation de demande d'inscription"
+    subject = name.nil? ? t("application_mailer.notify_new_application.subject_no_school") : default_i18n_subject(name: name)
     mail(to: @user.email, subject: subject)
   end
 

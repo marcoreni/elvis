@@ -47,7 +47,6 @@ class PayerPaymentTerms < ApplicationRecord
     return unless new_record?
     return if PayerPaymentTerms.where(payer_id: payer_id, season_id: season_id).empty?
 
-    errors.add(:base,
-               "Des modalités de paiement existent déjà pour la saison #{season.label}, le payeur #{payer.full_name}, veuillez faire une mise à jour")
+    errors.add(:base, :duplicate, season: season.label, payer: payer.full_name)
   end
 end

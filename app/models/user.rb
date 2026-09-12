@@ -202,7 +202,7 @@ class User < ApplicationRecord
 
     base_params.merge({
                         auto_deletable_references: [FamilyMemberUser, UserAddress, Adhesion, Planning, Student, Level, NewStudentLevelQuestionnaire, PreApplication, ConsentDocumentUser, PayerPaymentTerms],
-                        undeletable_message: "L'utilisateur ne peut pas être supprimé parce que:<br/>",
+                        undeletable_message: I18n.t("models.user.destroy_params.undeletable_message"),
                         success_message: success_message
                       })
   end
@@ -219,7 +219,7 @@ class User < ApplicationRecord
             DeviseMailer.confirmation_instructions(attached_user, attached_user.confirmation_token).deliver_later
           end
         else
-          raise "Impossible de détacher l'utilisateur #{attached_user.full_name}. Veuillez le faire manuellement ou contacter un administrateur."
+          raise I18n.t("models.user.pre_destroy.detach_error", name: attached_user.full_name)
         end
       end
     end
@@ -231,16 +231,11 @@ class User < ApplicationRecord
       birthday: birthday
     ).ci_find(:first_name, first_name).ci_find(:last_name, last_name).first
 
-    if matched_user && (matched_user.id != id)
-      errors.add(:base,
-                 "Un compte existe déjà avec cette combinaison Nom - Prénom - Date de Naissance.")
-    end
+    errors.add(:base, :duplicate_identity) if matched_user && (matched_user.id != id)
 
     # pour le moment, seulement pour les new records => compatibilité avec instances existantes
     # todo: remove new_record? condition
-    if attached_to.nil? && new_record? && (User.where(email: email).any?)
-      errors.add(:base, "Un compte existe déjà avec cet email.")
-    end
+    errors.add(:base, :duplicate_email) if attached_to.nil? && new_record? && (User.where(email: email).any?)
   end
 
   def valid_birth_date

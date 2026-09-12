@@ -4,7 +4,7 @@ class CsvImporterJob < ApplicationJob
   include ActiveJob::Status
 
   def perform(file_path, handler_class_name)
-    status[:step] = "Initialisation"
+    status[:step] = I18n.t("jobs.csv_importer.initializing")
 
     setup file_path, handler_class_name
 
@@ -27,10 +27,10 @@ class CsvImporterJob < ApplicationJob
       @import_handler = import_handler_class.new
     rescue NameError => e
       Rails.logger.error "Handler class not found: #{e.message}\n#{e.backtrace&.join("\n")}"
-      return { status: :unprocessable_entity, error: "Le handler spécifié est introuvable." }
+      return { status: :unprocessable_entity, error: I18n.t("jobs.csv_importer.handler_not_found") }
     rescue StandardError => e
       Rails.logger.error "Error initializing handler: #{e.message}\n#{e.backtrace&.join("\n")}"
-      return { status: :unprocessable_entity, error: "Une erreur est survenue lors de l'initialisation du handler." }
+      return { status: :unprocessable_entity, error: I18n.t("jobs.csv_importer.handler_init_error") }
     end
   end
 
@@ -42,14 +42,13 @@ class CsvImporterJob < ApplicationJob
       headers = CSV.open(@file_path, "r:bom|UTF-8", col_sep: ";", &:readline).map(&:strip)
     rescue StandardError => e
       Rails.logger.error "Could not import activity applications : #{e.message}\n#{e.backtrace&.join("\n")} "
-      return { status: :unprocessable_entity, error: "Le format du fichier ne convient pas. Veuillez importer
-      un fichier au format CSV." }
+      return { status: :unprocessable_entity, error: I18n.t("jobs.csv_importer.invalid_format") }
     end
 
     # vérifier que les en-têtes sont corrects
     unless @import_handler.check_valid_headers(headers)
       Rails.logger.error "Could not import activity applications : headers do not match expected headers."
-      return { status: :unprocessable_entity, error: "Le fichier CSV n'a pas les en-têtes attendus." }
+      return { status: :unprocessable_entity, error: I18n.t("jobs.csv_importer.unexpected_headers") }
     end
 
     # lire le reste du fichier
@@ -70,7 +69,7 @@ class CsvImporterJob < ApplicationJob
         total_ignored_activities += res[:ignored_activities]
         total_activity_applications_created += res[:activity_applications_created]
         errors += res[:errors]
-        status[:step] = "#{current_line} lignes traitées"
+        status[:step] = I18n.t("jobs.csv_importer.progress", count: current_line)
 
       rescue StandardError => e
         Rails.logger.error "Error while handling line #{current_line} : #{e.message}\n#{e.backtrace&.join("\n")} "
@@ -81,8 +80,12 @@ class CsvImporterJob < ApplicationJob
 
     end
 
-    message = "#{current_line} lignes traitées - #{total_activity_applications_created} inscriptions créées et #{total_ignored_activities} inscriptions existantes ignorées."
-    status[:step] = message
+    status[:step] = I18n.t(
+      "jobs.csv_importer.completed",
+      count: current_line,
+      created: total_activity_applications_created,
+      ignored: total_ignored_activities
+    )
     status[:errors] = errors
 
     progress.finish

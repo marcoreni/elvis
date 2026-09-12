@@ -164,13 +164,13 @@ class ActivityRef < ApplicationRecord
 
   def check_ages_are_corrects
     if from_age.present? && to_age.present? && from_age > to_age
-      errors.add(:to_age, "doit être supérieur à from_age")
+      errors.add(:to_age, :greater_than_from_age)
     end
   end
 
   def check_occupation_limits_are_corrects
     if occupation_limit.present? && occupation_hard_limit.present? && occupation_limit > occupation_hard_limit
-      errors.add(:occupation_hard_limit, "doit être supérieur à occupation_limit")
+      errors.add(:occupation_hard_limit, :greater_than_occupation_limit)
     end
   end
 

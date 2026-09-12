@@ -8,6 +8,21 @@ fr:
     date:
         formats:
             date_month_concise: '%d %B %Y'
+            long_date: '%e %B %Y'
+
+    # Explicit override matching rails-i18n's own fr.yml currency block verbatim - the fr locale
+    # already got this for free from the gem, but writing it out here keeps fr and en symmetrical
+    # and self-documenting rather than leaving en's identical override look unexplained.
+    number:
+        currency:
+            format:
+                delimiter: " "
+                format: "%n %u"
+                precision: 2
+                separator: ","
+                significant: false
+                strip_insignificant_zeros: false
+                unit: "€"
 
     common:
         actions:
@@ -25,6 +40,8 @@ fr:
             "no": "Non"
         confirm:
             sure: Êtes-vous sûr ?
+        errors:
+            access_denied: Vous n'avez pas le droit de faire cela
 
     menu:
         plugins: Plugins
@@ -135,6 +152,58 @@ fr:
                     attributes:
                         password_confirmation:
                             confirmation: "Le mot de passe ne concorde pas."
+                        base:
+                            duplicate_identity: "Un compte existe déjà avec cette combinaison nom - prénom - date de naissance."
+                            duplicate_email: "Un compte existe déjà avec cet email."
+                adhesion_price:
+                    attributes:
+                        label:
+                            blank: Le libellé est obligatoire
+                        price:
+                            blank: Le prix est obligatoire
+                            greater_than_or_equal_to: "Le prix doit être supérieur ou égal à %{count}"
+                        season_id:
+                            taken: Il existe déjà un tarif pour cette saison
+                activity_ref_kind:
+                    attributes:
+                        name:
+                            blank: ne peut être vide
+                            taken: existe déjà
+                        default_activity_ref:
+                            same_family: doit être de la même famille d'activité
+                season:
+                    attributes:
+                        end:
+                            after_start: doit être postérieur au début de saison
+                        opening_date_for_applications:
+                            before_season_start: doit être antérieur au début de saison
+                            after_previous_season_closing: "doit être postérieur à la date de clôture des inscriptions de la saison précédente"
+                        opening_date_for_new_applications:
+                            after_applications_opening: "doit être postérieur à la date d'ouverture des ré-inscriptions"
+                            before_applications_closing: doit être antérieur à la date de clôture des inscriptions
+                            after_previous_season_closing: "doit être postérieur à la date de clôture des inscriptions de la saison précédente"
+                        closing_date_for_applications:
+                            before_season_end: doit être antérieur à la fin de saison
+                activity_ref:
+                    attributes:
+                        to_age:
+                            greater_than_from_age: doit être supérieur à l'âge min
+                        occupation_hard_limit:
+                            greater_than_occupation_limit: doit être supérieur au nombre de places
+                formule:
+                    attributes:
+                        number_of_items:
+                            exceeds_available_activities: "ne peut pas dépasser le nombre total d'activités disponibles (%{count})"
+                        base:
+                            at_least_one_activity: "La formule doit contenir au moins une activité ou famille d'activités"
+                level:
+                    attributes:
+                        base:
+                            duplicate: "Ce niveau existe déjà pour la saison %{season}, l'activité %{activity} et l'utilisateur %{user}"
+                payer_payment_terms:
+                    attributes:
+                        base:
+                            duplicate: "Des modalités de paiement existent déjà pour la saison %{season} et le payeur %{payer} : veuillez faire une mise à jour"
 
     views:
         layouts:
@@ -208,6 +277,30 @@ fr:
                     greeting_html: "Bonjour <strong>%{name}</strong>,"
                     instruction: "Vous avez demandé à réinitialiser votre mot de passe. Pour le modifier, cliquez sur le bouton ci-dessous :"
                     instruction_2: "Si vous n’êtes pas à l’origine de cette demande, vous pouvez ignorer cet email. Votre mot de passe restera inchangé tant que vous ne cliquez pas sur le lien."
+        activity_assigned_mailer:
+            activity_assigned:
+                greeting_html: "Bonjour <strong>%{name}</strong>,"
+                proposed_slot_html: "Un créneau vous a été proposé pour le cours <br />\n<strong>\"%{activity}\"</strong>."
+                request_info_html: "Demande n°<span style=\"color:#0079bf\">%{id}</span> concernant %{first_name} %{last_name}"
+                schedule_info_html: "Pour la <strong>%{season}</strong>, le cours se déroulera le : <br />\n<strong>%{day}</strong> <br />\nde <strong>%{start_time}</strong>\nà <strong>%{end_time}</strong> <br />\navec le professeur <strong>%{teacher}</strong>"
+                validate_or_refuse: Valider ou refuser la proposition en cliquant sur le bouton ci-dessous.
+                cta_button: "Se rendre sur %{name}"
+        adhesion_mailer:
+            reminder_email:
+                greeting_html: "Bonjour <strong>%{name}</strong>,"
+                expiring_notice: Votre adhésion se termine dans 30 jours.
+                login_link: Connectez-vous
+                subscribe_notice: pour adhérer à une nouvelle activité.
+        application_mailer:
+            notify_new_application:
+                greeting: Bonjour,
+                acknowledgement_html: "Nous accusons réception de votre demande d'inscription pour la saison <strong>%{season}</strong>, pour l'élève <strong>%{student}</strong>\nà l'activité <strong>%{activities}</strong>"
+                application_number_html: "Voici son numéro de demande : <span style=\"color: darkred\">%{id}</span>"
+        partials:
+            mailer:
+                users_info_partial:
+                    adherent_number_html: "Votre numéro d'identification : <b>%{number}</b>"
+                    adherent_number_hint_html: "Ce numéro vous permet de vous authentifier sur %{app_name}"
         sessions:
             pick_user:
                 title_html: "Choisissez le compte pour %{email}"
@@ -668,3 +761,200 @@ fr:
         shared:
             form_errors:
                 heading: "%{count} erreur(s) empêchent l'enregistrement :"
+    # Mailer subjects below are picked up by ActionMailer's own auto-resolution
+    # convention (Mailer#default_i18n_subject), whose i18n scope is
+    # [mailer_name, action_name] with no extra "views"/"mailers" wrapper -
+    # hence these live as flat top-level nodes rather than nested under `views`.
+    activity_accepted_mailer:
+        activity_accepted:
+            subject: "%{name} - Proposition acceptée"
+    activity_assigned_mailer:
+        activity_assigned:
+            subject: "%{name} - Confirmation d'attribution de cours"
+    activity_proposed_mailer:
+        activity_proposed:
+            subject: "%{name} - Proposition de cours en attente"
+    adhesion_mailer:
+        reminder_email:
+            subject: "%{name} - Votre adhésion va bientôt expirer"
+    admin_cancelled_attendance_mailer:
+        cancelled_attendance:
+            subject: "%{name} - Annulation de cours par un élève"
+    application_mailer:
+        notify_new_application:
+            subject: "%{name} - Confirmation de demande d'inscription"
+            subject_no_school: Confirmation de demande d'inscription
+    payment_reminder_mailer:
+        send_payment_reminder:
+            subject: "%{name} - Rappel de paiement"
+    reglement_reminder_mailer:
+        send_reglement_reminder:
+            subject: "%{name} - Rappel de paiement"
+    upcoming_payment_mailer:
+        upcoming_payment:
+            subject: "%{name} - Paiement à venir"
+    user_cancelled_attendance_mailer:
+        cancelled_attendance:
+            subject: "%{name} - Confirmation d'annulation de cours"
+
+    controllers:
+        settings:
+            plugin:
+                update_success: Mise à jour réussie
+        practice:
+            band_types:
+                destroy:
+                    success: Le type de groupe a été supprimé avec succès.
+            music_genres:
+                destroy:
+                    success: Le genre musical a été supprimé avec succès.
+            bands:
+                destroy:
+                    success: Le groupe a été supprimé avec succès.
+        locations:
+            destroy:
+                linked_data_error: "La localisation est reliée à d'autres données (des cours par exemple)"
+        adhesion:
+            create:
+                failure: Impossible de créer l'adhésion
+        activity_application_statuses:
+            destroy:
+                linked_applications:
+                    one: "Ce statut est lié à %{count} demande d'inscription, vous ne pouvez donc pas le supprimer."
+                    other: "Ce statut est lié à %{count} demandes d'inscription, vous ne pouvez donc pas le supprimer."
+                success: La suppression s'est déroulée avec succès.
+        remove:
+            no_elements: Aucun élément à supprimer
+            class_not_found: La classe n'a pas été trouvée.
+            object_not_found: L'objet n'a pas été trouvé.
+            generic_error: Une erreur est survenue lors de la suppression de l'objet.
+            destroy_multiple:
+                success: Suppression terminée
+        organizations:
+            create:
+                failure: "L'organisation n'a pas été créée."
+            update_from_user:
+                failure: "Le numéro de TVA n'a pas été mis à jour."
+        planning:
+            no_default_planning: "Aucun planning par défaut n'a été défini par l'école"
+        activities_applications:
+            send_all_confirmation_mail:
+                no_users_selected: "Vous n'avez pas sélectionné d'utilisateurs"
+                already_processed: "Les utilisateurs sélectionnés ont déjà reçu le mail ou ne sont pas en cours attribué / cours proposé"
+        formules:
+            destroy:
+                in_use_error: "Cette formule est utilisée par une ou plusieurs inscriptions : elle ne peut pas être supprimée."
+                success: Formule supprimée
+        users:
+            reset_password:
+                email_sent: Email envoyé
+            attach_users:
+                main_account_not_found: Compte de rattachement introuvable
+            detach_user:
+                not_found: Utilisateur introuvable
+        activity_ref_kind:
+            destroy:
+                linked_activities: "Vous ne pouvez pas supprimer cette famille car des activités y sont attachées"
+        payment_schedule_options:
+            destroy:
+                success: Option d'échéancier de paiement supprimée
+            create:
+                success: Option d'échéancier de paiement créée
+            update:
+                success: Option d'échéancier de paiement mise à jour
+
+    models:
+        application_record:
+            build_subject:
+                vowel: "l'%{name}"
+                feminine: "la %{name}"
+                masculine: "le %{name}"
+                plural: "les %{name}"
+            success_message: "%{subject} a bien été supprimé%{suffix}"
+            destroy_params:
+                undeletable_message: "Impossible de supprimer parce que : <br/>"
+                deletable_message: "Il faut d'abord : <br/>"
+            undeletable_instruction:
+                default: "supprimer (si possible) les \"%{class_name}\" relié(e)s"
+        user:
+            destroy_params:
+                undeletable_message: "L'utilisateur ne peut pas être supprimé parce que : <br/>"
+            pre_destroy:
+                detach_error: "Impossible de détacher l'utilisateur %{name}. Veuillez le faire manuellement ou contacter un administrateur."
+        activity_application:
+            undeletable_instruction:
+                default: "supprimer la demande d'inscription numéro %{id}"
+            pre_destroy:
+                processing_error: "La demande d'inscription ne peut être supprimée, car l'administration est en train de la traiter ou doit encore le faire."
+        season:
+            pre_destroy:
+                current_season_error: Impossible de supprimer la saison en cours
+        payment:
+            undeletable_instruction:
+                has_payments: Il a déjà effectué des paiements
+        adhesion:
+            undeletable_instruction:
+                default: "supprimer l'adhésion de %{name}"
+        payment_schedule:
+            undeletable_instruction:
+                linked_payments: des paiements sont reliés à cette saison
+        pre_application:
+            undeletable_instruction:
+                pre_registered: "L'utilisateur s'est pré-inscrit. Il ne vous est pas possible de supprimer cette donnée."
+
+    csv_exports:
+        student_columns:
+            adherent_number: "N° adhérent de l'élève"
+            last_name: "Nom de l'élève"
+            first_name: "Prénom de l'élève"
+            gender: "Sexe de l'élève"
+            age: "Âge de l'élève"
+            email: "Adresse mail de l'élève"
+            address: "Adresse postale de l'élève"
+            phone: "N° de téléphone de l'élève"
+            guardian_first_name: "Prénom du responsable légal"
+            guardian_last_name: "Nom du responsable légal"
+            guardian_phone: "N° de téléphone du responsable légal"
+        applications_list:
+            request_number: "N° demande"
+            activities: "Activité(s)"
+            level: Niveau
+            action: Action
+            status: Statut
+            season: Saison
+            availabilities: Disponibilités
+            comments: Commentaires
+        users_list:
+            adherent_number: "N° adhérent"
+            last_name: Nom
+            first_name: Prénom
+            email: Email
+            phone: "N° de téléphone"
+            birthday: Date de naissance
+        absences_export:
+            student: Élève
+            adherent_number: "N° adhérent"
+            day: Jour
+            activity: "Cours / activité"
+            teacher: Professeur
+            date: Date
+            type: Type
+            remark: Remarque
+            justified: Justifiée
+            unjustified: Injustifiée
+
+    jobs:
+        csv_importer:
+            initializing: Initialisation
+            handler_not_found: "Le handler spécifié est introuvable."
+            handler_init_error: "Une erreur est survenue lors de l'initialisation du handler."
+            invalid_format: "Le format du fichier ne convient pas. Veuillez importer un fichier au format CSV."
+            unexpected_headers: "Le fichier CSV n'a pas les en-têtes attendus."
+            progress:
+                one: "%{count} ligne traitée"
+                other: "%{count} lignes traitées"
+            completed: "%{count} lignes traitées - %{created} inscriptions créées et %{ignored} inscriptions existantes ignorées."
+
+    services:
+        tes_import_handler:
+            activity_not_identified: "Impossible d'identifier l'activité demandée par l'élève dans le référentiel d'activités (%{activity} / %{instrument})"

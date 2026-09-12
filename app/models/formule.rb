@@ -69,11 +69,11 @@ class Formule < ApplicationRecord
     end
 
     if number_of_items > total_activities_count
-      errors.add(:number_of_items, "ne peut pas dépasser le nombre total d'activités disponibles (#{total_activities_count})")
+      errors.add(:number_of_items, :exceeds_available_activities, count: total_activities_count)
     end
 
     if formule_items.empty?
-      errors.add(:base, "La formule doit contenir au moins une activité ou famille d'activités")
+      errors.add(:base, :at_least_one_activity)
     end
   end
 end

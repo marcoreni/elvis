@@ -70,7 +70,7 @@
               <tr>
                 <td class="v-container-padding-padding" style="overflow-wrap:break-word;word-break:break-word;padding:25px 145px 10px;font-family:'Montserrat',sans-serif;" align="left">
                   <h2 class="v-font-size" style="margin: 0px; color: #000000; line-height: 130%; text-align: center; word-wrap: break-word; font-weight: normal; font-family: 'Montserrat',sans-serif; font-size: 20px;">
-                    Bonjour,
+                    <%= t("views.application_mailer.notify_new_application.greeting") %>
                   </h2>
                 </td>
               </tr>
@@ -117,8 +117,10 @@
                   <div style="color: #000000; line-height: 180%; text-align: left; word-wrap: break-word;">
                     <p style="font-size: 14px; line-height: 180%; text-align: center;">
                         <span style="font-family: Montserrat, sans-serif; font-size: 16px; line-height: 28.8px;">
-                          Nous accusons réception de votre demande d'inscription pour la <strong><%= @application.season.label %>,</strong> pour l'élève <strong><%= @application.user.first_name %> <%= @application.user.last_name %></strong>
-                          à l'activité <strong><%= @activity_refs.map(&:display_name).join(", ") %></strong>
+                          <%= t("views.application_mailer.notify_new_application.acknowledgement_html",
+                                season: @application.season.label,
+                                student: "#{@application.user.first_name} #{@application.user.last_name}",
+                                activities: @activity_refs.map(&:display_name).join(", ")) %>
                           <br/>
                         </span>
                       <br/>
@@ -128,7 +130,7 @@
                   <div style="color: #000000; line-height: 180%; text-align: left; word-wrap: break-word;">
                     <p style="font-size: 14px; line-height: 180%; text-align: center;">
                         <span style="font-family: Montserrat, sans-serif; font-size: 16px; line-height: 28.8px;">
-                          Voici son numéro de demande : <span style="color: darkred"><%= @application.id %> </span><br />
+                          <%= t("views.application_mailer.notify_new_application.application_number_html", id: @application.id) %><br />
                         </span>
                     </p>
                     <br/>

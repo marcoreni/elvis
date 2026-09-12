@@ -1190,7 +1190,10 @@ class ActivitiesApplicationsController < ApplicationController
     season = filtered_season_id.nil? || filtered_season_id == "all" ? Season.current_apps_season : Season.find(filtered_season_id)
 
     if params[:targets].length == 0
-      render json: { success: false, message: "Vous n'avez pas selectionné d'utilisateurs" }, status: 400 and return
+      render json: {
+        success: false,
+        message: t("controllers.activities_applications.send_all_confirmation_mail.no_users_selected")
+      }, status: 400 and return
     end
 
     # get same query from user view
@@ -1217,7 +1220,7 @@ class ActivitiesApplicationsController < ApplicationController
     end
 
     if mails_to_send.length == 0
-      render json: { success: false, message: "Les utilisateurs selectionnés ont déjà reçu le mail ou ne sont pas en cours attribué / cours proposé" }, status: 400 and return
+      render json: { success: false, message: t("controllers.activities_applications.send_all_confirmation_mail.already_processed") }, status: 400 and return
     end
 
     NotifyUsersOfApplicationStateJob.perform_later(applications_ids: mails_to_send.ids, current_user_id: current_user.id)
@@ -1795,24 +1798,24 @@ class ActivitiesApplicationsController < ApplicationController
 
     CSV.generate nil, col_sep: ";" do |csv|
       csv << [
-        "N° demande",
-        "Activité.s",
-        "Niveau",
-        "Action",
-        "Statut",
-        "Saison",
-        "N° adhérent de l'élève",
-        "Nom de l'élève",
-        "Prénom de l'élève",
-        "Âge de l'élève",
-        "Adresse mail de l'élève",
-        "Adresse postale de l'élève",
-        "N° de téléphone de l'élève",
-        "Prénom du responsable légal",
-        "Nom du responsable légal",
-        "N° de téléphone du responsable légal",
-        "Disponibilités",
-        "Commentaires",
+        t("csv_exports.applications_list.request_number"),
+        t("csv_exports.applications_list.activities"),
+        t("csv_exports.applications_list.level"),
+        t("csv_exports.applications_list.action"),
+        t("csv_exports.applications_list.status"),
+        t("csv_exports.applications_list.season"),
+        t("csv_exports.student_columns.adherent_number"),
+        t("csv_exports.student_columns.last_name"),
+        t("csv_exports.student_columns.first_name"),
+        t("csv_exports.student_columns.age"),
+        t("csv_exports.student_columns.email"),
+        t("csv_exports.student_columns.address"),
+        t("csv_exports.student_columns.phone"),
+        t("csv_exports.student_columns.guardian_first_name"),
+        t("csv_exports.student_columns.guardian_last_name"),
+        t("csv_exports.student_columns.guardian_phone"),
+        t("csv_exports.applications_list.availabilities"),
+        t("csv_exports.applications_list.comments"),
       ]
 
       s_for_links = Season.current_apps_season

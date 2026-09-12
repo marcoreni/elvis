@@ -71,7 +71,7 @@
               <tr>
                 <td class="v-container-padding-padding" style="overflow-wrap:break-word;word-break:break-word;padding:25px 145px 10px;font-family:'Montserrat',sans-serif;" align="left">
                   <h2 class="v-font-size" style="margin: 0px; color: #000000; line-height: 130%; text-align: center; word-wrap: break-word; font-weight: normal; font-family: 'Montserrat',sans-serif; font-size: 20px;">
-                    Bonjour <strong><%= @user.first_name.capitalize %> <%= @user.last_name.capitalize %>,</strong>
+                    <%= t("views.activity_assigned_mailer.activity_assigned.greeting_html", name: "#{@user.first_name.capitalize} #{@user.last_name.capitalize}") %>
                   </h2>
                 </td>
               </tr>
@@ -118,8 +118,7 @@
                   <div style="color: #000000; line-height: 180%; text-align: left; word-wrap: break-word;">
                     <p style="font-size: 14px; line-height: 180%; text-align: center;">
                         <span style="font-family: Montserrat, sans-serif; font-size: 16px; line-height: 28.8px;">
-                          Un créneau vous a été proposé pour le cours <br />
-                          <strong>"<%= @activity.activity_ref.label %>"</strong>.
+                          <%= t("views.activity_assigned_mailer.activity_assigned.proposed_slot_html", activity: @activity.activity_ref.label) %>
                         </span>
                       <br/>
                     </p>
@@ -128,7 +127,7 @@
                   <div style="color: #000000; line-height: 180%; text-align: left; word-wrap: break-word;">
                     <p style="font-size: 14px; line-height: 180%; text-align: center;">
                         <span style="font-family: Montserrat, sans-serif; font-size: 16px; line-height: 28.8px;">
-                          Demande n°<span style="color:#0079bf"><%= @application.id %></span> concernant <%= @application.user.first_name %> <%= @application.user.last_name %>
+                          <%= t("views.activity_assigned_mailer.activity_assigned.request_info_html", id: @application.id, first_name: @application.user.first_name, last_name: @application.user.last_name) %>
                           <br/>
                         </span>
                       <br/>
@@ -138,11 +137,12 @@
                   <div style="color: #000000; line-height: 180%; text-align: left; word-wrap: break-word;">
                     <p style="font-size: 14px; line-height: 180%; text-align: center;">
                         <span style="font-family: Montserrat, sans-serif; font-size: 16px; line-height: 28.8px;">
-                          Pour la <strong><%= @application.season.label %></strong>, le cours se déroulera le : <br />
-                          <strong><%= @activity.time_interval.start.strftime("%A").capitalize %></strong> <br />
-                          de <strong><%= @activity.time_interval.start.strftime("%H:%M") %></strong>
-                          à <strong><%= @activity.time_interval.end.strftime("%H:%M") %> <br />
-                        </strong> avec le professeur <strong><%= @activity.teachers.first.full_name %></strong>
+                          <%= t("views.activity_assigned_mailer.activity_assigned.schedule_info_html",
+                                season: @application.season.label,
+                                day: @activity.time_interval.start.strftime("%A").capitalize,
+                                start_time: @activity.time_interval.start.strftime("%H:%M"),
+                                end_time: @activity.time_interval.end.strftime("%H:%M"),
+                                teacher: @activity.teachers.first.full_name) %>
                         </span>
                       <br/>
                     </p>
@@ -171,10 +171,10 @@
                   <div style="color: #000000; line-height: 180%; text-align: left; word-wrap: break-word;">
                     <p style="font-size: 14px; line-height: 180%; text-align: center;">
                         <span style="font-family: Montserrat, sans-serif; font-size: 16px; line-height: 28.8px;">
-                            Valider ou refuser la proposition en cliquant sur le bouton ci-dessous.<br />
+                            <%= t("views.activity_assigned_mailer.activity_assigned.validate_or_refuse") %><br />
                         </span>
                       <br/>
-                      <a href="<%= Rails.env.kubernetes? ? "#{ApplicationMailer.application_url}/new_application/#{@user.id}": new_application_url(@user, confirmation_token: @token)%>" style="display: inline-block; padding: 10px 25px; border-radius: 3px; background: #86d69e; color: #000000; font-family: Arial; font-size: 16px; font-weight: normal; line-height: 120%; Margin: 0; text-decoration: none; text-transform: none;" target="_blank">Se rendre sur <%= @name %></a>
+                      <a href="<%= Rails.env.kubernetes? ? "#{ApplicationMailer.application_url}/new_application/#{@user.id}": new_application_url(@user, confirmation_token: @token)%>" style="display: inline-block; padding: 10px 25px; border-radius: 3px; background: #86d69e; color: #000000; font-family: Arial; font-size: 16px; font-weight: normal; line-height: 120%; Margin: 0; text-decoration: none; text-transform: none;" target="_blank"><%= t("views.activity_assigned_mailer.activity_assigned.cta_button", name: @name) %></a>
                       <br/><br/><br/>
                     </p>
                   </div>

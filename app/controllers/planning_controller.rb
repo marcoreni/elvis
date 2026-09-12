@@ -597,7 +597,7 @@ class PlanningController < ApplicationController
       default_intervals = school.planning&.time_intervals&.where(start: previous_season.start..previous_season.end)&.to_a || []
     end
 
-    return render json: { message: "pas de planning par défaut de saisie par l'école" }, status: :not_found if default_intervals.empty?
+    return render json: { message: t("controllers.planning.no_default_planning") }, status: :not_found if default_intervals.empty?
 
     default_intervals = default_intervals.map do |interval|
       interval = interval.dup

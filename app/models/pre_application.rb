@@ -34,7 +34,7 @@ class PreApplication < ApplicationRecord
 
     case source_object.class.to_s
       when User.to_s
-        { instruction: "L'utilisateur s'est pré-inscrit. Il ne vous est pas possible de supprimer cette donnée.", possible: false }
+        { instruction: I18n.t("models.pre_application.undeletable_instruction.pre_registered"), possible: false }
       else
         super
       end

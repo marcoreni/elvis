@@ -135,7 +135,7 @@ class Practice::BandsController < ApplicationController
     begin
       @band.destroy
       respond_to do |format|
-        format.html { redirect_to practice_bands_url, notice: "Band was successfully destroyed." }
+        format.html { redirect_to practice_bands_url, notice: t("controllers.practice.bands.destroy.success") }
         format.json { render json: @band, status: :ok }
       end
     rescue StandardError => e

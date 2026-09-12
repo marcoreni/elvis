@@ -66,7 +66,9 @@ module Practice
 
       @band_type.destroy!
       respond_to do |format|
-        format.html { redirect_to practice_band_types_url, notice: "Band type was successfully destroyed." }
+        format.html do
+          redirect_to practice_band_types_url, notice: t("controllers.practice.band_types.destroy.success")
+        end
         format.json { render json: @band_type, status: :ok }
       end
     end

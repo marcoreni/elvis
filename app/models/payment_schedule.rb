@@ -52,7 +52,7 @@ class PaymentSchedule < ApplicationRecord
     def undeletable_instruction(source_object = nil)
       case source_object
       when Season
-        { instruction: "des paiements sont reliés à cette saison", possible: false }
+        { instruction: I18n.t("models.payment_schedule.undeletable_instruction.linked_payments"), possible: false }
       else
         super
       end

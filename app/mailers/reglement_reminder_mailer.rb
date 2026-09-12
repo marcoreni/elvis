@@ -13,7 +13,7 @@ class ReglementReminderMailer < ApplicationMailer
     @reglements.each { |reglement| reglement["status"] =  "<a type='button' style='color: white; padding: 10px; border-radius: 5px; background-color:" + PaymentStatus.find(reglement["payment_status_id"]).as_json["color"] + "'>" + PaymentStatus.find(reglement["payment_status_id"]).as_json['label'] + "</a>"}
     @reglements.each { |reglement| reglement["cashing_date"] =  reglement["cashing_date"].to_date.strftime("%d/%m/%Y") + "" if reglement["cashing_date"] != nil}
 
-    mail(to: user.email, subject: "#{name} - Rappel de paiement")
+    mail(to: user.email, subject: default_i18n_subject(name: name))
   end
 
   def liquid_assigns

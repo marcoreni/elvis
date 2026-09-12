@@ -15,7 +15,7 @@ class UpcomingPaymentMailer < ApplicationMailer
                   .reduce(0.0) { |acc, d| acc + Float(d[:due_total]) }
                   .round(2)
 
-    mail(to: @user.email, subject: "#{name} - Paiement à venir")
+    mail(to: @user.email, subject: default_i18n_subject(name: name))
   end
 
   def liquid_assigns

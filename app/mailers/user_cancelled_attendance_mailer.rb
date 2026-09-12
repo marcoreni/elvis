@@ -18,7 +18,7 @@ class UserCancelledAttendanceMailer < ApplicationMailer
       time_interval: {}
     }))
 
-    mail(to: user.email, subject: "#{name} - Confirmation d'annulation de cours")
+    mail(to: user.email, subject: default_i18n_subject(name: name))
   end
 
   def liquid_assigns
