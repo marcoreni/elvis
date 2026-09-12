@@ -219,8 +219,8 @@ en:
                 one: registration request
                 other: registration requests
             activity_application_status:
-                one: Registration status
-                other: Registration statuses
+                one: Enrollment status
+                other: Enrollment statuses
             activity_instance:
                 one: class session
                 other: class sessions
@@ -300,11 +300,11 @@ en:
                 one: export template
                 other: export templates
             failed_payment_import:
-                one: payment import failure
-                other: payment import failures
+                one: failed payment import
+                other: failed payment imports
             failed_payment_import_reason:
-                one: payment import failure reason
-                other: payment import failure reasons
+                one: failed payment import reason
+                other: failed payment import reasons
             family_member_user:
                 one: family member
                 other: family members
@@ -378,8 +378,8 @@ en:
                 one: payment status
                 other: payment statuses
             planning:
-                one: Planning
-                other: Plannings
+                one: planning
+                other: plannings
             planning_conflict:
                 one: planning conflict
                 other: planning conflicts

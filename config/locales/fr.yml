@@ -229,8 +229,8 @@ fr:
                 one: activité
                 other: activités
             activity_ref_cycle:
-                one: "enchainement d'activités"
-                other: "enchainements d'activités"
+                one: "enchaînement d'activités"
+                other: "enchaînements d'activités"
             activity_ref_kind:
                 one: "famille d'activité"
                 other: "familles d'activités"
@@ -260,16 +260,16 @@ fr:
                 other: groupes de musique
             band_type:
                 one: type de groupe de musique
-                other: type de groupe de musique
+                other: types de groupe de musique
             bands_user:
                 one: membre de groupe de musique
                 other: membres de groupes de musique
             comment:
                 one: commentaire
-                other: commentaire
+                other: commentaires
             conflict:
                 one: conflit
-                other: conflit
+                other: conflits
             consent_document:
                 one: document de consentement
                 other: documents de consentement
@@ -344,7 +344,7 @@ fr:
                 other: messages
             message_recipient:
                 one: destinataire de message
-                other: destinataire de messages
+                other: destinataires de message
             music_genre:
                 one: genre musical
                 other: genres musicaux
@@ -374,16 +374,16 @@ fr:
                 other: "options d'échéancier de paiement"
             payment_schedule_status:
                 one: "statut d'échéancier"
-                other: "status d'échéancier"
+                other: "statuts d'échéancier"
             payment_status:
                 one: statut de paiement
-                other: statut de paiement
+                other: statuts de paiement
             planning:
                 one: planning
                 other: planning
             planning_conflict:
                 one: conflit de planning
-                other: conflit de planning
+                other: conflits de planning
             plugin:
                 one: plugin
                 other: plugins
