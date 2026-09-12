@@ -5,6 +5,8 @@ import {
     DEFAULT_VALUE_ACCESSOR,
 } from "../evaluation/question/select_targets";
 import get from "lodash/get";
+import find from "lodash/find";
+import has from "lodash/has";
 
 export const ISO_DATE_FORMAT = "YYYY-MM-DD";
 export const FR_DATE_FORMAT = "DD/MM/YYYY";
@@ -64,13 +66,13 @@ export function reactOptionCreator<T extends Entity>(
     {
         id = DEFAULT_VALUE_ACCESSOR,
         label = DEFAULT_LABEL_ACCESSOR,
-    }: CreatorOptions<T>
+    }: CreatorOptions<T> = {}
 ) {
     return { value: id(data, i, arr), label: label(data, i, arr) };
 }
 
 export function reactOptionMapper<T extends Entity>(
-    options: CreatorOptions<T>
+    options: CreatorOptions<T> = {}
 ) {
     return (data: T, i: number, arr: T[]) =>
         reactOptionCreator(data, i, arr, options);
@@ -84,20 +86,19 @@ export const USER_OPTIONS_SHORT = {
 };
 
 export function hasKeys<T extends Record<string, unknown>>(
-    o: T,
+    o: T | undefined | null,
     keys: string[]
 ): boolean {
-    return keys.filter((k) => !!o[k]).length === 0;
-    // return keys.reduce((acc, k) => acc && _.has(o, k), true);
+    return keys.reduce((acc: boolean, k) => acc && has(o, k), true);
 }
 
 export function findAndGet<T>(
-    data: T[],
-    f: (d: T) => boolean,
+    data: T[] | Record<string, T> | undefined | null,
+    f: ((d: T) => boolean) | Partial<T> | string,
     path: string,
-    def?: T
+    def: any = null
 ) {
-    return get(data.find(f), path, def);
+    return get(find(data, f), path, def);
 }
 
 export function isRadioTrue(v: string | boolean): boolean {

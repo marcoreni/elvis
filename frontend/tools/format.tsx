@@ -147,7 +147,10 @@ export const displayActivityRef = (ref: {
     kind: string;
 }) => (ref.activity_type === "child" ? ref.label : ref.kind);
 
-export const occupationInfos = (activity: Activity, referenceDate?: string) => {
+export const occupationInfos = (
+    activity: Activity,
+    referenceDate?: string | null
+) => {
     let headCount = 0;
     let validatedHeadCount = 0;
     let headCountLimit = 0;
@@ -177,7 +180,12 @@ export const occupationInfos = (activity: Activity, referenceDate?: string) => {
 
         const activeUsers = (activity.users || []).filter(
             (u) =>
-                referenceDate === undefined ||
+                // Loose on purpose: `referenceDate` legitimately arrives as `null` (e.g. via
+                // findAndGet's not-found default) as well as `undefined` -- both must mean "no
+                // reference date filter", matching the original `referenceDate == undefined`.
+                // A strict `=== undefined` check here misses the `null` case and ends up
+                // comparing dates against `null` below, which drops every user.
+                referenceDate == null ||
                 (u.begin_at <= referenceDate &&
                     (u.stopped_at == undefined || u.stopped_at > referenceDate))
         );
@@ -195,7 +203,7 @@ export const occupationInfos = (activity: Activity, referenceDate?: string) => {
 
 export const isActivityWithOnlyOneOption = (
     activity: Activity,
-    referenceDate?: string
+    referenceDate?: string | null
 ) => {
     let { validatedHeadCount, headCount } = occupationInfos(
         activity,
@@ -207,7 +215,7 @@ export const isActivityWithOnlyOneOption = (
 
 export const formatActivityHeadcount = (
     activity: Activity,
-    referenceDate?: string
+    referenceDate?: string | null
 ) => {
     let { headCount, validatedHeadCount, headCountLimit, hasOption } =
         occupationInfos(activity, referenceDate);

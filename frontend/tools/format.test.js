@@ -3,7 +3,13 @@
 // is currently set to.
 
 import i18n from "../i18n";
-import { toLocaleDate, toMonthName, formatActivityForDisplay, toFullDateFr } from "./format";
+import {
+    toLocaleDate,
+    toMonthName,
+    formatActivityForDisplay,
+    toFullDateFr,
+    occupationInfos,
+} from "./format";
 
 describe("locale-aware date formatting", () => {
     afterEach(async () => {
@@ -15,12 +21,20 @@ describe("locale-aware date formatting", () => {
 
         await i18n.changeLanguage("en");
         expect(toLocaleDate(date)).toBe(
-            date.toLocaleString("en", { year: "numeric", month: "numeric", day: "numeric" })
+            date.toLocaleString("en", {
+                year: "numeric",
+                month: "numeric",
+                day: "numeric",
+            })
         );
 
         await i18n.changeLanguage("fr");
         expect(toLocaleDate(date)).toBe(
-            date.toLocaleString("fr", { year: "numeric", month: "numeric", day: "numeric" })
+            date.toLocaleString("fr", {
+                year: "numeric",
+                month: "numeric",
+                day: "numeric",
+            })
         );
     });
 
@@ -37,7 +51,10 @@ describe("locale-aware date formatting", () => {
             group_name: "Group",
             activity_ref: { label: "Ref" },
             // 2026-01-12 is a Monday
-            time_interval: { start: "2026-01-12T10:00:00", end: "2026-01-12T11:00:00" },
+            time_interval: {
+                start: "2026-01-12T10:00:00",
+                end: "2026-01-12T11:00:00",
+            },
         };
 
         await i18n.changeLanguage("en");
@@ -62,5 +79,75 @@ describe("locale-aware date formatting", () => {
         // WEEKDAYS is capitalised ("Lundi"); the month segment comes straight from
         // Date#toLocaleString, which renders French month names lowercase ("janvier").
         expect(toFullDateFr(monday)).toBe("Lundi 12 janvier 2026");
+    });
+});
+
+// Regression tests for the `referenceDate` handling in occupationInfos, added alongside the
+// TS-conversion bugfix pass (see docs/KnownIssues.md). findAndGet's not-found default reverted
+// from `undefined` back to `null` (its pre-TS lodash behaviour), and a real call site
+// (LessonList's `findAndGet(filter.filtered, ..., "value")`, no explicit `def`) feeds that
+// straight into `occupationInfos` as `referenceDate`. occupationInfos used to check
+// `referenceDate === undefined`, which does NOT catch `null` -- so a `null` referenceDate fell
+// through to `u.begin_at <= referenceDate`, comparing every date against `null` and dropping
+// every user. The check is now `referenceDate == null`, matching the original loose
+// `referenceDate == undefined` from the pre-TS .js version.
+describe("occupationInfos — referenceDate handling", () => {
+    const nonWorkGroupActivity = {
+        activity_ref: { is_work_group: false, occupation_limit: 5 },
+        activities_instruments: [],
+        options: [],
+        users: [
+            { id: 1, begin_at: "2020-01-01", stopped_at: null },
+            { id: 2, begin_at: "2026-01-01", stopped_at: null },
+        ],
+    };
+
+    test.each([
+        ["undefined", undefined],
+        ["null", null],
+    ])(
+        "with no reference date (%s), every user counts regardless of begin_at",
+        (_label, referenceDate) => {
+            const { headCount, validatedHeadCount } = occupationInfos(
+                nonWorkGroupActivity,
+                referenceDate
+            );
+            expect(headCount).toBe(2);
+            expect(validatedHeadCount).toBe(2);
+        }
+    );
+
+    test("with a real reference date, only users already begun (and not yet stopped) count", () => {
+        const { headCount, validatedHeadCount } = occupationInfos(
+            nonWorkGroupActivity,
+            "2024-06-01"
+        );
+        expect(headCount).toBe(1);
+        expect(validatedHeadCount).toBe(1);
+    });
+
+    test("work-group activities ignore referenceDate entirely (undefined/null/date all agree)", () => {
+        const workGroupActivity = {
+            activity_ref: { is_work_group: true },
+            activities_instruments: [
+                { user_id: 1, is_validated: true },
+                { user_id: 2, is_validated: false },
+                { user_id: null, is_validated: false },
+            ],
+            options: [],
+            users: [],
+        };
+
+        const expected = {
+            headCount: 2,
+            validatedHeadCount: 1,
+            headCountLimit: 3,
+            hasOption: true,
+        };
+        expect(occupationInfos(workGroupActivity, undefined)).toEqual(expected);
+        expect(occupationInfos(workGroupActivity, null)).toEqual(expected);
+        expect(occupationInfos(workGroupActivity, "2024-06-01")).toEqual(
+            expected
+        );
     });
 });

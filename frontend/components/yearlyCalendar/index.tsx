@@ -24,6 +24,36 @@ interface MonthsToDisplay {
     year: number;
 }
 
+// Builds the list of {number, year} months to display between `start` and
+// `end` (inclusive of end's month). Guards against invalid moments (e.g. a
+// null season start/end producing `moment(null)`) — without this guard,
+// `.format("M")` on two invalid moments both return the literal string
+// "Invalid date", which compare equal and keep the loop condition true
+// forever while `.add(1, "month")` on an invalid moment stays invalid,
+// hanging the tab.
+export function monthsInRange(start: Moment, end: Moment): MonthsToDisplay[] {
+    if (!start.isValid() || !end.isValid()) {
+        return [];
+    }
+
+    const seasonStart = start.clone();
+    const seasonEnd = end.clone();
+    const monthsToDisplay: MonthsToDisplay[] = [];
+
+    while (
+        seasonEnd > seasonStart ||
+        seasonStart.format("M") === seasonEnd.format("M")
+    ) {
+        monthsToDisplay.push({
+            number: seasonStart.month() + 1,
+            year: seasonStart.year(), // number, not string
+        });
+        seasonStart.add(1, "month");
+    }
+
+    return monthsToDisplay;
+}
+
 export const Calendar: React.FC<CalendarProps> = (props) => {
     const {
         start,
@@ -110,23 +140,12 @@ export const Calendar: React.FC<CalendarProps> = (props) => {
         );
     };
 
-    // i: date début
-    const seasonStart = moment(start);
-    // i: date fin
-    const seasonEnd = moment(end);
+    // i: date début / i: date fin
     // o: [{ month: isoMonth, year: year for the month }]
-    const monthsToDisplay: MonthsToDisplay[] = [];
-
-    while (
-        seasonEnd > seasonStart ||
-        seasonStart.format("M") === seasonEnd.format("M")
-    ) {
-        monthsToDisplay.push({
-            number: seasonStart.month() + 1,
-            year: seasonStart.year(), // number, not string
-        });
-        seasonStart.add(1, "month");
-    }
+    const monthsToDisplay: MonthsToDisplay[] = monthsInRange(
+        moment(start),
+        moment(end)
+    );
 
     const months = monthsToDisplay.map((month) => (
         <Month

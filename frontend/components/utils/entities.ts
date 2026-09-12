@@ -1,8 +1,12 @@
 // FIXME: move elsewhere
+// Only `id` is truly universal across every entity below; `label` is present
+// on most but not all (see DEFAULT_LABEL_ACCESSOR's optional chaining), and
+// `group_name` only exists on the `activities` table (see `Activity` below) —
+// don't re-add it here even if narrowing surfaces a type error, fix the
+// interface that needs it instead.
 export interface Entity {
     id: number;
-    label: string;
-    group_name: string;
+    label?: string;
 }
 
 export interface StudentEvaluationStat {
@@ -96,6 +100,7 @@ export interface School {
 }
 
 export interface Activity extends Entity {
+    group_name: string;
     users: User[];
     activities_instruments: ActivityInstrument[];
     options: Option[];
