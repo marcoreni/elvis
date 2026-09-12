@@ -9,7 +9,7 @@
 //
 // constants-i18n lot 2 (branch feature/i18n-constants-lot2-messages) extends this same pattern to
 // MESSAGES / API_ERRORS_MESSAGES: `MESSAGES.err_required` etc. are plain-string live bindings,
-// while 7 entries (err_min_length, err_exact_length, err_starts_with, and the 4 err_ord_*) are
+// while 6 entries (err_min_length, err_exact_length, and the 4 err_ord_*) are
 // functions that take an interpolation value and return the localized string immediately,
 // bypassing the object-lookup pattern. Same aliased-capture gotcha applies: read `MESSAGES.xxx`
 // (or the object returned by a fresh `constants.MESSAGES`) after each changeLanguage, never a

@@ -276,7 +276,7 @@
         "loadParamsError": "Erreur lors du chargement des paramètres",
         "saveSuccess": "Sauvegarde effectuée",
         "saveError": "Erreur lors de la sauvegarde",
-        "saveButton": "Sauvegarder",
+        "saveButton": "Enregistrer",
         "saveCompleted": "Enregistrement effectué",
         "genericErrorShort": "Une erreur est survenue",
         "saveSuccessTitle": "Succès",

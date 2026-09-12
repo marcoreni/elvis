@@ -49,7 +49,7 @@
     "itemFormModal": {
         "updateTitleFallback": "Mise à jour",
         "createTitleFallback": "Création",
-        "saveButton": "Sauvegarder",
+        "saveButton": "Enregistrer",
         "errorsHeading": "Erreur(s) :"
     },
     "deleteItemModal": {
@@ -211,7 +211,7 @@
         "addComment": "Ajouter un commentaire",
         "addCommentTitle": "Ajouter un commentaire",
         "editCommentTitle": "Éditer un commentaire",
-        "save": "Sauvegarder",
+        "save": "Enregistrer",
         "byOn": "par {{first}} {{last}} le {{date}}",
         "modifiedOn": "Modifié le {{date}}",
         "unknownUser": "utilisateur",

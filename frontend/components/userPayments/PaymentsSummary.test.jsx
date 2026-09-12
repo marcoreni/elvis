@@ -41,7 +41,7 @@ describe("userPayments/PaymentsSummary", () => {
     // actually resolves ItemFormModal's own translated Cancel/Save buttons, not just the
     // createTitle prop this component passes explicitly.
     test.each([
-        ["fr", "Créer un taux de remise", "Annuler", "Sauvegarder"],
+        ["fr", "Créer un taux de remise", "Annuler", "Enregistrer"],
         ["en", "Create a discount rate", "Cancel", "Save"],
     ])("%s: opening the create-coupon modal resolves ItemFormModal's translated Cancel/Save buttons", async (lng, openButtonText, cancel, save) => {
         await i18n.changeLanguage(lng);

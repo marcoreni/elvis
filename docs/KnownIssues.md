@@ -403,37 +403,6 @@ re-read). Two things left:
 **Dedup (not a defect):** `common:kindsLabel` now duplicates `planning:kinds` in both locales
 (Cours/Course, Option, Évaluation/Evaluation). Fold into the cross-namespace consolidation backlog.
 
-**Bug still open — `err_starts_with` / `startsWith` validator is dead and buggy.** `MESSAGES.err_starts_with`
-  never uses its own `str` parameter (always renders the same generic text — preserved as-is,
-  same class as the `noIntervalMessage` type of no-op default). Its only caller, `validators.js`'s
-  exported `startsWith`, passes `length` instead of its own `str` param
-  (`MESSAGES["err_starts_with"](length)`) — in a browser this resolves to `window.length` (`0`,
-  the frame count), not a `ReferenceError`, so the failure branch silently returns the generic
-  no-op text with the wrong argument rather than throwing. It **would** throw where there is no
-  global `window` — e.g. reached from `packs/server_rendering.js`. No import of `startsWith` from
-  `tools/validators.js` was found anywhere in `frontend/`, so it is dead code today; noted here
-  rather than fixed, since fixing dead code risks masking that it's unreachable.
-
-## `Sauvegarder` / `Enregistrer` — two established save-button wordings, not unified
-
-Spotted 2026-09-05 reviewing the `itemFormModal`/`deleteItemModal` addition to `common.json`
-(`fix/known-issues-batch-4`). `common:actions.save` = "Enregistrer" is the dominant save-button
-wording (20+ call sites across the app — `MailSettings.jsx`, `EditFormule.jsx`,
-`ActivityDetailsModal.jsx`, etc.). A second wording, "Sauvegarder", is independently established in
-the `parameters` domain via `parameters.json`'s `shared.saveButton`
-(`editParameters/TeachersParameters.jsx`, `parameters/Plannings/TeacherAvailabilities.jsx`,
-`editParameters/EditParameters.jsx`, `parameters/Plannings/PlanningsSettings.jsx`). The new
-`common:itemFormModal.saveButton` correctly reuses that same "Sauvegarder" wording, since it's
-extracted verbatim from `ItemFormModal.jsx`'s pre-existing hardcoded French literal.
-`CommentSection.jsx` also still hardcodes "Sauvegarder" directly in JSX (not yet run through
-`useTranslation` at all).
-
-Not a typo — both are correctly-spelled, real French words — and not unified here, per the
-cross-lot dedup policy: unifying wording across already-shipped extraction lots is a design call,
-not a mechanical fix. Whoever eventually settles "Enregistrer" vs "Sauvegarder" as the one house
-style should sweep all four sites together: `common:actions.save`, `parameters:shared.saveButton`,
-`common:itemFormModal.saveButton`, and `CommentSection.jsx`'s still-unextracted literal.
-
 ## `frontend/tools/format.jsx` — `toFullDateFr` is day-before-month regardless of locale
 
 The month off-by-one bug (`toFullDateFr` feeding a 0-based `getMonth()` into the 1-based
