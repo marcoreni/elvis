@@ -137,24 +137,51 @@ referencing it. Still worth a production-data check before deleting this view.
 
 ## Rubocop backlog
 
-`rubocop` was only added as a Gemfile dependency 2026-08-26 (see git history around that date) — it
-had never actually been run against this codebase before, despite `CLAUDE.md` documenting
-`bundle exec rubocop` as the lint command. Running it now surfaces a real backlog, not yet triaged
-or cleaned up. Spotted so far (not exhaustive — nobody's run a full-codebase pass):
+`rubocop` was added as a Gemfile dependency 2026-08-26 but had never actually been run to completion
+against this codebase. A dedicated cleanup pass (`chore/rubocop-backlog-cleanup`, 2026-09-12) brought
+the count from 8255 offenses (681 files, 7001 auto-correctable) down to **1650 offenses in 568
+files**, via `bundle exec rubocop -a` (safe autocorrect only — never `-A`) across the whole repo
+(`app/`, `db/`, `config/`, `lib/`, `bin/`, both `spec/` and `test/`). Full RSpec suite was run before
+and after: same 257 examples / 3 pre-existing failures both times (the documented
+`devise_mailer_spec.rb` and `locations_destroy_spec.rb` flakes below) — no regressions from the
+autocorrect. A sample of ~20 changed files across models/controllers/services/mailers/specs was
+manually diffed to confirm each change was a genuine no-op (indentation, quoting, hash syntax, etc.);
+all 86 `Lint/UselessAssignment` removals were individually checked to confirm the removed variable was
+genuinely dead and any side-effecting right-hand-side expression (e.g. `level = self.levels.create!
+(...)`, `pgr = ActiveRecord::Base.connection.execute <<-SQL`) was preserved by the corrector rather
+than deleted along with the assignment.
 
-- `app/controllers/application_controller.rb`: `Style/RedundantSelf` (`self.call_render`),
-  `Style/GuardClause`, `Style/NumericPredicate` (`nb == 0` instead of `nb.zero?`),
-  `Layout/EmptyLinesAroundClassBody`, a couple of `Layout/LineLength` overflows — all pre-existing,
-  predate any of the i18n branches.
-- New spec files added during the i18n review passes (e.g.
-  `spec/controllers/parameters/localization_parameters_controller_spec.rb`) already carry minor
-  offenses of their own: missing `# frozen_string_literal: true`, `Style/WordArray`,
-  `Style/BlockDelimiters` on multi-line `expect { ... }` blocks, a few `Layout/LineLength` overflows
-  from long example descriptions.
+Two categories were deliberately left uncleaned rather than blindly accepted:
 
-Worth a dedicated `bundle exec rubocop -a` (or manual) cleanup pass across the whole codebase rather
-than fixing these piecemeal as they're noticed — deferred here for the same reason as the frontend
-dependency bumps above.
+- **`Style/Documentation` — disabled** in `.rubocop.yml` (was 443 offenses, not auto-correctable).
+  This cop demands a comment above every class/module, which conflicts with this repo's established
+  convention of writing no top-level doc comments unless the *why* is genuinely non-obvious.
+  Bulk-adding boilerplate documentation comments to satisfy the cop would have been noise, not a
+  cleanup.
+- **`Style/FrozenStringLiteralComment` — left as-is** (488 offenses, *unsafe* correctable). Adding
+  `# frozen_string_literal: true` to a file freezes every string literal in it, which can turn
+  existing in-place mutation (`x = "foo"; x << "bar"`) into a runtime `FrozenError`. Auditing 488 call
+  sites for this is a real, separate task, not something to batch under a "safe" pass. The cop itself
+  is not disabled — it's a legitimate goal, just not safely automatable today.
+
+What's left (1650 offenses, `bundle exec rubocop` final count) breaks down as:
+
+- 488 `Style/FrozenStringLiteralComment` (see above).
+- 488 `Layout/LineLength`. Nominally "safe correctable," but rubocop's line-length corrector can only
+  reflow lines it can mechanically split (long method chains, hashes, etc.); the original 724 dropped
+  to 488 as a side effect of the pass, and the rest need a human call on how to wrap them.
+- ~674 more spread across cops needing real code changes rather than reformatting —
+  `Style/OptionalBooleanParameter` (106), `Naming/VariableName` (79), `Naming/AccessorMethodName` (41),
+  a long tail of *unsafe*-correctable style cops (`Style/RedundantInterpolation`, `Style/SymbolProc`,
+  `Style/NumericPredicate`, `Style/SafeNavigation`, etc. — correctable only via `-A`, which this pass
+  deliberately didn't run), and a handful of `Naming/*`/`Lint/*` cops flagging real pre-existing code
+  smells (`Lint/DuplicateMethods` (3), `Lint/MissingSuper` (6), `Style/ClassVars` (11)) that need
+  case-by-case review, not a mechanical pass. None of these were touched in this cleanup — left for a
+  future, more surgical pass.
+- 17 `Lint/Syntax` offenses, all in a single file:
+  `lib/generators/elvis_plugin_model/templates/migration.rb`. This is a Thor/Rails generator ERB
+  template (`<%= %>` tags) that happens to have a `.rb` extension; it was never valid standalone Ruby
+  and rubocop can't parse it as such. Pre-existing, unrelated to this cleanup, not a real offense.
 
 ## Scaffold views suspected dead — recovery log + removal candidates
 
