@@ -94,6 +94,14 @@ class Setting < ActiveRecord::Base
     :F
   end
 
+  # Setting < ActiveRecord::Base directly (not ApplicationRecord, unlike every other model in this
+  # sweep), so it doesn't inherit ApplicationRecord's display_class_name and needs its own copy of
+  # the same delegation -- otherwise it silently loses a display name entirely (masked by
+  # RemoveController's respond_to? guard, but reverses the fix this method exists for).
+  def self.display_class_name(singular = true)
+    model_name.human(count: singular ? 1 : 2)
+  end
+
   cattr_accessor :available_settings
   self.available_settings ||= {}
 

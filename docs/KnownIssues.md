@@ -671,11 +671,34 @@ now shows two more examples flipping the same way: `DeviseMailer#confirmation_in
 `#reset_password_instructions` both "render in French by default" by asserting on French copy in
 the mail body, but get back the raw, un-interpolated devise mailer layout HTML instead (neither
 example touches `I18n`/`Parameter`/locale directly, and both pass in isolation and in
-`spec/controllers spec/mailers` together - only the full run flips them). Also worth noting for
-whoever eventually root-causes this: a full `bundle exec rspec` on plain `develop`
-(no new spec file at all) is *not* clean either - it currently reports 257 examples, 116 failures,
-almost entirely unrelated pre-existing flakes spread across `spec/requests` (mailers, CSRF,
-users/seasons/practice page i18n specs, etc.). Whatever global state leak underlies this file-count
-sensitivity looks like it accounts for a large share of that baseline number, not just the one or
-two examples each individual PR has bisected so far - worth keeping in mind before treating any
-single full-suite failure count as this repo's true green baseline.
+`spec/controllers spec/mailers` together - only the full run flips them).
+
+**Correction, made during code review of the same branch**: an earlier draft of this note claimed
+a plain `develop` full-suite run reports "257 examples, 116 failures" and used that to suggest the
+file-count-sensitivity bug might account for a large share of the baseline. That number was an
+artifact of a stale/incomplete `public/packs-test/` in the worktree that produced it (missing the
+`css/` subdirectory `stylesheet_pack_tag` needs), not a real result - it has since tripped up more
+than one agent working in a freshly-created worktree. **The real, verified baseline** (worktree
+with a complete `public/packs-test/` copied from a built checkout) is **257 examples, 0 failures**
+on plain `develop`, and **264 examples, 3 failures** with this branch's one new spec file added -
+all 3 the same order-dependent flip described above (`DeviseMailer` x2 + this branch's own "en"
+case), each passing individually. So the file-count-sensitivity bug is real and confirmed twice
+now, but it is NOT masking a much larger pre-existing failure count - don't let a future run
+without a proper asset manifest be mistaken for "the baseline was always this broken."
+
+## `ApplicationRecord#build_subject`'s vowel-detection misses accented vowels
+
+Found 2026-09-12 during code review of `fix/remove-controller-display-class-name-i18n`.
+`app/models/application_record.rb`'s `build_subject` picks French `"un"`/`"une"`/`"le"`/`"la"`
+grammar based on `d_name[/^[aeiouyAEIOUY]/]` — a plain ASCII vowel-class regex that doesn't match
+an accented first letter (`é`, `è`, `à`, …). At least 6 models' `display_class_name` starts with an
+accented vowel — `student` ("Élève"), `school` ("École"), `due_payment`/`payment_schedule`
+("Échéance"/"Échéancier"), `additional_student` ("Élève supplémentaire"),
+`student_evaluation` ("Évaluation") — so `build_subject` renders "le élève"/"le école" instead of
+the correct elided "l'élève"/"l'école".
+
+Pre-existing, not introduced by the `display_class_name` i18n conversion: confirmed the one
+relevant accent fix made during that branch's translator-polish pass
+(`enchainement` → `enchaînement`) doesn't change this bug's first-character check, since `e` was
+already the first letter before and after. Fix (not applied here, out of scope for that fix): widen
+the regex to `/^[aeiouyàâäéèêëîïôöùûüAEIOUYÀÂÄÉÈÊËÎÏÔÖÙÛÜ]/` or use a proper French elision helper.

@@ -96,4 +96,39 @@ RSpec.describe RemoveController do
       expect(I18n.t(key, locale: "fr", count: 1)).not_to eq(I18n.t(key, locale: "en", count: 1))
     end
   end
+
+  # The 88-model conversion's largest change surface is the *plural* (display_class_name(false))
+  # branch -- 7 of the 8 fr typo fixes made during translator polish were `other:` values that had
+  # been wrongly copy-pasted from `one:` (e.g. "commentaire" instead of "commentaires"). The
+  # examples above only exercise the singular (count: 1, the no-arg default) path via
+  # get_references; this covers plural directly against the model methods.
+  it "resolves the plural (display_class_name(false)) form correctly in both locales" do
+    [
+      [Comment, "activerecord.models.comment"],
+      [PaymentStatus, "activerecord.models.payment_status"],
+      [Room, "activerecord.models.room"]
+    ].each do |model, i18n_key|
+      %w[fr en].each do |locale|
+        I18n.with_locale(locale) do
+          expect(model.display_class_name(false)).to eq(I18n.t(i18n_key, locale: locale, count: 2))
+        end
+      end
+    end
+  end
+
+  # Setting < ActiveRecord::Base directly (not ApplicationRecord, unlike every other model in this
+  # sweep) -- confirmed during code review that deleting its override silently dropped its display
+  # name entirely (masked by RemoveController's respond_to? guard). Setting now carries its own
+  # copy of the same delegation; this pins both counts so a future "simplify Setting" pass doesn't
+  # quietly reintroduce the regression.
+  it "resolves Setting's display name even though it doesn't inherit from ApplicationRecord" do
+    I18n.with_locale(:fr) do
+      expect(Setting.display_class_name).to eq("configuration")
+      expect(Setting.display_class_name(false)).to eq("configurations")
+    end
+    I18n.with_locale(:en) do
+      expect(Setting.display_class_name).to eq("setting")
+      expect(Setting.display_class_name(false)).to eq("settings")
+    end
+  end
 end
