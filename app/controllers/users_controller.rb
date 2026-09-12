@@ -983,8 +983,8 @@ class UsersController < ApplicationController
     @evaluation_level_refs = EvaluationLevelRef.all
     @activity_refs = ActivityRef.includes(:activity_ref_kind).all
     @seasons = Season.all
-    @rooms = Room.all,
-             @locations = Location.all
+    @rooms = Room.all
+    @locations = Location.all
     @teachers = User.teachers.all
     @payment_methods = PaymentMethod.all
 
