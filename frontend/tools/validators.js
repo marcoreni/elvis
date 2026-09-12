@@ -31,11 +31,6 @@ export const exactLength = length => value =>{
     return value.length == length ? undefined : MESSAGES["err_exact_length"](length)
 }
 
-export const startsWith = str => value =>{
-    if( value == null) return undefined
-    return value.startsWith(str) ? undefined : MESSAGES["err_starts_with"](length)
-}
-
 export const isValidAge = value =>{
     const enteredDate = moment(value);
     const maxDate = moment();

@@ -92,8 +92,8 @@ export let API_ERRORS_MESSAGES = _loadApiErrorsMessages();
 // validator returned (`tools/validators.js`'s plain validators return e.g. "err_required", not
 // display text; a consuming component then resolves it via `MESSAGES[error]` — see
 // components/common/{Input,InputSelect,InputColor,AlertCheckbox,AlertYesNoRadio,
-// InlineYesNoRadio,ValidationErrorList}.jsx). The 7 function-valued entries
-// (err_min_length/err_exact_length/err_starts_with/the 4 err_ord_*) take the interpolation value
+// InlineYesNoRadio,ValidationErrorList}.jsx). The 6 function-valued entries
+// (err_min_length/err_exact_length/the 4 err_ord_*) take the interpolation value
 // and return the localized string immediately, bypassing that lookup.
 const _loadMessages = () => ({
     no_answer: i18n.t("common:messages.noAnswer"),
@@ -101,7 +101,6 @@ const _loadMessages = () => ({
         i18n.t("common:messages.errMinLength", { length }),
     err_exact_length: (length: number) =>
         i18n.t("common:messages.errExactLength", { length }),
-    err_starts_with: (str: string) => i18n.t("common:messages.errStartsWith"),
     err_required: i18n.t("common:messages.errRequired"),
     err_is_invalid: i18n.t("common:messages.errIsInvalid"),
     err_is_invalid_id: i18n.t("common:messages.errIsInvalidId"),
