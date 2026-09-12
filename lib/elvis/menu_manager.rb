@@ -211,8 +211,12 @@ module Elvis
 
     class MenuItem < MenuNode
       # include Redmine::I18n
-      attr_reader :name, :url, :param, :route_params, :condition, :parent,
-                  :child_menus, :last, :permission, :action, :controller, :position, :a_options
+      # :url and :position are intentionally not in this list: they are given custom
+      # implementations below (computed from route_params / falling back like a plain
+      # reader), which would otherwise be dead code shadowed by these attr_reader-generated
+      # methods (Lint/DuplicateMethods).
+      attr_reader :name, :param, :route_params, :condition, :parent,
+                  :child_menus, :last, :permission, :action, :controller, :a_options
 
       include Rails.application.routes.url_helpers
 

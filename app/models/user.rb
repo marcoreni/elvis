@@ -243,10 +243,6 @@ class User < ApplicationRecord
     addresses.first
   end
 
-  def activity_application
-    activity_applications.find_by(season: Season.current)
-  end
-
   def self.find_first_by_auth_conditions(warden_conditions)
     conditions = warden_conditions.dup
 
