@@ -1,24 +1,35 @@
-import React, { Fragment, useState } from "react";
+import { Fragment, useState } from "react";
 import PropTypes from "prop-types";
 import * as api from "../../tools/api";
 import swal from "sweetalert2";
-import {useTranslation} from "react-i18next";
+import { useTranslation } from "react-i18next";
 
 /**
  * Component for teachers parameters
- * @param {boolean} teacher_can_edit_planning
- * @param {boolean} authorize_teachers
- * @param {boolean} show_teacher_contacts
- * @param {boolean} teacher_can_manage_courses
- * @returns {JSX.Element}
- * @constructor
  */
-export default function TeachersParameters({ teacher_can_edit_planning, authorize_teachers, show_teacher_contacts, teacher_can_manage_courses }) {
-    const {t} = useTranslation("parameters");
-    const [planningChecked, setPlanningChecked] = useState(teacher_can_edit_planning);
-    const [permitTeacherActivities, setPermitTeacherActivities] = useState(authorize_teachers);
-    const [showTeacherContacts, setShowTeacherContacts] = useState(show_teacher_contacts);
-    const [teacherCanManageCourses, setTeacherCanManageCourses] = useState(teacher_can_manage_courses);
+export default function TeachersParameters({
+    teacher_can_edit_planning,
+    authorize_teachers,
+    show_teacher_contacts,
+    teacher_can_manage_courses,
+}: {
+    teacher_can_edit_planning: boolean;
+    authorize_teachers: boolean;
+    show_teacher_contacts: boolean;
+    teacher_can_manage_courses: boolean;
+}): JSX.Element {
+    const { t } = useTranslation("parameters");
+    const [planningChecked, setPlanningChecked] = useState(
+        teacher_can_edit_planning
+    );
+    const [permitTeacherActivities, setPermitTeacherActivities] =
+        useState(authorize_teachers);
+    const [showTeacherContacts, setShowTeacherContacts] = useState(
+        show_teacher_contacts
+    );
+    const [teacherCanManageCourses, setTeacherCanManageCourses] = useState(
+        teacher_can_manage_courses
+    );
 
     function onSubmit() {
         swal.showLoading();
@@ -29,16 +40,15 @@ export default function TeachersParameters({ teacher_can_edit_planning, authoriz
                     swal({
                         title: t("shared.saveSuccessTitle"),
                         text: t("editParameters.teachers.saveSuccessText"),
-                        type: "success"
+                        type: "success",
                     });
 
                     window.location.reload();
-                }
-                else {
+                } else {
                     swal({
                         title: t("shared.errorTitle"),
                         text: t("editParameters.teachers.saveErrorText"),
-                        type: "error"
+                        type: "error",
                     });
                 }
             })
@@ -46,20 +56,26 @@ export default function TeachersParameters({ teacher_can_edit_planning, authoriz
                 swal({
                     title: t("shared.errorTitle"),
                     text: t("editParameters.teachers.saveErrorText"),
-                    type: "error"
+                    type: "error",
                 });
             })
-            .post("/parameters/teachers", {
-                teacher_can_edit_planning: planningChecked,
-                authorize_teachers: permitTeacherActivities,
-                show_teacher_contacts: showTeacherContacts,
-                teacher_can_manage_courses: teacherCanManageCourses
-            }, {});
+            .post(
+                "/parameters/teachers",
+                {
+                    teacher_can_edit_planning: planningChecked,
+                    authorize_teachers: permitTeacherActivities,
+                    show_teacher_contacts: showTeacherContacts,
+                    teacher_can_manage_courses: teacherCanManageCourses,
+                },
+                {}
+            );
     }
 
     return (
         <Fragment>
-            <h3 className="mt-5">{t("editParameters.teachers.planningHeading")}</h3>
+            <h3 className="mt-5">
+                {t("editParameters.teachers.planningHeading")}
+            </h3>
             <div className="mb-sm-3 mt-3">
                 <input
                     type="checkbox"
@@ -80,7 +96,9 @@ export default function TeachersParameters({ teacher_can_edit_planning, authoriz
                         type="checkbox"
                         id="check"
                         checked={permitTeacherActivities}
-                        onChange={() => setPermitTeacherActivities(!permitTeacherActivities)}
+                        onChange={() =>
+                            setPermitTeacherActivities(!permitTeacherActivities)
+                        }
                     />
                     &nbsp;
                     <label className="ml-2 font-normal" htmlFor="check">
@@ -95,10 +113,15 @@ export default function TeachersParameters({ teacher_can_edit_planning, authoriz
                     type="checkbox"
                     id="showTeacherContactsCheck"
                     checked={showTeacherContacts}
-                    onChange={() => setShowTeacherContacts(!showTeacherContacts)}
+                    onChange={() =>
+                        setShowTeacherContacts(!showTeacherContacts)
+                    }
                 />
                 &nbsp;
-                <label className="ml-2 font-normal" htmlFor="showTeacherContactsCheck">
+                <label
+                    className="ml-2 font-normal"
+                    htmlFor="showTeacherContactsCheck"
+                >
                     {t("editParameters.teachers.contactsLabel")}
                 </label>
             </div>
@@ -109,15 +132,23 @@ export default function TeachersParameters({ teacher_can_edit_planning, authoriz
                     type="checkbox"
                     id="teacherCanManageCoursesCheck"
                     checked={teacherCanManageCourses}
-                    onChange={() => setTeacherCanManageCourses(!teacherCanManageCourses)}
+                    onChange={() =>
+                        setTeacherCanManageCourses(!teacherCanManageCourses)
+                    }
                 />
                 &nbsp;
-                <label className="ml-2 font-normal" htmlFor="teacherCanManageCoursesCheck">
+                <label
+                    className="ml-2 font-normal"
+                    htmlFor="teacherCanManageCoursesCheck"
+                >
                     {t("editParameters.teachers.coursesLabel")}
                 </label>
             </div>
 
-            <button className="btn btn-success no-margin pull-right" onClick={onSubmit}>
+            <button
+                className="btn btn-success no-margin pull-right"
+                onClick={onSubmit}
+            >
                 {t("shared.saveButton")}
             </button>
         </Fragment>
@@ -128,5 +159,5 @@ TeachersParameters.propTypes = {
     teacher_can_edit_planning: PropTypes.bool,
     authorize_teachers: PropTypes.bool,
     show_teacher_contacts: PropTypes.bool,
-    teacher_can_manage_courses: PropTypes.bool
+    teacher_can_manage_courses: PropTypes.bool,
 };

@@ -31,6 +31,17 @@ export interface Level {
     };
 }
 
+export interface Comment extends Entity {
+    content: string;
+    user_id?: number;
+    commentable_id?: number;
+    commentable_type?: string;
+}
+
+export interface Availability extends Entity {
+    comment?: Comment | null;
+}
+
 export interface User extends Entity {
     first_name: string;
     last_name: string;

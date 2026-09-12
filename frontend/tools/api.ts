@@ -38,8 +38,10 @@ interface Callbacks {
     loading?: boolean;
 }
 
-type RequestData =
-    string | string[][] | Record<string, string> | URLSearchParams | undefined;
+export type RequestData =
+    | Record<string, string | boolean | null | Record<string, string>>
+    | string[][]
+    | undefined;
 
 // API REQUESTS
 const request =

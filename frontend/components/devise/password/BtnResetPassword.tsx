@@ -1,5 +1,4 @@
-import React, { useState } from "react";
-import PropTypes from "prop-types";
+import { useState } from "react";
 import swal from "sweetalert2";
 import { useTranslation } from "react-i18next";
 import * as api from "../../../tools/api";
@@ -12,7 +11,23 @@ export default function BtnResetPassword({
     textSuccess,
     textNoData,
     user,
-}) {
+}: {
+    sendRequest: {
+        url: string;
+        type: "get" | "post";
+        data: api.RequestData;
+        additionnalHeaders?: Record<string, string>;
+    };
+    text: string;
+    className: string;
+    textError: string;
+    textSuccess: string;
+    textNoData: string;
+    user: {
+        is_admin: boolean;
+        is_teacher: boolean;
+    };
+}): JSX.Element {
     const { t } = useTranslation("users");
     const [resetLink, setResetLink] = useState(null);
 
@@ -41,7 +56,7 @@ export default function BtnResetPassword({
                     );
             } else {
                 api.set()
-                    .success(data => {
+                    .success((data) => {
                         if (!data?.reset_link) {
                             swal(
                                 t("users:passwordReset.btn.errorTitle"),
@@ -68,7 +83,7 @@ export default function BtnResetPassword({
             }
         } else {
             api.set()
-                .success(data => {
+                .success((data) => {
                     if ((!data || data.length === 0) && textNoData) {
                         swal(
                             t("users:passwordReset.btn.errorTitle"),
@@ -98,7 +113,7 @@ export default function BtnResetPassword({
         }
     }
 
-    function showResetLinkPopup(link) {
+    function showResetLinkPopup(link: string) {
         swal({
             title: t("users:passwordReset.btn.resetLinkTitle"),
             html: `
@@ -125,7 +140,7 @@ export default function BtnResetPassword({
                         )
                     );
             },
-        }).then(result => {
+        }).then((result) => {
             if (result.dismiss === swal.DismissReason.cancel) {
                 api.set()
                     .success(() =>
@@ -157,21 +172,3 @@ export default function BtnResetPassword({
         </button>
     );
 }
-
-BtnResetPassword.propTypes = {
-    sendRequest: PropTypes.shape({
-        type: PropTypes.string.isRequired,
-        url: PropTypes.string.isRequired,
-        data: PropTypes.object,
-        additionnalHeaders: PropTypes.object,
-    }),
-    text: PropTypes.string.isRequired,
-    className: PropTypes.string.isRequired,
-    textError: PropTypes.string,
-    textSuccess: PropTypes.string,
-    textNoData: PropTypes.string,
-    user: PropTypes.shape({
-        is_admin: PropTypes.bool,
-        is_teacher: PropTypes.bool,
-    }),
-};
