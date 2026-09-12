@@ -26,6 +26,12 @@ module LiquidDrops
       @user["last_name"]
     end
 
+    # Used by ActivityDrop#teachers, whose elements are also UserDrop instances (a teacher is a
+    # User) -- @activity.teachers.first.full_name mirrors User#full_name.
+    def full_name
+      "#{first_name} #{last_name}"
+    end
+
     def adherent_number
       @user["adherent_number"]
     end

@@ -858,6 +858,15 @@ en:
             subject: "%{name} - Course cancellation confirmation"
 
     controllers:
+        absences:
+            days:
+                monday: Monday
+                tuesday: Tuesday
+                wednesday: Wednesday
+                thursday: Thursday
+                friday: Friday
+                saturday: Saturday
+                sunday: Sunday
         settings:
             plugin:
                 update_success: Update successful
@@ -995,6 +1004,7 @@ en:
             student: Student
             adherent_number: Member number
             day: Day
+            day_index: Day index
             activity: Course / activity
             teacher: Teacher
             date: Date

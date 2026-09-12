@@ -1,11 +1,12 @@
 require "csv"
 
 class AbsencesController < ApplicationController
-  # NOTE(i18n P6): kept as literal French - frontend/components/AbsencesTracking.jsx's
-  # DAYS_ORDER / dayIndex() sort the grouped-by-day UI by matching this exact French string
-  # (see docs/KnownIssues.md). Localizing it here would silently break that sort for non-fr
-  # locales without a paired frontend change, which is out of this backend-only batch's scope.
-  DAYS_FR = %w[Dimanche Lundi Mardi Mercredi Jeudi Vendredi Samedi].freeze
+  # Order matches Ruby's Date#wday (0 = Sunday .. 6 = Saturday) -- used both as the day_index
+  # sort key (locale-independent) and to look up the locale-aware controllers.absences.days.*
+  # translation key for the day field. frontend/components/AbsencesTracking.jsx sorts the
+  # grouped-by-day UI using day_index rather than string-matching day, so day can be safely
+  # translated per-locale here.
+  DAY_I18N_KEYS = %w[sunday monday tuesday wednesday thursday friday saturday].freeze
 
   # Global absence tracking page ("Suivi des absences")
   def index
@@ -48,6 +49,7 @@ class AbsencesController < ApplicationController
         t("csv_exports.absences_export.student"),
         t("csv_exports.absences_export.adherent_number"),
         t("csv_exports.absences_export.day"),
+        t("csv_exports.absences_export.day_index"),
         t("csv_exports.absences_export.activity"),
         t("csv_exports.absences_export.teacher"),
         t("csv_exports.absences_export.date"),
@@ -59,6 +61,7 @@ class AbsencesController < ApplicationController
           a[:student][:full_name],
           a[:student][:adherent_number],
           a[:day],
+          a[:day_index],
           a[:activity],
           a[:teacher],
           a[:date],
@@ -127,7 +130,8 @@ class AbsencesController < ApplicationController
         id: abs.id,
         date: start.strftime("%d/%m/%Y"),
         date_iso: start.strftime("%Y-%m-%d"),
-        day: DAYS_FR[start.wday],
+        day: t("controllers.absences.days.#{DAY_I18N_KEYS[start.wday]}"),
+        day_index: start.wday,
         activity: instance.activity.activity_ref&.label,
         activity_ref_id: instance.activity.activity_ref_id,
         teacher: teacher&.full_name,

@@ -8,12 +8,10 @@ require "rails_helper"
 # real ActivityApplication and confirms it no longer raises NoMethodError on
 # @application.user.first_name/.last_name/@application.season.label.
 #
-# ActivityAssignedMailer#activity_assigned's file-based view is NOT exercised end-to-end here: its
-# view also calls @activity.activity_ref.label / @activity.time_interval.start / @activity.teachers
-# .first.full_name, none of which exist on LiquidDrops::ActivityDrop either (a separate,
-# pre-existing bug independent of ApplicationDrop, out of scope for this fix -- see
-# spec/mailers/application_drop_spec.rb for coverage of the ApplicationDrop half using the same
-# hash shape ActivityAssignedMailer builds).
+# ActivityAssignedMailer#activity_assigned's file-based view has its own end-to-end coverage in
+# spec/mailers/activity_assigned_mailer_spec.rb (a separate, now-fixed LiquidDrops::ActivityDrop
+# bug -- @activity.activity_ref.label / @activity.time_interval.start / @activity.teachers.first
+# .full_name -- independent of ApplicationDrop).
 RSpec.describe ApplicationMailer, type: :mailer do
   let!(:school) { School.create!(name: "École de Test") }
   let(:user) do

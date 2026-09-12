@@ -24,6 +24,7 @@ class ActivityAssignedMailer < LayoutMailer
     @activity = LiquidDrops::ActivityDrop.new(activity.as_json(include: {
       activity_ref: { methods: :display_price },
       teacher: {},
+      teachers: {},
       room: {},
       time_interval: {}
     }))

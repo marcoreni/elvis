@@ -931,7 +931,9 @@ const PanelStat = ({ label, value, color, sub }) => (
 
 /* -------------------------------- Helpers -------------------------------- */
 
-function buildGroups(rows) {
+// Exported for unit testing the day sort logic (see AbsencesTracking.test.jsx) without needing
+// to render the full component.
+export function buildGroups(rows) {
     const teachers = {};
     rows.forEach(a => {
         const tk = a.teacher || "—";
@@ -946,6 +948,10 @@ function buildGroups(rows) {
         const d = (t.days[dk] = t.days[dk] || {
             key: dk,
             name: dk,
+            // Stable, locale-independent sort key from the API (0 = Sunday .. 6 = Saturday) --
+            // see dayIndex() below. `day` itself is now translated server-side (fr/en), so it can
+            // no longer be string-matched against a hardcoded French day-name list to sort.
+            dayIndex: a.day_index,
             count: 0,
             courses: {},
         });
@@ -968,10 +974,11 @@ function buildGroups(rows) {
         s.rows.push(a);
     });
 
-    const dayIndex = d => {
-        const i = DAYS_ORDER.indexOf(d.name);
-        return i === -1 ? 99 : i;
-    };
+    // The API's day_index follows Ruby's Date#wday (0 = Sunday .. 6 = Saturday). Shift it so
+    // Monday sorts first and Sunday last, matching this table's previous Monday -> Sunday
+    // display order (previously achieved via DAYS_ORDER.indexOf(dayName), a Monday-first list).
+    const dayIndex = d =>
+        typeof d.dayIndex === "number" ? (d.dayIndex + 6) % 7 : 99;
 
     return Object.values(teachers)
         .sort((a, b) => a.name.localeCompare(b.name))

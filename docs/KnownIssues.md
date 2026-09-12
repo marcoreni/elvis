@@ -605,14 +605,6 @@ notes above, and harmless for the same reason (switching locale is a full server
   load and are admin-editable at runtime (the settings UI lets a school add custom statuses/methods
   alongside the built-ins) — closer to `Parameter`/`NotificationTemplate` per-instance content than
   to static UI chrome, so left untranslated for the same reason those are out of scope.
-- **`AbsencesController::DAYS_FR` (French day names) is intentionally still hardcoded**, unlike every
-  other CSV export header touched by P6. `frontend/components/AbsencesTracking.jsx`'s `DAYS_ORDER` /
-  `dayIndex()` (line 4) sort the grouped-by-day UI by exact-matching this string against the `day`
-  field `AbsencesController#serialize_absences` puts in both the `data` JSON endpoint and the CSV
-  export row content. Localizing the backend value alone would silently break that sort for any
-  non-`fr` locale (frontend never told to expect anything but the 7 French names) — a paired
-  frontend change (translate `DAYS_ORDER` too, or send a stable day index instead of a name) is
-  needed first. Backend-only P6 batch leaves it alone; noted for whoever picks up the React side.
 - **Background job status/error text (`ActiveJob`/`ActiveJob::Status`, e.g. `CsvImporterJob`) always
   renders in the default locale.** `I18n.locale` is set per-request by `ApplicationController`'s
   `switch_locale`, but nothing propagates the enqueuing request's locale into the job's execution
@@ -623,37 +615,6 @@ notes above, and harmless for the same reason (switching locale is a full server
   text won't follow an English-locale user the way a controller/view string does. A general fix
   (capture `I18n.locale` at enqueue time, pass it through as a job argument, wrap `perform` in
   `I18n.with_locale`) would apply to any future job that renders user-facing text, not just this one.
-
-## `ActivityAssignedMailer#activity_assigned`'s file-based view calls undefined `LiquidDrops::ActivityDrop` methods
-
-Found 2026-09-12 while fixing/verifying the sibling `LiquidDrops::ApplicationDrop` bug (`user`/`season` accessors, now fixed — see `spec/mailers/application_drop_spec.rb` and `spec/mailers/application_mailer_notify_new_application_spec.rb`). `app/views/activity_assigned_mailer/activity_assigned.html.erb` also calls `@activity.activity_ref.label`, `@activity.time_interval.start`/`.end`, and `@activity.teachers.first.full_name` — but `@activity` is a `LiquidDrops::ActivityDrop` (`app/mailers/liquid_drops/activity_drop.rb`), which only defines flattened accessors (`label`, `activity_start`, `activity_end`, `teacher_first_name`, `teacher_last_name`, `room_label`, …), not `activity_ref`/`time_interval`/`teachers`. Any real render of this file-based view (no `NotificationTemplate` override present) raises `NoMethodError` on the first of these calls, independent of and in addition to the now-fixed `ApplicationDrop` issue.
-
-Same masking as the `ApplicationDrop` bug was: a DB-stored `NotificationTemplate` row for this mailer/action hides it in production. Fix would mirror the `ApplicationDrop` fix — either add `activity_ref`/`time_interval`/`teachers` accessors to `ActivityDrop` returning small drop objects, or change the view to use the existing flattened accessors (`@activity.label`, `@activity.activity_start`/`activity_end`, `@activity.teacher_first_name`/`teacher_last_name`). Not fixed here — found incidentally while verifying a different, already-scoped fix; left for a follow-up.
-
-## `db/migrate/20240924141831_add_upcoming_payment_notice_to_notification_templates.rb` fails on a genuinely fresh `db:migrate` replay — root cause is a stale `ActiveRecord` primary-key memoization, not `reset_pk_sequence!`
-
-Investigated 2026-09-12 while triaging a backend bug batch that (incorrectly) assumed the culprit was this migration's `ActiveRecord::Base.connection.reset_pk_sequence!(:notification_templates)` call. **That hypothesis is wrong** — documented here in detail so nobody re-derives the wrong fix a second time.
-
-Reproduction: `RAILS_ENV=test bin/rails db:drop db:create db:migrate` against a genuinely empty database (not `db:prepare`/`db:setup` on an *absent* database — those call `db:schema:load`, which builds the final table shape directly from `db/schema.rb` and never executes this migration's Ruby code at all; the bug only fires when migrations are actually replayed one by one, e.g. `db:migrate` against an existing older-versioned DB, or `db:drop db:create db:migrate` as done here) fails at this migration:
-```
-PG::UndefinedColumn: ERROR:  column "id" does not exist
-LINE 1: ...son") VALUES ($1, $2, ...) RETURNING "id"
-```
-
-Root cause, confirmed by instrumenting the migration with `puts NotificationTemplate.primary_key`, `puts NotificationTemplate.columns.map(&:name)`, and `puts connection.primary_keys("notification_templates")` immediately before the failing `upsert`/`save!` call:
-- `notification_templates` originally had a normal `id` bigint primary key (`db/migrate/20230901084521_create_create_notification_templates.rb`).
-- Three earlier migrations (Sept–Oct 2023) call `NotificationTemplate.find_or_initialize_by(...).save!` while `id` still exists — the **first** access to `NotificationTemplate.primary_key` in the process happens here and memoizes `"id"` on the class object (`ActiveRecord::AttributeMethods::PrimaryKey#primary_key`: `@primary_key = reset_primary_key unless defined? @primary_key`).
-- `db/migrate/20231107102737_update_button_link_on_templates.rb` then drops the `id` column and makes `path` the primary key via raw SQL, and explicitly calls `NotificationTemplate.reset_column_information` right after — clearly *intending* to keep the model in sync.
-- **`reset_column_information` does not actually clear `@primary_key`.** In this Rails version (6.1.7.10), `reset_column_information` calls `reload_schema_from_cache`, which resets `@columns`, `@columns_hash`, `@attribute_types`, etc. — but never touches `@primary_key` (`active_record/model_schema.rb`, `reload_schema_from_cache`). So `NotificationTemplate.primary_key` keeps returning the stale `"id"` for the rest of the process, even though `connection.primary_keys("notification_templates")` (a live, uncached query) correctly returns `["path"]` the whole time.
-- Our migration's `upsert` calls `.save!` on a *new* `NotificationTemplate`, and ActiveRecord builds the INSERT's `RETURNING` clause from the (stale) `primary_key`, i.e. `RETURNING "id"` — a column that no longer exists.
-
-This only manifests when the *entire* migration history replays inside one Rails process (so the same `NotificationTemplate` class object survives from before the Nov 2023 id-drop to after it) — which is exactly what a genuinely fresh `db:migrate`/`rails db:create && rails db:migrate` does, but not what `db:prepare`/`db:setup` do against an absent database (schema-load path, migration code never runs), and not a `db:migrate` that resumes an already-migrated database in a fresh process (a fresh `NotificationTemplate` class object never had the chance to memoize the stale `"id"`).
-
-**`reset_pk_sequence!` is not involved.** Verified directly: it calls PostgreSQL's `pk_and_sequence_for`, finds `path` has no owning sequence (it's a string PK, not serial), logs a "has primary key path with no default sequence" warning, and returns — no exception, no interaction with ActiveRecord's model-level schema/primary-key cache whatsoever (`active_record/connection_adapters/postgresql/schema_statements.rb`). Removing the line does not fix the bug; **repeated empirical testing showed a `bin/rails db:migrate` "success" after removing that line was a false positive** caused by `db:drop` transiently failing (leaving a partially-migrated database that a later `db:create` silently reused via "already exists", so the migration replay never actually restarted from empty). A genuinely fresh `db:drop && db:create && db:migrate` reproduces the failure with or without the `reset_pk_sequence!` line — confirmed both ways, several times, with the debug instrumentation above.
-
-Real fix (not applied here — deeper than a one-line delete, and this migration's own `upsert`/data content was explicitly out of scope for the batch that surfaced this): either (a) have this migration call `NotificationTemplate.reset_column_information` *and* explicitly clear the memoized primary key (e.g. `NotificationTemplate.instance_variable_set(:@primary_key, nil)`, or reference `connection.schema_cache.clear!` plus re-deriving `primary_key`) before its own `upsert`, or (b) fix it at the source in `20231107102737_update_button_link_on_templates.rb` so `reset_column_information` there is paired with an explicit primary-key reset, so no migration after it can ever observe the stale value. (b) is more correct (fixes it for every migration after that point, not just this one) but touches an already-run, already-shipped migration, which needs a human call on whether that's safe for existing installations that already applied it.
-
-In the meantime, a practical workaround for a fresh dev/CI database (from the Phase 07 P7 pass, which independently hit this as a bare `rails db:prepare` failure without root-causing it): `rails db:environment:set` + `rails db:schema:load` skips replaying migration history entirely and gets a working database.
 
 ## `StaticPagesController#landing`/`#about` and `AdminController`'s mail-settings view are unrouted dead code
 

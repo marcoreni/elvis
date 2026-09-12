@@ -859,6 +859,15 @@ fr:
             subject: "%{name} - Confirmation d'annulation de cours"
 
     controllers:
+        absences:
+            days:
+                monday: Lundi
+                tuesday: Mardi
+                wednesday: Mercredi
+                thursday: Jeudi
+                friday: Vendredi
+                saturday: Samedi
+                sunday: Dimanche
         settings:
             plugin:
                 update_success: Mise à jour réussie
@@ -996,6 +1005,7 @@ fr:
             student: Élève
             adherent_number: "N° adhérent"
             day: Jour
+            day_index: "Index du jour"
             activity: "Cours / activité"
             teacher: Professeur
             date: Date
