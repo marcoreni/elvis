@@ -9,7 +9,6 @@ class AddInvoicesColumnsToSchools < ActiveRecord::Migration[6.1]
   def down
     remove_foreign_key :schools, :users, column: :contact_user
 
-
     remove_column :schools, :contact_user
     remove_column :schools, :siret_rna
   end

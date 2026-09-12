@@ -1,7 +1,7 @@
 updated_rows = []
 
 ActiveRecord::Base.transaction do
-  user_without_email = User.where(email: '').to_a
+  user_without_email = User.where(email: "").to_a
 
   user_without_email.each do |user|
     user = user
@@ -13,8 +13,8 @@ ActiveRecord::Base.transaction do
 
       if family_member_user.user_id == user.id
         user.update_column(:email, family_member_user.member.email) if family_member_user.member&.email
-      else
-        user.update_column(:email, family_member_user.user.email) if family_member_user.user&.email
+      elsif family_member_user.user&.email
+        user.update_column(:email, family_member_user.user.email)
       end
     end
   end

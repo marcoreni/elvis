@@ -31,7 +31,7 @@ module Elvis
         base_target_dir = File.join(destination, File.dirname(source_files.first).gsub(assets_dir, ""))
         begin
           FileUtils.mkdir_p(base_target_dir)
-        rescue => e
+        rescue StandardError => e
           raise "Could not create directory #{base_target_dir}: " + e.message
         end
       end
@@ -42,14 +42,14 @@ module Elvis
         target_dir = File.join(destination, dir.gsub(assets_dir, ""))
         begin
           FileUtils.mkdir_p(target_dir)
-        rescue => e
+        rescue StandardError => e
           raise "Could not create directory #{target_dir}: " + e.message
         end
       end
       source_files.each do |file|
         target = File.join(destination, file.gsub(assets_dir, ""))
         FileUtils.cp(file, target) unless File.exist?(target) && FileUtils.identical?(file, target)
-      rescue => e
+      rescue StandardError => e
         raise "Could not copy #{file} to #{target}: " + e.message
       end
     end
@@ -104,7 +104,8 @@ module Elvis
 
         # Adds plugin locales if any
         # YAML translation files should be found under <plugin>/config/locales/
-        Rails.application.config.i18n.load_path += Dir.glob(File.join(plugin.absolute_path, "config", "locales", "*.yml"))
+        Rails.application.config.i18n.load_path += Dir.glob(File.join(plugin.absolute_path, "config", "locales",
+                                                                      "*.yml"))
 
         # Prepends the app/views directory of the plugin to the view path
         view_path = File.join(plugin.absolute_path, "app", "views")
@@ -130,17 +131,17 @@ module Elvis
         plugin.register_settings(config["settings"]) if plugin.configurable?
 
         all_modules = ObjectSpace.each_object(Module).reject { |m| m.is_a?(Class) }
-        plugin_module = all_modules.find { |mod|
+        plugin_module = all_modules.find do |mod|
           begin
             mod_name = mod.to_s
-          rescue
+          rescue StandardError
             mod_name = mod.to_json
-          rescue
+          rescue StandardError
             mod_name = mod.name
           end
 
           mod_name.include?(plugin.name.camelcase)
-        }
+        end
 
         menus = if plugin_module && plugin_module.respond_to?(:menu_is_to_add?)
                   config["menus"].filter { |m| plugin_module.menu_is_to_add?(m) }
@@ -156,7 +157,10 @@ module Elvis
         FileUtils.mkdir(PluginLoader.public_directory) unless Dir.exist?(PluginLoader.public_directory)
 
         Dir.each_child(PluginLoader.public_directory) do |dir|
-          FileUtils.mv(File.join(PluginLoader.public_directory, dir), File.join(PluginLoader.public_directory, plugin.name)) if dir.start_with?("#{plugin.name}_-_")
+          if dir.start_with?("#{plugin.name}_-_")
+            FileUtils.mv(File.join(PluginLoader.public_directory, dir),
+                         File.join(PluginLoader.public_directory, plugin.name))
+          end
         end
 
         EventHandler.plugins.loaded.trigger(
@@ -169,7 +173,11 @@ module Elvis
 
       not_activated_plugins.each do |plugin|
         dir = File.join(PluginLoader.public_directory, plugin.name)
-        FileUtils.mv(dir, File.join(PluginLoader.public_directory, "#{plugin.name}_-_#{Digest::UUID.uuid_v4}")) if Dir.exist? dir
+        next unless Dir.exist? dir
+
+        FileUtils.mv(dir,
+                     File.join(PluginLoader.public_directory,
+                               "#{plugin.name}_-_#{Digest::UUID.uuid_v4}"))
       end
 
       Rails.application.reload_routes!

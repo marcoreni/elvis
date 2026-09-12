@@ -1,7 +1,7 @@
 class CreateSettings < ActiveRecord::Migration[4.2]
   def self.up
-    create_table :settings, :force => true do |t|
-      t.column "name", :bigint, :limit => 30, :default => "", :null => false
+    create_table :settings, force: true do |t|
+      t.column "name", :bigint, limit: 30, default: "", null: false
       t.column "value", :text
     end
   end

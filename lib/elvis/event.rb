@@ -1,6 +1,7 @@
 # frozen_string_literal: true
-require 'concurrent'
-require 'rails_event_store'
+
+require "concurrent"
+require "rails_event_store"
 
 class Event
   def initialize(name)
@@ -9,7 +10,7 @@ class Event
 
     event_name = "event_#{@name.underscore}".camelcase
     Object.const_set event_name, Class.new(RailsEventStore::Event)
-    @event_class =  eval(event_name)
+    @event_class = eval(event_name)
 
     @unsubscribe_procs = {}
   end
@@ -20,7 +21,9 @@ class Event
 
     parameters = block.parameters
 
-    if parameters.length != 2 || parameters.any? { |p| p[0] != :keyreq } || parameters[0][1] != :sender || parameters[1][1] != :args
+    if parameters.length != 2 || parameters.any? do |p|
+      p[0] != :keyreq
+    end || parameters[0][1] != :sender || parameters[1][1] != :args
       raise "block must have 2 parameters: sender: Object, args: Hash"
     end
 
@@ -52,9 +55,7 @@ class Event
     id
   end
 
-  def name
-    @name
-  end
+  attr_reader :name
 
   # @return [Boolean] true si l'évènement a été désouscrit
   def unsubscribe(id)
@@ -70,17 +71,17 @@ class Event
   end
 
   def trigger_classic(sender = nil, args = {})
-
     # @type [RailsEventStore::Event]
     event = @event_class.new(
       data: {
         sender: sender,
-        args: args,
-      })
+        args: args
+      }
+    )
 
     event_store.publish(
       event,
-      expected_version: :any,
+      expected_version: :any
     )
 
     event

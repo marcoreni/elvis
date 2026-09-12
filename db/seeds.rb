@@ -106,9 +106,12 @@ PricingCategory.create!([
 # =============================================================================
 
 ConsentDocument.create!([
-                          { title: "RGPD", expected_answer: true, index: 1, content: "Je consens à ce que mes données personnelles soient utilisées à des fins de traitements associés au fonctionnement de la plateforme comme décrits dans la politique de confidentialité et traitement des données personnelles par {schoolName}" },
-                          { title: "Droit à l'image", expected_answer: false, index: 2, content: "J'autorise {schoolName} à utiliser mon image sur ses différents supports de communication (site Internet, formulaires divers, réseaux sociaux, communiqués de presse, newsletters et ce, uniquement dans l'idée de valoriser la pratique musicale." },
-                          { title: " Inscription newsletter", expected_answer: false, index: 3, content: "J'autorise {schoolName} à me tenir à jour de son activité par newsletter." }
+                          { title: "RGPD", expected_answer: true, index: 1,
+                            content: "Je consens à ce que mes données personnelles soient utilisées à des fins de traitements associés au fonctionnement de la plateforme comme décrits dans la politique de confidentialité et traitement des données personnelles par {schoolName}" },
+                          { title: "Droit à l'image", expected_answer: false, index: 2,
+                            content: "J'autorise {schoolName} à utiliser mon image sur ses différents supports de communication (site Internet, formulaires divers, réseaux sociaux, communiqués de presse, newsletters et ce, uniquement dans l'idée de valoriser la pratique musicale." },
+                          { title: " Inscription newsletter", expected_answer: false, index: 3,
+                            content: "J'autorise {schoolName} à me tenir à jour de son activité par newsletter." }
                         ])
 
 # =============================================================================
@@ -172,9 +175,8 @@ def notification_template_create_if_not_exist(data)
                                             "created_at": data[:created_at],
                                             "updated_at": data[:updated_at],
                                             "name": data[:name],
-                                            "json": data[:json],
-                                          }
-  )
+                                            "json": data[:json]
+                                          })
 
   template = notification_template.as_json
   template.delete("id")
@@ -322,7 +324,7 @@ for template in notification_template_datas
 end
 
 # ENSURE adjusted_amount FUNCTION IS PRESENT "
-pgr = ActiveRecord::Base.connection.execute <<-SQL
+ActiveRecord::Base.connection.execute <<-SQL
   CREATE OR REPLACE FUNCTION adjusted_amount(op text, amount real) RETURNS REAL AS $$
     BEGIN
       CASE op

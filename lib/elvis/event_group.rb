@@ -1,16 +1,14 @@
 # frozen_string_literal: true
-require_relative 'event'
+
+require_relative "event"
 
 class EventGroup
-
   def initialize(name)
     @semaphore = Mutex.new
     @name = name
   end
 
-  def name
-    @name
-  end
+  attr_reader :name
 
   # @return [Event]
   def method_missing(method, *args)

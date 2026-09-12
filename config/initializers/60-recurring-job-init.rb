@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'whenever'
+require "whenever"
 
 if Rails.env.production? || Rails.env.kubernetes?
   `whenever --update-crontab`

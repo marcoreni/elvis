@@ -16,21 +16,19 @@ User.teachers.each do |teacher|
   Season.all.each do |season|
     counts = {}
 
-      activities = teacher.season_teacher_activities(season)
-          .includes({ activity_ref: { activity_ref_kind: {} } })
-          .joins(:time_interval)
-          .order("(extract(dow FROM start AT TIME ZONE 'GMT' AT TIME ZONE 'Europe/Paris')::text ||
+    activities = teacher.season_teacher_activities(season)
+                        .includes({ activity_ref: { activity_ref_kind: {} } })
+                        .joins(:time_interval)
+                        .order("(extract(dow FROM start AT TIME ZONE 'GMT' AT TIME ZONE 'Europe/Paris')::text ||
                 (start AT TIME ZONE 'GMT' AT TIME ZONE 'Europe/Paris')::time::text) asc")
 
-      activities.each do |a|
-        group_name = determine_group_name(a.activity_ref)
-          if(!counts[group_name])
-            counts[group_name] = 1
-          end
+    activities.each do |a|
+      group_name = determine_group_name(a.activity_ref)
+      counts[group_name] = 1 unless counts[group_name]
 
-          a.update(group_name: "#{group_name}#{counts[group_name]}")
+      a.update(group_name: "#{group_name}#{counts[group_name]}")
 
-          counts[group_name] += 1
-      end
+      counts[group_name] += 1
+    end
   end
 end

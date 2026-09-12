@@ -20,8 +20,8 @@
 class ElvisPluginMigrationGenerator < Rails::Generators::NamedBase
   include Rails::Generators::Migration
 
-  source_root File.expand_path("../templates", __FILE__)
-  argument :migration, :type => :string
+  source_root File.expand_path("templates", __dir__)
+  argument :migration, type: :string
 
   class << self
     def next_migration_number(dirname)
@@ -32,7 +32,7 @@ class ElvisPluginMigrationGenerator < Rails::Generators::NamedBase
 
   def create_migration_file
     plugin_name = file_name.underscore
-    plugin_path = Rails.root.join("plugins",plugin_name)
+    plugin_path = Rails.root.join("plugins", plugin_name)
     migration_template "migration.rb",
                        "#{plugin_path}/db/migrate/#{@migration}.rb"
   end

@@ -1,5 +1,7 @@
 class AuthorizationEndpoint
-  attr_accessor :app, :account, :client, :redirect_uri, :response_type, :scopes, :_request_, :request_uri, :request_object
+  attr_accessor :app, :account, :client, :redirect_uri, :response_type, :scopes, :_request_, :request_uri,
+                :request_object
+
   delegate :call, to: :app
 
   def initialize(current_account, allow_approval = false, approved = false)
@@ -7,10 +9,8 @@ class AuthorizationEndpoint
     @app = Rack::OAuth2::Server::Authorize.new do |req, res|
       @client = OidcClient.find_by_identifier(req.client_id) || req.bad_request!
       res.redirect_uri = @redirect_uri = req.verify_redirect_uri!(@client.redirect_uris)
-      if res.protocol_params_location == :fragment && req.nonce.blank?
-        req.invalid_request! 'nonce required'
-      end
-      @scopes = req.scope.inject([]) do |_scopes_, scope|
+      req.invalid_request! "nonce required" if res.protocol_params_location == :fragment && req.nonce.blank?
+      @scopes = req.scope.each_with_object([]) do |scope, _scopes_|
         _scope_ = OidcScope.find_by_name(scope)
         if _scope_
           _scopes_ << _scope_
@@ -18,14 +18,13 @@ class AuthorizationEndpoint
           # ignore
           # req.invalid_scope! "Unknown scope: #{scope}")
         end
-        _scopes_
       end
       @request_object = if (@_request_ = req.request).present?
-        OpenIDConnect::RequestObject.decode req.request, nil # @client.secret
-      elsif (@request_uri = req.request_uri).present?
-        OpenIDConnect::RequestObject.fetch req.request_uri, nil # @client.secret
-      end
-      if OidcClient.available_response_types.include? Array(req.response_type).collect(&:to_s).join(' ')
+                          OpenIDConnect::RequestObject.decode req.request, nil # @client.secret
+                        elsif (@request_uri = req.request_uri).present?
+                          OpenIDConnect::RequestObject.fetch req.request_uri, nil # @client.secret
+                        end
+      if OidcClient.available_response_types.include? Array(req.response_type).collect(&:to_s).join(" ")
         if allow_approval
           if approved
             approved! req, res
@@ -45,7 +44,8 @@ class AuthorizationEndpoint
     OidcClient.transaction do
       response_types = Array(req.response_type)
       if response_types.include? :code
-        authorization = account.oidc_authorizations.create!(oidc_client: @client, redirect_uri: res.redirect_uri, nonce: req.nonce)
+        authorization = account.oidc_authorizations.create!(oidc_client: @client, redirect_uri: res.redirect_uri,
+                                                            nonce: req.nonce)
         authorization.oidc_scopes << scopes
         if @request_object
           authorization.create_oidc_authorization_request_object!(

@@ -18,13 +18,14 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 class ElvisPluginModelGenerator < Rails::Generators::NamedBase
-  source_root File.expand_path("../templates", __FILE__)
-  argument :model, :type => :string
-  argument :attributes, :type => :array, :default => [], :banner => "field[:type][:index] field[:type][:index]"
-  class_option :migration,  :type => :boolean, :default => true
-  class_option :timestamps, :type => :boolean
-  class_option :parent,     :type => :string, :desc => "The parent class for the generated model"
-  class_option :indexes,    :type => :boolean, :default => true, :desc => "Add indexes for references and belongs_to columns"
+  source_root File.expand_path("templates", __dir__)
+  argument :model, type: :string
+  argument :attributes, type: :array, default: [], banner: "field[:type][:index] field[:type][:index]"
+  class_option :migration,  type: :boolean, default: true
+  class_option :timestamps, type: :boolean
+  class_option :parent,     type: :string, desc: "The parent class for the generated model"
+  class_option :indexes,    type: :boolean, default: true,
+                            desc: "Add indexes for references and belongs_to columns"
 
   attr_reader :plugin_path, :plugin_name, :plugin_pretty_name
 
@@ -32,7 +33,7 @@ class ElvisPluginModelGenerator < Rails::Generators::NamedBase
     super
     @plugin_name = file_name.underscore
     @plugin_pretty_name = plugin_name.titleize
-    @plugin_path = Rails.root.join("plugins",plugin_name)
+    @plugin_path = Rails.root.join("plugins", plugin_name)
     @model_class = model.camelize
     @table_name = @model_class.tableize
     @migration_filename = "create_#{@table_name}"
@@ -40,8 +41,8 @@ class ElvisPluginModelGenerator < Rails::Generators::NamedBase
   end
 
   def copy_templates
-    template 'model.rb.erb', "#{plugin_path}/app/models/#{model.underscore}.rb"
-    template 'unit_test.rb.erb', "#{plugin_path}/test/unit/#{model.underscore}_test.rb"
+    template "model.rb.erb", "#{plugin_path}/app/models/#{model.underscore}.rb"
+    template "unit_test.rb.erb", "#{plugin_path}/test/unit/#{model.underscore}_test.rb"
     return unless options[:migration]
 
     migration_filename = "%.14d_#{@migration_filename}.rb" % migration_number
@@ -51,7 +52,7 @@ class ElvisPluginModelGenerator < Rails::Generators::NamedBase
   private
 
   def attributes_with_index
-    attributes.select {|a| a.has_index? || (a.reference? && options[:indexes])}
+    attributes.select { |a| a.has_index? || (a.reference? && options[:indexes]) }
   end
 
   def migration_number

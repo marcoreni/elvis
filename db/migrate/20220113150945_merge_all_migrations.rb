@@ -7,7 +7,8 @@ class MergeAllMigrations < ActiveRecord::Migration[6.1]
       t.bigint "blob_id", null: false
       t.datetime "created_at", null: false
       t.index ["blob_id"], name: "index_active_storage_attachments_on_blob_id"
-      t.index ["record_type", "record_id", "name", "blob_id"], name: "index_active_storage_attachments_uniqueness", unique: true
+      t.index %w[record_type record_id name blob_id], name: "index_active_storage_attachments_uniqueness",
+                                                      unique: true
     end
 
     create_table "active_storage_blobs", if_not_exists: true do |t|
@@ -25,7 +26,7 @@ class MergeAllMigrations < ActiveRecord::Migration[6.1]
     create_table "active_storage_variant_records", if_not_exists: true do |t|
       t.bigint "blob_id", null: false
       t.string "variation_digest", null: false
-      t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
+      t.index %w[blob_id variation_digest], name: "index_active_storage_variant_records_uniqueness", unique: true
     end
 
     create_table "activities", if_not_exists: true do |t|
@@ -110,7 +111,8 @@ class MergeAllMigrations < ActiveRecord::Migration[6.1]
         t.bigint "season_id", null: false
         t.bigint "pricing_id"
         t.float "price", default: 0.0
-        t.index ["activity_ref_id", "season_id", "pricing_id"], name: "activity_ref_season_pricing_index_on_associations"
+        t.index %w[activity_ref_id season_id pricing_id],
+                name: "activity_ref_season_pricing_index_on_associations"
       end
     end
 
@@ -417,7 +419,7 @@ class MergeAllMigrations < ActiveRecord::Migration[6.1]
       t.boolean "is_legal_referent"
       t.string "linkable_type"
       t.index ["linkable_id"], name: "index_family_members_on_linkable_id"
-      t.index ["user_id", "linkable_id"], name: "index_family_members_on_user_id_and_linkable_id", unique: true
+      t.index %w[user_id linkable_id], name: "index_family_members_on_user_id_and_linkable_id", unique: true
       t.index ["user_id"], name: "index_family_members_on_user_id"
     end
 
@@ -441,7 +443,7 @@ class MergeAllMigrations < ActiveRecord::Migration[6.1]
       t.index ["season_id"], name: "index_holidays_on_season_id"
     end
 
-    create_table "hours_sheets", primary_key: ["user_id", "year", "month"], if_not_exists: true do |t|
+    create_table "hours_sheets", primary_key: %w[user_id year month], if_not_exists: true do |t|
       t.bigint "user_id", null: false
       t.integer "year", null: false
       t.integer "month", null: false
@@ -870,7 +872,7 @@ class MergeAllMigrations < ActiveRecord::Migration[6.1]
       t.text "comment"
       t.boolean "is_option", default: false
       t.index ["id"], name: "index_student_attendances_on_id"
-      t.index ["user_id", "activity_instance_id"], name: "index_student_attendances_on_user_id_and_activity_instance_id"
+      t.index %w[user_id activity_instance_id], name: "index_student_attendances_on_user_id_and_activity_instance_id"
     end
 
     create_table "student_evaluations", if_not_exists: true do |t|
@@ -896,7 +898,7 @@ class MergeAllMigrations < ActiveRecord::Migration[6.1]
     create_table "teacher_seasons", if_not_exists: true do |t|
       t.bigint "season_id", null: false
       t.bigint "user_id", null: false
-      t.index ["season_id", "user_id"], name: "index_teacher_seasons_on_season_id_and_user_id"
+      t.index %w[season_id user_id], name: "index_teacher_seasons_on_season_id_and_user_id"
     end
 
     create_table "teachers_activities", id: false, if_not_exists: true do |t|
@@ -1026,27 +1028,48 @@ class MergeAllMigrations < ActiveRecord::Migration[6.1]
     end
 
     add_foreign_key :activity_instances, :activities unless foreign_key_exists? :activity_instances, :activities
-    add_foreign_key :active_storage_variant_records, :active_storage_blobs, column: :blob_id unless foreign_key_exists? :active_storage_variant_records, :active_storage_blobs, column: :blob_id
+    unless foreign_key_exists? :active_storage_variant_records,
+                               :active_storage_blobs, column: :blob_id
+      add_foreign_key :active_storage_variant_records, :active_storage_blobs,
+                      column: :blob_id
+    end
     add_foreign_key :activity_instances, :locations unless foreign_key_exists? :activity_instances, :locations
     add_foreign_key :activity_instances, :rooms unless foreign_key_exists? :activity_instances, :rooms
     add_foreign_key :activity_instances, :time_intervals unless foreign_key_exists? :activity_instances, :time_intervals
     add_foreign_key :activity_refs, :activity_ref_kinds unless foreign_key_exists? :activity_refs, :activity_ref_kinds
     add_foreign_key :bands, :band_types unless foreign_key_exists? :bands, :band_types
     add_foreign_key :bands, :music_genres unless foreign_key_exists? :bands, :music_genres
-    add_foreign_key :desired_activities, :pricings unless foreign_key_exists? :desired_activities, :pricings if Object.const_defined?(:Pricing)
+    if Object.const_defined?(:Pricing) && !foreign_key_exists?(:desired_activities,
+                                                               :pricings)
+      add_foreign_key :desired_activities, :pricings
+    end
     add_foreign_key :due_payments, :payment_schedules unless foreign_key_exists? :due_payments, :payment_schedules
-    add_foreign_key :evaluation_appointments, :activity_applications unless foreign_key_exists? :evaluation_appointments, :activity_applications
+    unless foreign_key_exists? :evaluation_appointments,
+                               :activity_applications
+      add_foreign_key :evaluation_appointments,
+                      :activity_applications
+    end
     add_foreign_key :holidays, :seasons unless foreign_key_exists? :holidays, :seasons
     add_foreign_key :levels, :seasons unless foreign_key_exists? :levels, :seasons
     add_foreign_key :planning_conflicts, :conflicts unless foreign_key_exists? :planning_conflicts, :conflicts
     add_foreign_key :planning_conflicts, :plannings unless foreign_key_exists? :planning_conflicts, :plannings
-    add_foreign_key :room_room_features, :room_features, column: :room_features_id unless foreign_key_exists? :room_room_features, :room_features, column: :room_features_id
+    unless foreign_key_exists? :room_room_features,
+                               :room_features, column: :room_features_id
+      add_foreign_key :room_room_features, :room_features,
+                      column: :room_features_id
+    end
     add_foreign_key :room_room_features, :rooms unless foreign_key_exists? :room_room_features, :rooms
     add_foreign_key :rooms, :locations unless foreign_key_exists? :rooms, :locations
-    add_foreign_key :time_interval_preferences, :activity_applications unless foreign_key_exists? :time_interval_preferences, :activity_applications
-    add_foreign_key :time_interval_preferences, :activity_refs unless foreign_key_exists? :time_interval_preferences, :activity_refs
+    unless foreign_key_exists? :time_interval_preferences,
+                               :activity_applications
+      add_foreign_key :time_interval_preferences,
+                      :activity_applications
+    end
+    add_foreign_key :time_interval_preferences, :activity_refs unless foreign_key_exists? :time_interval_preferences,
+                                                                                          :activity_refs
     add_foreign_key :time_interval_preferences, :seasons unless foreign_key_exists? :time_interval_preferences, :seasons
-    add_foreign_key :time_interval_preferences, :time_intervals unless foreign_key_exists? :time_interval_preferences, :time_intervals
+    add_foreign_key :time_interval_preferences, :time_intervals unless foreign_key_exists? :time_interval_preferences,
+                                                                                           :time_intervals
     add_foreign_key :time_interval_preferences, :users unless foreign_key_exists? :time_interval_preferences, :users
 
     Payment.connection.execute("CREATE OR REPLACE FUNCTION adjusted_amount(op text, amount real) RETURNS REAL AS $$

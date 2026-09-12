@@ -1,11 +1,8 @@
 module Elvis
-
   module MenuManager
-    @@menus
-
     # @param [Symbol] menu
     # @param [Elvis::MenuManager::MenuItem] menu_item
-    def self.add_menu_item(menu, menu_item, options = {})
+    def self.add_menu_item(menu, menu_item, _options = {})
       items = get_menu(menu)
 
       throw StandardError.new "#{menu} menu doesn't exist" if items.nil?
@@ -15,7 +12,7 @@ module Elvis
 
     # @param [Symbol] menu
     # @param [Elvis::MenuManager::MenuItem] menu_item
-    def self.prepend_menu_item(menu, menu_item, options = {})
+    def self.prepend_menu_item(menu, menu_item, _options = {})
       items = get_menu(menu)
 
       throw StandardError.new "#{menu} menu doesn't exist" if items.nil?
@@ -25,7 +22,7 @@ module Elvis
 
     # @param [Symbol] menu
     # @param [Elvis::MenuManager::MenuItem] menu_item
-    def self.insert_menu_item(menu, menu_item, index = -1, options = {})
+    def self.insert_menu_item(menu, menu_item, index = -1, _options = {})
       return prepend_menu_item(menu, menu_item) if index.negative?
       return add_menu_item(menu, menu_item) if index >= menu_length(menu)
 
@@ -40,18 +37,17 @@ module Elvis
     # @param [String] role
     # @return [Array<Elvis::MenuManager::MenuItem>]
     def self.get_menu_with_role(menu, role)
-      get_menu(menu)&.select { |item| role.blank? || "#{item.user_role}".include?(role) || item.user_role.blank? }&.sort_by(&:position) || []
+      get_menu(menu)&.select do |item|
+        role.blank? || "#{item.user_role}".include?(role) || item.user_role.blank?
+      end&.sort_by(&:position) || []
     end
 
     def self.get_menu_with_roles(menu, roles)
-      get_menu(menu)&.map{|i| i.dup}&.select do |item|
-
+      get_menu(menu)&.map { |i| i.dup }&.select do |item|
         item.instance_variable_set "@children", item.children.dup
 
         item.each do |child|
-          unless menu_is_allowed?(roles, child.user_role)
-            item.remove!(child)
-          end
+          item.remove!(child) unless menu_is_allowed?(roles, child.user_role)
         end
 
         item.user_role.blank? || menu_is_allowed?(roles, item.user_role)
@@ -68,7 +64,7 @@ module Elvis
         return roles[0] == user_role[2..]
       end
 
-      return roles.include?(user_role)
+      roles.include?(user_role)
     end
 
     # search plugin item in all menu
@@ -137,15 +133,15 @@ module Elvis
       attr_accessor :parent
       attr_reader :last_items_count, :name
 
-      def initialize(name, content = nil)
+      def initialize(name, _content = nil)
         @name = name
         @children = []
         @last_items_count = 0
       end
 
-      def children
+      def children(&block)
         if block_given?
-          @children.sort_by(&:position).each { |child| yield child }
+          @children.sort_by(&:position).each(&block)
         else
           @children.sort_by(&:position)
         end
@@ -190,7 +186,7 @@ module Elvis
         position = @children.size - @last_items_count
         add_at(child, position)
       end
-      alias :<< :add
+      alias << add
 
       # Removes a child
       def remove!(child)
@@ -202,7 +198,7 @@ module Elvis
 
       # Returns the position for this node in it's parent
       def position
-        self.parent.children.index(self)
+        parent.children.index(self)
       end
 
       # Returns the root for this node
@@ -216,21 +212,19 @@ module Elvis
     class MenuItem < MenuNode
       # include Redmine::I18n
       attr_reader :name, :url, :param, :route_params, :condition, :parent,
-      :child_menus, :last, :permission, :action, :controller, :position, :a_options
+                  :child_menus, :last, :permission, :action, :controller, :position, :a_options
 
       include Rails.application.routes.url_helpers
 
       # @param [Proc<Hash>] route_params executed to get routes params. Block is executed with instance_eval in PluginManager by default, otherwise in object in url method params
-      def initialize(name, controller, action, options={}, &route_params)
+      def initialize(name, controller, action, options = {}, &route_params)
         if options[:if] && !options[:if].respond_to?(:call)
           raise ArgumentError, "Invalid option :if for menu item '#{name}'"
         end
         if options[:html] && !options[:html].is_a?(Hash)
           raise ArgumentError, "Invalid option :html for menu item '#{name}'"
         end
-        if options[:parent] == name.to_sym
-          raise ArgumentError, "Cannot set the :parent to be the same as this item"
-        end
+        raise ArgumentError, "Cannot set the :parent to be the same as this item" if options[:parent] == name.to_sym
         if options[:children] && !options[:children].respond_to?(:call)
           raise ArgumentError, "Invalid option :children for menu item '#{name}'"
         end
@@ -249,7 +243,7 @@ module Elvis
         @route_params = route_params
         @caption = options[:caption]
         @user_role = options[:user_role]
-        @a_options = options[:a_options] ||{}
+        @a_options = options[:a_options] || {}
         @html_options = options[:html] || {}
         # Adds a unique class to each menu item based on its name
         @html_options[:class] = [@html_options[:class], @name.to_s.dasherize].compact.join(" ")
@@ -269,38 +263,35 @@ module Elvis
 
         # return ActionView::RoutingUrlFor.url_for(action: action, controller: controller)
         url_for(url_parameters)
-
       end
 
       def icon
-        return @icon unless @icon.nil?
+        @icon unless @icon.nil?
       end
 
       def user_role
-        return @user_role unless @user_role.nil?
+        @user_role unless @user_role.nil?
       end
 
       def position
-        return @position unless @position.nil?
+        @position unless @position.nil?
       end
 
-      def caption(project=nil)
+      def caption(project = nil)
         if @caption.is_a?(Proc)
           c = @caption.call(project).to_s
           c = @name.to_s.humanize if c.blank?
           c
+        elsif @caption.nil?
+          name
         else
-          if @caption.nil?
-            name
-          else
-            # A Symbol caption is an i18n key, resolved here (at render) so it follows the
-            # request locale even though menu items are built once at boot.
-            @caption.is_a?(Symbol) ? I18n.t(@caption) : @caption
-          end
+          # A Symbol caption is an i18n key, resolved here (at render) so it follows the
+          # request locale even though menu items are built once at boot.
+          @caption.is_a?(Symbol) ? I18n.t(@caption) : @caption
         end
       end
 
-      def html_options(options={})
+      def html_options(options = {})
         if options[:selected]
           o = @html_options.dup
           o[:class] += " selected"
@@ -320,18 +311,12 @@ module Elvis
           # it is considered an allowed node if at least one of the children is allowed
           all_children = children
           all_children += child_menus.call(project) if child_menus
-          unless all_children.detect{ |child| child.allowed?(user, project) }
-            return false
-          end
+          return false unless all_children.detect { |child| child.allowed?(user, project) }
         elsif user && project
           if permission
-            unless user.allowed_to?(permission, project)
-              return false
-            end
+            return false unless user.allowed_to?(permission, project)
           elsif permission.nil? && url.is_a?(Hash)
-            unless user.allowed_to?(url, project)
-              return false
-            end
+            return false unless user.allowed_to?(url, project)
           end
         end
         if condition && !condition.call(project)

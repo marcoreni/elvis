@@ -13,8 +13,7 @@ class AddMessageMailerToNotificationTemplates < ActiveRecord::Migration[6.1]
              "updated_at": Time.now,
              "name": "Message personnalisé",
              "json": nil
-           }
-    )
+           })
   end
 
   def down
@@ -25,7 +24,8 @@ class AddMessageMailerToNotificationTemplates < ActiveRecord::Migration[6.1]
     notification_template = NotificationTemplate.find_or_initialize_by(
       {
         "path": data[:path]
-      })
+      }
+    )
 
     notification_template.assign_attributes({
                                               "body": data[:body],
@@ -36,9 +36,8 @@ class AddMessageMailerToNotificationTemplates < ActiveRecord::Migration[6.1]
                                               "created_at": data[:created_at],
                                               "updated_at": data[:updated_at],
                                               "name": data[:name],
-                                              "json": data[:json],
-                                            }
-    )
+                                              "json": data[:json]
+                                            })
 
     notification_template.save!
   end

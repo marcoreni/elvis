@@ -1,10 +1,9 @@
 module Elvis
-
   class CsvExporter
     # test :
     #   Elvis::CsvConverter.new(ActivityRef.all.as_json(include: :activity_ref_kind), "tmp/toto.csv").execute
 
-    KEY_SEP = '/'
+    KEY_SEP = "/"
 
     # gérer l'encodage, la séparation des caractères, etc.
 
@@ -34,7 +33,6 @@ module Elvis
           k
         end
       end
-
     end
 
     def generate
@@ -50,9 +48,8 @@ module Elvis
 
     def enumerator
       Enumerator.new do |stream|
-
         @query.find_each do |record|
-          if !@skip_headers
+          unless @skip_headers
             stream << CSV.generate_line(@headers_line, **@csv_options)
             yield(1, @keys) if block_given?
             @skip_headers = true
@@ -118,16 +115,13 @@ module Elvis
           else
             key
           end
+        elsif prefix
+          collect_keys(value, "#{prefix}#{KEY_SEP}#{key}")
         else
-          if prefix
-            collect_keys(value, "#{prefix}#{KEY_SEP}#{key}")
-          else
-            collect_keys(value, "#{key}")
-          end
+          collect_keys(value, "#{key}")
         end
       end
       arr.flatten
     end
-
   end
 end

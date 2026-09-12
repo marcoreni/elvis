@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-require_relative '../elvis/utils'
+require_relative "../elvis/utils"
 
 namespace :elvis do
   namespace :attachments do
@@ -65,7 +65,8 @@ namespace :elvis do
   end
 
   task clean_big_tables: %i[environment] do
-    table_to_clean = Parameter.get_value("app.clean_big_tables.tables_to_clean")&.split(",") || %w[event_store_events error_histories]
+    table_to_clean = Parameter.get_value("app.clean_big_tables.tables_to_clean")&.split(",") || %w[event_store_events
+                                                                                                   error_histories]
     logger = Logger.new(STDOUT)
 
     max_nb_lines = Parameter.get_value("app.clean_big_tables.max_nb_lines")&.to_i || 300_000
@@ -90,7 +91,7 @@ namespace :elvis do
   end
 
   task fix_activities_ti: %i[environment] do
-    sidekiq_redis_url = ENV['SIDEKIQ_REDIS_URL'] || ENV['REDIS_URL']
+    sidekiq_redis_url = ENV["SIDEKIQ_REDIS_URL"] || ENV["REDIS_URL"]
     if ENV["USE_SIDEKIQ"] == "true" && !sidekiq_redis_url.nil?
       ActivityTiCorrectorJob.perform_later
     else
@@ -99,14 +100,12 @@ namespace :elvis do
   end
 
   namespace :plugins do
-
     task :logged do
       @logger = Logger.new(STDOUT)
     end
 
     desc 'Parse gemfile to save in db all gem with line marked with "#plugin"'
     task discover: %i[environment logged] do
-
       plugins = PluginGemUtils.get_plugins_installed(include_libraries: false)
 
       plugins.each do |plugin|
@@ -143,14 +142,12 @@ namespace :elvis do
         else
           database_plugin.save
         end
-
       rescue StandardError => e
         @logger.error "#{e}\n#{e.backtrace&.join("\n")}"
       end
     end
 
     task :copy_react do
-
       plugins = PluginGemUtils.get_plugins_installed(include_libraries: false)
 
       def self.cpf(file, dest)
@@ -212,7 +209,6 @@ namespace :elvis do
     task :install_npm_dependencies do
       # Méthode pour capturer la sortie standard
 
-
       dependencies = capture_stdout { Rake::Task["elvis:plugins:npm_dependencies"].execute }
 
       if "#{dependencies}".strip.empty?
@@ -225,15 +221,17 @@ namespace :elvis do
     end
 
     task :generate_pluginjson_from_url do
-      if "#{ENV['PLUGINS_LIST_DOWNLOAD_URL']}".empty?
-        raise "PLUGINS_LIST_DOWNLOAD_URL is empty"
-      end
+      raise "PLUGINS_LIST_DOWNLOAD_URL is empty" if "#{ENV['PLUGINS_LIST_DOWNLOAD_URL']}".empty?
 
       puts "Downloading plugins list from #{ENV['PLUGINS_LIST_DOWNLOAD_URL']}"
 
       plugins_from_internet = PluginGemUtils.get_plugins_to_install(include_libraries: true)
 
-      plugins = plugins_from_internet.map {|p| p.as_json.deep_transform_keys{|k| k.camelize(:lower) }.except(:id, :installed_path)}
+      plugins = plugins_from_internet.map do |p|
+        p.as_json.deep_transform_keys do |k|
+          k.camelize(:lower)
+        end.except(:id, :installed_path)
+      end
 
       puts "Writing plugins list to plugins.json"
 
@@ -303,7 +301,6 @@ namespace :elvis do
 
       PluginGemUtils.get_plugins_installed(include_libraries: false).each do |plugin|
         Elvis::PluginLoader.mirror_assets(plugin.name)
-
       rescue StandardError => e
         @logger.error "#{e}\n#{e.backtrace&.join("\n")}"
         abort "Error copying assets for plugin #{name}."

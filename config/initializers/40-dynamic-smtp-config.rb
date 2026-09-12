@@ -1,16 +1,16 @@
-require 'openssl'
+require "openssl"
 
 class String
   def encrypt
-    cipher = OpenSSL::Cipher.new('aes-256-cbc').encrypt
+    cipher = OpenSSL::Cipher.new("aes-256-cbc").encrypt
     cipher.key = Digest::MD5.hexdigest(ENV["INSTANCE_NAME"] || "development")
     s = cipher.update(self) + cipher.final
 
-    s.unpack('H*')[0].upcase
+    s.unpack1("H*").upcase
   end
 
   def decrypt
-    cipher = OpenSSL::Cipher.new('aes-256-cbc').decrypt
+    cipher = OpenSSL::Cipher.new("aes-256-cbc").decrypt
     cipher.key = Digest::MD5.hexdigest(ENV["INSTANCE_NAME"] || "development")
     s = [self].pack("H*").unpack("C*").pack("c*")
 
@@ -21,10 +21,9 @@ end
 class EmailConfigInterceptor
   # @param [Mail::Message] message
   def self.delivering_email(message)
-
     # add header to identify the instance that sent the email
     message.headers({
-      "X-Instance-Name" => ENV["INSTANCE_NAME"] || "development"
+                      "X-Instance-Name" => ENV["INSTANCE_NAME"] || "development"
                     })
 
     password = Parameter.get_value("app.email.password")
@@ -36,20 +35,16 @@ class EmailConfigInterceptor
       password: password.present? ? password.to_s.decrypt : "",
       port: (Parameter.get_value("app.email.port") || "587").to_i,
       user_name: Parameter.get_value("app.email.username") || "",
-      ssl: Parameter.get_value("app.email.ssl_tls")=="true",
-      tls: Parameter.get_value("app.email.ssl_tls")=="true"
+      ssl: Parameter.get_value("app.email.ssl_tls") == "true",
+      tls: Parameter.get_value("app.email.ssl_tls") == "true"
     }
 
     # check si message.from == nil, si c'est le cas on lui attribue la valeur de la base de donnée
-    if message.from.nil?
-      message.from = Parameter.get_value("app.application_mailer.default_from")
-    end
+    message.from = Parameter.get_value("app.application_mailer.default_from") if message.from.nil?
 
     redirect = Parameter.get_value("app.email.redirect") || []
 
-    if redirect.length > 0
-      message.to = redirect
-    end
+    message.to = redirect if redirect.length > 0
 
     return if options[:user_name].blank? || options[:password].blank?
 

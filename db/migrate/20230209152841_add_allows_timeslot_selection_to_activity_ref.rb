@@ -5,5 +5,5 @@ class AddAllowsTimeslotSelectionToActivityRef < ActiveRecord::Migration[6.1]
 
   def self.down
     remove_column :activity_refs, :allows_timeslot_selection
-    end
+  end
 end

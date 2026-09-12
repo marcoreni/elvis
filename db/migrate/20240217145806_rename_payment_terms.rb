@@ -8,7 +8,6 @@ class RenamePaymentTerms < ActiveRecord::Migration[6.1]
 
     # modifications sur la table payer_payment_terms
     rename_column :payer_payment_terms, :payment_terms_id, :payment_schedule_options_id
-
   end
 
   def down

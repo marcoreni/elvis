@@ -3,7 +3,7 @@
 class FamiliesCsvExporter
   def initialize
     @season = Season.current
-    @activities =  Activity.includes(:time_interval).where(time_intervals: {start: @season.start..@season.end})
+    @activities = Activity.includes(:time_interval).where(time_intervals: { start: @season.start..@season.end })
     @activities_ids = @activities.map { |activity| activity.id }
   end
 
@@ -19,8 +19,9 @@ class FamiliesCsvExporter
     dupl_emails = find_duplicate_emails @activities_ids
 
     # open a file for csv output
-    CSV.open("tmp/duplicates.csv", "wb:UTF-8", col_sep: ';') do |csv|
-      csv << ["id", "first_name", "last_name", "email", "age", "is_paying", "payers", "payees", "is_student_for_season", "attach_to", "ambiguous", "step"]
+    CSV.open("tmp/duplicates.csv", "wb:UTF-8", col_sep: ";") do |csv|
+      csv << %w[id first_name last_name email age is_paying payers payees
+                is_student_for_season attach_to ambiguous step]
 
       dupl_emails.each do |email|
         next unless email.present?
@@ -35,35 +36,31 @@ class FamiliesCsvExporter
             user[:email],
             user[:age],
             user[:is_paying],
-            user[:payers]&.join(','),
-            user[:payees]&.join(','),
+            user[:payers]&.join(","),
+            user[:payees]&.join(","),
             user[:is_student_for_season],
-            user[:attach_to]&.join(','),
+            user[:attach_to]&.join(","),
             user[:ambiguous],
             user[:step]
           ]
         end
-
       end
-
     end
-
   end
 
   def pass2
-
     users = User.all
     families = []
 
-    CSV.open("tmp/families.csv", "wb:UTF-8", col_sep: ';') do |csv|
-      csv << ["family_id", "id", "first_name", "last_name", "email", "age", "is_paying", "payers", "legal_referents", "payees", "is_student_for_season", "attach_to", "ambiguous", "step"]
+    CSV.open("tmp/families.csv", "wb:UTF-8", col_sep: ";") do |csv|
+      csv << %w[family_id id first_name last_name email age is_paying payers legal_referents
+                payees is_student_for_season attach_to ambiguous step]
 
       users.find_each do |user|
-
         # pour chaque user, trouver "sa" famille
         family = user.whole_family
         # derive a unique value for this family from the ids of each member
-        family_id = "--" + family.map(&:id).sort.join('-') + "--"
+        family_id = "--" + family.map(&:id).sort.join("-") + "--"
         # if we've already processed this family, skip it
         next if families.include?(family_id)
 
@@ -79,10 +76,8 @@ class FamiliesCsvExporter
         guess_main_account_for_family users_list
 
         output_family_to_csv(csv, family_id, users_list)
-
       end
     end
-
   end
 
   private
@@ -94,19 +89,19 @@ class FamiliesCsvExporter
     # Ligne de synthèse
     csv << [
       family_id,
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
       has_student_for_season,
-      '',
+      "",
       ambiguous,
-      ''
+      ""
     ]
 
     # Lignes des utilisateurs
@@ -119,11 +114,11 @@ class FamiliesCsvExporter
         user[:email],
         user[:age],
         user[:is_paying],
-        user[:payers]&.join(','),
-        user[:legal_referents]&.join(','),
-        user[:payees]&.join(','),
+        user[:payers]&.join(","),
+        user[:legal_referents]&.join(","),
+        user[:payees]&.join(","),
         user[:is_student_for_season],
-        user[:attach_to]&.join(','),
+        user[:attach_to]&.join(","),
         ambiguous,
         2
       ]
@@ -154,17 +149,17 @@ class FamiliesCsvExporter
   def guess_main_account_for_family(users_list)
     # lister les payeurs de la famille
     payers = users_list
-               .map { |user| user[:payers] }
-               .flatten
-               .compact
-               .uniq
+             .map { |user| user[:payers] }
+             .flatten
+             .compact
+             .uniq
 
     # lister les responsables légaux de la famille
     legal_referents = users_list
-                        .map { |user| user[:legal_referents] }
-                        .flatten
-                        .compact
-                        .uniq
+                      .map { |user| user[:legal_referents] }
+                      .flatten
+                      .compact
+                      .uniq
 
     # les comptes de rattachement potentiels sont, avant tout, les payeurs
     # s'il n'y a pas de payeur, on prend les responsables légaux
@@ -179,10 +174,10 @@ class FamiliesCsvExporter
   end
 
   def find_duplicate_emails(activities_ids = nil)
-    users = User.all
+    User.all
 
-    if activities_ids.present?
-      sql = <<-SQL
+    sql = if activities_ids.present?
+            <<-SQL
           SELECT email
           FROM users
           where id in (select distinct user_id
@@ -191,20 +186,20 @@ class FamiliesCsvExporter
                              (#{activities_ids.join(',')}))
           GROUP BY email
           HAVING count(email) > 1
-      SQL
+            SQL
 
-    else
-      sql = <<-SQL
+          else
+            <<-SQL
           SELECT email
           FROM users
           GROUP BY email
           HAVING count(email) > 1
-      SQL
-    end
+            SQL
+          end
 
     ActiveRecord::Base.connection
                       .execute(sql)
-                      .pluck 'email'
+                      .pluck "email"
   end
 
   def guess_main_account_for_dupl_email(users_list)
@@ -213,11 +208,11 @@ class FamiliesCsvExporter
     # qui est un payeur
     # s'il y a plusieurs payeurs, on ne prend pas de décision
     payers = users_list
-               .select { |user| user[:payees].present? }
-               .map { |user| user[:id] }
-               .flatten
-               .compact
-               .uniq
+             .select { |user| user[:payees].present? }
+             .map { |user| user[:id] }
+             .flatten
+             .compact
+             .uniq
 
     users_list.each do |user|
       user[:attach_to] = payers
@@ -230,7 +225,7 @@ class FamiliesCsvExporter
     main_accounts = []
 
     # 1ere etape : pour chaque utilisateur, on liste ses payeurs et ses bénéficiaires
-    users_list = users.map { |user|
+    users_list = users.map do |user|
       payers = user.get_users_paying_for_self(@season).pluck(:id)
       payees = user.get_users_self_is_paying_for(@season).pluck(:id)
 
@@ -248,7 +243,7 @@ class FamiliesCsvExporter
         is_student_for_season: Student.where(user_id: user.id, activity_id: @activities_ids).exists?,
         step: step
       }
-    }
+    end
 
     # 2eme etape : on devine le compte principal
     guess_main_account_for_dupl_email users_list
@@ -259,6 +254,5 @@ class FamiliesCsvExporter
     # Rattacher les inscrits au payeur s'il n'y en a qu'un seul ; sinon, proposer les 2 au CEM
     # Si pas de payeur, l’indiquer (c’est sans doute un auto-payeur)
     # Pour les utilisateurs non-inscrits en 2023 et non payeurs en 2023 : même méthode
-
   end
 end

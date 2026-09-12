@@ -10,8 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_08_25_203427) do
-
+ActiveRecord::Schema.define(version: 20_260_825_203_427) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -22,7 +21,8 @@ ActiveRecord::Schema.define(version: 2026_08_25_203427) do
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
     t.index ["blob_id"], name: "index_active_storage_attachments_on_blob_id"
-    t.index ["record_type", "record_id", "name", "blob_id"], name: "index_active_storage_attachments_uniqueness", unique: true
+    t.index %w[record_type record_id name blob_id], name: "index_active_storage_attachments_uniqueness",
+                                                    unique: true
   end
 
   create_table "active_storage_blobs", force: :cascade do |t|
@@ -40,7 +40,7 @@ ActiveRecord::Schema.define(version: 2026_08_25_203427) do
   create_table "active_storage_variant_records", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.string "variation_digest", null: false
-    t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
+    t.index %w[blob_id variation_digest], name: "index_active_storage_variant_records_uniqueness", unique: true
   end
 
   create_table "activities", force: :cascade do |t|
@@ -364,8 +364,9 @@ ActiveRecord::Schema.define(version: 2026_08_25_203427) do
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
     t.index ["coupon_id"], name: "index_discounts_on_coupon_id"
-    t.index ["discountable_type", "discountable_id"], name: "index_discounts_on_discountable"
-    t.index ["discountable_type", "discountable_id"], name: "index_discounts_on_discountable_type_and_discountable_id", unique: true
+    t.index %w[discountable_type discountable_id], name: "index_discounts_on_discountable"
+    t.index %w[discountable_type discountable_id], name: "index_discounts_on_discountable_type_and_discountable_id",
+                                                   unique: true
   end
 
   create_table "due_payment_statuses", force: :cascade do |t|
@@ -464,8 +465,8 @@ ActiveRecord::Schema.define(version: 2026_08_25_203427) do
     t.uuid "event_id", null: false
     t.datetime "created_at", precision: 6, null: false
     t.index ["created_at"], name: "index_event_store_events_in_streams_on_created_at"
-    t.index ["stream", "event_id"], name: "index_event_store_events_in_streams_on_stream_and_event_id", unique: true
-    t.index ["stream", "position"], name: "index_event_store_events_in_streams_on_stream_and_position", unique: true
+    t.index %w[stream event_id], name: "index_event_store_events_in_streams_on_stream_and_event_id", unique: true
+    t.index %w[stream position], name: "index_event_store_events_in_streams_on_stream_and_position", unique: true
   end
 
   create_table "event_subscriptions", force: :cascade do |t|
@@ -543,7 +544,7 @@ ActiveRecord::Schema.define(version: 2026_08_25_203427) do
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
     t.index ["formule_id"], name: "index_formule_items_on_formule_id"
-    t.index ["item_type", "item_id"], name: "index_formule_items_on_item"
+    t.index %w[item_type item_id], name: "index_formule_items_on_item"
   end
 
   create_table "formule_pricings", force: :cascade do |t|
@@ -581,7 +582,7 @@ ActiveRecord::Schema.define(version: 2026_08_25_203427) do
     t.index ["season_id"], name: "index_holidays_on_season_id"
   end
 
-  create_table "hours_sheets", primary_key: ["user_id", "year", "month"], force: :cascade do |t|
+  create_table "hours_sheets", primary_key: %w[user_id year month], force: :cascade do |t|
     t.bigint "user_id", null: false
     t.integer "year", null: false
     t.integer "month", null: false
@@ -622,7 +623,8 @@ ActiveRecord::Schema.define(version: 2026_08_25_203427) do
     t.float "prix"
   end
 
-  create_table "max_activity_ref_price_for_seasons", primary_key: ["season_id", "target_id", "target_type"], force: :cascade do |t|
+  create_table "max_activity_ref_price_for_seasons", primary_key: %w[season_id target_id target_type],
+                                                     force: :cascade do |t|
     t.bigint "season_id", null: false
     t.string "target_type", null: false
     t.bigint "target_id", null: false
@@ -630,7 +632,7 @@ ActiveRecord::Schema.define(version: 2026_08_25_203427) do
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
     t.index ["season_id"], name: "index_max_activity_ref_price_for_seasons_on_season_id"
-    t.index ["target_type", "target_id"], name: "index_max_activity_ref_price_for_seasons_on_target"
+    t.index %w[target_type target_id], name: "index_max_activity_ref_price_for_seasons_on_target"
   end
 
   create_table "message_recipients", force: :cascade do |t|
@@ -1134,7 +1136,7 @@ ActiveRecord::Schema.define(version: 2026_08_25_203427) do
     t.boolean "is_pack", default: false
     t.text "remarks"
     t.index ["id"], name: "index_student_attendances_on_id"
-    t.index ["user_id", "activity_instance_id"], name: "index_student_attendances_on_user_id_and_activity_instance_id"
+    t.index %w[user_id activity_instance_id], name: "index_student_attendances_on_user_id_and_activity_instance_id"
   end
 
   create_table "student_evaluations", force: :cascade do |t|
@@ -1160,7 +1162,7 @@ ActiveRecord::Schema.define(version: 2026_08_25_203427) do
   create_table "teacher_seasons", force: :cascade do |t|
     t.bigint "season_id", null: false
     t.bigint "user_id", null: false
-    t.index ["season_id", "user_id"], name: "index_teacher_seasons_on_season_id_and_user_id"
+    t.index %w[season_id user_id], name: "index_teacher_seasons_on_season_id_and_user_id"
   end
 
   create_table "teachers_activities", id: false, force: :cascade do |t|
@@ -1284,7 +1286,7 @@ ActiveRecord::Schema.define(version: 2026_08_25_203427) do
     t.index ["authentication_token"], name: "index_users_on_authentication_token", unique: true
     t.index ["confirmation_token"], name: "index_users_on_confirmation_token", unique: true
     t.index ["deleted_at"], name: "index_users_on_deleted_at"
-    t.index ["email", "adherent_number"], name: "index_users_on_email_and_adherent_number", unique: true
+    t.index %w[email adherent_number], name: "index_users_on_email_and_adherent_number", unique: true
     t.index ["email"], name: "index_users_on_email"
     t.index ["evaluation_level_ref_id"], name: "index_users_on_evaluation_level_ref_id"
     t.index ["identification_number"], name: "index_users_on_identification_number", unique: true

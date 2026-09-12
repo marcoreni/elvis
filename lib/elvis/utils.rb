@@ -10,5 +10,4 @@ public def capture_stdout
   $stdout.string
 ensure
   $stdout = original_stdout
-  ""
 end

@@ -76,7 +76,6 @@ gem "rails_performance"
 gem "redis-namespace"
 gem "stackprof" # For call-stack profiling flamegraphs
 
-
 group :development, :test do
   # Call "byebug" anywhere in the code to stop execution and get a debugger console
   gem "byebug", platforms: %i[mri windows]
@@ -128,7 +127,6 @@ gem "translate_enum"
 gem "whenever"
 
 PluginGemUtils.get_plugins_to_install(include_libraries: true).each do |plugin|
-
   if plugin.is_from_tag?
     gem plugin.name, git: plugin.full_url, tag: plugin.tag
   else

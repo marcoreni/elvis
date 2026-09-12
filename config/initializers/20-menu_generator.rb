@@ -12,13 +12,13 @@ module MenuGenerator
         :plugins,
         "plugins",
         "index",
-        { caption: :"menu.plugins", icon:"fa-puzzle-piece", user_role:"admin", position: 8 }
+        { caption: :"menu.plugins", icon: "fa-puzzle-piece", user_role: "admin", position: 8 }
       )
 
       Elvis::MenuManager.insert_menu_item :side_menu, parent_menu
     end
 
-    #admin menu
+    # admin menu
 
     users = Elvis::MenuManager::MenuItem.new(
       :users,
@@ -34,36 +34,36 @@ module MenuGenerator
       { caption: :"menu.inscriptions", icon: "fa-file-alt", user_role: "admin", position: 1 }
     )
     inscriptions.add(Elvis::MenuManager::MenuItem.new(
-      :adherents,
-      "adhesion",
-      "index",
-      { caption: :"menu.adhesions" }
-    ))
+                       :adherents,
+                       "adhesion",
+                       "index",
+                       { caption: :"menu.adhesions" }
+                     ))
     inscriptions.add(Elvis::MenuManager::MenuItem.new(
-      :activities_applications,
-      "activities_applications",
-      "index",
-      { caption: :"menu.applications" }
-    ))
+                       :activities_applications,
+                       "activities_applications",
+                       "index",
+                       { caption: :"menu.applications" }
+                     ))
 
     inscriptions.add(Elvis::MenuManager::MenuItem.new(
-      :monitor_students,
-      "packs",
-      "index",
-      { caption: :"menu.packs", icon: "fa-user-graduate", user_role: "admin" }
-    ))
+                       :monitor_students,
+                       "packs",
+                       "index",
+                       { caption: :"menu.packs", icon: "fa-user-graduate", user_role: "admin" }
+                     ))
     inscriptions.add(Elvis::MenuManager::MenuItem.new(
-      :new_activities_applications,
-      "activities_applications",
-      "new",
-      { caption: :"menu.new_application" }
-    ))
+                       :new_activities_applications,
+                       "activities_applications",
+                       "new",
+                       { caption: :"menu.new_application" }
+                     ))
     inscriptions.add(Elvis::MenuManager::MenuItem.new(
-      :status_activities_applications,
-      "parameters/activity_application_parameters",
-      "index",
-      { caption: :"menu.params" }
-    ))
+                       :status_activities_applications,
+                       "parameters/activity_application_parameters",
+                       "index",
+                       { caption: :"menu.params" }
+                     ))
 
     plannings = Elvis::MenuManager::MenuItem.new(
       :plannings,
@@ -85,43 +85,42 @@ module MenuGenerator
 
     #----------------------------------------------------------------------------------------
 
-
     plannings.add(Elvis::MenuManager::MenuItem.new(
-      :seasons,
-      "seasons",
-      "index",
-      { caption: :"menu.seasons" }
-    ))
+                    :seasons,
+                    "seasons",
+                    "index",
+                    { caption: :"menu.seasons" }
+                  ))
     plannings.add(Elvis::MenuManager::MenuItem.new(
-      :activity,
-      "activity",
-      "index",
-      { caption: :"menu.courses_list" }
-    ))
+                    :activity,
+                    "activity",
+                    "index",
+                    { caption: :"menu.courses_list" }
+                  ))
     plannings.add(Elvis::MenuManager::MenuItem.new(
-      :planning_teachers,
-      "planning",
-      "index_for_teachers",
-      { caption: :"menu.planning_teachers" }
-    ))
+                    :planning_teachers,
+                    "planning",
+                    "index_for_teachers",
+                    { caption: :"menu.planning_teachers" }
+                  ))
     plannings.add(Elvis::MenuManager::MenuItem.new(
-      :planning_rooms,
-      "planning",
-      "index_for_rooms",
-      { caption: :"menu.planning_rooms" }
-    ))
+                    :planning_rooms,
+                    "planning",
+                    "index_for_rooms",
+                    { caption: :"menu.planning_rooms" }
+                  ))
     plannings.add(Elvis::MenuManager::MenuItem.new(
-      :scripts,
-      "scripts",
-      "replicate_week_activities",
-      { caption: :"menu.replicate_courses" }
-    ))
+                    :scripts,
+                    "scripts",
+                    "replicate_week_activities",
+                    { caption: :"menu.replicate_courses" }
+                  ))
     plannings.add(Elvis::MenuManager::MenuItem.new(
-      :planning_parameters,
-      "parameters/planning_parameters",
-      "index",
-      { caption: :"menu.params" }
-    ))
+                    :planning_parameters,
+                    "parameters/planning_parameters",
+                    "index",
+                    { caption: :"menu.params" }
+                  ))
 
     monitoring = Elvis::MenuManager::MenuItem.new(
       :monitoring,
@@ -130,11 +129,11 @@ module MenuGenerator
       { caption: :"menu.monitoring", icon: "fa-clipboard-list", user_role: "admin", position: 2.5 }
     )
     monitoring.add(Elvis::MenuManager::MenuItem.new(
-      :absences,
-      "absences",
-      "index",
-      { caption: :"menu.absences" }
-    ))
+                     :absences,
+                     "absences",
+                     "index",
+                     { caption: :"menu.absences" }
+                   ))
 
     payments = Elvis::MenuManager::MenuItem.new(
       :payments,
@@ -143,17 +142,17 @@ module MenuGenerator
       { caption: :"menu.payments", icon: "fa-euro-sign", user_role: "admin", position: 3 }
     )
     payments.add(Elvis::MenuManager::MenuItem.new(
-      :payment,
-      "payments",
-      "index",
-      { caption: :"menu.payments" }
-    ))
+                   :payment,
+                   "payments",
+                   "index",
+                   { caption: :"menu.payments" }
+                 ))
     payments.add(Elvis::MenuManager::MenuItem.new(
-      :payments_parameters,
-      "parameters/payments_parameters",
-      "index",
-      { caption: :"menu.params" }
-    ))
+                   :payments_parameters,
+                   "parameters/payments_parameters",
+                   "index",
+                   { caption: :"menu.params" }
+                 ))
 
     locations = Elvis::MenuManager::MenuItem.new(
       :rooms,
@@ -169,31 +168,31 @@ module MenuGenerator
       { caption: :"menu.activities", icon: "fa-music", user_role: "admin", position: 5 }
     )
     activities.add(Elvis::MenuManager::MenuItem.new(
-      :activity_ref_kind,
-      "activity_ref_kind",
-      "index",
-      { caption: :"menu.activity_families" }
-    ))
+                     :activity_ref_kind,
+                     "activity_ref_kind",
+                     "index",
+                     { caption: :"menu.activity_families" }
+                   ))
     activities.add(Elvis::MenuManager::MenuItem.new(
-      :instruments,
-      "instruments",
-      "index",
-      { caption: :"menu.instruments" }
-    ))
+                     :instruments,
+                     "instruments",
+                     "index",
+                     { caption: :"menu.instruments" }
+                   ))
     activities.add(Elvis::MenuManager::MenuItem.new(
-      :activity_ref,
-      "activity_ref",
-      "index",
-      { caption: :"menu.activity_refs" }
-    ))
-    show_formules = Parameter.find_by(label: 'activity.show_formules')&.value == 'true'
+                     :activity_ref,
+                     "activity_ref",
+                     "index",
+                     { caption: :"menu.activity_refs" }
+                   ))
+    show_formules = Parameter.find_by(label: "activity.show_formules")&.value == "true"
     if show_formules
       activities.add(Elvis::MenuManager::MenuItem.new(
-        :formule,
-        "formules",
-        "index",
-        { caption: :"menu.formulas" }
-      ))
+                       :formule,
+                       "formules",
+                       "index",
+                       { caption: :"menu.formulas" }
+                     ))
     end
 
     evaluations = Elvis::MenuManager::MenuItem.new(
@@ -203,29 +202,29 @@ module MenuGenerator
       { caption: :"menu.evaluations", icon: "fa-graduation-cap", user_role: "admin", position: 6 }
     )
     evaluations.add(Elvis::MenuManager::MenuItem.new(
-      :student_evaluations_stats,
-      "student_evaluations_stats",
-      "stats",
-      { caption: :"menu.evaluations_summary" }
-    ))
+                      :student_evaluations_stats,
+                      "student_evaluations_stats",
+                      "stats",
+                      { caption: :"menu.evaluations_summary" }
+                    ))
     evaluations.add(Elvis::MenuManager::MenuItem.new(
-      :evaluation_appointments,
-      "evaluation_appointments",
-      "index",
-      { caption: :"menu.evaluations_management" }
-    ))
+                      :evaluation_appointments,
+                      "evaluation_appointments",
+                      "index",
+                      { caption: :"menu.evaluations_management" }
+                    ))
     evaluations.add(Elvis::MenuManager::MenuItem.new(
-      :evaluation_appointments_incomplete,
-      "evaluation_appointments",
-      "incomplete",
-      { caption: :"menu.students_without_slots" }
-    ))
+                      :evaluation_appointments_incomplete,
+                      "evaluation_appointments",
+                      "incomplete",
+                      { caption: :"menu.students_without_slots" }
+                    ))
     evaluations.add(Elvis::MenuManager::MenuItem.new(
-      :evaluation_parameters,
-      "parameters/evaluation_parameters",
-      "index",
-      { caption: :"menu.params" }
-    ))
+                      :evaluation_parameters,
+                      "parameters/evaluation_parameters",
+                      "index",
+                      { caption: :"menu.params" }
+                    ))
 
     parameters = Elvis::MenuManager::MenuItem.new(
       :parameters,
@@ -233,7 +232,6 @@ module MenuGenerator
       "index",
       { caption: :"menu.parameters", icon: "fa-cog", user_role: "admin", position: 10 }
     )
-
 
     Elvis::MenuManager.insert_menu_item :side_menu, users
     Elvis::MenuManager.insert_menu_item :side_menu, inscriptions
@@ -245,7 +243,7 @@ module MenuGenerator
     Elvis::MenuManager.insert_menu_item :side_menu, evaluations
     Elvis::MenuManager.insert_menu_item :side_menu, parameters
 
-    #teacher menu
+    # teacher menu
     planning = Elvis::MenuManager::MenuItem.new(
       :planning,
       "planning",
@@ -285,7 +283,6 @@ module MenuGenerator
       { id: current_user&.id }
     end
 
-
     planning_simulation = Elvis::MenuManager::MenuItem.new(
       :planning_simulation,
       "users",
@@ -302,14 +299,17 @@ module MenuGenerator
       { caption: :"menu.courses_list", icon: "fa-list", user_role: "!!teacher", position: 6 }
     )
 
-
     Elvis::MenuManager.prepend_menu_item :side_menu, planning
-    Elvis::MenuManager.prepend_menu_item :side_menu, teacher_inscriptions if Parameter.get_value("activity_applications.authorize_teachers", default: false)
+    Elvis::MenuManager.prepend_menu_item :side_menu, teacher_inscriptions if Parameter.get_value(
+      "activity_applications.authorize_teachers", default: false
+    )
     Elvis::MenuManager.prepend_menu_item :side_menu, attendences
     Elvis::MenuManager.prepend_menu_item :side_menu, disponibility
     Elvis::MenuManager.prepend_menu_item :side_menu, evaluation
     Elvis::MenuManager.prepend_menu_item :side_menu, planning_simulation
-    Elvis::MenuManager.prepend_menu_item :side_menu, teacher_courses if Parameter.get_value("teachers.teacher_can_manage_courses", default: false)
+    Elvis::MenuManager.prepend_menu_item :side_menu, teacher_courses if Parameter.get_value(
+      "teachers.teacher_can_manage_courses", default: false
+    )
 
     # User menu
 
@@ -317,8 +317,8 @@ module MenuGenerator
       :user_homepage,
       "my_activities",
       "show",
-      { caption: :"menu.home", icon: "fa-home", user_role: "simple", position: 1 },
-      ) do
+      { caption: :"menu.home", icon: "fa-home", user_role: "simple", position: 1 }
+    ) do
       { id: current_user&.id }
     end
 
@@ -326,8 +326,8 @@ module MenuGenerator
       :user_applications,
       "users",
       "new_application",
-      { caption: :"menu.my_applications", icon: "fa-table", user_role: "simple", position: 2 },
-      ) do
+      { caption: :"menu.my_applications", icon: "fa-table", user_role: "simple", position: 2 }
+    ) do
       { id: current_user&.id }
     end
 
@@ -358,14 +358,12 @@ module MenuGenerator
       :disconnect,
       "sessions",
       "destroy",
-      { caption: :"menu.logout", icon:"fa-sign-out-alt", position: 100, a_options: { "data-method": "delete" } }
+      { caption: :"menu.logout", icon: "fa-sign-out-alt", position: 100, a_options: { "data-method": "delete" } }
     )
-
 
     Elvis::MenuManager.insert_menu_item :my_menu, my_profile
     Elvis::MenuManager.insert_menu_item :my_menu, divider
     Elvis::MenuManager.insert_menu_item :my_menu, disconnect
-
   end
 
   def self.regenerate_menus

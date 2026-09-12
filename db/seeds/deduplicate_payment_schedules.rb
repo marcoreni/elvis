@@ -1,7 +1,7 @@
-#Procédure rails de déduplication d'échéanciers:
-#Prendre tous les échéanciers en double(ou triple ou...) pour une même saison et un même utilisateur
-#Ne garder qu'un échéancier, en mettant les échéances et commentaires des autres dans celui qu'on garde.
-#Supprimer les autres échéanciers.
+# Procédure rails de déduplication d'échéanciers:
+# Prendre tous les échéanciers en double(ou triple ou...) pour une même saison et un même utilisateur
+# Ne garder qu'un échéancier, en mettant les échéances et commentaires des autres dans celui qu'on garde.
+# Supprimer les autres échéanciers.
 
 save = []
 keeps = []
@@ -11,15 +11,16 @@ due_payments = {}
 payments = {}
 
 PaymentSchedule.transaction do
-  PaymentSchedule.all.group_by { |s| [s.payable_id, s.payable_type, s.season_id] }.select { |k, v| !k.include?("Contact") && v.count > 1 }.each do |_k, v|
-
+  PaymentSchedule.all.group_by do |s|
+    [s.payable_id, s.payable_type, s.season_id]
+  end.select { |k, v| !k.include?("Contact") && v.count > 1 }.each do |_k, v|
     to_keep = v.max_by do |ps|
       a = ps.due_payments.max_by(&:updated_at)&.updated_at
 
       if a.nil?
         ps.updated_at
       else
-       [ps.updated_at, a].max
+        [ps.updated_at, a].max
       end
     end
 
@@ -33,7 +34,6 @@ PaymentSchedule.transaction do
 
       due_payments[td.id] = td.due_payments
       td.due_payments&.each { |d| payments[d.id] = d.payments }
-
     end
   end
 end

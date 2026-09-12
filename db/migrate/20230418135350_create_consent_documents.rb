@@ -4,7 +4,7 @@ class CreateConsentDocuments < ActiveRecord::Migration[6.1]
       t.string :title
       t.string :content
       t.string :attached_file
-      t.boolean :expected_answer  # true, false ou null
+      t.boolean :expected_answer # true, false ou null
 
       t.timestamps
     end

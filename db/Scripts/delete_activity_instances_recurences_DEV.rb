@@ -6,7 +6,8 @@
 s = Season.find 5
 activities = Activity.joins(:time_interval).where({ time_intervals: { start: s.start..s.end } })
 
-Activity.includes(:time_interval, teachers_activities: { teacher: { planning: :time_intervals } }, activity_instances: :time_interval, students: { user: { planning: :time_intervals } }).where(id: activities.ids).find_each(batch_size: 50) do |a|
+Activity.includes(:time_interval, teachers_activities: { teacher: { planning: :time_intervals } },
+                                  activity_instances: :time_interval, students: { user: { planning: :time_intervals } }).where(id: activities.ids).find_each(batch_size: 50) do |a|
   instances = a.activity_instances
   min_instance = instances.min { |ac, b| ac.time_interval.start <=> b.time_interval.start }
 
@@ -23,4 +24,3 @@ Activity.includes(:time_interval, teachers_activities: { teacher: { planning: :t
 
   instances.destroy_all
 end
-

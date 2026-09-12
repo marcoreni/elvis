@@ -1,8 +1,9 @@
 # frozen_string_literal: true
-sidekiq_redis_url = ENV['SIDEKIQ_REDIS_URL'] || ENV['REDIS_URL']
+
+sidekiq_redis_url = ENV["SIDEKIQ_REDIS_URL"] || ENV["REDIS_URL"]
 
 if ENV["USE_SIDEKIQ"] == "true" && !sidekiq_redis_url.nil?
-  require 'sidekiq/web'
+  require "sidekiq/web"
 
   redis_config = {
     url: sidekiq_redis_url
@@ -18,8 +19,8 @@ if ENV["USE_SIDEKIQ"] == "true" && !sidekiq_redis_url.nil?
 
   Rails.application.config.after_initialize do
     Rails.application.routes.draw do
-      authenticate :user, lambda { |u| u.admin? } do
-        mount Sidekiq::Web => '/sidekiq'
+      authenticate :user, ->(u) { u.admin? } do
+        mount Sidekiq::Web => "/sidekiq"
       end
     end
   end

@@ -19,10 +19,10 @@
 
 # Learn more: http://github.com/javan/whenever
 
-every 1.day, at: '4:30 am' do
-  rake 'elvis:clean_big_tables'
+every 1.day, at: "4:30 am" do
+  rake "elvis:clean_big_tables"
 end
 
-every 1.day, at: '7:30 am' do
-  rake 'elvis:fix_activities_ti'
+every 1.day, at: "7:30 am" do
+  rake "elvis:fix_activities_ti"
 end

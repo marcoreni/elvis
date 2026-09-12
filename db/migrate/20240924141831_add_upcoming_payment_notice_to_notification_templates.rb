@@ -22,18 +22,17 @@ class AddUpcomingPaymentNoticeToNotificationTemplates < ActiveRecord::Migration[
              "updated_at": Time.now,
              "name": "Notification de paiement à venir",
              "json": "{\"counters\":{\"u_column\":1,\"u_row\":1,\"u_content_heading\":1,\"u_content_text\":2,\"u_content_button\":1},\"body\":{\"id\":\"dJ8ZsnjcLr\",\"rows\":[{\"id\":\"J_gdJXVDBK\",\"cells\":[1],\"columns\":[{\"id\":\"gA3jy7m4bu\",\"contents\":[{\"id\":\"XWNzfmrFLN\",\"type\":\"heading\",\"values\":{\"containerPadding\":\"10px\",\"anchor\":\"\",\"headingType\":\"h3\",\"fontSize\":\"18px\",\"textAlign\":\"center\",\"lineHeight\":\"140%\",\"linkStyle\":{\"inherit\":true,\"linkColor\":\"#0000ee\",\"linkHoverColor\":\"#0000ee\",\"linkUnderline\":true,\"linkHoverUnderline\":true},\"hideDesktop\":false,\"displayCondition\":null,\"_meta\":{\"htmlID\":\"u_content_heading_1\",\"htmlClassNames\":\"u_content_heading\"},\"selectable\":true,\"draggable\":true,\"duplicatable\":true,\"deletable\":true,\"hideable\":true,\"text\":\"Bonjour,\"}},{\"id\":\"ZhGenL4StX\",\"type\":\"text\",\"values\":{\"containerPadding\":\"10px\",\"anchor\":\"\",\"fontSize\":\"16px\",\"textAlign\":\"center\",\"lineHeight\":\"250%\",\"linkStyle\":{\"inherit\":true,\"linkColor\":\"#0000ee\",\"linkHoverColor\":\"#0000ee\",\"linkUnderline\":true,\"linkHoverUnderline\":true},\"hideDesktop\":false,\"displayCondition\":null,\"_meta\":{\"htmlID\":\"u_content_text_1\",\"htmlClassNames\":\"u_content_text\"},\"selectable\":true,\"draggable\":true,\"duplicatable\":true,\"deletable\":true,\"hideable\":true,\"text\":\"\\u003cp style=\\\"line-height: 250%;\\\"\\u003eVous avez un paiement à venir de {{total_due}} € pour la {{season_label}}. Veuillez effectuer le paiement dès que possible.\\u003c/p\\u003e\"}},{\"id\":\"7mtKmzNxxA\",\"type\":\"button\",\"values\":{\"containerPadding\":\"10px\",\"anchor\":\"\",\"href\":{\"name\":\"web\",\"values\":{\"href\":\"\",\"target\":\"_blank\"}},\"buttonColors\":{\"color\":\"#000000\",\"backgroundColor\":\"#86d69e\",\"hoverColor\":\"#FFFFFF\",\"hoverBackgroundColor\":\"#3AAEE0\"},\"size\":{\"autoWidth\":true,\"width\":\"100%\"},\"fontSize\":\"14px\",\"textAlign\":\"center\",\"lineHeight\":\"120%\",\"padding\":\"7px\",\"border\":{},\"borderRadius\":\"4px\",\"hideDesktop\":false,\"displayCondition\":null,\"_meta\":{\"htmlID\":\"u_content_button_1\",\"htmlClassNames\":\"u_content_button\"},\"selectable\":true,\"draggable\":true,\"duplicatable\":true,\"deletable\":true,\"hideable\":true,\"text\":\"\\u003cstrong\\u003eEffectuer le paiement\\u003cbr /\\u003e\\u003c/strong\\u003e\",\"calculatedWidth\":141,\"calculatedHeight\":31}}],\"values\":{\"backgroundColor\":\"\",\"padding\":\"20px\",\"border\":{},\"_meta\":{\"htmlID\":\"u_column_1\",\"htmlClassNames\":\"u_column\"}}}],\"values\":{\"displayCondition\":null,\"columns\":false,\"backgroundColor\":\"\",\"columnsBackgroundColor\":\"#ffffff\",\"backgroundImage\":{\"url\":\"\",\"fullWidth\":true,\"repeat\":\"no-repeat\",\"size\":\"custom\",\"position\":\"center\"},\"padding\":\"0px\",\"anchor\":\"\",\"hideDesktop\":false,\"_meta\":{\"htmlID\":\"u_row_1\",\"htmlClassNames\":\"u_row\"},\"selectable\":true,\"draggable\":true,\"duplicatable\":true,\"deletable\":true,\"hideable\":true}}],\"headers\":[],\"footers\":[],\"values\":{\"popupPosition\":\"center\",\"popupWidth\":\"600px\",\"popupHeight\":\"auto\",\"borderRadius\":\"10px\",\"contentAlign\":\"center\",\"contentVerticalAlign\":\"center\",\"contentWidth\":\"500px\",\"fontFamily\":{\"label\":\"Arial\",\"value\":\"arial,helvetica,sans-serif\"},\"textColor\":\"#000000\",\"popupBackgroundColor\":\"#FFFFFF\",\"popupBackgroundImage\":{\"url\":\"\",\"fullWidth\":true,\"repeat\":\"no-repeat\",\"size\":\"cover\",\"position\":\"center\"},\"popupOverlay_backgroundColor\":\"rgba(0, 0, 0, 0.1)\",\"popupCloseButton_position\":\"top-right\",\"popupCloseButton_backgroundColor\":\"#DDDDDD\",\"popupCloseButton_iconColor\":\"#000000\",\"popupCloseButton_borderRadius\":\"0px\",\"popupCloseButton_margin\":\"0px\",\"popupCloseButton_action\":{\"name\":\"close_popup\",\"attrs\":{\"onClick\":\"document.querySelector('.u-popup-container').style.display = 'none';\"}},\"backgroundColor\":\"#e7e7e7\",\"backgroundImage\":{\"url\":\"\",\"fullWidth\":true,\"repeat\":\"no-repeat\",\"size\":\"custom\",\"position\":\"center\"},\"preheaderText\":\"\",\"linkStyle\":{\"body\":true,\"linkColor\":\"#0000ee\",\"linkHoverColor\":\"#0000ee\",\"linkUnderline\":true,\"linkHoverUnderline\":true},\"_meta\":{\"htmlID\":\"u_body\",\"htmlClassNames\":\"u_body\"}}},\"schemaVersion\":16}"
-           }
-    )
+           })
   end
 
-  def down
-  end
+  def down; end
 
   def upsert(data)
     notification_template = NotificationTemplate.find_or_initialize_by(
       {
         "path": data[:path]
-      })
+      }
+    )
 
     notification_template.assign_attributes({
                                               "body": data[:body],
@@ -44,9 +43,8 @@ class AddUpcomingPaymentNoticeToNotificationTemplates < ActiveRecord::Migration[
                                               "created_at": data[:created_at],
                                               "updated_at": data[:updated_at],
                                               "name": data[:name],
-                                              "json": data[:json],
-                                            }
-    )
+                                              "json": data[:json]
+                                            })
 
     notification_template.save!
   end

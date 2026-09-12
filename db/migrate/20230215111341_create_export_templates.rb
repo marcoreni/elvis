@@ -9,7 +9,6 @@ class CreateExportTemplates < ActiveRecord::Migration[6.1]
     end
 
     add_foreign_key :export_templates, :users
-
   end
 
   def self.down
@@ -17,4 +16,3 @@ class CreateExportTemplates < ActiveRecord::Migration[6.1]
     drop_table :export_templates
   end
 end
-

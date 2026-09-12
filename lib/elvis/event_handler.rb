@@ -1,9 +1,9 @@
 # frozen_string_literal: true
-require_relative 'event_group'
 
-#noinspection RubyClassVariableUsageInspection
+require_relative "event_group"
+
+# noinspection RubyClassVariableUsageInspection
 class EventHandler
-
   @@semaphore = Mutex.new
 
   # @return [EventGroup]

@@ -1,3 +1,3 @@
-require 'oj'
+require "oj"
 
-Oj.optimize_rails()
+Oj.optimize_rails

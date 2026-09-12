@@ -1,1 +1,1 @@
-Time::DATE_FORMATS[:french] = '%d/%m/%Y'
+Time::DATE_FORMATS[:french] = "%d/%m/%Y"

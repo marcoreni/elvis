@@ -26,9 +26,7 @@ module Elvis
       # Adds a listener class.
       # Automatically called when a class inherits from Redmine::Hook::Listener.
       def add_listener(klass)
-        unless klass.included_modules.include?(Singleton)
-          raise "Hooks must include Singleton module."
-        end
+        raise "Hooks must include Singleton module." unless klass.included_modules.include?(Singleton)
 
         @@listener_classes << klass
         clear_listeners_instances
@@ -36,12 +34,12 @@ module Elvis
 
       # Returns all the listener instances.
       def listeners
-        @@listeners ||= @@listener_classes.collect {|listener| listener.instance}
+        @@listeners ||= @@listener_classes.collect { |listener| listener.instance }
       end
 
       # Returns the listener instances for the given hook.
       def hook_listeners(hook)
-        @@hook_listeners[hook] ||= listeners.select {|listener| listener.respond_to?(hook)}
+        @@hook_listeners[hook] ||= listeners.select { |listener| listener.respond_to?(hook) }
       end
 
       # Clears all the listeners.
@@ -58,12 +56,10 @@ module Elvis
 
       # Calls a hook.
       # Returns the listeners response.
-      def call_hook(hook, context={})
+      def call_hook(hook, context = {})
         [].tap do |response|
           hls = hook_listeners(hook)
-          if hls.any?
-            hls.each {|listener| response << listener.send(hook, context)}
-          end
+          hls.each { |listener| response << listener.send(hook, context) } if hls.any?
         end
       end
     end
@@ -89,15 +85,15 @@ module Elvis
     # * hook_caller => object that called the hook
     #
     module Helper
-      def call_hook(hook, context={})
+      def call_hook(hook, context = {})
         if is_a?(ActionController::Base)
-          default_context = {:controller => self, :project => @project, :request => request, :hook_caller => self}
+          default_context = { controller: self, project: @project, request: request, hook_caller: self }
           Elvis::Hook.call_hook(hook, default_context.merge(context))
         else
-          default_context = {:project => @project, :hook_caller => self}
+          default_context = { project: @project, hook_caller: self }
           default_context[:controller] = controller if respond_to?(:controller)
           default_context[:request] = request if respond_to?(:request)
-          Elvis::Hook.call_hook(hook, default_context.merge(context)).join(' ').html_safe
+          Elvis::Hook.call_hook(hook, default_context.merge(context)).join(" ").html_safe
         end
       end
     end

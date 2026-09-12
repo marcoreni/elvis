@@ -30,8 +30,8 @@ Rails.application.configure do
 
   config.action_mailer.perform_caching = false
 
-  #config.action_mailer.delivery_method = :file
-  #config.action_mailer.file_settings = { location: Rails.root.join("tmp/mail") }
+  # config.action_mailer.delivery_method = :file
+  # config.action_mailer.file_settings = { location: Rails.root.join("tmp/mail") }
   config.action_mailer.delivery_method = :letter_opener
   config.action_mailer.perform_deliveries = true
 
@@ -68,18 +68,18 @@ Rails.application.configure do
 
   if ENV["USE_SIDEKIQ"]
     Sidekiq.configure_server do |config|
-      config.logger =  Logger.new(STDOUT)
+      config.logger = Logger.new(STDOUT)
     end
   end
 
   config.after_initialize do
     ENV["INSTANCE_NAME"] = "elvis-salsa"
-  #   Bullet.enable = true
-  #   Bullet.sentry = true
-  #   # Bullet.alert = true
-  #   Bullet.bullet_logger = true
-  #   Bullet.console = true
-  #   Bullet.rails_logger = true
-  #   Bullet.add_footer = true
+    #   Bullet.enable = true
+    #   Bullet.sentry = true
+    #   # Bullet.alert = true
+    #   Bullet.bullet_logger = true
+    #   Bullet.console = true
+    #   Bullet.rails_logger = true
+    #   Bullet.add_footer = true
   end
 end

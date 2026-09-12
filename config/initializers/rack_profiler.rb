@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-if Rails.env.development? || ENV['RACK_MINI_PROFILER'] == 'true'
+if Rails.env.development? || ENV["RACK_MINI_PROFILER"] == "true"
   require "rack-mini-profiler"
 
   # initialization is skipped so trigger it
@@ -8,9 +8,9 @@ if Rails.env.development? || ENV['RACK_MINI_PROFILER'] == 'true'
 
   unless Rails.env.development?
 
-    unless ENV['RACK_MINI_PROFILER_REDIS_URL'].nil?
+    unless ENV["RACK_MINI_PROFILER_REDIS_URL"].nil?
       Rack::MiniProfiler.config.storage_options = {
-        url: ENV['RACK_MINI_PROFILER_REDIS_URL'],
+        url: ENV["RACK_MINI_PROFILER_REDIS_URL"],
         ssl_params: { verify_mode: OpenSSL::SSL::VERIFY_NONE }
       }
       Rack::MiniProfiler.config.storage = Rack::MiniProfiler::RedisStore

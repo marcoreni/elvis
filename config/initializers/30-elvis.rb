@@ -20,7 +20,8 @@ Rails.application.config.after_initialize do
     end
 
     unless Parameter.find_by(label: "app.clean_big_tables.tables_to_clean")
-      Parameter.create(label: "app.clean_big_tables.tables_to_clean", value: "event_store_events,error_histories", value_type: "string")
+      Parameter.create(label: "app.clean_big_tables.tables_to_clean", value: "event_store_events,error_histories",
+                       value_type: "string")
     end
 
     unless Parameter.find_by(label: "app.cache.enabled")
@@ -34,10 +35,9 @@ Rails.application.config.after_initialize do
     unless Parameter.find_by(label: "app.cache.max_price.duration")
       Parameter.create(label: "app.cache.max_price.duration", value: "5.minutes", value_type: "duration")
     end
-  rescue ActiveRecord::NoDatabaseError => e
+  rescue ActiveRecord::NoDatabaseError
     # ignore this error for init script
   rescue StandardError => e
     pp e
   end
 end
-

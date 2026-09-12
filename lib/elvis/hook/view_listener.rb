@@ -38,7 +38,7 @@ module Elvis
       # change this default as needed
       #    def self.default_url_options
       # {:only_path => true, :script_name => Redmine::Utils.relative_url_root}
-      #end
+      # end
 
       # Helper method to directly render using the context,
       # render_options must be valid #render options.
@@ -57,11 +57,11 @@ module Elvis
         define_method hook do |context|
           render_options.map do |options|
             if context[:hook_caller].respond_to?(:render)
-              context[:hook_caller].send(:render, {:locals => context}.merge(options))
+              context[:hook_caller].send(:render, { locals: context }.merge(options))
             elsif context[:controller].is_a?(ActionController::Base)
-              context[:controller].send(:render_to_string, {:locals => context}.merge(options))
+              context[:controller].send(:render_to_string, { locals: context }.merge(options))
             else
-              raise "Cannot render #{self.name} hook from #{context[:hook_caller].class.name}"
+              raise "Cannot render #{name} hook from #{context[:hook_caller].class.name}"
             end
           end
         end

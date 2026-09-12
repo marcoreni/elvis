@@ -1,4 +1,4 @@
-s = Season.find(5) # cela correspond à la saison 2020-2022 sur la prod, à changer si besoin
+Season.find(5) # cela correspond à la saison 2020-2022 sur la prod, à changer si besoin
 
 vendredi15 = DateTime.parse "2021-10-15" # changer ces deux date pour les autres vacance si besoin
 samedi16 = DateTime.parse "2021-10-16T23:59" # mettre 23h59 car sinon ce n'est que les cours entre vendredi minuit et samedi minuit qui seront sélectionnés
@@ -13,7 +13,10 @@ activities.each do |instance|
   d = instance.time_interval.start + 1.week
   duration = instance.time_interval.end - instance.time_interval.start
 
-  if ActivityInstance.includes(:time_interval).joins(:time_interval).where(activity_id: a.id, time_intervals: { start: d, end: (d + duration) }).any?
+  if ActivityInstance.includes(:time_interval).joins(:time_interval).where(activity_id: a.id,
+                                                                           time_intervals: {
+                                                                             start: d, end: (d + duration)
+                                                                           }).any?
     next
   end
 

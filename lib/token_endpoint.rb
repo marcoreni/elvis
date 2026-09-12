@@ -1,5 +1,6 @@
 class TokenEndpoint
   attr_accessor :app
+
   delegate :call, to: :app
 
   def initialize
@@ -35,7 +36,7 @@ module Rack
       class Bearer < AccessToken
         def token_response(options = {})
           response = super
-          response[:token_type] = 'Bearer' # NOTE: ALB OIDC gateway currently cannot accept "bearer".
+          response[:token_type] = "Bearer" # NOTE: ALB OIDC gateway currently cannot accept "bearer".
           Rails.logger.info(response)
           response
         end

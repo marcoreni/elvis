@@ -18,7 +18,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 class ElvisPluginGenerator < Rails::Generators::NamedBase
-  source_root File.expand_path("../templates", __FILE__)
+  source_root File.expand_path("templates", __dir__)
 
   attr_reader :plugin_path, :plugin_name, :plugin_pretty_name
 
@@ -26,7 +26,7 @@ class ElvisPluginGenerator < Rails::Generators::NamedBase
     super
     @plugin_name = file_name.underscore
     @plugin_pretty_name = plugin_name.titleize
-    @plugin_path = Rails.root.join("plugins",plugin_name)
+    @plugin_path = Rails.root.join("plugins", plugin_name)
   end
 
   def copy_templates

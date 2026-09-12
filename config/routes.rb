@@ -10,7 +10,8 @@ Rails.application.routes.draw do
   get "/plugins", to: "plugins#index"
   post "/plugins", to: "plugins#changed"
 
-  match 'settings/:name', :controller => 'settings', :action => 'plugin', :via => [:get, :post], :as => 'plugin_settings'
+  match "settings/:name", controller: "settings", action: "plugin", via: %i[get post],
+                          as: "plugin_settings"
 
   # ===================
   # FIN PLUGINS
@@ -25,9 +26,12 @@ Rails.application.routes.draw do
     get "activity_application_parameters", to: "activity_application_parameters#index"
     post "activity_application_parameters/list_status", to: "activity_application_parameters#list_status"
 
-    get "activity_application_parameters/get_application_step_parameters/:parameter_label", to: "activity_application_parameters#get_application_step_parameters"
-    post "activity_application_parameters/change_activated_param", to: "activity_application_parameters#change_activated_param"
-    post "activity_application_parameters/change_display_text_param", to: "activity_application_parameters#change_display_text_param"
+    get "activity_application_parameters/get_application_step_parameters/:parameter_label",
+        to: "activity_application_parameters#get_application_step_parameters"
+    post "activity_application_parameters/change_activated_param",
+         to: "activity_application_parameters#change_activated_param"
+    post "activity_application_parameters/change_display_text_param",
+         to: "activity_application_parameters#change_display_text_param"
 
     get "community_parameters", to: "community_parameters#index"
 
@@ -108,7 +112,7 @@ Rails.application.routes.draw do
 
   resources :activities_applications, path: "inscriptions"
   post "/inscriptions/create_import_csv", to: "activities_applications#create_import_csv"
-  
+
   get "/get_activity_application_parameters", to: "activities_applications#get_activity_application_parameters"
   post "/set_activity_application_parameters", to: "activities_applications#set_activity_application_parameters"
 
@@ -123,7 +127,6 @@ Rails.application.routes.draw do
   # ==================
   post "/discounts/upsert", to: "discount#upsert"
   delete "/discounts", to: "discount#destroy"
-
 
   # =====================
   # HOURS SHEETS
@@ -144,7 +147,7 @@ Rails.application.routes.draw do
   # SEASONS
   #  =====================
   resources "seasons"
-  get "/seasons", to:"seasons#index"
+  get "/seasons", to: "seasons#index"
   get "season/weeks", to: "seasons#get_season_weeks"
   get "season/evaluation/weeks", to: "seasons#get_evaluation_weeks"
   get "/seasons/:id/available_evaluation_intervals/:activity_ref_id", to: "seasons#available_evaluation_intervals"
@@ -157,15 +160,17 @@ Rails.application.routes.draw do
   # SEARCH
   #  =====================
   post "omnisearch", to: "search#index"
-  #get "/recherche_avancee", to: "search#advanced_search", as: "advanced_search"
+  # get "/recherche_avancee", to: "search#advanced_search", as: "advanced_search"
   post "/advanced_query", to: "search#advanced_search_query"
   get "/indexation", to: "search#indexation"
 
   #  =====================
   # ACTIVITY APPLICATIONS
   #  =====================
-  get "/applications/:id/desired_activities/:des_id/suggestions", to: "activities_applications#find_activity_suggestions"
-  get '/desired_activities/user/:user_id/activity/:activity_id/ref/:activity_ref_id/time/:time_interval_id', to: 'desired_activity#find_by_user_and_activity'
+  get "/applications/:id/desired_activities/:des_id/suggestions",
+      to: "activities_applications#find_activity_suggestions"
+  get "/desired_activities/user/:user_id/activity/:activity_id/ref/:activity_ref_id/time/:time_interval_id",
+      to: "desired_activity#find_by_user_and_activity"
 
   # (pour élève/admin) pour un élève déjà inscrit et possédant une préinscription, renvoie vers le Wizard
   get "/inscriptions/new/:user_id/:pre_application_activity_id/:activity_ref_id(/:action_type)",
@@ -245,11 +250,11 @@ Rails.application.routes.draw do
   post "/users/:id/family_links_with_user", to: "users#get_family_links_with_user"
   post "/users/list", to: "users#list"
   get "/users/:user_id/family", to: "users#family"
-   # Utilisé pour peupler un select
+  # Utilisé pour peupler un select
   post "/users/simple_list", to: "users#simple_list"
   post "/users/:id/absences_list", to: "users#list_abscences"
   get "/users/:id/absences_summary", to: "users#absences_summary"
-  patch '/student_attendances/:id/update_remarks', to: 'student_attendances#update_remarks'
+  patch "/student_attendances/:id/update_remarks", to: "student_attendances#update_remarks"
 
   # Suivi des absences (vue globale)
   get "/absences", to: "absences#index"
@@ -328,8 +333,6 @@ Rails.application.routes.draw do
   delete "/due_payment/:id", to: "due_payment#destroy"
   get "/due_payments/export", to: "due_payment#export_selected"
   post "/due_payments/send_payment_mail", to: "due_payment#send_payment_mail"
-
-
 
   post "/payments/schedule", to: "payment_schedule#create"
   post "/schedule/:id/generate_payments", to: "due_payment#generate_payments"
@@ -457,7 +460,6 @@ Rails.application.routes.draw do
 
   get "/addCourse", to: "activity#add_course"
 
-
   # ==================
   # ADMIN
   # ==================
@@ -483,7 +485,7 @@ Rails.application.routes.draw do
   # ==================
   get "/evaluation_appointments/without_interval", to: "evaluation_appointments#without_interval"
   get "/evaluation_incomplete", to: "evaluation_appointments#incomplete",
-      as: :incomplete_evaluation_appointments
+                                as: :incomplete_evaluation_appointments
   resources :evaluation_appointments
 
   # ==================
@@ -496,7 +498,6 @@ Rails.application.routes.draw do
   # STUDENTS
   # ==================
   get "/students.pdf", to: "students#index"
-
 
   # ==================
   # STUDENT EVALUATIONS
@@ -546,7 +547,7 @@ Rails.application.routes.draw do
   post "scripts/replicate_activities/execute", to: "scripts#execute_replicate_activities"
   get "scripts/replicate_week_activities", to: "scripts#replicate_week_activities", as: :replicate_week_activities
   post "scripts/replicate_week_activities/execute", to: "scripts#execute_replicate_week_activities"
-  #get "scripts/job_status", to: "scripts#get_job_status"
+  # get "scripts/job_status", to: "scripts#get_job_status"
 
   get "/jobs/:id/status", to: "jobs#show_status"
 
@@ -558,7 +559,6 @@ Rails.application.routes.draw do
   post "/consent_documents/move_up", to: "consent_documents#move_up"
   post "/consent_documents/move_down", to: "consent_documents#move_down"
   post "/consent_documents/:id/has_consented", to: "consent_documents#has_consented"
-
 
   get "/parameters", to: "parameters#index"
   get "/parameters/school", to: "parameters#school_parameters_edit"
@@ -585,7 +585,6 @@ Rails.application.routes.draw do
   resources :events_rules
   post "/events_rules/list", to: "events_rules#list"
 
-
   # destroy generic route
   delete "/destroy/:classname/:id", to: "remove#destroy", as: "generic_destroy"
   delete "/destroy/:classname", to: "remove#destroy_multiple", as: "generic_destroy_multiple"
@@ -602,10 +601,9 @@ Rails.application.routes.draw do
   post "/payment_schedule_options/move_down", to: "payment_schedule_options#move_down"
 
   resources :organizations
-   post "/organizations/update_from_user", to: "organizations#update_from_user"
+  post "/organizations/update_from_user", to: "organizations#update_from_user"
 
-
-  resources :adhesion_prices, path: "adhesion-prices", only: [:destroy, :create, :update, :index]
+  resources :adhesion_prices, path: "adhesion-prices", only: %i[destroy create update index]
 
   # ==================
   # New payment user page
@@ -613,8 +611,10 @@ Rails.application.routes.draw do
 
   get "/users/:id/payments", to: "user_payments#show_for_user", as: :user_payments_for_user
   get "/users/:id/payments/data", to: "user_payments#get_data_for_season", as: :user_payments_data_for_season
-  get "/users/:id/paymentTerms", to: "user_payments#get_user_payment_terms_for_season", as: :user_payment_terms_for_season
-  post "/users/:id/paymentTerms", to: "user_payments#update_user_payment_terms_for_season", as: :update_user_payment_terms_for_season
+  get "/users/:id/paymentTerms", to: "user_payments#get_user_payment_terms_for_season",
+                                 as: :user_payment_terms_for_season
+  post "/users/:id/paymentTerms", to: "user_payments#update_user_payment_terms_for_season",
+                                  as: :update_user_payment_terms_for_season
 
   get "/school/get_zone_by_address", to: "school#get_zone_by_address"
 
@@ -628,7 +628,8 @@ Rails.application.routes.draw do
   get "/get_user_activities_data/my_activities/:user_id", to: "my_activities#get_own_and_possible_user_activities"
 
   get "/my_activities/:id/bookActivity/:activity_ref_id", to: "my_activities#show_bookings_and_availabilities"
-  get "/get_bookings_and_availabilities/my_activities/:user_id/bookActivity/:pack_id", to: "my_activities#get_bookings_and_availabilities"
+  get "/get_bookings_and_availabilities/my_activities/:user_id/bookActivity/:pack_id",
+      to: "my_activities#get_bookings_and_availabilities"
 
   get "/my_activities/:id/upcoming", to: "my_activities#show_upcoming_activities"
   get "/get_upcoming_activities/my_activities/:user_id/upcoming", to: "my_activities#get_upcoming_activities_for_user"
@@ -646,7 +647,8 @@ Rails.application.routes.draw do
 
   get "/activity_ref_pricing", to: "activity_ref_pricing#index"
   post "/activity_ref_pricings/list", to: "activity_ref_pricing#list"
-  get "/activity_ref_pricings/get_seasons_and_pricing_categories", to: "activity_ref_pricing#get_seasons_and_pricing_categories"
+  get "/activity_ref_pricings/get_seasons_and_pricing_categories",
+      to: "activity_ref_pricing#get_seasons_and_pricing_categories"
   post "/activity_ref_pricings/", to: "activity_ref_pricing#create"
   put "/activity_ref_pricings/:id", to: "activity_ref_pricing#update"
   delete "/activity_ref_pricings/:id", to: "activity_ref_pricing#destroy"
@@ -658,7 +660,6 @@ Rails.application.routes.draw do
   resources :formules
   patch "/formules/:id/archive", to: "formules#archive"
 
-  resources :formule_pricings, :path => "/formules/:formule_id/formule_pricings"
+  resources :formule_pricings, path: "/formules/:formule_id/formule_pricings"
   post "/formules/:formule_id/formule_pricings/list", to: "formule_pricings#list"
-
 end

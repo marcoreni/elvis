@@ -11,8 +11,8 @@ require "action_mailer/railtie"
 require "action_view/railtie"
 require "action_cable/engine"
 require "sprockets/railtie"
-require 'active_support/core_ext'
-require 'sidekiq/component'
+require "active_support/core_ext"
+require "sidekiq/component"
 require_relative "../lib/elvis/version"
 require_relative "../lib/elvis/supported_locales"
 # require "rails/test_unit/railtie"
@@ -21,8 +21,8 @@ require_relative "../lib/elvis/supported_locales"
 # you've limited to :test, :development, or :production.
 Bundler.require(*Rails.groups)
 
-class TrueClass; def to_i; 1 end end
-class FalseClass; def to_i; 0 end end
+class TrueClass; def to_i = 1 end
+class FalseClass; def to_i = 0 end
 
 module RailsStarter
   class Application < Rails::Application
@@ -40,11 +40,11 @@ module RailsStarter
     # Don't generate system test files.
     config.generators.system_tests = nil
     config.generators do |g|
-        g.test_framework false
-        g.stylesheets    false
-        g.javascripts    false
-        g.helper         false
-        g.channel        assets: false
+      g.test_framework false
+      g.stylesheets    false
+      g.javascripts    false
+      g.helper         false
+      g.channel        assets: false
     end
 
     config.time_zone = "Paris"
@@ -52,14 +52,12 @@ module RailsStarter
     config.i18n.default_locale = :fr
     config.i18n.available_locales = Elvis::SUPPORTED_LOCALES
 
-    # TODO env var
+    # TODO: env var
 
-    if Rails.env.kubernetes?
-      config.action_mailer.asset_host = "https://#{ENV['DOMAIN']}/"
-    else
-      config.action_mailer.asset_host = "http://localhost:7212/"
-    end
-
-
+    config.action_mailer.asset_host = if Rails.env.kubernetes?
+                                        "https://#{ENV['DOMAIN']}/"
+                                      else
+                                        "http://localhost:7212/"
+                                      end
   end
 end

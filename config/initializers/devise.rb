@@ -282,7 +282,7 @@ Devise.setup do |config|
 end
 
 Devise::TokenAuthenticatable.setup do |config|
-  config.token_expires_in = 1.day # default nil
+  config.token_expires_in = 1.day #  default nil
   config.token_authentication_key = :auth_token # default :auth_token
   # config.should_reset_authentication_token = false # default false
   config.should_ensure_authentication_token = true # default false
