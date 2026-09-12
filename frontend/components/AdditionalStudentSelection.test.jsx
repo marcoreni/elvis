@@ -25,6 +25,36 @@ describe("ChildSelection (AdditionalStudentSelection) — _.chain/_.map render w
         expect(screen.getByText(/Élève pour l'Éveil/)).toBeInTheDocument();
     });
 
+    test("numbers each additional student's label with a numeric index, not a string-concatenated one", () => {
+        // Regression test for the `key + 1` string-concat bug: `key` is the object key from
+        // `_.map(this.props.additionalStudents, ...)`, i.e. a string ("0", "1", ...). Without
+        // `parseInt(key, 10)`, `key + 1` string-concatenates ("0" + 1 => "01", "1" + 1 => "11")
+        // instead of incrementing numerically.
+        const props = {
+            family: [{ id: 1, first_name: "Jean", last_name: "Dupont" }],
+            additionalStudents: {
+                0: [null, 1],
+                1: [null, 1],
+            },
+            handleChangeAdditionalStudent: () => {},
+        };
+
+        render(<ChildSelection {...props} />);
+
+        expect(
+            screen.getByText("Élève pour l'Éveil n° 1")
+        ).toBeInTheDocument();
+        expect(
+            screen.getByText("Élève pour l'Éveil n° 2")
+        ).toBeInTheDocument();
+        expect(
+            screen.queryByText(/n° 01/)
+        ).not.toBeInTheDocument();
+        expect(
+            screen.queryByText(/n° 11/)
+        ).not.toBeInTheDocument();
+    });
+
     test("renders nothing extra when there are no additional students", () => {
         const props = {
             family: [{ id: 1, first_name: "Jean", last_name: "Dupont" }],
