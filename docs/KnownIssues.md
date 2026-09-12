@@ -336,10 +336,6 @@ Non-i18n code bugs still open, surfaced while extracting these files (none are l
   identical `seasonStart.label` access one line up is still unguarded and throws if `from_season_id`
   doesn't match any fetched season. Low reachability (`get_seasons_and_pricing_categories` returns
   every season); the asymmetry is the visible part.
-- **Server-side `active` filter is hardcoded French** — `pratice_parameters_controller.rb:86` (and
-  `:107` for features): `query.where(active: filter[:value] == "oui")`. An EN-locale admin filtering
-  the "active" column gets `active: false` for anything other than the literal string `"oui"`.
-  Fold into the controller-strings pass (roadmap Phase 07 P6).
 - **`icon:` / sweetalert2-v7** — under the pinned `sweetalert2 ^7`, `icon:` is an unknown param
   (no crash, just no icon styling; use `type:`). Open at: `editParameters/MailSettings.jsx:37,43`,
   `editParameters/CsvSettings.jsx:30,36`, `planning/ActivityDetailsModal.jsx:918`,
@@ -554,10 +550,6 @@ before any `{...props}` spread onto a DOM node.
 
 ## Pre-existing bugs surfaced during Phase 07 P2 (practice/rooms/locations extraction)
 
-- **`locations_controller.rb:75` sets `flash[:error]` to a bare String**, but `locations/index.html.erb:32`
-  does `flash[:error].each` (and `locations/_form.html.erb:2` `&.any?`) — a `NoMethodError` on the
-  destroy-blocked path. The P2 diff touched the surrounding block (the `<h3>` heading) but not this;
-  fix is to make the controller set an array, or the views handle a scalar.
 - **`app/views/rooms/{new,edit}.html.erb` still render hardcoded French inside `react_component`
   props** (`title: "Localisation"`, `title: "Activités"`, `title: 'Image'`). Deliberately left by
   P2 ("React-mount props untouched"); belongs with the `rooms/` React components in a later lot.
@@ -569,14 +561,6 @@ before any `{...props}` spread onto a DOM node.
 
 ## Pre-existing bugs surfaced during Phase 07 P4 (activity-catalogue + member-facing ERB)
 
-- **`app/views/activity_application_statuses/_activity_application_status_form.html.erb` label `for:`
-  targets are stale.** The `is_stopping` / `is_active` labels carry `for: "is_stopping"` /
-  `for: "is_active"`, but `f.check_box :is_stopping` / `:is_active` emit ids
-  `activity_application_status_is_stopping` / `..._is_active`, so clicking the label does not toggle
-  the box. Pre-existing (predates the P4 i18n pass, which only swapped the label text to
-  `f.label :attr` + `activerecord.attributes.activity_application_status.*` and left `for:`
-  untouched). Fix: drop the `for:` overrides so Rails auto-matches, or give the check boxes
-  `id: "is_stopping"` / `id: "is_active"`.
 - **Rails scaffold placeholder views still present** (English `<h1>Model#action</h1><p>Find me in ...</p>`
   stubs, no route reaching them for a real render): `activity/remove.html.erb`,
   `activity_instance/{delete,update}.html.erb`, `activity_ref/{create,update}.html.erb`,
@@ -673,13 +657,11 @@ before any `{...props}` spread onto a DOM node.
   (capture `I18n.locale` at enqueue time, pass it through as a job argument, wrap `perform` in
   `I18n.with_locale`) would apply to any future job that renders user-facing text, not just this one.
 
-## `ActivityAssignedMailer` / `ApplicationMailer#notify_new_application` file-based views call undefined `LiquidDrops::ApplicationDrop` methods
+## `ActivityAssignedMailer#activity_assigned`'s file-based view calls undefined `LiquidDrops::ActivityDrop` methods
 
-Found 2026-09-11 while adding a P6 mailer-subject checkpoint spec (`spec/mailers/i18n_p6_mailers_spec.rb`) — a fresh-test-DB run of either mailer's file-based view (no `NotificationTemplate` override present) raises `NoMethodError`. Pre-existing, not introduced by P6 (the offending calls were already there; P6 only wrapped the surrounding text in `t(...)`, see `git diff` on these views in commit `744d2c99`).
+Found 2026-09-12 while fixing/verifying the sibling `LiquidDrops::ApplicationDrop` bug (`user`/`season` accessors, now fixed — see `spec/mailers/application_drop_spec.rb` and `spec/mailers/application_mailer_notify_new_application_spec.rb`). `app/views/activity_assigned_mailer/activity_assigned.html.erb` also calls `@activity.activity_ref.label`, `@activity.time_interval.start`/`.end`, and `@activity.teachers.first.full_name` — but `@activity` is a `LiquidDrops::ActivityDrop` (`app/mailers/liquid_drops/activity_drop.rb`), which only defines flattened accessors (`label`, `activity_start`, `activity_end`, `teacher_first_name`, `teacher_last_name`, `room_label`, …), not `activity_ref`/`time_interval`/`teachers`. Any real render of this file-based view (no `NotificationTemplate` override present) raises `NoMethodError` on the first of these calls, independent of and in addition to the now-fixed `ApplicationDrop` issue.
 
-Both `ActivityAssignedMailer#activity_assigned` (`app/views/activity_assigned_mailer/activity_assigned.html.erb`) and `ApplicationMailer#notify_new_application` (`app/views/application_mailer/notify_new_application.html.erb` + the sibling `.mjml`) assign `@application = LiquidDrops::ApplicationDrop.new(application.as_json(...))`, then their views call `@application.user.first_name` / `@application.user.last_name` / `@application.season.label`. `LiquidDrops::ApplicationDrop` (`app/mailers/liquid_drops/application_drop.rb`) has no `user` or `season` method — only flattened accessors (`first_name`, `last_name`, `email`, `birthday`, `adherent_number`, `start`, …) that reach into the underlying `@application["user"]`/`["season"]` hash directly. Calling `.user` or `.season` on the drop raises `NoMethodError`.
-
-In production this is masked whenever a DB-stored `NotificationTemplate` row exists for the action (`prepend_view_path NotificationTemplate.resolver` on both mailers renders that instead of the `.html.erb`), so the bug likely hasn't been noticed — but any installation missing that template row would hard-fail sending the mail. Fix is either: add `user`/`season` drop accessors to `ApplicationDrop` (or dedicated sub-drops), or change the views to use the drop's existing flattened accessors (`@application.first_name`, `@application.last_name`, and add a `season_label`-style accessor for the season name). Left unfixed here — a behavior/robustness fix, out of scope for an i18n string-extraction pass.
+Same masking as the `ApplicationDrop` bug was: a DB-stored `NotificationTemplate` row for this mailer/action hides it in production. Fix would mirror the `ApplicationDrop` fix — either add `activity_ref`/`time_interval`/`teachers` accessors to `ActivityDrop` returning small drop objects, or change the view to use the existing flattened accessors (`@activity.label`, `@activity.activity_start`/`activity_end`, `@activity.teacher_first_name`/`teacher_last_name`). Not fixed here — found incidentally while verifying a different, already-scoped fix; left for a follow-up.
 
 ## `Parameter` cache leaks across test examples/processes via `FileStore`, causing nondeterministic spec failures
 
