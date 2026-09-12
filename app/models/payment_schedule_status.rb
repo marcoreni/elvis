@@ -9,10 +9,6 @@
 #
 
 class PaymentScheduleStatus < ApplicationRecord
-  def self.display_class_name(singular = true)
-    singular ? "statut d'échéancier" : "status d'échéancier"
-  end
-
   def self.class_name_gender
     :M
   end

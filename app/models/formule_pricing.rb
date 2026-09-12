@@ -16,10 +16,6 @@ class FormulePricing < ApplicationRecord
   validates :from_season_id, presence: true
   validates :pricing_category_id, presence: true
 
-  def self.display_class_name(singular = true)
-    singular ? "Tarif" : "Tarifs"
-  end
-
   def self.class_name_gender
     :M
   end

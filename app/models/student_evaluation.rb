@@ -18,10 +18,6 @@ class StudentEvaluation < ApplicationRecord
 
   has_many :answers, as: :answerable, dependent: :destroy
 
-  def self.display_class_name(singular = true)
-    singular ? "évaluation d'élève" : "évaluations d'élèves"
-  end
-
   def self.class_name_gender
     :F
   end

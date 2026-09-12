@@ -27,10 +27,6 @@ class DuePayment < ApplicationRecord
 
   accepts_nested_attributes_for :payment_method
 
-  def self.display_class_name(singular = true)
-    singular ? "échéance" : "échéances"
-  end
-
   def self.class_name_gender
     :F
   end

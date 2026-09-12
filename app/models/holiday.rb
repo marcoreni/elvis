@@ -14,10 +14,6 @@
 class Holiday < ApplicationRecord
   belongs_to :season
 
-  def self.display_class_name(singular = true)
-    singular ? "congé" : "congés"
-  end
-
   def self.class_name_gender
     :M
   end

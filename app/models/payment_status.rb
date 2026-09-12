@@ -42,10 +42,6 @@ class PaymentStatus < ApplicationRecord
   # réinitialise, si besoin, la séquence de l'ID pour permettre de créer des prochains objets en base
   reset_pk_sequence
 
-  def self.display_class_name(singular = true)
-    singular ? "statut de paiement" : "statut de paiement"
-  end
-
   def self.class_name_gender
     :M
   end

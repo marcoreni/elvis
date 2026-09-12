@@ -75,10 +75,6 @@ class ActivityApplication < ApplicationRecord
 
   belongs_to :formule, optional: true
 
-  def self.display_class_name(singular = true)
-    singular ? "demande d'inscription" : "demandes d'inscription"
-  end
-
   def self.class_name_gender
     :F
   end

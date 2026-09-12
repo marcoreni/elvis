@@ -18,10 +18,6 @@ class TimeIntervalPreference < ApplicationRecord
   belongs_to :activity_ref
   belongs_to :activity_application
 
-  def self.display_class_name(singular = false)
-    singular ? "préférence horaire" : "préférences horaires"
-  end
-
   def self.class_name_gender
     :F
   end

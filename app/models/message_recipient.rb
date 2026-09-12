@@ -13,10 +13,6 @@ class MessageRecipient < ApplicationRecord
   belongs_to :message
   belongs_to :recipient, class_name: :User, foreign_key: :user_id
 
-  def self.display_class_name(singular = true)
-    singular ? "destinataire de message" : "destinataire de messages"
-  end
-
   def self.class_name_gender
     :M
   end

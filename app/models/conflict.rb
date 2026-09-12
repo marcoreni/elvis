@@ -17,10 +17,6 @@ class Conflict < ApplicationRecord
 
   belongs_to :activity_instance
 
-  def self.display_class_name(singular = true)
-    singular ? "conflit" : "conflit"
-  end
-
   def self.class_name_gender
     :M
   end

@@ -49,10 +49,6 @@ class PaymentMethod < ApplicationRecord
   ActiveRecord::Base.connection.reset_pk_sequence!(table_name)
   # reset_pk_sequence
 
-  def self.display_class_name(singular = true)
-    singular ? "moyen de paiement" : "moyens de paiement"
-  end
-
   def self.class_name_gender
     :F
   end

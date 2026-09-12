@@ -29,10 +29,6 @@ class EvaluationAppointment < ApplicationRecord
   scope :incomplete, -> { where(student_id: nil, activity_application_id: nil) }
   scope :in_season, ->(season) { where(season_id: season.id) }
 
-  def self.display_class_name(singular = true)
-    singular ? "RDV d'évaluation" : "RDV d'évaluation"
-  end
-
   def self.class_name_gender
     :M
   end

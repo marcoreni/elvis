@@ -16,10 +16,6 @@ class TimeSlot < ApplicationRecord
     select(:id, :start, :is_validated, :end)
   }, class_name: "TimeInterval", required: false
 
-  def self.display_class_name(singular = true)
-    singular ? "créneau de planning" : "créneaux des plannings"
-  end
-
   def self.class_name_gender
     :M
   end

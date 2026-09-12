@@ -20,10 +20,6 @@ class PaymentScheduleOptions < ApplicationRecord
   has_many :payers, through: :payer_payment_terms
   belongs_to :pricing_category
 
-  def self.display_class_name(singular = true)
-    singular ? "option d'échéancier de paiement" : "options d'échéancier de paiement"
-  end
-
   def self.class_name_gender
     :F
   end

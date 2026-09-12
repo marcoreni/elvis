@@ -203,6 +203,276 @@ en:
                     attributes:
                         base:
                             duplicate: "Payment terms already exist for season %{season} and payer %{payer}: please update them"
+        # Human-readable model names for ApplicationRecord#display_class_name (see
+        # app/models/application_record.rb), resolved dynamically per model via
+        # `self.model_name.human(count:)` - see config/i18n-tasks.yml's ignore_unused note for
+        # activerecord.models.*. Each value moved here verbatim from the model's former
+        # `self.display_class_name` override (fix/remove-controller-display-class-name-i18n).
+        models:
+            activities_instrument:
+                one: course/instrument association
+                other: course/instrument associations
+            activity:
+                one: course
+                other: courses
+            activity_application:
+                one: registration request
+                other: registration requests
+            activity_application_status:
+                one: Registration status
+                other: Registration statuses
+            activity_instance:
+                one: class session
+                other: class sessions
+            activity_ref:
+                one: activity
+                other: activities
+            activity_ref_cycle:
+                one: activity sequence
+                other: activity sequences
+            activity_ref_kind:
+                one: activity family
+                other: activity families
+            activity_ref_pricing:
+                one: Rate
+                other: Rates
+            activity_refs_instrument:
+                one: activity/instrument association
+                other: activity/instrument associations
+            additional_student:
+                one: additional student
+                other: additional students
+            address:
+                one: address
+                other: addresses
+            adhesion:
+                one: membership
+                other: memberships
+            answer:
+                one: answer
+                other: answers
+            application_change_questionnaire:
+                one: registration change questionnaire
+                other: registration change questionnaires
+            band:
+                one: band
+                other: bands
+            band_type:
+                one: band type
+                other: band types
+            bands_user:
+                one: band member
+                other: band members
+            comment:
+                one: comment
+                other: comments
+            conflict:
+                one: conflict
+                other: conflicts
+            consent_document:
+                one: consent document
+                other: consent documents
+            desired_activity:
+                one: desired activity
+                other: desired activities
+            desired_time_interval:
+                one: desired time slot
+                other: desired time slots
+            due_payment:
+                one: due payment
+                other: due payments
+            due_payment_status:
+                one: due payment status
+                other: due payment statuses
+            evaluation_appointment:
+                one: evaluation appointment
+                other: evaluation appointments
+            evaluation_level_ref:
+                one: evaluation level reference
+                other: evaluation level references
+            event_rules:
+                one: EventRules
+                other: EventRules
+            event_subscription:
+                one: event subscription
+                other: event subscriptions
+            export_template:
+                one: export template
+                other: export templates
+            failed_payment_import:
+                one: payment import failure
+                other: payment import failures
+            failed_payment_import_reason:
+                one: payment import failure reason
+                other: payment import failure reasons
+            family_member_user:
+                one: family member
+                other: family members
+            flat_rate:
+                one: flat rate
+                other: flat rates
+            formule:
+                one: Package
+                other: Packages
+            formule_item:
+                one: Item
+                other: Items
+            formule_pricing:
+                one: Rate
+                other: Rates
+            holiday:
+                one: holiday
+                other: holidays
+            hours_sheet:
+                one: hours sheet
+                other: hours sheets
+            instrument:
+                one: instrument
+                other: instruments
+            level:
+                one: level
+                other: levels
+            location:
+                one: location
+                other: locations
+            material:
+                one: equipment
+                other: equipment
+            message:
+                one: message
+                other: messages
+            message_recipient:
+                one: message recipient
+                other: message recipients
+            music_genre:
+                one: music genre
+                other: music genres
+            new_student_level_questionnaire:
+                one: new student level questionnaire
+                other: new student level questionnaires
+            option:
+                one: option
+                other: options
+            pack:
+                one: Pack
+                other: Packs
+            payer_payment_terms:
+                one: payment terms for a payer
+                other: payment terms for payers
+            payment:
+                one: payment
+                other: payments
+            payment_method:
+                one: payment method
+                other: payment methods
+            payment_schedule:
+                one: payment schedule
+                other: payment schedules
+            payment_schedule_options:
+                one: payment schedule option
+                other: payment schedule options
+            payment_schedule_status:
+                one: payment schedule status
+                other: payment schedule statuses
+            payment_status:
+                one: payment status
+                other: payment statuses
+            planning:
+                one: Planning
+                other: Plannings
+            planning_conflict:
+                one: planning conflict
+                other: planning conflicts
+            plugin:
+                one: plugin
+                other: plugins
+            practice_room_parameter:
+                one: practice room parameter
+                other: practice room parameters
+            practice_room_planning:
+                one: practice room planning
+                other: practice room plannings
+            practice_session:
+                one: practice session
+                other: practice sessions
+            pre_application:
+                one: pre-registration
+                other: pre-registrations
+            pre_application_activity:
+                one: course assigned as part of a re-registration
+                other: courses assigned as part of a re-registration
+            pre_application_desired_activity:
+                one: desired course as part of a re-registration
+                other: desired courses as part of a re-registration
+            pricing_category:
+                one: Price category
+                other: Price categories
+            question:
+                one: question
+                other: questions
+            room:
+                one: room
+                other: rooms
+            room_activity:
+                one: activity/room association
+                other: activity/room associations
+            room_features:
+                one: room feature
+                other: room features
+            room_room_feature:
+                one: room/feature association
+                other: room/feature associations
+            school:
+                one: school
+                other: schools
+            season:
+                one: season
+                other: seasons
+            setting:
+                one: setting
+                other: settings
+            student:
+                one: student
+                other: students
+            student_attendance:
+                one: session registration
+                other: session registrations
+            student_evaluation:
+                one: student evaluation
+                other: student evaluations
+            teacher_season:
+                one: teacher/season association
+                other: teacher/season associations
+            teachers_activity:
+                one: teacher course
+                other: teacher courses
+            teachers_activity_instance:
+                one: teacher class session
+                other: teacher class sessions
+            teachers_activity_ref:
+                one: teacher activity
+                other: teacher activities
+            telephone:
+                one: phone
+                other: phones
+            time_interval:
+                one: time slot
+                other: time slots
+            time_interval_preference:
+                one: time preference
+                other: time preferences
+            time_slot:
+                one: planning time slot
+                other: planning time slots
+            user:
+                one: user
+                other: users
+            user_address:
+                one: user/address association
+                other: user/address associations
+            users_instrument:
+                one: user/instrument association
+                other: user/instrument associations
 
     views:
         layouts:

@@ -13,10 +13,6 @@ class MusicGenre < ApplicationRecord
 
   validates :name, presence: true
 
-  def self.display_class_name(singular = true)
-    singular ? "genre musical" : "genres musicaux"
-  end
-
   def self.class_name_gender
     :M
   end

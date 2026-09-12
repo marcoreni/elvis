@@ -29,10 +29,6 @@ class EventSubscription < ApplicationRecord
   validate :params_types_as_same_size
   validate :event_class_exists_and_respond_to_execute
 
-  def self.display_class_name(singular = true)
-    singular ? "souscription d'événement" : "souscriptions d'événement"
-  end
-
   def self.class_name_gender
     :F
   end

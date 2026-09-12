@@ -23,10 +23,6 @@ class ConsentDocument < ApplicationRecord
     ConsentDocumentUser.where(consent_document_id: id, user_id: user_id).first&.has_consented
   end
 
-  def self.display_class_name(singular = true)
-    singular ? "document de consentement" : "documents de consentement"
-  end
-
   def self.class_name_gender
     :M
   end

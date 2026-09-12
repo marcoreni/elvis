@@ -20,10 +20,6 @@ class EvaluationLevelRef < ApplicationRecord
 
   reset_pk_sequence
 
-  def self.display_class_name(singular = true)
-    singular ? "référentiel d'évaluation" : "référentiels d'évaluation"
-  end
-
   def self.class_name_gender
     :M
   end

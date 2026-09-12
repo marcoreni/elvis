@@ -14,10 +14,6 @@ class TeachersActivity < ApplicationRecord
   # define user_id and activity_id as primary key
   self.primary_keys = :user_id, :activity_id
 
-  def self.display_class_name(singular = true)
-    singular ? "cours de professeur" : "cours de professeurs"
-  end
-
   def self.class_name_gender
     :M
   end

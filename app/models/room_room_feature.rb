@@ -12,10 +12,6 @@ class RoomRoomFeature < ApplicationRecord
   belongs_to :room
   belongs_to :room_features
 
-  def self.display_class_name(singular = true)
-    singular ? "association salle / caractéristiques" : "associations salles / caractéristiques"
-  end
-
   def self.class_name_gender
     :F
   end

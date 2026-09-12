@@ -122,10 +122,6 @@ class ActivityRef < ApplicationRecord
   enum activity_type: { child: 0, cham: 1, chorale_ma: 2, eveil_musical: 3, actions_culturelles: 4 }
   translate_enum :activity_type
 
-  def self.display_class_name(singular = true)
-    singular ? "activité" : "activités"
-  end
-
   def self.class_name_gender
     :F
   end

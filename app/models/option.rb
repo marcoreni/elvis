@@ -16,10 +16,6 @@ class Option < ApplicationRecord
   belongs_to :activity
   belongs_to :desired_activity
 
-  def self.display_class_name(singular = true)
-    singular ? "option" : "options"
-  end
-
   def self.class_name_gender
     :F
   end

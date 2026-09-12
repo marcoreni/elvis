@@ -24,10 +24,6 @@ class Question < ApplicationRecord
   scope :new_student_level_questionnaire, -> { where(question_type: "new_student_level_questionnaire") }
   scope :application_change_questionnaire, -> { where(question_type: "application_change_questionnaire") }
 
-  def self.display_class_name(singular = true)
-    singular ? "question" : "questions"
-  end
-
   def self.class_name_gender
     :F
   end

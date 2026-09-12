@@ -45,10 +45,6 @@ class DuePaymentStatus < ApplicationRecord
   # réinitialise, si besoin, la séquence de l'ID pour permettre de créer des prochains objets en base
   reset_pk_sequence
 
-  def self.display_class_name(singular = true)
-    singular ? "statut d'échéance" : "statuts d'échéance"
-  end
-
   def self.class_name_gender
     :M
   end

@@ -34,10 +34,6 @@ class Room < ApplicationRecord
 
   validates :label, presence: true
 
-  def self.display_class_name(singular = true)
-    singular ? "salle" : "salles"
-  end
-
   def self.class_name_gender
     :F
   end

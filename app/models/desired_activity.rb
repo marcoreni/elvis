@@ -30,10 +30,6 @@ class DesiredActivity < ApplicationRecord
   has_one :user, through: :activity_application
   has_one :discount, as: :discountable, dependent: :destroy
 
-  def self.display_class_name(singular = true)
-    singular ? "activité souhaitée" : "activités souhaitées"
-  end
-
   def self.class_name_gender
     :F
   end

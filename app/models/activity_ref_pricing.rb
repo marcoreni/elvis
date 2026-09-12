@@ -23,10 +23,6 @@ class ActivityRefPricing < ApplicationRecord
   scope :for_pricing_category, ->(pricing_category) { where(pricing_category: pricing_category) }
   scope :for_pricing_category_id, ->(pricing_category_id) { where(pricing_category_id: pricing_category_id) }
 
-  def self.display_class_name(singular = true)
-    singular ? "Tarif" : "Tarifs"
-  end
-
   def self.class_name_gender
     :M
   end

@@ -32,10 +32,6 @@ class PracticeRoomPlanning < ApplicationRecord
 
   after_create :create_all_days_intervals
 
-  def self.display_class_name(singular = true)
-    singular ? "planning de salle de répétition" : "plannings des salles de répétition"
-  end
-
   def self.class_name_gender
     :M
   end

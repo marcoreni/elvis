@@ -16,10 +16,6 @@ class Instrument < ApplicationRecord
   has_many :users_instruments, dependent: :destroy
   has_many :users, through: :users_instruments
 
-  def self.display_class_name(singular = true)
-    singular ? "instrument" : "instruments"
-  end
-
   def self.class_name_gender
     :M
   end

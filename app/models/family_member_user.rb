@@ -42,10 +42,6 @@ class FamilyMemberUser < ApplicationRecord
   after_save :invalidate_family_cache
   after_destroy :invalidate_family_cache
 
-  def self.display_class_name(singular = true)
-    singular ? "membre de famille" : "membres de famille"
-  end
-
   def self.class_name_gender
     :M
   end

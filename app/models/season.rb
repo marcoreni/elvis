@@ -46,10 +46,6 @@ class Season < ApplicationRecord
   validate :check_start_end
   validate :check_applications_dates
 
-  def self.display_class_name(singular = true)
-    singular ? "saison" : "saisons"
-  end
-
   def self.class_name_gender
     :F
   end

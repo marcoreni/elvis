@@ -25,10 +25,6 @@ class School < ApplicationRecord
   belongs_to :planning, required: false
   has_many :formules
 
-  def self.display_class_name(singular = true)
-    singular ? "école" : "écoles"
-  end
-
   def self.class_name_gender
     :F
   end

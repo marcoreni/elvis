@@ -22,10 +22,6 @@ class PayerPaymentTerms < ApplicationRecord
 
   validate :uniqueness
 
-  def self.display_class_name(singular = true)
-    singular ? "modalité de paiement pour un payeur" : "modalités de paiement pour les payeurs"
-  end
-
   def self.class_name_gender
     :F
   end

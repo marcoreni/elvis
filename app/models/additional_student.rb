@@ -13,10 +13,6 @@ class AdditionalStudent < ApplicationRecord
   belongs_to :desired_activity
   belongs_to :user
 
-  def self.display_class_name(singular = true)
-    singular ? "élève supplémentaire" : "élèves supplémentaires"
-  end
-
   def self.class_name_gender
     :M
   end

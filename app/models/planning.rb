@@ -20,10 +20,6 @@ class Planning < ApplicationRecord
   has_many :planning_conflicts
   has_many :conflicts, through: :planning_conflicts
 
-  def self.display_class_name(singular = true)
-    singular ? "planning" : "planning"
-  end
-
   def self.class_name_gender
     :M
   end

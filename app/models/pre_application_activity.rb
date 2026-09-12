@@ -19,10 +19,6 @@ class PreApplicationActivity < ApplicationRecord
 
   belongs_to :activity_application, optional: true
 
-  def self.display_class_name(singular = true)
-    singular ? "cours attribué dans le cadre d'une réinscription" : "cours attribués dans le cadre d'une réinscription"
-  end
-
   def self.class_name_gender
     :M
   end

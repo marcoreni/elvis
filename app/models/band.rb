@@ -19,10 +19,6 @@ class Band < ApplicationRecord
   has_many :practice_sessions
   has_many :users, through: :bands_users
 
-  def self.display_class_name(singular = true)
-    singular ? "groupe de musique" : "groupes de musique"
-  end
-
   def self.class_name_gender
     :M
   end

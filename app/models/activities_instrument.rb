@@ -16,10 +16,6 @@ class ActivitiesInstrument < ApplicationRecord
 
   belongs_to :user, optional: true
 
-  def self.display_class_name(singular = true)
-    singular ? "association cours/instruments" : "associations cours/instruments"
-  end
-
   def self.class_name_gender
     :F
   end

@@ -16,10 +16,6 @@ class Comment < ApplicationRecord
   belongs_to :user
   belongs_to :user_csv, -> {  select(:id, :first_name, :last_name) }, class_name: "User", required: false
 
-  def self.display_class_name(singular = true)
-    singular ? "commentaire" : "commentaire"
-  end
-
   def self.class_name_gender
     :M
   end

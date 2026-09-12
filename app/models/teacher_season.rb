@@ -15,10 +15,6 @@ class TeacherSeason < ApplicationRecord
   belongs_to :teacher, -> { where(is_teacher: true) }, class_name: :User, foreign_key: :user_id, required: true
   belongs_to :season, required: true
 
-  def self.display_class_name(singular = true)
-    singular ? "association professeur / saison" : "associations professeurs / saisons"
-  end
-
   def self.class_name_gender
     :F
   end

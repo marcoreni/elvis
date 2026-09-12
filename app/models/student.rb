@@ -17,10 +17,6 @@ class Student < ApplicationRecord
   belongs_to :activity
   belongs_to :payment_method, optional: true
 
-  def self.display_class_name(singular = true)
-    singular ? "élève" : "élèves"
-  end
-
   def self.class_name_gender
     :M
   end

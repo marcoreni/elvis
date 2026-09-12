@@ -13,10 +13,6 @@ class PlanningConflict < ApplicationRecord
   belongs_to :planning
   belongs_to :conflict
 
-  def self.display_class_name(singular = true)
-    singular ? "conflit de planning" : "conflit de planning"
-  end
-
   def self.class_name_gender
     :M
   end

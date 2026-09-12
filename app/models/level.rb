@@ -22,10 +22,6 @@ class Level < ApplicationRecord
 
   validate :uniqueness
 
-  def self.display_class_name(singular = true)
-    singular ? "niveau" : "niveaux"
-  end
-
   def self.class_name_gender
     :M
   end

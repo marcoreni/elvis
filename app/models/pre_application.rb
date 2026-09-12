@@ -19,10 +19,6 @@ class PreApplication < ApplicationRecord
   has_many :pre_application_desired_activities
   has_many :desired_activities, through: :pre_application_desired_activities
 
-  def self.display_class_name(singular = true)
-    singular ? "pré-inscription" : "pré-inscriptions"
-  end
-
   def self.class_name_gender
     :F
   end

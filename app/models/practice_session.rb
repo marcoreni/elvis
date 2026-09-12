@@ -22,10 +22,6 @@ class PracticeSession < ApplicationRecord
     joins(:time_interval).where({ time_intervals: { start: [start..stop], end: [start..stop] } })
   }
 
-  def self.display_class_name(singular = true)
-    singular ? "séance de répétition" : "séances de répétition"
-  end
-
   def self.class_name_gender
     :M
   end

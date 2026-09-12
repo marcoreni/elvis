@@ -198,3 +198,11 @@ ignore_unused:
   - "number.currency.format.significant"
   - "number.currency.format.strip_insignificant_zeros"
   - "number.currency.format.unit"
+  # fix/remove-controller-display-class-name-i18n: ApplicationRecord#display_class_name
+  # (app/models/application_record.rb) delegates to `self.model_name.human(count: ...)`, which
+  # resolves `activerecord.models.<model_i18n_key>` dynamically per model class at runtime - there
+  # is no literal `t("activerecord.models.<model>")`/`I18n.t(...)` call anywhere for the static
+  # scanner to credit, same "dynamic key, not a literal call" reasoning as menu.* above. Wildcarded
+  # (not leaf-listed like the activerecord.attributes.* sets) because every one of the ~88 entries
+  # under activerecord.models is reached through this same single dynamic call site.
+  - "activerecord.models.*"

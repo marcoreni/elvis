@@ -30,10 +30,6 @@ class Formule < ApplicationRecord
     activity_applications.exists?
   end
 
-  def self.display_class_name(singular = true)
-    singular ? "Formule" : "Formules"
-  end
-
   def self.class_name_gender
     :F
   end

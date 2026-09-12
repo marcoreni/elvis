@@ -28,10 +28,6 @@ class ActivityRefKind < ApplicationRecord
 
   attribute :display_name
 
-  def self.display_class_name(singular = true)
-    singular ? "famille d'activité" : "familles d'activités"
-  end
-
   def self.class_name_gender
     :F
   end

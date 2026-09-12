@@ -28,10 +28,6 @@ class ActivityInstance < ApplicationRecord
   attribute :start, :datetime
   attribute :end, :datetime
 
-  def self.display_class_name(singular = true)
-    singular ? "séance de cours" : "séances de cours"
-  end
-
   def self.class_name_gender
     :F
   end

@@ -90,10 +90,6 @@ class Setting < ActiveRecord::Base
                  Big5-HKSCS
                  TIS-620].freeze
 
-  def self.display_class_name(singular = true)
-    singular ? "configuration" : "configurations"
-  end
-
   def self.class_name_gender
     :F
   end

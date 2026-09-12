@@ -13,10 +13,6 @@ class BandType < ApplicationRecord
 
   validates :name, presence: true
 
-  def self.display_class_name(singular = true)
-    singular ? "type de groupe de musique" : "type de groupe de musique"
-  end
-
   def self.class_name_gender
     :M
   end

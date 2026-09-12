@@ -204,6 +204,276 @@ fr:
                     attributes:
                         base:
                             duplicate: "Des modalités de paiement existent déjà pour la saison %{season} et le payeur %{payer} : veuillez faire une mise à jour"
+        # Human-readable model names for ApplicationRecord#display_class_name (see
+        # app/models/application_record.rb), resolved dynamically per model via
+        # `self.model_name.human(count:)` - see config/i18n-tasks.yml's ignore_unused note for
+        # activerecord.models.*. Each value moved here verbatim from the model's former
+        # `self.display_class_name` override (fix/remove-controller-display-class-name-i18n).
+        models:
+            activities_instrument:
+                one: association cours/instruments
+                other: associations cours/instruments
+            activity:
+                one: cours
+                other: cours
+            activity_application:
+                one: "demande d'inscription"
+                other: "demandes d'inscription"
+            activity_application_status:
+                one: "Statut d'inscription"
+                other: "Statuts d'inscription"
+            activity_instance:
+                one: séance de cours
+                other: séances de cours
+            activity_ref:
+                one: activité
+                other: activités
+            activity_ref_cycle:
+                one: "enchainement d'activités"
+                other: "enchainements d'activités"
+            activity_ref_kind:
+                one: "famille d'activité"
+                other: "familles d'activités"
+            activity_ref_pricing:
+                one: Tarif
+                other: Tarifs
+            activity_refs_instrument:
+                one: association activité / instruments
+                other: associations activité / instruments
+            additional_student:
+                one: élève supplémentaire
+                other: élèves supplémentaires
+            address:
+                one: adresse
+                other: adresses
+            adhesion:
+                one: adhésion
+                other: adhésions
+            answer:
+                one: réponse
+                other: réponses
+            application_change_questionnaire:
+                one: "questionnaire de changement d'inscription"
+                other: "questionnaires de changement d'inscription"
+            band:
+                one: groupe de musique
+                other: groupes de musique
+            band_type:
+                one: type de groupe de musique
+                other: type de groupe de musique
+            bands_user:
+                one: membre de groupe de musique
+                other: membres de groupes de musique
+            comment:
+                one: commentaire
+                other: commentaire
+            conflict:
+                one: conflit
+                other: conflit
+            consent_document:
+                one: document de consentement
+                other: documents de consentement
+            desired_activity:
+                one: activité souhaitée
+                other: activités souhaitées
+            desired_time_interval:
+                one: créneau souhaité
+                other: créneaux souhaités
+            due_payment:
+                one: échéance
+                other: échéances
+            due_payment_status:
+                one: "statut d'échéance"
+                other: "statuts d'échéance"
+            evaluation_appointment:
+                one: "RDV d'évaluation"
+                other: "RDV d'évaluation"
+            evaluation_level_ref:
+                one: "référentiel d'évaluation"
+                other: "référentiels d'évaluation"
+            event_rules:
+                one: EventRules
+                other: EventRules
+            event_subscription:
+                one: "souscription d'événement"
+                other: "souscriptions d'événement"
+            export_template:
+                one: "modèle d'export"
+                other: "modèles d'export"
+            failed_payment_import:
+                one: "import d'échecs de paiements"
+                other: "imports d'échecs de paiements"
+            failed_payment_import_reason:
+                one: "motif d'import d'échecs de paiements"
+                other: "motifs d'import d'échecs de paiements"
+            family_member_user:
+                one: membre de famille
+                other: membres de famille
+            flat_rate:
+                one: forfait
+                other: forfaits
+            formule:
+                one: Formule
+                other: Formules
+            formule_item:
+                one: Item
+                other: Items
+            formule_pricing:
+                one: Tarif
+                other: Tarifs
+            holiday:
+                one: congé
+                other: congés
+            hours_sheet:
+                one: "feuille d'heure"
+                other: "feuilles d'heure"
+            instrument:
+                one: instrument
+                other: instruments
+            level:
+                one: niveau
+                other: niveaux
+            location:
+                one: lieu
+                other: lieux
+            material:
+                one: matériel
+                other: matériels
+            message:
+                one: message
+                other: messages
+            message_recipient:
+                one: destinataire de message
+                other: destinataire de messages
+            music_genre:
+                one: genre musical
+                other: genres musicaux
+            new_student_level_questionnaire:
+                one: questionnaire de niveau pour nouvel élève
+                other: questionnaires de niveau pour nouvel élève
+            option:
+                one: option
+                other: options
+            pack:
+                one: Pack
+                other: Packs
+            payer_payment_terms:
+                one: modalité de paiement pour un payeur
+                other: modalités de paiement pour les payeurs
+            payment:
+                one: règlement
+                other: règlements
+            payment_method:
+                one: moyen de paiement
+                other: moyens de paiement
+            payment_schedule:
+                one: échéancier
+                other: échéanciers
+            payment_schedule_options:
+                one: "option d'échéancier de paiement"
+                other: "options d'échéancier de paiement"
+            payment_schedule_status:
+                one: "statut d'échéancier"
+                other: "status d'échéancier"
+            payment_status:
+                one: statut de paiement
+                other: statut de paiement
+            planning:
+                one: planning
+                other: planning
+            planning_conflict:
+                one: conflit de planning
+                other: conflit de planning
+            plugin:
+                one: plugin
+                other: plugins
+            practice_room_parameter:
+                one: paramètre de salle de répétition
+                other: paramètres de salles de répétition
+            practice_room_planning:
+                one: planning de salle de répétition
+                other: plannings des salles de répétition
+            practice_session:
+                one: séance de répétition
+                other: séances de répétition
+            pre_application:
+                one: pré-inscription
+                other: pré-inscriptions
+            pre_application_activity:
+                one: "cours attribué dans le cadre d'une réinscription"
+                other: "cours attribués dans le cadre d'une réinscription"
+            pre_application_desired_activity:
+                one: "cours souhaité dans le cadre d'une réinscription"
+                other: "cours souhaités dans le cadre d'une réinscription"
+            pricing_category:
+                one: Catégorie prix
+                other: Catégories prix
+            question:
+                one: question
+                other: questions
+            room:
+                one: salle
+                other: salles
+            room_activity:
+                one: association activité / salle
+                other: associations activités / salles
+            room_features:
+                one: caractéristique de salle
+                other: caractéristiques des salles
+            room_room_feature:
+                one: association salle / caractéristiques
+                other: associations salles / caractéristiques
+            school:
+                one: école
+                other: écoles
+            season:
+                one: saison
+                other: saisons
+            setting:
+                one: configuration
+                other: configurations
+            student:
+                one: élève
+                other: élèves
+            student_attendance:
+                one: inscription aux séances
+                other: inscriptions aux séances
+            student_evaluation:
+                one: "évaluation d'élève"
+                other: "évaluations d'élèves"
+            teacher_season:
+                one: association professeur / saison
+                other: associations professeurs / saisons
+            teachers_activity:
+                one: cours de professeur
+                other: cours de professeurs
+            teachers_activity_instance:
+                one: séance de cours de professeur
+                other: séances de cours des professeurs
+            teachers_activity_ref:
+                one: activité de professeur
+                other: activités des professeurs
+            telephone:
+                one: téléphone
+                other: téléphones
+            time_interval:
+                one: créneau
+                other: créneaux
+            time_interval_preference:
+                one: préférence horaire
+                other: préférences horaires
+            time_slot:
+                one: créneau de planning
+                other: créneaux des plannings
+            user:
+                one: utilisateur
+                other: utilisateurs
+            user_address:
+                one: association utilisateur / adresse
+                other: associations utilisateurs / adresses
+            users_instrument:
+                one: association utilisateur / instrument
+                other: associations utilisateurs / instruments
 
     views:
         layouts:

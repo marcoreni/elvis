@@ -63,10 +63,6 @@ class TimeInterval < ApplicationRecord
 
   after_destroy :unlink_dependencies
 
-  def self.display_class_name(singular = true)
-    singular ? "créneau" : "créneaux"
-  end
-
   def self.class_name_gender
     :M
   end

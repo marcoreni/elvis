@@ -17,10 +17,6 @@ class PracticeRoomParameter < ApplicationRecord
 
   after_create :create_room_planning
 
-  def self.display_class_name(singular = true)
-    singular ? "paramètre de salle de répétition" : "paramètres de salles de répétition"
-  end
-
   def self.class_name_gender
     :M
   end

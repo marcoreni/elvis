@@ -35,10 +35,6 @@ class Adhesion < ApplicationRecord
     where("validity_start_date < NOW() AND validity_end_date > NOW() AND is_active = TRUE")
   }
 
-  def self.display_class_name(singular = true)
-    singular ? "adhésion" : "adhésions"
-  end
-
   def self.class_name_gender
     :F
   end

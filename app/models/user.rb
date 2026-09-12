@@ -187,10 +187,6 @@ class User < ApplicationRecord
 
   belongs_to :organization, optional: true
 
-  def self.display_class_name(singular = true)
-    singular ? "utilisateur" : "utilisateurs"
-  end
-
   def self.class_name_gender
     :M
   end

@@ -17,10 +17,6 @@ class ApplicationChangeQuestionnaire < ApplicationRecord
 
   has_many :answers, as: :answerable, dependent: :destroy
 
-  def self.display_class_name(singular = true)
-    singular ? "questionnaire de changement d'inscription" : "questionnaires de changement d'inscription"
-  end
-
   def self.class_name_gender
     :M
   end

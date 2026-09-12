@@ -13,10 +13,6 @@
 #  updated_at :datetime         not null
 #
 class ExportTemplate < ApplicationRecord
-  def self.display_class_name(singular = true)
-    singular ? "modèle d'export" : "modèles d'export"
-  end
-
   def self.class_name_gender
     :M
   end

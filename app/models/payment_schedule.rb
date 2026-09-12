@@ -25,10 +25,6 @@ class PaymentSchedule < ApplicationRecord
   belongs_to :location, optional: true
   belongs_to :season, optional: true
 
-  def self.display_class_name(singular = true)
-    singular ? "échéancier" : "échéanciers"
-  end
-
   def self.class_name_gender
     :M
   end

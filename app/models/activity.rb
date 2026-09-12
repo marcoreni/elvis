@@ -58,10 +58,6 @@ class Activity < ApplicationRecord
 
   has_many :student_evaluations
 
-  def self.display_class_name(singular = true)
-    singular ? "cours" : "cours"
-  end
-
   def self.class_name_gender
     :M
   end
