@@ -12,9 +12,9 @@
 %>
 
 <article>
-  <h2>Autorisez vous l'accès de <%= @client.name %> à ces informations ?</h2>
+  <h2><%= t("views.oidc/authorizations.new.heading", client: @client.name) %></h2>
   <dl>
-    <dt>Informations demandées</dt>
+    <dt><%= t("views.oidc/authorizations.new.requested_information") %></dt>
     <% @scopes.each do |scope| %>
       <dd><%= scope.name %></dd>
     <% end %>

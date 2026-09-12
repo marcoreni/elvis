@@ -277,6 +277,12 @@ fr:
                     greeting_html: "Bonjour <strong>%{name}</strong>,"
                     instruction: "Vous avez demandé à réinitialiser votre mot de passe. Pour le modifier, cliquez sur le bouton ci-dessous :"
                     instruction_2: "Si vous n’êtes pas à l’origine de cette demande, vous pouvez ignorer cet email. Votre mot de passe restera inchangé tant que vous ne cliquez pas sur le lien."
+        oidc/authorizations:
+            new:
+                heading: "Autorisez-vous l’accès de %{client} à ces informations ?"
+                requested_information: Informations demandées
+                authorize: Autoriser
+                deny: Refuser
         activity_assigned_mailer:
             activity_assigned:
                 greeting_html: "Bonjour <strong>%{name}</strong>,"
@@ -758,6 +764,61 @@ fr:
                 room: "salle %{name}"
                 from_date: "à partir du %{date}"
                 until_date: "jusqu'au %{date}"
+        errors:
+            base_renderer_error:
+                heading: "Erreur %{code}"
+        static_pages:
+            landing:
+                collective_courses_heading: Super Cours Collectifs
+                workshops_heading: Ateliers
+                membership_heading: Adhésion
+                details_link: "Détails »"
+            about:
+                heading: À propos d’Elvis
+        cgu:
+            index:
+                title: Politique de confidentialité et traitement des données personnelles.
+                gdpr_intro: "Le Règlement Général sur la Protection des données (Règlement UE 2016/679) désigné par « RGPD » est entré en vigueur le 25 mai 2018 et %{school_name} se doit d’être en conformité avec celui-ci pour tous les traitements de données personnelles existants au sein d'Elvis."
+                objectives_intro: "Ce règlement poursuit 3 objectifs :"
+                objective_1: Adapter le contexte juridique pour suivre les évolutions des technologies et de nos sociétés
+                objective_2: "Il s’inscrit dans la continuité de la Loi française Informatique et Libertés de 1978 et renforce le contrôle par les citoyens de l’utilisation qui peut être faite des données les concernant."
+                objective_3: Harmoniser les règles en Europe pour offrir un cadre juridique unique aux professionnels.
+                internal_procedures: "%{school_name} met également en œuvre les procédures internes adéquates afin de sensibiliser ses employés et d’assurer le respect de ces règles au sein de son organisation."
+                obligations_heading: "Quels sont les obligations de %{school_name} en matière de protection des données personnelles ?"
+                obligations_guarantee: "%{school_name} doit garantir un niveau de protection élevé des données personnelles des Utilisateurs de tous ses services."
+                obligations_principles_intro: "%{school_name} doit respecter la réglementation applicable à l’ensemble des traitements de données personnelles qu’elle met en œuvre. Plus particulièrement, %{school_name_lower} s’engage notamment à respecter les principes suivants :"
+                principle_1: "vos données personnelles sont traitées de manière licite, loyale et transparente (licéité, loyauté, transparence) ;"
+                principle_2: "vos données personnelles sont collectées pour des finalités déterminées, explicites et légitimes, et ne sont pas traitées ultérieurement d’une manière incompatible avec ces finalités (limitation des finalités) ;"
+                principle_3: "vos données personnelles sont conservées de manière adéquate, pertinente et sont limitées à ce qui est nécessaire au regard des finalités pour lesquelles elles sont traitées (minimisation des données) ;"
+                principle_4: "vos données personnelles sont exactes, tenues à jour et toutes les mesures raisonnables sont prises pour que les données inexactes, eu égard aux finalités pour lesquelles elles sont traitées, soient effacées ou rectifiées sans tarder (exactitude)."
+                security_measures: "%{school_name} met en œuvre les mesures techniques et organisationnelles appropriées afin de garantir un niveau de sécurité adapté au risque inhérent à ses opérations de traitement, répondre aux exigences réglementaires et protéger les droits et les données des personnes concernées dès la conception des opérations de traitement."
+                final_commitment: "Enfin, %{school_name} s’engage à respecter tout autre principe s’imposant au regard de la réglementation applicable en matière de protection des données personnelles, et plus précisément concernant les droits conférés aux personnes concernées, les durées de conservation des données personnelles ainsi que les obligations relatives aux transferts transfrontaliers de données personnelles."
+                rights_heading: Vos droits
+                rights_guarantee: "%{school_name} garantit à l’utilisateur un droit d’opposition, d’accès et de rectification sur les données le concernant"
+                rights_how_to_question: "Comment faire valoir vos droits ?"
+                rights_how_to_email: En envoyant un message à l’adresse
+                registration_heading: Dans le cadre d'une inscription sur la plateforme Elvis
+                purposes_heading: "Quelles sont les finalités ?"
+                purpose_1: Traiter votre demande d’inscription
+                purpose_2: Trouver le meilleur cours pour l’élève
+                purpose_3: Avoir un suivi pédagogique et administratif sur une saison scolaire
+                storage_heading: "Où sont stockées vos données ?"
+                storage_sixmon: Elvis est un logiciel développé par l’entreprise havraise Sixmon
+                storage_azure_prefix: Elvis est hébergé sur une infrastructure Microsoft Azure
+                storage_azure_suffix: située en France et gérée par Sixmon.
+                access_heading: "Qui est susceptible d’accéder à vos données personnelles ?"
+                access_staff: "Le personnel de %{school_name} en charge des inscriptions, du suivi administratif et pédagogique est susceptible d’accéder à vos données personnelles."
+                access_teachers: "Les professeurs ont accès aux informations de contacts (email, téléphone, adresse) de leurs élèves."
+        admin:
+            edit_mail_settings:
+                heading: "Paramètres avancés : Mails"
+        settings:
+            plugin:
+                title: "Plugins - %{name}"
+                submit: Appliquer
+        events_rules:
+            index:
+                heading: Liste des évènements
         shared:
             form_errors:
                 heading: "%{count} erreur(s) empêchent l'enregistrement :"
