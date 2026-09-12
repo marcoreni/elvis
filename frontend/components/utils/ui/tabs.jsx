@@ -67,7 +67,13 @@ export default function TabbedComponent({ tabs: tabsProps , mode: modeProps, def
                             className={`tab-pane ${active === i ? "active" : ""}`}
                             role="tabpanel">
                             <div className={`panel-body ${mode === "classic" ? "" : "no-padding"}`}>
-                                {active === i && { ...tab.body, props: { ...tab.body.props, setTabError: isError => setTabErrorState(tabErrorState => ({ ...tabErrorState, [tab.id]: isError })) } }}
+                                {active === i && (
+                                    typeof tab.body.type === "function"
+                                        ? React.cloneElement(tab.body, {
+                                              setTabError: isError => setTabErrorState(tabErrorState => ({ ...tabErrorState, [tab.id]: isError })),
+                                          })
+                                        : tab.body
+                                )}
                             </div>
                         </div>)
                     }
