@@ -72,7 +72,7 @@ class LocationsController < ApplicationController
     begin
       location.destroy
     rescue StandardError
-      flash[:error] = t("controllers.locations.destroy.linked_data_error")
+      flash[:error] = [t("controllers.locations.destroy.linked_data_error")]
       is_error = true
     end
 
