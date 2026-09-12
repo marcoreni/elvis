@@ -372,6 +372,9 @@
     "availabilityCommentModal": {
         "title": "Commentaire"
     },
+    "weekSelector": {
+        "range": "Du {{from}} au {{to}}"
+    },
     "plannings": {
         "columns": {
             "lastModified": "Dernière modification",
