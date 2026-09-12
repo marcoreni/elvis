@@ -776,7 +776,7 @@ en:
                 heading: About Elvis
         cgu:
             index:
-                title: Personal data protection and privacy policy.
+                title: Privacy policy and personal data processing.
                 gdpr_intro: "The General Data Protection Regulation (EU Regulation 2016/679), referred to as the \"GDPR,\" came into force on May 25, 2018, and %{school_name} is committed to complying with it for all personal data processing carried out within Elvis."
                 objectives_intro: "This regulation pursues 3 objectives:"
                 objective_1: Adapt the legal framework to keep pace with changes in technology and society
@@ -810,7 +810,7 @@ en:
                 access_teachers: "Teachers have access to their students' contact information (email, phone, address)."
         admin:
             edit_mail_settings:
-                heading: "Advanced settings: Mail"
+                heading: "Advanced settings: Emails"
         settings:
             plugin:
                 title: "Plugins - %{name}"
