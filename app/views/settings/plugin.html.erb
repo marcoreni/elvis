@@ -3,7 +3,7 @@
 <div class="row wrapper border-bottom white-bg page-heading m-b-md">
   <h2>
     <% if @title.nil? %>
-      Plugins - <%= @plugin.name %>
+      <%= t("views.settings.plugin.title", name: @plugin.name) %>
     <% else %>
       <%= @title %>
     <% end %>
@@ -17,7 +17,7 @@
           <%= partial %>
         </div>
         <% if @hide_btn_validation.nil? || !@hide_btn_validation %>
-          <%= submit_tag "Appliquer" %>
+          <%= submit_tag t("views.settings.plugin.submit") %>
         <% end %>
       <% end %>
     </div>
