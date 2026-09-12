@@ -99,6 +99,31 @@ RSpec.describe "OAuth consent / legal pages i18n (P7)", type: :request do
     expect(body).to include(I18n.t("views.cgu.index.gdpr_intro", school_name: school.name, locale: "fr"))
   end
 
+  # /cgu's obligations_principles_intro key is the one call site that interpolates BOTH the
+  # upcase_first and the plain-lowercase form of the school name in the same sentence
+  # (school_name: @school_name&.upcase_first, school_name_lower: @school_name). A dropped
+  # interpolation is already caught above (missing kwarg -> 500), but the two variants being
+  # SWAPPED would still render 200 with no missing-translation marker -- only a school name whose
+  # case actually differs under upcase_first can catch that. Use a lowercase name so the two
+  # forms are genuinely distinct, then assert each form appears at its expected position.
+  it "does not swap the upcase_first / lowercase school-name interpolation on /cgu" do
+    School.delete_all
+    School.create!(name: "école de test")
+
+    cookies[:locale] = "fr"
+    get "/cgu"
+    expect(response).to have_http_status(:ok)
+
+    body = CGI.unescapeHTML(response.body)
+    expected = I18n.t(
+      "views.cgu.index.obligations_principles_intro",
+      school_name: "École de test",
+      school_name_lower: "école de test",
+      locale: "fr"
+    )
+    expect(body).to include(expected)
+  end
+
   # oidc/authorizations#new and errors/base_renderer_error aren't reachable via a plain GET (see
   # the module comment above for why) -- spot-check their extracted copy directly against the
   # locale files instead of skipping their coverage outright.

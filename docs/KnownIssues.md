@@ -721,3 +721,23 @@ English word `Error` (`<h2>Error <%= code %></h2>`) in a French-default-locale a
 in `en.yml`) rather than left broken, since the whole point of moving it into `t(...)` is to make
 it locale-correct; flagging here per the "don't silently fix semantic bugs" policy since it *is*
 a wording/language change, not a typo/accent fix.
+
+The same P7 pass silently fixed two more English-leak strings without flagging them per that
+same policy — noting them here for consistency: `static_pages/about.html.erb`'s heading
+("About Elvis" hardcoded in a French view) is now `views.static_pages.about.heading` =
+"À propos d'Elvis" (fr) / "About Elvis" (en); `static_pages/landing.html.erb`'s link text
+("Details »") is now `views.static_pages.landing.read_more` = "Détails »" (fr) / "Details »" (en).
+Both are on the unrouted dead views above, so harmless in practice, but the fix pattern is
+identical to `base_renderer_error`'s and should have been called out the same way.
+
+## `db:prepare` fails on a pre-existing broken migration
+
+Found 2026-09-12 setting up a fresh Postgres container to run the P7 review's RSpec suite.
+`db/migrate/20240924141831_add_upcoming_payment_notice_to_notification_templates.rb:42` raises
+`PG::UndefinedColumn: column "id" does not exist` when run against an empty database via
+`rails db:prepare` (i.e. `db:create` + `db:migrate` from scratch) — the migration assumes a
+column/table state that only exists if the schema was already loaded some other way first, so
+`db:prepare` is not a viable path to a working test database in a clean checkout. Worked around
+via `rails db:environment:set` + `rails db:schema:load` (skips replaying migration history
+entirely). Not investigated further or fixed here — orthogonal to the i18n work that surfaced it,
+but anyone bootstrapping a fresh dev/CI database from scratch will hit this.
