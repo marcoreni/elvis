@@ -81,7 +81,7 @@ export default function EditApplication(props) {
                                         title: t(
                                             "activityApplications:activityItems.editApplication.emptyError"
                                         ),
-                                        icon: "info",
+                                        type: "info",
                                         confirmButtonColor: "#00334A",
                                         confirmButtonText: t(
                                             "activityApplications:activityItems.editApplication.ok"
