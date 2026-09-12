@@ -113,10 +113,13 @@ module Elvis
     end
 
     # @return [Hash{Symbol=>Array<Elvis::MenuManager::MenuItem>}]
+    # Class instance var (not a @@ class var): Elvis::MenuManager is a plain module used
+    # only through its own `self.` methods -- nothing includes/extends the module itself,
+    # so there is no hierarchy this could leak state across.
     def self.menus
-      @@menus ||= {}
+      @menus ||= {}
 
-      @@menus
+      @menus
     end
 
     # @param [Symbol] menu_key
@@ -125,7 +128,7 @@ module Elvis
     end
 
     def self.clear_menus
-      @@menus = {}
+      @menus = {}
     end
 
     class MenuNode
