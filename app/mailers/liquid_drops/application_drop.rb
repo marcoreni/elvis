@@ -1,4 +1,8 @@
 # frozen_string_literal: true
+
+require_relative "user_drop"
+require_relative "season_drop"
+
 module LiquidDrops
   class ApplicationDrop < Liquid::Drop
 
@@ -12,6 +16,19 @@ module LiquidDrops
 
     def user_id
       @application["user_id"]
+    end
+
+    # Views (e.g. activity_assigned_mailer/activity_assigned.html.erb,
+    # application_mailer/notify_new_application.{html.erb,mjml}) call @application.user.first_name /
+    # .last_name directly, rather than this drop's own flattened first_name/last_name accessors.
+    def user
+      UserDrop.new(@application["user"])
+    end
+
+    # Views call @application.season.label directly, rather than this drop's own flattened
+    # season_label accessor.
+    def season
+      SeasonDrop.new(@application["season"])
     end
 
     def email
