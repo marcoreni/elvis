@@ -102,7 +102,7 @@ class RemoveController < ApplicationController
     references.map do |ref|
       {
         name: ref.class.name,
-        display_name: ref.class.respond_to?(:display_name) ? ref.class.display_name : ref.class.name,
+        display_name: ref.class.respond_to?(:display_class_name) ? ref.class.display_class_name : ref.class.name,
         to_string: (ref.to_s if ref.method(:to_s).owner == ref.class || ref.method(:to_s).owner == ApplicationRecord)
       }
     end

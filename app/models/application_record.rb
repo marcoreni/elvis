@@ -8,8 +8,14 @@ class ApplicationRecord < ActiveRecord::Base
     before_save :register_changes
   end
 
+  # Human-readable name for the model, used in destroy-confirmation UI copy
+  # (RemoveController#get_references) and in the undeletable_instruction/build_subject sentences
+  # below. Delegates to Rails' own i18n-aware ActiveModel::Name#human, which looks up
+  # `activerecord.models.<model_i18n_key>` (a plain string, or a `{one:, other:}` sub-hash
+  # pluralized via `count:`) and falls back to a humanized class name when no locale entry exists.
+  # See config/locales/{fr,en}.yml's `activerecord.models.*` for the per-model overrides.
   def self.display_class_name(singular = true)
-    singular ? self.class.name : self.class.name.pluralize
+    model_name.human(count: singular ? 1 : 2)
   end
 
   def self.class_name_gender
