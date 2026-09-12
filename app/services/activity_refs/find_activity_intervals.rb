@@ -11,8 +11,8 @@ module ActivityRefs
       # vars
       season = Season.find(@season_id)
       activity_ref = ActivityRef
-                      .includes({ activities: {} })
-                      .find(@activity_ref_id)
+                     .includes({ activities: {} })
+                     .find(@activity_ref_id)
 
       activities = activity_ref
                    .activities
@@ -23,23 +23,21 @@ module ActivityRefs
       # return activities mapped by weekday of time_interval
       activities
         .uniq { |act| act.time_interval.start.strftime("%u%H%M") + act.time_interval.end.strftime("%u%H%M") }
-        .reduce({}) { |obj, act|
+        .each_with_object({}) do |act, obj|
           weekday = act.time_interval.start.to_date.wday
           obj[weekday] = [] unless obj.key?(weekday)
 
           obj[weekday] << act.time_interval.as_json(include: {
-            :activity => {
-              :include => {
-                :location => {},
-                :teacher => {},
-              }
-            },
-          })
+                                                      activity: {
+                                                        include: {
+                                                          location: {},
+                                                          teacher: {}
+                                                        }
+                                                      }
+                                                    })
 
           # obj[weekday][0]["avatar_url"] = (act.teacher.avatar).to_s if act.teacher.avatar.attached?
-
-          obj
-        }
+        end
     end
   end
 end

@@ -9,13 +9,11 @@
 #
 
 class FailedPaymentImportReason < ApplicationRecord
-
   def self.display_class_name(singular = true)
     singular ? "motif d'import d'échecs de paiements" : "motifs d'import d'échecs de paiements"
   end
 
   def self.class_name_gender
-    return :M
+    :M
   end
-
 end

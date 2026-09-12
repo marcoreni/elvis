@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 class RemoveController < ApplicationController
-
   before_action :get_object
 
   def destroy
@@ -17,12 +16,18 @@ class RemoveController < ApplicationController
 
       if args[:success]
         respond_to do |format|
-          format.html { flash[:success] = args[:message]; redirect_to request.referer }
+          format.html do
+            flash[:success] = args[:message]
+            redirect_to request.referer
+          end
           format.json { render json: { message: args[:message], success: true }, status: :ok }
         end
       else
         respond_to do |format|
-          format.html { flash[:destroy_error] = args[:message]; redirect_to request.referer }
+          format.html do
+            flash[:destroy_error] = args[:message]
+            redirect_to request.referer
+          end
           format.json { render json: { message: args[:message], success: false }, status: args[:status] }
         end
       end
@@ -34,15 +39,16 @@ class RemoveController < ApplicationController
     ids = params[:ids] || []
 
     # transform string to array if needed
-    if ids.is_a?(String)
-      ids = ids.split(',')
-    end
+    ids = ids.split(",") if ids.is_a?(String)
 
     # get all elements to destroy if authorized
     # @type [Array<ApplicationRecord>]
     elements = ids.length > 0 ? @classname.where(id: ids).accessible_by(current_ability, :destroy).to_a : []
 
-    return render json: { message: t("controllers.remove.no_elements"), success: false }, status: :not_found if elements.empty?
+    if elements.empty?
+      return render json: { message: t("controllers.remove.no_elements"), success: false },
+                    status: :not_found
+    end
 
     EventHandler.send("#{@classname.name}").destroy_ended
 
@@ -53,19 +59,22 @@ class RemoveController < ApplicationController
 
     Rails.configuration.event_store.within do
       elements.each do |element|
-        DestroyJob.perform_now(classname: @classname.name, object: element, selected_dep_to_destroy: params[:selected_dep_to_destroy])
+        DestroyJob.perform_now(classname: @classname.name, object: element,
+                               selected_dep_to_destroy: params[:selected_dep_to_destroy])
       end
     end.subscribe(to: ["Event#{@classname.name}DestroyEnded".constantize]) do |event|
       obj_id = event.data[:args][:objId]
 
-      endedDestroyElements << {
-        id: obj_id,
-        data: {
-          success: event.data[:args][:success],
-          message: event.data[:args][:message],
-          status: event.data[:args][:status]
+      if ids.include?(obj_id)
+        endedDestroyElements << {
+          id: obj_id,
+          data: {
+            success: event.data[:args][:success],
+            message: event.data[:args][:message],
+            status: event.data[:args][:status]
+          }
         }
-      } if ids.include?(obj_id)
+      end
     end
 
     wait_count = 0
@@ -81,24 +90,22 @@ class RemoveController < ApplicationController
     render json: {
       message: t("controllers.remove.destroy_multiple.success"),
       success: endedDestroyElements.filter { |el| el[:data][:success] }.map { |el| el[:id] },
-      failed: endedDestroyElements.filter { |el| !el[:data][:success] },
+      failed: endedDestroyElements.filter { |el| !el[:data][:success] }
     }
   end
 
   def get_references
     references = @object.objects_that_reference_me
-                        .filter {|ref| !@destroy_params[:auto_deletable_references].include?(ref.class) }
-                        .filter {|ref| ref.undeletable_instruction(@object)[:possible] }
+                        .filter { |ref| !@destroy_params[:auto_deletable_references].include?(ref.class) }
+                        .filter { |ref| ref.undeletable_instruction(@object)[:possible] }
 
-    references.map { |ref| {
-      name: ref.class.name,
-      display_name: ref.class.respond_to?(:display_name) ? ref.class.display_name : ref.class.name,
-      to_string: if ref.method(:to_s).owner == ref.class || ref.method(:to_s).owner == ApplicationRecord
-                   ref.to_s
-                 else
-                   nil
-                 end
-    }}
+    references.map do |ref|
+      {
+        name: ref.class.name,
+        display_name: ref.class.respond_to?(:display_name) ? ref.class.display_name : ref.class.name,
+        to_string: (ref.to_s if ref.method(:to_s).owner == ref.class || ref.method(:to_s).owner == ApplicationRecord)
+      }
+    end
   end
 
   private
@@ -124,27 +131,34 @@ class RemoveController < ApplicationController
     Rails.logger.error("La classe n'a pas été trouvée: #{e.message}\n#{(e.backtrace || []).join("\n")}")
 
     respond_to do |format|
-      format.html { flash[:destroy_error] = t("controllers.remove.class_not_found"); redirect_to request.referer }
+      format.html do
+        flash[:destroy_error] = t("controllers.remove.class_not_found")
+        redirect_to request.referer
+      end
       format.json do
         render json: { message: t("controllers.remove.class_not_found"), success: false }, status: :not_found
       end
     end
-
   rescue ActiveRecord::RecordNotFound => e
     Rails.logger.error("L'objet n'a pas été trouvé: #{e.message}\n#{(e.backtrace || []).join("\n")}")
 
     respond_to do |format|
-      format.html { flash[:destroy_error] = t("controllers.remove.object_not_found"); redirect_to request.referer }
+      format.html do
+        flash[:destroy_error] = t("controllers.remove.object_not_found")
+        redirect_to request.referer
+      end
       format.json do
         render json: { message: t("controllers.remove.object_not_found"), success: false }, status: :not_found
       end
     end
-
   rescue StandardError => e
     Rails.logger.error("Une erreur est survenue lors de la suppression de l'objet. #{e.message}\n#{(e.backtrace || []).join("\n")}")
 
     respond_to do |format|
-      format.html { flash[:destroy_error] = t("controllers.remove.generic_error"); redirect_to request.referer }
+      format.html do
+        flash[:destroy_error] = t("controllers.remove.generic_error")
+        redirect_to request.referer
+      end
       format.json do
         render json: { message: t("controllers.remove.generic_error"), success: false }, status: :internal_server_error
       end

@@ -11,19 +11,18 @@
 #
 
 class NewStudentLevelQuestionnaire < ApplicationRecord
-    belongs_to :user
+  belongs_to :user
 
-    belongs_to :activity_ref
-    belongs_to :season
+  belongs_to :activity_ref
+  belongs_to :season
 
-    has_many :answers, as: :answerable, dependent: :destroy
+  has_many :answers, as: :answerable, dependent: :destroy
 
-    def self.display_class_name(singular = true)
-        singular ? "questionnaire de niveau pour nouvel élève" : "questionnaires de niveau pour nouvel élève"
-    end
+  def self.display_class_name(singular = true)
+    singular ? "questionnaire de niveau pour nouvel élève" : "questionnaires de niveau pour nouvel élève"
+  end
 
-    def self.class_name_gender
-        return :M
-    end
-
+  def self.class_name_gender
+    :M
+  end
 end

@@ -10,8 +10,12 @@ class ActivityRefPricing < ApplicationRecord
 
   has_many :packs
 
-  scope :for_season, ->(season) { where("from_season_id <= ? AND (to_season_id IS NULL OR to_season_id >= ?)", season&.id, season&.id) }
-  scope :for_season_id, ->(season_id) { where("from_season_id <= ? AND (to_season_id IS NULL OR to_season_id >= ?)", season_id, season_id) }
+  scope :for_season, lambda { |season|
+    where("from_season_id <= ? AND (to_season_id IS NULL OR to_season_id >= ?)", season&.id, season&.id)
+  }
+  scope :for_season_id, lambda { |season_id|
+    where("from_season_id <= ? AND (to_season_id IS NULL OR to_season_id >= ?)", season_id, season_id)
+  }
 
   scope :for_activity_ref, ->(activity_ref) { where(activity_ref: activity_ref) }
   scope :for_activity_ref_id, ->(activity_ref_id) { where(activity_ref_id: activity_ref_id) }
@@ -19,19 +23,18 @@ class ActivityRefPricing < ApplicationRecord
   scope :for_pricing_category, ->(pricing_category) { where(pricing_category: pricing_category) }
   scope :for_pricing_category_id, ->(pricing_category_id) { where(pricing_category_id: pricing_category_id) }
 
-
-  def self.display_class_name(singular= true)
+  def self.display_class_name(singular = true)
     singular ? "Tarif" : "Tarifs"
   end
 
   def self.class_name_gender
-    return :M
+    :M
   end
 
   def overlaps?(pricing)
     # saison à comparer
-    self_from_season = Season.find(self.from_season_id)
-    self_to_season = Season.find(self.to_season_id) unless self.to_season_id.nil?
+    self_from_season = Season.find(from_season_id)
+    self_to_season = Season.find(to_season_id) unless to_season_id.nil?
 
     # saison à créer
     pricing_from_season = Season.find(pricing.from_season_id)

@@ -1,10 +1,9 @@
 # frozen_string_literal: true
 
-require_relative 'base_listener'
+require_relative "base_listener"
 
 # Evènements commentés pour le moment car ils ne sont pas encore utilisés
 class NotificationListener < BaseListener
-
   def self.subscribe
     event_ids ||= []
 
@@ -40,7 +39,6 @@ class NotificationListener < BaseListener
       activity = args[:activity]
       ActivityAcceptedMailer.activity_accepted(user, user.confirmation_token, activity).deliver_later
 
-
       # event = EventRules.find_by_eventName("activity_accepted")
       # if event.present?
       #   if event.sendMail?
@@ -65,10 +63,8 @@ class NotificationListener < BaseListener
       activity_instance = args[:activity_instance]
       user = args[:user]
 
-     UserCancelledAttendanceMailer.cancelled_attendance(user, activity_instance).deliver_later
+      UserCancelledAttendanceMailer.cancelled_attendance(user, activity_instance).deliver_later
       AdminCancelledAttendanceMailer.cancelled_attendance(activity_instance, user).deliver_later
-
-
 
       # event = EventRules.find_by_eventName("activity_cancelled")
       # if event.present?
@@ -85,8 +81,6 @@ class NotificationListener < BaseListener
       generatedDataForPaymentSummary = args[:generatedDataForPaymentSummary]
 
       UpcomingPaymentMailer.upcoming_payment(user, season, generatedDataForPaymentSummary).deliver_later
-
     end
-
   end
 end

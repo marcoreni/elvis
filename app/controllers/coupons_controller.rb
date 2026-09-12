@@ -1,9 +1,7 @@
 # frozen_string_literal: true
 
 class CouponsController < ApplicationController
-
   def index
-
     @coupons = Coupon.all
 
     respond_to do |format|
@@ -18,6 +16,7 @@ class CouponsController < ApplicationController
     respond_to do |format|
       format.json do
         render json: @coupon.as_json and return if res
+
         render status: :unprocessable_entity, json: { errors: @coupon.errors.full_messages }
       end
     end
@@ -32,6 +31,7 @@ class CouponsController < ApplicationController
     respond_to do |format|
       format.json do
         render json: @coupon.as_json and return @coupon if res
+
         render status: :unprocessable_entity, json: { errors: @coupon.errors.full_messages }
       end
     end
@@ -45,6 +45,7 @@ class CouponsController < ApplicationController
     respond_to do |format|
       format.json do
         render status: :ok, json: {} and return if res
+
         render status: :unprocessable_entity, json: { errors: @coupon.errors.full_messages }
       end
     end
@@ -56,18 +57,18 @@ class CouponsController < ApplicationController
     if params[:sorted]
       sort_order = params[:sorted][:desc] ? :desc : :asc
       query = query
-                .order(params[:sorted][:id].to_sym => sort_order)
+              .order(params[:sorted][:id].to_sym => sort_order)
     end
 
     query = query
-              .page(params[:page] + 1)
-              .per(params[:pageSize])
+            .page(params[:page] + 1)
+            .per(params[:pageSize])
 
     respond_to do |format|
       format.json do
         render json: {
           data: query.as_json(methods: :has_any_discount),
-          pages: pages = query.total_pages,
+          pages: query.total_pages,
           total: query.count
         }
       end
@@ -84,9 +85,7 @@ class CouponsController < ApplicationController
               when "id"
                 query.where(id: filter[:value])
               else
-                if filter[:value] != "all"
-                  query.where("#{filter[:id]} ILIKE ?", "#{filter[:value]}%")
-                end
+                query.where("#{filter[:id]} ILIKE ?", "#{filter[:value]}%") if filter[:value] != "all"
 
               end
     end
@@ -104,4 +103,3 @@ class CouponsController < ApplicationController
     params.permit(:label, :enabled)
   end
 end
-

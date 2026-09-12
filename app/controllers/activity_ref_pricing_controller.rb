@@ -1,9 +1,7 @@
 # frozen_string_literal: true
 
 class ActivityRefPricingController < ApplicationController
-
-  def index
-  end
+  def index; end
 
   def create
     if verify_inputs
@@ -12,16 +10,16 @@ class ActivityRefPricingController < ApplicationController
     end
 
     to_season_value = params.dig(:toSeason, :value).presence || nil
-    @activity_ref_pricings = ActivityRefPricing.new(activity_ref_id: params[:activity_ref_id], from_season_id: params[:fromSeason][:value], to_season_id: to_season_value, price: "#{params[:price]}".gsub(',', '.').to_f, pricing_category_id: params[:name][:value])
+    @activity_ref_pricings = ActivityRefPricing.new(activity_ref_id: params[:activity_ref_id],
+                                                    from_season_id: params[:fromSeason][:value], to_season_id: to_season_value, price: "#{params[:price]}".gsub(",", ".").to_f, pricing_category_id: params[:name][:value])
     from_season = Season.find(@activity_ref_pricings.from_season_id)
     to_season = Season.find(@activity_ref_pricings.to_season_id) unless @activity_ref_pricings.to_season_id.nil?
     activity_ref = ActivityRef.find(params[:activity_ref_id])
 
-    unless to_season.nil?
-      unless from_season.starts_before(to_season)
-        render json: { errors: ["La période de début doit être inférieure à la période de fin"] }, status: :unprocessable_entity
-        return
-      end
+    if !to_season.nil? && !from_season.starts_before(to_season)
+      render json: { errors: ["La période de début doit être inférieure à la période de fin"] },
+             status: :unprocessable_entity
+      return
     end
 
     activity_ref.activity_ref_pricing.where(pricing_category_id: params[:name][:value]).each do |activity_ref_pricing|
@@ -52,11 +50,10 @@ class ActivityRefPricingController < ApplicationController
     from_season = Season.find(params[:fromSeason][:value])
     to_season = Season.find(to_season_value) unless to_season_value.nil?
 
-    unless to_season_value.nil?
-      unless from_season.starts_before(to_season)
-        render json: { errors: ["La période de début doit être inférieure à la période de fin"] }, status: :unprocessable_entity
-        return
-      end
+    if !to_season_value.nil? && !from_season.starts_before(to_season)
+      render json: { errors: ["La période de début doit être inférieure à la période de fin"] },
+             status: :unprocessable_entity
+      return
     end
 
     @activity_ref_pricing.to_season = to_season
@@ -70,7 +67,7 @@ class ActivityRefPricingController < ApplicationController
       end
     end
 
-    @activity_ref_pricing.price = "#{params[:price]}".gsub(',', '.').to_f
+    @activity_ref_pricing.price = "#{params[:price]}".gsub(",", ".").to_f
 
     @activity_ref_pricing.save!
 
@@ -98,20 +95,19 @@ class ActivityRefPricingController < ApplicationController
     if params[:sorted]
       sort_order = params[:sorted][:desc] ? :desc : :asc
       query = query
-                .order(params[:sorted][:id].to_sym => sort_order)
+              .order(params[:sorted][:id].to_sym => sort_order)
     end
 
     query = query
-              .page(params[:page] + 1)
-              .per(params[:pageSize])
+            .page(params[:page] + 1)
+            .per(params[:pageSize])
 
     respond_to do |format|
       format.json do
         render json: {
           data: query.as_json(include:
-                                { pricing_category: {} }
-                              ),
-          pages: pages = query.total_pages,
+                                { pricing_category: {} }),
+          pages: query.total_pages,
           total: query.count
         }
       end
@@ -120,14 +116,14 @@ class ActivityRefPricingController < ApplicationController
 
   def get_seasons_and_pricing_categories
     respond_to do |format|
-      format.json {
+      format.json do
         render json: {
-          seasons: Season.all_seasons_cached.as_json(only: [:id, :label]),
+          seasons: Season.all_seasons_cached.as_json(only: %i[id label]),
           pricing_categories: PricingCategory.all.as_json,
           activity_ref_pricings: ActivityRefPricing.all.as_json(include: { pricing_category: {} }),
-          packs: Pack.all.as_json(only: [:id, :user_id, :activity_ref_pricing_id])
+          packs: Pack.all.as_json(only: %i[id user_id activity_ref_pricing_id])
         }
-      }
+      end
     end
   end
 
@@ -155,5 +151,4 @@ class ActivityRefPricingController < ApplicationController
   def verify_inputs
     params[:name].nil? || params[:fromSeason].nil?
   end
-
 end

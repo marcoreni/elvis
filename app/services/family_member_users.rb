@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 module FamilyMemberUsers
   def self.inverse_link(link, sex)
     case link
@@ -32,18 +33,18 @@ module FamilyMemberUsers
   end
 
   def self.addFamilyMemberWithConfirmation(family, user, season, send_confirmation: true)
-    #is_created = false
+    # is_created = false
     family&.each do |member|
       fmu = if member[:id]
-             User.find(member[:id])
+              User.find(member[:id])
             else
               # on ne change pas le lien d'attachement ici...
-             User.new(
-               attached_to_id: member[:attach_to_user] ? user.id : nil,
-             )
-           end
+              User.new(
+                attached_to_id: member[:attach_to_user] ? user.id : nil
+              )
+            end
 
-      #is_created ||= member[:id].nil?
+      # is_created ||= member[:id].nil?
 
       fmu.email = if fmu.attached? && fmu.email == user.email
                     nil
@@ -59,10 +60,10 @@ module FamilyMemberUsers
 
       # Pas la meilleur façon de faire. Mais la plus rapide (à coder)
       fmu.sex = if %w[père grand-père frère].include? link
-                 "M"
-               else
-                 %w[mère grand-mère soeur].include? link ? "F" : ""
-               end
+                  "M"
+                else
+                  %w[mère grand-mère soeur].include? link ? "F" : ""
+                end
 
       if fmu.save! && send_confirmation && member[:id].nil? && fmu.email != user.email
         begin
@@ -74,7 +75,7 @@ module FamilyMemberUsers
 
       phones = []
       member[:telephones]&.each do |p|
-        phones << Telephone.new({ number: p[:number], label: p[:label]})
+        phones << Telephone.new({ number: p[:number], label: p[:label] })
       end
       fmu.telephones = phones
 
@@ -86,9 +87,9 @@ module FamilyMemberUsers
       user_id, member_id = member_id, user_id if initial_is_inverse
 
       family_member = FamilyMemberUser
-                        .order(:season_id)
-                        .where(user_id: user_id, member_id: member_id, season_id: season.id)
-                        .first_or_create!(user_id: user_id, member_id: member_id, season_id: season.id)
+                      .order(:season_id)
+                      .where(user_id: user_id, member_id: member_id, season_id: season.id)
+                      .first_or_create!(user_id: user_id, member_id: member_id, season_id: season.id)
 
       if initial_is_inverse != member[:is_inverse]
         family_member.user_id = member_id
@@ -99,7 +100,12 @@ module FamilyMemberUsers
       family_member.is_paying_for = member[:is_paying_for]
       family_member.is_legal_referent = member[:is_legal_referent]
       family_member.is_to_call = member[:is_to_call]
-      family_member.link = member[:is_inverse] ? FamilyMemberUsers.inverse_link(member[:link], member[:sex]) : member[:link]
+      family_member.link = if member[:is_inverse]
+                             FamilyMemberUsers.inverse_link(member[:link],
+                                                            member[:sex])
+                           else
+                             member[:link]
+                           end
       family_member.save!
     end
   end

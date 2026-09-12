@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 class FormuleListener < BaseListener
-
   def self.subscribe
     event_ids ||= []
 
@@ -17,5 +16,4 @@ class FormuleListener < BaseListener
       ActivityRefMaxPricesCalculatorJob.perform_later(nil)
     end
   end
-
 end

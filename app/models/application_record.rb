@@ -1,4 +1,4 @@
-require_relative '../../lib/elvis/event_handler'
+require_relative "../../lib/elvis/event_handler"
 
 class ApplicationRecord < ActiveRecord::Base
   self.abstract_class = true
@@ -13,7 +13,7 @@ class ApplicationRecord < ActiveRecord::Base
   end
 
   def self.class_name_gender
-    return :M
+    :M
   end
 
   def class_name
@@ -26,11 +26,13 @@ class ApplicationRecord < ActiveRecord::Base
   def self.associations_that_reference_me
     ApplicationRecord
       .subclasses # on récupère tous les modèles
-      .map { |model| model.reflections.filter do |k, v|
-        v.class_name == self.name # on récupère les associations qui pointent vers notre modèle
-      rescue
+      .map do |model|
+      model.reflections.filter do |_k, v|
+        v.class_name == name # on récupère les associations qui pointent vers notre modèle
+      rescue StandardError
         false # on ignore les associations qui ne sont pas définies
-      end }
+      end
+    end
       .filter { |m| m.present? } # on filtre les valeurs nulles ou vides
       .flatten
       .map { |m| m.values } # on récupère les valeurs des associations (c'est un hash)
@@ -43,12 +45,10 @@ class ApplicationRecord < ActiveRecord::Base
     if singular
       if d_name[/^[aeiouyAEIOUY]/]
         I18n.t("models.application_record.build_subject.vowel", name: d_name)
+      elsif class_name_gender == :F
+        I18n.t("models.application_record.build_subject.feminine", name: d_name)
       else
-        if class_name_gender == :F
-          I18n.t("models.application_record.build_subject.feminine", name: d_name)
-        else
-          I18n.t("models.application_record.build_subject.masculine", name: d_name)
-        end
+        I18n.t("models.application_record.build_subject.masculine", name: d_name)
       end
     else
       I18n.t("models.application_record.build_subject.plural", name: d_name)
@@ -71,7 +71,7 @@ class ApplicationRecord < ActiveRecord::Base
       ignore_references: [], # ignore references and try to delete object
       undeletable_message: I18n.t("models.application_record.destroy_params.undeletable_message"),
       deletable_message: I18n.t("models.application_record.destroy_params.deletable_message"),
-      success_message: success_message,
+      success_message: success_message
     }
   end
 
@@ -94,7 +94,7 @@ class ApplicationRecord < ActiveRecord::Base
   # méthode destiné à être surchargée dans les classes filles
   # @param [ApplicationRecord] source_object objet qui a appelé la méthode
   # @return [{ instruction: String, possible: Boolean }]
-  def undeletable_instruction(source_object = nil)
+  def undeletable_instruction(_source_object = nil)
     instruction = I18n.t(
       "models.application_record.undeletable_instruction.default",
       class_name: self.class.display_class_name
@@ -127,9 +127,9 @@ class ApplicationRecord < ActiveRecord::Base
   def register_changes
     @changes = nil
 
-    if self.has_changes_to_save?
-      @changes = self.changes
-    end
+    return unless has_changes_to_save?
+
+    @changes = changes
   end
 
   def commit_callback
@@ -151,11 +151,9 @@ class ApplicationRecord < ActiveRecord::Base
     }
 
     events.each do |event|
-      begin
-        EventHandler.send(classname).send(event).trigger(sender: self, args: args)
-      rescue StandardError => e
-        Rails.logger.error "Error while triggering event #{event} on #{classname}: #{e.message}\n #{e.backtrace&.join("\n")}"
-      end
+      EventHandler.send(classname).send(event).trigger(sender: self, args: args)
+    rescue StandardError => e
+      Rails.logger.error "Error while triggering event #{event} on #{classname}: #{e.message}\n #{e.backtrace&.join("\n")}"
     end
   end
 end

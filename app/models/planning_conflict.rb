@@ -18,7 +18,6 @@ class PlanningConflict < ApplicationRecord
   end
 
   def self.class_name_gender
-    return :M
+    :M
   end
-
 end

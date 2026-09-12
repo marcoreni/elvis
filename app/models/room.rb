@@ -39,9 +39,8 @@ class Room < ApplicationRecord
   end
 
   def self.class_name_gender
-    return :F
+    :F
   end
-
 
   # Permet de savoir si une salle est référencée dans une autre table.
   # Solution manuelle qui me semblais la plus propre. Il faut ajouter les conditions si d'autres refs sont ajoutées.

@@ -6,7 +6,6 @@ require_relative "time_interval_drop"
 
 module LiquidDrops
   class ActivityDrop < Liquid::Drop
-
     def initialize(activity)
       @activity = activity
     end
@@ -57,7 +56,7 @@ module LiquidDrops
     end
 
     def display_price
-      ActiveSupport::NumberHelper::number_to_currency @activity["activity_ref"]["display_price"]
+      ActiveSupport::NumberHelper.number_to_currency @activity["activity_ref"]["display_price"]
     end
 
     def from_age
@@ -103,7 +102,5 @@ module LiquidDrops
     def day_in_week
       I18n.l(DateTime.parse(@activity["time_interval"]["end"]), format: "%A")
     end
-
   end
 end
-

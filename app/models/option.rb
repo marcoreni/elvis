@@ -11,21 +11,20 @@
 #
 
 class Option < ApplicationRecord
-    acts_as_paranoid
+  acts_as_paranoid
 
-    belongs_to :activity
-    belongs_to :desired_activity
+  belongs_to :activity
+  belongs_to :desired_activity
 
-    def self.display_class_name(singular = true)
-        singular ? "option" : "options"
-    end
+  def self.display_class_name(singular = true)
+    singular ? "option" : "options"
+  end
 
-    def self.class_name_gender
-        return :F
-    end
+  def self.class_name_gender
+    :F
+  end
 
-
-    def user
-        return self.desired_activity&.activity_application&.user
-    end
+  def user
+    desired_activity&.activity_application&.user
+  end
 end

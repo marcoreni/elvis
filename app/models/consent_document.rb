@@ -28,7 +28,7 @@ class ConsentDocument < ApplicationRecord
   end
 
   def self.class_name_gender
-    return :M
+    :M
   end
 
   def attached_filename
@@ -44,17 +44,15 @@ class ConsentDocument < ApplicationRecord
   end
 
   def attached_file_url
-    self.attached_file.attached? ?
-      Rails.application.routes.url_helpers.rails_blob_path(self.attached_file, only_path: true) :
-      nil
+    return unless attached_file.attached?
+
+    Rails.application.routes.url_helpers.rails_blob_path(attached_file, only_path: true)
   end
 
   def self.jsonize_consent_document_query(query)
-    res = query.as_json(
-      except: [:created_at, :updated_at, :deleted_at, :attached_file],
+    query.as_json(
+      except: %i[created_at updated_at deleted_at attached_file],
       methods: [:attached_file_url]
     )
-
-    res
   end
 end

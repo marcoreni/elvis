@@ -33,16 +33,16 @@ module Holidays
     end
 
     def self.read_zone_parameter
-      return Parameter.get_value("BANK_HOLIDAYS_ZONE")
+      Parameter.get_value("BANK_HOLIDAYS_ZONE")
     end
 
     private
 
     def validate!
-      unless ZONES.include? @zone
-        raise ArgumentError,
-              "Invalid zone"
-      end
+      return if ZONES.include? @zone
+
+      raise ArgumentError,
+            "Invalid zone"
     end
   end
 end

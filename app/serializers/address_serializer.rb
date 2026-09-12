@@ -14,8 +14,7 @@
 #
 
 class AddressSerializer < ActiveModel::Serializer
-    # include FastJsonapi::ObjectSerializer
-  
-    attributes :id, :street_address, :postcode, :city, :department, :country
-  end
-  
+  # include FastJsonapi::ObjectSerializer
+
+  attributes :id, :street_address, :postcode, :city, :department, :country
+end

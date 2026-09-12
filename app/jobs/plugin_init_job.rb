@@ -1,9 +1,9 @@
 require "elvis/plugin_loader"
-require 'concurrent'
+require "concurrent"
 
-  class PluginInitJob < ApplicationJob
-    # need to be async because it define && require plugins
-    self.queue_adapter = :async
+class PluginInitJob < ApplicationJob
+  # need to be async because it define && require plugins
+  self.queue_adapter = :async
 
   def initialize
     super
@@ -35,13 +35,12 @@ require 'concurrent'
       plugin_assets_reloader = Elvis::PluginLoader.create_assets_reloader
 
       Rails.application.reloaders << plugin_assets_reloader
-
     rescue StandardError => e
       pp "Erreur dans load_plugins"
       @logger.error "#{e}\n#{e.backtrace.join("\n")}"
     end
 
-    # TODO à restaurer
+    # TODO: à restaurer
     # unless Elvis::Configuration['mirror_plugins_assets_on_startup'] == false
     #   plugin_assets_reloader.execute
     # end

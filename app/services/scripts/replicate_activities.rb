@@ -2,7 +2,6 @@
 
 module Scripts
   class ReplicateActivities
-
     def initialize(replicate_on_vac, dates = [], season = Season.current)
       @dates = []
 
@@ -41,12 +40,15 @@ module Scripts
           d = instance.time_interval.start + 1.week
           duration = instance.time_interval.end - instance.time_interval.start
 
-          if a.teacher.nil? || ActivityInstance.includes(:time_interval).joins(:time_interval).where(activity_id: a.id, time_intervals: { start: d, end: (d + duration) }).any?
+          if a.teacher.nil? || ActivityInstance.includes(:time_interval).joins(:time_interval).where(activity_id: a.id,
+                                                                                                     time_intervals: {
+                                                                                                       start: d, end: (d + duration)
+                                                                                                     }).any?
             next
           end
 
           new_instance = instance.dup
-          new_instance.time_interval = TimeInterval.new(start: d, end: d + duration, kind: 'c', is_validated: true)
+          new_instance.time_interval = TimeInterval.new(start: d, end: d + duration, kind: "c", is_validated: true)
           new_instance.time_interval.start = d
           new_instance.time_interval.end = d + duration
           new_instance.student_attendances << a.students.map(&:user).map { |u| StudentAttendance.new(user: u) }
@@ -73,14 +75,16 @@ module Scripts
                        .where("extract(dow from time_intervals.start) = extract(dow from ?::date)", date)
 
           activities.each do |activity|
-            if ActivityInstance.joins(:time_interval).where(activity: activity).where("time_intervals.start::date = ?::date", date).any?
+            if ActivityInstance.joins(:time_interval).where(activity: activity).where(
+              "time_intervals.start::date = ?::date", date
+            ).any?
               next
             end
 
             d = activity.time_interval.start + (date.to_date - activity.time_interval.start.to_date).days
             duration = activity.time_interval.end - activity.time_interval.start
 
-            time_interval = TimeInterval.new(start: d, end: d + duration, kind: 'c', is_validated: true)
+            time_interval = TimeInterval.new(start: d, end: d + duration, kind: "c", is_validated: true)
 
             instance = ActivityInstance.new
             instance.time_interval = time_interval
@@ -93,7 +97,9 @@ module Scripts
             instance.teachers_activity_instances << TeachersActivityInstance.new(teacher: activity.teacher)
 
             # add interval to teacher and students plannings
-            ([activity.teacher] + activity.students.map(&:user)).map(&:planning).each { |p| p.time_intervals << instance.time_interval }
+            ([activity.teacher] + activity.students.map(&:user)).map(&:planning).each do |p|
+              p.time_intervals << instance.time_interval
+            end
           end
         end
       end

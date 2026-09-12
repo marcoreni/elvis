@@ -13,7 +13,7 @@ class CsvImporterJob < ApplicationJob
     CSV.foreach(@file_path, "r:bom|UTF-8", col_sep: ";") { count += 1 }
     progress.total = count
 
-      # démarrer l'importation
+    # démarrer l'importation
     import_csv
   end
 
@@ -27,15 +27,14 @@ class CsvImporterJob < ApplicationJob
       @import_handler = import_handler_class.new
     rescue NameError => e
       Rails.logger.error "Handler class not found: #{e.message}\n#{e.backtrace&.join("\n")}"
-      return { status: :unprocessable_entity, error: I18n.t("jobs.csv_importer.handler_not_found") }
+      { status: :unprocessable_entity, error: I18n.t("jobs.csv_importer.handler_not_found") }
     rescue StandardError => e
       Rails.logger.error "Error initializing handler: #{e.message}\n#{e.backtrace&.join("\n")}"
-      return { status: :unprocessable_entity, error: I18n.t("jobs.csv_importer.handler_init_error") }
+      { status: :unprocessable_entity, error: I18n.t("jobs.csv_importer.handler_init_error") }
     end
   end
 
   def import_csv
-
     # utiliser le module CSV pour lire la première ligne et obtenir les en-têtes
     # utiliser le séparateur ; pour les fichiers CSV
     begin
@@ -64,20 +63,17 @@ class CsvImporterJob < ApplicationJob
       current_line += 1
 
       begin
-
         res = @import_handler.handle_row(row, current_line)
         total_ignored_activities += res[:ignored_activities]
         total_activity_applications_created += res[:activity_applications_created]
         errors += res[:errors]
         status[:step] = I18n.t("jobs.csv_importer.progress", count: current_line)
-
       rescue StandardError => e
         Rails.logger.error "Error while handling line #{current_line} : #{e.message}\n#{e.backtrace&.join("\n")} "
         errors << { line: current_line, message: e.message }
       ensure
         progress.increment
       end
-
     end
 
     status[:step] = I18n.t(
@@ -90,5 +86,4 @@ class CsvImporterJob < ApplicationJob
 
     progress.finish
   end
-
 end

@@ -1,8 +1,7 @@
 # frozen_string_literal: true
 
 class Parameters::ActivitiesParametersController < ApplicationController
-  def index
-  end
+  def index; end
 
   # def get_pricing_categories
   #   respond_to do |format|

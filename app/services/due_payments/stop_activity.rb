@@ -1,6 +1,6 @@
 module DuePayments
   class StopActivity
-    #@param [ActivityApplication] application
+    # @param [ActivityApplication] application
     def initialize(application)
       @application = application
     end
@@ -14,11 +14,12 @@ module DuePayments
           .execute
 
         desired_activities.includes(:activity).each do |des|
+          next if des.activity_id.nil?
+
           des.update(
             prorata: des.activity.calculate_prorata_for_student(@application.user_id)
-          ) unless des.activity_id.nil?
+          )
         end
-
       end
     end
   end

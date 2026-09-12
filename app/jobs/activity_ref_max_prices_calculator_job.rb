@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
-
 # Service qui calcule les tarifs max pour toutes les activités et les familles d'activités et les stocke en cache (durée 5 minutes)
 #  Ce service est créé dans un objectif de performance : il évite de faire des requêtes SQL à chaque fois que l'on veut afficher un tarif
 class ActivityRefMaxPricesCalculatorJob < ApplicationJob
@@ -23,7 +22,8 @@ class ActivityRefMaxPricesCalculatorJob < ApplicationJob
       hash.each do |season_id, max_price|
         next if season_id.nil? || max_price.nil?
 
-        pricing_to_save = MaxActivityRefPriceForSeason.find_or_initialize_by(season_id: season_id, target_id: activity_ref_id, target_type: "ActivityRef")
+        pricing_to_save = MaxActivityRefPriceForSeason.find_or_initialize_by(season_id: season_id,
+                                                                             target_id: activity_ref_id, target_type: "ActivityRef")
 
         pricing_to_save.price = max_price
         max_pricings_to_save << pricing_to_save
@@ -36,7 +36,8 @@ class ActivityRefMaxPricesCalculatorJob < ApplicationJob
       hash.each do |season_id, max_price|
         next if season_id.nil? || max_price.nil?
 
-        pricing_to_save = MaxActivityRefPriceForSeason.find_or_initialize_by(season_id: season_id, target_id: activity_ref_kind_id, target_type: "ActivityRefKind")
+        pricing_to_save = MaxActivityRefPriceForSeason.find_or_initialize_by(season_id: season_id,
+                                                                             target_id: activity_ref_kind_id, target_type: "ActivityRefKind")
 
         pricing_to_save.price = max_price
         max_pricings_to_save << pricing_to_save
@@ -59,7 +60,7 @@ class ActivityRefMaxPricesCalculatorJob < ApplicationJob
             created_at: p.created_at || date_now
           }
         end,
-        unique_by: [:season_id, :target_id, :target_type], returning: false
+        unique_by: %i[season_id target_id target_type], returning: false
       )
     end
   end
@@ -76,20 +77,18 @@ class ActivityRefMaxPricesCalculatorJob < ApplicationJob
     pricings_by_ar.each do |activity_ref_id, pricings|
       current_activity_ref_is_substitutable = activity_ref_substitutable[activity_ref_id]
 
-      compute_max_price_for_activity_ref_and_kinds(activity_ref_id, max_ar_kind_pricings_by_season, max_ar_pricings_by_season, pricings, current_activity_ref_is_substitutable)
+      compute_max_price_for_activity_ref_and_kinds(activity_ref_id, max_ar_kind_pricings_by_season,
+                                                   max_ar_pricings_by_season, pricings, current_activity_ref_is_substitutable)
     end
 
     [max_ar_pricings_by_season, max_ar_kind_pricings_by_season]
   end
 
-  def compute_max_price_for_activity_ref_and_kinds(activity_ref_id, max_ar_kind_pricings_by_season, max_pricings_by_season, pricings, current_activity_ref_is_substitutable)
+  def compute_max_price_for_activity_ref_and_kinds(activity_ref_id, max_ar_kind_pricings_by_season,
+                                                   max_pricings_by_season, pricings, current_activity_ref_is_substitutable)
     max_pricings_by_season[activity_ref_id] = {}
 
-    ar_kind_id = if pricings.any?
-                   pricings.first.activity_ref_kind_id
-                 else
-                   nil
-                 end
+    ar_kind_id = (pricings.first.activity_ref_kind_id if pricings.any?)
     max_ar_kind_pricings_by_season[ar_kind_id] ||= {}
 
     @seasons.each do |season|
@@ -107,23 +106,24 @@ class ActivityRefMaxPricesCalculatorJob < ApplicationJob
 
   def update_max_price_for_activity_ref_kind(ar_kind_id, max_ar_kind_pricings_by_season, max_price, season)
     max_ar_kind_pricings_by_season[ar_kind_id][season.id] ||= 0
-    if max_price > max_ar_kind_pricings_by_season[ar_kind_id][season.id]
-      max_ar_kind_pricings_by_season[ar_kind_id][season.id] = max_price
-    end
+    return unless max_price > max_ar_kind_pricings_by_season[ar_kind_id][season.id]
+
+    max_ar_kind_pricings_by_season[ar_kind_id][season.id] = max_price
   end
 
   def compute_max_price_for_activity_ref(pricings, season)
     pricings
-      .select { |p|
-        p.from_season_start <= season.start &&
-          (p.to_season_id.nil? || p.to_season_end >= season.start) }
+      .select do |p|
+      p.from_season_start <= season.start &&
+        (p.to_season_id.nil? || p.to_season_end >= season.start)
+    end
       .map(&:price)
       .max || 0
   end
 
   def fetch_pricings
     pricings = ActivityRefPricing
-                 .select("
+               .select("
                       activity_ref_pricings.id,
                       activity_ref_pricings.activity_ref_id,
                       activity_refs.activity_ref_kind_id,
@@ -134,14 +134,12 @@ class ActivityRefMaxPricesCalculatorJob < ApplicationJob
                       activity_ref_pricings.to_season_id,
                       to_seasons.end as to_season_end
                       ")
-                 .joins("right join activity_refs on activity_refs.id = activity_ref_pricings.activity_ref_id")
-                 .joins("inner join seasons as from_seasons on activity_ref_pricings.from_season_id = from_seasons.id")
-                 .joins("left join seasons as to_seasons on activity_ref_pricings.to_season_id = to_seasons.id or activity_ref_pricings.to_season_id is null")
-                 .where("activity_ref_pricings.deleted_at is null")
+               .joins("right join activity_refs on activity_refs.id = activity_ref_pricings.activity_ref_id")
+               .joins("inner join seasons as from_seasons on activity_ref_pricings.from_season_id = from_seasons.id")
+               .joins("left join seasons as to_seasons on activity_ref_pricings.to_season_id = to_seasons.id or activity_ref_pricings.to_season_id is null")
+               .where("activity_ref_pricings.deleted_at is null")
 
-    if @season.is_a?(Season)
-      pricings = pricings.for_season(@season)
-    end
+    pricings = pricings.for_season(@season) if @season.is_a?(Season)
     pricings
   end
 
@@ -162,5 +160,4 @@ class ActivityRefMaxPricesCalculatorJob < ApplicationJob
 
     [pricings_by_ar, activity_ref_substitutable]
   end
-
 end

@@ -19,9 +19,6 @@ class UpdateApplicationUrlUsageJob < ApplicationJob
       url_model.save
       ApplicationUrl.reset_main_root_url_cache
     end
-
-
-
   rescue StandardError => e
     Rails.logger.error e.message
   end

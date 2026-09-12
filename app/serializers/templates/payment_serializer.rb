@@ -1,11 +1,12 @@
 # frozen_string_literal: true
+
 module Templates
   class PaymentSerializer < ActiveModel::Serializer
     attribute "cashing_date", key: "date d'encaissement" do
-      object.cashing_date&.strftime('%d/%m/%Y')
+      object.cashing_date&.strftime("%d/%m/%Y")
     end
 
-    attribute "payer_name", key: "Titulaire du RIB"  do
+    attribute "payer_name", key: "Titulaire du RIB" do
       payer.nil? ? "?" : "#{payer.first_name} #{payer.last_name}"
     end
 
@@ -16,21 +17,24 @@ module Templates
     attribute "operation", key: "Opération (+, -, 0)"
 
     attribute "lesson_amount", key: "Cours" do
-      object.due_payment&.number&.zero? ?
-        0 :
+      if object.due_payment&.number&.zero?
+        0
+      else
         amount
+      end
     end
 
     attribute "adh_amount", key: "Adhésion" do
-      object.due_payment&.number&.zero? ?
-        amount :
+      if object.due_payment&.number&.zero?
+        amount
+      else
         0
+      end
     end
 
     attribute "total", key: "Total" do
       amount
     end
-
 
     def adherent_numbers
       return if payer.nil?
@@ -48,6 +52,7 @@ module Templates
     end
 
     private
+
     def payer
       @payer ||= object.due_payment&.payment_schedule&.user
     end
@@ -56,5 +61,4 @@ module Templates
       @season ||= object.due_payment&.payment_schedule&.season
     end
   end
-
 end

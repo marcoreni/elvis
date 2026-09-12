@@ -10,7 +10,6 @@
 #  deleted_at   :datetime
 #
 class ActivityRefKind < ApplicationRecord
-
   acts_as_paranoid
 
   validates_presence_of :name, message: :blank
@@ -34,7 +33,7 @@ class ActivityRefKind < ApplicationRecord
   end
 
   def self.class_name_gender
-    return :F
+    :F
   end
 
   def display_name
@@ -44,8 +43,8 @@ class ActivityRefKind < ApplicationRecord
   private
 
   def verify_default_activity_ref_is_for_same_activity_ref_kind
-    if default_activity_ref && default_activity_ref.activity_ref_kind != self
-      errors.add(:default_activity_ref, :same_family)
-    end
+    return unless default_activity_ref && default_activity_ref.activity_ref_kind != self
+
+    errors.add(:default_activity_ref, :same_family)
   end
 end

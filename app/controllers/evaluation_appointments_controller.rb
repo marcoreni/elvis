@@ -120,7 +120,7 @@ class EvaluationAppointmentsController < ApplicationController
 
       season = Season
                .find_by("? BETWEEN seasons.start AND seasons.start + interval '1 year'", DateTime.parse(params[:start].to_s))
-          &.next
+               &.next
 
       appointment = EvaluationAppointment.create!(
         room: room,

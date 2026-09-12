@@ -127,9 +127,8 @@ class ActivityRef < ApplicationRecord
   end
 
   def self.class_name_gender
-    return :F
+    :F
   end
-
 
   # Retourne le nom à afficher pour une activité
   # Renvoie le nom de la famille d'activités ou le nom de l'activité pour les activités enfance, CHAM
@@ -143,7 +142,8 @@ class ActivityRef < ApplicationRecord
   end
 
   def display_price(season = Season.current_apps_season || Season.current)
-    Elvis::CacheUtils.cache_block_if_enabled("activity_ref_#{id}_price_#{season.id}", expires_in: Parameter.get_value("app.cache.max_price.duration") || 5.minutes) do
+    Elvis::CacheUtils.cache_block_if_enabled("activity_ref_#{id}_price_#{season.id}",
+                                             expires_in: Parameter.get_value("app.cache.max_price.duration") || 5.minutes) do
       (substitutable ? activity_ref_kind.max_prices.find_by(season_id: season.id)&.price : max_prices.find_by(season_id: season.id)&.price) || 0
     end
   end
@@ -163,9 +163,9 @@ class ActivityRef < ApplicationRecord
   end
 
   def check_ages_are_corrects
-    if from_age.present? && to_age.present? && from_age > to_age
-      errors.add(:to_age, :greater_than_from_age)
-    end
+    return unless from_age.present? && to_age.present? && from_age > to_age
+
+    errors.add(:to_age, :greater_than_from_age)
   end
 
   def check_occupation_limits_are_corrects
@@ -189,6 +189,11 @@ class ActivityRef < ApplicationRecord
   end
 
   def picture_path
-    picture.attached? ? Rails.application.routes.url_helpers.rails_blob_path(picture_attachment.blob, only_path: true) : ""
+    if picture.attached?
+      Rails.application.routes.url_helpers.rails_blob_path(picture_attachment.blob,
+                                                           only_path: true)
+    else
+      ""
+    end
   end
 end

@@ -6,7 +6,7 @@ class StudentAttendancesController < ApplicationController
   end
 
   def update_all
-    student_attendances = params.permit({:student_attendances => {}})[:student_attendances].to_h.transform_keys(&StudentAttendance.method(:find))
+    student_attendances = params.permit({ student_attendances: {} })[:student_attendances].to_h.transform_keys(&StudentAttendance.method(:find))
     attendances = student_attendances.keys
 
     StudentAttendance.transaction do
@@ -18,25 +18,24 @@ class StudentAttendancesController < ApplicationController
     result = attendances
 
     instances_ids = attendances.map(&:activity_instance_id).uniq
-    if instances_ids.one?
-      result = ActivityInstance.find(instances_ids.first).student_attendances
-    end
+    result = ActivityInstance.find(instances_ids.first).student_attendances if instances_ids.one?
 
-    render :json => { attendances: result.as_json({
-        :include => :user,
-    }) }
+    render json: { attendances: result.as_json({
+                                                 include: :user
+                                               }) }
   end
 
   def update_remarks
     attendance = StudentAttendance.find(params[:id])
     attendance.update(remarks: params[:remarks])
 
-    render json: { status: 'success' }
-  rescue => e
-    render json: { status: 'error', message: e.message }
+    render json: { status: "success" }
+  rescue StandardError => e
+    render json: { status: "error", message: e.message }
   end
 
-    private
+  private
+
   def attendance_params
     params.require(:student_attendance).permit(:attended)
   end

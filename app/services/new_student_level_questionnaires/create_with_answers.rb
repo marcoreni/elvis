@@ -12,7 +12,7 @@ module NewStudentLevelQuestionnaires
         @evaluation = NewStudentLevelQuestionnaire.find_or_create_by!(
           user: @user,
           activity_ref: @activity_ref,
-          season: @season,
+          season: @season
         )
 
         already_practiced_instrument = Question.new_student_level_questionnaire.find_by(name: "already_practiced_instrument")
@@ -22,21 +22,21 @@ module NewStudentLevelQuestionnaires
           existing_level = @user.levels.find_by(season: @season, activity_ref: @activity_ref, user_id: @user.id)
 
           # Create beginner level if user has never practiced the instrument and has no existing level
-          if existing_level.nil?
-            if question == already_practiced_instrument && val == "false"
-              beginner_level_ref = EvaluationLevelRef.where(label: "DEBUTANT").first
+          if existing_level.nil? && question == already_practiced_instrument && val == "false"
+            beginner_level_ref = EvaluationLevelRef.where(label: "DEBUTANT").first
+            if beginner_level_ref
               @user.levels.find_or_create_by!(
                 season: @season,
                 activity_ref: @activity_ref,
-                evaluation_level_ref: beginner_level_ref,
-              ) if beginner_level_ref
+                evaluation_level_ref: beginner_level_ref
+              )
             end
           end
 
           Answer.create!(
             answerable: @evaluation,
             question: question,
-            value: val,
+            value: val
           )
         end
 

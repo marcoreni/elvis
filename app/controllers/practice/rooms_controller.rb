@@ -2,7 +2,6 @@
 
 module Practice
   class RoomsController < ApplicationController
-
     before_action :set_current_user
 
     # GET practice/rooms

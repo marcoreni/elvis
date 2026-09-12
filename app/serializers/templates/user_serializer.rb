@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 module Templates
   class UserSerializer < ActiveModel::Serializer
     attribute "adherent_number", key: "Numéro d'adhérent"
@@ -16,10 +17,9 @@ module Templates
       define_method id do
         consented = object.consent_document_users.where(consent_document_id: consent_document.id).first&.has_consented
 
-        case
-        when consented.nil?
+        if consented.nil?
           "?"
-        when consented
+        elsif consented
           "Oui"
         else
           "Non"
@@ -36,5 +36,4 @@ module Templates
       object.birthday && object.birthday.strftime("%d/%m/%Y") || "?"
     end
   end
-
 end

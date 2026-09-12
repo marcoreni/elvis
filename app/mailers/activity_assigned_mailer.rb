@@ -1,5 +1,5 @@
-require_relative 'liquid_drops/application_drop'
-require_relative 'liquid_drops/activity_drop'
+require_relative "liquid_drops/application_drop"
+require_relative "liquid_drops/activity_drop"
 
 class ActivityAssignedMailer < LayoutMailer
   prepend_view_path NotificationTemplate.resolver
@@ -9,25 +9,25 @@ class ActivityAssignedMailer < LayoutMailer
     @user = user
     @confirmation_token = token
     @application = LiquidDrops::ApplicationDrop.new(application.as_json(include: {
-      user: {
-        include: {
-          payment_schedules: {
-            include: {
-              due_payments: {}
-            }
-          }
-        }
-      },
-      season: {}
-    }))
+                                                                          user: {
+                                                                            include: {
+                                                                              payment_schedules: {
+                                                                                include: {
+                                                                                  due_payments: {}
+                                                                                }
+                                                                              }
+                                                                            }
+                                                                          },
+                                                                          season: {}
+                                                                        }))
 
     @activity = LiquidDrops::ActivityDrop.new(activity.as_json(include: {
-      activity_ref: { methods: :display_price },
-      teacher: {},
-      teachers: {},
-      room: {},
-      time_interval: {}
-    }))
+                                                                 activity_ref: { methods: :display_price },
+                                                                 teacher: {},
+                                                                 teachers: {},
+                                                                 room: {},
+                                                                 time_interval: {}
+                                                               }))
 
     mail(to: @user.email, subject: default_i18n_subject(name: name))
   end
@@ -35,11 +35,11 @@ class ActivityAssignedMailer < LayoutMailer
   def liquid_assigns
     {
       "school_logo" => getSchoolLogo,
-      'first_name' => @user.first_name.capitalize,
-      'last_name' => @user.last_name.capitalize,
-      'school_link' => get_button_school_link,
-      'activity' => @activity,
-      'application' => @application
+      "first_name" => @user.first_name.capitalize,
+      "last_name" => @user.last_name.capitalize,
+      "school_link" => get_button_school_link,
+      "activity" => @activity,
+      "application" => @application
     }
   end
 end

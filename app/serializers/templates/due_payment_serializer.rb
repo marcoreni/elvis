@@ -1,7 +1,8 @@
 # frozen_string_literal: true
+
 module Templates
   class DuePaymentSerializer < ActiveModel::Serializer
-    attribute "payer_name", key: "Titulaire du RIB"  do
+    attribute "payer_name", key: "Titulaire du RIB" do
       payer.nil? ? "?" : "#{payer.first_name} #{payer.last_name}"
     end
 
@@ -12,21 +13,24 @@ module Templates
     attribute "operation", key: "Opération (+, -, 0)"
 
     attribute "lesson_amount", key: "Cours" do
-      object.number&.zero? ?
-        0 :
+      if object.number&.zero?
+        0
+      else
         amount
+      end
     end
 
     attribute "adh_amount", key: "Adhésion" do
-      object.number&.zero? ?
-        amount :
+      if object.number&.zero?
+        amount
+      else
         0
+      end
     end
 
     attribute "total", key: "Total" do
       amount
     end
-
 
     def adherent_numbers
       return if payer.nil?
@@ -44,6 +48,7 @@ module Templates
     end
 
     private
+
     def payer
       @payer ||= object.payment_schedule&.user
     end
@@ -52,5 +57,4 @@ module Templates
       @season ||= object.payment_schedule&.season
     end
   end
-
 end

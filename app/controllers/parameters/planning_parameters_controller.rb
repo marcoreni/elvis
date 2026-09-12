@@ -1,5 +1,4 @@
 class Parameters::PlanningParametersController < ApplicationController
-
   def index
     show_availabilities = Parameter.find_or_create_by(
       label: "planning.show_disponibilities",

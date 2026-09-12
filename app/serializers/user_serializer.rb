@@ -53,7 +53,6 @@ class UserSerializer < ActiveModel::Serializer
   attributes :id, :first_name, :last_name, :adherent_number, :birthday, :is_teacher, :activity_refs
 
   def activity_refs
-    object.activity_refs.as_json(only: [:id, :label, :kind, :duration])
+    object.activity_refs.as_json(only: %i[id label kind duration])
   end
 end
-

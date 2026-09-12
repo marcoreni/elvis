@@ -16,16 +16,15 @@
 #
 
 class BandsUser < ApplicationRecord
-    belongs_to :band
-    belongs_to :user
-    belongs_to :instrument
+  belongs_to :band
+  belongs_to :user
+  belongs_to :instrument
 
-    def self.display_class_name(singular = true)
-        singular ? "membre de groupe de musique" : "membres de groupes de musique"
-    end
+  def self.display_class_name(singular = true)
+    singular ? "membre de groupe de musique" : "membres de groupes de musique"
+  end
 
-    def self.class_name_gender
-        return :M
-    end
-
+  def self.class_name_gender
+    :M
+  end
 end

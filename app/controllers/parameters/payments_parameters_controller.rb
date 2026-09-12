@@ -1,8 +1,5 @@
 class Parameters::PaymentsParametersController < ApplicationController
-
-  def index
-
-  end
+  def index; end
 
   def list_payments_status
     query = PaymentStatus.all
@@ -57,13 +54,13 @@ class Parameters::PaymentsParametersController < ApplicationController
     res = adhesion_enabled.save
 
     respond_to do |format|
-      format.json {
+      format.json do
         if res
           render status: :ok, json: {}
         else
           render status: :unprocessable_entity, json: { errors: { adhesionFee: "doit être un nombre positif" } }
         end
-      }
+      end
     end
   end
 
@@ -75,7 +72,7 @@ class Parameters::PaymentsParametersController < ApplicationController
     rescue ArgumentError
       return false
     end
-    return res >= 0 ? res : false
+    res >= 0 ? res : false
   end
 
   def list_json(query, params)

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
+
 module LiquidDrops
   class PaymentDrop < Liquid::Drop
-
     def initialize(payment_schedule)
       @payment_data = payment_schedule
     end
@@ -25,6 +25,5 @@ module LiquidDrops
     def season_of_payment
       Season.find(@payment_data["season_id"]).label
     end
-
   end
 end

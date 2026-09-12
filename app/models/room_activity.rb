@@ -10,15 +10,14 @@
 #
 
 class RoomActivity < ApplicationRecord
-    belongs_to :room
-    belongs_to :activity_ref
+  belongs_to :room
+  belongs_to :activity_ref
 
-    def self.display_class_name(singular = true)
-        singular ? "association activité / salle" : "associations activités / salles"
-    end
+  def self.display_class_name(singular = true)
+    singular ? "association activité / salle" : "associations activités / salles"
+  end
 
-    def self.class_name_gender
-        return :F
-    end
-
+  def self.class_name_gender
+    :F
+  end
 end

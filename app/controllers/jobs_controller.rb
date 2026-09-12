@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 class JobsController < ApplicationController
-
   before_action -> { @current_user = current_user }
 
   def show_status
@@ -18,6 +17,5 @@ class JobsController < ApplicationController
     rescue StandardError => e
       render status: :internal_server_error, json: { error: e.message } and return
     end
-
   end
 end

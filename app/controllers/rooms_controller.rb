@@ -22,8 +22,9 @@ class RoomsController < ApplicationController
       end
 
       format.json do
-          render json: @rooms.as_json(
-              except: [:created_at, :updated_at, :deleted_at] )
+        render json: @rooms.as_json(
+          except: %i[created_at updated_at deleted_at]
+        )
       end
     end
   end
@@ -32,9 +33,9 @@ class RoomsController < ApplicationController
   # **Paramètres**
   # - start : le début du créneau sur lequel vérifier les disponibilités
   # - end : la fin du créneau sur lequel vérifier les disponibilités
-  # - recurrence (optionnel) : 1 pour vérifier la disponibilité toutes les semaines ; 0 ou absent si on ne veut vérifier les disponibilités que sur le créneau spécifié 
-  # - from_date (optionnel) : date de début pour la récurrence ; absent si on ne veut vérifier les disponibilités que sur le créneau spécifié 
-  # - to_date (optionnel) : date de fin pour la récurrence ; absent si on ne veut vérifier les disponibilités que sur le créneau spécifié 
+  # - recurrence (optionnel) : 1 pour vérifier la disponibilité toutes les semaines ; 0 ou absent si on ne veut vérifier les disponibilités que sur le créneau spécifié
+  # - from_date (optionnel) : date de début pour la récurrence ; absent si on ne veut vérifier les disponibilités que sur le créneau spécifié
+  # - to_date (optionnel) : date de fin pour la récurrence ; absent si on ne veut vérifier les disponibilités que sur le créneau spécifié
   # **Retourne**
   # - un JSON avec les objets Room correspondant aux salles et enrichi avec une propriété "has_overlap"
   # - la propriété "has_overlap" vaut false si la salle est disponible ; sinon, elle contient le 1er créneau où la salle n'est pas disponible
@@ -42,17 +43,17 @@ class RoomsController < ApplicationController
     @current_user = current_user
     authorize! :manage, @current_user.is_admin
 
-    ti_params = params.permit( 
-      :startTime, 
+    ti_params = params.permit(
+      :startTime,
       :endTime,
       :recurrence,
       :fromDate,
       :toDate,
-      :activityRefId,
+      :activityRefId
     )
 
-    interval = TimeInterval.new({start: ti_params[:startTime], end: ti_params[:endTime]})
-    if(interval.start.nil? || interval.end.nil?)
+    interval = TimeInterval.new({ start: ti_params[:startTime], end: ti_params[:endTime] })
+    if interval.start.nil? || interval.end.nil?
       render json: { errors: "invalid start or end" }, status: 500
       return
     end
@@ -64,27 +65,24 @@ class RoomsController < ApplicationController
       to_date = ti_params[:toDate]&.to_date
     end
 
-
     # on récupère la liste des salles
-    if(ti_params[:activityRefId])
-    room_ids = RoomActivity.where(activity_ref_id: ti_params[:activityRefId]).pluck(:room_id)
-    @rooms = Room.where(id: room_ids).order(label: :asc)
+    if ti_params[:activityRefId]
+      room_ids = RoomActivity.where(activity_ref_id: ti_params[:activityRefId]).pluck(:room_id)
+      @rooms = Room.where(id: room_ids).order(label: :asc)
     else
       @rooms = Room.order(label: :asc)
     end
 
-
-
     rooms_json = @rooms.as_json(
-      except: [:created_at, :updated_at, :deleted_at,
-               :authentication_token, :authentication_token_created_at, :first_connection, :is_creator] )
-        
+      except: %i[created_at updated_at deleted_at
+                 authentication_token authentication_token_created_at first_connection is_creator]
+    )
+
     # et on l'enrichit avec leur disponibilité
     i = 0
     @rooms.each do |room|
-
-      # si c'est une vérification d'un créneau unique      
-      if(recurrence==0)
+      # si c'est une vérification d'un créneau unique
+      if recurrence == 0
         overlap = interval.overlap_room(room.id)
 
       # si c'est une vérification de tous les créneaux au cours de la saison
@@ -94,23 +92,22 @@ class RoomsController < ApplicationController
 
         # et on récupère, le cas échéant, le 1er intervalle en conflit
         overlap = interval.overlap_room_over_weeks(room.id, from_date, to_date).as_json(
-                          except: [:created_at, :updated_at, :deleted_at])
+          except: %i[created_at updated_at deleted_at]
+        )
       end
 
       rooms_json[i][:has_overlap] = overlap || false
 
-      i = i+1
+      i += 1
     end
-        
-    respond_to do |format|
 
+    respond_to do |format|
       format.json do
-          render json: rooms_json
-          return
+        render json: rooms_json
+        return
       end
     end
   end
-
 
   def show; end
 
@@ -118,9 +115,7 @@ class RoomsController < ApplicationController
     begin
       room = Room.find params[:id]
       unless room.nil?
-        unless room.picture.nil?
-          room.picture&.purge if room.picture&.attached?
-        end
+        room.picture&.purge if !room.picture.nil? && room.picture&.attached?
         room.destroy
       end
     rescue StandardError => e
@@ -131,7 +126,7 @@ class RoomsController < ApplicationController
   end
 
   def new
-    test = params
+    params
     @room = Room.new
 
     location = Location.find params[:location_id]
@@ -184,8 +179,7 @@ class RoomsController < ApplicationController
     @selected_features = RoomRoomFeature.where(room_id: @room.id).collect(&:room_features_id)
   end
 
-  def delete
-  end
+  def delete; end
 
   def update
     room = Room.find(params[:id])
@@ -262,6 +256,7 @@ class RoomsController < ApplicationController
   private
 
   def room_params
-    params.require(:room).permit(:label, :kind, :floor, :activity_refs, :picture, :is_practice_room, :area, :location_id)
+    params.require(:room).permit(:label, :kind, :floor, :activity_refs, :picture, :is_practice_room, :area,
+                                 :location_id)
   end
 end

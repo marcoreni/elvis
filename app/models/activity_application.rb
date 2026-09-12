@@ -18,8 +18,8 @@
 #
 
 class ActivityApplication < ApplicationRecord
-  update_index("activity_applications") { self } # specifying index, type and back-reference for updating
-  # after user save or destroy
+  update_index("activity_applications") { self } #  specifying index, type and back-reference for updating
+  #  after user save or destroy
 
   def run_chewy_callbacks
     base_chewy_callbacks
@@ -29,25 +29,35 @@ class ActivityApplication < ApplicationRecord
   before_update :refresh_status_updated_at
 
   belongs_to :user
-  belongs_to :user_csv, -> { select(:id, :adherent_number, :birthday, :first_name, :last_name, :email) }, class_name: "User", required: false
+  belongs_to :user_csv, lambda {
+    select(:id, :adherent_number, :birthday, :first_name, :last_name, :email)
+  }, class_name: "User", required: false
   belongs_to :season, optional: true
   belongs_to :season_csv, -> { select(:id, :label) }, class_name: "Season", optional: true
 
   has_many :desired_activities, dependent: :destroy
-  has_many :desired_activities_csv, -> { select(:id, :activity_application_id, :activity_ref_id) }, class_name: "DesiredActivity"
+  has_many :desired_activities_csv, lambda {
+    select(:id, :activity_application_id, :activity_ref_id)
+  }, class_name: "DesiredActivity"
   has_many :activity_refs, through: :desired_activities
 
   has_many :comments, as: :commentable
-  has_many :comments_csv, -> { select(:id, :content, :commentable_id, :user_id) }, class_name: "Comment", as: :commentable
+  has_many :comments_csv, lambda {
+    select(:id, :content, :commentable_id, :user_id)
+  }, class_name: "Comment", as: :commentable
 
   belongs_to :activity_application_status
   # belongs_to :activity_application_status_csv, -> { select(:id, :label) }, class_name: "ActivityApplicationStatus", required: false
 
   has_one :pre_application_activity # dependent: :destroy #, optional: true
-  has_one :pre_application_activity_csv, -> { select(:id, :action, :activity_application_id) }, class_name: "PreApplicationActivity" # dependent: :destroy #, optional: true
+  has_one :pre_application_activity_csv, lambda {
+    select(:id, :action, :activity_application_id)
+  }, class_name: "PreApplicationActivity" # dependent: :destroy #, optional: true
 
   has_one :pre_application_desired_activity # dependent: :destroy #, optional: true
-  has_one :pre_application_desired_activity_csv, -> { select(:id, :action, :activity_application_id) }, class_name: "PreApplicationDesiredActivity", required: false # dependent: :destroy #, optional: true
+  has_one :pre_application_desired_activity_csv, lambda {
+    select(:id, :action, :activity_application_id)
+  }, class_name: "PreApplicationDesiredActivity", required: false # dependent: :destroy #, optional: true
 
   has_many :time_interval_preferences
 
@@ -57,7 +67,9 @@ class ActivityApplication < ApplicationRecord
 
   has_many :time_interval_preferences, dependent: :destroy
 
-  scope :for_activity_id, ->(activity_id) { joins(:desired_activities).where(desired_activities: { activity_id: activity_id }) }
+  scope :for_activity_id, lambda { |activity_id|
+    joins(:desired_activities).where(desired_activities: { activity_id: activity_id })
+  }
 
   attribute :mail_sent, :boolean
 
@@ -68,12 +80,13 @@ class ActivityApplication < ApplicationRecord
   end
 
   def self.class_name_gender
-    return :F
+    :F
   end
 
   def mail_sent
     !mail_sent_at.nil?
   end
+
   def mail_sent=(value)
     self.mail_sent_at = value ? Time.zone.now : nil
 
@@ -84,15 +97,16 @@ class ActivityApplication < ApplicationRecord
     activity_ref = ActivityRef.find(activity_ref_id)
 
     desired_activity = DesiredActivity.new(activity_ref: activity_ref)
-    self.desired_activities << desired_activity
+    desired_activities << desired_activity
 
-    AdditionalStudent.create(desired_activity: desired_activity, user: additional_student) unless additional_student.nil?
+    return if additional_student.nil?
 
+    AdditionalStudent.create(desired_activity: desired_activity,
+                             user: additional_student)
   end
 
   def add_activities(activity_ref_ids, additional_students, family)
     activity_ref_ids.each do |activity_ref_id|
-
       # Getting the parameter linked to the activity if it exists
       idx = additional_students.index { |p| p[0] == activity_ref_id } unless additional_students.nil?
 
@@ -105,7 +119,7 @@ class ActivityApplication < ApplicationRecord
         additional_student = family.select { |u| u.id == additional_student_id.to_i }.first
       end
 
-      self.add_activity(activity_ref_id, additional_student)
+      add_activity(activity_ref_id, additional_student)
     end
   end
 
@@ -114,20 +128,20 @@ class ActivityApplication < ApplicationRecord
   # * les disponibilités renseignées, sinon
   # @return [Array<TimeInterval>] les disponibilités correspondantes
   def availabilities(include_validated: false)
-    if self.desired_activities.joins(:activity_ref).where(activity_refs: { allows_timeslot_selection: true }).any?
-      self
-        .time_interval_preferences
+    if desired_activities.joins(:activity_ref).where(activity_refs: { allows_timeslot_selection: true }).any?
+
+      time_interval_preferences
         .includes(:time_interval)
         .order(:rank)
         .map(&:time_interval)
         .compact
 
     else
-      query = self
-                .user
-                .planning
-                .time_intervals
-                .where(start: self.season.start..self.season.end)
+      query =
+        user
+        .planning
+        .time_intervals
+        .where(start: season.start..season.end)
 
       (include_validated ? query : query.where(is_validated: false)).to_a
     end
@@ -135,17 +149,15 @@ class ActivityApplication < ApplicationRecord
 
   def remove_desired_activity_by_id(activity_id)
     desired_activity = DesiredActivity.includes(:additional_student).find(activity_id)
-    unless desired_activity.additional_student.nil?
-      desired_activity.additional_student.delete()
-    end
+    desired_activity.additional_student.delete unless desired_activity.additional_student.nil?
 
-    self.desired_activities.delete(desired_activity)
+    desired_activities.delete(desired_activity)
   end
 
   def refresh_status_updated_at
-    if self.activity_application_status_id_changed?
-      self.status_updated_at = Time.now
-    end
+    return unless activity_application_status_id_changed?
+
+    self.status_updated_at = Time.now
   end
 
   def undeletable_instruction(source_object = nil)
@@ -181,9 +193,11 @@ class ActivityApplication < ApplicationRecord
 
       default_activity_status_id = set_status&.parse&.positive? ? set_status.parse : ActivityApplicationStatus::TREATMENT_PENDING_ID
 
-      raise I18n.t("models.activity_application.pre_destroy.processing_error") if self.activity_application_status_id != default_activity_status_id
+      if activity_application_status_id != default_activity_status_id
+        raise I18n.t("models.activity_application.pre_destroy.processing_error")
+      end
     end
 
-    self.pre_application_activity.reset if self.pre_application_activity
+    pre_application_activity.reset if pre_application_activity
   end
 end

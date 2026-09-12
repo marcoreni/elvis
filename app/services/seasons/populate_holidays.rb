@@ -122,10 +122,10 @@ module Seasons
       raise ArgumentError, "Invalid zone" if @zone.nil?
 
       # erreur si on n'a ni académie, ni zone scolaire, ni addresse
-      if @academie.nil? && @school_zone.nil? && @address.nil?
-        raise ArgumentError,
-              "Invalid arguments - need one of academie, school_zone or address"
-      end
+      return unless @academie.nil? && @school_zone.nil? && @address.nil?
+
+      raise ArgumentError,
+            "Invalid arguments - need one of academie, school_zone or address"
     end
 
     # fusionne le tableau passé en argument avec celui des saisons, en évitant les doublons

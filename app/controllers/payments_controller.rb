@@ -89,16 +89,16 @@ class PaymentsController < ApplicationController
           payment_schedule.due_payments.map(&:payments).flatten.as_json(include: :payment_method)
 
         @schedules[payment_schedule.season_id][payer.id] = payment_schedule.as_json(include: {
-          due_payments: {
-            include: {
-              payment_method: {}
-            },
-            methods: :adjusted_amount
-          },
-          comments: {
-            include: [:user]
-          }
-        })
+                                                                                      due_payments: {
+                                                                                        include: {
+                                                                                          payment_method: {}
+                                                                                        },
+                                                                                        methods: :adjusted_amount
+                                                                                      },
+                                                                                      comments: {
+                                                                                        include: [:user]
+                                                                                      }
+                                                                                    })
       end
     end
 
@@ -117,11 +117,9 @@ class PaymentsController < ApplicationController
 
     # Si un seul tarif d'adhésion est disponible, l'ajouter par défaut
     if @adhesion_prices.length == 1
-      default_adhesion_price_id = @adhesion_prices.first['id']
+      default_adhesion_price_id = @adhesion_prices.first["id"]
       @adhesions.each do |adhesion|
-        if adhesion['adhesion_price_id'].nil?
-          adhesion['adhesion_price_id'] = default_adhesion_price_id
-        end
+        adhesion["adhesion_price_id"] = default_adhesion_price_id if adhesion["adhesion_price_id"].nil?
       end
     end
 
@@ -135,38 +133,37 @@ class PaymentsController < ApplicationController
       @packs[pack.season_id] = [] if @packs[pack.season_id].nil?
 
       @packs[pack.season_id] << pack.as_json(include: {
-        activity_ref: {},
-        activity_ref_pricing: {
-          include: {
-            pricing_category: {}
-          }
-        },
-        user: {},
-        discount: {
-          only: :coupon,
-          include: {
-            coupon: {
-              only: %i[id percent_off label]
-            }
-          }
-        }
-      })
+                                               activity_ref: {},
+                                               activity_ref_pricing: {
+                                                 include: {
+                                                   pricing_category: {}
+                                                 }
+                                               },
+                                               user: {},
+                                               discount: {
+                                                 only: :coupon,
+                                                 include: {
+                                                   coupon: {
+                                                     only: %i[id percent_off label]
+                                                   }
+                                                 }
+                                               }
+                                             })
     end
 
     @is_upcoming_payment_defined = NotificationTemplate.where(path: "upcoming_payment_mailer/upcoming_payment").any?
 
     @formulas = Formule.all.as_json(
-      only: [:id, :name, :description],
+      only: %i[id name description],
       include: {
         formule_pricings: {
-          only: [:id, :price],
+          only: %i[id price],
           include: {
-            pricing_category: { only: [:id, :name] }
+            pricing_category: { only: %i[id name] }
           }
         }
       }
     )
-
 
     respond_to do |format|
       format.html
@@ -178,9 +175,19 @@ class PaymentsController < ApplicationController
           @season = Season.current
         end
 
-        due_payment_ids = (params[:payer_id].present? ? @schedules.dig(@season.id, params[:payer_id].to_i) : @schedules[@season.id]&.values&.first)&.fetch("due_payments", [])&.map { |d| d["id"] } || []
-        payment_ids = (params[:payer_id].present? ? @payments.dig(@season.id, params[:payer_id].to_i
-        ) : @payments[@season.id]&.values&.first)&.map { |p| p["id"] } || []
+        due_payment_ids = (params[:payer_id].present? ? @schedules.dig(@season.id, params[:payer_id].to_i) : @schedules[@season.id]&.values&.first)&.fetch(
+          "due_payments", []
+        )&.map do |d|
+          d["id"]
+        end || []
+        payment_ids = (if params[:payer_id].present?
+                         @payments.dig(@season.id,
+                                       params[:payer_id].to_i)
+                       else
+                         @payments[@season.id]&.values&.first
+                       end)&.map do |p|
+          p["id"]
+        end || []
 
         @due_payments_objects = DuePayment.where(id: due_payment_ids).to_a
         # @type [Array<Payment>]
@@ -292,8 +299,8 @@ class PaymentsController < ApplicationController
 
   def list
     query = Payment.includes(:payment_status, due_payment: {
-      payment_schedule: :user
-    })
+                               payment_schedule: :user
+                             })
                    .joins(:due_payment)
                    .order("#{params[:sorted][:id]} #{params[:sorted][:desc] ? 'desc' : 'asc'}")
                    .where("(SELECT due_payments.id
@@ -373,22 +380,22 @@ class PaymentsController < ApplicationController
         sort_order = params[:sorted][:desc] ? :desc : :asc
 
         query = query
-                  .order(params[:sorted][:id].to_sym => sort_order)
-                  .page(params[:page] + 1)
-                  .per(params[:pageSize])
+                .order(params[:sorted][:id].to_sym => sort_order)
+                .page(params[:page] + 1)
+                .per(params[:pageSize])
 
         pages = query.total_pages
         payments = query.as_json(include: {
-          due_payment: {
-            include: {
-              payment_schedule: {
-                include: :user
-              }
-            },
-            methods: :adjusted_amount
-          },
-          payment_status: {}
-        })
+                                   due_payment: {
+                                     include: {
+                                       payment_schedule: {
+                                         include: :user
+                                       }
+                                     },
+                                     methods: :adjusted_amount
+                                   },
+                                   payment_status: {}
+                                 })
 
         authorize! :read, payments
 
@@ -398,10 +405,9 @@ class PaymentsController < ApplicationController
   end
 
   def export_selected
-
     query = Payment.includes(:payment_status, due_payment: {
-      payment_schedule: :user
-    })
+                               payment_schedule: :user
+                             })
                    .joins(:due_payment)
                    .where("(SELECT due_payments.id
                      FROM due_payments
@@ -469,18 +475,18 @@ class PaymentsController < ApplicationController
     end
 
     totals = {}
-    headers = %w(Montant\ initial Cours Adhésion Total)
-    block = Proc.new do |step, h|
+    headers = ["Montant initial", "Cours", "Adhésion", "Total"]
+    block = proc do |step, h|
       case step
       when 1 # initialisation ; h est un array avec les en-têtes
         h.each do |k|
           totals[k] = headers.include?(k) ? 0 : nil
         end
       when 2 # itération ; h est un hash avec les valeurs issues de la sérialisation
-        totals['Montant initial'] += h['Montant initial'].to_f
-        totals['Cours'] += h['Cours'].to_f
-        totals['Adhésion'] += h['Adhésion'].to_f
-        totals['Total'] += h['Total'].to_f
+        totals["Montant initial"] += h["Montant initial"].to_f
+        totals["Cours"] += h["Cours"].to_f
+        totals["Adhésion"] += h["Adhésion"].to_f
+        totals["Total"] += h["Total"].to_f
       when 3 # ligne des totaux ; on doit renvoyer
         totals.each do |k, v|
           totals[k] = v.to_s(:rounded, precision: 2, locale: :fr) if headers.include?(k)
@@ -504,11 +510,11 @@ class PaymentsController < ApplicationController
                                     .where(payment_method_id: 2)
     query = Payment.from(query_uniq_checknumber, :payments) # create an alias for the 'DISTINCT ON' table
                    .includes(:payment_status, due_payment: { # pre-load data
-                                                             payment_schedule: :user
-                   })
+                               payment_schedule: :user
+                             })
                    .joins(due_payment: { # force inner-join
-                                         payment_schedule: :user
-                   })
+                            payment_schedule: :user
+                          })
                    .joins("LEFT OUTER JOIN payment_statuses ON payment_statuses.id = payments.payment_status_id")
                    .order("#{params[:sorted][:id]} #{params[:sorted][:desc] ? 'desc' : 'asc'}")
                    .where(payment_method_id: 2)
@@ -556,24 +562,24 @@ class PaymentsController < ApplicationController
     rows_count = query.count
 
     query = query
-              .page(params[:page] + 1)
-              .per(params[:pageSize])
+            .page(params[:page] + 1)
+            .per(params[:pageSize])
 
     pages = query.total_pages
 
     payments = query.as_json(include: {
-      due_payment: {
-        include: {
-          payment_schedule: {
-            include: {
-              user: {
-                methods: %i[students get_users_paying_for_self]
-              }
-            }
-          }
-        }
-      }
-    })
+                               due_payment: {
+                                 include: {
+                                   payment_schedule: {
+                                     include: {
+                                       user: {
+                                         methods: %i[students get_users_paying_for_self]
+                                       }
+                                     }
+                                   }
+                                 }
+                               }
+                             })
     payments = payments.each { |p| p["amount"] = sum_amount_per_checknumber[[p["check_number"], p["payable_id"]]] }
 
     authorize! :read, payments
@@ -713,21 +719,21 @@ class PaymentsController < ApplicationController
         next
       end
 
-      due_payment_candidates = nil
+      nil
 
       # Looks for due payments from the date the bank gave to two days before it
       # And groups them by date in a Hash
       due_payment_candidates = DuePayment
-                                 .where(payment_schedule_id: payer
+                               .where(payment_schedule_id: payer
                                                                .payment_schedules
                                                                .select(:id))
-                                 .where(
-                                   "DATE(previsional_date) >= ? AND DATE(previsional_date) <= ?",
-                                   due_date - 2,
-                                   due_date + 2
-                                 )
-                                 .to_a
-                                 .each_with_object({}) do |due, h|
+                               .where(
+                                 "DATE(previsional_date) >= ? AND DATE(previsional_date) <= ?",
+                                 due_date - 2,
+                                 due_date + 2
+                               )
+                               .to_a
+                               .each_with_object({}) do |due, h|
         key = due.previsional_date.strftime("%Y-%m-%d")
         if !h[key].nil?
           h[key] << due
@@ -848,21 +854,15 @@ class PaymentsController < ApplicationController
   def send_reglement_mail
     if params[:targets].length == 1
       payment = Payment.find(params[:targets][0])
-      unless payment.nil?
-        if payment.payment_status_id == PaymentStatus::UNPAID_ID
-          if payment.cashing_date.nil? || payment.cashing_date <= DateTime.now
-            ReglementReminderMailer.send_reglement_reminder(payment.user, [payment]).deliver_later
-          end
-        end
+      if !payment.nil? && (payment.payment_status_id == PaymentStatus::UNPAID_ID) && (payment.cashing_date.nil? || payment.cashing_date <= DateTime.now)
+        ReglementReminderMailer.send_reglement_reminder(payment.user, [payment]).deliver_later
       end
     else
       selected_users = params[:targets].map do |id|
         payment = Payment.find(id)
         user = nil
 
-        if payment&.payable_id
-          user = User.find(payment.payable_id)
-        end
+        user = User.find(payment.payable_id) if payment&.payable_id
 
         user
       end
@@ -877,9 +877,11 @@ class PaymentsController < ApplicationController
     end
 
     respond_to do |format|
-      format.json { render json: {
-        status: "success"
-      } }
+      format.json do
+        render json: {
+          status: "success"
+        }
+      end
     end
   end
 
@@ -892,15 +894,15 @@ class PaymentsController < ApplicationController
     data = generate_data_for_payment_summary_table(season.id)
 
     EventHandler.notification.upcoming_payment.trigger(
-                                                         sender: {
-                                                           controller_name: self.class.name,
-                                                         },
-                                                         args: {
-                                                           user: user,
-                                                           season: season,
-                                                           generatedDataForPaymentSummary: data
-                                                         }
-                                                       )
+      sender: {
+        controller_name: self.class.name
+      },
+      args: {
+        user: user,
+        season: season,
+        generatedDataForPaymentSummary: data
+      }
+    )
 
     render json: {
       status: "success"
@@ -913,7 +915,7 @@ class PaymentsController < ApplicationController
   # @param [User] user
   # @return [Array<Hash>]
   def get_payers_by_seasons_and_fill_desired_and_activities(user)
-    return Season.all.reduce([]) do |arr, s|
+    Season.all.each_with_object([]) do |s, arr|
       users = (user.whole_family(s.id) << user).uniq
 
       @desired_activities[s.id] = users.first&.get_desired_activities_for_family(s)
@@ -927,8 +929,8 @@ class PaymentsController < ApplicationController
       # verify if exist a due_payment for the user
       why_payers_added = {}
       tmp_payers = tmp_fm
-                     .filter { |fm| fm.is_paying_for || fm.member.payment_schedules.find_by(season_id: s.id)&.due_payments&.any? }
-                     .map do |fm|
+                   .filter { |fm| fm.is_paying_for || fm.member.payment_schedules.find_by(season_id: s.id)&.due_payments&.any? }
+                   .map do |fm|
         # add an atribute to get the payer adding decision (added because is_paying or added because of a payment schedule)
         why_payers_added[fm.member_id] = fm.is_paying_for
 
@@ -951,17 +953,16 @@ class PaymentsController < ApplicationController
       }
 
       # si l'utilisateur paie pour au moins une autre personne, on l'ajoute aux payeurs
-      if user.id == @user.id && !arr.last[:payers].any? { |u| u.id == user.id } && (@user.is_paying || user.any_users_self_is_paying_for?(s))
+      if user.id == @user.id && !arr.last[:payers].any? do |u|
+        u.id == user.id
+      end && (@user.is_paying || user.any_users_self_is_paying_for?(s))
         arr.last[:payers] << user
         why_payers_added[user.id] = user.is_paying
       end
 
       arr.last[:payers].uniq!
-
-      arr
     end
   end
-
 
   def payment_params
     params.require(:payment).permit(
@@ -984,27 +985,27 @@ class PaymentsController < ApplicationController
   # @param [Array<Hash>] items_for_payments
   def calculate_totals(due_payments, payments, items_for_payments)
     total_due = items_for_payments
-                  .reduce(0.0) { |acc, d| acc + Float(d[:due_total]) }
-                  .round(2)
+                .reduce(0.0) { |acc, d| acc + Float(d[:due_total]) }
+                .round(2)
 
     previsionnal_total = due_payments
-                           .reduce(0.0) { |acc, d| acc + d.adjusted_amount }
-                           .round(2)
+                         .reduce(0.0) { |acc, d| acc + d.adjusted_amount }
+                         .round(2)
 
     total_payments = payments
-                       .reduce(0.0) { |acc, p| acc + p.adjusted_amount }
-                       .round(2)
+                     .reduce(0.0) { |acc, p| acc + p.adjusted_amount }
+                     .round(2)
 
     total_payback = payments
-                      .map { |p| p.adjusted_amount }
-                      .compact
-                      .reduce(0.0) { |acc, p| acc + p }
-                      .round(2)
+                    .map { |p| p.adjusted_amount }
+                    .compact
+                    .reduce(0.0) { |acc, p| acc + p }
+                    .round(2)
 
     total_payments_to_day = payments
-                              .filter { |p| p.payment_status_id == PaymentStatus::PAID_ID && p.cashing_date <= DateTime.now }
-                              .reduce(0.0) { |acc, p| acc + p.adjusted_amount }
-                              .round(2)
+                            .filter { |p| p.payment_status_id == PaymentStatus::PAID_ID && p.cashing_date <= DateTime.now }
+                            .reduce(0.0) { |acc, p| acc + p.adjusted_amount }
+                            .round(2)
 
     r = {
       total_due: total_due,
@@ -1036,37 +1037,37 @@ class PaymentsController < ApplicationController
       if des["formula_id"].present?
         formula_id = des["formula_id"]
         formula_activities[formula_id] ||= []
-        formula_activities[formula_id] << {act: act, des: des, activity: a}
+        formula_activities[formula_id] << { act: act, des: des, activity: a }
       else
 
-      activity_nb_lessons = a["intended_nb_lessons"]
+        activity_nb_lessons = a["intended_nb_lessons"]
 
-      activity_ref_pricing  = ActivityRefPricing
-                                .for_season_id(season_id)
-                                .for_activity_ref_id(a["activity_ref"]['id'])
-                                .for_pricing_category_id(des['pricing_category_id'])
-                                .first
+        activity_ref_pricing = ActivityRefPricing
+                               .for_season_id(season_id)
+                               .for_activity_ref_id(a["activity_ref"]["id"])
+                               .for_pricing_category_id(des["pricing_category_id"])
+                               .first
 
-      amount = 0
+        amount = 0
 
-      if activity_ref_pricing&.price
-        amount = ((activity_ref_pricing.price / activity_nb_lessons) * (des["prorata"] || activity_nb_lessons)).round(2)
-      end
+        if activity_ref_pricing&.price
+          amount = ((activity_ref_pricing.price / activity_nb_lessons) * (des["prorata"] || activity_nb_lessons)).round(2)
+        end
 
-      data.push({
-                  id: des["id"],
-                  activity: "#{a['activity_ref']['label']} (#{a['activity_ref']['kind']})",
-                  stopped_at: des["activity_application"]["stopped_at"],
-                  des: nil,
-                  ref: a["activity_ref"],
-                  prorata: des["prorata"],
-                  studentId: act["id"],
-                  user: act["user"],
-                  pricingCategoryId: des["pricing_category_id"],
-                  activityId: a["id"],
-                  paymentLocation: act["payment_location"],
-                  due_total: amount || 0
-                })
+        data.push({
+                    id: des["id"],
+                    activity: "#{a['activity_ref']['label']} (#{a['activity_ref']['kind']})",
+                    stopped_at: des["activity_application"]["stopped_at"],
+                    des: nil,
+                    ref: a["activity_ref"],
+                    prorata: des["prorata"],
+                    studentId: act["id"],
+                    user: act["user"],
+                    pricingCategoryId: des["pricing_category_id"],
+                    activityId: a["id"],
+                    paymentLocation: act["payment_location"],
+                    due_total: amount || 0
+                  })
       end
     end
 
@@ -1114,7 +1115,6 @@ class PaymentsController < ApplicationController
       end
     end
 
-
     taken = data.map { |d| d["activityId"] }
     taken_desired = data.map { |d| d["id"] }
 
@@ -1129,18 +1129,17 @@ class PaymentsController < ApplicationController
       taken_desired.push(des.id)
       activity_nb_lessons = a["intended_nb_lessons"]
 
-      activity_ref_pricing  = ActivityRefPricing
-                                .for_season_id(season_id)
-                                .for_activity_ref_id(a["activity_ref"]['id'])
-                                .for_pricing_category_id(des['pricing_category_id'])
-                                .first
+      activity_ref_pricing = ActivityRefPricing
+                             .for_season_id(season_id)
+                             .for_activity_ref_id(a["activity_ref"]["id"])
+                             .for_pricing_category_id(des["pricing_category_id"])
+                             .first
 
       amount = 0
 
       if activity_ref_pricing&.price
         amount = ((activity_ref_pricing.price / activity_nb_lessons) * (des["prorata"] || activity_nb_lessons)).round(2)
       end
-
 
       const formattedOption = {
         id: des["id"],
@@ -1171,42 +1170,44 @@ class PaymentsController < ApplicationController
 
         adhesion_price = AdhesionPrice.find_by(id: adhesion["adhesion_price_id"])
 
-        if adhesion_price
-          data.push({
-                      id: 0,
-                      activity: "Adhésion de #{user.first_name} #{user.last_name}",
-                      frequency: 1,
-                      initial_total: 1,
-                      due_total: adhesion_price["price"] || 0,
-                      unitPrice: adhesion_price["price"] || 0,
-                      user: user,
-                      studentId: user.id,
-                      adhesionPriceId: adhesion_price["id"],
-                      adhesionId: adhesion["id"],
-                    })
-        end
+        next unless adhesion_price
+
+        data.push({
+                    id: 0,
+                    activity: "Adhésion de #{user.first_name} #{user.last_name}",
+                    frequency: 1,
+                    initial_total: 1,
+                    due_total: adhesion_price["price"] || 0,
+                    unitPrice: adhesion_price["price"] || 0,
+                    user: user,
+                    studentId: user.id,
+                    adhesionPriceId: adhesion_price["id"],
+                    adhesionId: adhesion["id"]
+                  })
       end
     end
 
     season_packs = []
 
-    Pack.where(season_id: season_id, user_id: @activities_json.map{|a| a.dig("user", "id") }.compact.uniq).each do |pack|
+    Pack.where(season_id: season_id, user_id: @activities_json.map do |a|
+      a.dig("user", "id")
+    end.compact.uniq).each do |pack|
       season_packs << pack.as_json(include: {
-        activity_ref: {},
-        activity_ref_pricing: {
-          include: {
-            pricing_category: {}
-          }
-        },
-        user: {}
-      })
+                                     activity_ref: {},
+                                     activity_ref_pricing: {
+                                       include: {
+                                         pricing_category: {}
+                                       }
+                                     },
+                                     user: {}
+                                   })
     end
 
     if season_packs.any?
       season_packs.each do |pack|
         data.push({
                     id: 0,
-                    activity: "Pack de #{pack["user"]["first_name"]} #{pack["user"]["last_name"]} pour #{pack["activity_ref"]["label"]} (#{pack["activity_ref"]["kind"]})",
+                    activity: "Pack de #{pack['user']['first_name']} #{pack['user']['last_name']} pour #{pack['activity_ref']['label']} (#{pack['activity_ref']['kind']})",
                     frequency: 1,
                     initial_total: 1,
                     due_total: pack["activity_ref_pricing"]["price"] || 0,
@@ -1216,7 +1217,7 @@ class PaymentsController < ApplicationController
                     user: pack["user"],
                     studentId: pack["user"]["id"],
                     packPrice: pack["activity_ref_pricing"],
-                    packId: pack["id"],
+                    packId: pack["id"]
                   })
       end
     end
@@ -1224,38 +1225,33 @@ class PaymentsController < ApplicationController
     data
   end
 
-
   def calculate_formula_price(formula, activities, season_id)
-    if formula.fixed_price
-      return formula.price
-    else
-      total = 0
-      activities.each do |item|
-        a = item[:activity]
-        des = item[:des]
+    return formula.price if formula.fixed_price
 
-        activity_nb_lessons = a["intended_nb_lessons"]
+    total = 0
+    activities.each do |item|
+      a = item[:activity]
+      des = item[:des]
 
-        activity_ref_pricing = ActivityRefPricing
-                                 .for_season_id(season_id)
-                                 .for_activity_ref_id(a["activity_ref"]['id'])
-                                 .for_pricing_category_id(des['pricing_category_id'])
-                                 .first
+      activity_nb_lessons = a["intended_nb_lessons"]
 
-        if activity_ref_pricing&.price
-          activity_price = ((activity_ref_pricing.price / activity_nb_lessons) * (des["prorata"] || activity_nb_lessons)).round(2)
-          total += activity_price
-        end
+      activity_ref_pricing = ActivityRefPricing
+                             .for_season_id(season_id)
+                             .for_activity_ref_id(a["activity_ref"]["id"])
+                             .for_pricing_category_id(des["pricing_category_id"])
+                             .first
+
+      if activity_ref_pricing&.price
+        activity_price = ((activity_ref_pricing.price / activity_nb_lessons) * (des["prorata"] || activity_nb_lessons)).round(2)
+        total += activity_price
       end
-
-      discount_amount = (total * formula.discount_percent / 100).round(2)
-      return total - discount_amount
     end
+
+    discount_amount = (total * formula.discount_percent / 100).round(2)
+    total - discount_amount
   end
 
-
   def generate_activities_data_for_action(user)
-
     @user = user
 
     @desired_activities = {}
@@ -1274,7 +1270,9 @@ class PaymentsController < ApplicationController
                         include: {
                           coupon: {
                             only: %i[id percent_off label]
-                          } } },
+                          }
+                        }
+                      },
                       activity_ref: {
                         include: {
                           activity_ref_pricing: {
@@ -1303,7 +1301,9 @@ class PaymentsController < ApplicationController
                               }
                             }
                           },
-                          season: {} } }
+                          season: {}
+                        }
+                      }
                     }
                   })
     end.as_json
@@ -1349,13 +1349,13 @@ class PaymentsController < ApplicationController
 
     # Récupérer tous les utilisateurs de toutes les @desired_activities
     desired_activities_users = @desired_activities
-                                 .values
-                                 .flatten
-                                 .map { |da| da["activity_application"]["user"] }
-                                 .uniq
+                               .values
+                               .flatten
+                               .map { |da| da["activity_application"]["user"] }
+                               .uniq
 
     # récupérer les adhésions de tous ces utilisateurs
-    @adhesions = Adhesion.where(user_id: desired_activities_users.pluck('id'))
+    @adhesions = Adhesion.where(user_id: desired_activities_users.pluck("id"))
                          .includes(user: {}, discount: { coupon: {} })
                          .uniq
                          .as_json({

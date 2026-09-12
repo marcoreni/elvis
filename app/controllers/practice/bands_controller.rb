@@ -30,7 +30,6 @@ class Practice::BandsController < ApplicationController
                            }
                          })
     authorize! :manage, @band
-
   end
 
   # POST /bands
@@ -39,7 +38,7 @@ class Practice::BandsController < ApplicationController
     @band = Band.create(band_params)
     authorize! :manage, @band
     params[:users]&.each do |user|
-      if (user[:id]).zero?
+      if user[:id].zero?
         createUser = User.new
         createUser.first_name = user[:first_name]
         createUser.last_name = user [:last_name]
@@ -57,7 +56,10 @@ class Practice::BandsController < ApplicationController
         format.html { redirect_to "#{parameters_practice_parameters_list_bands_path}#tab-2" }
         format.json { render json: @band, status: :created }
       else
-        format.html { set_referentials; render :new }
+        format.html do
+          set_referentials
+          render :new
+        end
         format.json { render json: @band.errors, status: :unprocessable_entity }
       end
     end
@@ -79,16 +81,16 @@ class Practice::BandsController < ApplicationController
                     User.find_by(id: user[:id])
                   end
 
-      if !user[:first_name].nil? && !user[:last_name].nil? && !bu.nil?
-        bu.instrument_id = user[:instrument_id]
-        bu.first_name = user[:first_name]
-        bu.last_name = user[:last_name]
-        bu.email = user[:email]
-        bu.left_at = bu.left_at.nil? ? Time.now.utc : bu.left_at
-        bu.user = edit_user if bu.user.nil?
+      next unless !user[:first_name].nil? && !user[:last_name].nil? && !bu.nil?
 
-        bu.save!
-      end
+      bu.instrument_id = user[:instrument_id]
+      bu.first_name = user[:first_name]
+      bu.last_name = user[:last_name]
+      bu.email = user[:email]
+      bu.left_at = bu.left_at.nil? ? Time.now.utc : bu.left_at
+      bu.user = edit_user if bu.user.nil?
+
+      bu.save!
     end
 
     params[:users]&.each do |user|
@@ -121,7 +123,10 @@ class Practice::BandsController < ApplicationController
         format.html { redirect_to "#{parameters_practice_parameters_list_bands_path}#tab-2" }
         format.json { render json: @band, status: :created }
       else
-        format.html { set_referentials; render :edit }
+        format.html do
+          set_referentials
+          render :edit
+        end
         format.json { render json: @band.errors, status: :unprocessable_entity }
       end
     end
@@ -144,12 +149,13 @@ class Practice::BandsController < ApplicationController
   end
 
   private
-    # Use callbacks to share common setup or constraints between actions.
+
+  # Use callbacks to share common setup or constraints between actions.
   def set_band
     @band = Band.find(params[:id])
   end
 
-    # Never trust parameters from the scary internet, only allow the white list through.
+  # Never trust parameters from the scary internet, only allow the white list through.
   def band_params
     params.require(:band).permit(:id, :name, :blacklisted, :music_genre_id, :band_type_id)
   end

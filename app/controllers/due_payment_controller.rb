@@ -1,24 +1,26 @@
 # frozen_string_literal: true
+
 class DuePaymentController < ApplicationController
   def create
     authorize! :create, DuePayment.new
 
-    if (params[:due_payment][:payment_schedule_id]).zero?
+    if params[:due_payment][:payment_schedule_id].zero?
       status = PaymentScheduleStatus.find_by(label: "En attente de règlement")
       season = Season.find params[:season_id]
-      schedule = PaymentSchedule.create!(payable_id: params[:due_payment][:payer][:id], payable_type: "User", payment_schedule_status: status, season: season)
+      schedule = PaymentSchedule.create!(payable_id: params[:due_payment][:payer][:id], payable_type: "User",
+                                         payment_schedule_status: status, season: season)
     else
       schedule = PaymentSchedule.find params[:due_payment][:payment_schedule_id]
     end
 
-    due_payment = DuePayment.create!({
-                                       previsional_date: params[:due_payment][:previsional_date],
-                                       amount: params[:due_payment][:amount],
-                                       payment_schedule: schedule,
-                                       payment_method_id: params[:due_payment][:payment_method_id],
-                                       number: params[:due_payment][:isAdhesionDue] ? 0 : schedule.get_due_payment_number,
-                                       due_payment_status_id: DuePaymentStatus::UNPAID_ID
-                                     })
+    DuePayment.create!({
+                         previsional_date: params[:due_payment][:previsional_date],
+                         amount: params[:due_payment][:amount],
+                         payment_schedule: schedule,
+                         payment_method_id: params[:due_payment][:payment_method_id],
+                         number: params[:due_payment][:isAdhesionDue] ? 0 : schedule.get_due_payment_number,
+                         due_payment_status_id: DuePaymentStatus::UNPAID_ID
+                       })
 
     render json: schedule.as_json({
                                     include: {
@@ -56,13 +58,14 @@ class DuePaymentController < ApplicationController
   end
 
   def generate_payments
-    schedule = PaymentSchedule.find params[:id]
+    PaymentSchedule.find params[:id]
 
     dues = DuePayment.where(id: params[:targets])
 
     dues.each do |dp|
       p = Payment.find_by(due_payment_id: dp.id)
       next unless p.nil?
+
       dp.create_related_payment
     end
 
@@ -89,12 +92,8 @@ class DuePaymentController < ApplicationController
   def send_payment_mail
     if params[:targets].length == 1
       dp = DuePayment.find(params[:targets][0])
-      unless dp.nil?
-        if dp.due_payment_status_id == DuePaymentStatus::UNPAID_ID
-          if dp.previsional_date <= Date.today
-            PaymentReminderMailer.send_payment_reminder(dp.payment_schedule.user, [dp]).deliver_later
-          end
-        end
+      if !dp.nil? && (dp.due_payment_status_id == DuePaymentStatus::UNPAID_ID) && (dp.previsional_date <= Date.today)
+        PaymentReminderMailer.send_payment_reminder(dp.payment_schedule.user, [dp]).deliver_later
       end
     else
       selected_users = params[:targets].map { |id| User.find(DuePayment.find(id).payment_schedule.payable_id) }.uniq
@@ -107,9 +106,11 @@ class DuePaymentController < ApplicationController
     end
 
     respond_to do |format|
-      format.json { render json: {
-        status: "success"
-      } }
+      format.json do
+        render json: {
+          status: "success"
+        }
+      end
     end
   end
 
@@ -122,25 +123,23 @@ class DuePaymentController < ApplicationController
 
     due_payments.update_all(bulk_params.to_h)
 
-    if params[:mode] == "user"
-      if bulk_params.include? "due_payment_status_id"
-        due_payments.each do |p|
-          if !p.payments.nil? && p.payments.any?
-            p.payments.update(payment_status_id: params[:due_payment_status_id])
-          end
-        end
+    return unless params[:mode] == "user"
+
+    if bulk_params.include? "due_payment_status_id"
+      due_payments.each do |p|
+        p.payments.update(payment_status_id: params[:due_payment_status_id]) if !p.payments.nil? && p.payments.any?
       end
-
-      due_payments.compact.each(&:reevaluate_status)
-
-      @due_payments = due_payments.as_json(include: {
-        payments: {
-          methods: :adjusted_amount
-        }
-      })
-
-      render json: @due_payments
     end
+
+    due_payments.compact.each(&:reevaluate_status)
+
+    @due_payments = due_payments.as_json(include: {
+                                           payments: {
+                                             methods: :adjusted_amount
+                                           }
+                                         })
+
+    render json: @due_payments
   end
 
   def bulkdelete
@@ -169,12 +168,12 @@ class DuePaymentController < ApplicationController
   def renumber
     PaymentSchedule.all.each do |schedule|
       next unless schedule.due_payments.where(number: nil).any?
+
       i = 1
       adhesion_fee_set = false
       dues = schedule.due_payments.order(:previsional_date)
       dues.each do |dp|
-
-        # TODO quelle est la logique métier ici ?
+        # TODO: quelle est la logique métier ici ?
         if !dp.amount.nil? && (dp.amount % 15).zero? && dp.amount <= 60.0 && !adhesion_fee_set
           dp.number = 0
           adhesion_fee_set = true
@@ -196,10 +195,10 @@ class DuePaymentController < ApplicationController
                       .joins(payment_schedule: :user)
                       .where(payment_schedules: { payable_type: "User" })
                       .where(payment_schedules: {
-                        users: {
-                          deleted_at: nil
-                        }
-                      })
+                               users: {
+                                 deleted_at: nil
+                               }
+                             })
 
     if params[:list]
       list = JSON.parse(params[:list])
@@ -237,7 +236,7 @@ class DuePaymentController < ApplicationController
           end
         elsif prop == "payment_payment_method_id"
           query = query
-                    .joins("LEFT OUTER JOIN payments AS outer_payments ON outer_payments.due_payment_id = due_payments.id")
+                  .joins("LEFT OUTER JOIN payments AS outer_payments ON outer_payments.due_payment_id = due_payments.id")
           query = if val == "null"
                     query.where("outer_payments.payment_method_id is NULL OR outer_payments.payment_method_id = 0")
                   else
@@ -250,12 +249,11 @@ class DuePaymentController < ApplicationController
                     query.where(payment_method_id: val)
                   end
         elsif prop == "due_payment_status_id" || prop == "location_id" && val.match?(/\d+/)
-          if val == "null"
-            query = query.where("due_payments.#{prop} is null OR due_payments.#{prop} = 0")
-          else
-            payment_method_filter = val
-            query = query.where("due_payments.#{prop} = #{val}")
-          end
+          query = if val == "null"
+                    query.where("due_payments.#{prop} is null OR due_payments.#{prop} = 0")
+                  else
+                    query.where("due_payments.#{prop} = #{val}")
+                  end
         elsif prop == "previsional_date"
           if val[:start] && val[:end]
             query = query.where("due_payments.previsional_date >= ?::date", val[:start])
@@ -266,10 +264,14 @@ class DuePaymentController < ApplicationController
           end
         elsif prop == "cashing_date"
           if val[:start] && val[:end]
-            query = query.where("(SELECT COUNT(*) FROM payments p WHERE p.due_payment_id = due_payments.id AND p.cashing_date BETWEEN ?::date AND ?::date) > 0", val[:start], val[:end])
+            query = query.where(
+              "(SELECT COUNT(*) FROM payments p WHERE p.due_payment_id = due_payments.id AND p.cashing_date BETWEEN ?::date AND ?::date) > 0", val[:start], val[:end]
+            )
           elsif val[:start] || val[:end]
             day = val[:start] || val[:end]
-            query = query.where("(SELECT COUNT(*) FROM payments p WHERE p.due_payment_id = due_payments.id AND p.cashing_date = ?::date) > 0", day)
+            query = query.where(
+              "(SELECT COUNT(*) FROM payments p WHERE p.due_payment_id = due_payments.id AND p.cashing_date = ?::date) > 0", day
+            )
           end
         elsif prop == "season_id"
           s = Season.find(val)
@@ -281,17 +283,18 @@ class DuePaymentController < ApplicationController
     end
 
     totals = {}
-    headers = %w(Montant\ initial Cours Adhésion Total)
-    block = Proc.new do |step, h |
+    headers = ["Montant initial", "Cours", "Adhésion", "Total"]
+    block = proc do |step, h|
       case step
       when 1 # initialisation ; h est un array avec les en-têtes
-        h.each { |k|
-          totals[k] =  headers.include?(k) ? 0 : nil }
+        h.each do |k|
+          totals[k] = headers.include?(k) ? 0 : nil
+        end
       when 2 # itération ; h est un hash avec les valeurs issues de la sérialisation
-        totals['Montant initial'] += h['Montant initial'].to_f
-        totals['Cours'] += h['Cours'].to_f
-        totals['Adhésion'] += h['Adhésion'].to_f
-        totals['Total'] += h['Total'].to_f
+        totals["Montant initial"] += h["Montant initial"].to_f
+        totals["Cours"] += h["Cours"].to_f
+        totals["Adhésion"] += h["Adhésion"].to_f
+        totals["Total"] += h["Total"].to_f
       when 3 # ligne des totaux ; on doit renvoyer
         totals.each do |k, v|
           totals[k] = v.to_s(:rounded, precision: 2, locale: :fr) if headers.include?(k)
@@ -315,10 +318,10 @@ class DuePaymentController < ApplicationController
                       .joins(payment_schedule: :user)
                       .where(payment_schedules: { payable_type: "User" })
                       .where(payment_schedules: {
-                        users: {
-                          deleted_at: nil
-                        }
-                      })
+                               users: {
+                                 deleted_at: nil
+                               }
+                             })
 
     payment_method_filter = nil
 
@@ -354,7 +357,7 @@ class DuePaymentController < ApplicationController
         end
       elsif prop == "payment_payment_method_id"
         query = query
-                  .joins("LEFT OUTER JOIN payments AS outer_payments ON outer_payments.due_payment_id = due_payments.id")
+                .joins("LEFT OUTER JOIN payments AS outer_payments ON outer_payments.due_payment_id = due_payments.id")
         query = if val == "null"
                   query.where("outer_payments.payment_method_id is NULL OR outer_payments.payment_method_id = 0")
                 else
@@ -383,10 +386,14 @@ class DuePaymentController < ApplicationController
         end
       elsif prop == "cashing_date"
         if val[:start] && val[:end]
-          query = query.where("(SELECT COUNT(*) FROM payments p WHERE p.due_payment_id = due_payments.id AND p.cashing_date BETWEEN ?::date AND ?::date) > 0", val[:start], val[:end])
+          query = query.where(
+            "(SELECT COUNT(*) FROM payments p WHERE p.due_payment_id = due_payments.id AND p.cashing_date BETWEEN ?::date AND ?::date) > 0", val[:start], val[:end]
+          )
         elsif val[:start] || val[:end]
           day = val[:start] || val[:end]
-          query = query.where("(SELECT COUNT(*) FROM payments p WHERE p.due_payment_id = due_payments.id AND p.cashing_date = ?::date) > 0", day)
+          query = query.where(
+            "(SELECT COUNT(*) FROM payments p WHERE p.due_payment_id = due_payments.id AND p.cashing_date = ?::date) > 0", day
+          )
         end
       elsif prop == "season_id"
         s = Season.find(val)
@@ -399,18 +406,21 @@ class DuePaymentController < ApplicationController
   end
 
   def payments_list_json(query, payment_method_id)
-    totalDueAmount = query.distinct.pluck(:id, Arel.sql("adjusted_amount(due_payments.operation, due_payments.amount)")).map { |pair| pair[1] }.compact.sum
+    totalDueAmount = query.distinct.pluck(:id,
+                                          Arel.sql("adjusted_amount(due_payments.operation, due_payments.amount)")).map do |pair|
+      pair[1]
+    end.compact.sum
 
     total_paid_query = query
 
     total_paid_query = query.where(payments: { payment_method_id: payment_method_id }) if payment_method_id
 
     totalPaidAmount = total_paid_query
-                        .distinct
-                        .pluck("payments.id", Arel.sql("adjusted_amount(payments.operation, payments.amount)"))
-                        .map { |pair| pair[1] }
-                        .compact
-                        .sum
+                      .distinct
+                      .pluck("payments.id", Arel.sql("adjusted_amount(payments.operation, payments.amount)"))
+                      .map { |pair| pair[1] }
+                      .compact
+                      .sum
 
     rows_count = query.count
 
@@ -424,20 +434,20 @@ class DuePaymentController < ApplicationController
       end).joins(payment_schedule: :user)
 
     query = query
-              .page(params[:page] + 1)
-              .per(params[:pageSize])
+            .page(params[:page] + 1)
+            .per(params[:pageSize])
 
     pages = query.total_pages
 
     payments = query.as_json(include: {
-      payments: {
-        methods: :adjusted_amount
-      },
-      due_payment_status: {},
-      payment_schedule: {
-        include: [:user]
-      }
-    })
+                               payments: {
+                                 methods: :adjusted_amount
+                               },
+                               due_payment_status: {},
+                               payment_schedule: {
+                                 include: [:user]
+                               }
+                             })
     authorize! :read, payments
 
     {
@@ -450,10 +460,12 @@ class DuePaymentController < ApplicationController
   end
 
   def due_payment_params
-    params.require(:due_payment).permit(:previsional_date, :operation, :amount, :payment_method_id, :due_payment_status_id)
+    params.require(:due_payment).permit(:previsional_date, :operation, :amount, :payment_method_id,
+                                        :due_payment_status_id)
   end
 
   def bulk_params
-    params.require(:due_payment).permit(:previsional_date, :operation, :amount, :payment_method_id, :due_payment_status_id)
+    params.require(:due_payment).permit(:previsional_date, :operation, :amount, :payment_method_id,
+                                        :due_payment_status_id)
   end
 end

@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 class LiquidDrops::JsonDrop < Liquid::Drop
-
   def initialize(json)
     raise ArgumentError, "Expected a Hash, got: #{json.class}" unless json.is_a?(Hash)
 

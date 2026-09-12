@@ -1,5 +1,4 @@
 class ScriptsController < ApplicationController
-
   before_action -> { @current_user = current_user }
 
   USER_DATA_TO_COPY = [
@@ -21,9 +20,7 @@ class ScriptsController < ApplicationController
     @season = Season.current
   end
 
-  def replicate_week_activities
-    #
-  end
+  def replicate_week_activities; end
 
   def execute_merge_users
     user_to_delete = User.find params[:old_user_id]
@@ -93,16 +90,13 @@ class ScriptsController < ApplicationController
     target_date_end = params[:targetEndDate]
 
     begin
-
-      job = Scripts::ReplicateWeekActivities.perform_later(replicate_on_vac, ref_week_date, target_date_start, target_date_end)
-
-
+      job = Scripts::ReplicateWeekActivities.perform_later(replicate_on_vac, ref_week_date, target_date_start,
+                                                           target_date_end)
     rescue StandardError, NoMemoryError => e
       render json: { errors: e }, status: 500
       return
     end
 
-    render json: {jobId: job.job_id}
+    render json: { jobId: job.job_id }
   end
-
 end

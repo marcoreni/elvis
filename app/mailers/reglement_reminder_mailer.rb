@@ -1,6 +1,7 @@
 # frozen_string_literal: true
-require_relative 'liquid_drops/application_drop'
-require_relative 'liquid_drops/activity_drop'
+
+require_relative "liquid_drops/application_drop"
+require_relative "liquid_drops/activity_drop"
 
 class ReglementReminderMailer < ApplicationMailer
   prepend_view_path NotificationTemplate.resolver
@@ -10,8 +11,16 @@ class ReglementReminderMailer < ApplicationMailer
     @user = user
 
     @reglements = reglements.as_json
-    @reglements.each { |reglement| reglement["status"] =  "<a type='button' style='color: white; padding: 10px; border-radius: 5px; background-color:" + PaymentStatus.find(reglement["payment_status_id"]).as_json["color"] + "'>" + PaymentStatus.find(reglement["payment_status_id"]).as_json['label'] + "</a>"}
-    @reglements.each { |reglement| reglement["cashing_date"] =  reglement["cashing_date"].to_date.strftime("%d/%m/%Y") + "" if reglement["cashing_date"] != nil}
+    @reglements.each do |reglement|
+      reglement["status"] =
+        "<a type='button' style='color: white; padding: 10px; border-radius: 5px; background-color:" + PaymentStatus.find(reglement["payment_status_id"]).as_json["color"] + "'>" + PaymentStatus.find(reglement["payment_status_id"]).as_json["label"] + "</a>"
+    end
+    @reglements.each do |reglement|
+      unless reglement["cashing_date"].nil?
+        reglement["cashing_date"] =
+          reglement["cashing_date"].to_date.strftime("%d/%m/%Y") + ""
+      end
+    end
 
     mail(to: user.email, subject: default_i18n_subject(name: name))
   end
@@ -19,10 +28,10 @@ class ReglementReminderMailer < ApplicationMailer
   def liquid_assigns
     {
       "school_logo" => getSchoolLogo,
-      'first_name' => @user.first_name.capitalize,
-      'last_name' => @user.last_name.capitalize,
-      'school_link' => get_button_school_link,
-      'reglements' => @reglements,
+      "first_name" => @user.first_name.capitalize,
+      "last_name" => @user.last_name.capitalize,
+      "school_link" => get_button_school_link,
+      "reglements" => @reglements
     }
   end
 end

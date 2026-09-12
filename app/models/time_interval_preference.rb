@@ -12,19 +12,17 @@
 #
 
 class TimeIntervalPreference < ApplicationRecord
-    belongs_to :user
-    belongs_to :season
-    belongs_to :time_interval
-    belongs_to :activity_ref
-    belongs_to :activity_application
+  belongs_to :user
+  belongs_to :season
+  belongs_to :time_interval
+  belongs_to :activity_ref
+  belongs_to :activity_application
 
-    def self.display_class_name(singular=false)
-        singular ? "préférence horaire" : "préférences horaires"
-    end
+  def self.display_class_name(singular = false)
+    singular ? "préférence horaire" : "préférences horaires"
+  end
 
-    def self.class_name_gender
-        return :F
-    end
-
-
+  def self.class_name_gender
+    :F
+  end
 end

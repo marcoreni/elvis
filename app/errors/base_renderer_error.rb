@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 class BaseRendererError < StandardError
-
   attr_accessor :sup_message
 
   def initialize(message, code)
@@ -10,16 +9,13 @@ class BaseRendererError < StandardError
     @code = code
   end
 
-  def code
-    @code
-  end
+  attr_reader :code
 
   def with_message(message)
-    duplicated = self.dup
+    duplicated = dup
 
     duplicated.sup_message = message
 
     duplicated
   end
 end
-

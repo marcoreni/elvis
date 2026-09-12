@@ -1,5 +1,4 @@
 class AdminController < ApplicationController
-
   def update_logo
     school = School.first
 
@@ -12,7 +11,7 @@ class AdminController < ApplicationController
   end
 
   def get_session_hour
-    #getinterval_step
+    # getinterval_step
     evaluation_interval = Parameter.get_value("INTERVAL_STEPS")
     render json: { session_hour: evaluation_interval }
   end

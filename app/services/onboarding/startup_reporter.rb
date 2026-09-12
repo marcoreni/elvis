@@ -5,8 +5,8 @@ module Onboarding
     end
 
     def initialize(step)
-      instance_name = (ENV["INSTANCE_SLUG"]).to_s
-      pod_id = (ENV["POD_ID"]).to_s
+      instance_name = ENV["INSTANCE_SLUG"].to_s
+      pod_id = ENV["POD_ID"].to_s
 
       @body = {
         instanceName: instance_name,

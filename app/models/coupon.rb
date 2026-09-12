@@ -20,7 +20,6 @@ class Coupon < ApplicationRecord
   validates :percent_off, presence: true, numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: 100 }
   validates :enabled, inclusion: { in: [true, false] }
 
-
   def self.apply_discount_to_price(price, coupon)
     return unless price
     return price unless coupon

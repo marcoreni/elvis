@@ -18,9 +18,9 @@ class AdhesionMailer < LayoutMailer
   def liquid_assigns
     {
       "school_logo" => getSchoolLogo,
-      'first_name' => @user.first_name.capitalize,
-      'last_name' => @user.last_name.capitalize,
-      'school_link' => get_button_school_link("Connectez vous"),
+      "first_name" => @user.first_name.capitalize,
+      "last_name" => @user.last_name.capitalize,
+      "school_link" => get_button_school_link("Connectez vous")
     }
   end
 end

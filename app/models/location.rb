@@ -9,15 +9,14 @@
 #
 
 class Location < ApplicationRecord
-    has_many :room
-    validates :label, uniqueness: true
+  has_many :room
+  validates :label, uniqueness: true
 
-    def self.display_class_name(singular = true)
-        singular ? "lieu" : "lieux"
-    end
+  def self.display_class_name(singular = true)
+    singular ? "lieu" : "lieux"
+  end
 
-    def self.class_name_gender
-        return :M
-    end
-
+  def self.class_name_gender
+    :M
+  end
 end

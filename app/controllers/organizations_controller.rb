@@ -5,9 +5,10 @@ class OrganizationsController < ApplicationController
     attr_organization = organization_params
     tax_id = nil
     if attr_organization[:organization_tax_id].present?
-      tax_id = { type: 'eu_vat', value: attr_organization[:organization_tax_id] }
+      tax_id = { type: "eu_vat", value: attr_organization[:organization_tax_id] }
     end
-    organization = Organization.new(name: attr_organization[:organization_name], reg_number: attr_organization[:organization_reg_number], tax_id: tax_id)
+    organization = Organization.new(name: attr_organization[:organization_name],
+                                    reg_number: attr_organization[:organization_reg_number], tax_id: tax_id)
 
     if organization.valid?
 
@@ -24,12 +25,11 @@ class OrganizationsController < ApplicationController
   end
 
   def update_from_user
-
     organisation_params = organization_params_update
     user = User.find(organisation_params[:user_id])
     organization = Organization.find(user.organization_id)
 
-    organization.tax_id = { type: 'eu_vat', value: organisation_params[:organization_tax_id] }
+    organization.tax_id = { type: "eu_vat", value: organisation_params[:organization_tax_id] }
 
     if organization.save
       render json: {}, status: 200 and return
@@ -37,7 +37,6 @@ class OrganizationsController < ApplicationController
       Rails.logger.error "La mise à jour n'a pas été effectué (modifier une organization)"
       render json: { message: t("controllers.organizations.update_from_user.failure") }, status: 500 and return
     end
-
   end
 
   private

@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 class ActivityRefPricingsListener < BaseListener
-
   def self.remove_cache(season_id)
     Rails.cache.delete("activity_refs_packs:season_#{season_id}")
   end
@@ -9,15 +8,15 @@ class ActivityRefPricingsListener < BaseListener
   def self.remove_cache_for(from_season_id, to_season_id)
     remove_cache(from_season_id)
 
-    if to_season_id
-      remove_cache(to_season_id)
-      s = Season.find_by(id: to_season_id)
+    return unless to_season_id
 
-      while s.present? && s.id != from_season_id && s.previous
-        s = s.previous
+    remove_cache(to_season_id)
+    s = Season.find_by(id: to_season_id)
 
-        remove_cache(s&.id)
-      end
+    while s.present? && s.id != from_season_id && s.previous
+      s = s.previous
+
+      remove_cache(s&.id)
     end
   end
 
@@ -41,6 +40,5 @@ class ActivityRefPricingsListener < BaseListener
 
       remove_cache_for(model.from_season_id, model.to_season_id)
     end
-
   end
 end

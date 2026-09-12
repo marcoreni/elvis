@@ -19,7 +19,7 @@ module ActivityApplications
                                                       activity_ref: { activity_ref_kind: {} }
                                                     }).find(@desired_activity_id)
         matches = Elvis::CacheUtils.cache_block_if_enabled("find_all_suggestions_#{desired_activity.id}") do
-          self.find_all_suggestions(desired_activity)
+          find_all_suggestions(desired_activity)
         end
       when "CUSTOM"
         desired_activity = DesiredActivity.includes({
@@ -30,23 +30,25 @@ module ActivityApplications
                                                       },
                                                       options: {},
                                                       activity_ref: [:activity_ref_kind],
-                                                      activity: { time_interval: {}, activity_ref: [:activity_ref_kind] }
+                                                      activity: { time_interval: {},
+                                                                  activity_ref: [:activity_ref_kind] }
                                                     }).find(@desired_activity_id)
         matches = Elvis::CacheUtils.cache_block_if_enabled("find_custom_suggestions_#{desired_activity.id}") do
-          self.find_custom_suggestions(desired_activity)
+          find_custom_suggestions(desired_activity)
         end
 
       end
 
-      desired_activity = desired_activity || DesiredActivity.find(@desired_activity_id)
+      desired_activity ||= DesiredActivity.find(@desired_activity_id)
 
       application = desired_activity.activity_application
 
       matches = (matches&.to_a || []).compact
 
       # return with or without active/inactive students
-      !@do_format ?
-        matches :
+      if !@do_format
+        matches
+      else
         matches.map do |activity|
           from_date = application.stopped_at ? Time.zone.now : application.begin_at
 
@@ -54,6 +56,7 @@ module ActivityApplications
             Utils.format_for_suggestion(application.user, activity, from_date)
           end
         end
+      end
     end
 
     # @param [DesiredActivity] desired_activity
@@ -62,29 +65,27 @@ module ActivityApplications
       season = desired_activity.activity_application.season
 
       matches = Activity
-                  .includes({
-                              time_interval: {},
-                              activity_ref: { activity_ref_kind: {} },
-                              users: {},
-                            })
-                  .where({
-                           time_intervals: {
-                             start: season.start..season.end,
-                           },
-                         })
+                .includes({
+                            time_interval: {},
+                            activity_ref: { activity_ref_kind: {} },
+                            users: {}
+                          })
+                .where({
+                         time_intervals: {
+                           start: season.start..season.end
+                         }
+                       })
 
       if activity_ref.activity_type&.to_s == "child"
-        matches = matches.where({ activity_ref_id: activity_ref.id })
+        matches.where({ activity_ref_id: activity_ref.id })
       else
-        matches = matches
-                    .where({
-                             activity_refs: {
-                               activity_ref_kind_id: activity_ref.activity_ref_kind_id,
-                             },
-                           })
+        matches
+          .where({
+                   activity_refs: {
+                     activity_ref_kind_id: activity_ref.activity_ref_kind_id
+                   }
+                 })
       end
-
-      matches
     end
 
     # @param [DesiredActivity] desired_activity
@@ -97,8 +98,6 @@ module ActivityApplications
       application_season = application.season
       # @type [User]
       user = application.user
-
-      availability_intervals = []
 
       is_childhood = false
       skip_intervals_matching = false
@@ -113,14 +112,14 @@ module ActivityApplications
         if user.time_interval_preferences.where(season: application_season).none?
           skip_intervals_matching = true
           matches = TimeInterval
-                      .validated
-                      .joins({ activity: { activity_ref: :activity_ref_kind } })
-                      .where({
-                               start: (application_season.start..application_season.end),
-                               activities: {
-                                 activity_ref: activity_ref
-                               }
-                             }).to_a
+                    .validated
+                    .joins({ activity: { activity_ref: :activity_ref_kind } })
+                    .where({
+                             start: (application_season.start..application_season.end),
+                             activities: {
+                               activity_ref: activity_ref
+                             }
+                           }).to_a
         end
       end
 
@@ -130,25 +129,25 @@ module ActivityApplications
 
       unless skip_intervals_matching
         user_activity_application_ids = ActivityApplication
-                                          .where(user_id: application.user_id)
-                                          .pluck(:id)
+                                        .where(user_id: application.user_id)
+                                        .pluck(:id)
 
         busy_interval_ids = DesiredActivity
-          .joins(:activity)
-          .where(activity_application_id: user_activity_application_ids, is_validated: true)
-          .where.not(id: desired_activity.id)
-          .pluck(:time_interval_id)
-          .uniq
+                            .joins(:activity)
+                            .where(activity_application_id: user_activity_application_ids, is_validated: true)
+                            .where.not(id: desired_activity.id)
+                            .pluck(:time_interval_id)
+                            .uniq
 
         busy_intervals = TimeInterval.where(id: busy_interval_ids).to_a
 
-          #busy_intervals = ActivityApplication
-          #                 .where(user_id: application.user_id)
-          #                 .map(&:desired_activities)
-          #                 .flatten
-          #                 .compact
-          #                 .select(&:is_validated)
-          #                 .select(&:activity) - [desired_activity]
+        # busy_intervals = ActivityApplication
+        #                 .where(user_id: application.user_id)
+        #                 .map(&:desired_activities)
+        #                 .flatten
+        #                 .compact
+        #                 .select(&:is_validated)
+        #                 .select(&:activity) - [desired_activity]
 
         #  On itère sur chaque time_pref pour trouver les matchs possibles parmi tous les créneaux validés
         availability_intervals.each do |time_pref|
@@ -165,24 +164,24 @@ module ActivityApplications
       end
 
       activities = Activity
-        .includes({
-                    evaluation_level_ref: {},
-                    teachers_activities: {},
-                    options: {
-                      desired_activity: {
-                        activity_application: [:user]
-                      }
-                    },
-                    location: {},
-                    room: {},
-                    time_interval: [:time_interval_preferences],
-                    activity_ref: [:activity_ref_kind],
-                    activities_instruments: [:user],
-                    users: {},
-                    activity_instances: {}
-                  })
-        .where(time_interval_id: matches.map(&:id))
-        .to_a
+                   .includes({
+                               evaluation_level_ref: {},
+                               teachers_activities: {},
+                               options: {
+                                 desired_activity: {
+                                   activity_application: [:user]
+                                 }
+                               },
+                               location: {},
+                               room: {},
+                               time_interval: [:time_interval_preferences],
+                               activity_ref: [:activity_ref_kind],
+                               activities_instruments: [:user],
+                               users: {},
+                               activity_instances: {}
+                             })
+                   .where(time_interval_id: matches.map(&:id))
+                   .to_a
 
       activities.select! do |a|
         instance = a.closest_instance(application.begin_at)
@@ -212,28 +211,28 @@ module ActivityApplications
     def sort_by_teacher_prev(suggestions, application)
       prev_teacher = application&.pre_application_activity&.activity&.teachers&.first
 
-      if suggestions.empty? || prev_teacher.nil?
-        return suggestions
-      else
-        ordered_results = suggestions.sort_by do |s|
-          (s.is_a?(Activity) ? s : s.activity).teacher.id == prev_teacher.id ? -1 : 0
-        end
+      return suggestions if suggestions.empty? || prev_teacher.nil?
 
-        return ordered_results
+      suggestions.sort_by do |s|
+        if (s.is_a?(Activity) ? s : s.activity).teacher.id == prev_teacher.id
+          -1
+        else
+          0
+        end
       end
     end
 
     def sort_by_day_prev(suggestions, application)
       prev_day = application&.pre_application_activity&.activity&.time_interval&.start&.strftime("%A")
 
-      if suggestions.empty? || prev_day.nil?
-        return suggestions
-      else
-        ordered_results = suggestions.sort_by do |s|
-          (s.is_a?(Activity) ? s : s.activity).time_interval.start.strftime("%A") == prev_day ? -1 : 0
-        end
+      return suggestions if suggestions.empty? || prev_day.nil?
 
-        return ordered_results
+      suggestions.sort_by do |s|
+        if (s.is_a?(Activity) ? s : s.activity).time_interval.start.strftime("%A") == prev_day
+          -1
+        else
+          0
+        end
       end
     end
   end

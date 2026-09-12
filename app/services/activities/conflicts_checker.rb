@@ -1,4 +1,3 @@
-
 module Activities
   class ConflictsChecker
     def initialize(instances_to_check)
@@ -20,5 +19,4 @@ module Activities
       results
     end
   end
-
 end

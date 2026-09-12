@@ -4,34 +4,39 @@ class CommentsController < ApplicationController
 
     @commentable = @comment.commentable
 
-    res = @commentable.class.method_defined?(:comments) ?
-      @commentable.comments :
-      @commentable.comment
+    res = if @commentable.class.method_defined?(:comments)
+            @commentable.comments
+          else
+            @commentable.comment
+          end
 
-    render json: res, :include => [:user]
+    render json: res, include: [:user]
   end
 
   def update
-      @comment = Comment.find(params[:id])
+    @comment = Comment.find(params[:id])
 
-      @comment.update(create_or_update_params)
+    @comment.update(create_or_update_params)
 
-      @commentable = @comment.commentable
+    @commentable = @comment.commentable
 
-      res = @commentable.class.method_defined?(:comments) ?
-        @commentable.comments :
-        @commentable.comment
+    res = if @commentable.class.method_defined?(:comments)
+            @commentable.comments
+          else
+            @commentable.comment
+          end
 
-      render json: res, :include => [:user]
+    render json: res, include: [:user]
   end
 
   def destroy
     Comment.find(params[:id]).destroy
 
-    render :json => {}
+    render json: {}
   end
 
   private
+
   def create_or_update_params
     params.require(:comment).permit(:commentable_id, :commentable_type, :user_id, :content)
   end

@@ -1,11 +1,10 @@
 class ActivityRefController < ApplicationController
   load_and_authorize_resource param_method: :ref_params
-  require 'elvis/csv_responder.rb'
+  require "elvis/csv_responder"
 
   respond_to :csv
 
   def index
-
     respond_to do |format|
       format.html do
         @activities = ActivityRef.all
@@ -16,14 +15,15 @@ class ActivityRefController < ApplicationController
 
       format.json do
         render json: ActivityRef.all.includes(:activity_ref_kind).as_json(
-          except: [:created_at, :updated_at, :deleted_at])
+          except: %i[created_at updated_at deleted_at]
+        )
       end
 
       format.csv do
         model_name = controller_name.classify
         default_serializer = "Templates::#{model_name}Serializer".constantize
 
-        template_name = params[:template]&.to_sym
+        params[:template]&.to_sym
 
         query = model_name.constantize.all
 
@@ -47,11 +47,14 @@ class ActivityRefController < ApplicationController
     @activity_kinds = ActivityRefKind.all.order(:name).map { |ar| [ar.name, ar.id] }
 
     @seasons = Season.order(:start)
-    @activity_refs = ActivityRef.all.group_by(&:kind).transform_values { |arr| arr.map { |a| { label: a.label, id: a.id } } }.to_a
+    @activity_refs = ActivityRef.all.group_by(&:kind).transform_values do |arr|
+      arr.map do |a|
+        { label: a.label, id: a.id }
+      end
+    end.to_a
     @next_cycles = []
 
     @teachers = @activity_ref.users.map { |u| { first_name: u.first_name, last_name: u.last_name, id: u.id } }
-
   end
 
   def create
@@ -62,10 +65,11 @@ class ActivityRefController < ApplicationController
     pricings.each do |pricing|
       p = ActivityRefPricing.create(
         activity_ref_id: @activity_ref.id,
-        price: "#{pricing[:price]}".gsub(',', '.').to_f,
+        price: "#{pricing[:price]}".gsub(",", ".").to_f,
         from_season_id: pricing[:from_season_id],
         to_season_id: pricing[:to_season_id],
-        pricing_category_id: pricing[:pricing_category][:id])
+        pricing_category_id: pricing[:pricing_category][:id]
+      )
       p.save!
 
       unless p
@@ -74,7 +78,7 @@ class ActivityRefController < ApplicationController
       end
     end
 
-    unless (@activity_ref)
+    unless @activity_ref
       render json: { class: "ActivityRef", errors: @activity_ref.errors }, status: 500
       return
     end
@@ -85,19 +89,22 @@ class ActivityRefController < ApplicationController
   end
 
   def edit
-
     @activity_ref = ActivityRef.find(params[:id])
 
     @activity_kinds = ActivityRefKind.all.order(:name).map { |ar| [ar.name, ar.id] }
     @seasons = Season.order(:start)
-    @activity_refs = ActivityRef.all.group_by(&:activity_ref_kind).transform_values { |arr| arr.map { |a| { label: a.label, id: a.id } } }.to_a
+    @activity_refs = ActivityRef.all.group_by(&:activity_ref_kind).transform_values do |arr|
+      arr.map do |a|
+        { label: a.label, id: a.id }
+      end
+    end.to_a
     @next_cycles = @activity_ref.next_cycles.pluck(:to_activity_ref_id)
 
     @teachers = @activity_ref.users.map { |u| { first_name: u.first_name, last_name: u.last_name, id: u.id } }
   end
 
   def save_picture
-    params.require([:id, :picture])
+    params.require(%i[id picture])
 
     @activity_ref = ActivityRef.find(params[:id])
 
@@ -129,15 +136,14 @@ class ActivityRefController < ApplicationController
     render json: {}, status: 200 if update_associated_objects(ref_param)
   end
 
-  def update_associated_objects(ref_param)
-
+  def update_associated_objects(_ref_param)
     #########
     # puis on enregistre les changements sur les prochains cycles
     begin
       ActivityRef.transaction do
         @activity_ref.next_cycles.destroy_all
 
-        res = @activity_ref.next_cycles.create!(
+        @activity_ref.next_cycles.create!(
           params[:activity_ref][:next_cycles]
             .select { |s| !s.blank? }
             .map { |to_id| { to_activity_ref_id: to_id } }
@@ -154,9 +160,7 @@ class ActivityRefController < ApplicationController
         @activity_ref.teachers_activity_refs.where.not(user_id: params[:activity_ref][:users]).destroy_all
 
         (params[:activity_ref][:users] || []).each do |user_id|
-          unless @activity_ref.users.where(id: user_id).any?
-            @activity_ref.users << User.find(user_id)
-          end
+          @activity_ref.users << User.find(user_id) unless @activity_ref.users.where(id: user_id).any?
         end
       end
     rescue StandardError => e
@@ -215,7 +219,9 @@ class ActivityRefController < ApplicationController
     end
 
     if undeletable_references.any?
-      flash[:destroy_error] = "Impossible de supprimer cette activité car elle est référencée par #{undeletable_references.map { |r| "#{r.class.name&.underscore}".humanize }.uniq.join(', ')}}"
+      flash[:destroy_error] = "Impossible de supprimer cette activité car elle est référencée par #{undeletable_references.map do |r|
+        "#{r.class.name&.underscore}".humanize
+      end.uniq.join(', ')}}"
 
       redirect_to activity_ref_index_path
       return
@@ -227,7 +233,7 @@ class ActivityRefController < ApplicationController
         @activity_ref.activity_ref_pricing.destroy_all
         @activity_ref.destroy
       end
-    rescue StandardError => e
+    rescue StandardError
       flash[:destroy_error] = "Impossible de supprimer cette activité car elle est référencée par d'autres objets"
     end
 
@@ -283,7 +289,7 @@ class ActivityRefController < ApplicationController
       :users,
       :nb_lessons,
       :duration,
-      :color_code,
-      )
+      :color_code
+    )
   end
 end

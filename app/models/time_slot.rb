@@ -10,16 +10,17 @@
 #
 
 class TimeSlot < ApplicationRecord
-    belongs_to :planning
-    belongs_to :time_interval
-    belongs_to :time_interval_csv, -> { select(:id, :start, :is_validated, :end) }, class_name: "TimeInterval", required: false
+  belongs_to :planning
+  belongs_to :time_interval
+  belongs_to :time_interval_csv, lambda {
+    select(:id, :start, :is_validated, :end)
+  }, class_name: "TimeInterval", required: false
 
-    def self.display_class_name(singular = true)
-        singular ? "créneau de planning" : "créneaux des plannings"
-    end
+  def self.display_class_name(singular = true)
+    singular ? "créneau de planning" : "créneaux des plannings"
+  end
 
-    def self.class_name_gender
-        return :M
-    end
-
+  def self.class_name_gender
+    :M
+  end
 end

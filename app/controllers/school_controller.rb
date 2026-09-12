@@ -1,12 +1,11 @@
 class SchoolController < ApplicationController
-
   def get_zone_by_address
     address = params[:address]
     postal_code = params[:postal_code]
     city = params[:city]
     country_code = params[:countryCode]
 
-    return render json: { zone: nil, academy: nil } if country_code != 'FR'
+    return render json: { zone: nil, academy: nil } if country_code != "FR"
 
     full_address = "#{address} #{postal_code} #{city}"
 
@@ -22,5 +21,4 @@ class SchoolController < ApplicationController
 
     render json: { zone: zone, academy: academy }
   end
-
 end

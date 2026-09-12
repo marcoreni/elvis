@@ -11,16 +11,14 @@
 #
 
 class StudentAttendance < ApplicationRecord
-    belongs_to :user, required: true
-    belongs_to :activity_instance, required: true
+  belongs_to :user, required: true
+  belongs_to :activity_instance, required: true
 
-    def self.display_class_name(singular=false)
-        singular ? "inscription aux séances" : "inscriptions aux séances"
-    end
+  def self.display_class_name(singular = false)
+    singular ? "inscription aux séances" : "inscriptions aux séances"
+  end
 
-    def self.class_name_gender
-        return :F
-    end
-
-
+  def self.class_name_gender
+    :F
+  end
 end

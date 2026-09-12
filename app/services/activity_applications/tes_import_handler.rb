@@ -1,9 +1,6 @@
 module ActivityApplications
-
   class TesImportHandler
-    def initialize
-
-    end
+    def initialize; end
 
     def check_valid_headers(headers)
       headers == AA_CSV_HEADERS
@@ -24,7 +21,7 @@ module ActivityApplications
         if user.id.positive? && (user.first_name != row["prenom"] || user.last_name != row["nom"])
           user = User.new(
             email: nil,
-            attached_to_id: user.id,
+            attached_to_id: user.id
           )
         else
           user.email = row["email"].downcase
@@ -40,9 +37,9 @@ module ActivityApplications
 
         # enregistrement de tel_1, tel_2, tel_3 comme téléphones
         telephones = []
-        telephones << get_clean_phone(row['tel_1'], "Tel 1", user)
-        telephones << get_clean_phone(row['tel_2'], "Tel 2", user)
-        telephones << get_clean_phone(row['tel_3'], "Tel 3", user)
+        telephones << get_clean_phone(row["tel_1"], "Tel 1", user)
+        telephones << get_clean_phone(row["tel_2"], "Tel 2", user)
+        telephones << get_clean_phone(row["tel_3"], "Tel 3", user)
         user.telephones = telephones.compact
 
         # enregistrement de l'adresse
@@ -68,17 +65,20 @@ module ActivityApplications
           activity_refs_and_level = guess_activity_ref_and_level activite, instrument
 
           activity_refs_and_level.each do |activity_ref_and_level|
-            activity_ref_id, instrument_names, is_workshop, level = activity_ref_and_level.values_at(:activity_ref_id, :instrument_names, :is_workshop, :level)
+            activity_ref_id, instrument_names, is_workshop, level = activity_ref_and_level.values_at(:activity_ref_id,
+                                                                                                     :instrument_names, :is_workshop, :level)
 
             if activity_ref_id.nil?
-              errors << { line: current_line, message: I18n.t("services.tes_import_handler.activity_not_identified", activity: activite, instrument: instrument) }
+              errors << { line: current_line,
+                          message: I18n.t("services.tes_import_handler.activity_not_identified", activity: activite,
+                                                                                                 instrument: instrument) }
               next
             end
 
             if level.present?
               evaluation_level_ref_id = EvaluationLevelRef
-                                          .where("lower(label) = ?", level.downcase)
-                                          .pick(:id)
+                                        .where("lower(label) = ?", level.downcase)
+                                        .pick(:id)
               if evaluation_level_ref_id.present?
                 user.levels <<
                   Level.new(
@@ -90,10 +90,10 @@ module ActivityApplications
             end
 
             # S'il existe déjà une inscription pour cette activité et pour la saison concernée, on ne la recrée pas
-            if user.activity_applications.any? { |aa|
+            if user.activity_applications.any? do |aa|
               aa.season_id == Season.current_apps_season.id &&
-                aa.activity_refs.any? { |ar| ar.id == activity_ref_id }
-            }
+              aa.activity_refs.any? { |ar| ar.id == activity_ref_id }
+            end
               ignored_activities += 1
               next
             end
@@ -110,15 +110,19 @@ module ActivityApplications
             activity_application.created_at = row["date_insc"].to_date if row["date_insc"].present?
 
             # 2.3 Ajout des commentaires
-            activity_application.comments << Comment.new(user_id: user.id, content: row["observations"]) if row["observations"].present?
-            activity_application.comments << Comment.new(user_id: user.id, content: "Instrument(s) : #{instrument_names}") if is_workshop
+            if row["observations"].present?
+              activity_application.comments << Comment.new(user_id: user.id,
+                                                           content: row["observations"])
+            end
+            if is_workshop
+              activity_application.comments << Comment.new(user_id: user.id,
+                                                           content: "Instrument(s) : #{instrument_names}")
+            end
             activity_application.save!
 
             activity_applications_created += 1
           end
-
         end
-
       rescue StandardError => e
         Rails.logger.error "Error while handling line #{current_line} : #{e.message}\n#{e.backtrace&.join("\n")} "
         errors << { line: current_line, message: e.message }
@@ -134,50 +138,50 @@ module ActivityApplications
     private
 
     AA_CSV_HEADERS = %w[
-num_adh
-ajout_lg
-date_insc
-civilite
-prenom
-nom
-adresse
-cp
-ville
-tel_1
-tel_2
-tel_3
-email
-date_naissance
-profession
-employeur
-activite_1
-instrument_1
-activite_2
-instrument_2
-activite_3
-instrument_3
-solfege_gratuit
-frais_adh
-frais_insc
-cout_annuel
-cout_trimestriel
-cout_total
-details_reglement
-annee_ok
-1er_tri_ok
-2e_tri_ok
-3e_tri_ok
-avoir
-observations
-absences
-inscription_cours
-adherent
-dispos_cours
-souhaits_cours
-dispos_atelier
-aut_util_img
-form
-].freeze
+      num_adh
+      ajout_lg
+      date_insc
+      civilite
+      prenom
+      nom
+      adresse
+      cp
+      ville
+      tel_1
+      tel_2
+      tel_3
+      email
+      date_naissance
+      profession
+      employeur
+      activite_1
+      instrument_1
+      activite_2
+      instrument_2
+      activite_3
+      instrument_3
+      solfege_gratuit
+      frais_adh
+      frais_insc
+      cout_annuel
+      cout_trimestriel
+      cout_total
+      details_reglement
+      annee_ok
+      1er_tri_ok
+      2e_tri_ok
+      3e_tri_ok
+      avoir
+      observations
+      absences
+      inscription_cours
+      adherent
+      dispos_cours
+      souhaits_cours
+      dispos_atelier
+      aut_util_img
+      form
+    ].freeze
 
     def get_clean_phone(phone_number, label, user)
       return if phone_number.nil?
@@ -203,7 +207,7 @@ form
     def map_birthday(birthday_str)
       begin
         birthday = birthday_str.to_date
-      rescue ArgumentError => e
+      rescue ArgumentError
         birthday = nil
       end
       birthday
@@ -217,7 +221,7 @@ form
       #----------------------------------------------------------
       if instrument.present?
         # au préalable, nettoyer en extrayant le niveau
-        match_data = instrument.match(/(?<ark_name>[^\(]+)(\((?<level>(\d+)\s+ans?)\))?/)
+        match_data = instrument.match(/(?<ark_name>[^(]+)(\((?<level>(\d+)\s+ans?)\))?/)
         return [] if match_data.nil?
 
         instrument_names = match_data[:ark_name].strip
@@ -225,27 +229,28 @@ form
 
         if activite == "Atelier"
           activity_ref_kind = ActivityRefKind
-                                .where("lower(name) = ?", "atelier")
-                                .first
+                              .where("lower(name) = ?", "atelier")
+                              .first
           return [] if activity_ref_kind.nil?
+
           ar_label = "atelier"
           return [{
-                    activity_ref_id: ActivityRef
-                                       .where('lower(label) = ?', ar_label)
-                                       .where(activity_ref_kind: activity_ref_kind)
-                                       .pick(:id),
+            activity_ref_id: ActivityRef
+                             .where("lower(label) = ?", ar_label)
+                             .where(activity_ref_kind: activity_ref_kind)
+                             .pick(:id),
 
-                    instrument_names: instrument_names,
-                    is_workshop: activity_ref_kind.name == "Atelier",
-                    level: level
-                  }]
+            instrument_names: instrument_names,
+            is_workshop: activity_ref_kind.name == "Atelier",
+            level: level
+          }]
 
         else
           res = []
           instrument_names.split(",").map(&:strip).each do |instrument_name|
             activity_ref_kind = ActivityRefKind
-                                  .where("lower(name) = ?", instrument_name.downcase)
-                                  .first
+                                .where("lower(name) = ?", instrument_name.downcase)
+                                .first
             return [] if activity_ref_kind.nil?
 
             # activite détermine alors l'activité dans cette famille
@@ -258,9 +263,9 @@ form
 
             res << {
               activity_ref_id: ActivityRef
-                                 .where('lower(label) = ?', ar_label)
-                                 .where(activity_ref_kind: activity_ref_kind)
-                                 .pick(:id),
+                               .where("lower(label) = ?", ar_label)
+                               .where(activity_ref_kind: activity_ref_kind)
+                               .pick(:id),
               level: level
             }
           end
@@ -276,20 +281,22 @@ form
         # Définir une structure de données pour les cas possibles
         cases = [
           { match: /eveil musical/i, ark_name: "eveil musical 5-7 ans", label: "eveil musical (5 à 7 ans)" },
-          { match: /chorale musiques actuelles/i, ark_name: "chant", label: "chorale musiques actuelles ados / adultes" },
+          { match: /chorale musiques actuelles/i, ark_name: "chant",
+            label: "chorale musiques actuelles ados / adultes" },
           { match: /solfège gratuit/i, ark_name: "solfège", label: "solfège gratuit (mercredi 14h-15h)" },
-          { match: /solfège en ligne/i, ark_name: "solfège", label: "solfège en ligne" },
+          { match: /solfège en ligne/i, ark_name: "solfège", label: "solfège en ligne" }
         ]
 
         # Itérer sur les cas
         ar_label = nil
         cases.each do |case_data|
-          if activite.match(case_data[:match])
-            activity_ref_kind = ActivityRefKind.where("lower(name) = ?", case_data[:ark_name]).first
-            return [] if activity_ref_kind.nil?
-            ar_label = case_data[:label]
-            break
-          end
+          next unless activite.match(case_data[:match])
+
+          activity_ref_kind = ActivityRefKind.where("lower(name) = ?", case_data[:ark_name]).first
+          return [] if activity_ref_kind.nil?
+
+          ar_label = case_data[:label]
+          break
         end
 
         # quand on n'a trouvé aucune correspondance, on essaie d'autres patterns
@@ -300,8 +307,8 @@ form
           # on extrait l'instrument
           if !!(match_data = activite.match(/Cours collectif\s+(?<ark_name>\w+)/))
             activity_ref_kind = ActivityRefKind
-                                  .where("lower(name)= ?", match_data[:ark_name])
-                                  .first
+                                .where("lower(name)= ?", match_data[:ark_name])
+                                .first
             return [] if activity_ref_kind.nil?
 
             # on renvoie l'activité cours collectif de cet instrument
@@ -312,8 +319,8 @@ form
             # on extrait l'instrument
           elsif !!(match_data = activite.match(/Cours duo\s+(?<ark_name>\w+)/))
             activity_ref_kind = ActivityRefKind
-                                  .where("lower(name)= ?", match_data[:ark_name])
-                                  .first
+                                .where("lower(name)= ?", match_data[:ark_name])
+                                .first
             return [] if activity_ref_kind.nil?
 
             # on renvoie l'activité cours duo de cet instrument
@@ -327,19 +334,18 @@ form
         end
 
         return [{
-                  activity_ref_id:
+          activity_ref_id:
                     ActivityRef
-                      .where('lower(label) = ?', ar_label)
-                      .where(activity_ref_kind: activity_ref_kind)
-                      .pick(:id),
-                  level:
+                    .where("lower(label) = ?", ar_label)
+                    .where(activity_ref_kind: activity_ref_kind)
+                    .pick(:id),
+          level:
                     nil
-                }]
+        }]
 
       end
 
-      return [] if activity_ref_kind.nil?
+      [] if activity_ref_kind.nil?
     end
   end
-
 end

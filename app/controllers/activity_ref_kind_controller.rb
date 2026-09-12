@@ -5,11 +5,12 @@ class ActivityRefKindController < ApplicationController
     @activity_ref_kinds = ActivityRefKind.all
 
     respond_to do |format|
-      format.html 
+      format.html
 
       format.json do
-          render json: @activity_ref_kinds.as_json(
-              except: [:created_at, :updated_at, :deleted_at])
+        render json: @activity_ref_kinds.as_json(
+          except: %i[created_at updated_at deleted_at]
+        )
       end
     end
   end
@@ -18,7 +19,7 @@ class ActivityRefKindController < ApplicationController
     query = ActivityRefKind.all.order(:name)
 
     respond_to do |format|
-      format.json { render json: { status:query.as_json(include: { default_activity_ref: {} }), pages:1, total:1} }
+      format.json { render json: { status: query.as_json(include: { default_activity_ref: {} }), pages: 1, total: 1 } }
     end
   end
 
@@ -65,8 +66,11 @@ class ActivityRefKindController < ApplicationController
         activities_ref = activities_ref.take(2).join(", ") + "..." if activities_ref.length > 2
 
         respond_to do |format|
-          format.json { render json: { message: t("controllers.activity_ref_kind.destroy.linked_activities"), activities: activities_ref}, status: :internal_server_error }
+          format.json do
+            render json: { message: t("controllers.activity_ref_kind.destroy.linked_activities"), activities: activities_ref },
+                   status: :internal_server_error
           end
+        end
       end
     rescue StandardError => e
       kind.errors[:base] << e.message.to_s
@@ -90,7 +94,7 @@ class ActivityRefKindController < ApplicationController
       kind.default_activity_ref_id = activity_ref_kind_params[:default_activity_ref_id]
 
       kind.save!
-    rescue StandardError => e
+    rescue StandardError
       redirect_to edit_activity_ref_kind_path(kind, error: instrument.errors.full_messages)
     end
 

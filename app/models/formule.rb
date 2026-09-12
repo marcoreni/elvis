@@ -30,16 +30,17 @@ class Formule < ApplicationRecord
     activity_applications.exists?
   end
 
-  def self.display_class_name(singular= true)
+  def self.display_class_name(singular = true)
     singular ? "Formule" : "Formules"
   end
 
   def self.class_name_gender
-    return :F
+    :F
   end
 
   def display_price(season = Season.current_apps_season || Season.current)
-    Elvis::CacheUtils.cache_block_if_enabled("formules_#{id}_price_#{season.id}", expires_in: Parameter.get_value("app.cache.max_price.duration") || 5.minutes) do
+    Elvis::CacheUtils.cache_block_if_enabled("formules_#{id}_price_#{season.id}",
+                                             expires_in: Parameter.get_value("app.cache.max_price.duration") || 5.minutes) do
       max_prices.find_by(season_id: season.id)&.price || 0
     end
   end
@@ -72,8 +73,8 @@ class Formule < ApplicationRecord
       errors.add(:number_of_items, :exceeds_available_activities, count: total_activities_count)
     end
 
-    if formule_items.empty?
-      errors.add(:base, :at_least_one_activity)
-    end
+    return unless formule_items.empty?
+
+    errors.add(:base, :at_least_one_activity)
   end
 end

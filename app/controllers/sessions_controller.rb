@@ -1,14 +1,11 @@
 class SessionsController < Devise::SessionsController
-  
   def create
     matching_user = User
-                      .where(email: params[:user][:login])
-                      .or(User.where(adherent_number: params[:user][:login]))
+                    .where(email: params[:user][:login])
+                    .or(User.where(adherent_number: params[:user][:login]))
 
     # verify if there are any admin users
-    unless matching_user.where(is_admin: true).any?
-      matching_user = matching_user.where(attached_to: nil)
-    end
+    matching_user = matching_user.where(attached_to: nil) unless matching_user.where(is_admin: true).any?
 
     if matching_user.many?
       matching_user.each do |user|
@@ -72,7 +69,6 @@ class SessionsController < Devise::SessionsController
     else
       redirect_to action: "pick_user", id: user.id
     end
-
   end
 
   def after_sign_in_path_for(resource)

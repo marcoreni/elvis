@@ -1,5 +1,4 @@
 class Pack < ApplicationRecord
-
   belongs_to :user
   belongs_to :activity_ref_pricing
   belongs_to :season
@@ -7,11 +6,11 @@ class Pack < ApplicationRecord
   has_one :activity_ref, through: :activity_ref_pricing
   has_one :discount, as: :discountable, dependent: :destroy
 
-  def self.display_class_name(singular= true)
+  def self.display_class_name(singular = true)
     singular ? "Pack" : "Packs"
   end
 
   def self.class_name_gender
-    return :M
+    :M
   end
 end

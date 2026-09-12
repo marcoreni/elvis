@@ -1,8 +1,8 @@
 class FamilyMemberUsersController < ApplicationController
   def destroy
-      fm = FamilyMemberUser.find(params[:id])
-      fm.destroy
+    fm = FamilyMemberUser.find(params[:id])
+    fm.destroy
 
-      render :json => {}
+    render json: {}
   end
 end

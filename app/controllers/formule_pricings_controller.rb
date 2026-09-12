@@ -11,8 +11,8 @@ class FormulePricingsController < ApplicationController
     total = query.count
 
     query = query
-              .page((params[:page]&.to_i || 0))
-              .per(params[:pageSize])
+            .page(params[:page]&.to_i || 0)
+            .per(params[:pageSize])
 
     pages = query.total_pages
 
@@ -45,7 +45,8 @@ class FormulePricingsController < ApplicationController
     formule_price = params[:price]
 
     from_season = Season.find(formule_price_params.dig(:fromSeason, :value))
-    to_season = Season.find(formule_price_params.dig(:fromSeason, :value)) if formule_price_params.dig(:toSeason, :value).present?
+    to_season = Season.find(formule_price_params.dig(:fromSeason, :value)) if formule_price_params.dig(:toSeason,
+                                                                                                       :value).present?
 
     pricing_category = PricingCategory.find(formule_price_params.dig(:name, :value))
 
@@ -75,7 +76,8 @@ class FormulePricingsController < ApplicationController
     formule_price_params = self.formule_price_params
 
     from_season = Season.find(formule_price_params.dig(:fromSeason, :value))
-    to_season = Season.find(formule_price_params.dig(:fromSeason, :value)) if formule_price_params.dig(:toSeason, :value).present?
+    to_season = Season.find(formule_price_params.dig(:fromSeason, :value)) if formule_price_params.dig(:toSeason,
+                                                                                                       :value).present?
 
     pricing_category = PricingCategory.find(formule_price_params.dig(:name, :value))
 

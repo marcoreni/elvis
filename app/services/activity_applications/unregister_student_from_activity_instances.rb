@@ -20,16 +20,12 @@ module ActivityApplications
           intervals_to_unlink_user_from = []
 
           instances = act
-                        .activity_instances
-                        .joins(:time_interval)
+                      .activity_instances
+                      .joins(:time_interval)
 
-          if @from_date
-            instances = instances.where("(start AT TIME ZONE 'Europe/Paris')::date >= ?::date", @from_date)
-          end
+          instances = instances.where("(start AT TIME ZONE 'Europe/Paris')::date >= ?::date", @from_date) if @from_date
 
-          if @to_date
-            instances = instances.where("(start AT TIME ZONE 'Europe/Paris')::date <= ?::date", @to_date)
-          end
+          instances = instances.where("(start AT TIME ZONE 'Europe/Paris')::date <= ?::date", @to_date) if @to_date
 
           # delete student's attendances from instances
           instances.each do |inst|

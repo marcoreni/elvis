@@ -25,15 +25,12 @@ class PaymentScheduleOptions < ApplicationRecord
   end
 
   def self.class_name_gender
-    return :F
+    :F
   end
 
   def self.jsonize_payment_schedule_options_query(query)
-    res = query.as_json(
-      except: [:created_at, :updated_at, :deleted_at],
+    query.as_json(
+      except: %i[created_at updated_at deleted_at]
     )
-
-    res
   end
-
 end

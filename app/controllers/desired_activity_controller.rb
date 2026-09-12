@@ -1,127 +1,123 @@
 class DesiredActivityController < ApplicationController
-    def update
-        # @type [DesiredActivity]
-        des = DesiredActivity.find(params[:id])
+  def update
+    # @type [DesiredActivity]
+    des = DesiredActivity.find(params[:id])
 
-        old_activity_ref = des.activity_ref
+    old_activity_ref = des.activity_ref
 
-        #reset options
-        #we can do it without checking for now because the
-        #only update possible for now is the activity_ref id
-        des.options.destroy_all
+    # reset options
+    # we can do it without checking for now because the
+    # only update possible for now is the activity_ref id
+    des.options.destroy_all
 
-        des.update(update_params)
+    des.update(update_params)
 
-        # update level with the new activity_ref
-        user = des.user
+    # update level with the new activity_ref
+    user = des.user
 
-        # @type [Level]
-        level = user.levels.find_by(season: des.activity_application.season, activity_ref: old_activity_ref)
+    # @type [Level]
+    level = user.levels.find_by(season: des.activity_application.season, activity_ref: old_activity_ref)
 
-        if level&.evaluation_level_ref&.present?
-            new_level = user.levels.find_or_create_by(season: des.activity_application.season, activity_ref: des.activity_ref)
+    if level&.evaluation_level_ref&.present?
+      new_level = user.levels.find_or_create_by(season: des.activity_application.season,
+                                                activity_ref: des.activity_ref)
 
-            if new_level.evaluation_level_ref == nil # cannot use .nil? with &
-                new_level.update(evaluation_level_ref: level.evaluation_level_ref)
-            end
-        end
-
-        @desired_activity = des.as_json include: :options
-
-        render json: @desired_activity
+      if new_level.evaluation_level_ref.nil? # cannot use .nil? with &
+        new_level.update(evaluation_level_ref: level.evaluation_level_ref)
+      end
     end
 
-    def set_pricing
-        desired_activity = DesiredActivity.find(params[:id])
-        pricing = PricingCategory.find(params[:pricing_category_id])
+    @desired_activity = des.as_json include: :options
 
-        if desired_activity.nil? || pricing.nil?
-            return head :not_found
-        end
+    render json: @desired_activity
+  end
 
-        desired_activity.update!(pricing_category_id: pricing.id)
-        head :ok
+  def set_pricing
+    desired_activity = DesiredActivity.find(params[:id])
+    pricing = PricingCategory.find(params[:pricing_category_id])
+
+    return head :not_found if desired_activity.nil? || pricing.nil?
+
+    desired_activity.update!(pricing_category_id: pricing.id)
+    head :ok
+  end
+
+  def find_by_user_and_activity
+    user_id = params[:user_id]
+    activity_id = params[:activity_id]
+    activity_ref_id = params[:activity_ref_id]
+    time_interval_id = params[:time_interval_id]
+
+    # utiliser l'activity_ref_id ?
+
+    # On récupère la DesiredActivity, qu’elle vienne d’une inscription « active »
+    # ou d’une option
+
+    # On cherche avec l'activity_id
+    desired_activity = DesiredActivity
+                       .joins(:activity_application)
+                       .where("activity_applications.user_id = ? AND desired_activities.activity_id = ?", user_id, activity_id)
+                       .first
+
+    # Si pas trouvé on cherche avec l'activity_ref_id et la saison (via le time_interval_id)
+    if desired_activity.nil? && activity_ref_id && time_interval_id
+      ti = TimeInterval.find(time_interval_id)
+      s = Season.from_interval(ti).first
+
+      desired_activity = DesiredActivity
+                         .joins(:activity_application)
+                         .where("activity_applications.user_id = ? AND desired_activities.activity_ref_id = ? AND activity_applications.season_id = ?", user_id, activity_ref_id, s.id)
+                         .first
     end
 
-    def find_by_user_and_activity
-        user_id     = params[:user_id]
-        activity_id = params[:activity_id]
-        activity_ref_id = params[:activity_ref_id]
-        time_interval_id = params[:time_interval_id]
-
-        # utiliser l'activity_ref_id ?
-
-        # On récupère la DesiredActivity, qu’elle vienne d’une inscription « active »
-        # ou d’une option
-
-        # On cherche avec l'activity_id
-        desired_activity = DesiredActivity
-                             .joins(:activity_application)
-                             .where("activity_applications.user_id = ? AND desired_activities.activity_id = ?", user_id, activity_id)
-                             .first
-
-        # Si pas trouvé on cherche avec l'activity_ref_id et la saison (via le time_interval_id)
-        if desired_activity.nil? && activity_ref_id && time_interval_id
-            ti = TimeInterval.find(time_interval_id)
-            s = Season.from_interval(ti).first
-
-            desired_activity = DesiredActivity
-                                .joins(:activity_application)
-                                .where("activity_applications.user_id = ? AND desired_activities.activity_ref_id = ? AND activity_applications.season_id = ?", user_id, activity_ref_id, s.id)
-                                .first
-        end
-
-        # Si toujours pas trouvé on cherche dans les options
-        if desired_activity.nil?
-            option = Option.find_by(activity_id: activity_id)
-            desired_activity = option&.desired_activity
-        end
-
-        if desired_activity
-            # On cherche, pour cet utilisateur / saison / activité, son objet Level
-            # qui contient evaluation_level_ref
-            application = desired_activity.activity_application
-            level = Level.find_by(
-              user:      application.user,
-              season:    application.season,
-              activity_ref: desired_activity.activity_ref
-            )
-
-            render json: {
-              id:                       desired_activity.id,
-              activity_application_id:  desired_activity.activity_application_id,
-              evaluation_level_ref:     level&.evaluation_level_ref&.label
-            }
-        else
-            render json: { error: "Demande d'inscription introuvable" }, status: 404
-        end
+    # Si toujours pas trouvé on cherche dans les options
+    if desired_activity.nil?
+      option = Option.find_by(activity_id: activity_id)
+      desired_activity = option&.desired_activity
     end
 
+    if desired_activity
+      # On cherche, pour cet utilisateur / saison / activité, son objet Level
+      # qui contient evaluation_level_ref
+      application = desired_activity.activity_application
+      level = Level.find_by(
+        user: application.user,
+        season: application.season,
+        activity_ref: desired_activity.activity_ref
+      )
 
-    def update_prorata
-        desired_activity = DesiredActivity.find(params[:id])
+      render json: {
+        id: desired_activity.id,
+        activity_application_id: desired_activity.activity_application_id,
+        evaluation_level_ref: level&.evaluation_level_ref&.label
+      }
+    else
+      render json: { error: "Demande d'inscription introuvable" }, status: 404
+    end
+  end
 
-        if desired_activity.nil?
-            return head :not_found
-        end
+  def update_prorata
+    desired_activity = DesiredActivity.find(params[:id])
 
-        prorata = params[:prorata].to_i
+    return head :not_found if desired_activity.nil?
 
-        if prorata < 0
-            return render json: { error: "Le prorata ne peut pas être négatif" }, status: :unprocessable_entity
-        end
+    prorata = params[:prorata].to_i
 
-        activity = desired_activity.activity
-        if activity && prorata > activity.intended_nb_lessons
-            return render json: { error: "Le prorata ne peut pas dépasser le nombre de séances prévues" }, status: :unprocessable_entity
-        end
+    return render json: { error: "Le prorata ne peut pas être négatif" }, status: :unprocessable_entity if prorata < 0
 
-        desired_activity.update!(prorata: prorata)
-        head :ok
+    activity = desired_activity.activity
+    if activity && prorata > activity.intended_nb_lessons
+      return render json: { error: "Le prorata ne peut pas dépasser le nombre de séances prévues" },
+                    status: :unprocessable_entity
     end
 
-    private
-    def update_params
-        params.require(:desired_activity).permit(:activity_ref_id)
-    end
+    desired_activity.update!(prorata: prorata)
+    head :ok
+  end
+
+  private
+
+  def update_params
+    params.require(:desired_activity).permit(:activity_ref_id)
+  end
 end

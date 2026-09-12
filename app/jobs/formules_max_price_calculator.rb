@@ -19,7 +19,8 @@ class FormulesMaxPriceCalculator < ApplicationJob
       hash.each do |season_id, max_price|
         next if season_id.nil? || max_price.nil?
 
-        pricing_to_save = MaxActivityRefPriceForSeason.find_or_initialize_by(season_id: season_id, target_id: formule_id, target_type: "Formule")
+        pricing_to_save = MaxActivityRefPriceForSeason.find_or_initialize_by(season_id: season_id,
+                                                                             target_id: formule_id, target_type: "Formule")
 
         pricing_to_save.price = max_price
         max_pricings_to_save << pricing_to_save
@@ -42,14 +43,14 @@ class FormulesMaxPriceCalculator < ApplicationJob
             created_at: p.created_at || date_now
           }
         end,
-        unique_by: [:season_id, :target_id, :target_type], returning: false
+        unique_by: %i[season_id target_id target_type], returning: false
       )
     end
   end
 
   def fetch_pricings
     pricings_by_formules = FormulePricing
-                 .select("
+                           .select("
                       formule_pricings.id,
                       formule_pricings.formule_id,
                       formule_pricings.price,
@@ -59,14 +60,12 @@ class FormulesMaxPriceCalculator < ApplicationJob
                       formule_pricings.to_season_id,
                       to_seasons.end as to_season_end
                       ")
-                 .joins("right join formules on formules.id = formule_pricings.formule_id")
-                 .joins("inner join seasons as from_seasons on formule_pricings.from_season_id = from_seasons.id")
-                 .joins("left join seasons as to_seasons on formule_pricings.to_season_id = to_seasons.id or formule_pricings.to_season_id is null")
-                 .group_by(&:formule_id)
+                           .joins("right join formules on formules.id = formule_pricings.formule_id")
+                           .joins("inner join seasons as from_seasons on formule_pricings.from_season_id = from_seasons.id")
+                           .joins("left join seasons as to_seasons on formule_pricings.to_season_id = to_seasons.id or formule_pricings.to_season_id is null")
+                           .group_by(&:formule_id)
 
-    if @season.is_a?(Season)
-      pricings_by_formules = pricings_by_formules.for_season(@season)
-    end
+    pricings_by_formules = pricings_by_formules.for_season(@season) if @season.is_a?(Season)
 
     pricings_by_formules
   end
@@ -95,9 +94,10 @@ class FormulesMaxPriceCalculator < ApplicationJob
 
   def compute_max_price_for_formule(pricings, season)
     pricings
-      .select { |p|
-        p.from_season_start <= season.start &&
-          (p.to_season_id.nil? || p.to_season_end >= season.start) }
+      .select do |p|
+      p.from_season_start <= season.start &&
+        (p.to_season_id.nil? || p.to_season_end >= season.start)
+    end
       .map(&:price)
       .max || 0
   end

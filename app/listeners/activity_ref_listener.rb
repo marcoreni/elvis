@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 class ActivityRefListener < BaseListener
-
   def self.subscribe
     event_ids ||= []
 

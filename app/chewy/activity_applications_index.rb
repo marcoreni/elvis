@@ -25,7 +25,7 @@ class ActivityApplicationsIndex < Chewy::Index
     }
   }
 
-  index_scope ActivityApplication 
+  index_scope ActivityApplication
   field :kind, value: ->(application) { application.class.name.downcase }
   field :application_id, value: -> { id }
   field :application_status, analyzer: "autocomplete", value: -> { activity_application_status.label }

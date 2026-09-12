@@ -15,20 +15,20 @@
 #
 class UniqGroupName < ActiveModel::Validator
   def validate(record)
-    if record.group_name
-      season = Season.from_interval(record.time_interval).first
-      teacher = record.teacher
+    return unless record.group_name
 
-      activities_w_same_name = Activity
-                                 .joins(:time_interval, :teachers_activities)
-                                 .where({ time_intervals: { start: (season.start..season.end) } })
-                                 .where(:teachers_activities => { teacher: teacher })
-                                 .where(group_name: record.group_name)
+    season = Season.from_interval(record.time_interval).first
+    teacher = record.teacher
 
-      if !activities_w_same_name.empty? && !activities_w_same_name.include?(record)
-        record.errors[:base] << "err_group_name_exists"
-      end
-    end
+    activities_w_same_name = Activity
+                             .joins(:time_interval, :teachers_activities)
+                             .where({ time_intervals: { start: (season.start..season.end) } })
+                             .where(teachers_activities: { teacher: teacher })
+                             .where(group_name: record.group_name)
+
+    return unless !activities_w_same_name.empty? && !activities_w_same_name.include?(record)
+
+    record.errors[:base] << "err_group_name_exists"
   end
 end
 
@@ -63,7 +63,7 @@ class Activity < ApplicationRecord
   end
 
   def self.class_name_gender
-    return :M
+    :M
   end
 
   # crée les instances (ActivityInstance) de l'Activity
@@ -77,9 +77,7 @@ class Activity < ApplicationRecord
   def create_instances(intervals = [], from_date = nil, to_date = nil)
     # If front doesn't provide intervals for any reason,
     # we need to generate them here
-    if intervals.length == 0
-      intervals = self.time_interval.generate_for_rest_of_season
-    end
+    intervals = time_interval.generate_for_rest_of_season if intervals.length == 0
 
     time_interval_instances = []
     time_inter_to_add = []
@@ -92,10 +90,10 @@ class Activity < ApplicationRecord
           interval[:end] < from_date ||
           interval[:end] > to_date)
 
-      if DateTime.parse(interval[:start].to_s).to_date == self.time_interval.start.to_date # we don't want to create a duplicate time_interval
-        time_interval_instances << self.time_interval
+      if DateTime.parse(interval[:start].to_s).to_date == time_interval.start.to_date #  we don't want to create a duplicate time_interval
+        time_interval_instances << time_interval
       else
-        new_time_interval = self.time_interval.dup
+        new_time_interval = time_interval.dup
 
         start = interval[:start]
         endTime = interval[:end]
@@ -110,9 +108,9 @@ class Activity < ApplicationRecord
 
     if time_inter_to_add.length > 0
       TimeInterval.transaction do
-        time_intervals = time_inter_to_add.map { |ti|
+        time_intervals = time_inter_to_add.map do |ti|
           ti.attributes.except("id").merge("created_at" => DateTime.now, "updated_at" => DateTime.now)
-        }
+        end
         time_interval_instances += TimeInterval.where(id: TimeInterval.insert_all(time_intervals)
                                                                       .rows
                                                                       .map { |row| row[0] })
@@ -123,10 +121,10 @@ class Activity < ApplicationRecord
 
     time_interval_instances.each do |ti_instance|
       activity_instance = {
-        activity_id: self.id,
+        activity_id: id,
         time_interval_id: ti_instance.id,
-        room_id: self.room_id,
-        location_id: self.location_id
+        room_id: room_id,
+        location_id: location_id
       }
 
       activity_instance_to_add << activity_instance
@@ -134,19 +132,23 @@ class Activity < ApplicationRecord
 
     ActivityInstance.transaction do
       # @type [ActiveRecord::Result]
-      result = ActivityInstance.insert_all!(activity_instance_to_add.map { |ai| ai.except("id").merge("created_at" => DateTime.now, "updated_at" => DateTime.now) })
+      result = ActivityInstance.insert_all!(activity_instance_to_add.map do |ai|
+        ai.except("id").merge("created_at" => DateTime.now, "updated_at" => DateTime.now)
+      end)
 
-      self.teacher&.teachers_activity_instances&.insert_all!(result.map { |ai| { activity_instance_id: ai["id"], is_main: true } })
+      teacher&.teachers_activity_instances&.insert_all!(result.map do |ai|
+        { activity_instance_id: ai["id"], is_main: true }
+      end)
     end
 
-    # Update teacher planning
+    #  Update teacher planning
     # Already done before in time_interval_controller
-    self.teacher.planning.time_intervals << time_interval_instances - [self.time_interval]
-    self.teacher.planning.save
+    teacher.planning.time_intervals << time_interval_instances - [time_interval]
+    teacher.planning.save
 
     time_slots_to_add = []
 
-    self.users.map { |u| u.planning_id }.each do |planning_id|
+    users.map { |u| u.planning_id }.each do |planning_id|
       time_interval_instances.each do |ti|
         time_slots_to_add << {
           planning_id: planning_id,
@@ -161,14 +163,14 @@ class Activity < ApplicationRecord
       TimeSlot.insert_all!(time_slots_to_add) if time_slots_to_add.length > 0
     end
 
-    # We return the time_intervals to help with perfomance in the controller
+    #  We return the time_intervals to help with perfomance in the controller
     time_interval_instances
   end
 
   # return  the teacher of the activity or nil if none
   # @return [NilClass, User]
   def teacher
-    self.teachers_activities.where(is_main: true).map(&:teacher).first
+    teachers_activities.where(is_main: true).map(&:teacher).first
   end
 
   def season
@@ -178,94 +180,94 @@ class Activity < ApplicationRecord
   def change_activity_ref(new_activity_ref_id)
     new_activity_ref = ActivityRef.find(new_activity_ref_id)
 
-    if self.activity_ref.id != new_activity_ref_id
-      self.activity_ref = new_activity_ref
+    return unless activity_ref.id != new_activity_ref_id
 
-      # Lorsque l'on change l'activity_ref (1h -> 1h30 par exemple), il est nécessaire
-      # de répercuter ce changement sur l'activité souhaité par les élèves déjà assigné
-      # pour qu'elle ne disparaisse pas de leur demande
-      self.users.each do |user|
-        desired = user.activity_application.desired_activities.where(activity_id: self.id)
-        desired.update(activity_ref_id: activity_ref.id)
-      end
+    self.activity_ref = new_activity_ref
 
-      self.save
+    #  Lorsque l'on change l'activity_ref (1h -> 1h30 par exemple), il est nécessaire
+    # de répercuter ce changement sur l'activité souhaité par les élèves déjà assigné
+    # pour qu'elle ne disparaisse pas de leur demande
+    users.each do |user|
+      desired = user.activity_application.desired_activities.where(activity_id: id)
+      desired.update(activity_ref_id: activity_ref.id)
     end
+
+    save
   end
 
   def change_teachers(teachers)
-    if !teachers.empty?
-      self.remove_teachers
-      teachers.each { |id, main| self.add_teacher(id, main) }
+    unless teachers.empty?
+      remove_teachers
+      teachers.each { |id, main| add_teacher(id, main) }
     end
 
-    self.save
+    save
   end
 
   def change_teacher(old_id, new_id)
-    teachers_activity = self.teachers_activities.find_by(user_id: old_id)
+    teachers_activity = teachers_activities.find_by(user_id: old_id)
     new_teacher = User.find(new_id)
 
-    if !new_teacher.nil? && new_teacher.is_teacher
-      teachers_activity.update!(user_id: new_teacher.id)
-    end
+    return unless !new_teacher.nil? && new_teacher.is_teacher
+
+    teachers_activity.update!(user_id: new_teacher.id)
   end
 
   def add_teacher(id, is_main)
     teacher = User.teachers.find(id)
 
-    unless teacher.nil?
-      Activity.transaction do
-        self.teachers_activities.create(teacher: teacher, is_main: is_main)
-        self.teachers.reload
+    return if teacher.nil?
 
-        duration = ((self.time_interval.end - self.time_interval.start) / 3600).round
+    Activity.transaction do
+      teachers_activities.create(teacher: teacher, is_main: is_main)
+      teachers.reload
 
-        self.activity_instances.each do |instance|
-          instance.time_interval.plannings.push(teacher.planning)
-          duration += (instance.duration / 60).round
-        end
+      duration = ((time_interval.end - time_interval.start) / 3600).round
 
-        teacher.planning.hours_count += duration
-        self.time_interval.plannings.push(teacher.planning)
-
-        teacher.save!
+      activity_instances.each do |instance|
+        instance.time_interval.plannings.push(teacher.planning)
+        duration += (instance.duration / 60).round
       end
+
+      teacher.planning.hours_count += duration
+      time_interval.plannings.push(teacher.planning)
+
+      teacher.save!
     end
   end
 
   def remove_teacher(id)
-    teacher = self.teachers.find(id)
+    teacher = teachers.find(id)
 
-    if !teacher.nil?
-      Activity.transaction do
-        self.teachers.destroy(teacher)
-        self.time_interval.plannings.destroy(teacher.planning)
+    return if teacher.nil?
 
-        duration = ((self.time_interval.end - self.time_interval.start) / 3600).round
+    Activity.transaction do
+      teachers.destroy(teacher)
+      time_interval.plannings.destroy(teacher.planning)
 
-        self.activity_instances.each do |instance|
-          instance.time_interval.plannings.destroy(teacher.planning)
-          duration += ((instance.time_interval.end - instance.time_interval.start) / 3600).round
-        end
+      duration = ((time_interval.end - time_interval.start) / 3600).round
 
-        teacher.planning.hours_count -= duration
-        teacher.save!
+      activity_instances.each do |instance|
+        instance.time_interval.plannings.destroy(teacher.planning)
+        duration += ((instance.time_interval.end - instance.time_interval.start) / 3600).round
       end
+
+      teacher.planning.hours_count -= duration
+      teacher.save!
     end
   end
 
   def remove_teachers
-    self.teachers_activities.each do |teacher_activity|
-      self.remove_teacher(teacher_activity.user_id)
+    teachers_activities.each do |teacher_activity|
+      remove_teacher(teacher_activity.user_id)
     end
   end
 
   def remove_student(desired_activity_id, is_option = false)
     desired_activity = DesiredActivity.includes({
-                                                  :activity_application => {
-                                                    :user => {},
-                                                  },
+                                                  activity_application: {
+                                                    user: {}
+                                                  }
                                                 }).find(desired_activity_id)
 
     Activity.transaction do
@@ -274,7 +276,7 @@ class Activity < ApplicationRecord
       student_user = desired_activity.activity_application.user
 
       # delete student's attendances from instances
-      self.activity_instances.each do |inst|
+      activity_instances.each do |inst|
         # Using a private method to encapsulate the permissible
         inst.student_attendances.where(user: student_user, is_option: is_option || [false, nil]).destroy_all
         intervals_to_unlink_user_from << inst.time_interval_id
@@ -285,9 +287,11 @@ class Activity < ApplicationRecord
 
       if is_option
         # delete option only if student is no more in activity
-        self.options.where(desired_activity_id: desired_activity_id).destroy_all if self.activities_instruments.where(user: desired_activity.activity_application.user, is_validated: true).none?
-      elsif self.users.include?(student_user)
-        self.users.delete(student_user.id)
+        options.where(desired_activity_id: desired_activity_id).destroy_all if activities_instruments.where(
+          user: desired_activity.activity_application.user, is_validated: true
+        ).none?
+      elsif users.include?(student_user)
+        users.delete(student_user.id)
       end
 
       unless is_option
@@ -300,22 +304,21 @@ class Activity < ApplicationRecord
   end
 
   def count_active_students(from_date)
-    self
-      .users
+    users
       .to_a
-      .select { |u|
+      .select do |u|
         application = u.activity_applications
                        .joins(:desired_activities)
                        .where({
-                                :desired_activities => {
-                                  :activity_id => self.id,
-                                },
+                                desired_activities: {
+                                  activity_id: id
+                                }
                               })
                        .first
 
-        application && (!application.stopped_at || application.stopped_at > from_date) && (!application.begin_at.nil? && application.begin_at <= from_date)
-      }
-      .count
+        application && (!application.stopped_at || application.stopped_at > from_date) && !application.begin_at.nil? && application.begin_at <= from_date
+      end
+    .count
   end
 
   # Returns the intended number of lessons for this activity, as defined in its ActivityRef
@@ -339,8 +342,8 @@ class Activity < ApplicationRecord
     #   .count("activity_instance.id")
 
     query = StudentAttendance
-              .joins(activity_instance: :time_interval)
-              .where(activity_instance: { activity_id: self.id })
+            .joins(activity_instance: :time_interval)
+            .where(activity_instance: { activity_id: id })
 
     query = query.where("time_intervals.start > ?", from_date) if from_date
 
@@ -355,7 +358,7 @@ class Activity < ApplicationRecord
   def count_registered_instances_for_student(user_id, is_option = false)
     StudentAttendance
       .joins(:activity_instance)
-      .where(activity_instance: { activity_id: self.id }, user_id: user_id, is_option: is_option)
+      .where(activity_instance: { activity_id: id }, user_id: user_id, is_option: is_option)
       .count
   end
 
@@ -373,7 +376,7 @@ class Activity < ApplicationRecord
   # @return [Integer] the number of activity instances that are due by the student (prorata)
   def calculate_prorata_for_student(user_id, begin_date = nil, stop_date = nil)
     activity_application = ActivityApplication.joins(:desired_activities)
-                                              .where(desired_activities: { activity_id: self.id })
+                                              .where(desired_activities: { activity_id: id })
                                               .where(user_id: user_id)
                                               .first
 
@@ -391,32 +394,24 @@ class Activity < ApplicationRecord
 
   def count_lessons_in_period(begin_date, stop_date)
     query = StudentAttendance
-              .joins(activity_instance: :time_interval)
-              .where(activity_instance: { activity_id: self.id })
+            .joins(activity_instance: :time_interval)
+            .where(activity_instance: { activity_id: id })
 
-    if begin_date
-      query = query.where("time_intervals.start::date >= ?", begin_date.to_date)
-    end
+    query = query.where("time_intervals.start::date >= ?", begin_date.to_date) if begin_date
 
-    if stop_date
-      query = query.where("time_intervals.start::date < ?", stop_date.to_date)
-    end
+    query = query.where("time_intervals.start::date < ?", stop_date.to_date) if stop_date
 
     query.distinct.count("activity_instance.id")
   end
 
   def count_registered_instances_for_student_in_period(user_id, begin_date, stop_date)
     query = activity_instances
-              .joins(:student_attendances, :time_interval)
-              .where(student_attendances: { user_id: user_id })
+            .joins(:student_attendances, :time_interval)
+            .where(student_attendances: { user_id: user_id })
 
-    if begin_date
-      query = query.where("time_intervals.start::date >= ?", begin_date.to_date)
-    end
+    query = query.where("time_intervals.start::date >= ?", begin_date.to_date) if begin_date
 
-    if stop_date
-      query = query.where("time_intervals.start::date < ?", stop_date.to_date)
-    end
+    query = query.where("time_intervals.start::date < ?", stop_date.to_date) if stop_date
 
     query.count
   end
@@ -426,16 +421,15 @@ class Activity < ApplicationRecord
   end
 
   def closest_instance(from_date)
-    Elvis::CacheUtils.cache_block_if_enabled("activity:#{self.id}:closest_instance_from:#{from_date.to_date}") do
+    Elvis::CacheUtils.cache_block_if_enabled("activity:#{id}:closest_instance_from:#{from_date.to_date}") do
       # Possiblement plus rapide, mais plus consommateur en mémoire/réseau/CPU du serveur rails
-      #self
+      # self
       #  .activity_instances
       #  .includes(:time_interval)
       #  n'est ps une methode traduite en sql ==> oblige à raméné toutes les instances pour avoir le min
       #  .min_by { |instance| (from_date - instance.time_interval.start).abs }
 
-      self
-        .activity_instances
+      activity_instances
         .joins(:time_interval)
         .includes(:time_interval)
         .select("activity_instances.*, min(abs(EXTRACT(EPOCH FROM ('#{from_date}'::timestamp - time_intervals.start)))) as time_from_date")
@@ -446,7 +440,7 @@ class Activity < ApplicationRecord
   end
 
   def closest_instance_from_now
-    self.closest_instance(DateTime.now)
+    closest_instance(DateTime.now)
   end
 
   def full_periods(period_start, period_end)
@@ -454,22 +448,23 @@ class Activity < ApplicationRecord
     current_start = nil
     current_end = nil
 
-    instances = self
-                  .activity_instances
-                  .includes(:time_interval)
-                  .map { |inst| {
-                    :count => inst.active_students.count,
-                    :ti_start => inst.time_interval.start,
-                    :ti_end => inst.time_interval.end,
-                  } }
-                  .select { |inst|
-                    inst[:ti_start] >= period_start && inst[:ti_end] <= period_end
-                  }
-                  .sort_by { |ti| ti[:ti_start] }
-                  .each do |inst|
-      if inst[:count] >= self.activity_ref.occupation_hard_limit
+    activity_instances
+      .includes(:time_interval)
+      .map do |inst|
+      {
+        count: inst.active_students.count,
+        ti_start: inst.time_interval.start,
+        ti_end: inst.time_interval.end
+      }
+    end
+      .select do |inst|
+        inst[:ti_start] >= period_start && inst[:ti_end] <= period_end
+      end
+      .sort_by { |ti| ti[:ti_start] }
+      .each do |inst|
+      if inst[:count] >= activity_ref.occupation_hard_limit
         # lesson is full, begin/continue period
-        current_start = inst[:ti_start] if !current_start
+        current_start ||= inst[:ti_start]
         current_end = inst[:ti_end]
       elsif current_start
         # end period and register it
@@ -479,14 +474,12 @@ class Activity < ApplicationRecord
       end
     end
 
-    if current_start && current_end
-      periods << (current_start..current_end)
-    end
+    periods << (current_start..current_end) if current_start && current_end
 
     periods
   end
 
   def level
-    self.users.length > 0 ? self.users.first.levels.find_by(activity_ref_id: self.activity_ref_id).evaluation_level_ref_id : 0
+    users.length > 0 ? users.first.levels.find_by(activity_ref_id: activity_ref_id).evaluation_level_ref_id : 0
   end
 end

@@ -13,7 +13,7 @@ class BaseEventJob < ActiveJob::Base
     sender = event.data.fetch(:sender)
     args = event.data.fetch(:args)
 
-    self.block.call(sender: sender, args: args)
+    block.call(sender: sender, args: args)
   end
 
   private

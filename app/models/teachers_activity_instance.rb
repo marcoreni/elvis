@@ -9,15 +9,14 @@
 #
 
 class TeachersActivityInstance < ApplicationRecord
-    belongs_to :teacher, -> {where(is_teacher: true)}, class_name: :User, foreign_key: :user_id
-    belongs_to :activity_instance
+  belongs_to :teacher, -> { where(is_teacher: true) }, class_name: :User, foreign_key: :user_id
+  belongs_to :activity_instance
 
-    def self.display_class_name(singular = true)
-        singular ? "séance de cours de professeur" : "séances de cours des professeurs"
-    end
+  def self.display_class_name(singular = true)
+    singular ? "séance de cours de professeur" : "séances de cours des professeurs"
+  end
 
-    def self.class_name_gender
-        return :F
-    end
-
+  def self.class_name_gender
+    :F
+  end
 end

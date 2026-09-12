@@ -16,15 +16,14 @@
 #
 
 class FailedPaymentImport < ApplicationRecord
-    belongs_to :failed_payment_import_reason
-    belongs_to :user, optional: true
+  belongs_to :failed_payment_import_reason
+  belongs_to :user, optional: true
 
-    def self.display_class_name(singular = true)
-        singular ? "import d'échecs de paiements" : "imports d'échecs de paiements"
-    end
+  def self.display_class_name(singular = true)
+    singular ? "import d'échecs de paiements" : "imports d'échecs de paiements"
+  end
 
-    def self.class_name_gender
-        return :M
-    end
-
+  def self.class_name_gender
+    :M
+  end
 end

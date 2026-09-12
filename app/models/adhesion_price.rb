@@ -16,7 +16,7 @@ class AdhesionPrice < ApplicationRecord
 
   validates_presence_of :label, message: :blank
   validates_presence_of :price, message: :blank
-  validates_numericality_of :price, :greater_than_or_equal_to => 0, message: :greater_than_or_equal_to
+  validates_numericality_of :price, greater_than_or_equal_to: 0, message: :greater_than_or_equal_to
 
   validates_uniqueness_of :season_id, message: :taken, allow_nil: true
 end

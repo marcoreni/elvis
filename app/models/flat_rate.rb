@@ -12,13 +12,11 @@
 #  updated_at    :datetime         not null
 #
 class FlatRate < ApplicationRecord
-
   def self.display_class_name(singular = true)
     singular ? "forfait" : "forfaits"
   end
 
   def self.class_name_gender
-    return :M
+    :M
   end
-
 end

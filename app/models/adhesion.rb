@@ -31,14 +31,16 @@ class Adhesion < ApplicationRecord
   has_one :payment_method
   has_one :discount, as: :discountable, dependent: :destroy
 
-  scope :currently_active, -> { where("validity_start_date < NOW() AND validity_end_date > NOW() AND is_active = TRUE") }
+  scope :currently_active, lambda {
+    where("validity_start_date < NOW() AND validity_end_date > NOW() AND is_active = TRUE")
+  }
 
-  def self.display_class_name(singular= true)
+  def self.display_class_name(singular = true)
     singular ? "adhésion" : "adhésions"
   end
 
   def self.class_name_gender
-    return :F
+    :F
   end
 
   def self.enabled

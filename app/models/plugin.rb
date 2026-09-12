@@ -18,8 +18,7 @@
 #  partial           :string
 #
 class Plugin < ApplicationRecord
-
-  scope :visible, ->{ where(hidden: false) }
+  scope :visible, -> { where(hidden: false) }
 
   @@used_partials = {}
 
@@ -28,9 +27,8 @@ class Plugin < ApplicationRecord
   end
 
   def self.class_name_gender
-    return :M
+    :M
   end
-
 
   def activated?
     activated_at.present?
@@ -59,7 +57,6 @@ class Plugin < ApplicationRecord
   end
 
   def register_settings(options = {})
-
     setting = Setting.find_or_create_by!(name: name) do |s|
       s.value = options["default"]
     end
@@ -68,25 +65,25 @@ class Plugin < ApplicationRecord
     Setting.define_plugin_setting(name, setting.value)
 
     # Warn for potential settings[:partial] collisions
-    if options["partial"].present?
-      partial = options["partial"]
-      if @@used_partials[partial]
-        Rails.logger.warn(
-          "WARNING: settings partial '#{partial}' is declared in '#{name}' plugin " \
-            "but it is already used by plugin '#{@@used_partials[partial]}'. " \
-            "Only one settings view will be used. " \
-            "You may want to contact those plugins authors to fix this."
-        )
-      end
-      @@used_partials[partial] = name
-    end
+    return unless options["partial"].present?
 
+    partial = options["partial"]
+    if @@used_partials[partial]
+      Rails.logger.warn(
+        "WARNING: settings partial '#{partial}' is declared in '#{name}' plugin " \
+          "but it is already used by plugin '#{@@used_partials[partial]}'. " \
+          "Only one settings view will be used. " \
+          "You may want to contact those plugins authors to fix this."
+      )
+    end
+    @@used_partials[partial] = name
   end
 
   # @param [Array<Hash>] menus
   def self.register_menus(menus = [])
     menus.each do |m|
-      Plugin.menu(m["menu"]&.to_sym || :side_menu, m["name"], m["display_name"], m["controller"], m["action"], m["options"])
+      Plugin.menu(m["menu"]&.to_sym || :side_menu, m["name"], m["display_name"], m["controller"], m["action"],
+                  m["options"])
     end
   end
 
@@ -100,7 +97,6 @@ class Plugin < ApplicationRecord
   # @param [String] action
   # @param [Hash] options
   def self.menu(menu, plugin, caption, controller, action, options = {})
-
     options ||= {}
 
     parent_sym = if options["parent"] == "root"
@@ -146,7 +142,7 @@ class Plugin < ApplicationRecord
     )
 
     if parent_menu.nil?
-      #Elvis::MenuManager.add_menu_item menu, plugin_menu_item if Elvis::MenuManager.find_item_by_name(menu, plugin).present?
+      # Elvis::MenuManager.add_menu_item menu, plugin_menu_item if Elvis::MenuManager.find_item_by_name(menu, plugin).present?
       Elvis::MenuManager.add_menu_item menu, plugin_menu_item
     else
       parent_menu.add plugin_menu_item unless parent_menu.children.include?(plugin_menu_item)

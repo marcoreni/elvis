@@ -30,9 +30,8 @@ class School < ApplicationRecord
   end
 
   def self.class_name_gender
-    return :F
+    :F
   end
-
 
   def self.school_name
     School.first&.name

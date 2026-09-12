@@ -11,21 +11,20 @@
 #
 
 class EvaluationLevelRef < ApplicationRecord
-    extend Elvis::ConstantLike
+  extend Elvis::ConstantLike
 
-    has_many :levels
+  has_many :levels
 
-    DEFAULT_LEVEL_REF_ID = 1
-    DEFAULT_LEVEL_REF = find_or_create_by!(id: DEFAULT_LEVEL_REF_ID, label: 'DEBUTANT', value: 0, can_continue: false)
+  DEFAULT_LEVEL_REF_ID = 1
+  DEFAULT_LEVEL_REF = find_or_create_by!(id: DEFAULT_LEVEL_REF_ID, label: "DEBUTANT", value: 0, can_continue: false)
 
-    reset_pk_sequence
+  reset_pk_sequence
 
-    def self.display_class_name(singular = true)
-        singular ? "référentiel d'évaluation" : "référentiels d'évaluation"
-    end
+  def self.display_class_name(singular = true)
+    singular ? "référentiel d'évaluation" : "référentiels d'évaluation"
+  end
 
-    def self.class_name_gender
-        return :M
-    end
-
+  def self.class_name_gender
+    :M
+  end
 end

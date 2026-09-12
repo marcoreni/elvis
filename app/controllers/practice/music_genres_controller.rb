@@ -1,5 +1,5 @@
 class Practice::MusicGenresController < ApplicationController
-  before_action :set_music_genre, only: [:edit, :update, :destroy]
+  before_action :set_music_genre, only: %i[edit update destroy]
   before_action :set_current_user
 
   # GET /music_genres
@@ -66,13 +66,14 @@ class Practice::MusicGenresController < ApplicationController
   end
 
   private
-    # Use callbacks to share common setup or constraints between actions.
-    def set_music_genre
-      @music_genre = MusicGenre.find(params[:id])
-    end
 
-    # Never trust parameters from the scary internet, only allow the white list through.
-    def music_genre_params
-      params.require(:music_genre).permit(:name)
-    end
+  # Use callbacks to share common setup or constraints between actions.
+  def set_music_genre
+    @music_genre = MusicGenre.find(params[:id])
+  end
+
+  # Never trust parameters from the scary internet, only allow the white list through.
+  def music_genre_params
+    params.require(:music_genre).permit(:name)
+  end
 end

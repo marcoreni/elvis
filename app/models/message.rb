@@ -13,16 +13,15 @@
 #
 
 class Message < ApplicationRecord
-    has_many :message_recipients
-    has_many :recipients, through: :message_recipients
-    belongs_to :sender, class_name: :User, foreign_key: :user_id
+  has_many :message_recipients
+  has_many :recipients, through: :message_recipients
+  belongs_to :sender, class_name: :User, foreign_key: :user_id
 
-    def self.display_class_name(singular = true)
-        singular ? "message" : "messages"
-    end
+  def self.display_class_name(singular = true)
+    singular ? "message" : "messages"
+  end
 
-    def self.class_name_gender
-        return :M
-    end
-
+  def self.class_name_gender
+    :M
+  end
 end

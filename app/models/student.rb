@@ -13,62 +13,56 @@
 #
 
 class Student < ApplicationRecord
-    belongs_to :user
-    belongs_to :activity
-    belongs_to :payment_method, optional: true
+  belongs_to :user
+  belongs_to :activity
+  belongs_to :payment_method, optional: true
 
-    def self.display_class_name(singular = true)
-        singular ? "élève" : "élèves"
+  def self.display_class_name(singular = true)
+    singular ? "élève" : "élèves"
+  end
+
+  def self.class_name_gender
+    :M
+  end
+
+  def get_price
+    case payment_frequency
+    when 1, 12
+      activity.activity_ref.annual_price
+    when 3
+      activity.activity_ref.quarterly_price
+    when 10
+      activity.activity_ref.monthly_price
+    when 11
+      activity.activity_ref.special_price
+    when 13
+      floor2(activity.activity_ref.annual_price * 0.95, 2)
+    else
+      1111
     end
+  end
 
-    def self.class_name_gender
-        return :M
+  def get_price_format
+    case payment_frequency
+    when 1, 12
+      "annuel"
+    when 3
+      "trimestriel"
+    when 10
+      "mensuel"
+    when 11
+      "annuel"
+    when 13
+      "annuel -5%"
+    else
+      "annuel"
     end
+  end
 
+  private
 
-    def get_price
-        amount = 0
-        case self.payment_frequency
-        when 1, 12
-            amount = self.activity.activity_ref.annual_price
-        when 3
-            amount = self.activity.activity_ref.quarterly_price
-        when 10
-            amount = self.activity.activity_ref.monthly_price
-        when 11
-            amount = self.activity.activity_ref.special_price
-        when 13
-            amount = floor2(self.activity.activity_ref.annual_price * 0.95, 2)
-        else
-            amount = 1111
-        end
-
-        return amount
-    end
-
-    def get_price_format
-        format = "annuel"
-        case self.payment_frequency
-        when 1, 12
-            format = "annuel"
-        when 3
-            format = "trimestriel"
-        when 10
-            format = "mensuel"
-        when 11
-            format = "annuel"
-        when 13
-            format = "annuel -5%"
-        else
-            format = "annuel"
-        end
-
-        return format
-    end
-
-    private
-        def floor2(value, exp = 0)
-            multiplier = 10 ** exp
-            ((value * multiplier).floor).to_f/multiplier.to_f
-        end
+  def floor2(value, exp = 0)
+    multiplier = 10**exp
+    (value * multiplier).floor.to_f / multiplier.to_f
+  end
 end

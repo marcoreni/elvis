@@ -80,5 +80,4 @@ class SettingsController < ApplicationController
       @settings = Setting.send "#{@plugin.name}"
     end
   end
-
 end

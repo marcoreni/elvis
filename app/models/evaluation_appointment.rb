@@ -15,26 +15,25 @@
 #
 
 class EvaluationAppointment < ApplicationRecord
-    belongs_to :season
-    belongs_to :time_interval, required: false
-    
-    belongs_to :teacher, class_name: :User, required: false
+  belongs_to :season
+  belongs_to :time_interval, required: false
 
-    belongs_to :room, required: false
-    belongs_to :activity_ref
+  belongs_to :teacher, class_name: :User, required: false
 
-    belongs_to :student, class_name: :User, required: false
-    belongs_to :activity_application, required: false
+  belongs_to :room, required: false
+  belongs_to :activity_ref
 
-    scope :incomplete, ->{ where(student_id: nil, activity_application_id: nil) }
-    scope :in_season, ->(season){ where(season_id: season.id) }
+  belongs_to :student, class_name: :User, required: false
+  belongs_to :activity_application, required: false
 
-    def self.display_class_name(singular = true)
-        singular ? "RDV d'évaluation" : "RDV d'évaluation"
-    end
+  scope :incomplete, -> { where(student_id: nil, activity_application_id: nil) }
+  scope :in_season, ->(season) { where(season_id: season.id) }
 
-    def self.class_name_gender
-        return :M
-    end
+  def self.display_class_name(singular = true)
+    singular ? "RDV d'évaluation" : "RDV d'évaluation"
+  end
 
+  def self.class_name_gender
+    :M
+  end
 end

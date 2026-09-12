@@ -31,12 +31,12 @@ class Payment < ApplicationRecord
 
   belongs_to :location, optional: true
 
-  def self.display_class_name(singular= true)
+  def self.display_class_name(singular = true)
     singular ? "règlement" : "règlements"
   end
 
   def self.class_name_gender
-    return :M
+    :M
   end
 
   def adjusted_amount

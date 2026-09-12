@@ -1,7 +1,5 @@
 class Parameters::EvaluationParametersController < ApplicationController
-  def index
-
-  end
+  def index; end
 
   def list_levels
     query = EvaluationLevelRef.all
@@ -13,7 +11,7 @@ class Parameters::EvaluationParametersController < ApplicationController
               when "value"
                 query.where(value: filter[:value])
               when "can_continue"
-                query.where(can_continue: filter[:value] == 'oui')
+                query.where(can_continue: filter[:value] == "oui")
               else
                 query.where("#{filter[:id]} ILIKE ?", "#{filter[:value]}%")
               end

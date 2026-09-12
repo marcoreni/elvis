@@ -2,12 +2,12 @@
 
 class MyActivitiesController < ApplicationController
   before_action -> { @current_user = current_user }
-  before_action :authorize_user, only: [:show, :show_bookings_and_availabilities, :show_upcoming_activities]
+  before_action :authorize_user, only: %i[show show_bookings_and_availabilities show_upcoming_activities]
 
   def authorize_user
-    if current_user.id != params[:id].to_i && !current_user.admin?
-      redirect_to main_app.root_url
-    end
+    return unless current_user.id != params[:id].to_i && !current_user.admin?
+
+    redirect_to main_app.root_url
   end
 
   ##########
@@ -19,24 +19,20 @@ class MyActivitiesController < ApplicationController
     respond_to do |format|
       format.html
 
-      format.json {
+      format.json do
         render json: {
           seasons: Season.all,
-          current_season: Season.current,
+          current_season: Season.current
         }
-      }
+      end
     end
   end
 
   ###### Page Réservations ######
-  def show_bookings_and_availabilities
-
-  end
+  def show_bookings_and_availabilities; end
 
   ###### Page des prochains cours ######
-  def show_upcoming_activities
-
-  end
+  def show_upcoming_activities; end
 
   ########################
   #  API CALLS FOR DATA  #
@@ -60,22 +56,20 @@ class MyActivitiesController < ApplicationController
 
       activity.activity_instances.each do |instance|
         next if instance.nil?
-        availabilities.push(instance) if DateTime.now < instance.time_interval.start
 
+        availabilities.push(instance) if DateTime.now < instance.time_interval.start
 
         # on vérifie si l'activité a été réservée par l'utilisateur
         instance.student_attendances.each do |attendance|
-          if attendance.user_id == params[:user_id].to_i
-            if instance.time_interval.start
-              my_activities.push(instance) # c'est une activité réservée par l'utilisateur
-            end
+          if (attendance.user_id == params[:user_id].to_i) && instance.time_interval.start
+            my_activities.push(instance) # c'est une activité réservée par l'utilisateur
           end
         end
       end
     end
 
     # On retire les activités réservées par l'utilisateur des disponibilités
-    availabilities = availabilities - my_activities
+    availabilities -= my_activities
 
     # On trie les activités par date de début
     availabilities = availabilities.sort_by do |activity|
@@ -87,7 +81,7 @@ class MyActivitiesController < ApplicationController
     end
 
     respond_to do |format|
-      format.json {
+      format.json do
         render json: {
           user: User.find(params[:user_id]),
           availabilities: availabilities.as_json({
@@ -95,8 +89,8 @@ class MyActivitiesController < ApplicationController
                                                      teacher: {},
                                                      room: {},
                                                      time_interval: {},
-                                                     student_attendances: {},
-                                                   },
+                                                     student_attendances: {}
+                                                   }
 
                                                  }),
           my_activities: my_activities.as_json({
@@ -106,20 +100,25 @@ class MyActivitiesController < ApplicationController
                                                    time_interval: {}
                                                  }
                                                }),
-          activity_ref: activity_ref.as_json({ only: [:id, :label, :kind, :occupation_limit] }),
+          activity_ref: activity_ref.as_json({ only: %i[id label kind occupation_limit] }),
           activity_ref_pricing: activity_ref_pricing.as_json,
           pack: pack.as_json,
-          hours_before_cancelling: Parameter.get_value("planning.hours_before_cancelling_activity") || 0,
+          hours_before_cancelling: Parameter.get_value("planning.hours_before_cancelling_activity") || 0
 
         }
-      }
+      end
     end
   end
 
   ###### Page Principale ######
   def get_own_and_possible_user_activities
     user = User.find(params[:user_id])
-    user_packs = params[:id].nil? ? Pack.where(user_id: user.id, season_id: params[:season_id]) : Pack.where(user_id: user.id)
+    user_packs = if params[:id].nil?
+                   Pack.where(user_id: user.id,
+                              season_id: params[:season_id])
+                 else
+                   Pack.where(user_id: user.id)
+                 end
     season = if params[:season_id].present?
                Season.find_by(id: params[:season_id]) || Season.current_season
              else
@@ -148,7 +147,7 @@ class MyActivitiesController < ApplicationController
             pre_application_activities: {
               include: {
                 activity: {
-                  include: [:teacher, :room, :time_interval]
+                  include: %i[teacher room time_interval]
                 }
               }
             }
@@ -158,7 +157,7 @@ class MyActivitiesController < ApplicationController
     end
 
     respond_to do |format|
-      format.json {
+      format.json do
         render json: {
           regular_user_activities: user.activity_applications.where(season_id: season.id).as_json(
             include: {
@@ -206,7 +205,7 @@ class MyActivitiesController < ApplicationController
             show_teacher_contacts: show_teacher_contacts
           }
         }
-      }
+      end
     end
   end
 
@@ -220,16 +219,16 @@ class MyActivitiesController < ApplicationController
     # On récupère toutes les activités à venir qui ont été réservées par l'utilisateur par le biais du formulaire de réservation pricinpal
     annual_activities.each do |activity|
       activity.desired_activities.each do |desired_activity|
-        if desired_activity.activity&.time_interval&.start
-          upcoming_activities.push(desired_activity.activity)
-        end
+        upcoming_activities.push(desired_activity.activity) if desired_activity.activity&.time_interval&.start
       end
     end
 
     # On récupère toutes les activités résérvées par l'utilisateur par le biais du formulaire de réservation de packs
     attendance = StudentAttendance.where(user_id: params[:user_id])
     attendance.each do |attendance|
-      upcoming_activities.push(attendance.activity_instance) if attendance.activity_instance && attendance.user_id == user.id.to_i
+      if attendance.activity_instance && attendance.user_id == user.id.to_i
+        upcoming_activities.push(attendance.activity_instance)
+      end
     end
 
     # on trie les activités par le mois de la date actuelle
@@ -241,20 +240,20 @@ class MyActivitiesController < ApplicationController
                                                         include: {
                                                           teacher: {},
                                                           room: {},
-                                                          time_interval: {},
+                                                          time_interval: {}
                                                         }
                                                       })
 
     # On ajoute la référence de l'activité à chaque activité
     upcoming_activities.each do |activity|
-      activity["activity_ref"] = Activity.find(activity['activity_id']).activity_ref if activity['activity_id']
-      activity["activity_ref"] = ActivityRef.find(activity['activity_ref_id']) if activity['activity_ref_id']
+      activity["activity_ref"] = Activity.find(activity["activity_id"]).activity_ref if activity["activity_id"]
+      activity["activity_ref"] = ActivityRef.find(activity["activity_ref_id"]) if activity["activity_ref_id"]
     end
 
     respond_to do |format|
-      format.json {
+      format.json do
         render json: upcoming_activities
-      }
+      end
     end
   end
 
@@ -271,7 +270,9 @@ class MyActivitiesController < ApplicationController
     annual_activities_this_month.each do |activity|
       activity.desired_activities.each do |desired_activity|
         next if desired_activity.activity.nil?
-        next if desired_activity.activity.time_interval.start < date.beginning_of_month || desired_activity.activity.time_interval.start > date.end_of_month
+        if desired_activity.activity.time_interval.start < date.beginning_of_month || desired_activity.activity.time_interval.start > date.end_of_month
+          next
+        end
 
         upcoming_activities_this_month.push(desired_activity.activity)
       end
@@ -293,14 +294,14 @@ class MyActivitiesController < ApplicationController
                                                                                 teacher: {},
                                                                                 location: {},
                                                                                 room: {},
-                                                                                time_interval: {},
+                                                                                time_interval: {}
                                                                               }
                                                                             })
 
     # On ajoute la référence de l'activité à chaque activité
     upcoming_activities_this_month.each do |activity|
-      activity["activity_ref"] = Activity.find(activity['activity_id']).activity_ref if activity['activity_id']
-      activity["activity_ref"] = ActivityRef.find(activity['activity_ref_id']) if activity['activity_ref_id']
+      activity["activity_ref"] = Activity.find(activity["activity_id"]).activity_ref if activity["activity_id"]
+      activity["activity_ref"] = ActivityRef.find(activity["activity_ref_id"]) if activity["activity_ref_id"]
     end
 
     upcoming_activities_this_month
@@ -321,7 +322,8 @@ class MyActivitiesController < ApplicationController
         # inscrire l'élève au cours sélectionné, si ce n'est pas encore le cas
         Student.find_or_create_by!(user_id: params[:user_id], activity_id: activityInstance["activity_id"])
 
-        attendance = StudentAttendance.create(user_id: params[:user_id], activity_instance_id: activityInstance["id"], is_pack: true)
+        attendance = StudentAttendance.create(user_id: params[:user_id], activity_instance_id: activityInstance["id"],
+                                              is_pack: true)
         attendance.save!
 
         # ajouter la séance au planning de l'élève
@@ -350,7 +352,8 @@ class MyActivitiesController < ApplicationController
 
   # Retirer une activité de la liste des activités souhaitées
   def remove_wished_attendance
-    attendance = StudentAttendance.find_by(user_id: params[:user]["id"], activity_instance_id: params[:activity_instance]["id"], is_pack: true)
+    attendance = StudentAttendance.find_by(user_id: params[:user]["id"],
+                                           activity_instance_id: params[:activity_instance]["id"], is_pack: true)
     user_pack = Pack.find(params[:pack_id])
 
     # supprimer la séance du planning de l'élève
@@ -369,11 +372,11 @@ class MyActivitiesController < ApplicationController
     if saved
       EventHandler.notification.activity_cancelled.trigger(
         sender: {
-          controller_name: self.class.name,
+          controller_name: self.class.name
         },
         args: {
           user: attendance.user,
-          activity_instance: attendance.activity_instance,
+          activity_instance: attendance.activity_instance
         }
       )
 
@@ -388,5 +391,4 @@ class MyActivitiesController < ApplicationController
   def format_and_capitalize_date(time_interval, format)
     l(time_interval, format: format).capitalize.to_s
   end
-
 end

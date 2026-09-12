@@ -1,1 +1,1 @@
-json.array! @room_features, partial: 'room_features/room_feature', as: :room_feature
+json.array! @room_features, partial: "room_features/room_feature", as: :room_feature

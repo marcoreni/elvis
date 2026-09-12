@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 module PaymentHelper
-
   def self.generate_payer_payment_summary_data(user, season)
     family = (user.whole_family(season.id) << user).uniq
 
@@ -12,12 +11,14 @@ module PaymentHelper
 
     students.each do |student|
       activity = student.activity
-      desired  = desired_activities.find { |da| da.activity_id == activity.id && da.activity_application.user_id == user.id }
+      desired  = desired_activities.find do |da|
+        da.activity_id == activity.id && da.activity_application.user_id == user.id
+      end
 
       next unless desired
 
       activity_nb_lesson = activity.intended_nb_lessons
-      activity_ref_pricing  = ActivityRefPricing
+      activity_ref_pricing = ActivityRefPricing
                              .for_season(season)
                              .for_activity_ref(activity.activity_ref)
                              .for_pricing_category(desired.pricing_category)
@@ -38,7 +39,6 @@ module PaymentHelper
         intended_nb_lessons: activity_nb_lesson,
         type: :des
       }
-
     end
 
     if Adhesion.enabled
@@ -52,37 +52,37 @@ module PaymentHelper
 
         adhesion_price = adhesion.adhesion_price
 
-        if adhesion_price
-          data << {
-            id: adhesion.id,
-            activity: "Adhésion de #{user.first_name} #{user.last_name}",
-            amount: adhesion_price.price || 0,
-            user_full_name: user.full_name,
-            type: :adh
-          }
-        end
+        next unless adhesion_price
+
+        data << {
+          id: adhesion.id,
+          activity: "Adhésion de #{user.first_name} #{user.last_name}",
+          amount: adhesion_price.price || 0,
+          user_full_name: user.full_name,
+          type: :adh
+        }
       end
     end
 
     season_packs = []
 
-    Pack.where(season_id: season_id, user_id: students.map{|a| a.user_id }.uniq).each do |pack|
+    Pack.where(season_id: season_id, user_id: students.map { |a| a.user_id }.uniq).each do |pack|
       season_packs << pack.as_json(include: {
-        activity_ref: {},
-        activity_ref_pricing: {
-          include: {
-            pricing_category: {}
-          }
-        },
-        user: {}
-      })
+                                     activity_ref: {},
+                                     activity_ref_pricing: {
+                                       include: {
+                                         pricing_category: {}
+                                       }
+                                     },
+                                     user: {}
+                                   })
     end
 
     if season_packs.any?
       season_packs.each do |pack|
         data.push({
                     id: 0,
-                    activity: "Pack de #{pack["user"]["first_name"]} #{pack["user"]["last_name"]} pour #{pack["activity_ref"]["label"]} (#{pack["activity_ref"]["kind"]})",
+                    activity: "Pack de #{pack['user']['first_name']} #{pack['user']['last_name']} pour #{pack['activity_ref']['label']} (#{pack['activity_ref']['kind']})",
                     frequency: 1,
                     initial_total: 1,
                     due_total: pack["activity_ref_pricing"]["price"] || 0,
@@ -92,12 +92,11 @@ module PaymentHelper
                     user: pack["user"],
                     studentId: pack["user"]["id"],
                     packPrice: pack["activity_ref_pricing"],
-                    packId: pack["id"],
+                    packId: pack["id"]
                   })
       end
     end
 
     data
   end
-
 end

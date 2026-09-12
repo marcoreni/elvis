@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 class DestroyJob < ApplicationJob
-
   class DestroyEndError < StandardError
     def initialize(data)
       super(data[:message])
@@ -9,9 +8,7 @@ class DestroyJob < ApplicationJob
       @data = data
     end
 
-    def data
-      @data
-    end
+    attr_reader :data
   end
 
   def perform(*params)
@@ -29,9 +26,7 @@ class DestroyJob < ApplicationJob
       if @destroy_params[:auto_deletable_references].include?(reference.class)
         deletable_refs << reference
       else
-        unless @destroy_params[:ignore_references].include?(reference.class)
-          undeletable_refs << reference
-        end
+        undeletable_refs << reference unless @destroy_params[:ignore_references].include?(reference.class)
       end
     end
 
@@ -39,7 +34,6 @@ class DestroyJob < ApplicationJob
     # | A partir d'ici on se met dans une transaction éviter de modifier la base de données si une erreur survient |
     # ==============================================================================================================
     ActiveRecord::Base.transaction do
-
       # ============================================================================================================
       # | On execute la méthode pre_destroy si elle existe (permet de faire des vérifications avant la suppression |
       # | ou de supprimer des dépendances automatiquement)                                                         |
@@ -64,11 +58,11 @@ class DestroyJob < ApplicationJob
       # ===================================================================================================================
       if @selected_dep_to_destroy.any?
         tmp.each do |ref|
-          if @selected_dep_to_destroy.include?(ref.class) && ref.undeletable_instruction(@object)[:possible]
-            ref.pre_destroy if ref.respond_to?(:pre_destroy)
-            ref.destroy!
-            undeletable_refs.delete(ref)
-          end
+          next unless @selected_dep_to_destroy.include?(ref.class) && ref.undeletable_instruction(@object)[:possible]
+
+          ref.pre_destroy if ref.respond_to?(:pre_destroy)
+          ref.destroy!
+          undeletable_refs.delete(ref)
         end
       end
 
@@ -76,15 +70,17 @@ class DestroyJob < ApplicationJob
       # | Si il reste des dépendances non supprimables automatiquement, on affiche un message d'erreur |
       # ================================================================================================
       if undeletable_refs.any?
-        messages = undeletable_refs.map {|ref| ref.undeletable_instruction(@object) }
+        messages = undeletable_refs.map { |ref| ref.undeletable_instruction(@object) }
 
-        has_impossible_deletion = messages.any? {|message| !message[:possible] }
+        has_impossible_deletion = messages.any? { |message| !message[:possible] }
 
         message = has_impossible_deletion ? @destroy_params[:undeletable_message] : @destroy_params[:deletable_message]
 
         message += "<ul>"
 
-        message += messages.filter{|m| m[:possible] != has_impossible_deletion}.map {|m| "<li>#{m[:instruction]}</li>" }.uniq.take(20).join("")
+        message += messages.filter do |m|
+          m[:possible] != has_impossible_deletion
+        end.map { |m| "<li>#{m[:instruction]}</li>" }.uniq.take(20).join("")
 
         # on ne prendra que les 20 premiers messages d'erreur
         if messages.count > 20 && !has_impossible_deletion
@@ -126,7 +122,7 @@ class DestroyJob < ApplicationJob
       args: data
     )
 
-    return data
+    data
 
   # catch all personnal error (bad data, etc.)
   rescue DestroyEndError => e
@@ -135,7 +131,7 @@ class DestroyJob < ApplicationJob
       args: e.data
     )
 
-    return e.data
+    e.data
 
   # catch class not found errors (for personnal errors messages)
   rescue NameError => e
@@ -143,17 +139,17 @@ class DestroyJob < ApplicationJob
 
     data = {
       success: false,
-      message: "La classe #{params&.first&.fetch(:classname, "Inconnue")} n'a pas été trouvée.",
+      message: "La classe #{params&.first&.fetch(:classname, 'Inconnue')} n'a pas été trouvée.",
       status: :not_found,
       objId: @object&.id
     }
 
-    EventHandler.send("#{params&.first&.fetch(:classname, "Inconnue")}").destroy_ended.trigger(
+    EventHandler.send("#{params&.first&.fetch(:classname, 'Inconnue')}").destroy_ended.trigger(
       sender: self.class.name,
       args: data
     )
 
-    return data
+    data
 
     # catch record not found errors (for personnal errors messages)
   rescue ActiveRecord::RecordNotFound => e
@@ -171,7 +167,7 @@ class DestroyJob < ApplicationJob
       args: data
     )
 
-    return data
+    data
 
   # catch all other errors with généric message
   rescue StandardError => e
@@ -184,12 +180,12 @@ class DestroyJob < ApplicationJob
       objId: @object&.id
     }
 
-    EventHandler.send("#{@classname&.name || params&.first&.fetch(:classname, "notFound")}").destroy_ended.trigger(
+    EventHandler.send("#{@classname&.name || params&.first&.fetch(:classname, 'notFound')}").destroy_ended.trigger(
       sender: self.class.name,
       args: data
     )
 
-    return data
+    data
   end
 
   private

@@ -10,24 +10,23 @@
 #  updated_at                :datetime         not null
 #
 class PracticeRoomParameter < ApplicationRecord
-    belongs_to :room
-    belongs_to :practice_room_planning, optional: true
+  belongs_to :room
+  belongs_to :practice_room_planning, optional: true
 
-    # scope :by_room, ->(id) {where(room_id: id).first}
+  # scope :by_room, ->(id) {where(room_id: id).first}
 
-    after_create :create_room_planning
+  after_create :create_room_planning
 
-    def self.display_class_name(singular = true)
-        singular ? "paramètre de salle de répétition" : "paramètres de salles de répétition"
-    end
+  def self.display_class_name(singular = true)
+    singular ? "paramètre de salle de répétition" : "paramètres de salles de répétition"
+  end
 
-    def self.class_name_gender
-        return :M
-    end
+  def self.class_name_gender
+    :M
+  end
 
-
-    def create_room_planning
-        self.create_practice_room_planning!
-        self.save!
-    end
+  def create_room_planning
+    create_practice_room_planning!
+    save!
+  end
 end

@@ -3,8 +3,7 @@
 class NotificationTemplatesController < ApplicationController
   before_action -> { @current_user = current_user }
 
-  def index
-  end
+  def index; end
 
   def edit_template
     @event = params[:event]
@@ -13,49 +12,48 @@ class NotificationTemplatesController < ApplicationController
     respond_to do |format|
       format.html
 
-      format.json {
+      format.json do
         render json: {
           template: @template,
-          event: @event,
+          event: @event
         }
-      }
+      end
     end
   end
 
   def update
-    if params != nil
+    if !params.nil?
       template = NotificationTemplate.find(params[:id])
       template.body = params[:html]
       template.json = params[:json].to_json
       template.save!
-      render json: {status: "ok"}, status: 200
+      render json: { status: "ok" }, status: 200
     else
-      render json: {status: "not ok"}, status: 500
+      render json: { status: "not ok" }, status: 500
     end
   end
 
   def destroy
-    if params != nil
+    if !params.nil?
       template = NotificationTemplate.find(params[:id])
       template.delete
-      render json: {status: "ok"}, status: 200
+      render json: { status: "ok" }, status: 200
     else
-      render json: {status: "not ok"}, status: 500
+      render json: { status: "not ok" }, status: 500
     end
   end
 
-  def new
-
-  end
+  def new; end
 
   def create
-    if params != nil
-      template = NotificationTemplate.new(name: params[:name], body: params[:html], path: params[:path], json: params[:json].to_json, partial: false, format: "html", handler: "liquid")
+    if !params.nil?
+      template = NotificationTemplate.new(name: params[:name], body: params[:html], path: params[:path],
+                                          json: params[:json].to_json, partial: false, format: "html", handler: "liquid")
       template.save!
 
-      render json: {status: "ok"}, status: 200
+      render json: { status: "ok" }, status: 200
     else
-      render json: {status: "not ok"}, status: 500
+      render json: { status: "not ok" }, status: 500
     end
   end
 
@@ -68,10 +66,9 @@ class NotificationTemplatesController < ApplicationController
   end
 
   def templates_list_json(templates)
-
     query = templates
-              .page(params[:page] + 1)
-              .per(params[:pageSize])
+            .page(params[:page] + 1)
+            .per(params[:pageSize])
 
     pages = query.total_pages
     total = templates.count
@@ -79,7 +76,7 @@ class NotificationTemplatesController < ApplicationController
     {
       templates: query,
       pages: pages,
-      total: total,
+      total: total
     }
   end
 end

@@ -1,5 +1,8 @@
 class HealthcheckController < ActionController::Base
-  http_basic_authenticate_with name: "#{ENV['HEALTH_CHECK_USER']}", password: "#{ENV['HEALTH_CHECK_PASSWORD']}" if ENV['HEALTH_CHECK_USER'].present? && ENV['HEALTH_CHECK_PASSWORD'].present?
+  if ENV["HEALTH_CHECK_USER"].present? && ENV["HEALTH_CHECK_PASSWORD"].present?
+    http_basic_authenticate_with name: "#{ENV['HEALTH_CHECK_USER']}",
+                                 password: "#{ENV['HEALTH_CHECK_PASSWORD']}"
+  end
 
   def index
     components_status = {}
@@ -9,23 +12,18 @@ class HealthcheckController < ActionController::Base
     begin
       database_active = ActiveRecord::Base.connection.active?
 
-      if database_active
-        res = ActiveRecord::Base.connection.execute('SELECT 1')
-        stop = Time.now
+      raise "Database is not active" unless database_active
 
-        unless res.present?
-          raise 'Database is not accessible'
-        end
+      res = ActiveRecord::Base.connection.execute("SELECT 1")
+      stop = Time.now
 
-        components_status[:database] = {
-          status: 1,
-          message: "",
-          duration: (stop - start) * 1000
-        }
-      else
-        raise 'Database is not active'
-      end
+      raise "Database is not accessible" unless res.present?
 
+      components_status[:database] = {
+        status: 1,
+        message: "",
+        duration: (stop - start) * 1000
+      }
     rescue StandardError => e
       stop = Time.now
       components_status[:database] = {
@@ -35,11 +33,11 @@ class HealthcheckController < ActionController::Base
       }
     end
 
-    if ENV['REDIS_URL']
+    if ENV["REDIS_URL"]
       # test redis connection
       start = Time.now
       begin
-        redis = Redis.new(url: ENV['REDIS_URL'])
+        redis = Redis.new(url: ENV["REDIS_URL"])
         redis.ping
         stop = Time.now
 
@@ -70,7 +68,6 @@ class HealthcheckController < ActionController::Base
         message: "",
         duration: (stop - start) * 1000
       }
-
     rescue StandardError => e
       stop = Time.now
       components_status[:elasticsearch] = {
@@ -85,17 +82,15 @@ class HealthcheckController < ActionController::Base
     all_system_up = components_status.values.all? { |status| status[:status] == 1 }
 
     final_status[:status] = all_system_up ? 1 : 0
-    final_status[:message] = all_system_up ? 'All systems operational' : 'Some systems are down'
+    final_status[:message] = all_system_up ? "All systems operational" : "Some systems are down"
 
     final_status = final_status.merge(components_status)
 
     render json: final_status, status: all_system_up ? 200 : 500
-
   rescue StandardError => e
     render json: {
       status: 0,
       message: e.message
     }, status: 500
   end
-
 end

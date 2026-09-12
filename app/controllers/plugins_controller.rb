@@ -4,9 +4,11 @@ class PluginsController < ApplicationController
   def index
     respond_to do |format|
       format.html
-      format.json { render json: {
-        plugins: Plugin.where(hidden: false),
-      } }
+      format.json do
+        render json: {
+          plugins: Plugin.where(hidden: false)
+        }
+      end
     end
   end
 

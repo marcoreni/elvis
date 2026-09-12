@@ -26,7 +26,8 @@ class SchoolSerializer < ActiveModel::Serializer
 
   has_one :address
 
-  attributes :id, :name, :phone_number, :email, :academy, :zone, :logo, :siret_rna, :rcs,:activities_not_subject_to_vat, :entity_subject_to_vat
+  attributes :id, :name, :phone_number, :email, :academy, :zone, :logo, :siret_rna, :rcs,
+             :activities_not_subject_to_vat, :entity_subject_to_vat
 
   def logo
     return object.logo.filename if object.logo.attached?

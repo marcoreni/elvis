@@ -14,7 +14,6 @@
 #  updated_at              :datetime         not null
 #
 class EventSubscription < ApplicationRecord
-
   # @!attribute event_group
   #  @return [String]
   validates :event_group, presence: true
@@ -35,9 +34,8 @@ class EventSubscription < ApplicationRecord
   end
 
   def self.class_name_gender
-    return :F
+    :F
   end
-
 
   def params
     serialized_params_types.each_with_index.map do |type, index|
@@ -46,9 +44,9 @@ class EventSubscription < ApplicationRecord
   end
 
   def params_types_as_same_size
-    if serialized_params_types.size != serialized_params.size
-      errors.add(:serialized_params_types, "must be the same size as serialized_params")
-    end
+    return unless serialized_params_types.size != serialized_params.size
+
+    errors.add(:serialized_params_types, "must be the same size as serialized_params")
   end
 
   def event_class_exists_and_respond_to_execute
@@ -63,7 +61,7 @@ class EventSubscription < ApplicationRecord
 
       if execute_parameters.size != 3
         errors.add(:event_class, "execute method must have 3 parameters")
-      elsif execute_parameters.map(&:last) != [:sender, :args, :sauv_params]
+      elsif execute_parameters.map(&:last) != %i[sender args sauv_params]
         errors.add(:event_class, "execute method must have :sender, :args, :sauv_params as parameters")
       elsif !execute_parameters.map(&:first).all? { |p| p == :key }
         errors.add(:event_class, "execute method declared like this: def execute(sender:, args:, sauv_params:)")
@@ -79,7 +77,7 @@ class EventSubscription < ApplicationRecord
   #   sauv_params: the parameters of the event subscription (tab)
   # @return [nil]
   def subscribe
-    return nil unless self.subscribe_id.nil?
+    return nil unless subscribe_id.nil?
 
     event_group = self.event_group
     event = self.event
@@ -90,16 +88,17 @@ class EventSubscription < ApplicationRecord
     if execute_instance.respond_to?(:execute)
       execute_parameters = execute_instance.method(:execute).parameters
 
-      if execute_parameters.size == 3 && execute_parameters.map(&:last) == [:sender, :args, :sauv_params] && execute_parameters.map(&:first).all? { |p| p == :key }
-        self.subscribe_id = EventHandler.send(event_group).send(event).subscribe(self.async) do |sender:, args:|
+      if execute_parameters.size == 3 && execute_parameters.map(&:last) == %i[sender args
+                                                                              sauv_params] && execute_parameters.map(&:first).all? do |p|
+                                                                                                p == :key
+                                                                                              end
+        self.subscribe_id = EventHandler.send(event_group).send(event).subscribe(async) do |sender:, args:|
           ei = event_class.new
 
-          ei.execute(sender: sender, args: args, sauv_params: self.params)
+          ei.execute(sender: sender, args: args, sauv_params: params)
         end
 
-        unless self.save
-          EventHandler.send(self.event_group).send(self.event).unsubscribe(self.subscribe_id)
-        end
+        EventHandler.send(self.event_group).send(self.event).unsubscribe(subscribe_id) unless save
       end
     end
 
@@ -107,13 +106,13 @@ class EventSubscription < ApplicationRecord
   end
 
   def unsubscribe
-    return nil if self.subscribe_id.nil?
+    return nil if subscribe_id.nil?
 
-    id = self.subscribe_id
+    id = subscribe_id
     self.subscribe_id = nil
 
-    self.save!
+    save!
 
-    EventHandler.send(self.event_group).send(self.event).unsubscribe(id)
+    EventHandler.send(event_group).send(event).unsubscribe(id)
   end
 end

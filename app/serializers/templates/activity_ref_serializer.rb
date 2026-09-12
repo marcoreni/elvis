@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 module Templates
   class ActivityRefSerializer < ActiveModel::Serializer
     attribute "label", key: "Label"
@@ -14,5 +15,4 @@ module Templates
       end
     end
   end
-
 end

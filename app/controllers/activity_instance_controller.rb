@@ -6,7 +6,8 @@ class ActivityInstanceController < ApplicationController
   end
 
   def update_all
-    instances_to_check = Activities::TimeIntervalUpdater.new(params[:id], params[:time_interval_id], "following").execute
+    instances_to_check = Activities::TimeIntervalUpdater.new(params[:id], params[:time_interval_id],
+                                                             "following").execute
     results = Activities::ConflictsChecker.new(instances_to_check).execute
 
     tis = instances_to_check.map { |instance| instance.time_interval }
@@ -17,13 +18,11 @@ class ActivityInstanceController < ApplicationController
 
   def change_teacher
     @activity_instance = ActivityInstance.find(params[:id])
-
   end
 
   def set_cover_teacher
     @instance = ActivityInstance.find(params[:id])
-    cover_teacher = User.find_by(id: params[:cover_teacher_id])
-
+    User.find_by(id: params[:cover_teacher_id])
   end
 
   def edit_activity_instance
@@ -38,35 +37,37 @@ class ActivityInstanceController < ApplicationController
       }
 
       new_time_interval = build_new_time_interval(new_time_interval_array, old_time_interval)
-    rescue => error
-      @error_message = error.message
+    rescue StandardError => e
+      @error_message = e.message
     end
 
     case params[:instances_update_scope]
     when InstancesUpdateScope::FOLLOWING
-      instances = instance
-                    .activity
-                    .activity_instances
-                    .joins(:time_interval)
-                    .where("time_intervals.start >= ?", instance.time_interval.start)
-                    .each { |i| i.update(permitted_params) }
+      instance
+        .activity
+        .activity_instances
+        .joins(:time_interval)
+        .where("time_intervals.start >= ?", instance.time_interval.start)
+        .each { |i| i.update(permitted_params) }
 
       if new_time_interval.present?
         instance.time_interval.update!(new_time_interval)
-        following_instances_to_update = Activities::TimeIntervalUpdater.new(instance.id, instance.time_interval.id, "following").execute
+        following_instances_to_update = Activities::TimeIntervalUpdater.new(instance.id, instance.time_interval.id,
+                                                                            "following").execute
         conflicts_results = Activities::ConflictsChecker.new(following_instances_to_update).execute
       end
 
     when InstancesUpdateScope::ALL
-      instances = instance
-                    .activity
-                    .activity_instances
-                    .update_all(permitted_params.to_h)
+      instance
+        .activity
+        .activity_instances
+        .update_all(permitted_params.to_h)
 
       instance.activity.update!(params.permit(:room_id, :location_id))
       if new_time_interval.present?
         instance.time_interval.update!(new_time_interval)
-        all_instances_to_update = Activities::TimeIntervalUpdater.new(instance.id, instance.time_interval.id, "all").execute
+        all_instances_to_update = Activities::TimeIntervalUpdater.new(instance.id, instance.time_interval.id,
+                                                                      "all").execute
         conflicts_results = Activities::ConflictsChecker.new(all_instances_to_update).execute
       end
     else
@@ -90,7 +91,6 @@ class ActivityInstanceController < ApplicationController
   end
 
   def bulkdelete
-
     a_param = params.permit(
       :activity_id,
       :instance_ids,
@@ -99,13 +99,11 @@ class ActivityInstanceController < ApplicationController
 
     activity_instances = ActivityInstance.where(id: a_param[:instance_ids].split(","))
 
-    if activity_instances
-      activity_instances.destroy_all
-    end
+    activity_instances.destroy_all if activity_instances
 
     instancesLeft = ActivityInstance.where(activity_id: a_param[:activity_id]).count > 0
 
-    if !instancesLeft
+    unless instancesLeft
 
       activity = Activity.find(a_param[:activity_id])
       teacher = activity.teacher
@@ -144,27 +142,30 @@ class ActivityInstanceController < ApplicationController
   def build_new_time_interval(new_time_interval_array, old_time_interval)
     new_time_interval = {}
 
-    time_keys = [:date, :startTime, :endTime]
+    time_keys = %i[date startTime endTime]
     time_keys.each do |key|
-      if new_time_interval_array[key].empty?
-        case key
-        when :date
-          new_time_interval_array[key].push(old_time_interval.start.year, old_time_interval.start.month, old_time_interval.start.day)
-        when :startTime
-          new_time_interval_array[key].push(old_time_interval.start.hour, old_time_interval.start.min)
-        when :endTime
-          new_time_interval_array[key].push(old_time_interval.end.hour, old_time_interval.end.min)
-        else
-          raise ArgumentError, "La clé #{key} n'est pas reconnue."
-        end
+      next unless new_time_interval_array[key].empty?
+
+      case key
+      when :date
+        new_time_interval_array[key].push(old_time_interval.start.year, old_time_interval.start.month,
+                                          old_time_interval.start.day)
+      when :startTime
+        new_time_interval_array[key].push(old_time_interval.start.hour, old_time_interval.start.min)
+      when :endTime
+        new_time_interval_array[key].push(old_time_interval.end.hour, old_time_interval.end.min)
+      else
+        raise ArgumentError, "La clé #{key} n'est pas reconnue."
       end
     end
 
     # build the new time interval
     new_time_interval.merge!({
-                               start: Time.zone.local(*new_time_interval_array[:date], *new_time_interval_array[:startTime]),
-                               end: Time.zone.local(*new_time_interval_array[:date], *new_time_interval_array[:endTime]),
-                               kind: 'c',
+                               start: Time.zone.local(*new_time_interval_array[:date],
+                                                      *new_time_interval_array[:startTime]),
+                               end: Time.zone.local(*new_time_interval_array[:date],
+                                                    *new_time_interval_array[:endTime]),
+                               kind: "c",
                                is_validated: true
                              })
 
@@ -179,6 +180,4 @@ class ActivityInstanceController < ApplicationController
     # Return the new time interval
     new_time_interval
   end
-
 end
-

@@ -1,7 +1,6 @@
-require_relative 'base_listener'# frozen_string_literal: true
+require_relative "base_listener" # frozen_string_literal: true
 
 class UserListener < BaseListener
-
   def self.subscribe
     event_ids ||= []
 
@@ -12,10 +11,16 @@ class UserListener < BaseListener
 
       user = args[:model]
 
-      EventHandler.notification.user_created.trigger(sender: sender, args: args) if ctr_params&.fetch("user", nil)&.fetch("confirm", nil) || ctr_params&.fetch("confirm", nil)
+      if ctr_params&.fetch("user", nil)&.fetch(
+        "confirm", nil
+      ) || ctr_params&.fetch(
+        "confirm", nil
+      )
+        EventHandler.notification.user_created.trigger(sender: sender,
+                                                       args: args)
+      end
 
       Adhesions::CreateAdhesion.new(user.id).execute if ctr_params&.fetch("user", nil)&.fetch("adherent", nil)
     end
   end
-
 end

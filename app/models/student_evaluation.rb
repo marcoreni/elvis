@@ -10,20 +10,19 @@
 #
 
 class StudentEvaluation < ApplicationRecord
-    belongs_to :teacher, class_name: :User, foreign_key: :teacher_id
-    belongs_to :student, class_name: :User, foreign_key: :student_id
+  belongs_to :teacher, class_name: :User, foreign_key: :teacher_id
+  belongs_to :student, class_name: :User, foreign_key: :student_id
 
-    belongs_to :activity
-    belongs_to :season
+  belongs_to :activity
+  belongs_to :season
 
-    has_many :answers, as: :answerable, dependent: :destroy
+  has_many :answers, as: :answerable, dependent: :destroy
 
-    def self.display_class_name(singular = true)
-        singular ? "évaluation d'élève" : "évaluations d'élèves"
-    end
+  def self.display_class_name(singular = true)
+    singular ? "évaluation d'élève" : "évaluations d'élèves"
+  end
 
-    def self.class_name_gender
-        return :F
-    end
-
+  def self.class_name_gender
+    :F
+  end
 end

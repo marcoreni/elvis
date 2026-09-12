@@ -1,14 +1,15 @@
 # frozen_string_literal: true
+
 module Activities
   class DestroyActivitiesAndTimeIntervals
     def initialize(activity)
       @activity = activity
 
       time_interval = activity.time_interval
-      if time_interval
-        time_interval.is_validated = false
-        time_interval.save!
-      end
+      return unless time_interval
+
+      time_interval.is_validated = false
+      time_interval.save!
     end
 
     def execute

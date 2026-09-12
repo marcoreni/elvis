@@ -9,20 +9,19 @@
 #
 
 class MusicGenre < ApplicationRecord
-    has_many :bands
+  has_many :bands
 
-    validates :name, presence: true
+  validates :name, presence: true
 
-    def self.display_class_name(singular = true)
-        singular ? "genre musical" : "genres musicaux"
-    end
+  def self.display_class_name(singular = true)
+    singular ? "genre musical" : "genres musicaux"
+  end
 
-    def self.class_name_gender
-        return :M
-    end
+  def self.class_name_gender
+    :M
+  end
 
-
-    def to_s
-        name
-    end
+  def to_s
+    name
+  end
 end

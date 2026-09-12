@@ -3,22 +3,23 @@
 class PaymentScheduleOptionsController < ApplicationController
   before_action :set_current_user
   before_action :get_all_payment_schedule_option_indexes
-  before_action -> { @pricing_categories = PricingCategory.all }, only: [:new, :edit]
+  before_action -> { @pricing_categories = PricingCategory.all }, only: %i[new edit]
 
   def index
     @payment_schedule_options = PaymentScheduleOptions.all
-    @activated = Parameter.get_value('payment_terms.activated')
-    @display_text = Parameter.get_value('payment_step.display_text')
+    @activated = Parameter.get_value("payment_terms.activated")
+    @display_text = Parameter.get_value("payment_step.display_text")
 
     respond_to do |format|
-      format.json { render json: {
-        data: @payment_schedule_options,
-        activated: @activated.present?, # present? return true if object is true and false if null or false
-        display_text: @display_text,
-        index: @payment_schedule_options.pluck(:index)
-      }, status: :ok }
+      format.json do
+        render json: {
+          data: @payment_schedule_options,
+          activated: @activated.present?, # present? return true if object is true and false if null or false
+          display_text: @display_text,
+          index: @payment_schedule_options.pluck(:index)
+        }, status: :ok
+      end
     end
-
   rescue StandardError => e
     render json: { error: e.message }, status: :unprocessable_entity
   end
@@ -32,7 +33,6 @@ class PaymentScheduleOptionsController < ApplicationController
     respond_to do |format|
       format.json { render json: { message: t("controllers.payment_schedule_options.destroy.success") }, status: :ok }
     end
-
   rescue StandardError => e
     render json: { error: e.message }, status: :unprocessable_entity
   end
@@ -50,7 +50,6 @@ class PaymentScheduleOptionsController < ApplicationController
     respond_to do |format|
       format.json { render json: { message: t("controllers.payment_schedule_options.create.success") }, status: :ok }
     end
-
   rescue StandardError => e
     render json: { error: e.message }, status: :unprocessable_entity
   end
@@ -70,42 +69,40 @@ class PaymentScheduleOptionsController < ApplicationController
     respond_to do |format|
       format.json { render json: { message: t("controllers.payment_schedule_options.update.success") }, status: :ok }
     end
-
   rescue StandardError => e
     render json: { error: e.message }, status: :unprocessable_entity
   end
 
   def change_activated_param
-    @activated = Parameter.find_by(label: 'payment_terms.activated')
+    @activated = Parameter.find_by(label: "payment_terms.activated")
 
     if @activated.present?
       @activated.update!(value: params[:activated].to_s)
     else
-      Parameter.create!(label: 'payment_terms.activated', value: params[:activated].to_s, value_type: "boolean")
+      Parameter.create!(label: "payment_terms.activated", value: params[:activated].to_s, value_type: "boolean")
     end
 
     respond_to do |format|
-      format.json { render json: {activated: params[:activated]}, status: :ok }
+      format.json { render json: { activated: params[:activated] }, status: :ok }
     end
-
   rescue StandardError => e
     render json: { error: e.message }, status: :unprocessable_entity
   end
 
   def change_term_display_text_param
-    @display_text = Parameter.find_by(label: 'payment_step.display_text')
+    @display_text = Parameter.find_by(label: "payment_step.display_text")
 
     if @display_text.present?
       @display_text.update!(value: params[:display_text])
     else
-      Parameter.create!(label: 'payment_step.display_text', value: params[:display_text], value_type: "string")
+      Parameter.create!(label: "payment_step.display_text", value: params[:display_text], value_type: "string")
     end
   end
 
   # Enhanced version of @author: Xavier Maquignon #
   def move_up
     doc_to_move_up = PaymentScheduleOptions.find(params[:id])
-    return if doc_to_move_up.index==PaymentScheduleOptions.minimum(:index)
+    return if doc_to_move_up.index == PaymentScheduleOptions.minimum(:index)
 
     move_up_index = find_nearest_smaller_number(get_all_payment_schedule_option_indexes, doc_to_move_up.index)
     doc_to_move_down = PaymentScheduleOptions.find_by(index: move_up_index)
@@ -121,7 +118,7 @@ class PaymentScheduleOptionsController < ApplicationController
 
   def move_down
     doc_to_move_down = PaymentScheduleOptions.find(params[:id])
-    return if doc_to_move_down.index==PaymentScheduleOptions.maximum(:index)
+    return if doc_to_move_down.index == PaymentScheduleOptions.maximum(:index)
 
     move_down_index = find_nearest_greater_number(get_all_payment_schedule_option_indexes, doc_to_move_down.index)
     doc_to_move_up = PaymentScheduleOptions.find_by(index: move_down_index)
@@ -141,8 +138,6 @@ class PaymentScheduleOptionsController < ApplicationController
     PaymentScheduleOptions.all.pluck(:index)
   end
 
-  private
-
   def payment_schedule_option_params
     params.require(:payment_schedule_option)
           .permit(
@@ -152,7 +147,6 @@ class PaymentScheduleOptionsController < ApplicationController
             payments_months: [],
             available_payments_days: []
           )
-
   end
 
   def jsonize_payment_schedule_options_query(query)

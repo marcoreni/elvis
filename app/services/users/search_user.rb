@@ -1,6 +1,7 @@
 module Users
   class SearchUser
-    def initialize(last_name, first_name, birthday, season_id, adherent_number, includes, exact_search = true, hide_attached_accounts = false)
+    def initialize(last_name, first_name, birthday, season_id, adherent_number, includes, exact_search = true,
+                   hide_attached_accounts = false)
       @last_name = last_name.strip.capitalize
       @first_name = first_name.strip.capitalize
       @birthday = birthday
@@ -12,7 +13,8 @@ module Users
     end
 
     def execute
-      users = User.includes(:telephones, :planning, :payer_payment_terms, :adhesions, :activity_applications, family_member_users: { member: [:telephones] }, inverse_family_members: { user: [:telephones] })
+      users = User.includes(:telephones, :planning, :payer_payment_terms, :adhesions, :activity_applications,
+                            family_member_users: { member: [:telephones] }, inverse_family_members: { user: [:telephones] })
 
       users = if @exact_search
                 users.ci_find(:first_name, @first_name).ci_find(:last_name, @last_name)
@@ -31,7 +33,6 @@ module Users
         if @includes.dig(:methods)&.include?(:family_links_with_user)
           user["family_links_with_user"] = u.family_links_with_user(@season)
         end
-
 
         unless @season.nil? || u.planning.nil?
           user["availabilities"] = u.planning

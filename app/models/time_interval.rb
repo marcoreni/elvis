@@ -22,10 +22,10 @@ class TimeInterval < ApplicationRecord
   #   * d = disponibilité (obsolète)
   # ===========
 
-  # Si le time_interval appartient a une demande d'inscription
+  #  Si le time_interval appartient a une demande d'inscription
   has_one :desired_time_interval
 
-  # Si le time_interval appartient à un planning
+  #  Si le time_interval appartient à un planning
   has_many :time_slots, dependent: :destroy
   has_many :plannings, through: :time_slots
 
@@ -47,11 +47,13 @@ class TimeInterval < ApplicationRecord
   scope :with_teacher, ->(teacher_id) { joins(:plannings).where(plannings: { user: User.find(teacher_id) }) }
 
   # renvoie les time_interval qui concernent la saison passée en argument
-  scope :for_season, ->(season) { where(
-    "tstzrange(?, ?, '[]') @> tstzrange(time_intervals.start, time_intervals.end, '[]')",
-    season.first_week_date,
-    season.end,
-  ) }
+  scope :for_season, lambda { |season|
+    where(
+      "tstzrange(?, ?, '[]') @> tstzrange(time_intervals.start, time_intervals.end, '[]')",
+      season.first_week_date,
+      season.end
+    )
+  }
 
   scope :evaluation, -> { where(kind: "e") }
 
@@ -66,74 +68,73 @@ class TimeInterval < ApplicationRecord
   end
 
   def self.class_name_gender
-    return :M
+    :M
   end
 
   def teacher
-    planning = self
-                 .plannings
-                 .includes(:user)
-                 .where({ users: { is_teacher: true } })
-                 .first
+    planning =
+      plannings
+      .includes(:user)
+      .where({ users: { is_teacher: true } })
+      .first
 
-    return planning&.user
+    planning&.user
   end
 
   def generate_over_season(exclude_bank_holidays = false, only_from_now_on = true)
     intervals = []
-    season = Season.all.select { |s| (s.start..s.end).include? self.start }.first
+    season = Season.all.select { |s| (s.start..s.end).include? start }.first
 
-    if !season.nil?
-      season_start = season.start.to_date
-      season_end = season.end.to_date
+    return [] if season.nil?
 
-      if only_from_now_on
-        today = Date.today
-        season_start = today > season_start ? today : season_start
-      end
+    season_start = season.start.to_date
+    season_end = season.end.to_date
 
-      cwday = self.start.to_date.cwday
-      # We first generate all the corresponding dates over the season
-      date_instances = (season_start..(season_end - 1.day)).to_a.select { |date| date.cwday == cwday }
-
-      # We need to remove all that are holidays
-      if exclude_bank_holidays
-        holiday_dates = season.holidays.select { |h| h.kind != "bank" }.map(&:date)
-      else
-        holiday_dates = season.holidays.map { |h| h.date }
-      end
-
-      date_instances = date_instances.select { |instance| not holiday_dates.include? instance }
-
-      # To obtain the time_intervals, we map the dates to objects with start & end
-      date_instances.each do |d|
-        start = self.start.to_datetime
-        end_date = self.end.to_datetime
-
-        intervals << {
-          "start": start.change({ year: d.year, month: d.month, day: d.day }),
-          "end": end_date.change({ year: d.year, month: d.month, day: d.day }),
-        }
-      end
-
-      return intervals
-    else
-      return []
+    if only_from_now_on
+      today = Date.today
+      season_start = today > season_start ? today : season_start
     end
 
+    cwday = start.to_date.cwday
+    # We first generate all the corresponding dates over the season
+    date_instances = (season_start..(season_end - 1.day)).to_a.select { |date| date.cwday == cwday }
+
+    # We need to remove all that are holidays
+    holiday_dates = if exclude_bank_holidays
+                      season.holidays.select { |h| h.kind != "bank" }.map(&:date)
+                    else
+                      season.holidays.map { |h| h.date }
+                    end
+
+    date_instances = date_instances.select { |instance| !holiday_dates.include? instance }
+
+    #  To obtain the time_intervals, we map the dates to objects with start & end
+    date_instances.each do |d|
+      start = self.start.to_datetime
+      end_date = self.end.to_datetime
+
+      intervals << {
+        "start": start.change({ year: d.year, month: d.month, day: d.day }),
+        "end": end_date.change({ year: d.year, month: d.month, day: d.day })
+      }
+    end
+
+    intervals
   end
 
   def change_start_and_end(new_start, new_end)
-    self.start = self.start.change(year: new_start.year, month: new_start.month, day: new_start.day, hour: new_start.hour, min: new_start.min)
-    self.end = self.end.change(year: new_end.year, month: new_end.month, day: new_end.day, hour: new_end.hour, min: new_end.min)
+    self.start = start.change(year: new_start.year, month: new_start.month, day: new_start.day,
+                              hour: new_start.hour, min: new_start.min)
+    self.end = self.end.change(year: new_end.year, month: new_end.month, day: new_end.day, hour: new_end.hour,
+                               min: new_end.min)
   end
 
   def generate_for_rest_of_season
-    self.generate_over_season(true, false).select { |ti| ti[:start] >= self.start }
+    generate_over_season(true, false).select { |ti| ti[:start] >= start }
   end
 
   def contains?(date)
-    self.start <= date && date <= self.end
+    start <= date && date <= self.end
   end
 
   def check_for_conflict(teacher, room)
@@ -141,19 +142,19 @@ class TimeInterval < ApplicationRecord
 
     holiday_dates = season.holidays.map { |h| h.date }
 
-    room_conflict = self.overlap_room(room.id)
-    teacher_conflict = self.overlap_teacher(teacher.id)
+    room_conflict = overlap_room(room.id)
+    teacher_conflict = overlap_teacher(teacher.id)
 
-    holiday_conflict = holiday_dates.include?(self.start.to_date)
+    holiday_conflict = holiday_dates.include?(start.to_date)
 
     if !room_conflict.nil?
-      return 'room'
+      "room"
     elsif !teacher_conflict.nil?
-      return 'teacher'
+      "teacher"
     elsif holiday_conflict
-      return 'holiday'
+      "holiday"
     else
-      return false
+      false
     end
   end
 
@@ -162,35 +163,31 @@ class TimeInterval < ApplicationRecord
 
     season = Season.from_interval(self).first
 
-    if !season.nil?
-      potential_overlaps = potential_overlaps.where(start: (season.start..season.end))
-    end
+    potential_overlaps = potential_overlaps.where(start: (season.start..season.end)) unless season.nil?
 
-    return potential_overlaps.find {
-      |suspect|
-      self.overlap_in_any_way?(suspect)
-    }
+    potential_overlaps.find do |suspect|
+      overlap_in_any_way?(suspect)
+    end
   end
 
   def overlap_room_over_weeks(teacher_id, from_date, to_date)
-
     from_date = Time.zone.at(from_date.to_time.to_i)
     to_date = Time.zone.at(to_date.to_time.to_i)
 
     overlap = nil
 
     # on génère tous les intervalles en excluant les jours fériés et les vacances scolaires
-    tis = self.generate_over_season(true, false)
+    tis = generate_over_season(true, false)
 
     # on vérifie la disponibilité du prof sur chacun des intervalles
     tis.each do |_ti|
-      if _ti[:start] >= from_date && _ti[:end] <= to_date
-        ti = TimeInterval.new(start: _ti[:start], end: _ti[:end])
-        overlap = ti.overlap_room(teacher_id)
+      next unless _ti[:start] >= from_date && _ti[:end] <= to_date
 
-        # on s'arrête dès qu'on a trouvé une indisponibilité
-        break if overlap
-      end
+      ti = TimeInterval.new(start: _ti[:start], end: _ti[:end])
+      overlap = ti.overlap_room(teacher_id)
+
+      # on s'arrête dès qu'on a trouvé une indisponibilité
+      break if overlap
     end
 
     overlap
@@ -201,12 +198,10 @@ class TimeInterval < ApplicationRecord
 
     potential_overlaps = TimeInterval.with_teacher(teacher_id).where(is_validated: true)
 
-    if !season.nil?
-      potential_overlaps = potential_overlaps.where(start: (season.start..season.end))
-    end
+    potential_overlaps = potential_overlaps.where(start: (season.start..season.end)) unless season.nil?
 
-    return potential_overlaps.find do |suspect|
-      self.overlap_in_any_way?(suspect)
+    potential_overlaps.find do |suspect|
+      overlap_in_any_way?(suspect)
     end
   end
 
@@ -214,47 +209,44 @@ class TimeInterval < ApplicationRecord
     overlap = nil
 
     # on génère tous les intervalles en excluant les jours fériés et les vacances scolaires
-    tis = self.generate_over_season(true, false)
+    tis = generate_over_season(true, false)
 
     # on vérifie la disponibilité du prof sur chacun des intervalles
     tis.each do |_ti|
-      if _ti[:start] >= from_date && _ti[:end] <= to_date
-        ti = TimeInterval.new(start: _ti[:start], end: _ti[:end])
-        overlap = ti.overlap_teacher(teacher_id)
+      next unless _ti[:start] >= from_date && _ti[:end] <= to_date
 
-        # on s'arrête dès qu'on a trouvé une indisponibilité
-        break if overlap
-      end
+      ti = TimeInterval.new(start: _ti[:start], end: _ti[:end])
+      overlap = ti.overlap_teacher(teacher_id)
+
+      # on s'arrête dès qu'on a trouvé une indisponibilité
+      break if overlap
     end
 
     overlap
   end
 
   def overlap_in_any_way?(int)
+    return false if int.id == id
 
-    if int.id == self.id
-      return false
-    end
-
-    # First we extract the time from the intervals
-    self_start = self.start
+    #  First we extract the time from the intervals
+    self_start = start
     self_end = self.end
-    self_iso = self.start.wday
+    self_iso = start.wday
     int_start = int.start
     int_end = int.end
     int_iso = int.start.wday
 
-    # Then we check if the two intervals overlap in any way.
+    #  Then we check if the two intervals overlap in any way.
     # In our case, a matching starting OR ending time do not
     # correspond to an overlap.
-    return self_iso == int_iso && self_start < int_end && int_start < self_end
+    self_iso == int_iso && self_start < int_end && int_start < self_end
   end
 
   def overlap_completely?(int)
     # First we extract the time from the intervals
-    self_start = self.start.in_time_zone("Europe/Paris").strftime("%H:%M")
+    self_start = start.in_time_zone("Europe/Paris").strftime("%H:%M")
     self_end = self.end.in_time_zone("Europe/Paris").strftime("%H:%M")
-    self_iso = self.start.wday
+    self_iso = start.wday
 
     int_start = int.start.in_time_zone("Europe/Paris").strftime("%H:%M")
     int_end = int.end.in_time_zone("Europe/Paris").strftime("%H:%M")
@@ -262,8 +254,7 @@ class TimeInterval < ApplicationRecord
 
     # Then we check if the interval (self) completely "wraps" the compared interval (int).
     # In this case, the starting or ending times can (and should) be identical.
-    result = self_iso == int_iso && self_start <= int_start && self_end >= int_end
-    return result
+    self_iso == int_iso && self_start <= int_start && self_end >= int_end
   end
 
   # Performs a difference between two intervals
@@ -274,14 +265,14 @@ class TimeInterval < ApplicationRecord
   #   4- cutting interval covers base interval
   def difference(int)
     # case 1
-    if self.overlap_completely?(int)
+    if overlap_completely?(int)
       # base interval is cut in two
       #   |___________|
       # -     |___|     FULL COVERING
       # = |___| + |___|
       [
-        TimeInterval.new(start: self.start, end: int.start),
-        TimeInterval.new(start: int.end, end: self.end),
+        TimeInterval.new(start: start, end: int.start),
+        TimeInterval.new(start: int.end, end: self.end)
       ]
     elsif int.overlap_completely?(self)
       # we return empty interval,
@@ -290,7 +281,7 @@ class TimeInterval < ApplicationRecord
       # - |___________| FULLY COVERED
       # = Ø (empty interval)
       []
-    elsif self.overlap_in_any_way?(int)
+    elsif overlap_in_any_way?(int)
       # check which part of interval is overlapping
       #      |___________|
       # - |_____|           LEFT OVERLAP
@@ -300,7 +291,7 @@ class TimeInterval < ApplicationRecord
       # -        |_______| RIGHT OVERLAP
       # = |______|
       overlap_left = int.end <= self.end
-      res_start = overlap_left ? int.end : self.start
+      res_start = overlap_left ? int.end : start
       res_end = overlap_left ? self.end : int.start
 
       [TimeInterval.new(start: res_start, end: res_end)]
@@ -317,28 +308,28 @@ class TimeInterval < ApplicationRecord
     # On prend la liste des intervalles inclus dans le créneau de dispo,
     # tout en filtrant les intervalles déjà pris par une activité
     query = TimeInterval
-              .validated
-              .where(start: (season.start..season.end))
-              .joins(:activity)
+            .validated
+            .where(start: (season.start..season.end))
+            .joins(:activity)
 
-    if act_ref.activity_type == "child"
-      query = query.where(activity: { activity_ref_id: act_ref.id })
-    else
-      query = query
+    query = if act_ref.activity_type == "child"
+              query.where(activity: { activity_ref_id: act_ref.id })
+            else
+              query
                 .joins({ activity: :activity_ref })
-                .where(activity: {activity_refs: {activity_ref_kind_id: act_ref.activity_ref_kind_id}})
-    end
+                .where(activity: { activity_refs: { activity_ref_kind_id: act_ref.activity_ref_kind_id } })
+            end
 
     query.to_a.select do |i|
-      self.to_iso.overlap_completely?(i.to_iso) &&
+      to_iso.overlap_completely?(i.to_iso) &&
         busy.find_index { |b| i.to_iso.overlap_in_any_way?(b.to_iso) }.nil?
     end
   end
 
   def iso_equal(other)
-    self.start.wday == other.start.wday &&
-      self.start.hour == other.start.hour &&
-      self.start.min == other.start.min &&
+    start.wday == other.start.wday &&
+      start.hour == other.start.hour &&
+      start.min == other.start.min &&
       self.end.wday == other.end.wday &&
       self.end.hour == other.end.hour &&
       self.end.min == other.end.min
@@ -352,20 +343,20 @@ class TimeInterval < ApplicationRecord
   # in overlap methods.
   # (set same year and week for all iso intervals)
   def to_iso
-    iso_start_date = Date.strptime("#{ISO_YEAR}-#{ISO_WEEK}-#{self.start.wday}", "%G-%W-%w")
+    iso_start_date = Date.strptime("#{ISO_YEAR}-#{ISO_WEEK}-#{start.wday}", "%G-%W-%w")
     iso_end_date = Date.strptime("#{ISO_YEAR}-#{ISO_WEEK}-#{self.end.wday}", "%G-%W-%w")
     DateTime.now.wday
-    iso_start = self.start.change(year: iso_start_date.year, month: iso_start_date.month, day: iso_start_date.day)
+    iso_start = start.change(year: iso_start_date.year, month: iso_start_date.month, day: iso_start_date.day)
     iso_end = self.end.change(year: iso_end_date.year, month: iso_end_date.month, day: iso_end_date.day)
 
     TimeInterval.new(start: iso_start, end: iso_end)
   end
 
   def convert_to_first_week_of_season(season, ensure_day_in_season = true)
-    return if self.activity || self.activity_instance
+    return if activity || activity_instance
 
-    new_start = season.start.beginning_of_week + (self.start.wday-1).days + self.start.hour.hours + self.start.min.minutes
-    new_end = season.start.beginning_of_week + (self.end.wday-1).days  + self.end.hour.hours + self.end.min.minutes
+    new_start = season.start.beginning_of_week + (start.wday - 1).days + start.hour.hours + start.min.minutes
+    new_end = season.start.beginning_of_week + (self.end.wday - 1).days + self.end.hour.hours + self.end.min.minutes
 
     new_start += 1.week if new_start < season.start && ensure_day_in_season
     new_end += 1.week if new_end < season.start && ensure_day_in_season
@@ -375,7 +366,7 @@ class TimeInterval < ApplicationRecord
   end
 
   def unlink_dependencies
-    appointment = EvaluationAppointment.find_by(time_interval_id: self.id)
+    appointment = EvaluationAppointment.find_by(time_interval_id: id)
     appointment.update({ time_interval_id: nil, teacher_id: nil }) unless appointment.nil?
   end
 
@@ -400,17 +391,17 @@ class TimeInterval < ApplicationRecord
 
   # is other intervals sticker to self (end or start)
   def sticked?(other)
-    self.end == other.start || other.end == self.start
+    self.end == other.start || other.end == start
   end
 
   # Fusionne l'intervalle avec un autre intervalle s'ils sont adjacents
   # @return [TimeInterval] un nouvel intervalle fusionné ; nil s'ils ne sont pas adjacents
   def merge_sticked(other)
-    return nil unless self.sticked?(other)
+    return nil unless sticked?(other)
 
     new_interval = TimeInterval.new
 
-    new_interval.start = other.start > self.start ? self.start : other.start
+    new_interval.start = other.start > start ? start : other.start
     new_interval.end = other.end > self.end ? other.end : self.end
 
     new_interval

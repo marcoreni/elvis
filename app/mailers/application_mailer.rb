@@ -1,16 +1,15 @@
-require_relative 'liquid_drops/application_drop'
-require_relative 'liquid_drops/activity_drop'
+require_relative "liquid_drops/application_drop"
+require_relative "liquid_drops/activity_drop"
 
 class ApplicationMailer < LayoutMailer
   default from: Parameter.get_value("app.application_mailer.default_from")
   prepend_view_path NotificationTemplate.resolver
 
   def self.application_url
-    ApplicationUrl.main_root_url || (Rails.env.kubernetes? ? "https://#{ENV["DOMAIN"]}" : "http://localhost:7212")
+    ApplicationUrl.main_root_url || (Rails.env.kubernetes? ? "https://#{ENV['DOMAIN']}" : "http://localhost:7212")
   end
 
   def notify_new_application(params)
-
     activity_application_id = if params.is_a?(Integer)
                                 params
                               else
@@ -19,12 +18,14 @@ class ApplicationMailer < LayoutMailer
 
     application = ActivityApplication.find(activity_application_id)
 
-    @application = LiquidDrops::ApplicationDrop.new(application.as_json(include: {desired_activities: { activity_ref: {} }, user: {}, season: {}}))
+    @application = LiquidDrops::ApplicationDrop.new(application.as_json(include: {
+                                                                          desired_activities: { activity_ref: {} }, user: {}, season: {}
+                                                                        }))
 
     @activity_refs = application
-                       .desired_activities
-                       .map(&:activity_ref)
-                       .compact
+                     .desired_activities
+                     .map(&:activity_ref)
+                     .compact
 
     @activity = LiquidDrops::DynamicDrop.new(@activity_refs.first)
 
@@ -40,11 +41,11 @@ class ApplicationMailer < LayoutMailer
   def liquid_assigns
     {
       "school_logo" => getSchoolLogo,
-      'first_name' => @user.first_name.capitalize,
-      'last_name' => @user.last_name.capitalize,
-      'school_link' => get_button_school_link,
-      'activity' => @activity,
-      'application' => @application
+      "first_name" => @user.first_name.capitalize,
+      "last_name" => @user.last_name.capitalize,
+      "school_link" => get_button_school_link,
+      "activity" => @activity,
+      "application" => @application
     }
   end
 end

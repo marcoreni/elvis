@@ -3,8 +3,8 @@ module Users
   class MergeUsers
     def initialize(first_user, second_user, with_delete: false)
       @first = first_user
-      @second= second_user
-      @with_delete= with_delete
+      @second = second_user
+      @with_delete = with_delete
     end
 
     def execute
@@ -22,7 +22,7 @@ module Users
         # time_intervals - planning
         Planning.where(user_id: @second.id).update_all(user_id: @first.id)
         TimeIntervalPreference.where(user_id: @second.id).update_all(user_id: @first.id)
-        #adhesion
+        # adhesion
         Adhesion.where(user_id: @second.id).update_all(user_id: @first.id)
         # teachers_activity_refs
         TeachersActivityRef.where(user_id: @second.id).update_all(user_id: @first.id)
@@ -30,7 +30,7 @@ module Users
         TeachersActivity.where(user_id: @second.id).update_all(user_id: @first.id)
         # teachers_activity_instances
         TeachersActivityInstance.where(user_id: @second.id).update_all(user_id: @first.id)
-        #Students
+        # Students
         Student.where(user_id: @second.id).update_all(user_id: @first.id)
         # EvaluationAppointment
         EvaluationAppointment.where(student_id: @second.id).update_all(student_id: @first.id)

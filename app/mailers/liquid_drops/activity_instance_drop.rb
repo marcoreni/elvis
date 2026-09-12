@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 module LiquidDrops
   class ActivityInstanceDrop < Liquid::Drop
     def initialize(activity_instance)
@@ -42,6 +43,5 @@ module LiquidDrops
     def teacher_first_name
       @activity_instance["activity"]["teacher"]["first_name"]
     end
-
   end
 end

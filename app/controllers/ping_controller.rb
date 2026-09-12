@@ -3,6 +3,6 @@ class PingController < ActionController::Base
   self.logger = nil
 
   def index
-    render json: { message: 'Pong' }
+    render json: { message: "Pong" }
   end
 end

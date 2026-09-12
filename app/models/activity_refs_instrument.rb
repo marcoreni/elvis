@@ -8,15 +8,14 @@
 #
 
 class ActivityRefsInstrument < ApplicationRecord
-    belongs_to :activity_ref
-    belongs_to :instrument
+  belongs_to :activity_ref
+  belongs_to :instrument
 
-    def self.display_class_name(singular = true)
-        singular ? "association activité / instruments" : "associations activité / instruments"
-    end
+  def self.display_class_name(singular = true)
+    singular ? "association activité / instruments" : "associations activité / instruments"
+  end
 
-    def self.class_name_gender
-        return :F
-    end
-
+  def self.class_name_gender
+    :F
+  end
 end

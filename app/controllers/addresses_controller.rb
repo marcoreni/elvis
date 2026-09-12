@@ -3,21 +3,21 @@ class AddressesController < ApplicationController
     query = params[:query].downcase.strip
     user = User.find(params[:user_id])
 
-    if !user.nil?
+    unless user.nil?
       matches = user
-        .family
-        .uniq
-        .map{ |m| m.user_addresses }
-        .flatten
-        .select{ |ua| ua.address.street_address.downcase.match? /.*#{query}.*/ }
-        .as_json(
-          include: {
-            address: {},
-            user: {}
-          }
-        )
+                .family
+                .uniq
+                .map { |m| m.user_addresses }
+                .flatten
+                .select { |ua| ua.address.street_address.downcase.match?(/.*#{query}.*/) }
+                .as_json(
+                  include: {
+                    address: {},
+                    user: {}
+                  }
+                )
     end
-    render :json => matches
+    render json: matches
   end
 
   def get
@@ -36,7 +36,8 @@ class AddressesController < ApplicationController
   end
 
   private
-    def address_params
-        params.require(:address).permit(:street_address, :postcode, :city, :department, :country);
-    end
+
+  def address_params
+    params.require(:address).permit(:street_address, :postcode, :city, :department, :country)
+  end
 end

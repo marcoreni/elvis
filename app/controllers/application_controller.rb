@@ -14,21 +14,21 @@ class ApplicationController < ActionController::Base
   attr_accessor :call_render
 
   before_action do
-    if current_user&.creator?
-      Rack::MiniProfiler.authorize_request if Object.const_defined?("Rack::MiniProfiler")
-    end
+    Rack::MiniProfiler.authorize_request if current_user&.creator? && Object.const_defined?("Rack::MiniProfiler")
   end
 
   # catch all error in actions
   rescue_from BaseRendererError do |exception|
-
     Rails.logger.error "(#{exception.code}) #{exception.sup_message || exception.message}\n#{exception.backtrace.join("\n")}"
 
     error_code = Rack::Utils::HTTP_STATUS_CODES.key?(exception.code) ? exception.code : :internal_server_error
 
     respond_to do |format|
       format.json { render json: { message: exception.message, code: exception.code }, status: error_code }
-      format.html { render "errors/base_renderer_error", status: error_code, locals: { message: exception.message, code: exception.code } }
+      format.html do
+        render "errors/base_renderer_error", status: error_code,
+                                             locals: { message: exception.message, code: exception.code }
+      end
     end
   end
 
@@ -57,9 +57,9 @@ class ApplicationController < ActionController::Base
   end
 
   def render(*args)
-    self.call_render = true if self.call_render.nil?
+    self.call_render = true if call_render.nil?
 
-    super(*args) if self.call_render
+    super(*args) if call_render
   end
 
   protected
@@ -189,27 +189,27 @@ class ApplicationController < ActionController::Base
   end
 
   def verify_season
-    if !current_user.nil? && current_user.is_admin && Season.none?
-      @base_season_created = true
+    return unless !current_user.nil? && current_user.is_admin && Season.none?
 
-      [-1, 0, 1].each do |nb|
-        base_season = Season.new
+    @base_season_created = true
 
-        current_date = DateTime.now + nb.year
-        current_school_year = current_date.month < 9 ? current_date.year - 1 : current_date.year
+    [-1, 0, 1].each do |nb|
+      base_season = Season.new
 
-        base_season.label = "Saison #{current_school_year}-#{current_school_year + 1}"
-        base_season.start = DateTime.new current_school_year, 9, 1
-        base_season.end   = DateTime.new current_school_year + 1, 6, 30
-        base_season.is_current = nb == 0
-        # base_season.is_next = nb == 1
-        base_season.is_off = nb == -1
-        base_season.opening_date_for_applications = base_season.start - 2.month
-        base_season.opening_date_for_new_applications = base_season.start - 1.month
-        base_season.closing_date_for_applications = base_season.start + 1.month
+      current_date = DateTime.now + nb.year
+      current_school_year = current_date.month < 9 ? current_date.year - 1 : current_date.year
 
-        base_season.save!
-      end
+      base_season.label = "Saison #{current_school_year}-#{current_school_year + 1}"
+      base_season.start = DateTime.new current_school_year, 9, 1
+      base_season.end   = DateTime.new current_school_year + 1, 6, 30
+      base_season.is_current = nb == 0
+      # base_season.is_next = nb == 1
+      base_season.is_off = nb == -1
+      base_season.opening_date_for_applications = base_season.start - 2.month
+      base_season.opening_date_for_new_applications = base_season.start - 1.month
+      base_season.closing_date_for_applications = base_season.start + 1.month
+
+      base_season.save!
     end
   end
 
@@ -240,5 +240,4 @@ class ApplicationController < ActionController::Base
 
     UpdateApplicationUrlUsageJob.perform_later url_string, DateTime.now.to_s
   end
-
 end

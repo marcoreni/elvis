@@ -12,14 +12,13 @@
 #
 
 class Telephone < ApplicationRecord
-    belongs_to :phonable, :polymorphic => true
+  belongs_to :phonable, polymorphic: true
 
-    def self.display_class_name(singular = true)
-        singular ? "téléphone" : "téléphones"
-    end
+  def self.display_class_name(singular = true)
+    singular ? "téléphone" : "téléphones"
+  end
 
-    def self.class_name_gender
-        return :M
-    end
-
+  def self.class_name_gender
+    :M
+  end
 end

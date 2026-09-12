@@ -1,14 +1,16 @@
 class PlanningController < ApplicationController
   skip_before_action :verify_authenticity_token, only: [:update_availabilities]
 
-  before_action -> { @recurrence_activated = Parameter.get_value("planning.recurrence_activated", default: false) }, only: %i[show show_generic show_all_rooms show_for_conflict show_for_room]
+  before_action lambda {
+    @recurrence_activated = Parameter.get_value("planning.recurrence_activated", default: false)
+  }, only: %i[show show_generic show_all_rooms show_for_conflict show_for_room]
 
   def index_for_teachers
     @current_user = current_user
     plannings = Planning.includes(:user).where(users: { is_teacher: true })
     authorize! :manage, plannings
 
-    @plannings = plannings.as_json(include: [user: { include: :activity_refs }])
+    @plannings = plannings.as_json(include: [{ user: { include: :activity_refs } }])
   end
 
   def index_for_rooms
@@ -58,10 +60,12 @@ class PlanningController < ApplicationController
     @origin_user = params[:ouid].nil? ? nil : User.find_by(id: params[:ouid])
 
     if (@origin_user.present? && !@origin_user.is_teacher) || !planning.user.is_teacher
-      @users_for_navigation = planning.user.whole_family(@season['id']).reject { |u| u == planning.user }.as_json(include: %i[planning])
+      @users_for_navigation = planning.user.whole_family(@season["id"]).reject do |u|
+        u == planning.user
+      end.as_json(include: %i[planning])
     end
 
-    @users_for_navigation.reject! { |user| user['planning'].nil? }
+    @users_for_navigation.reject! { |user| user["planning"].nil? }
 
     @activity_refs = ActivityRef.all
     @evaluation_level_refs = EvaluationLevelRef.all
@@ -77,23 +81,26 @@ class PlanningController < ApplicationController
 
   def show_simple
     redirect_to root_path and return unless current_user.is_teacher
-    redirect_to planning_path(current_user.planning.id) if Parameter.get_value("planning.teacher_can_edit_planning") == true
+
+    if Parameter.get_value("planning.teacher_can_edit_planning") == true
+      redirect_to planning_path(current_user.planning.id)
+    end
 
     @current_planning_id = User.find(current_user.id).planning.id
     @teachers = User
-                  .teachers
-                  .order(:last_name, :first_name)
-                  .includes(:teachers_activity_refs, :planning)
-                  .as_json(only: %i[id first_name last_name], include: %i[teachers_activity_refs planning])
+                .teachers
+                .order(:last_name, :first_name)
+                .includes(:teachers_activity_refs, :planning)
+                .as_json(only: %i[id first_name last_name], include: %i[teachers_activity_refs planning])
 
-    if params['id'].nil? || params['id'].to_i === current_user.planning.id
+    if params["id"].nil? || params["id"].to_i === current_user.planning.id
       planning = Plannings::GetSimplePlanning.new(current_user, params[:day]).execute
       @name = { "last_name" => current_user.last_name, "first_name" => current_user.first_name }
 
     else
-      teacher_selected = @teachers.select { |t| t['planning']['id'] == params['id'].to_i }
-      @selected_planning_id = teacher_selected[0]['planning']['id']
-      planning = Plannings::GetSimplePlanning.new(User.find(teacher_selected[0]['id']), params[:day]).execute
+      teacher_selected = @teachers.select { |t| t["planning"]["id"] == params["id"].to_i }
+      @selected_planning_id = teacher_selected[0]["planning"]["id"]
+      planning = Plannings::GetSimplePlanning.new(User.find(teacher_selected[0]["id"]), params[:day]).execute
       @name = { "last_name" => teacher_selected[0]["last_name"], "first_name" => teacher_selected[0]["first_name"] }
 
     end
@@ -106,13 +113,13 @@ class PlanningController < ApplicationController
   end
 
   def get_intervals_simple
-
     render json: {}, status: 403 and return unless current_user.is_teacher
 
-    if params['id'].nil? || params['id'].to_i === current_user.planning.id
+    if params["id"].nil? || params["id"].to_i === current_user.planning.id
       render json: Plannings::GetSimplePlanning.new(current_user, params[:day]).execute
     else
-      render json: Plannings::GetSimplePlanning.new(User.find(Planning.find(params['id']).user_id), params[:day]).execute
+      render json: Plannings::GetSimplePlanning.new(User.find(Planning.find(params["id"]).user_id),
+                                                    params[:day]).execute
     end
   end
 
@@ -140,14 +147,14 @@ class PlanningController < ApplicationController
     season_bounds = (season.start..season.end)
 
     time_intervals = planning
-                       .user
-                       .teachers_activities
-                       .map(&:activity)
-                       .compact
-                       .map(&:time_interval)
-                       .compact
-                       .uniq
-                       .select { |ti| season_bounds.include? ti.start }
+                     .user
+                     .teachers_activities
+                     .map(&:activity)
+                     .compact
+                     .map(&:time_interval)
+                     .compact
+                     .uniq
+                     .select { |ti| season_bounds.include? ti.start }
 
     time_intervals += planning.time_intervals.where(is_validated: false, start: season_bounds).uniq
 
@@ -203,49 +210,49 @@ class PlanningController < ApplicationController
 
   def get_intervals
     intervals = Planning
-                  .find(params[:id])
-                  .time_intervals
-                  .includes({
-                              comment: {},
-                              activity_instance: {
-                                student_attendances: {},
-                                activity: {
-                                  activity_ref: {},
-                                  students: {},
-                                  users: {
-                                    levels: %i[evaluation_level_ref activity_ref]
-                                  },
-                                  options: {
-                                    desired_activity: {
-                                      activity_application: { user: {} }
-                                    }
-                                  },
-                                  room: {},
-                                  location: {},
-                                  teachers_activities: {}
+                .find(params[:id])
+                .time_intervals
+                .includes({
+                            comment: {},
+                            activity_instance: {
+                              student_attendances: {},
+                              activity: {
+                                activity_ref: {},
+                                students: {},
+                                users: {
+                                  levels: %i[evaluation_level_ref activity_ref]
+                                },
+                                options: {
+                                  desired_activity: {
+                                    activity_application: { user: {} }
+                                  }
                                 },
                                 room: {},
-                                cover_teacher: {}
+                                location: {},
+                                teachers_activities: {}
                               },
-                              evaluation_appointment: {
-                                student: {},
-                                teacher: {},
-                                activity_ref: {}
-                              }
-                            })
-                  .joins("LEFT OUTER JOIN activity_instances ON activity_instances.time_interval_id = time_intervals.id")
-                  .where("NOT time_intervals.is_validated OR time_intervals.kind = 'e' OR activity_instances.id IS NOT NULL") # If the interval is validated it must have an activity_instance
-                  .where("date_trunc(:granularity, time_intervals.start AT TIME ZONE 'Europe/Paris') = date_trunc(:granularity, :date::date AT TIME ZONE 'Europe/Paris')", {
-                    granularity: params[:granularity],
-                    date: params[:date]
-                  })
+                              room: {},
+                              cover_teacher: {}
+                            },
+                            evaluation_appointment: {
+                              student: {},
+                              teacher: {},
+                              activity_ref: {}
+                            }
+                          })
+                .joins("LEFT OUTER JOIN activity_instances ON activity_instances.time_interval_id = time_intervals.id")
+                .where("NOT time_intervals.is_validated OR time_intervals.kind = 'e' OR activity_instances.id IS NOT NULL") # If the interval is validated it must have an activity_instance
+                .where("date_trunc(:granularity, time_intervals.start AT TIME ZONE 'Europe/Paris') = date_trunc(:granularity, :date::date AT TIME ZONE 'Europe/Paris')", {
+                         granularity: params[:granularity],
+                         date: params[:date]
+                       })
 
     intervals = intervals.uniq
 
     holidays = Holiday.where("date_trunc(:granularity, date AT TIME ZONE 'Europe/Paris') = date_trunc(:granularity, :target_date::date AT TIME ZONE 'Europe/Paris')", {
-      granularity: params[:granularity],
-      target_date: params[:date]
-    })
+                               granularity: params[:granularity],
+                               target_date: params[:date]
+                             })
 
     @intervals = intervals.as_json({
                                      include: {
@@ -321,16 +328,16 @@ class PlanningController < ApplicationController
                                          .joins(:time_interval)
                                          .where(room: @room)
                                          .where("date_trunc(:granularity, time_intervals.start AT TIME ZONE 'Europe/Paris') = date_trunc(:granularity, :date::date AT TIME ZONE 'Europe/Paris')", {
-                                           granularity: params[:granularity],
-                                           date: params[:date]
-                                         })
+                                                  granularity: params[:granularity],
+                                                  date: params[:date]
+                                                })
 
     intervals = activity_instances.map(&:time_interval).compact
 
     holidays = Holiday.where("date_trunc(:granularity, date AT TIME ZONE 'Europe/Paris') = date_trunc(:granularity, :target_date::date AT TIME ZONE 'Europe/Paris')", {
-      granularity: params[:granularity],
-      target_date: params[:date]
-    })
+                               granularity: params[:granularity],
+                               target_date: params[:date]
+                             })
 
     @intervals = intervals.as_json include: {
       activity_instance: {
@@ -471,11 +478,11 @@ class PlanningController < ApplicationController
     ).all
 
     room_activities_formated = room_activities
-                                 .map(&:time_interval)
-                                 .compact
-                                 .group_by { |ti| ti.activity.room_id }
-                                 .to_a
-                                 .sort_by! { |ti| Room.find(ti[0]).label }
+                               .map(&:time_interval)
+                               .compact
+                               .group_by { |ti| ti.activity.room_id }
+                               .to_a
+                               .sort_by! { |ti| Room.find(ti[0]).label }
 
     @room_plannings = room_activities_formated.as_json({
                                                          include: {
@@ -582,14 +589,14 @@ class PlanningController < ApplicationController
     # @type [Array<TimeInterval>]
     default_intervals =
       school.planning
-        &.time_intervals
-        &.where("kind = 'p'")
-        &.where("EXTRACT(YEAR FROM start) = :year", year: season.start.year)
-        &.where("date_trunc(:granularity, time_intervals.start AT TIME ZONE 'Europe/Paris') = date_trunc(:granularity, :date::date AT TIME ZONE 'Europe/Paris')", {
-          granularity: 'week',
-          date: season.start.to_s
-        })
-        &.to_a || []
+            &.time_intervals
+            &.where("kind = 'p'")
+            &.where("EXTRACT(YEAR FROM start) = :year", year: season.start.year)
+            &.where("date_trunc(:granularity, time_intervals.start AT TIME ZONE 'Europe/Paris') = date_trunc(:granularity, :date::date AT TIME ZONE 'Europe/Paris')", {
+                      granularity: "week",
+                      date: season.start.to_s
+                    })
+            &.to_a || []
     school_has_default = default_intervals.any?
 
     if default_intervals.empty?
@@ -597,7 +604,10 @@ class PlanningController < ApplicationController
       default_intervals = school.planning&.time_intervals&.where(start: previous_season.start..previous_season.end)&.to_a || []
     end
 
-    return render json: { message: t("controllers.planning.no_default_planning") }, status: :not_found if default_intervals.empty?
+    if default_intervals.empty?
+      return render json: { message: t("controllers.planning.no_default_planning") },
+                    status: :not_found
+    end
 
     default_intervals = default_intervals.map do |interval|
       interval = interval.dup
@@ -634,13 +644,14 @@ class PlanningController < ApplicationController
 
     # @type [TrueClass | FalseClass, Array<TimeInterval>, IntervalError | NilClass]
     res = TimeIntervals::AvailabilitiesUtils
-                  .new(
-                    params[:from],
-                    params[:to],
-                    params[:season_id] || Season.current_apps_season.id,
-                    params[:id],
-                    params[:comment])
-                  .can_create?
+          .new(
+            params[:from],
+            params[:to],
+            params[:season_id] || Season.current_apps_season.id,
+            params[:id],
+            params[:comment]
+          )
+          .can_create?
 
     raise res[2] unless res[0]
 
@@ -652,21 +663,22 @@ class PlanningController < ApplicationController
   def update_availabilities
     # id = params[:id].nil? ? 0 : params[:id]
     intervals = TimeIntervals::AvailabilitiesUtils
-                  .new(
-                    params[:from],
-                    params[:to],
-                    params[:season_id] || Season.current_apps_season.id,
-                    params[:id],
-                    params[:comment])
-                  .bulk_create
+                .new(
+                  params[:from],
+                  params[:to],
+                  params[:season_id] || Season.current_apps_season.id,
+                  params[:id],
+                  params[:comment]
+                )
+                .bulk_create
     render json: { intervals: intervals.as_json(include: :comment) }
   rescue IntervalError => e
     render json: { errors: [e.message] }, status: :bad_request
   end
 
   def copy_availabilities
-    intervals = TimeIntervals::CopyAvailabilities.new(params[:id], Season.current, Season.next,
-                                                      %w[p c o]).execute
+    TimeIntervals::CopyAvailabilities.new(params[:id], Season.current, Season.next,
+                                          %w[p c o]).execute
     redirect_to :availabilities_planning
   end
 

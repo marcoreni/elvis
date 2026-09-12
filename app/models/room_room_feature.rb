@@ -17,7 +17,6 @@ class RoomRoomFeature < ApplicationRecord
   end
 
   def self.class_name_gender
-    return :F
+    :F
   end
-
 end

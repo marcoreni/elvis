@@ -32,10 +32,10 @@ class Ability
     # user ||= User.new
     if user.admin?
       can :manage, :all
-        # can :manage, Message
-        # can :manage, PracticeSession
+    # can :manage, Message
+    # can :manage, PracticeSession
     elsif user.teacher?
-      can [:read, :edit], Planning, user_id: user.id
+      can %i[read edit], Planning, user_id: user.id
       can :manage, User, id: user.id
       can [:read], User
       can :write, Message
@@ -55,8 +55,8 @@ class Ability
     can :create, ActivityApplication, user_id: 0
     can :read, Planning, user: user
 
-    if user.is_teacher && Parameter.get_value("activity_applications.authorize_teachers", default: false)
-      Abilities::ActivityApplicationAbilities.teacher_can_edit_assigned_for_current_season(self, user)
-    end
+    return unless user.is_teacher && Parameter.get_value("activity_applications.authorize_teachers", default: false)
+
+    Abilities::ActivityApplicationAbilities.teacher_can_edit_assigned_for_current_season(self, user)
   end
 end

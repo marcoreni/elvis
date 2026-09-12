@@ -61,17 +61,12 @@ module Holidays
       end
 
       zones_hash = response_hash["facet_groups"][0]
-      zones_list = zones_hash["facets"].map {|facet| facet["name"]}
-
-
-      zones_list
+      zones_hash["facets"].map { |facet| facet["name"] }
     end
 
-
     def self.fetch_academie_from_location(location)
-      if location.nil?
-        return nil
-      end
+      return nil if location.nil?
+
       academies_service_url = "https://data.education.gouv.fr/api/records/1.0/search/?dataset=fr-en-contour-academies-2020&q=&geofilter.distance=#{location[0]}%2C+#{location[1]}%2C1"
 
       uri = URI(academies_service_url)
@@ -142,15 +137,15 @@ module Holidays
     def self.read_academy_parameter
       school = School.first
       return if school.nil?
-  
-      return school.academy
+
+      school.academy
     end
-    
+
     def self.read_zone_parameter
       school = School.first
       return if school.nil?
-  
-      return school.zone
+
+      school.zone
     end
 
     def initialize(year = nil, academie = nil, zone = nil, address = nil)
@@ -194,12 +189,12 @@ module Holidays
         return {}
       end
 
-      rmap = holidays_records.map do |r|
+      holidays_records.map do |r|
         {
           start_date: r["fields"]["start_date"],
           end_date: r["fields"]["end_date"],
           label: r["fields"]["description"],
-          zone: r["fields"]["zones"],
+          zone: r["fields"]["zones"]
         }
       end
     end

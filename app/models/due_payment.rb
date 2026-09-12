@@ -32,18 +32,17 @@ class DuePayment < ApplicationRecord
   end
 
   def self.class_name_gender
-    return :F
+    :F
   end
 
-
   def adjusted_amount
-    case self.operation
+    case operation
     when "-"
-      -self.amount
+      -amount
     when "0"
       0
     when "+"
-      self.amount
+      amount
     end
   end
 
@@ -64,15 +63,13 @@ class DuePayment < ApplicationRecord
     payment
   end
 
-
   def reevaluate_status
-
     # set due payment to paid if totals are equal or greater (acceptable_difference of 0.01)
     # if the sum of payments is greater, then it will be displayed as so on frontend
     if total_payed >= adjusted_amount
       update(due_payment_status: DuePaymentStatus::PAID)
 
-    elsif DateTime.now < self.previsional_date
+    elsif DateTime.now < previsional_date
       # si on n'a pas atteint la date du terme
       # ne rien faire
 
@@ -102,19 +99,18 @@ class DuePayment < ApplicationRecord
   def self.mark_unpaid(for_date = DateTime.now)
     dues = DuePayment.where(previsional_date: for_date)
     dues = DuePayment.identify_unpaid_dues(dues)
-    dues.each{ |due| due.save! }
+    dues.each { |due| due.save! }
   end
 
-  def as_json(options={})
-    super options.merge(:methods => :adjusted_amount)
+  def as_json(options = {})
+    super options.merge(methods: :adjusted_amount)
   end
 
-    private
   def self.identify_unpaid_dues(due_payments)
     unpaid_due_status = DuePaymentStatus::UNPAID
 
     due_payments.each do |due_payment|
-      total = due_payment.payments.reduce(0.0){ |acc, p| acc + p.amount }
+      total = due_payment.payments.reduce(0.0) { |acc, p| acc + p.amount }
 
       difference = due_payment.amount - total
       acceptable_difference = 0.01
@@ -124,7 +120,7 @@ class DuePayment < ApplicationRecord
         due_payment.due_payment_status = unpaid_due_status
       elsif difference < 0
         # Total paid exceed the due amount -> Too much paid
-        # TODO Create new status 
+        #  TODO Create new status
       else
         # paid
         due_payment.due_payment_status = nil

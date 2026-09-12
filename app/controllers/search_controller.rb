@@ -1,12 +1,13 @@
 # frozen_string_literal: true
-#
-require 'json'
+
+require "json"
 
 class SearchController < ApplicationController
   def index
     value = params[:search_value]
 
-    query = Chewy::Search::Request.new(UsersIndex, ActivityApplicationsIndex, AdhesionsIndex, ActivitiesIndex, SallesIndex)
+    query = Chewy::Search::Request.new(UsersIndex, ActivityApplicationsIndex, AdhesionsIndex, ActivitiesIndex,
+                                       SallesIndex)
     results = query.limit(15).query(multi_match: {
                                       query: value,
                                       analyzer: "search",

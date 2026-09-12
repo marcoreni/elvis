@@ -30,13 +30,12 @@ class DesiredActivity < ApplicationRecord
   has_one :user, through: :activity_application
   has_one :discount, as: :discountable, dependent: :destroy
 
-
   def self.display_class_name(singular = true)
     singular ? "activité souhaitée" : "activités souhaitées"
   end
 
   def self.class_name_gender
-    return :F
+    :F
   end
 
   def add_option(activity_id)
@@ -48,43 +47,37 @@ class DesiredActivity < ApplicationRecord
   end
 
   def get_price
-    amount = 0
     case payment_frequency
     when 1, 12
-      amount = activity_ref.annual_price
+      activity_ref.annual_price
     when 3
-      amount = activity_ref.quarterly_price
+      activity_ref.quarterly_price
     when 10
-      amount = activity_ref.monthly_price
+      activity_ref.monthly_price
     when 11
-      amount = activity_ref.special_price
+      activity_ref.special_price
     when 13
-      amount = floor2(activity_ref.annual_price * 0.95, 2)
+      floor2(activity_ref.annual_price * 0.95, 2)
     else
-      amount = 0
+      0
     end
-
-    amount
   end
 
   def get_price_format
-    format = "annuel"
     case payment_frequency
     when 1, 12
-      format = "annuel"
+      "annuel"
     when 3
-      format = "trimestriel"
+      "trimestriel"
     when 10
-      format = "mensuel"
+      "mensuel"
     when 11
-      format = "annuel"
+      "annuel"
     when 13
-      format = "annuel -5%"
+      "annuel -5%"
     else
-      format = "annuel"
+      "annuel"
     end
-
-    format
   end
 
   private

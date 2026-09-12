@@ -1,7 +1,6 @@
 class PaymentMethodController < ApplicationController
-
   before_action :set_current_user
-  before_action -> { render status: 401, json: {error: "forbidden"} and return },
+  before_action -> { render status: 401, json: { error: "forbidden" } and return },
                 if: -> { PaymentMethod::BUILTIN_IDS.include?(params[:id].to_i) },
                 only: [:destroy]
 
@@ -9,9 +8,17 @@ class PaymentMethodController < ApplicationController
     @payment_methods = PaymentMethod.all
 
     respond_to do |format|
-      format.json { render json: {
-        data: @current_user.is_admin ? @payment_methods : @payment_methods.where(show_payment_method_to_user: true).select(:id, :label).as_json(only: [:id, :label]),
-      }}
+      format.json do
+        render json: {
+          data: if @current_user.is_admin
+                  @payment_methods
+                else
+                  @payment_methods.where(show_payment_method_to_user: true).select(
+                    :id, :label
+                  ).as_json(only: %i[id label])
+                end
+        }
+      end
 
       format.html
     end

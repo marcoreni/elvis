@@ -1,5 +1,5 @@
 # frozen_string_literal: true
-#
+
 require "time"
 
 class ActivityController < ApplicationController
@@ -28,8 +28,7 @@ class ActivityController < ApplicationController
 
     if current_user.is_admin
       authorize! :manager, query
-    elsif current_user.is_teacher && Parameter.get_value("teachers.teacher_can_manage_courses", default: false)
-    else
+      current_user.is_teacher && Parameter.get_value("teachers.teacher_can_manage_courses", default: false)
       redirect_to root_path and return
     end
 
@@ -121,18 +120,18 @@ class ActivityController < ApplicationController
       activity_ref: activity_ref,
       room: room,
       location: location,
-      instruments: activity_ref.instruments,
-      )
+      instruments: activity_ref.instruments
+    )
 
-    # on cherche le jour du 1er cours de la saison 
+    # on cherche le jour du 1er cours de la saison
     # on convertit d'abord le 1er jour de la saison (s.start, objet Time) en objet Date
     # start_date = Date.parse(season.start.to_s)
 
     # on récupère le numéro du jour dans la semaine
     # if start_date.cwday <= weekday
-    #     first_day = start_date + (weekday - start_date.cwday) 
+    #     first_day = start_date + (weekday - start_date.cwday)
     # else
-    #     first_day = start_date + 7+(weekday - start_date.cwday) 
+    #     first_day = start_date + 7+(weekday - start_date.cwday)
     # end
 
     # on détermine maintenant le début et la fin de la 1ère séance de cours de la saison
@@ -141,7 +140,6 @@ class ActivityController < ApplicationController
 
     # On va maintenant créer l'Activity et les ActivityInstances au sein d'une transaction
     Activity.transaction do
-
       # on peut maintenant créer un intervalle pour notre future activité
       interval = TimeInterval.create!(
         activity: nil,
@@ -163,14 +161,14 @@ class ActivityController < ApplicationController
         activity_ref: activity_ref,
         room: room,
         location: location,
-        instruments: activity_ref.instruments, # instantiates ref's template positions
+        instruments: activity_ref.instruments # instantiates ref's template positions
       )
       activity.add_teacher(teacher_id, true)
 
       interval.activity = activity
       interval.save!
 
-      # NOTE Pourquoi fait-on un reload ici ?
+      #  NOTE Pourquoi fait-on un reload ici ?
       # Il y avait un problème de synchro de données avec la base
       activity.teachers_activities.reload
 
@@ -187,7 +185,7 @@ class ActivityController < ApplicationController
       # .execute
     end
 
-    render :json => intervals, each_serializer: TimeIntervalSerializer
+    render json: intervals, each_serializer: TimeIntervalSerializer
   end
 
   def add_student
@@ -214,9 +212,9 @@ class ActivityController < ApplicationController
       # (do not include students who are yet to start
       #  or who have already stopped)
       students_count = activity
-                         .closest_instance(begin_at)
-                         .active_students
-                         .count
+                       .closest_instance(begin_at)
+                       .active_students
+                       .count
 
       if students_count >= activity.activity_ref.occupation_hard_limit
         # the activity is already full, send error and up to date
@@ -290,14 +288,13 @@ class ActivityController < ApplicationController
           end
         end
       end
-
     end
 
     activity.reload
 
-    automatic_status_param = Parameter.find_by(label: 'activityApplication.automatic_status')
-    if automatic_status_param&.value == 'true' || automatic_status_param&.value == true
-      new_status = ActivityApplicationStatus.find_by(label: 'Cours attribué')
+    automatic_status_param = Parameter.find_by(label: "activityApplication.automatic_status")
+    if ["true", true].include?(automatic_status_param&.value)
+      new_status = ActivityApplicationStatus.find_by(label: "Cours attribué")
       if new_status
         application.update!(
           activity_application_status: new_status,
@@ -311,13 +308,14 @@ class ActivityController < ApplicationController
       activity: Utils.format_for_suggestion(user, activity, application.begin_at),
       status: application.activity_application_status&.label,
       status_updated_at: application.status_updated_at,
-      referent: application.referent ? {
-        first_name: application.referent&.first_name,
-        last_name: application.referent&.last_name
-      } : nil
+      referent: if application.referent
+                  {
+                    first_name: application.referent&.first_name,
+                    last_name: application.referent&.last_name
+                  }
+                end
     }
   end
-
 
   def remove_student
     activity_id = params[:id]
@@ -332,10 +330,9 @@ class ActivityController < ApplicationController
 
     activity.remove_student(desired_activity_id)
 
-
-    automatic_status_param = Parameter.find_by(label: 'activityApplication.automatic_status')
-    if automatic_status_param&.value == 'true' || automatic_status_param&.value == true
-      waiting_status = ActivityApplicationStatus.find_by(label: 'En attente de traitement')
+    automatic_status_param = Parameter.find_by(label: "activityApplication.automatic_status")
+    if ["true", true].include?(automatic_status_param&.value)
+      waiting_status = ActivityApplicationStatus.find_by(label: "En attente de traitement")
       if waiting_status
         application.update!(
           activity_application_status: waiting_status,
@@ -352,10 +349,12 @@ class ActivityController < ApplicationController
       ),
       status: application.activity_application_status&.label,
       status_updated_at: application.status_updated_at,
-      referent: application.referent ? {
-        first_name: application.referent&.first_name,
-        last_name: application.referent&.last_name
-      } : nil
+      referent: if application.referent
+                  {
+                    first_name: application.referent&.first_name,
+                    last_name: application.referent&.last_name
+                  }
+                end
     }
   end
 
@@ -367,12 +366,11 @@ class ActivityController < ApplicationController
 
     authorize! :edit, desired_activity&.activity_application
 
-    activity = Activity.includes(activity_instances: :time_interval).find(activity_id)
+    Activity.includes(activity_instances: :time_interval).find(activity_id)
 
     Activities::AddStudent
       .new(activity_id, desired_activity_id, true)
       .execute
-
 
     # Créating adhesion if non-existing
     user = desired_activity.activity_application.user
@@ -451,9 +449,9 @@ class ActivityController < ApplicationController
     end
 
     existing_instances = @activity_ref
-                           .activity_instances
-                           .select(&:time_interval) # remove instances without time_intervals
-                           .each_with_object({}) do |ai, h|
+                         .activity_instances
+                         .select(&:time_interval) # remove instances without time_intervals
+                         .each_with_object({}) do |ai, h|
       h[ai.time_interval.start.strftime(date_format)] = ai
     end
 
@@ -618,24 +616,26 @@ class ActivityController < ApplicationController
 
   def activity_time_intervals
     a_params = params.permit(
-      :activity_id,
+      :activity_id
     )
 
     activityId = a_params[:activity_id]
     time_intervals = []
 
     unless activityId.nil?
-      time_intervals = ActivityInstance.where(activity_id: activityId).select(:id, :time_interval_id).as_json({ include: { student_attendances: {} } })
-      time_intervals = time_intervals.map { |ti| { activity_instance_id: ti['id'], time_interval: TimeInterval.find(ti['time_interval_id']), student_count: ti["student_attendances"].count } }
+      time_intervals = ActivityInstance.where(activity_id: activityId).select(:id,
+                                                                              :time_interval_id).as_json({ include: { student_attendances: {} } })
+      time_intervals = time_intervals.map do |ti|
+        { activity_instance_id: ti["id"], time_interval: TimeInterval.find(ti["time_interval_id"]),
+          student_count: ti["student_attendances"].count }
+      end
     end
 
     respond_to do |format|
-
       format.json do
         render json: time_intervals
       end
     end
-
   end
 
   private
@@ -657,7 +657,7 @@ class ActivityController < ApplicationController
       ]
 
       users.each do |user|
-        telephone = (user.telephones.select { |t| t.label == "portable" }.first || user.telephones.first)
+        telephone = user.telephones.select { |t| t.label == "portable" }.first || user.telephones.first
         user_telephone_number = telephone&.number || "?"
 
         address = user.addresses.first
@@ -762,12 +762,14 @@ class ActivityController < ApplicationController
     }
 
     query = Activity
-              .all
-              .includes(includes_h)
+            .all
+            .includes(includes_h)
 
     query = query.joins(:time_interval).where(time_intervals: { is_validated: true })
 
-    if @current_user.is_teacher && !@current_user.is_admin && Parameter.get_value("teachers.teacher_can_manage_courses", default: false)
+    if @current_user.is_teacher && !@current_user.is_admin && Parameter.get_value(
+      "teachers.teacher_can_manage_courses", default: false
+    )
       query = query.joins(:teachers_activities).where(teachers_activities: { user_id: @current_user.id, is_main: true })
     end
 
@@ -780,15 +782,18 @@ class ActivityController < ApplicationController
         query = query.where(activity_ref_id: val)
       when "teacher_id"
         query = query.joins(:teachers_activities).where(
-          "teachers_activities.is_main = true AND teachers_activities.user_id = ?", val)
+          "teachers_activities.is_main = true AND teachers_activities.user_id = ?", val
+        )
       when "time_interval"
         unless val[:start].blank?
           query = query.joins(:time_interval).where(
-            "(time_intervals.start AT TIME ZONE 'GMT' AT TIME ZONE 'Europe/Paris')::time >= ?::time", val[:start])
+            "(time_intervals.start AT TIME ZONE 'GMT' AT TIME ZONE 'Europe/Paris')::time >= ?::time", val[:start]
+          )
         end
         unless val[:end].blank?
           query = query.joins(:time_interval).where(
-            "(time_intervals.end AT TIME ZONE 'GMT' AT TIME ZONE 'Europe/Paris')::time <= ?::time", val[:end])
+            "(time_intervals.end AT TIME ZONE 'GMT' AT TIME ZONE 'Europe/Paris')::time <= ?::time", val[:end]
+          )
         end
       when "average_age"
         query = query.where("
@@ -863,7 +868,8 @@ class ActivityController < ApplicationController
 
         unless season.nil?
           query = query.joins(:time_interval).where(
-            "tstzrange(?, ?, '[]') @> tstzrange(LEAST(time_intervals.start, time_intervals.end), GREATEST(time_intervals.start, time_intervals.end), '[]')", season.start, season.end)
+            "tstzrange(?, ?, '[]') @> tstzrange(LEAST(time_intervals.start, time_intervals.end), GREATEST(time_intervals.start, time_intervals.end), '[]')", season.start, season.end
+          )
         end
       when "day"
         query = query.joins(:time_interval).where("extract(DOW FROM time_intervals.start) = ?::numeric", val)
@@ -911,7 +917,7 @@ class ActivityController < ApplicationController
             act.count_active_students(reference_date) < act.activity_ref.occupation_limit
           end
         end
-    end
+      end
 
       query = Activity.includes(includes_h).where(id: query.map(&:id))
     end
@@ -925,9 +931,9 @@ class ActivityController < ApplicationController
         query = query.joins(:activity_ref).order("activity_refs.label #{direction}")
       when "teacher_id"
         query = query
-                  .joins(:teachers_activities)
-                  .joins("INNER JOIN users AS teacher ON teachers_activities.user_id = teacher.id")
-                  .order("teacher.last_name #{direction}")
+                .joins(:teachers_activities)
+                .joins("INNER JOIN users AS teacher ON teachers_activities.user_id = teacher.id")
+                .order("teacher.last_name #{direction}")
       when "average_age"
         query = query.order(Arel.sql("
                     (SELECT FLOOR(AVG(age)) FROM (
@@ -945,8 +951,8 @@ class ActivityController < ApplicationController
         query = query.joins(:location).order("locations.label #{direction}")
       when "level"
         query = query
-                  .joins(:time_interval)
-                  .order(Arel.sql("
+                .joins(:time_interval)
+                .order(Arel.sql("
                     CASE
                       WHEN activities.evaluation_level_ref_id IS NOT NULL THEN activities.evaluation_level_ref_id
 
@@ -992,8 +998,8 @@ class ActivityController < ApplicationController
                   "))
       when "day"
         query = query
-                  .joins(:time_interval)
-                  .order!(Arel.sql("(extract(DOW FROM time_intervals.start) + 6)::integer % 7 #{direction}"))
+                .joins(:time_interval)
+                .order!(Arel.sql("(extract(DOW FROM time_intervals.start) + 6)::integer % 7 #{direction}"))
       when "occupation"
         query = query.joins(:activity_ref).order(Arel.sql("(SELECT COUNT(*) FROM students WHERE students.activity_id = activities.id)::float / activity_refs.occupation_limit::float #{direction}"))
       when "season_id"
@@ -1013,8 +1019,8 @@ class ActivityController < ApplicationController
 
     if filter[:page] && filter[:page_size]
       query = query
-                .page(filter[:page] + 1)
-                .per(filter[:page_size])
+              .page(filter[:page] + 1)
+              .per(filter[:page_size])
 
       total_pages = query.total_pages
     end
@@ -1091,24 +1097,26 @@ class ActivityController < ApplicationController
         end
       end
 
-      if act["teacher"] == nil
+      if act["teacher"].nil?
         old_teacher_id = Activity.find(act["id"]).teachers_activities.where(is_main: true).first&.user_id
-        act["teacher"] = User.find(old_teacher_id).as_json({
-                                                             include: {
-                                                               planning: {
-                                                                 only: :id
+        if old_teacher_id
+          act["teacher"] = User.find(old_teacher_id).as_json({
+                                                               include: {
+                                                                 planning: {
+                                                                   only: :id
+                                                                 }
                                                                }
-                                                             }
-                                                           }) if old_teacher_id
+                                                             })
+        end
       end
 
       act["activity_instance"] =
         ActivityInstance
-          .joins(:time_interval)
-          .where(activity_id: act["id"])
-          .where(time_intervals: { start: (DateTime.parse(filter[:filtered][0][:value]&.to_s) || DateTime.now).. })
-          .order("time_intervals.start asc")
-          .first
+        .joins(:time_interval)
+        .where(activity_id: act["id"])
+        .where(time_intervals: { start: (DateTime.parse(filter[:filtered][0][:value]&.to_s) || DateTime.now).. })
+        .order("time_intervals.start asc")
+        .first
     end
 
     {
@@ -1122,5 +1130,4 @@ class ActivityController < ApplicationController
     users = (query.map(&:students) + query.map(&:options)).flatten.map(&:user).compact.uniq
     users_list_csv(users)
   end
-
 end

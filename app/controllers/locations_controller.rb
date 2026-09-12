@@ -1,5 +1,4 @@
 class LocationsController < ApplicationController
-
   before_action -> { @current_user = current_user }
 
   def index
@@ -7,11 +6,12 @@ class LocationsController < ApplicationController
 
     authorize! :manage, @locations
     respond_to do |format|
-      format.html 
+      format.html
 
       format.json do
-          render json: @locations.as_json(
-              except: [:created_at, :updated_at, :deleted_at] )
+        render json: @locations.as_json(
+          except: %i[created_at updated_at deleted_at]
+        )
       end
     end
   end
@@ -87,5 +87,4 @@ class LocationsController < ApplicationController
   def location_params
     params.require(:location).permit(:label)
   end
-
 end

@@ -27,13 +27,13 @@ class PayerPaymentTerms < ApplicationRecord
   end
 
   def self.class_name_gender
-    return :F
+    :F
   end
 
   def summary
     res = "paiement #{payment_schedule_options.label}"
     if day_for_collection.present?
-      payments_months = payment_schedule_options.payments_months.map { |m| DateHelper::month_name(m + 1) }.join(", ")
+      payments_months = payment_schedule_options.payments_months.map { |m| DateHelper.month_name(m + 1) }.join(", ")
       res += " le #{payment_schedule_options.available_payments_days[day_for_collection]} du mois (#{payments_months})"
     end
     res += " par #{payment_method.label}" if payment_method.present?

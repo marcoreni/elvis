@@ -14,14 +14,13 @@
 # /!\ ........................................................ /!\
 
 class HoursSheet < ApplicationRecord
-    belongs_to :user, required: true
+  belongs_to :user, required: true
 
-    def self.display_class_name(singular = true)
-        singular ? "feuille d'heure" : "feuilles d'heure"
-    end
+  def self.display_class_name(singular = true)
+    singular ? "feuille d'heure" : "feuilles d'heure"
+  end
 
-    def self.class_name_gender
-        return :F
-    end
-
+  def self.class_name_gender
+    :F
+  end
 end

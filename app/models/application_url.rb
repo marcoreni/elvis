@@ -16,9 +16,7 @@
 #  is_main                         :boolean          not null
 #  last_used_at                    :datetime         not null
 class ApplicationUrl < ApplicationRecord
-  if Rails.env.kubernetes?
-    skip_callback :commit, :after, :commit_callback
-  end
+  skip_callback :commit, :after, :commit_callback if Rails.env.kubernetes?
 
   def self.main_root_url
     Rails.cache.fetch("ApplicationUrl::main_root_url", expires_in: 12.hours) do

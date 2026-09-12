@@ -35,9 +35,7 @@ class Level < ApplicationRecord
   def uniqueness
     query = Level.where(activity_ref_id: activity_ref_id, season_id: season_id, user_id: user_id)
 
-    if self.id.present? && self.id.positive?
-      query = query.where.not(id: self.id)
-    end
+    query = query.where.not(id: id) if id.present? && id.positive?
 
     return unless query.any?
 

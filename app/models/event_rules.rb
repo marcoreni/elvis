@@ -22,9 +22,8 @@ class EventRules < ApplicationRecord
   end
 
   def self.class_name_gender
-    return :M
+    :M
   end
-
 
   # n'existera plus dans la phase finale, uniquement pour les tests
   # def self.add_sample

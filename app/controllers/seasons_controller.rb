@@ -10,7 +10,7 @@ class SeasonsController < ApplicationController
       season = Season.current_apps_season
       render json: season.as_json(
         include: :holidays,
-        except: [:created_at, :updated_at, :deleted_at]
+        except: %i[created_at updated_at deleted_at]
       )
     else
       @seasons = Season.all
@@ -19,7 +19,7 @@ class SeasonsController < ApplicationController
         format.json do
           render json: @seasons.as_json(
             include: :holidays,
-            except: [:created_at, :updated_at, :deleted_at]
+            except: %i[created_at updated_at deleted_at]
           )
         end
       end
@@ -33,19 +33,19 @@ class SeasonsController < ApplicationController
     authorize! :manage, @current_user.is_admin
   end
 
-   def show
-     @season = Season.find(params[:id])
+  def show
+    @season = Season.find(params[:id])
 
-     respond_to do |format|
-       format.html { redirect_to edit_season_path @season }
-       format.json do
-         render json: @season.as_json(
-           include: :holidays,
-           except: [:created_at, :updated_at, :deleted_at]
-         )
-       end
-     end
-   end
+    respond_to do |format|
+      format.html { redirect_to edit_season_path @season }
+      format.json do
+        render json: @season.as_json(
+          include: :holidays,
+          except: %i[created_at updated_at deleted_at]
+        )
+      end
+    end
+  end
 
   def get_season_weeks
     render json: Seasons::GetSeasonWeeks.new.execute
@@ -58,7 +58,7 @@ class SeasonsController < ApplicationController
   def create
     @season = Season.new season_params
 
-    #SwitchSeasonJob.perform_now @season.id
+    # SwitchSeasonJob.perform_now @season.id
 
     if @season.save && @season.errors.empty?
       # TODO: Extract business logic to service
@@ -76,7 +76,7 @@ class SeasonsController < ApplicationController
       redirect_to seasons_path, method: :get
     else
       @current_user = current_user
-      flash.now[:alert] = {errors: @season.errors.to_hash(true)}
+      flash.now[:alert] = { errors: @season.errors.to_hash(true) }
       render :new
     end
   end
@@ -132,7 +132,7 @@ class SeasonsController < ApplicationController
 
       bank_holidays_zone = Holidays::BankHolidays.read_zone_parameter
       school_holidays_zone = Holidays::SchoolHolidays.read_zone_parameter
-  
+
       if bank_holidays_zone && school_holidays_zone
         Seasons::PopulateHolidays
           .new(season: @season, bank_holidays_zone: bank_holidays_zone, school_zone: school_holidays_zone)
@@ -161,7 +161,8 @@ class SeasonsController < ApplicationController
     result = Seasons::SeasonSwitcher.execute(season)
 
     if result
-      render json: {id: season.id, new_next_season: next_season.nil?, next: (next_season || season.next)&.as_json(except: [:created_at, :updated_at, :deleted_at], include: :next_season, methods: [:start_formatted, :end_formatted])}, status: :ok
+      render json: { id: season.id, new_next_season: next_season.nil?, next: (next_season || season.next)&.as_json(except: %i[created_at updated_at deleted_at], include: :next_season, methods: %i[start_formatted end_formatted]) },
+             status: :ok
     else
       head :unprocessable_entity
     end
@@ -182,7 +183,9 @@ class SeasonsController < ApplicationController
 
     @season = Season.find(params[:id])
     result = @season.update(season_params)
-    logger.error "Unable to update season with params #{season_params} ; error is : #{@season.errors.to_a}" if @season.errors
+    if @season.errors
+      logger.error "Unable to update season with params #{season_params} ; error is : #{@season.errors.to_a}"
+    end
 
     # workaround pour supprimer la saison suivante
     # lorsque le front renvoie 0 pour next_season_id
@@ -199,11 +202,11 @@ class SeasonsController < ApplicationController
 
       redirect_to seasons_path
     else
-      #redirect_to edit_season_path(season_params), alert: {title: "Impossible de sauvegarder la saison", errors: @season.errors.to_h}
+      # redirect_to edit_season_path(season_params), alert: {title: "Impossible de sauvegarder la saison", errors: @season.errors.to_h}
       @current_user = current_user
       @holidays = Holidays::HolidaysPacker.pack_holidays(@season)
-      flash.now[:alert] = {errors: @season.errors.to_h}
-      
+      flash.now[:alert] = { errors: @season.errors.to_h }
+
       render :edit
     end
   end
@@ -212,7 +215,10 @@ class SeasonsController < ApplicationController
     # @type [Season]
     season = Season.find(params[:id])
 
-    return render json: {error: "Impossible de supprimer la saison active"}, status: :unprocessable_entity if season.is_current
+    if season.is_current
+      return render json: { error: "Impossible de supprimer la saison active" },
+                    status: :unprocessable_entity
+    end
 
     FamilyMemberUser.where(season: season).destroy_all
     previous_season = season.previous

@@ -25,7 +25,7 @@ class AdhesionsIndex < Chewy::Index
     }
   }
 
-  index_scope Adhesion 
+  index_scope Adhesion
   field :kind, value: ->(adhesion) { adhesion.class.name.downcase }
   field :adhesion_user_id, value: -> { user.id }
   field :adhesion_adherent_number, value: -> { user.adherent_number }

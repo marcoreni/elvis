@@ -1,5 +1,6 @@
 # frozen_string_literal: true
-require 'zip'
+
+require "zip"
 
 class StudentsController < ApplicationController
   def index
@@ -10,8 +11,8 @@ class StudentsController < ApplicationController
     end
 
     teachers_and_activities = TeachersActivity
-                                .where(activity_id: activity_ids)
-                                .group_by(&:user_id)
+                              .where(activity_id: activity_ids)
+                              .group_by(&:user_id)
 
     generate_student_list teachers_and_activities
   end
@@ -24,7 +25,7 @@ class StudentsController < ApplicationController
       teacher_id = teacher_ids[0]
       teacher = User.find(teacher_id)
       pdf = generate_pdf_for_teacher(teacher, teachers_and_activities[teacher_id])
-      send_data pdf, filename: "liste_élèves_#{teacher.first_name}_#{teacher.last_name}.pdf", type: 'application/pdf'
+      send_data pdf, filename: "liste_élèves_#{teacher.first_name}_#{teacher.last_name}.pdf", type: "application/pdf"
     else
       # Générer un PDF pour chaque professeur et les zipper
       zip_data = Zip::OutputStream.write_buffer do |zip|
@@ -36,7 +37,7 @@ class StudentsController < ApplicationController
         end
       end
       zip_data.rewind
-      send_data zip_data.read, filename: 'liste_élèves.zip', type: 'application/zip'
+      send_data zip_data.read, filename: "liste_élèves.zip", type: "application/zip"
     end
   end
 
@@ -47,13 +48,14 @@ class StudentsController < ApplicationController
 
     activities_and_students =
       Activity
-        .joins(
-          :activity_ref,
-          :time_interval,
-          :room)
-        .left_joins(students: :user)
-        .where('activities.id IN (?)', activity_ids)
-        .select('
+      .joins(
+        :activity_ref,
+        :time_interval,
+        :room
+      )
+      .left_joins(students: :user)
+      .where("activities.id IN (?)", activity_ids)
+      .select('
             users.id as user_id,
             users.first_name,
             users.last_name,
@@ -64,19 +66,18 @@ class StudentsController < ApplicationController
             time_intervals.end,
             rooms.label as room_label
             ')
-        .order('time_intervals.start')
-        .as_json
-        .group_by { |a| a['activity_id'] }
+      .order("time_intervals.start")
+      .as_json
+      .group_by { |a| a["activity_id"] }
 
     render_to_string(wicked_pdf: {}, pdf: "list_#{teacher.last_name}",
-                     encoding: 'utf8',
-                     template: 'students/index.html.erb',
-                     layout: 'pdf.html.erb',
+                     encoding: "utf8",
+                     template: "students/index.html.erb",
+                     layout: "pdf.html.erb",
                      locals: {
                        school: School.first,
                        teacher: teacher,
                        activities_and_students: activities_and_students
                      })
   end
-
 end

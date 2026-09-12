@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 class PricingCategoriesController < ApplicationController
-
   def index
     @pricing_categories = PricingCategory.all
 
@@ -11,13 +10,15 @@ class PricingCategoriesController < ApplicationController
   end
 
   def create
-    is_pack = params[:is_a_pack].present? ? true : false
-    @pricing_category = PricingCategory.new(name: params[:name], number_lessons: params[:number_lessons], is_a_pack: is_pack)
+    is_pack = params[:is_a_pack].present? || false
+    @pricing_category = PricingCategory.new(name: params[:name], number_lessons: params[:number_lessons],
+                                            is_a_pack: is_pack)
     res = @pricing_category.save
 
     respond_to do |format|
       format.json do
         render json: @pricing_category.as_json and return if res
+
         render status: :unprocessable_entity, json: { errors: @pricing_category.errors.full_messages }
       end
     end
@@ -26,11 +27,13 @@ class PricingCategoriesController < ApplicationController
   def update
     @pricing_category = PricingCategory.find(params[:id])
 
-    res = @pricing_category.update(name: params[:name], number_lessons: params[:number_lessons], is_a_pack: params[:is_a_pack])
+    res = @pricing_category.update(name: params[:name], number_lessons: params[:number_lessons],
+                                   is_a_pack: params[:is_a_pack])
 
     respond_to do |format|
       format.json do
         render json: @pricing_category.as_json and return @pricing_category if res
+
         render status: :unprocessable_entity, json: { errors: @pricing_category.errors.full_messages }
       end
     end
@@ -42,7 +45,7 @@ class PricingCategoriesController < ApplicationController
     begin
       @pricing_category.destroy!
       render status: :ok, json: {}
-    rescue StandardError => e
+    rescue StandardError
       render status: :unprocessable_entity,
              json: { message: "Erreur lors de la suppression, la catégorie de prix est encore référencée" }
     end
@@ -54,18 +57,18 @@ class PricingCategoriesController < ApplicationController
     if params[:sorted]
       sort_order = params[:sorted][:desc] ? :desc : :asc
       query = query
-                .order(params[:sorted][:id].to_sym => sort_order)
+              .order(params[:sorted][:id].to_sym => sort_order)
     end
 
     query = query
-              .page(params[:page] + 1)
-              .per(params[:pageSize])
+            .page(params[:page] + 1)
+            .per(params[:pageSize])
 
     respond_to do |format|
       format.json do
         render json: {
           data: query.as_json,
-          pages: pages = query.total_pages,
+          pages: query.total_pages,
           total: query.count
         }
       end
@@ -88,5 +91,4 @@ class PricingCategoriesController < ApplicationController
 
     query
   end
-
 end

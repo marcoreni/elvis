@@ -1,5 +1,4 @@
 class InstrumentsController < ApplicationController
-
   before_action -> { @current_user = current_user }
 
   def index
@@ -15,7 +14,7 @@ class InstrumentsController < ApplicationController
     query = Instrument.all
 
     respond_to do |format|
-      format.json { render json: { status:query.as_json, pages:1, total:1} }
+      format.json { render json: { status: query.as_json, pages: 1, total: 1 } }
     end
   end
 
@@ -38,7 +37,7 @@ class InstrumentsController < ApplicationController
       instrument.save!
 
       redirect_to "#{instruments_path}#tab-6"
-    rescue StandardError => e
+    rescue StandardError
       redirect_to new_instrument_path(error: instrument.errors.full_messages)
     end
   end
@@ -80,8 +79,7 @@ class InstrumentsController < ApplicationController
       raise StandardError unless instrument.errors.empty?
 
       instrument.save!
-
-    rescue StandardError => e
+    rescue StandardError
       redirect_to edit_instrument_path(instrument, error: instrument.errors.full_messages)
     end
 

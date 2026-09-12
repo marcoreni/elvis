@@ -1,7 +1,5 @@
 class Parameters::ActivityApplicationParametersController < ApplicationController
-  def index
-
-  end
+  def index; end
 
   def list_status
     query = ActivityApplicationStatus.all
@@ -22,37 +20,36 @@ class Parameters::ActivityApplicationParametersController < ApplicationControlle
 
   def get_application_step_parameters
     parameter_label = params[:parameter_label]
-    
-    @activated = Parameter.get_value(parameter_label+'.activated')
-    @display_text = Parameter.get_value(parameter_label+'.display_text')
+
+    @activated = Parameter.get_value(parameter_label + ".activated")
+    @display_text = Parameter.get_value(parameter_label + ".display_text")
 
     respond_to do |format|
-      format.json { render json: {
-        activated: @activated.present?,
-        display_text: @display_text
-      }, status: :ok }
+      format.json do
+        render json: {
+          activated: @activated.present?,
+          display_text: @display_text
+        }, status: :ok
+      end
     end
-
   rescue StandardError => e
     render json: { error: e.message }, status: :unprocessable_entity
   end
 
   def change_activated_param
-    @activated = Parameter.find_or_create_by(label: params[:parameter_label]+'.activated', value_type: "boolean")
+    @activated = Parameter.find_or_create_by(label: params[:parameter_label] + ".activated", value_type: "boolean")
     @activated.update!(value: params[:activated].to_s)
 
     respond_to do |format|
       format.json { render json: { activated: params[:activated] }, status: :ok }
     end
-
   rescue StandardError => e
     render json: { error: e.message }, status: :unprocessable_entity
   end
 
   def change_display_text_param
-    @display_text = Parameter.find_or_create_by(label: params[:parameter_label]+'.display_text')
+    @display_text = Parameter.find_or_create_by(label: params[:parameter_label] + ".display_text")
     @display_text.update!(value: params[:display_text])
-
   rescue StandardError => e
     render json: { error: e.message }, status: :unprocessable_entity
   end

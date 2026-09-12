@@ -10,15 +10,14 @@
 #
 
 class Answer < ApplicationRecord
-    belongs_to :answerable, polymorphic: true
-    belongs_to :question
+  belongs_to :answerable, polymorphic: true
+  belongs_to :question
 
-    def self.display_class_name(singular = true)
-        singular ? "réponse" : "réponses"
-    end
+  def self.display_class_name(singular = true)
+    singular ? "réponse" : "réponses"
+  end
 
-    def self.class_name_gender
-        return :F
-    end
-
+  def self.class_name_gender
+    :F
+  end
 end

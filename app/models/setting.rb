@@ -95,9 +95,8 @@ class Setting < ActiveRecord::Base
   end
 
   def self.class_name_gender
-    return :F
+    :F
   end
-
 
   cattr_accessor :available_settings
   self.available_settings ||= {}
@@ -121,7 +120,8 @@ class Setting < ActiveRecord::Base
   @cached_settings = {}
   @cached_cleared_on = Time.now
 
-  YAML_PERMITTED_CLASSES = [Symbol, ActiveSupport::HashWithIndifferentAccess, TrueClass, FalseClass, NilClass, Numeric, String, Array, Hash].freeze
+  YAML_PERMITTED_CLASSES = [Symbol, ActiveSupport::HashWithIndifferentAccess, TrueClass, FalseClass, NilClass, Numeric,
+                            String, Array, Hash].freeze
 
   def value
     v = read_attribute(:value)
@@ -186,9 +186,7 @@ class Setting < ActiveRecord::Base
 
       previous_value = Setting[name]
       set_from_params name, value
-      if available_settings[name.to_s]["security_notifications"] && Setting[name] != previous_value
-        changes << name
-      end
+      changes << name if available_settings[name.to_s]["security_notifications"] && Setting[name] != previous_value
     end
 
     nil
@@ -204,18 +202,16 @@ class Setting < ActiveRecord::Base
        :mail_handler_excluded_filenames,
        /\s*,\s*/]
     ].each do |enable_regex, regex_field, delimiter|
-      if settings.key?(regex_field) || settings.key?(enable_regex)
-        regexp = Setting.send("#{enable_regex}?")
-        if settings.key?(enable_regex)
-          regexp = settings[enable_regex].to_s != "0"
-        end
-        if regexp
-          settings[regex_field].to_s.split(delimiter).each do |value|
-            Regexp.new(value)
-          rescue RegexpError => e
-            messages << [regex_field, "#{l('activerecord.errors.messages.not_a_regexp')} (#{e.message})"]
-          end
-        end
+      next unless settings.key?(regex_field) || settings.key?(enable_regex)
+
+      regexp = Setting.send("#{enable_regex}?")
+      regexp = settings[enable_regex].to_s != "0" if settings.key?(enable_regex)
+      next unless regexp
+
+      settings[regex_field].to_s.split(delimiter).each do |value|
+        Regexp.new(value)
+      rescue RegexpError => e
+        messages << [regex_field, "#{l('activerecord.errors.messages.not_a_regexp')} (#{e.message})"]
       end
     end
     if settings.key?(:mail_from)
@@ -232,7 +228,7 @@ class Setting < ActiveRecord::Base
   # Sets a setting value from params
   def self.set_from_params(name, params)
     params = params.dup
-    params.delete_if {|v| v.blank?} if params.is_a?(Array)
+    params.delete_if { |v| v.blank? } if params.is_a?(Array)
     params.symbolize_keys! if params.is_a?(Hash)
 
     m = "#{name}_from_params"
@@ -251,15 +247,14 @@ class Setting < ActiveRecord::Base
   # # => [{'keywords => 'fixes', 'status_id' => "3"}, {'keywords => 'closes', 'status_id' => "5", 'done_ratio' => "100"}]
   def self.commit_update_keywords_from_params(params)
     s = []
-    if params.is_a?(Hash) && params.key?(:keywords) && params.values.all? {|v| v.is_a? Array}
+    if params.is_a?(Hash) && params.key?(:keywords) && params.values.all? { |v| v.is_a? Array }
       attributes = params.except(:keywords).keys
       params[:keywords].each_with_index do |keywords, i|
         next if keywords.blank?
 
-        s << attributes.inject({}) do |h, a|
+        s << attributes.each_with_object({}) do |a, h|
           value = params[a][i].to_s
           h[a.to_s] = value if value.present?
-          h
         end.merge("keywords" => keywords)
       end
     end
@@ -268,7 +263,7 @@ class Setting < ActiveRecord::Base
 
   # Helper that returns an array based on per_page_options setting
   def self.per_page_options_array
-    per_page_options.split(%r{[\s,]}).collect(&:to_i).select {|n| n > 0}.sort
+    per_page_options.split(/[\s,]/).collect(&:to_i).select { |n| n > 0 }.sort
   end
 
   # Helper that returns a Hash with single update keywords as keys
@@ -279,7 +274,7 @@ class Setting < ActiveRecord::Base
         next unless rule.is_a?(Hash)
 
         rule = rule.dup
-        rule.delete_if {|k, v| v.blank?}
+        rule.delete_if { |_k, v| v.blank? }
         keywords = rule["keywords"].to_s.downcase.split(",").map(&:strip).reject(&:blank?)
         next if keywords.empty?
 
@@ -294,9 +289,9 @@ class Setting < ActiveRecord::Base
   # Called once per request
   def self.check_cache
     settings_updated_on = Setting.maximum(:updated_on)
-    if settings_updated_on && @cached_cleared_on <= settings_updated_on
-      clear_cache
-    end
+    return unless settings_updated_on && @cached_cleared_on <= settings_updated_on
+
+    clear_cache
   end
 
   # Clears the settings cache
@@ -306,17 +301,17 @@ class Setting < ActiveRecord::Base
     logger&.info "Settings cache cleared."
   end
 
-  def self.define_plugin_setting(name, default={})
-    unless default.empty?
-      name = "#{name}"
-      define_setting name, {"default" => default, "serialized" => true}
-    end
+  def self.define_plugin_setting(name, default = {})
+    return if default.empty?
+
+    name = "#{name}"
+    define_setting name, { "default" => default, "serialized" => true }
   end
 
   # Defines getter and setter for each setting
   # Then setting values can be read using: Setting.some_setting_name
   # or set using Setting.some_setting_name = "some value"
-  def self.define_setting(name, options={})
+  def self.define_setting(name, options = {})
     available_settings[name.to_s] = options
 
     src = <<~END_SRC

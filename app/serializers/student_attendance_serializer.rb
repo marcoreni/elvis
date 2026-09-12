@@ -11,5 +11,5 @@
 #
 
 class StudentAttendanceSerializer < ActiveModel::Serializer
-    attributes :id, :user_id, :activity_instance_id, :attended
+  attributes :id, :user_id, :activity_instance_id, :attended
 end

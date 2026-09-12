@@ -1,6 +1,4 @@
-
 class UserPaymentsController < ApplicationController
-
   before_action :set_current_user
 
   def show_for_current
@@ -57,7 +55,9 @@ class UserPaymentsController < ApplicationController
 
     # methode de paiement
 
-    payer_payment_terms = user.payer_payment_terms.where(season_id: season.id).first&.as_json(include: [:payment_schedule_options, :payment_method])
+    payer_payment_terms = user.payer_payment_terms.where(season_id: season.id).first&.as_json(include: %i[
+                                                                                                payment_schedule_options payment_method
+                                                                                              ])
     payment_schedule_option = payer_payment_terms&.dig("payment_schedule_options")
 
     payment_terms_data = {
@@ -69,11 +69,13 @@ class UserPaymentsController < ApplicationController
     # fin de la methode de paiement
 
     respond_to do |format|
-      format.json { render json: {
-        general_infos: data,
-        due_payments: due_payments_data.sort_by { |e| e[:due_date] }.reverse,
-        payer_payment_terms: payment_terms_data
-      }}
+      format.json do
+        render json: {
+          general_infos: data,
+          due_payments: due_payments_data.sort_by { |e| e[:due_date] }.reverse,
+          payer_payment_terms: payment_terms_data
+        }
+      end
     end
   end
 
@@ -85,7 +87,9 @@ class UserPaymentsController < ApplicationController
     payment = user.payer_payment_terms.where(season_id: params[:season_id]).first
 
     respond_to do |format|
-      format.json { render json: payment.as_json(only: [:payment_method_id, :payment_schedule_options_id, :day_for_collection]) }
+      format.json do
+        render json: payment.as_json(only: %i[payment_method_id payment_schedule_options_id day_for_collection])
+      end
     end
   end
 
@@ -127,7 +131,10 @@ class UserPaymentsController < ApplicationController
     SyncDuePaymentWithPayerTermsJob.perform_now(id: user_payment_term.id, creation: creation)
 
     respond_to do |format|
-      format.json { render json: user_payment_term.as_json(only: [:payment_method_id, :payment_schedule_options_id, :day_for_collection]) }
+      format.json do
+        render json: user_payment_term.as_json(only: %i[payment_method_id payment_schedule_options_id
+                                                        day_for_collection])
+      end
     end
   end
 

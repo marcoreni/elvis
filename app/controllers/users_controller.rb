@@ -77,18 +77,18 @@ class UsersController < ApplicationController
 
   def infos
     user = User
-             .includes(
-               :telephones,
-               :addresses,
-               :attached_to,
-               family_member_users: {
-                 member: %i[addresses telephones]
-               },
-               inverse_family_members: {
-                 user: %i[addresses telephones]
-               }
-             )
-             .find(params[:id])
+           .includes(
+             :telephones,
+             :addresses,
+             :attached_to,
+             family_member_users: {
+               member: %i[addresses telephones]
+             },
+             inverse_family_members: {
+               user: %i[addresses telephones]
+             }
+           )
+           .find(params[:id])
 
     authorize! :read, user
 
@@ -118,7 +118,7 @@ class UsersController < ApplicationController
         default_serializer = "Templates::#{model_name}Serializer".constantize
 
         template_name = params[:template]&.to_sym
-        template_content = ExportTemplate.find_by(model: model_name, name: template_name)&.content
+        ExportTemplate.find_by(model: model_name, name: template_name)&.content
 
         query = model_name.constantize.all
 
@@ -133,7 +133,7 @@ class UsersController < ApplicationController
     query = User.all
                 .left_joins(:telephones, :addresses, :organization)
                 .includes(:telephones, :addresses, :organization)
-                .as_json(include: [:telephones, :addresses, :organization])
+                .as_json(include: %i[telephones addresses organization])
     respond_to do |format|
       format.csv { render plain: users_list_csv(query), content_type: "text/csv" }
       format.json { render json: { users: query } }
@@ -162,7 +162,9 @@ class UsersController < ApplicationController
       when "id"
         query = query.where("id = ?", filter[:value].to_i)
       when "attached"
-        query = filter[:value] == "true" ? query.where(attached_to_id: nil) : query.where.not(attached_to_id: nil) unless "#{filter[:value]}".empty?
+        unless "#{filter[:value]}".empty?
+          query = filter[:value] == "true" ? query.where(attached_to_id: nil) : query.where.not(attached_to_id: nil)
+        end
       else
         query = query.where("#{filter[:id]} ILIKE ?", "#{filter[:value]}%")
       end
@@ -243,8 +245,8 @@ class UsersController < ApplicationController
     total = query.count
 
     query = query
-              .page(params[:page] + 1)
-              .per(params[:pageSize])
+            .page(params[:page] + 1)
+            .per(params[:pageSize])
 
     if params[:sorted]
       query = query.order(Arel.sql("(users.first_#{params[:sorted][:id]} || users.last_#{params[:sorted][:id]}) #{params[:sorted][:desc] ? 'desc' : 'asc'}"))
@@ -294,11 +296,16 @@ class UsersController < ApplicationController
     attached_account_to_show = @user.attached_accounts.where.not(id: user_to_exclude_from_attached)
 
     @users_to_show_in_family_list = @user
-                                      .family(@season)
-                                      .uniq
-                                      .map { |u| {user: u, fml: u.family_link_with(@user, @season), attached_to: u.attached_to}}
-                                      .sort_by { |d| -2 * (d.dig(:fml)&.is_to_call || false).to_i - (d.dig(:fml)&.is_paying_for || false).to_i }
-    @users_to_show_in_family_list += attached_account_to_show.map { |u| {user: u, fml: nil, attached_to: u.attached_to} }
+                                    .family(@season)
+                                    .uniq
+                                    .map do |u|
+      { user: u, fml: u.family_link_with(@user, @season),
+        attached_to: u.attached_to }
+    end
+                                    .sort_by { |d| -2 * (d.dig(:fml)&.is_to_call || false).to_i - (d.dig(:fml)&.is_paying_for || false).to_i }
+    @users_to_show_in_family_list += attached_account_to_show.map do |u|
+      { user: u, fml: nil, attached_to: u.attached_to }
+    end
 
     @adhesion = @user.get_last_adhesion
     @distance_to_end_date = nil
@@ -308,68 +315,68 @@ class UsersController < ApplicationController
     end
 
     @any_abs = @user
-                 .student_attendances
-                 .joins(:activity_instance)
-                 .joins("INNER JOIN time_intervals ON activity_instances.time_interval_id = time_intervals.id")
-                 .where("attended != 1")
-                 .any?
+               .student_attendances
+               .joins(:activity_instance)
+               .joins("INNER JOIN time_intervals ON activity_instances.time_interval_id = time_intervals.id")
+               .where("attended != 1")
+               .any?
 
     @activities = @user
-                    .activity_applications
-                    .includes({
-                                desired_activities: {
-                                  activity: {
-                                    room: {},
-                                    activity_instances: [],
-                                    time_interval: {},
-                                    teachers_activities: {},
-                                    activity_ref: {}
-                                  }
+                  .activity_applications
+                  .includes({
+                              desired_activities: {
+                                activity: {
+                                  room: {},
+                                  activity_instances: [],
+                                  time_interval: {},
+                                  teachers_activities: {},
+                                  activity_ref: {}
                                 }
-                              })
-                    .select { |app| app.desired_activities.where(is_validated: true).any? }
-                    .group_by(&:season_id)
-                    .transform_values { |apps| apps.map(&:desired_activities).flatten.map(&:activity).compact }
-                    .transform_keys { |k| Season.find(k) }
-                    .entries
-                    .sort_by { |e| e.first.end }
-                    .reverse
-                    .to_h
+                              }
+                            })
+                  .select { |app| app.desired_activities.where(is_validated: true).any? }
+                  .group_by(&:season_id)
+                  .transform_values { |apps| apps.map(&:desired_activities).flatten.map(&:activity).compact }
+                  .transform_keys { |k| Season.find(k) }
+                  .entries
+                  .sort_by { |e| e.first.end }
+                  .reverse
+                  .to_h
 
     # on doit ajouter ici les activités liées à des packs
     # qui ne font pas l'objet d'une inscription (activity_application)
     activity_refs = ActivityRef
-                      .includes(activity_ref_pricing: :pricing_category)
-                      .includes(activities: :students)
-                      .joins(activities: :students)
-                      .where("pricing_categories.is_a_pack = true")
-                      .where("students.user_id=?", @user.id)
+                    .includes(activity_ref_pricing: :pricing_category)
+                    .includes(activities: :students)
+                    .joins(activities: :students)
+                    .where("pricing_categories.is_a_pack = true")
+                    .where("students.user_id=?", @user.id)
 
     activities = activity_refs
-                   .map(&:activities)
-                   .flatten
-    #.uniq { |act| act.id}
+                 .map(&:activities)
+                 .flatten
+    # .uniq { |act| act.id}
 
     # group activities by season
-    activities = activities.group_by{|act| act.season.id}
+    activities = activities.group_by { |act| act.season.id }
     # add these activities to the &activities hash
     activities.each do |season_id, acts|
       season = Season.find(season_id)
       @activities[season] = [] if @activities[season].nil?
       @activities[season] += acts
-      @activities[season].uniq! { |act| act.id}
+      @activities[season].uniq! { |act| act.id }
     end
 
     @applications = @user
-                      .activity_applications
-                      .includes({
-                                  desired_activities: {
-                                    activity: {}
-                                  }
-                                })
-                      .select { |app| app.desired_activities.where(is_validated: true).any? }
-                      .group_by { |app| app.desired_activities.map(&:activity).compact.map(&:id) }
-                      .transform_values(&:first)
+                    .activity_applications
+                    .includes({
+                                desired_activities: {
+                                  activity: {}
+                                }
+                              })
+                    .select { |app| app.desired_activities.where(is_validated: true).any? }
+                    .group_by { |app| app.desired_activities.map(&:activity).compact.map(&:id) }
+                    .transform_values(&:first)
 
     @seasons = Season.all.select(:id, :label, :is_current)
 
@@ -388,26 +395,26 @@ class UsersController < ApplicationController
     render json: [], status: :ok and return if @season.nil?
 
     absences = user
-                 .student_attendances
-                 .joins(:activity_instance)
-                 .joins("INNER JOIN time_intervals ON activity_instances.time_interval_id = time_intervals.id")
-                 .joins("INNER JOIN activities ON activity_instances.activity_id = activities.id")
-                 .joins("INNER JOIN activity_refs ON activities.activity_ref_id = activity_refs.id")
-                 .joins("INNER JOIN teachers_activities ON activities.id = teachers_activities.activity_id")
-                 .joins("INNER JOIN users teachers ON teachers_activities.user_id = teachers.id")
-                 .where("attended != 1")
-                 .where("time_intervals.start >= :start", start: @season.start)
-                 .where("time_intervals.start <= :end", end: @season.end)
-                 .order("time_intervals.start DESC")
-                 .includes({
-                             activity_instance: {
-                               activity: {
-                                 activity_ref: {},
-                                 teachers_activities: :teacher
-                               },
-                               time_interval: {}
-                             }
-                           })
+               .student_attendances
+               .joins(:activity_instance)
+               .joins("INNER JOIN time_intervals ON activity_instances.time_interval_id = time_intervals.id")
+               .joins("INNER JOIN activities ON activity_instances.activity_id = activities.id")
+               .joins("INNER JOIN activity_refs ON activities.activity_ref_id = activity_refs.id")
+               .joins("INNER JOIN teachers_activities ON activities.id = teachers_activities.activity_id")
+               .joins("INNER JOIN users teachers ON teachers_activities.user_id = teachers.id")
+               .where("attended != 1")
+               .where("time_intervals.start >= :start", start: @season.start)
+               .where("time_intervals.start <= :end", end: @season.end)
+               .order("time_intervals.start DESC")
+               .includes({
+                           activity_instance: {
+                             activity: {
+                               activity_ref: {},
+                               teachers_activities: :teacher
+                             },
+                             time_interval: {}
+                           }
+                         })
 
     params[:filtered].each do |filter|
       next if filter[:value].nil?
@@ -475,21 +482,21 @@ class UsersController < ApplicationController
     render json: { absences: [], courses: [] } and return if season.nil?
 
     absences = user
-                 .student_attendances
-                 .joins(:activity_instance)
-                 .joins("INNER JOIN time_intervals ON activity_instances.time_interval_id = time_intervals.id")
-                 .joins("INNER JOIN activities ON activity_instances.activity_id = activities.id")
-                 .joins("INNER JOIN activity_refs ON activities.activity_ref_id = activity_refs.id")
-                 .where("attended != 1")
-                 .where("time_intervals.start >= :start", start: season.start)
-                 .where("time_intervals.start <= :end", end: season.end)
-                 .order("time_intervals.start DESC")
-                 .includes(
-                   activity_instance: {
-                     activity: { activity_ref: {}, teachers_activities: :teacher },
-                     time_interval: {},
-                   }
-                 )
+               .student_attendances
+               .joins(:activity_instance)
+               .joins("INNER JOIN time_intervals ON activity_instances.time_interval_id = time_intervals.id")
+               .joins("INNER JOIN activities ON activity_instances.activity_id = activities.id")
+               .joins("INNER JOIN activity_refs ON activities.activity_ref_id = activity_refs.id")
+               .where("attended != 1")
+               .where("time_intervals.start >= :start", start: season.start)
+               .where("time_intervals.start <= :end", end: season.end)
+               .order("time_intervals.start DESC")
+               .includes(
+                 activity_instance: {
+                   activity: { activity_ref: {}, teachers_activities: :teacher },
+                   time_interval: {}
+                 }
+               )
 
     serialized = absences.map do |abs|
       instance = abs.activity_instance
@@ -505,15 +512,15 @@ class UsersController < ApplicationController
         teacher: instance.activity.teacher&.full_name,
         type: abs.attended,
         justified: abs.attended == 3,
-        remarks: abs.remarks,
+        remarks: abs.remarks
       }
     end
 
     courses = serialized
-                .reject { |a| a[:activity_ref_id].nil? }
-                .map { |a| { id: a[:activity_ref_id], label: a[:activity] } }
-                .uniq { |c| c[:id] }
-                .sort_by { |c| c[:label].to_s }
+              .reject { |a| a[:activity_ref_id].nil? }
+              .map { |a| { id: a[:activity_ref_id], label: a[:activity] } }
+              .uniq { |c| c[:id] }
+              .sort_by { |c| c[:label].to_s }
 
     render json: { absences: serialized, courses: courses }
   end
@@ -521,10 +528,10 @@ class UsersController < ApplicationController
   def family
     @current_user = current_user
     user = if params[:user_id]
-              User.find(params[:user_id])
-            else
-              @current_user
-            end
+             User.find(params[:user_id])
+           else
+             @current_user
+           end
     authorize! :read, user
 
     season = Season.find_by(id: params[:season]) || Season.current_apps_season || Season.current
@@ -536,7 +543,7 @@ class UsersController < ApplicationController
     members = (whole_family + attached_accounts).uniq(&:id)
 
     respond_to do |format|
-      format.json {
+      format.json do
         render json: (members.map do |u|
           user_json = u.as_json(
             include: {
@@ -560,7 +567,7 @@ class UsersController < ApplicationController
 
           user_json
         end)
-      }
+      end
     end
   end
 
@@ -608,15 +615,15 @@ class UsersController < ApplicationController
       # get time_intervals of a month in a year
       # and groups them by day
       grouped_intervals = user
-                            .planning
-                            .time_intervals
-                            .includes({
-                                        activity_instance: {
-                                          activity: :activity_ref
-                                        }
-                                      })
-                            .where("date_trunc('month', time_intervals.start) = '#{year}-#{month}-01'::date AND time_intervals.kind IN ('c', 'p', 'o') AND time_intervals.is_validated")
-                            .group_by { |ti| ti.start.to_date.to_s }
+                          .planning
+                          .time_intervals
+                          .includes({
+                                      activity_instance: {
+                                        activity: :activity_ref
+                                      }
+                                    })
+                          .where("date_trunc('month', time_intervals.start) = '#{year}-#{month}-01'::date AND time_intervals.kind IN ('c', 'p', 'o') AND time_intervals.is_validated")
+                          .group_by { |ti| ti.start.to_date.to_s }
 
       # separates hours worked in the morning and the ones worked in the afternoon
       # result format :
@@ -632,7 +639,7 @@ class UsersController < ApplicationController
         # ]
         # and then we reduce all of the time intervals' durations into an aggregated one
         transformed = arr
-                        .each_with_object({}) do |i, acc|
+                      .each_with_object({}) do |i, acc|
           key = i.activity_instance.activity.activity_ref.label
           duration = (i.end - i.start).to_f / 3600
 
@@ -707,7 +714,7 @@ class UsersController < ApplicationController
     # user.skip_confirmation_notification!
     begin
       user.save!
-    rescue StandardError => e
+    rescue StandardError
       return redirect_to(new_user_path(errors: user.errors.full_messages))
     end
 
@@ -853,14 +860,15 @@ class UsersController < ApplicationController
         params.dig(:user, :consent_docs)&.each do |doc|
           next if doc.nil? || (doc.class == Array && doc.length < 2)
 
-          consentement = @user.consent_document_users.find_or_create_by(consent_document_id: "#{doc[0]}".gsub("id_", ""))
+          consentement = @user.consent_document_users.find_or_create_by(consent_document_id: "#{doc[0]}".gsub("id_",
+                                                                                                              ""))
 
           consentement.has_consented = doc[1][:agreement]
           consentement.save!
         end
       end
-    rescue ActiveRecord::RecordInvalid => invalid
-      render json: invalid.to_json, status: 500
+    rescue ActiveRecord::RecordInvalid => e
+      render json: e.to_json, status: 500
     else
       render json: @user, status: 200
     end
@@ -923,40 +931,40 @@ class UsersController < ApplicationController
     @teachers = User.teachers.all
     @payment_methods = PaymentMethod.all
     temp_act = @user
-                 .season_teacher_activities(Season.current)
-                 .includes({
-                             time_interval: {},
-                             activity_ref: { activity_ref_kind: {} },
-                             student_evaluations: %i[answers student],
-                             users: {
-                               levels: {
-                                 evaluation_level_ref: {},
-                                 activity_ref: { activity_ref_kind: {} }
-                               }
+               .season_teacher_activities(Season.current)
+               .includes({
+                           time_interval: {},
+                           activity_ref: { activity_ref_kind: {} },
+                           student_evaluations: %i[answers student],
+                           users: {
+                             levels: {
+                               evaluation_level_ref: {},
+                               activity_ref: { activity_ref_kind: {} }
                              }
-                           })
+                           }
+                         })
     @activities = temp_act.where({ activity_ref: { activity_type: nil } })
                           .or(temp_act.where.not({ activity_ref: { activity_type: %w[child cham] } }))
                           .order(Arel.sql("extract(isodow from time_intervals.start)::text || time_intervals.start::time::text asc"))
     # order regardless of date in year, just day of week and time
 
     @activities_json = @activities.as_json(include: {
-      time_interval: {},
-      activity_ref: { include: :activity_ref_kind },
-      student_evaluations: {
-        include: %i[answers student]
-      },
-      users: {
-        include: {
-          levels: {
-            include: {
-              evaluation_level_ref: {},
-              activity_ref: { include: :activity_ref_kind }
-            }
-          }
-        }
-      }
-    })
+                                             time_interval: {},
+                                             activity_ref: { include: :activity_ref_kind },
+                                             student_evaluations: {
+                                               include: %i[answers student]
+                                             },
+                                             users: {
+                                               include: {
+                                                 levels: {
+                                                   include: {
+                                                     evaluation_level_ref: {},
+                                                     activity_ref: { include: :activity_ref_kind }
+                                                   }
+                                                 }
+                                               }
+                                             }
+                                           })
 
     @activities = @activities.as_json(include: :users)
   end
@@ -976,7 +984,7 @@ class UsersController < ApplicationController
     @activity_refs = ActivityRef.includes(:activity_ref_kind).all
     @seasons = Season.all
     @rooms = Room.all,
-      @locations = Location.all
+             @locations = Location.all
     @teachers = User.teachers.all
     @payment_methods = PaymentMethod.all
 
@@ -1023,10 +1031,10 @@ class UsersController < ApplicationController
     @pursue_answers = evaluations.each_with_object({}) do |e, h|
       # I don't know
       pursue_answer = e
-                        .answers
-                        .where(question: pursue_question)
-                        .first
-                        .value
+                      .answers
+                      .where(question: pursue_question)
+                      .first
+                      .value
 
       h[e.activity_id] ||= { yes: [], no: [], maybe: [] }
       h[e.activity_id][:yes] << e.student.id if pursue_answer == "true"
@@ -1057,12 +1065,12 @@ class UsersController < ApplicationController
 
     activities_ids = evaluations.map do |e|
       ids = e
-              .answers
-              .where(question: groups_question)
-              .map { |a| a.value.split(",") }
-              .flatten
-              .select { |v| !v.start_with?("static_") }
-              .map(&:to_i)
+            .answers
+            .where(question: groups_question)
+            .map { |a| a.value.split(",") }
+            .flatten
+            .select { |v| !v.start_with?("static_") }
+            .map(&:to_i)
 
       ids = [e.activity_id] if ids.none?
 
@@ -1083,73 +1091,73 @@ class UsersController < ApplicationController
     @evaluation_level_refs = EvaluationLevelRef.all
 
     @activities = Activity
-                    .includes({
-                                time_interval: {},
-                                activity_ref: {}
-                              })
-                    .where(id: activities_ids)
-                    .as_json({
-                               include: {
-                                 activity_ref: {},
-                                 time_interval: {}
-                               }
-                             })
+                  .includes({
+                              time_interval: {},
+                              activity_ref: {}
+                            })
+                  .where(id: activities_ids)
+                  .as_json({
+                             include: {
+                               activity_ref: {},
+                               time_interval: {}
+                             }
+                           })
 
     authorize! :manage, @activities unless @current_user.is_teacher
   end
 
-def search_for_user
-  includes = {
-    include: {
-      telephones: {},
-      addresses: { only: %i[id street_address country department postcode city] },
-      planning: { include: [:time_intervals] },
-      levels: { include: %i[evaluation_level_ref activity_ref] },
-      consent_document_users: {},
-    },
-    methods: [:family_links_with_user, :avatar_url]
-  }
+  def search_for_user
+    includes = {
+      include: {
+        telephones: {},
+        addresses: { only: %i[id street_address country department postcode city] },
+        planning: { include: [:time_intervals] },
+        levels: { include: %i[evaluation_level_ref activity_ref] },
+        consent_document_users: {}
+      },
+      methods: %i[family_links_with_user avatar_url]
+    }
 
-  season = params[:season_id].present? ? Season.find(params[:season_id]) : Season.current_apps_season
+    season = params[:season_id].present? ? Season.find(params[:season_id]) : Season.current_apps_season
 
-  birthday = params[:birthday]
+    birthday = params[:birthday]
 
-  result = Users::SearchUser.new(params[:last_name] || "", params[:first_name] || "", birthday, nil, nil, includes,
-                                 !current_user.is_admin).execute
+    result = Users::SearchUser.new(params[:last_name] || "", params[:first_name] || "", birthday, nil, nil, includes,
+                                   !current_user.is_admin).execute
 
-  result.each do |u|
-    if can? :read, u
-      u["family_member_users"] = u["family_links_with_user"].select { |fmu| fmu["season_id"] == season.id }
+    result.each do |u|
+      if can? :read, u
+        u["family_member_users"] = u["family_links_with_user"].select { |fmu| fmu["season_id"] == season.id }
+      end
     end
+
+    render json: result
   end
 
-  render json: result
-end
-
   def search_for_admin
-  return render json: {}, status: 403 if current_user.simple?
+    return render json: {}, status: 403 if current_user.simple?
 
-  includes = {
-    include: {
-      planning: { include: [:time_intervals] },
-      telephones: {},
-      adhesions: {},
-      activity_applications: {
-        include: :desired_activities
+    includes = {
+      include: {
+        planning: { include: [:time_intervals] },
+        telephones: {},
+        adhesions: {},
+        activity_applications: {
+          include: :desired_activities
+        },
+        addresses: {},
+        instruments: {},
+        consent_document_users: {},
+        payer_payment_terms: {}
       },
-      addresses: {},
-      instruments: {},
-      consent_document_users: {},
-      payer_payment_terms: {}
-    },
-    methods: [:family_links_with_user, :avatar_url]
-  }
+      methods: %i[family_links_with_user avatar_url]
+    }
 
-  result = Users::SearchUser.new(params[:last_name], params[:first_name], nil, params[:season_id], nil, includes,
-                                 false, params[:hideAttachedAccounts]).execute
+    result = Users::SearchUser.new(params[:last_name], params[:first_name], nil, params[:season_id], nil, includes,
+                                   false, params[:hideAttachedAccounts]).execute
 
-  render json: result
-end
+    render json: result
+  end
 
   def set_level
     user = User.find(params[:id])
@@ -1219,30 +1227,30 @@ end
     @prev_week = date - 1.week
 
     @instances = @user
-                   .planning
-                   .time_intervals
-                   .includes(:activity_instance)
-                   .where("start::date = ?", @date)
-                   .collect(&:activity_instance)
-                   .compact
-                   .as_json(include: {
-                     activity: {
-                       include: {
-                         activity_ref: {},
-                         users: {},
-                         options: {
-                           include: :user
-                         }
-                       }
-                     },
-                     student_attendances: {
-                       include: :user
-                     },
-                     time_interval: {},
-                     room: {
-                       only: :label
-                     }
-                   })
+                 .planning
+                 .time_intervals
+                 .includes(:activity_instance)
+                 .where("start::date = ?", @date)
+                 .collect(&:activity_instance)
+                 .compact
+                 .as_json(include: {
+                            activity: {
+                              include: {
+                                activity_ref: {},
+                                users: {},
+                                options: {
+                                  include: :user
+                                }
+                              }
+                            },
+                            student_attendances: {
+                              include: :user
+                            },
+                            time_interval: {},
+                            room: {
+                              only: :label
+                            }
+                          })
   end
 
   # (pour élèves/admin) page de gestion des inscriptions, affiche les inscriptions actuelles, les réinscription et les demandes d'inscription
@@ -1264,30 +1272,30 @@ end
 
       statuses = ActivityApplicationStatus.where(is_stopping: false).pluck(:id)
       activity_ids = Activity
-                       .joins([
-                                :activity_ref,
-                                { desired_activities: :activity_application }
-                              ])
-                       .includes([
-                                   :activity_ref,
-                                   { desired_activities: :activity_application }
-                                 ])
-                       .where({
-                                activity_application: {
-                                  activity_application_status_id: statuses,
-                                  season_id: @season.previous.id,
-                                  user_id: user.id
-                                }
-                              })
-                       .where({
-                                activity_ref: {
-                                  activity_type: ActivityRef.activity_types
-                                                            .except(:cham)
-                                                            .keys
-                                                            .append(nil)
-                                }
-                              })
-                       .pluck(:id)
+                     .joins([
+                              :activity_ref,
+                              { desired_activities: :activity_application }
+                            ])
+                     .includes([
+                                 :activity_ref,
+                                 { desired_activities: :activity_application }
+                               ])
+                     .where({
+                              activity_application: {
+                                activity_application_status_id: statuses,
+                                season_id: @season.previous.id,
+                                user_id: user.id
+                              }
+                            })
+                     .where({
+                              activity_ref: {
+                                activity_type: ActivityRef.activity_types
+                                                          .except(:cham)
+                                                          .keys
+                                                          .append(nil)
+                              }
+                            })
+                     .pluck(:id)
 
       activity_ids.each do |activity_id|
         PreApplicationActivity.create!(
@@ -1318,66 +1326,66 @@ end
 
     jsonize_pre_application = lambda { |pre_app_id|
       PreApplication.find(pre_app_id).as_json(include: {
-        pre_application_desired_activities: {
-          include: {
-            activity_application: {
-              include: [:activity_application_status]
-            },
-            desired_activity: {
-              include: {
-                activity_ref: {
-                  methods: %i[is_default_in_kind?]
-                }
-              }
-            }
-          }
-        },
-        pre_application_activities: {
-          include: {
-            activity_application: {
-              include: {
-                activity_application_status: {},
-                desired_activities: {
-                  include: {
-                    activity_ref: {
-                      include: {
-                        next_cycles: {
-                          include: {
-                            to: {
-                              methods: %i[is_default_in_kind?]
-                            }
-                          }
-                        }
-                      },
-                      methods: %i[is_default_in_kind?]
-                    }
-                  }
-                }
-              }
-            },
-            activity: {
-              include: {
-                activity_ref: {
-                  include: {
-                    next_cycles: {
-                      include: {
-                        to: {
-                          methods: %i[is_default_in_kind?]
-                        }
-                      }
-                    }
-                  },
-                  methods: %i[is_default_in_kind?]
-                },
-                teacher: {},
-                room: {},
-                time_interval: {}
-              }
-            }
-          }
-        },
-        user: { methods: %i[full_name] }
-      })
+                                                pre_application_desired_activities: {
+                                                  include: {
+                                                    activity_application: {
+                                                      include: [:activity_application_status]
+                                                    },
+                                                    desired_activity: {
+                                                      include: {
+                                                        activity_ref: {
+                                                          methods: %i[is_default_in_kind?]
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                },
+                                                pre_application_activities: {
+                                                  include: {
+                                                    activity_application: {
+                                                      include: {
+                                                        activity_application_status: {},
+                                                        desired_activities: {
+                                                          include: {
+                                                            activity_ref: {
+                                                              include: {
+                                                                next_cycles: {
+                                                                  include: {
+                                                                    to: {
+                                                                      methods: %i[is_default_in_kind?]
+                                                                    }
+                                                                  }
+                                                                }
+                                                              },
+                                                              methods: %i[is_default_in_kind?]
+                                                            }
+                                                          }
+                                                        }
+                                                      }
+                                                    },
+                                                    activity: {
+                                                      include: {
+                                                        activity_ref: {
+                                                          include: {
+                                                            next_cycles: {
+                                                              include: {
+                                                                to: {
+                                                                  methods: %i[is_default_in_kind?]
+                                                                }
+                                                              }
+                                                            }
+                                                          },
+                                                          methods: %i[is_default_in_kind?]
+                                                        },
+                                                        teacher: {},
+                                                        room: {},
+                                                        time_interval: {}
+                                                      }
+                                                    }
+                                                  }
+                                                },
+                                                user: { methods: %i[full_name] }
+                                              })
     }
 
     # pour un admin connecté, l'utilisateur de référence (point d'entrée) est le user qui est passé en paramètre
@@ -1429,9 +1437,7 @@ end
         member_data = prepare_member_data(member, jsonize_pre_application)
 
         # Ne conserver que les membres qui ont des demandes (renewals ou nouvelles)
-        if member_data[:renew_activities].any? || member_data[:new_activities].any?
-          @family_members_data << member_data
-        end
+        @family_members_data << member_data if member_data[:renew_activities].any? || member_data[:new_activities].any?
       end
 
       @family_members_data.sort_by! do |member_data|
@@ -1446,34 +1452,34 @@ end
       @pre_application = jsonize_pre_application.call(pre_application_id)
 
       @current_activity_applications = user.activity_applications.where(season_id: @season.previous).as_json(include: {
-        activity_application_status: {},
-        desired_activities: {
-          include: {
-            activity_ref: {
-              include: {
-                next_cycles: {
-                  include: {
-                    to: {
-                      methods: %i[is_default_in_kind?]
-                    }
-                  }
-                }
-              },
-              methods: %i[is_default_in_kind?]
-            },
-            activity: {
-              include: {
-                activity_ref: {
-                  methods: %i[is_default_in_kind?]
-                },
-                teacher: {},
-                room: {},
-                time_interval: {}
-              }
-            }
-          }
-        }
-      })
+                                                                                                               activity_application_status: {},
+                                                                                                               desired_activities: {
+                                                                                                                 include: {
+                                                                                                                   activity_ref: {
+                                                                                                                     include: {
+                                                                                                                       next_cycles: {
+                                                                                                                         include: {
+                                                                                                                           to: {
+                                                                                                                             methods: %i[is_default_in_kind?]
+                                                                                                                           }
+                                                                                                                         }
+                                                                                                                       }
+                                                                                                                     },
+                                                                                                                     methods: %i[is_default_in_kind?]
+                                                                                                                   },
+                                                                                                                   activity: {
+                                                                                                                     include: {
+                                                                                                                       activity_ref: {
+                                                                                                                         methods: %i[is_default_in_kind?]
+                                                                                                                       },
+                                                                                                                       teacher: {},
+                                                                                                                       room: {},
+                                                                                                                       time_interval: {}
+                                                                                                                     }
+                                                                                                                   }
+                                                                                                                 }
+                                                                                                               }
+                                                                                                             })
 
       pre_application_activities = user.pre_applications.find_by(season_id: @season)&.pre_application_activities || []
 
@@ -1486,25 +1492,25 @@ end
       end
 
       user_activities_applications = user.activity_applications.where(season_id: @season).as_json(include: {
-        activity_application_status: {},
-        desired_activities: {
-          include: {
-            activity_ref: {
-              methods: %i[is_default_in_kind?]
-            },
-            activity: {
-              include: {
-                activity_ref: {
-                  methods: %i[is_default_in_kind?]
-                },
-                teacher: {},
-                room: {},
-                time_interval: {}
-              }
-            }
-          }
-        }
-      })
+                                                                                                    activity_application_status: {},
+                                                                                                    desired_activities: {
+                                                                                                      include: {
+                                                                                                        activity_ref: {
+                                                                                                          methods: %i[is_default_in_kind?]
+                                                                                                        },
+                                                                                                        activity: {
+                                                                                                          include: {
+                                                                                                            activity_ref: {
+                                                                                                              methods: %i[is_default_in_kind?]
+                                                                                                            },
+                                                                                                            teacher: {},
+                                                                                                            room: {},
+                                                                                                            time_interval: {}
+                                                                                                          }
+                                                                                                        }
+                                                                                                      }
+                                                                                                    }
+                                                                                                  })
 
       pre_applications_renew_ids = user.pre_applications.where(season_id: @season)
                                        .map { |pa| pa.pre_application_activities }
@@ -1512,12 +1518,14 @@ end
                                        .map { |paa| paa.activity_application_id }
                                        .compact
 
-      @new_activities_applications = user_activities_applications.reject { |activity| pre_applications_renew_ids.include?(activity["id"]) }
+      @new_activities_applications = user_activities_applications.reject do |activity|
+        pre_applications_renew_ids.include?(activity["id"])
+      end
 
       family_users =
         reference_user
-          .get_users_self_is_paying_for(@season)
-          .select do |u|
+        .get_users_self_is_paying_for(@season)
+        .select do |u|
           u.id != user.id
         end
 
@@ -1530,7 +1538,9 @@ end
       end
 
       family_users += user.attached_accounts
-      family_users += [user.attached_to] if user.attached_to&.id == @current_user.id || (user.attached_to && @current_user.is_admin)
+      if user.attached_to&.id == @current_user.id || (user.attached_to && @current_user.is_admin)
+        family_users += [user.attached_to]
+      end
 
       @family_users = []
       family_users.uniq.each do |u|
@@ -1606,19 +1616,19 @@ end
     @non_stopping_statuses ||= ActivityApplicationStatus.where(is_stopping: false).pluck(:id)
 
     activities_by_user = Activity
-                           .joins([:activity_ref, { desired_activities: :activity_application }])
-                           .where(
-                             activity_application: {
-                               activity_application_status_id: @non_stopping_statuses,
-                               season_id: @season.previous.id,
-                               user_id: members.map(&:id)
-                             },
-                             activity_ref: {
-                               activity_type: ActivityRef.activity_types.except(:cham).keys.append(nil)
-                             }
-                           )
-                           .pluck('activity_application.user_id', 'activities.id') # activity_application au singulier car le where crée un alias avec le nom de la relation
-                           .group_by(&:first)
+                         .joins([:activity_ref, { desired_activities: :activity_application }])
+                         .where(
+                           activity_application: {
+                             activity_application_status_id: @non_stopping_statuses,
+                             season_id: @season.previous.id,
+                             user_id: members.map(&:id)
+                           },
+                           activity_ref: {
+                             activity_type: ActivityRef.activity_types.except(:cham).keys.append(nil)
+                           }
+                         )
+                         .pluck("activity_application.user_id", "activities.id") # activity_application au singulier car le where crée un alias avec le nom de la relation
+                         .group_by(&:first)
 
     all_pre_app_activities = []
 
@@ -1639,34 +1649,34 @@ end
 
   def get_current_activities_for_user(user)
     current_activities = user.activity_applications.where(season_id: @season.previous).as_json(include: {
-      activity_application_status: {},
-      desired_activities: {
-        include: {
-          activity_ref: {
-            include: {
-              next_cycles: {
-                include: {
-                  to: {
-                    methods: %i[is_default_in_kind?]
-                  }
-                }
-              }
-            },
-            methods: %i[is_default_in_kind?]
-          },
-          activity: {
-            include: {
-              activity_ref: {
-                methods: %i[is_default_in_kind?]
-              },
-              teacher: {},
-              room: {},
-              time_interval: {}
-            }
-          }
-        }
-      }
-    })
+                                                                                                 activity_application_status: {},
+                                                                                                 desired_activities: {
+                                                                                                   include: {
+                                                                                                     activity_ref: {
+                                                                                                       include: {
+                                                                                                         next_cycles: {
+                                                                                                           include: {
+                                                                                                             to: {
+                                                                                                               methods: %i[is_default_in_kind?]
+                                                                                                             }
+                                                                                                           }
+                                                                                                         }
+                                                                                                       },
+                                                                                                       methods: %i[is_default_in_kind?]
+                                                                                                     },
+                                                                                                     activity: {
+                                                                                                       include: {
+                                                                                                         activity_ref: {
+                                                                                                           methods: %i[is_default_in_kind?]
+                                                                                                         },
+                                                                                                         teacher: {},
+                                                                                                         room: {},
+                                                                                                         time_interval: {}
+                                                                                                       }
+                                                                                                     }
+                                                                                                   }
+                                                                                                 }
+                                                                                               })
 
     pre_application_activities = user.pre_applications.find_by(season_id: @season)&.pre_application_activities || []
 
@@ -1688,29 +1698,29 @@ end
     renew_activities = []
     if pre_application_data && pre_application_data["pre_application_activities"]
       renew_activities = pre_application_data["pre_application_activities"]
-                           .select { |paa| paa["action"] == "renew" || paa["action"] == "pursue_childhood" }
+                         .select { |paa| %w[renew pursue_childhood].include?(paa["action"]) }
     end
 
     user_activities_applications = user.activity_applications.where(season_id: @season).as_json(include: {
-      activity_application_status: {},
-      desired_activities: {
-        include: {
-          activity_ref: {
-            methods: %i[is_default_in_kind?]
-          },
-          activity: {
-            include: {
-              activity_ref: {
-                methods: %i[is_default_in_kind?]
-              },
-              teacher: {},
-              room: {},
-              time_interval: {}
-            }
-          }
-        }
-      }
-    })
+                                                                                                  activity_application_status: {},
+                                                                                                  desired_activities: {
+                                                                                                    include: {
+                                                                                                      activity_ref: {
+                                                                                                        methods: %i[is_default_in_kind?]
+                                                                                                      },
+                                                                                                      activity: {
+                                                                                                        include: {
+                                                                                                          activity_ref: {
+                                                                                                            methods: %i[is_default_in_kind?]
+                                                                                                          },
+                                                                                                          teacher: {},
+                                                                                                          room: {},
+                                                                                                          time_interval: {}
+                                                                                                        }
+                                                                                                      }
+                                                                                                    }
+                                                                                                  }
+                                                                                                })
 
     pre_applications_renew_ids = user.pre_applications.where(season_id: @season)
                                      .map { |pa| pa.pre_application_activities }
@@ -1718,7 +1728,9 @@ end
                                      .map { |paa| paa.activity_application_id }
                                      .compact
 
-    new_activities = user_activities_applications.reject { |activity| pre_applications_renew_ids.include?(activity["id"]) }
+    new_activities = user_activities_applications.reject do |activity|
+      pre_applications_renew_ids.include?(activity["id"])
+    end
 
     {
       user: {
@@ -1735,7 +1747,6 @@ end
   end
 
   def exist
-    exist = false
     bday = Date.strptime(params[:birthday], "%Y-%m-%d")
     email = User.where(
       birthday: bday
@@ -1786,7 +1797,6 @@ end
     end
   end
 
-
   def all_doc_consented
     # @type [User]
     @user = User.find(params[:id])
@@ -1805,7 +1815,7 @@ end
     ActiveRecord::Base.transaction do
       (params[:users] || []).each do |u|
         user_to_attach = User.find(u[:id])
-        #next if user_to_attach.nil? || user_to_attach.attached? || user_to_attach.id == user.id
+        # next if user_to_attach.nil? || user_to_attach.attached? || user_to_attach.id == user.id
         next if user_to_attach.nil? || user_to_attach.id == user.id
 
         user_to_attach.attached_to = user
@@ -1813,9 +1823,8 @@ end
         user_to_attach.save!
       end
     end
-
-  rescue ActiveRecord::RecordInvalid => invalid
-    render json: {message: invalid.message}, status: :unprocessable_entity
+  rescue ActiveRecord::RecordInvalid => e
+    render json: { message: e.message }, status: :unprocessable_entity
   end
 
   def detach_user
@@ -1828,7 +1837,7 @@ end
       return
     end
 
-    old_main_user = user_to_detach.attached_to
+    user_to_detach.attached_to
 
     user_to_detach.attached_to = nil
     user_to_detach.email = params[:email]
@@ -1839,9 +1848,9 @@ end
         DeviseMailer.confirmation_instructions(user_to_detach, user_to_detach.confirmation_token).deliver_later
       end
 
-      render json: {message: "success"}, status: :ok
+      render json: { message: "success" }, status: :ok
     else
-      render json: {message: user_to_detach.errors.full_messages}, status: :unprocessable_entity
+      render json: { message: user_to_detach.errors.full_messages }, status: :unprocessable_entity
     end
   end
 
@@ -1849,7 +1858,7 @@ end
     @current_user = current_user
     authorize! :manage, @current_user.is_admin
     @user = User.find(params[:id])
-    @referent_user = @user.attached_to #si compte rattaché, on trouve le compte principal
+    @referent_user = @user.attached_to # si compte rattaché, on trouve le compte principal
   end
 
   def get_attached_users
@@ -1858,7 +1867,7 @@ end
 
     attached_users = User.where(attached_to_id: user_id).select(:id, :first_name, :last_name, :email, :attached_to_id)
 
-    render json: {attached_users: attached_users}
+    render json: { attached_users: attached_users }
   end
 
   private
@@ -1942,7 +1951,7 @@ end
       :checked_image_right,
       :checked_newsletter,
       :organization_id,
-      :identification_number,
+      :identification_number
     )
   end
 

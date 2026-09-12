@@ -24,13 +24,12 @@ class PreApplicationActivity < ApplicationRecord
   end
 
   def self.class_name_gender
-    return :M
+    :M
   end
-
 
   def reset
     self.status = false
     self.action = ""
-    self.save!
+    save!
   end
 end

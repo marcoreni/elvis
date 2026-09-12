@@ -24,13 +24,13 @@ module StudentEvaluations
         # if any was advised (should be less or equal compared to the second indicator)
         @teachers.order(:last_name).map do |teacher|
           season_activities_query = teacher.season_teacher_activities(@season)
-                                     .includes(:students)
-                                     .includes(:activity_ref)
-                                     .includes(activity_ref: :activity_ref_kind)
+                                           .includes(:students)
+                                           .includes(:activity_ref)
+                                           .includes(activity_ref: :activity_ref_kind)
 
           season_activities = season_activities_query
-                                .where.not(activity_refs: { activity_type: %w[child cham]})
-                                .or(season_activities_query.where(activity_refs: { activity_type: nil})) # where.not with tab remove the null values by default, so we have to add them back
+                              .where.not(activity_refs: { activity_type: %w[child cham] })
+                              .or(season_activities_query.where(activity_refs: { activity_type: nil })) # where.not with tab remove the null values by default, so we have to add them back
 
           #  .season_teacher_activities(@season)
           #  .includes(:students)

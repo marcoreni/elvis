@@ -11,17 +11,16 @@
 #
 
 class ActivitiesInstrument < ApplicationRecord
-    belongs_to :activity
-    belongs_to :instrument, optional: true
-    
-    belongs_to :user, optional: true
+  belongs_to :activity
+  belongs_to :instrument, optional: true
 
-    def self.display_class_name(singular = true)
-        singular ? "association cours/instruments" : "associations cours/instruments"
-    end
+  belongs_to :user, optional: true
 
-    def self.class_name_gender
-        return :F
-    end
+  def self.display_class_name(singular = true)
+    singular ? "association cours/instruments" : "associations cours/instruments"
+  end
 
+  def self.class_name_gender
+    :F
+  end
 end

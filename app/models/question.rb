@@ -20,16 +20,15 @@
 #
 
 class Question < ApplicationRecord
-    scope :student_evaluation_questions, -> { where(question_type: "student_evaluations") }
-    scope :new_student_level_questionnaire, -> { where(question_type: "new_student_level_questionnaire") }
-    scope :application_change_questionnaire, -> { where(question_type: "application_change_questionnaire") }
+  scope :student_evaluation_questions, -> { where(question_type: "student_evaluations") }
+  scope :new_student_level_questionnaire, -> { where(question_type: "new_student_level_questionnaire") }
+  scope :application_change_questionnaire, -> { where(question_type: "application_change_questionnaire") }
 
-    def self.display_class_name(singular = true)
-        singular ? "question" : "questions"
-    end
+  def self.display_class_name(singular = true)
+    singular ? "question" : "questions"
+  end
 
-    def self.class_name_gender
-        return :F
-    end
-
+  def self.class_name_gender
+    :F
+  end
 end

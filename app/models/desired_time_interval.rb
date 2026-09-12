@@ -10,15 +10,14 @@
 #
 
 class DesiredTimeInterval < ApplicationRecord
-    belongs_to :activity_application
-    belongs_to :time_interval
+  belongs_to :activity_application
+  belongs_to :time_interval
 
-    def self.display_class_name(singular = true)
-        singular ? "créneau souhaité" : "créneaux souhaités"
-    end
+  def self.display_class_name(singular = true)
+    singular ? "créneau souhaité" : "créneaux souhaités"
+  end
 
-    def self.class_name_gender
-        return :M
-    end
-
+  def self.class_name_gender
+    :M
+  end
 end

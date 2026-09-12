@@ -192,7 +192,7 @@ class User < ApplicationRecord
   end
 
   def self.class_name_gender
-    return :M
+    :M
   end
 
   # Récupère les paramètres de suppression
@@ -201,26 +201,25 @@ class User < ApplicationRecord
     base_params = ApplicationRecord.destroy_params
 
     base_params.merge({
-                        auto_deletable_references: [FamilyMemberUser, UserAddress, Adhesion, Planning, Student, Level, NewStudentLevelQuestionnaire, PreApplication, ConsentDocumentUser, PayerPaymentTerms],
+                        auto_deletable_references: [FamilyMemberUser, UserAddress, Adhesion, Planning, Student, Level,
+                                                    NewStudentLevelQuestionnaire, PreApplication, ConsentDocumentUser, PayerPaymentTerms],
                         undeletable_message: I18n.t("models.user.destroy_params.undeletable_message"),
                         success_message: success_message
                       })
   end
 
   def pre_destroy
-    if self.attached_to_id.present? # not use attached? to not query database
-      self.attached_accounts.each do |attached_user|
-        user_have_personal_email = attached_user.email != self.email
+    return unless attached_to_id.present? # not use attached? to not query database
 
-        attached_user.attached_to = nil
+    attached_accounts.each do |attached_user|
+      user_have_personal_email = attached_user.email != email
 
-        if attached_user.save
-          if user_have_personal_email
-            DeviseMailer.confirmation_instructions(attached_user, attached_user.confirmation_token).deliver_later
-          end
-        else
-          raise I18n.t("models.user.pre_destroy.detach_error", name: attached_user.full_name)
-        end
+      attached_user.attached_to = nil
+
+      raise I18n.t("models.user.pre_destroy.detach_error", name: attached_user.full_name) unless attached_user.save
+
+      if user_have_personal_email
+        DeviseMailer.confirmation_instructions(attached_user, attached_user.confirmation_token).deliver_later
       end
     end
   end
@@ -235,13 +234,13 @@ class User < ApplicationRecord
 
     # pour le moment, seulement pour les new records => compatibilité avec instances existantes
     # todo: remove new_record? condition
-    errors.add(:base, :duplicate_email) if attached_to.nil? && new_record? && (User.where(email: email).any?)
+    errors.add(:base, :duplicate_email) if attached_to.nil? && new_record? && User.where(email: email).any?
   end
 
   def valid_birth_date
-    if birthday.present? && birthday > DateTime.now
-      errors.add(:Date_de_naissance, ': Votre date de naissance est forcément dans le passé')
-    end
+    return unless birthday.present? && birthday > DateTime.now
+
+    errors.add(:Date_de_naissance, ": Votre date de naissance est forcément dans le passé")
   end
 
   def address
@@ -289,8 +288,7 @@ class User < ApplicationRecord
   end
 
   def self.check_uniq_users
-    uniq = true
-    uniq = User.all.each do |u|
+    User.all.each do |u|
       break false unless User.where(
         first_name: u.first_name,
         last_name: u.last_name,
@@ -377,7 +375,7 @@ class User < ApplicationRecord
   def parents
     parents = []
     family_member_users.each do |fl|
-      parents << fl.member if fl.link == "père" or fl.link == "mère"
+      parents << fl.member if %w[père mère].include?(fl.link)
     end
     inverse_family_members.each do |fl|
       parents << fl.user if fl.link == "enfant"
@@ -492,7 +490,7 @@ class User < ApplicationRecord
   end
 
   # renvoie une liste de Students
-  # qui représente les participants aux cours (Activity)  
+  # qui représente les participants aux cours (Activity)
   def get_list_of_activities(s = Season.current)
     # on commence par lister les activité de la personne
     activities = []
@@ -501,9 +499,9 @@ class User < ApplicationRecord
     # et on liste ensuite les activités des membres de sa famille
     activities <<
       whole_family(s.id)
-        .map(&:students)
-        .flatten
-        .select { |student| student.activity&.time_interval&.start&.year == s.start.year }
+      .map(&:students)
+      .flatten
+      .select { |student| student.activity&.time_interval&.start&.year == s.start.year }
 
     activities.flatten.uniq
   end
@@ -511,7 +509,6 @@ class User < ApplicationRecord
   def update_is_paying_of_family_links(payer_ids, season = Season.current_apps_season, send_confirmation_mail = false)
     # use season.current because it's same as edit page
     family_links_with_user(season).each do |fmu|
-
       fmu[:is_paying_for] = payer_ids&.include?(fmu[:id]) || false
 
       FamilyMemberUsers.addFamilyMemberWithConfirmation(
@@ -582,12 +579,12 @@ class User < ApplicationRecord
     # ifms = inverse_family_members.select { |ifm| ifm.season_id == season.id }
 
     res = family_member_users
-            .for_season(season)
-            .where(is_paying_for: true)
-            .map { |fm| fm.member }
-            .compact
+          .for_season(season)
+          .where(is_paying_for: true)
+          .map { |fm| fm.member }
+          .compact
 
-    res << self if is_paying #|| (res.empty? && age >= 18)
+    res << self if is_paying # || (res.empty? && age >= 18)
 
     res.uniq(&:id)
   end
@@ -656,7 +653,7 @@ class User < ApplicationRecord
     d = Date.today
     a = d.year - bd.year
     a -= 1 if bd.month > d.month or
-      (bd.month >= d.month and bd.day > d.day)
+              (bd.month >= d.month and bd.day > d.day)
 
     a
   end
@@ -681,8 +678,8 @@ class User < ApplicationRecord
   # end
 
   def whole_family(season_id = Season.current_apps_season.id)
-    # Add condition to return self if more than 18yo
-    # If self is adult and has no payer link with someone else, self is payer
+    #  Add condition to return self if more than 18yo
+    #  If self is adult and has no payer link with someone else, self is payer
 
     @visited_users = []
     @family_users = [id]
@@ -692,11 +689,9 @@ class User < ApplicationRecord
 
     users = User.where(id: @family_users).all
 
-    if users.empty?
-      return [self]
-    else
-      return users.uniq
-    end
+    return [self] if users.empty?
+
+    users.uniq
   end
 
   def get_last_adhesion
@@ -717,7 +712,7 @@ class User < ApplicationRecord
 
     # et on liste ensuite les adhésions des membres de sa famille
     family_links.each do |fm|
-      user = fm.user == self && fm.member || fm.user
+      fm.user == self && fm.member || fm.user
       personal = fm.user.get_last_adhesion
       adhesions << personal.user.id if fm.is_paying_for && !personal.nil?
     end
@@ -826,7 +821,7 @@ class User < ApplicationRecord
     levels.each do |l|
       # Persist request
       if l[:isNew]
-        level = self.levels.create!(l.permit(:activity_ref_id, :evaluation_level_ref_id, :can_continue, :season_id))
+        self.levels.create!(l.permit(:activity_ref_id, :evaluation_level_ref_id, :can_continue, :season_id))
         # Update existing level
       elsif l[:isUpdated]
         Level.find(l[:id]).update!(l.permit(:activity_ref_id, :evaluation_level_ref_id, :can_continue, :season_id))
@@ -931,15 +926,17 @@ class User < ApplicationRecord
 
   def teacher_activity_instances(from_date = Time.now.in_time_zone, to_date = nil)
     qry = ActivityInstance
-            .joins(activity: :teachers_activities, time_interval: {})
-            .includes(activity: :teachers_activities, time_interval: {})
-            .where(
-              activity: {
-                teachers_activities: {
-                  user_id: id,
-                  is_main: true
-                } })
-            .where("start > ?", from_date)
+          .joins(activity: :teachers_activities, time_interval: {})
+          .includes(activity: :teachers_activities, time_interval: {})
+          .where(
+            activity: {
+              teachers_activities: {
+                user_id: id,
+                is_main: true
+              }
+            }
+          )
+          .where("start > ?", from_date)
 
     qry = qry.where('"end" < ? ', to_date) if to_date
 
@@ -949,11 +946,11 @@ class User < ApplicationRecord
   def has_prolonged_absence(threshold = 3, before = DateTime.now)
     n_last_attendances =
       student_attendances
-        .joins(:activity_instance)
-        .joins("INNER JOIN time_intervals ON time_intervals.id = activity_instances.time_interval_id")
-        .where("time_intervals.start < ?", before)
-        .order("time_intervals.start DESC")
-        .limit(threshold)
+      .joins(:activity_instance)
+      .joins("INNER JOIN time_intervals ON time_intervals.id = activity_instances.time_interval_id")
+      .where("time_intervals.start < ?", before)
+      .order("time_intervals.start DESC")
+      .limit(threshold)
 
     n_last_attendances
       .select { |a| a.attended.nil? ? 0 : a.attended }
@@ -1015,11 +1012,11 @@ class User < ApplicationRecord
   private
 
   def ensure_attached_account_has_no_password
-    if attached_to.present?
-      self.encrypted_password = ""
-      self.password = nil
-      self.password_confirmation = nil
-    end
+    return unless attached_to.present?
+
+    self.encrypted_password = ""
+    self.password = nil
+    self.password_confirmation = nil
   end
 
   def clear_dupl_email_if_attached
@@ -1047,8 +1044,6 @@ class User < ApplicationRecord
 
   MAX_DEPTH = 4
 
-  private
-
   def visit_user_links(current_user_id, visit_ascendants, season_id, depth = 0)
     return if depth > 1
 
@@ -1064,12 +1059,11 @@ class User < ApplicationRecord
       .and!(FamilyMemberUser.where(user_id: current_user_id))
       .pluck(:id, :member_id, :link, :is_paying_for)
       .each do |link_id, member_id, link, is_paying_for|
-
       next if @seen_links.include?(link_id) || @visited_users.include?(member_id)
 
       @seen_links << link_id
 
-      is_ascending_link = (link == "mère" || link == "père" || is_paying_for == true)
+      %w[mère père].include?(link) || is_paying_for == true
       is_ascending_link = (is_paying_for == true)
       next if is_ascending_link && !visit_ascendants
 
@@ -1083,8 +1077,7 @@ class User < ApplicationRecord
       .for_season_id(season_id)
       .and!(FamilyMemberUser.where(member_id: current_user_id))
       .pluck(:id, :user_id, :link, :is_paying_for)
-      .each do |link_id, user_id, link, is_paying_for|
-
+      .each do |link_id, user_id, link, _is_paying_for|
       next if @seen_links.include?(link_id) || @visited_users.include?(user_id)
 
       @seen_links << link_id
@@ -1110,7 +1103,6 @@ class User < ApplicationRecord
       .or(FamilyMemberUser.where(member_id: current_user_id))
       .pluck(:user_id, :member_id)
       .each do |user_id, member_id|
-
       students = Student.where(user_id: user_id).or(Student.where(user_id: member_id)).pluck(:user_id).uniq
 
       [user_id, member_id].each do |id|

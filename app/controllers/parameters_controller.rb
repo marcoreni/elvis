@@ -1,5 +1,6 @@
 # frozen_string_literal: true
-require 'mimemagic'
+
+require "mimemagic"
 
 class ParametersController < ApplicationController
   before_action :set_base_parameters, only: %i[index]
@@ -64,15 +65,13 @@ class ParametersController < ApplicationController
       zone = "" if zone == value
     end
 
-    if zone.empty? || academy.empty?
-      if school_params["street"] != "" && school_params["postalCode"] != "" && school_params["city"] != ""
-        address = "#{school_params["street"]} #{school_params["postalCode"]} #{school_params["city"]}"
-        location = Holidays::SchoolHolidays.fetch_location_for_address(address)
+    if (zone.empty? || academy.empty?) && school_params["street"] != "" && school_params["postalCode"] != "" && school_params["city"] != ""
+      address = "#{school_params['street']} #{school_params['postalCode']} #{school_params['city']}"
+      location = Holidays::SchoolHolidays.fetch_location_for_address(address)
 
-        unless location.nil?
-          academy = "#{Holidays::SchoolHolidays.fetch_academie_from_location(location)}"
-          zone = Holidays::SchoolHolidays.new(Season.current.start.year, academy).fetch_school_zone if academy
-        end
+      unless location.nil?
+        academy = "#{Holidays::SchoolHolidays.fetch_academie_from_location(location)}"
+        zone = Holidays::SchoolHolidays.new(Season.current.start.year, academy).fetch_school_zone if academy
       end
     end
 
@@ -81,7 +80,7 @@ class ParametersController < ApplicationController
 
     if school.nil?
       new_address = Address.new({ city: school_params["city"], street_address: school_params["street"],
-                                  postcode: school_params["postalCode"], country: school_params['countryCode'] })
+                                  postcode: school_params["postalCode"], country: school_params["countryCode"] })
       new_school = School.new name: school_params["schoolName"], phone_number: school_params["contactPhone"],
                               email: school_params["email"], address: new_address
 
@@ -102,7 +101,7 @@ class ParametersController < ApplicationController
       school.address.city = school_params["city"]
       school.address.street_address = school_params["street"]
       school.address.postcode = school_params["postalCode"]
-      school.address.country = school_params['countryCode']
+      school.address.country = school_params["countryCode"]
 
       school.siret_rna = school_params["siret_rna"]
       school.rcs = school_params["rcs"]
@@ -138,12 +137,11 @@ class ParametersController < ApplicationController
       password: Parameter.get_value("app.email.password").nil? ? "" : "*",
       port: (Parameter.get_value("app.email.port") || ENV["SMTP_PORT"] || "587").to_i,
       redirect: Parameter.get_value("app.email.redirect") || [],
-      user_name: Parameter.get_value("app.email.username") || ENV["SMTP_ACCESS_KEY"] || "",
+      user_name: Parameter.get_value("app.email.username") || ENV["SMTP_ACCESS_KEY"] || ""
     }
 
     ssl_tls = Parameter.get_value("app.email.ssl_tls")
-    @mail_settings['sslTls'] = true if ssl_tls == "true"
-
+    @mail_settings["sslTls"] = true if ssl_tls == "true"
   end
 
   def mails_parameters_update
@@ -189,10 +187,10 @@ class ParametersController < ApplicationController
     @method_selected = Parameter.get_value("school.rules_of_procedure.method")
 
     blob = ActiveStorage::Blob.find_by(id: Parameter.get_value("school.rules_of_procedure.blob_id"))
-    unless blob.nil?
-      @pdf_file = blob.filename
-      @document_url = rails_blob_url(blob, only_path: false)
-    end
+    return if blob.nil?
+
+    @pdf_file = blob.filename
+    @document_url = rails_blob_url(blob, only_path: false)
   end
 
   def rules_parameters_update
@@ -220,9 +218,7 @@ class ParametersController < ApplicationController
         rules_PDF.save!
       end
 
-      if !params[:document_cleared] && !params[:pdf_file]
-        @errors = "ne peut pas être vide"
-      end
+      @errors = "ne peut pas être vide" if !params[:document_cleared] && !params[:pdf_file]
 
       if params[:pdf_file]
         if params[:pdf_file] != "empty"
@@ -261,9 +257,8 @@ class ParametersController < ApplicationController
 
     @csv_settings = {
       col_sep: Parameter.get_value("app.csv_export.col_sep") || ";",
-      encoding: Parameter.get_value("app.csv_export.encoding") || "utf-8",
+      encoding: Parameter.get_value("app.csv_export.encoding") || "utf-8"
     }
-
   end
 
   def csv_parameters_update
@@ -297,31 +292,34 @@ class ParametersController < ApplicationController
     authorize! :manage, current_user.is_admin
 
     begin
-      authorize_teachers = Parameter.find_or_create_by label: "activity_applications.authorize_teachers", value_type: "boolean"
+      authorize_teachers = Parameter.find_or_create_by label: "activity_applications.authorize_teachers",
+                                                       value_type: "boolean"
       authorize_teachers.value = (params[:authorize_teachers]&.to_s == "true").to_s
       authorize_teachers.save!
 
-      teacher_can_edit_planning = Parameter.find_or_create_by label: "planning.teacher_can_edit_planning", value_type: "boolean"
+      teacher_can_edit_planning = Parameter.find_or_create_by label: "planning.teacher_can_edit_planning",
+                                                              value_type: "boolean"
       teacher_can_edit_planning.value = (params[:teacher_can_edit_planning]&.to_s == "true").to_s
       teacher_can_edit_planning.save!
 
-      show_teacher_contacts = Parameter.find_or_create_by(label: "teachers.show_teacher_contacts", value_type: "boolean")
+      show_teacher_contacts = Parameter.find_or_create_by(label: "teachers.show_teacher_contacts",
+                                                          value_type: "boolean")
       show_teacher_contacts.value = (params[:show_teacher_contacts]&.to_s == "true").to_s
       show_teacher_contacts.save!
 
-      teacher_can_manage_courses = Parameter.find_or_create_by(label: "teachers.teacher_can_manage_courses", value_type: "boolean")
+      teacher_can_manage_courses = Parameter.find_or_create_by(label: "teachers.teacher_can_manage_courses",
+                                                               value_type: "boolean")
       teacher_can_manage_courses.value = (params[:teacher_can_manage_courses]&.to_s == "true").to_s
       teacher_can_manage_courses.save!
 
-
       begin
         MenuGenerator.regenerate_menus
-      rescue => menu_error
-        Rails.logger.warn "Problème lors de la régénération des menus (ignoré): #{menu_error.message}"
+      rescue StandardError => e
+        Rails.logger.warn "Problème lors de la régénération des menus (ignoré): #{e.message}"
       end
 
       render json: { success: true }
-    rescue => e
+    rescue StandardError => e
       Rails.logger.error "Erreur lors de la sauvegarde des paramètres professeurs: #{e.message}"
       render json: { success: false }
     end
@@ -344,17 +342,16 @@ class ParametersController < ApplicationController
 
       begin
         MenuGenerator.regenerate_menus
-      rescue => menu_error
-        Rails.logger.warn "Problème lors de la régénération des menus (ignoré): #{menu_error.message}"
+      rescue StandardError => e
+        Rails.logger.warn "Problème lors de la régénération des menus (ignoré): #{e.message}"
       end
 
       render json: { success: true }
-    rescue => e
+    rescue StandardError => e
       Rails.logger.error "Erreur lors de la sauvegarde des paramètres formules: #{e.message}"
       render json: { success: false }
     end
   end
-
 
   def set_base_parameters
     @parameters ||= {}
@@ -389,9 +386,8 @@ class ParametersController < ApplicationController
     @parameters[:personnalisation] << {
       title: t("views.parameters.index.cards.notifications.title"),
       text: t("views.parameters.index.cards.notifications.text"),
-      link: url_for(controller: 'notification_templates', action: 'index', only_path: true)
+      link: url_for(controller: "notification_templates", action: "index", only_path: true)
     }
-
 
     @parameters[:personnalisation] << {
       title: t("views.parameters.index.cards.teachers.title"),
@@ -404,6 +400,5 @@ class ParametersController < ApplicationController
       text: t("views.parameters.index.cards.packages.text"),
       link: url_for(action: :formules_parameters_edit, only_path: true)
     }
-
   end
 end

@@ -1,1 +1,1 @@
-json.array! @materials, partial: 'materials/material', as: :material
+json.array! @materials, partial: "materials/material", as: :material

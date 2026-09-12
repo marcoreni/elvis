@@ -7,12 +7,12 @@ module Adhesions
     end
 
     def execute
-
       # on vérifie d'abord s'il n'existe pas une adhésion qui recouvre la période demandée
       if Adhesion.where("user_id = :user_id AND validity_start_date<=:new_adh_end AND validity_end_date>=:new_adh_start",
-        { user_id: @user.id, new_adh_start: @validity_start_date, new_adh_end: @validity_start_date.to_date + 1.year })
+                        { user_id: @user.id, new_adh_start: @validity_start_date,
+                          new_adh_end: @validity_start_date.to_date + 1.year })
                  .any?
-        raise ArgumentError, 'new adhesion would overlap existing adhesion'
+        raise ArgumentError, "new adhesion would overlap existing adhesion"
       end
 
       @adhesion = Adhesion.create!({ user_id: @user.id, is_active: true })

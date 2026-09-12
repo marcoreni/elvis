@@ -33,7 +33,9 @@ class Season < ApplicationRecord
   has_many :time_interval_preferences, dependent: :destroy
 
   scope :order_by_start, -> { order(start: :desc) }
-  scope :from_interval, ->(interval) { includes(:holidays).where("tstzrange(seasons.start, seasons.end, '[]') @> tstzrange(?, ?, '[]')", interval.start, interval.end) }
+  scope :from_interval, lambda { |interval|
+    includes(:holidays).where("tstzrange(seasons.start, seasons.end, '[]') @> tstzrange(?, ?, '[]')", interval.start, interval.end)
+  }
 
   validates :start, presence: true
   validates :end, presence: true
@@ -49,21 +51,18 @@ class Season < ApplicationRecord
   end
 
   def self.class_name_gender
-    return :F
+    :F
   end
 
   # renvoie la saison pour laquelle les inscriptions devraient être ouvertes
   # @return [Season] la saison en cours ou bien la saison suivante
   def self.current_apps_season
     Rails.cache.fetch("current_apps_season", expires_in: 12.hours) do
-
       return nil unless Season.any?
 
       s = Season.current
 
-      if DateTime.now > s&.closing_date_for_applications
-        s = Season.next
-      end
+      s = Season.next if DateTime.now > s&.closing_date_for_applications
 
       s
     end
@@ -107,8 +106,7 @@ class Season < ApplicationRecord
     start_date = Date.parse(start.to_s)
 
     # on récupère la date du lundi qui précède le début de la saison (ne change rien si c'est déjà un lundi)
-    monday = start - (start_date.cwday - 1).day
-    monday
+    start - (start_date.cwday - 1).day
   end
 
   def previous
@@ -139,9 +137,9 @@ class Season < ApplicationRecord
   end
 
   def check_start_end
-    if start.present? && self.end.present? && start > self.end
-      errors.add(:end, :after_start)
-    end
+    return unless start.present? && self.end.present? && start > self.end
+
+    errors.add(:end, :after_start)
   end
 
   def check_applications_dates
@@ -173,7 +171,7 @@ class Season < ApplicationRecord
   end
 
   def start_formatted
-    I18n.localize self.start, format: :date_month_concise
+    I18n.localize start, format: :date_month_concise
   end
 
   def end_formatted
@@ -189,7 +187,7 @@ class Season < ApplicationRecord
   end
 
   def self.destroy_params
-    params = ApplicationRecord::destroy_params
+    params = ApplicationRecord.destroy_params
 
     params.merge!({
                     auto_deletable_references: [Holiday, FamilyMemberUser, ActivityRefPricing],
@@ -200,16 +198,16 @@ class Season < ApplicationRecord
   def pre_destroy
     raise I18n.t("models.season.pre_destroy.current_season_error") if is_current
 
-    previous_season = self.previous
+    previous_season = previous
 
-    if previous_season
-      previous_season.next_season_id = nil
-      previous_season.save!
-    end
+    return unless previous_season
+
+    previous_season.next_season_id = nil
+    previous_season.save!
   end
 
   def starts_before(to_season)
-    self.start <= to_season.start
+    start <= to_season.start
   end
 
   private
@@ -217,12 +215,10 @@ class Season < ApplicationRecord
   def neighbour_season(dir)
     sorted_seasons = Season.all.order("start #{dir}")
 
-    self_index = sorted_seasons.find_index { |s| s.id == self.id }
+    self_index = sorted_seasons.find_index { |s| s.id == id }
 
-    if !self_index || self_index == 0
-      return nil
-    else
-      return sorted_seasons[self_index - 1]
-    end
+    return nil if !self_index || self_index == 0
+
+    sorted_seasons[self_index - 1]
   end
 end

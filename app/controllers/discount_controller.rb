@@ -19,20 +19,21 @@ class DiscountController < ApplicationController
   end
 
   def destroy
-    if(params[:id])
-      discount = Discount.find(params[:id])
-    else
-      discount = Discount.find_by(
-        discountable_type: discount_params[:discountable_type],
-        discountable_id: discount_params[:discountable_id]
-      )
-    end
+    discount = if params[:id]
+                 Discount.find(params[:id])
+               else
+                 Discount.find_by(
+                   discountable_type: discount_params[:discountable_type],
+                   discountable_id: discount_params[:discountable_id]
+                 )
+               end
 
     res = discount.destroy
 
     respond_to do |format|
       format.json do
-        render status: :ok, json:{} and return if res
+        render status: :ok, json: {} and return if res
+
         render status: :unprocessable_entity, json: { errors: discount.errors.full_messages }
       end
     end

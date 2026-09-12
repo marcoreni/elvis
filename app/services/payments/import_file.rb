@@ -77,7 +77,7 @@ module Payments
           next
         end
 
-        due_payment_candidates = nil
+        nil
 
         # Looks for due payments from two days around the date the bank gave
         # And groups them by date in a Hash

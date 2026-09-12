@@ -17,16 +17,16 @@ class MessageMailer < LayoutMailer
     @message.recipients << User.where(id: @to).compact.uniq
 
     # Send email
-    if @message.is_email
-      name = School.first&.name || Parameter.get_value("app.name")
+    return unless @message.is_email
 
-      if @from.nil? || @from.email.nil? || @to.nil? || @to.empty?
-        emails = Parameter.get_value("app.message_mailer.email_addresses")
-        mail(to: emails, subject: "#{name} - #{@message.title}")
-      else
-        emails = @message.recipients.map { |r| r.email }
-        mail(to: @from.email, bcc: emails, subject: "#{name} - #{@message.title}")
-      end
+    name = School.first&.name || Parameter.get_value("app.name")
+
+    if @from.nil? || @from.email.nil? || @to.nil? || @to.empty?
+      emails = Parameter.get_value("app.message_mailer.email_addresses")
+      mail(to: emails, subject: "#{name} - #{@message.title}")
+    else
+      emails = @message.recipients.map { |r| r.email }
+      mail(to: @from.email, bcc: emails, subject: "#{name} - #{@message.title}")
     end
   end
 

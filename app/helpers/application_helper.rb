@@ -13,7 +13,6 @@ module ApplicationHelper
   end
 
   def payment_methods_path(pm = {})
-
     return payment_method_index_path(pm) if pm[:id].nil?
 
     payment_method_path(pm)
@@ -24,7 +23,11 @@ module ApplicationHelper
   def self.generate_csv(query, columns = nil)
     return "" unless query.any?
 
-    columns = query.first.attributes.keys.map { |key| { col_key: key, display_name: key.humanize }.as_json } if columns.nil?
+    if columns.nil?
+      columns = query.first.attributes.keys.map do |key|
+        { col_key: key, display_name: key.humanize }.as_json
+      end
+    end
 
     CSV.generate nil, col_sep: ";" do |csv|
       csv << columns.map { |col_hash| col_hash["display_name"] }
@@ -37,8 +40,6 @@ module ApplicationHelper
                        "********"
                      elsif !col_hash["col_key"].include?("id") && ApplicationHelper.authorized_type?(row[col_hash["col_key"]])
                        row[col_hash["col_key"]]
-                     else
-                       nil
                      end
         end
 

@@ -22,74 +22,73 @@
 #  updated_at                 :datetime         not null
 #
 class PracticeRoomPlanning < ApplicationRecord
-    belongs_to :monday, class_name: 'TimeInterval', foreign_key: :monday_time_interval_id, optional: true
-    belongs_to :tuesday, class_name: 'TimeInterval', foreign_key: :tuesday_time_interval_id, optional: true
-    belongs_to :wednesday, class_name: 'TimeInterval', foreign_key: :wednesday_time_interval_id, optional: true
-    belongs_to :thursday, class_name: 'TimeInterval', foreign_key: :thursday_time_interval_id, optional: true
-    belongs_to :friday, class_name: 'TimeInterval', foreign_key: :friday_time_interval_id, optional: true
-    belongs_to :saturday, class_name: 'TimeInterval', foreign_key: :saturday_time_interval_id, optional: true
-    belongs_to :sunday, class_name: 'TimeInterval', foreign_key: :sunday_time_interval_id, optional: true
+  belongs_to :monday, class_name: "TimeInterval", foreign_key: :monday_time_interval_id, optional: true
+  belongs_to :tuesday, class_name: "TimeInterval", foreign_key: :tuesday_time_interval_id, optional: true
+  belongs_to :wednesday, class_name: "TimeInterval", foreign_key: :wednesday_time_interval_id, optional: true
+  belongs_to :thursday, class_name: "TimeInterval", foreign_key: :thursday_time_interval_id, optional: true
+  belongs_to :friday, class_name: "TimeInterval", foreign_key: :friday_time_interval_id, optional: true
+  belongs_to :saturday, class_name: "TimeInterval", foreign_key: :saturday_time_interval_id, optional: true
+  belongs_to :sunday, class_name: "TimeInterval", foreign_key: :sunday_time_interval_id, optional: true
 
-    after_create :create_all_days_intervals
+  after_create :create_all_days_intervals
 
-    def self.display_class_name(singular = true)
-        singular ? "planning de salle de répétition" : "plannings des salles de répétition"
-    end
+  def self.display_class_name(singular = true)
+    singular ? "planning de salle de répétition" : "plannings des salles de répétition"
+  end
 
-    def self.class_name_gender
-        return :M
-    end
+  def self.class_name_gender
+    :M
+  end
 
+  def create_all_days_intervals
+    create_monday if monday.nil?
+    create_tuesday if tuesday.nil?
+    create_wednesday if wednesday.nil?
+    create_thursday if thursday.nil?
+    create_friday if friday.nil?
+    create_saturday if saturday.nil?
+    create_sunday if sunday.nil?
+  end
 
-    def create_all_days_intervals
-        self.create_monday if self.monday.nil?
-        self.create_tuesday if self.tuesday.nil?
-        self.create_wednesday if self.wednesday.nil?
-        self.create_thursday if self.thursday.nil?
-        self.create_friday if self.friday.nil?
-        self.create_saturday if self.saturday.nil?
-        self.create_sunday if self.sunday.nil?
-    end
+  def set_monday(new_start = nil, new_end = nil)
+    new_start = monday.start if new_start.nil?
+    new_end = monday.end if new_end.nil?
+    monday.change_start_and_end(new_start, new_end)
+  end
 
-    def set_monday(new_start=nil, new_end=nil)
-        new_start = self.monday.start if new_start.nil?
-        new_end = self.monday.end if new_end.nil?
-        self.monday.change_start_and_end(new_start, new_end)
-    end
+  def set_tuesday(new_start = nil, new_end = nil)
+    new_start = tuesday.start if new_start.nil?
+    new_end = tuesday.end if new_end.nil?
+    tuesday.change_start_and_end(new_start, new_end)
+  end
 
-    def set_tuesday(new_start=nil, new_end=nil)
-        new_start = self.tuesday.start if new_start.nil?
-        new_end = self.tuesday.end if new_end.nil?
-        self.tuesday.change_start_and_end(new_start, new_end)
-    end
+  def set_wednesday(new_start = nil, new_end = nil)
+    new_start = wednesday.start if new_start.nil?
+    new_end = wednesday.end if new_end.nil?
+    wednesday.change_start_and_end(new_start, new_end)
+  end
 
-    def set_wednesday(new_start=nil, new_end=nil)
-        new_start = self.wednesday.start if new_start.nil?
-        new_end = self.wednesday.end if new_end.nil?
-        self.wednesday.change_start_and_end(new_start, new_end)
-    end
+  def set_thursday(new_start = nil, new_end = nil)
+    new_start = thursday.start if new_start.nil?
+    new_end = thursday.end if new_end.nil?
+    thursday.change_start_and_end(new_start, new_end)
+  end
 
-    def set_thursday(new_start=nil, new_end=nil)
-        new_start = self.thursday.start if new_start.nil?
-        new_end = self.thursday.end if new_end.nil?
-        self.thursday.change_start_and_end(new_start, new_end)
-    end
+  def set_friday(new_start = nil, new_end = nil)
+    new_start = friday.start if new_start.nil?
+    new_end = friday.end if new_end.nil?
+    friday.change_start_and_end(new_start, new_end)
+  end
 
-    def set_friday(new_start=nil, new_end=nil)
-        new_start = self.friday.start if new_start.nil?
-        new_end = self.friday.end if new_end.nil?
-        self.friday.change_start_and_end(new_start, new_end)
-    end
+  def set_saturday(new_start = nil, new_end = nil)
+    new_start = saturday.start if new_start.nil?
+    new_end = saturday.end if new_end.nil?
+    saturday.change_start_and_end(new_start, new_end)
+  end
 
-    def set_saturday(new_start=nil, new_end=nil)
-        new_start = self.saturday.start if new_start.nil?
-        new_end = self.saturday.end if new_end.nil?
-        self.saturday.change_start_and_end(new_start, new_end)
-    end
-
-    def set_sunday(new_start=nil, new_end=nil)
-        new_start = self.sunday.start if new_start.nil?
-        new_end = self.sunday.end if new_end.nil?
-        self.sunday.change_start_and_end(new_start, new_end)
-    end
+  def set_sunday(new_start = nil, new_end = nil)
+    new_start = sunday.start if new_start.nil?
+    new_end = sunday.end if new_end.nil?
+    sunday.change_start_and_end(new_start, new_end)
+  end
 end

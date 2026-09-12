@@ -12,21 +12,19 @@ class ConsentDocumentsController < ApplicationController
 
     has_attached_file =
       params[:attached_file] &&
-        params[:attached_file] != "undefined" &&
-        MimeMagic.by_magic(File.open(params[:attached_file])).type == "application/pdf"
+      params[:attached_file] != "undefined" &&
+      MimeMagic.by_magic(File.open(params[:attached_file])).type == "application/pdf"
 
     begin
       p = flat_consent_document_params
       p[:index] = (ConsentDocument.maximum(:index) || 0) + 1
       document = ConsentDocument.create! p
 
-      if has_attached_file
-        document.attached_file.attach(params[:attached_file])
-      end
+      document.attached_file.attach(params[:attached_file]) if has_attached_file
 
       render status: :created,
              json: jsonize_consent_document_query(document)
-    rescue StandardError => e
+    rescue StandardError
       render status: :unprocessable_entity,
              json: { error: document&.errors.as_json }
     end
@@ -44,11 +42,10 @@ class ConsentDocumentsController < ApplicationController
 
     has_attached_file =
       params[:attached_file] &&
-        params[:attached_file] != "undefined" &&
-        MimeMagic.by_magic(File.open(params[:attached_file])).type == "application/pdf"
+      params[:attached_file] != "undefined" &&
+      MimeMagic.by_magic(File.open(params[:attached_file])).type == "application/pdf"
 
     begin
-
       document.update! flat_consent_document_params
 
       if params[:attached_file_has_changed] == "true"
@@ -75,8 +72,7 @@ class ConsentDocumentsController < ApplicationController
 
     begin
       document.destroy
-
-    rescue StandardError => e
+    rescue StandardError
       render status: :unprocessable_entity,
              json: { error: "deletion failed" }
       return
@@ -89,9 +85,9 @@ class ConsentDocumentsController < ApplicationController
     authorize! :manage, ConsentDocument
 
     doc_to_move_up = ConsentDocument.find(params[:id])
-    return if doc_to_move_up.index==1
+    return if doc_to_move_up.index == 1
 
-    doc_to_move_down = ConsentDocument.find_by(index: doc_to_move_up.index-1)
+    doc_to_move_down = ConsentDocument.find_by(index: doc_to_move_up.index - 1)
 
     doc_to_move_down.index += 1
     doc_to_move_up.index -= 1
@@ -106,9 +102,9 @@ class ConsentDocumentsController < ApplicationController
     authorize! :manage, ConsentDocument
 
     doc_to_move_down = ConsentDocument.find(params[:id])
-    return if doc_to_move_down.index==ConsentDocument.maximum(:index)
+    return if doc_to_move_down.index == ConsentDocument.maximum(:index)
 
-    doc_to_move_up = ConsentDocument.find_by(index: doc_to_move_down.index+1)
+    doc_to_move_up = ConsentDocument.find_by(index: doc_to_move_down.index + 1)
 
     doc_to_move_down.index += 1
     doc_to_move_up.index -= 1
@@ -143,7 +139,7 @@ class ConsentDocumentsController < ApplicationController
       :index,
       :title,
       :content,
-      :expected_answer,
+      :expected_answer
     )
   end
 

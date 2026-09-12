@@ -1,8 +1,9 @@
 class PaymentStatusesController < ApplicationController
-
   before_action :set_current_user
   before_action -> { authorize! :manage, PaymentStatus }
-  before_action -> { render status:401, json:{error: "forbidden"} and return }, if: -> { PaymentStatus::BUILTIN_IDS.include?(params[:id].to_i) }, only: [:edit, :update, :destroy]
+  before_action -> { render status: 401, json: { error: "forbidden" } and return }, if: lambda {
+    PaymentStatus::BUILTIN_IDS.include?(params[:id].to_i)
+  }, only: %i[edit update destroy]
 
   def index
     @payment_statuses = PaymentStatus.all

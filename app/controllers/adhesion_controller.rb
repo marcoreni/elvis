@@ -1,5 +1,4 @@
 class AdhesionController < ApplicationController
-
   def index
     @current_user = current_user
 
@@ -26,7 +25,10 @@ class AdhesionController < ApplicationController
 
     authorize! :manage, adhesion
 
-    render json: { error: "Adhesion not found or pricing is empty" }, status: :not_found and return if !adhesion || !params[:adhesion_price_id]
+    if !adhesion || !params[:adhesion_price_id]
+      render json: { error: "Adhesion not found or pricing is empty" },
+             status: :not_found and return
+    end
 
     if adhesion.update(adhesion_price_id: params[:adhesion_price_id])
       render json: { adhesion: adhesion.as_json(include: { user: {}, adhesion_price: {} }) }
@@ -42,7 +44,7 @@ class AdhesionController < ApplicationController
 
   def create
     begin
-      Adhesions::CreateAdhesion.new(params[:user_id],params[:validity_start_date]).execute
+      Adhesions::CreateAdhesion.new(params[:user_id], params[:validity_start_date]).execute
     rescue ArgumentError => e
       Rails.logger.error e
       flash[:error] = t("controllers.adhesion.create.failure")
@@ -55,9 +57,9 @@ class AdhesionController < ApplicationController
     adhesion = Adhesion.find(params[:id])
     user = User.find(adhesion.user.id)
     adhesion.last_reminder = DateTime.now
-    if adhesion.save
-      AdhesionMailer.with(user: user).reminder_email.deliver_later
-    end
+    return unless adhesion.save
+
+    AdhesionMailer.with(user: user).reminder_email.deliver_later
   end
 
   def destroy
@@ -69,23 +71,24 @@ class AdhesionController < ApplicationController
     query = Adhesion.joins("INNER JOIN users ON users.id = adhesions.user_id").includes(:adhesion_price)
 
     adhesions = query
-        .order("#{params[:sorted][:id]} #{params[:sorted][:desc] ? "desc" : "asc"}");
+                .order("#{params[:sorted][:id]} #{params[:sorted][:desc] ? 'desc' : 'asc'}")
 
     params[:filtered].each do |filter|
       if filter[:id] == "users.adherent_number" && filter[:value].match?(/\d+/)
-        adhesions = adhesions.where("users.adherent_number = #{Integer(params[:filtered][0][:value], 10)}");
+        adhesions = adhesions.where("users.adherent_number = #{Integer(params[:filtered][0][:value], 10)}")
       elsif filter[:id] == "validity_end_date" && filter[:value]
         adhesions = adhesions.where("extract(days from adhesions.validity_end_date - now()) > 0 AND extract(days from adhesions.validity_end_date - now()) < 30")
-      elsif filter[:id] == "users.first_name" || filter[:id] == "users.last_name"
-        adhesions = adhesions.where("LOWER(#{params[:filtered][0][:id]}) LIKE ?", "#{params[:filtered][0][:value].downcase}%");
+      elsif ["users.first_name", "users.last_name"].include?(filter[:id])
+        adhesions = adhesions.where("LOWER(#{params[:filtered][0][:id]}) LIKE ?",
+                                    "#{params[:filtered][0][:value].downcase}%")
       end
     end
 
     total = adhesions.count
 
     adhesions = adhesions
-        .page(params[:page] + 1)
-        .per(params[:pageSize]);
+                .page(params[:page] + 1)
+                .per(params[:pageSize])
 
     pages = adhesions.total_pages
 

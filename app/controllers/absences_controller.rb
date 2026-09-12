@@ -66,7 +66,7 @@ class AbsencesController < ApplicationController
           a[:teacher],
           a[:date],
           a[:justified] ? t("csv_exports.absences_export.justified") : t("csv_exports.absences_export.unjustified"),
-          a[:remarks],
+          a[:remarks]
         ]
       end
     end
@@ -84,33 +84,29 @@ class AbsencesController < ApplicationController
     nil
   end
 
-  def absences_scope(season, range_start, range_end)
+  def absences_scope(_season, range_start, range_end)
     scope = StudentAttendance
-              .joins(:activity_instance)
-              .joins("INNER JOIN time_intervals ON activity_instances.time_interval_id = time_intervals.id")
-              .joins("INNER JOIN activities ON activity_instances.activity_id = activities.id")
-              .joins("INNER JOIN activity_refs ON activities.activity_ref_id = activity_refs.id")
-              .joins("INNER JOIN teachers_activities ON activities.id = teachers_activities.activity_id")
-              .joins("INNER JOIN users teachers ON teachers_activities.user_id = teachers.id")
-              .where("attended != 1")
-              .where("time_intervals.start >= :start", start: range_start)
-              .where("time_intervals.start <= :end", end: range_end)
-              .order("time_intervals.start DESC")
-              .includes(
-                user: {},
-                activity_instance: {
-                  activity: { activity_ref: {}, teachers_activities: :teacher },
-                  time_interval: {},
-                }
-              )
+            .joins(:activity_instance)
+            .joins("INNER JOIN time_intervals ON activity_instances.time_interval_id = time_intervals.id")
+            .joins("INNER JOIN activities ON activity_instances.activity_id = activities.id")
+            .joins("INNER JOIN activity_refs ON activities.activity_ref_id = activity_refs.id")
+            .joins("INNER JOIN teachers_activities ON activities.id = teachers_activities.activity_id")
+            .joins("INNER JOIN users teachers ON teachers_activities.user_id = teachers.id")
+            .where("attended != 1")
+            .where("time_intervals.start >= :start", start: range_start)
+            .where("time_intervals.start <= :end", end: range_end)
+            .order("time_intervals.start DESC")
+            .includes(
+              user: {},
+              activity_instance: {
+                activity: { activity_ref: {}, teachers_activities: :teacher },
+                time_interval: {}
+              }
+            )
 
-    if params[:teacher_id].present?
-      scope = scope.where("teachers.id = :tid", tid: params[:teacher_id])
-    end
+    scope = scope.where("teachers.id = :tid", tid: params[:teacher_id]) if params[:teacher_id].present?
 
-    if params[:activity_ref_id].present?
-      scope = scope.where("activity_refs.id = :aid", aid: params[:activity_ref_id])
-    end
+    scope = scope.where("activity_refs.id = :aid", aid: params[:activity_ref_id]) if params[:activity_ref_id].present?
 
     if params[:type].present? && params[:type] != "all"
       scope = params[:type] == "justified" ? scope.where(attended: 3) : scope.where.not(attended: 3)
@@ -145,8 +141,8 @@ class AbsencesController < ApplicationController
           last_name: student.last_name,
           adherent_number: student.adherent_number,
           avatar_url: student.avatar_url,
-          sex: student.sex,
-        },
+          sex: student.sex
+        }
       }
     end
   end

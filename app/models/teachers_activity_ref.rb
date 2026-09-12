@@ -10,15 +10,14 @@
 #
 
 class TeachersActivityRef < ApplicationRecord
-    belongs_to :activity_ref
-    belongs_to :user
+  belongs_to :activity_ref
+  belongs_to :user
 
-    def self.display_class_name(singular = true)
-        singular ? "activité de professeur" : "activités des professeurs"
-    end
+  def self.display_class_name(singular = true)
+    singular ? "activité de professeur" : "activités des professeurs"
+  end
 
-    def self.class_name_gender
-        return :F
-    end
-
+  def self.class_name_gender
+    :F
+  end
 end

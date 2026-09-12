@@ -11,7 +11,5 @@
 #  error_code_id   :bigint           not null
 #
 class ErrorHistory < ActiveRecord::Base
-
   belongs_to :error_code
-
 end

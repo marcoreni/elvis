@@ -1,5 +1,4 @@
 class FormulesController < ApplicationController
-
   def index
     @formules = Formule.all
 
@@ -22,10 +21,10 @@ class FormulesController < ApplicationController
           include: {
             item: {
               only: %i[id display_name]
-            },
+            }
           },
           only: %i[id],
-          methods: %i[is_for_kind],
+          methods: %i[is_for_kind]
         },
         formule_pricings: {
           only: %i[id price],
@@ -47,7 +46,7 @@ class FormulesController < ApplicationController
 
     ActiveRecord::Base.transaction do
       # Save formule items
-      formule_items_params = params.permit(formuleItems: [:itemId, :isFamily])[:formuleItems]
+      formule_items_params = params.permit(formuleItems: %i[itemId isFamily])[:formuleItems]
 
       if formule_items_params.present?
         formule_items_params.each do |formule_item|
@@ -59,7 +58,8 @@ class FormulesController < ApplicationController
       end
 
       # Save formule prices
-      formule_prices_params = params.permit(formulePricings: [:priceCategoryId, :price, :fromSeasonId, :toSeasonId])[:formulePricings]
+      formule_prices_params = params.permit(formulePricings: %i[priceCategoryId price fromSeasonId
+                                                                toSeasonId])[:formulePricings]
 
       if formule_prices_params.present?
         formule_prices_params.each do |formule_price|
@@ -95,7 +95,7 @@ class FormulesController < ApplicationController
 
     ActiveRecord::Base.transaction do
       # Save formule items
-      formule_items_params = params.permit(formuleItems: [:itemId, :isFamily])[:formuleItems]
+      formule_items_params = params.permit(formuleItems: %i[itemId isFamily])[:formuleItems]
 
       formule.formule_items.destroy_all
       formule_items_params.each do |formule_item|
@@ -152,12 +152,14 @@ class FormulesController < ApplicationController
     filtered = JSON.parse(params[:filtered]&.to_s || "[]") || []
 
     filtered.each do |filter|
-      case filter[:id]
-      when "activities"
-        query = query.joins(:activity_refs).joins(:activity_ref_kinds).where("activity_refs.id = ? OR activity_ref_kinds.id = ?", filter[:value], filter[:value])
-      else
-        query = query.where("#{filter[:id]} ILIKE ?", "#{filter[:value]}%")
-      end
+      query = case filter[:id]
+              when "activities"
+                query.joins(:activity_refs).joins(:activity_ref_kinds).where(
+                  "activity_refs.id = ? OR activity_ref_kinds.id = ?", filter[:value], filter[:value]
+                )
+              else
+                query.where("#{filter[:id]} ILIKE ?", "#{filter[:value]}%")
+              end
     end
 
     sorted = JSON.parse(params[:sorted]&.to_s || "{}") || nil
@@ -170,8 +172,8 @@ class FormulesController < ApplicationController
     total = query.count
 
     query = query
-              .page((params[:page]&.to_i || 0))
-              .per(params[:pageSize])
+            .page(params[:page]&.to_i || 0)
+            .per(params[:pageSize])
 
     pages = query.total_pages
 
@@ -192,4 +194,3 @@ class FormulesController < ApplicationController
     }
   end
 end
-

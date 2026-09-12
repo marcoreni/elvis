@@ -1,7 +1,5 @@
 class Parameters::PraticeParametersController < ApplicationController
-  def index
-
-  end
+  def index; end
 
   def list_bands
     query = Band.includes(:band_type).includes(:music_genre).all
