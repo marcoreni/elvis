@@ -577,30 +577,32 @@ notes above, and harmless for the same reason (switching locale is a full server
 
 ## Pre-existing bugs surfaced during Phase 07 P6 (backend strings: mailers, controllers, models)
 
-- **`RemoveController#get_references` checks the wrong method name, so ~80 models'
-  `display_class_name` overrides never reach the destroy-confirmation UI.** It does
-  `ref.class.respond_to?(:display_name) ? ref.class.display_name : ref.class.name` (`app/controllers/
-  remove_controller.rb:95`), but no model anywhere defines a class-level `display_name` — the actual
-  method every model overrides is `display_class_name` (see `app/models/application_record.rb:11`,
-  used correctly by `application_record.rb`'s own `undeletable_instruction`/`build_subject`). Since
-  `respond_to?(:display_name)` is always false, the `references[].display_name` field this action
-  returns is always the raw Ruby class name (e.g. `"ActivityRefPricing"` instead of `"Tarif"`) for
-  every dependent-object list the destroy-confirmation UI shows. Not fixed here: swapping the method
-  name is a one-line fix, but auditing whether the frontend `RemoveComponent` already special-cases
-  the raw-class-name fallback (and whether ~80 models' French singular/plural strings are even ready
-  to reach a French+English UI once wired up — see below) is bigger than this lean i18n batch.
-  Flagging so a follow-up either fixes the method name or removes the dead `display_name` branch.
-- **`display_class_name` (~80 models) and the seeded `label` columns on `PaymentStatus` /
-  `DuePaymentStatus` / `ActivityApplicationStatus` / `PaymentMethod` / `EvaluationLevelRef` remain
-  hardcoded French, deliberately out of scope for P6.** `display_class_name` is a uniform
-  singular/plural-name pattern repeated across almost every model (`Tarif`/`Tarifs`,
-  `Statut d'inscription`/`Statuts d'inscription`, ...) — converting all of them to Rails' native
-  `model_name.human(count:)` i18n convention is a mechanical but much larger follow-up (~80 files) on
-  top of the RemoveController bug above, not attempted here. The seeded status/method `label` values
-  (`"Validé"`, `"Echoué"`, `"En attente"`, ...) are DB rows created via `find_or_create_by!` at class
-  load and are admin-editable at runtime (the settings UI lets a school add custom statuses/methods
-  alongside the built-ins) — closer to `Parameter`/`NotificationTemplate` per-instance content than
-  to static UI chrome, so left untranslated for the same reason those are out of scope.
+- **`RemoveController#get_references` never actually renders its return value over HTTP - the
+  endpoint always responds `204 No Content`, regardless of the `display_name` bug fixed on
+  `fix/remove-controller-display-class-name-i18n`.** Discovered while fixing that bug (see
+  `app/models/application_record.rb`'s `display_class_name` and
+  `app/controllers/remove_controller.rb:105`, now correct). The action
+  (`app/controllers/remove_controller.rb`) computes and returns an array but never calls `render`,
+  and there is no `app/views/remove/get_references.*` template. Rails'
+  `ActionController::ImplicitRender#default_render` then falls through to `head :no_content` for any
+  non-"interactive browser" request format (confirmed via a real `GET /references/:classname/:id` in
+  a request spec, both before and after the display_name fix). Whether some plugin supplies the
+  missing template at runtime in a real deployment (see `docs/Plugin-*.md`'s view-path prepending)
+  could not be determined in this checkout, since no plugins are loaded here (`plugins.json` absent).
+  This means either the endpoint is currently dead code with no HTTP consumer (no `frontend/**`
+  caller of `/references/:classname/:id` was found either - see `RemoveComponent.jsx`, which only
+  ever calls the plain `generic_destroy` delete route), or a plugin's template is doing the rendering
+  in production. Left unfixed - adding a `render json:` call wasn't part of the two-bug fix this was
+  found alongside, and could conflict with a plugin-supplied template if one exists. Flagging for a
+  follow-up to determine which case applies and fix accordingly.
+- **The seeded `label` columns on `PaymentStatus` / `DuePaymentStatus` / `ActivityApplicationStatus`
+  / `PaymentMethod` / `EvaluationLevelRef` remain hardcoded French, deliberately out of scope for
+  P6.** (`display_class_name` itself was converted to `model_name.human(count:)` on
+  `fix/remove-controller-display-class-name-i18n`.) The seeded status/method `label` values
+  (`"Validé"`, `"Echoué"`, `"En attente"`, ...) are still untranslated and still out of scope: they're
+  DB rows created via `find_or_create_by!` at class load and are admin-editable at runtime (the
+  settings UI lets a school add custom statuses/methods alongside the built-ins) — closer to
+  `Parameter`/`NotificationTemplate` per-instance content than to static UI chrome.
 - **Background job status/error text (`ActiveJob`/`ActiveJob::Status`, e.g. `CsvImporterJob`) always
   renders in the default locale.** `I18n.locale` is set per-request by `ApplicationController`'s
   `switch_locale`, but nothing propagates the enqueuing request's locale into the job's execution
@@ -658,3 +660,22 @@ identical to `base_renderer_error`'s and should have been called out the same wa
 Found 2026-09-12 while running the full `bundle exec rspec` suite after adding `spec/mailers/application_mailer_notify_new_application_spec.rb` (part of the `LiquidDrops::ApplicationDrop` fix above). Bisected by excluding files: with that one file excluded from a `spec/controllers spec/mailers spec/models spec/requests spec/services` run, all 229 examples pass (module the separate `formule_i18n_spec.rb` flake below); with it included, `spec/controllers/application_controller_spec.rb`'s `"falls back to I18n.default_locale when the localization settings lookup raises"` example fails — `response.body` (rendered while `Parameter.get_values` is stubbed to raise) comes back `"en"` instead of the expected `"fr"`. The file's own content doesn't touch `I18n`, `Parameter`, or `Elvis::SUPPORTED_LOCALES` at all (it exercises `ApplicationMailer#notify_new_application` against a plain `ActivityApplication`/`Season`/`School` fixture) — its mere presence in the file list is enough to change example ordering/timing elsewhere in the run and surface a **pre-existing** fragility, not something this file's code causes. Both the implicated example and `application_mailer_notify_new_application_spec.rb` pass individually and pass together with `spec/controllers spec/mailers` alone (54 examples, 0 failures) — the interaction needs something in `spec/models`/`spec/requests`/`spec/services` to also be present.
 
 Not root-caused further here (would need the same kind of deep instrumentation as the migration issue above, and is unrelated to any of this batch's 6 scoped items). Given `resolve_locale`'s fallback path when `Parameter.get_values` raises hardcodes `I18n.default_locale.to_s` as the `default_language` candidate and `Elvis::SUPPORTED_LOCALES` (`%w[fr en].freeze`, `fr` first) as `available_languages`, the observed `"en"` result implies either `I18n.default_locale` or the effective `available_locales` ordering is transiently different from what a fresh boot has — worth a dedicated investigation, ideally with the same before/after `Rails.cache`-style global-state audit that resolved the `Parameter` cache-leak entry previously in this file. Left unfixed; not blocking this batch since it reproduces on develop with an unrelated new spec file present, not on any of the 6 fixes themselves.
+
+**Second confirmed instance (`fix/remove-controller-display-class-name-i18n`, 2026-09-12):** adding
+`spec/controllers/remove_controller_display_class_name_spec.rb` reproduces the *exact same*
+`application_controller_spec.rb` flip (`bundle exec rspec spec/controllers spec/mailers`: 63
+examples, this one failure, `fr`/`en` swapped the same way) - confirming it really is triggered by
+"a new spec file exists somewhere in the load list," not by anything about
+`application_mailer_notify_new_application_spec.rb`'s content specifically. The full-suite run also
+now shows two more examples flipping the same way: `DeviseMailer#confirmation_instructions` and
+`#reset_password_instructions` both "render in French by default" by asserting on French copy in
+the mail body, but get back the raw, un-interpolated devise mailer layout HTML instead (neither
+example touches `I18n`/`Parameter`/locale directly, and both pass in isolation and in
+`spec/controllers spec/mailers` together - only the full run flips them). Also worth noting for
+whoever eventually root-causes this: a full `bundle exec rspec` on plain `develop`
+(no new spec file at all) is *not* clean either - it currently reports 257 examples, 116 failures,
+almost entirely unrelated pre-existing flakes spread across `spec/requests` (mailers, CSRF,
+users/seasons/practice page i18n specs, etc.). Whatever global state leak underlies this file-count
+sensitivity looks like it accounts for a large share of that baseline number, not just the one or
+two examples each individual PR has bisected so far - worth keeping in mind before treating any
+single full-suite failure count as this repo's true green baseline.
