@@ -174,14 +174,77 @@ What's left (1650 offenses, `bundle exec rubocop` final count) breaks down as:
   `Style/OptionalBooleanParameter` (106), `Naming/VariableName` (79), `Naming/AccessorMethodName` (41),
   a long tail of *unsafe*-correctable style cops (`Style/RedundantInterpolation`, `Style/SymbolProc`,
   `Style/NumericPredicate`, `Style/SafeNavigation`, etc. — correctable only via `-A`, which this pass
-  deliberately didn't run), and a handful of `Naming/*`/`Lint/*` cops flagging real pre-existing code
-  smells (`Lint/DuplicateMethods` (3), `Lint/MissingSuper` (6), `Style/ClassVars` (11)) that need
-  case-by-case review, not a mechanical pass. None of these were touched in this cleanup — left for a
-  future, more surgical pass.
+  deliberately didn't run). None of these were touched in this cleanup — left for a future, more
+  surgical pass.
+- `Lint/DuplicateMethods` (3), `Lint/MissingSuper` (6), `Style/ClassVars` (11) — case-by-case
+  triaged and resolved 2026-09-13 (`chore/lint-tail-triage`), see "Rubocop backlog: `Lint`/`Style`
+  case-by-case triage" below. All 20 sites were fixed or explicitly documented; none left as bare
+  offenses.
 - 17 `Lint/Syntax` offenses, all in a single file:
   `lib/generators/elvis_plugin_model/templates/migration.rb`. This is a Thor/Rails generator ERB
   template (`<%= %>` tags) that happens to have a `.rb` extension; it was never valid standalone Ruby
   and rubocop can't parse it as such. Pre-existing, unrelated to this cleanup, not a real offense.
+
+### Rubocop backlog: `Lint`/`Style` case-by-case triage (2026-09-13)
+
+Follow-up to the safe-autocorrect pass above, on the three cops it deliberately left for
+case-by-case review. Fresh count matched the stale one exactly (3/6/11, 20 sites total,
+`chore/lint-tail-triage`). All 20 were resolved — none left as bare, undocumented offenses.
+
+**`Lint/DuplicateMethods` (3/3 fixed)** — all three were "identical definitions" cases: no
+behavior change, the surviving (already-running) definition was kept and the dead earlier one
+removed.
+- `User#activity_application` (`app/models/user.rb`): defined twice, both from the same squashed
+  "initial commit" (no real history to compare) — `find_by(season: Season.current)` vs.
+  `find_by(season_id: Season.current.id)`, semantically identical ActiveRecord calls. Removed the
+  first (dead) definition. Regression spec: `spec/models/user_activity_application_spec.rb`.
+- `Elvis::MenuManager::MenuItem#url` and `#position` (`lib/elvis/menu_manager.rb`): both were
+  actually an `attr_reader` entry immediately shadowed by an explicit `def url`/`def position` a
+  few lines below (also present since the same initial commit) — the attr_reader-generated readers
+  never ran. Removed `:url`/`:position` from the `attr_reader` list; the custom methods (unchanged)
+  are now the only definitions. Regression spec: `spec/lib/menu_manager_menu_item_spec.rb`.
+
+**`Lint/MissingSuper` (6/6 documented, none needed a code fix)** — all six are
+`LiquidDrops::*#initialize` overriding `Liquid::Drop#initialize`
+(`app/mailers/liquid_drops/{activity_drop,activity_instance_drop,application_drop,dynamic_drop,
+json_drop,payment_drop}.rb`). `Liquid::Drop#initialize` only does `@context = nil`; Liquid's own
+`Context#find_variable`/`VariableLookup#lookup` always assign `drop.context = context` on every
+drop before any drop method that reads `@context` (`liquid_method_missing`) runs, and an unset
+ivar already reads as `nil` — so skipping `super` here is a genuine no-op, not a bug. Added
+`# rubocop:disable Lint/MissingSuper` with a one-line rationale on each `initialize` rather than
+leaving a bare offense. Existing `spec/mailers/*` coverage (activity_assigned_mailer_spec.rb,
+application_mailer_notify_new_application_spec.rb, application_drop_spec.rb, i18n_p6_mailers_spec.rb)
+exercises these drops end-to-end and still passes — no new test needed for a disable-comment-only
+change.
+
+**`Style/ClassVars` (11/11 fixed)** — all eleven were runtime-mutated `@@` variables, but in every
+case the owning class/module has no subclasses and (for the two modules) is never
+`include`d/`extend`ed elsewhere, so the cross-hierarchy-sharing risk the cop warns about was never
+actually live. All converted to class instance variables with identical semantics (verified via new
+regression specs, full RSpec suite, and manual trace of every call site):
+- `Plugin.@@used_partials` → `Plugin.used_partials` (`class << self; attr_accessor
+  :used_partials; end`) — `app/models/plugin.rb`. No subclasses of `Plugin`. Spec:
+  `spec/models/plugin_used_partials_spec.rb`.
+- `EventHandler.@@semaphore` → `@semaphore` (plain class instance var, read/written only from
+  `EventHandler`'s own class methods) — `lib/elvis/event_handler.rb`. No subclasses. Spec:
+  `spec/lib/event_handler_spec.rb`.
+- `Elvis::Hook.@@listener_classes`/`@@listeners`/`@@hook_listeners` → `@listener_classes`/
+  `@listeners`/`@hook_listeners` — `lib/elvis/hook.rb`. `Elvis::Hook` is a plain module used only
+  through its own `class << self` methods; `Elvis::Hook::Listener` subclasses call back into it via
+  `Elvis::Hook.add_listener`, they don't share its variable scope, and nothing `include`s/`extend`s
+  `Elvis::Hook` itself. Spec: `spec/lib/elvis_hook_spec.rb`.
+- `Elvis::MenuManager.@@menus` → `@menus` — `lib/elvis/menu_manager.rb`. Same shape as
+  `Elvis::Hook`: a plain module, only ever called via `self.`-prefixed methods, never
+  included/extended. Spec: `spec/lib/menu_manager_menus_spec.rb`.
+
+No genuine runtime bug was found among these 20 sites — all three cops were flagging
+latent/theoretical risk (dead shadowed code, a harmless skipped `super`, and a footgun pattern
+that wasn't actually being triggered by any real subclass/inclusion in this codebase), not an
+active defect. Full RSpec suite: 294 examples / 0 failures after the fix (257 baseline + 21 from
+a prior batch + 16 new specs added here). `bundle exec rubocop --only
+Lint/DuplicateMethods,Lint/MissingSuper,Style/ClassVars` reports 0 offenses for app/lib code
+(only the pre-existing, unrelated `lib/generators/elvis_plugin_model/templates/migration.rb`
+`Lint/Syntax` noise remains, as documented above).
 
 ## Scaffold views suspected dead — recovery log + removal candidates
 
