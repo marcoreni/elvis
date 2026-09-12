@@ -16,6 +16,6 @@ RSpec.describe "I18n custom date/time formats" do
   end
 
   it "falls back to :fr for a key that only exists there, instead of raising" do
-    expect(I18n.fallbacks[:en]).to eq([:en, :fr])
+    expect(I18n.fallbacks[:en]).to eq(%i[en fr])
   end
 end

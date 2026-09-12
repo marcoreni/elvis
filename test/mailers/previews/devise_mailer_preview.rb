@@ -8,7 +8,7 @@ class DeviseMailerPreview < ActionMailer::Preview
 
   def reset_password_instructions
     user = User.last
-    token = user.reset_password_token ? user.reset_password_token : "fake_token"
+    token = user.reset_password_token || "fake_token"
     DeviseMailer.reset_password_instructions(user, token)
   end
 end

@@ -9,11 +9,13 @@ RSpec.describe Parameters::LocalizationParametersController, type: :controller d
 
   describe "#update" do
     it "saves both parameters when the default is within the available languages" do
-      post :update, params: { default_language: "en", available_languages: ["en", "fr"] }, format: :json
+      post :update, params: { default_language: "en", available_languages: %w[en fr] }, format: :json
 
       expect(response).to have_http_status(:ok)
       expect(Parameter.find_by(label: "app.localization.default_language").value).to eq("en")
-      expect(JSON.parse(Parameter.find_by(label: "app.localization.available_languages").value)).to contain_exactly("en", "fr")
+      expect(JSON.parse(Parameter.find_by(label: "app.localization.available_languages").value)).to contain_exactly(
+        "en", "fr"
+      )
     end
 
     it "rejects a default language that isn't in the available languages" do
@@ -24,7 +26,7 @@ RSpec.describe Parameters::LocalizationParametersController, type: :controller d
     end
 
     it "makes the new values visible to Parameter.get_value immediately (regression: cache used to go stale for up to 1h)" do
-      post :update, params: { default_language: "en", available_languages: ["en", "fr"] }, format: :json
+      post :update, params: { default_language: "en", available_languages: %w[en fr] }, format: :json
 
       expect(Parameter.get_value("app.localization.default_language")).to eq("en")
       expect(Parameter.get_value("app.localization.available_languages")).to contain_exactly("en", "fr")
@@ -42,9 +44,9 @@ RSpec.describe Parameters::LocalizationParametersController, type: :controller d
           record
         end
 
-      expect {
+      expect do
         post :update, params: { default_language: "en", available_languages: ["en"] }
-      }.to raise_error(ActiveRecord::RecordInvalid)
+      end.to raise_error(ActiveRecord::RecordInvalid)
 
       expect(Parameter.find_by(label: "app.localization.default_language").value).to eq("fr")
     end

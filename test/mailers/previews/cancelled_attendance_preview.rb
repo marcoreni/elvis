@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 class CancelledAttendancePreview < ActionMailer::Preview
-
   # http://localhost:7212/rails/mailers/cancelled_attendance/user_cancelled_attendance
   def user_cancelled_attendance
     user = User.last
@@ -17,4 +16,3 @@ class CancelledAttendancePreview < ActionMailer::Preview
     AdminCancelledAttendanceMailer.cancelled_attendance(activity_instance, User.last)
   end
 end
-

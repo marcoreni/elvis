@@ -101,7 +101,11 @@ RSpec.describe "Sign-in CSRF (switch_locale must not pre-authenticate)", type: :
 
     expect(response).not_to have_http_status(:unprocessable_entity)
 
-    5.times { break unless response.status == 302; follow_redirect! }
+    5.times do
+      break unless response.status == 302
+
+      follow_redirect!
+    end
     expect(response).to have_http_status(:ok)
     # Back on the sign-in form, still not authenticated.
     expect(Nokogiri::HTML(response.body).at_css("form#new_user")).to be_present

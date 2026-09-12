@@ -3,7 +3,7 @@
 class DroppletTestPreview < ActionMailer::Preview
   def droppletTest
     user = User.last
-    token = user.reset_password_token ? user.reset_password_token : "fake_token"
+    token = user.reset_password_token || "fake_token"
     application = ActivityApplication.last
     activity = Activity.last
 
