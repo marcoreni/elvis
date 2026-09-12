@@ -7,6 +7,6 @@
   <%= hidden_field_tag :nonce, nonce %>
   <%= hidden_field_tag :request, _request_ %>
   <%= hidden_field_tag :request_uri, request_uri %>
-  <%= submit_tag (action == :approve ? "Autoriser" : "Refuser") %>
+  <%= submit_tag (action == :approve ? t("views.oidc/authorizations.new.authorize") : t("views.oidc/authorizations.new.deny")) %>
   <%= hidden_field_tag action, true %>
 <% end %>

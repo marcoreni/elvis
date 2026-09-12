@@ -276,6 +276,12 @@ en:
                     greeting_html: "Hello <strong>%{name}</strong>,"
                     instruction: "You requested to reset your password. To change it, click the button below:"
                     instruction_2: "If you did not make this request, you can ignore this email. Your password will remain unchanged until you click the link."
+        oidc/authorizations:
+            new:
+                heading: "Do you authorize %{client} to access this information?"
+                requested_information: Requested information
+                authorize: Authorize
+                deny: Deny
         activity_assigned_mailer:
             activity_assigned:
                 greeting_html: "Hello <strong>%{name}</strong>,"
@@ -757,6 +763,61 @@ en:
                 room: "room %{name}"
                 from_date: "from %{date}"
                 until_date: "until %{date}"
+        errors:
+            base_renderer_error:
+                heading: "Error %{code}"
+        static_pages:
+            landing:
+                collective_courses_heading: Group Classes
+                workshops_heading: Workshops
+                membership_heading: Membership
+                details_link: "Details »"
+            about:
+                heading: About Elvis
+        cgu:
+            index:
+                title: Privacy policy and personal data processing.
+                gdpr_intro: "The General Data Protection Regulation (EU Regulation 2016/679), referred to as the \"GDPR,\" came into force on May 25, 2018, and %{school_name} is committed to complying with it for all personal data processing carried out within Elvis."
+                objectives_intro: "This regulation pursues 3 objectives:"
+                objective_1: Adapt the legal framework to keep pace with changes in technology and society
+                objective_2: "It continues the French Data Protection Act (Loi Informatique et Libertés) of 1978 and strengthens citizens' control over how data concerning them may be used."
+                objective_3: Harmonize rules across Europe to provide a single legal framework for professionals.
+                internal_procedures: "%{school_name} also implements appropriate internal procedures to raise its employees' awareness and to ensure these rules are followed within its organization."
+                obligations_heading: "What are %{school_name}'s obligations regarding the protection of personal data?"
+                obligations_guarantee: "%{school_name} must guarantee a high level of protection for the personal data of all Users of its services."
+                obligations_principles_intro: "%{school_name} must comply with the regulations applicable to all the personal data processing it carries out. In particular, %{school_name_lower} undertakes to comply with the following principles:"
+                principle_1: "your personal data is processed lawfully, fairly and transparently (lawfulness, fairness, transparency);"
+                principle_2: "your personal data is collected for specified, explicit and legitimate purposes, and is not further processed in a way incompatible with those purposes (purpose limitation);"
+                principle_3: "your personal data is kept adequate, relevant and limited to what is necessary in relation to the purposes for which it is processed (data minimization);"
+                principle_4: "your personal data is accurate, kept up to date, and every reasonable step is taken to ensure that inaccurate data, having regard to the purposes for which it is processed, is erased or rectified without delay (accuracy)."
+                security_measures: "%{school_name} implements appropriate technical and organizational measures to guarantee a level of security suited to the risk inherent in its processing operations, to meet regulatory requirements, and to protect the rights and data of the individuals concerned from the design stage of its processing operations."
+                final_commitment: "Finally, %{school_name} undertakes to comply with any other principle required by the regulations applicable to the protection of personal data, and more specifically regarding the rights granted to the individuals concerned, the retention periods for personal data, and obligations relating to cross-border transfers of personal data."
+                rights_heading: Your rights
+                rights_guarantee: "%{school_name} guarantees users a right to object, to access, and to rectify data concerning them"
+                rights_how_to_question: "How can you exercise your rights?"
+                rights_how_to_email: By sending a message to the address
+                registration_heading: As part of a registration on the Elvis platform
+                purposes_heading: "What are the purposes?"
+                purpose_1: Process your registration request
+                purpose_2: Find the best course for the student
+                purpose_3: Provide educational and administrative follow-up over a school season
+                storage_heading: "Where is your data stored?"
+                storage_sixmon: Elvis is software developed by Sixmon, a company based in Le Havre
+                storage_azure_prefix: Elvis is hosted on Microsoft Azure infrastructure
+                storage_azure_suffix: located in France and managed by Sixmon.
+                access_heading: "Who is likely to access your personal data?"
+                access_staff: "%{school_name} staff in charge of registrations and administrative and educational follow-up may access your personal data."
+                access_teachers: "Teachers have access to their students' contact information (email, phone, address)."
+        admin:
+            edit_mail_settings:
+                heading: "Advanced settings: Emails"
+        settings:
+            plugin:
+                title: "Plugins - %{name}"
+                submit: Apply
+        events_rules:
+            index:
+                heading: List of events
         shared:
             form_errors:
                 heading: "%{count} error(s) prevented this record from being saved:"

@@ -688,3 +688,56 @@ Root-caused 2026-09-12 while reviewing Phase 07 P6 (`feat/i18n-p6-backend-string
 Mechanism: `config/environments/test.rb` configures `Rails.cache` as `ActiveSupport::Cache::FileStore` — a real on-disk cache, not cleared between examples or between separate `rspec` process invocations. `spec/controllers/application_controller_spec.rb:57` does `Parameter.create!(label: "app.localization.available_languages", value: ["en"].to_json)` inside a transactional example. `Parameter#expire_cache` (see `app/models/parameter.rb`) is registered as an `after_commit` callback, but RSpec's transactional fixtures roll the transaction back at the end of the example rather than committing it — so `expire_cache` never fires, and the previously-cached `parameter_app.localization.available_languages` key is never invalidated. The stale `["en"]` value then leaks into whatever example (in this run, or a later `rspec` invocation reading the same `tmp/cache` directory) next reads that Parameter through the cache.
 
 Fix would be a `before`/`around` hook clearing `Rails.cache` (or specifically the `parameter_*` keys) around specs that touch `Parameter`, or switching test env to `ActiveSupport::Cache::NullStore`/`MemoryStore` (verify nothing relies on cache persistence across requests within the same example first). Not fixed here — orthogonal to the i18n work that surfaced it.
+
+## `StaticPagesController#landing`/`#about` and `AdminController`'s mail-settings view are unrouted dead code
+
+Found 2026-09-12 while extracting strings for Phase 07 P7 (`feat/i18n-p7-oauth-legal-pages`).
+
+- `app/controllers/static_pages_controller.rb` (`landing`, `about` actions) and their views
+  (`app/views/static_pages/{landing,about}.html.erb`) have no matching entry anywhere in
+  `config/routes.rb` — confirmed both by grepping the routes file for `landing`/`about`/
+  `static_pages` (no hits) and by hitting `GET /about` in a `RAILS_ENV=test` integration session,
+  which raises `ActionController::RoutingError: No route matches`. `app/views/layouts/
+  static_pages.html.erb` (already localized in an earlier Phase 07 batch) still references
+  `about_path`, which would itself raise `NoMethodError` if that layout were ever rendered, since
+  no such route/path helper exists. Not fixed here (adding routes is a behavior change, not a
+  string-extraction one) — flagging in case this layout+controller+views trio is either meant to be
+  wired up (marketing landing page) or is safe to remove outright.
+- `app/views/admin/edit_mail_settings.html.erb` (`views.admin.edit_mail_settings.*` after this PR)
+  has no corresponding route or controller action either — `AdminController` has no
+  `edit_mail_settings` method, and nothing in `config/routes.rb` references it. Its live
+  equivalent is `ParametersController#mails_parameters_edit` /
+  `app/views/parameters/mails_parameters_edit.html.erb` (already localized, `views.parameters.
+  mails_parameters.edit.heading`), which renders the same `editParameters/MailSettings` React
+  component. This file looks like a superseded leftover from before the `parameters` controller
+  consolidation. Extracted its one hardcoded string anyway per the P7 task scope (mechanical
+  audit of everything under `app/views/admin/`), but not deleted — per this repo's "don't delete
+  on 500 / looks dead" policy, leave orphaned code for a human to confirm before removing.
+
+Per the same P7 audit, `app/views/errors/base_renderer_error.html.erb` hardcoded the literal
+English word `Error` (`<h2>Error <%= code %></h2>`) in a French-default-locale app — genuine
+"English leaking into a French view", not a typo. Fixed as part of the extraction
+(`views.errors.base_renderer_error.heading` is `"Erreur %{code}"` in `fr.yml`, `"Error %{code}"`
+in `en.yml`) rather than left broken, since the whole point of moving it into `t(...)` is to make
+it locale-correct; flagging here per the "don't silently fix semantic bugs" policy since it *is*
+a wording/language change, not a typo/accent fix.
+
+The same P7 pass silently fixed two more English-leak strings without flagging them per that
+same policy — noting them here for consistency: `static_pages/about.html.erb`'s heading
+("About Elvis" hardcoded in a French view) is now `views.static_pages.about.heading` =
+"À propos d'Elvis" (fr) / "About Elvis" (en); `static_pages/landing.html.erb`'s link text
+("Details »") is now `views.static_pages.landing.read_more` = "Détails »" (fr) / "Details »" (en).
+Both are on the unrouted dead views above, so harmless in practice, but the fix pattern is
+identical to `base_renderer_error`'s and should have been called out the same way.
+
+## `db:prepare` fails on a pre-existing broken migration
+
+Found 2026-09-12 setting up a fresh Postgres container to run the P7 review's RSpec suite.
+`db/migrate/20240924141831_add_upcoming_payment_notice_to_notification_templates.rb:42` raises
+`PG::UndefinedColumn: column "id" does not exist` when run against an empty database via
+`rails db:prepare` (i.e. `db:create` + `db:migrate` from scratch) — the migration assumes a
+column/table state that only exists if the schema was already loaded some other way first, so
+`db:prepare` is not a viable path to a working test database in a clean checkout. Worked around
+via `rails db:environment:set` + `rails db:schema:load` (skips replaying migration history
+entirely). Not investigated further or fixed here — orthogonal to the i18n work that surfaced it,
+but anyone bootstrapping a fresh dev/CI database from scratch will hit this.
