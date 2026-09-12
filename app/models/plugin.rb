@@ -20,7 +20,14 @@
 class Plugin < ApplicationRecord
   scope :visible, -> { where(hidden: false) }
 
-  @@used_partials = {}
+  class << self
+    # Tracks which plugin registered which settings partial, to warn on collisions in
+    # #register_settings. A class instance var (not a @@ class var): Plugin has no
+    # subclasses, so there is no cross-hierarchy sharing to worry about, but this avoids
+    # the footgun outright rather than relying on that staying true.
+    attr_accessor :used_partials
+  end
+  self.used_partials = {}
 
   def self.class_name_gender
     :M
@@ -64,15 +71,15 @@ class Plugin < ApplicationRecord
     return unless options["partial"].present?
 
     partial = options["partial"]
-    if @@used_partials[partial]
+    if self.class.used_partials[partial]
       Rails.logger.warn(
         "WARNING: settings partial '#{partial}' is declared in '#{name}' plugin " \
-          "but it is already used by plugin '#{@@used_partials[partial]}'. " \
+          "but it is already used by plugin '#{self.class.used_partials[partial]}'. " \
           "Only one settings view will be used. " \
           "You may want to contact those plugins authors to fix this."
       )
     end
-    @@used_partials[partial] = name
+    self.class.used_partials[partial] = name
   end
 
   # @param [Array<Hash>] menus

@@ -6,9 +6,14 @@ require_relative "time_interval_drop"
 
 module LiquidDrops
   class ActivityDrop < Liquid::Drop
+    # rubocop:disable Lint/MissingSuper -- Liquid::Drop#initialize only sets @context = nil,
+    # which is a no-op here: Liquid always assigns drop.context= itself (see
+    # Liquid::VariableLookup#lookup / Context#find_variable) before any drop method that
+    # reads @context runs, and an unset @context already reads as nil anyway.
     def initialize(activity)
       @activity = activity
     end
+    # rubocop:enable Lint/MissingSuper
 
     def id
       @activity["id"]

@@ -18,9 +18,14 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 module Elvis
   module Hook
-    @@listener_classes = []
-    @@listeners = nil
-    @@hook_listeners = {}
+    # Class instance vars (not @@ class vars): Elvis::Hook is a plain module used only
+    # through its own `class << self` singleton methods below -- nothing else `include`s
+    # or `extend`s Elvis::Hook itself (Elvis::Hook::Listener subclasses call back into it,
+    # they don't share its variable scope), so there is no hierarchy to accidentally share
+    # this state with.
+    @listener_classes = []
+    @listeners = nil
+    @hook_listeners = {}
 
     class << self
       # Adds a listener class.
@@ -28,30 +33,30 @@ module Elvis
       def add_listener(klass)
         raise "Hooks must include Singleton module." unless klass.included_modules.include?(Singleton)
 
-        @@listener_classes << klass
+        @listener_classes << klass
         clear_listeners_instances
       end
 
       # Returns all the listener instances.
       def listeners
-        @@listeners ||= @@listener_classes.collect { |listener| listener.instance }
+        @listeners ||= @listener_classes.collect { |listener| listener.instance }
       end
 
       # Returns the listener instances for the given hook.
       def hook_listeners(hook)
-        @@hook_listeners[hook] ||= listeners.select { |listener| listener.respond_to?(hook) }
+        @hook_listeners[hook] ||= listeners.select { |listener| listener.respond_to?(hook) }
       end
 
       # Clears all the listeners.
       def clear_listeners
-        @@listener_classes = []
+        @listener_classes = []
         clear_listeners_instances
       end
 
       # Clears all the listeners instances.
       def clear_listeners_instances
-        @@listeners = nil
-        @@hook_listeners = {}
+        @listeners = nil
+        @hook_listeners = {}
       end
 
       # Calls a hook.

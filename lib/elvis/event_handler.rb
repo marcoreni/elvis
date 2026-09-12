@@ -2,9 +2,11 @@
 
 require_relative "event_group"
 
-# noinspection RubyClassVariableUsageInspection
 class EventHandler
-  @@semaphore = Mutex.new
+  # Class instance var (not a @@ class var): EventHandler has no subclasses, and this is
+  # only ever read/written from class methods on EventHandler itself, so there's no
+  # cross-hierarchy sharing to guard against here.
+  @semaphore = Mutex.new
 
   # @return [EventGroup]
   def self.method_missing(method, *args)
@@ -14,7 +16,7 @@ class EventHandler
       end
     END_SRC
 
-    @@semaphore.synchronize do
+    @semaphore.synchronize do
       begin
         class_eval src, __FILE__, __LINE__
       rescue StandardError => e

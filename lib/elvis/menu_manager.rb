@@ -113,10 +113,13 @@ module Elvis
     end
 
     # @return [Hash{Symbol=>Array<Elvis::MenuManager::MenuItem>}]
+    # Class instance var (not a @@ class var): Elvis::MenuManager is a plain module used
+    # only through its own `self.` methods -- nothing includes/extends the module itself,
+    # so there is no hierarchy this could leak state across.
     def self.menus
-      @@menus ||= {}
+      @menus ||= {}
 
-      @@menus
+      @menus
     end
 
     # @param [Symbol] menu_key
@@ -125,7 +128,7 @@ module Elvis
     end
 
     def self.clear_menus
-      @@menus = {}
+      @menus = {}
     end
 
     class MenuNode
@@ -211,8 +214,12 @@ module Elvis
 
     class MenuItem < MenuNode
       # include Redmine::I18n
-      attr_reader :name, :url, :param, :route_params, :condition, :parent,
-                  :child_menus, :last, :permission, :action, :controller, :position, :a_options
+      # :url and :position are intentionally not in this list: they are given custom
+      # implementations below (computed from route_params / falling back like a plain
+      # reader), which would otherwise be dead code shadowed by these attr_reader-generated
+      # methods (Lint/DuplicateMethods).
+      attr_reader :name, :param, :route_params, :condition, :parent,
+                  :child_menus, :last, :permission, :action, :controller, :a_options
 
       include Rails.application.routes.url_helpers
 

@@ -5,9 +5,12 @@ require_relative "season_drop"
 
 module LiquidDrops
   class ApplicationDrop < Liquid::Drop
+    # rubocop:disable Lint/MissingSuper -- see app/mailers/liquid_drops/activity_drop.rb: skipping
+    # Liquid::Drop#initialize's @context = nil is harmless, Liquid sets drop.context= itself.
     def initialize(application)
       @application = application
     end
+    # rubocop:enable Lint/MissingSuper
 
     def id
       @application["id"]
