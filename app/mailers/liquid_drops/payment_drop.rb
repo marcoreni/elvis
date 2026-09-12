@@ -2,9 +2,12 @@
 
 module LiquidDrops
   class PaymentDrop < Liquid::Drop
+    # rubocop:disable Lint/MissingSuper -- see app/mailers/liquid_drops/activity_drop.rb: skipping
+    # Liquid::Drop#initialize's @context = nil is harmless, Liquid sets drop.context= itself.
     def initialize(payment_schedule)
       @payment_data = payment_schedule
     end
+    # rubocop:enable Lint/MissingSuper
 
     def payment_schedule_id
       @payment_data["id"]
