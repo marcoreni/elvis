@@ -184,12 +184,21 @@ i18n.on("languageChanged", () => {
 
 // --- End of constants sourced from the `common` i18n namespace.
 
-export const TIME_STEPS = [
-    { label: "1h", value: 1 },
-    { label: "45min", value: 0.75 },
-    { label: "30min", value: 0.5 },
-    { label: "15min", value: 0.25 },
+// TIME_STEPS: labels are display text, `value` is data (a fraction-of-an-hour step size consumed
+// by tools/date.js's `adjustStartEndTime`, unrelated to locale) — only the labels are localized,
+// following the same `export let` + `languageChanged` pattern as WEEKDAYS/KINDS_LABEL above.
+const _loadTimeSteps = () => [
+    { label: i18n.t("activityApplications:units.hours", { hours: 1 }), value: 1 },
+    { label: i18n.t("activityApplications:units.minutes", { minutes: 45 }), value: 0.75 },
+    { label: i18n.t("activityApplications:units.minutes", { minutes: 30 }), value: 0.5 },
+    { label: i18n.t("activityApplications:units.minutes", { minutes: 15 }), value: 0.25 },
 ];
+
+export let TIME_STEPS = _loadTimeSteps();
+
+i18n.on("languageChanged", () => {
+    TIME_STEPS = _loadTimeSteps();
+});
 
 // RECURRENCE_TYPES: unlike the exports above, this doesn't need an `export let` + `languageChanged`
 // pair — `toString` is a method, so every call already reads `i18n.t()` fresh; there is no

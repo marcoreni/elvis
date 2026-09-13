@@ -23,7 +23,13 @@
 
 import i18n from "../i18n";
 import * as constants from "./constants";
-import { WEEKDAYS, MONTHS, INTERVAL_KINDS, RECURRENCE_TYPES } from "./constants";
+import {
+    WEEKDAYS,
+    MONTHS,
+    INTERVAL_KINDS,
+    RECURRENCE_TYPES,
+    TIME_STEPS,
+} from "./constants";
 
 afterEach(async () => {
     await i18n.changeLanguage("fr");
@@ -102,7 +108,9 @@ describe("MESSAGES follows the active UI language", () => {
     test("after changeLanguage('fr') exposes the French plain-string messages", async () => {
         await i18n.changeLanguage("fr");
 
-        expect(constants.MESSAGES.err_required).toBe("Cette information est requise.");
+        expect(constants.MESSAGES.err_required).toBe(
+            "Cette information est requise."
+        );
         expect(constants.MESSAGES.err_must_choose_activity).toBe(
             "Veuillez choisir une activité avant de continuer."
         );
@@ -111,7 +119,9 @@ describe("MESSAGES follows the active UI language", () => {
     test("after changeLanguage('en') plain-string messages are re-read as English", async () => {
         await i18n.changeLanguage("en");
 
-        expect(constants.MESSAGES.err_required).toBe("This information is required.");
+        expect(constants.MESSAGES.err_required).toBe(
+            "This information is required."
+        );
         expect(constants.MESSAGES.err_must_choose_activity).toBe(
             "Please choose an activity before continuing."
         );
@@ -119,10 +129,14 @@ describe("MESSAGES follows the active UI language", () => {
 
     test("switching back to fr restores the French plain-string messages", async () => {
         await i18n.changeLanguage("en");
-        expect(constants.MESSAGES.err_required).toBe("This information is required.");
+        expect(constants.MESSAGES.err_required).toBe(
+            "This information is required."
+        );
 
         await i18n.changeLanguage("fr");
-        expect(constants.MESSAGES.err_required).toBe("Cette information est requise.");
+        expect(constants.MESSAGES.err_required).toBe(
+            "Cette information est requise."
+        );
     });
 
     test("an aliased capture of a plain-string message freezes at its value", async () => {
@@ -131,7 +145,9 @@ describe("MESSAGES follows the active UI language", () => {
 
         await i18n.changeLanguage("en");
         expect(aliased).toBe("Cette information est requise."); // stale
-        expect(constants.MESSAGES.err_required).toBe("This information is required."); // live
+        expect(constants.MESSAGES.err_required).toBe(
+            "This information is required."
+        ); // live
     });
 
     test("function-valued messages interpolate their argument in French", async () => {
@@ -163,11 +179,15 @@ describe("MESSAGES follows the active UI language", () => {
     // French strings until this batch corrected them (docs/KnownIssues.md).
     test.each(["fr", "en"])(
         "err_ord_lt is the strict variant, err_ord_lte the 'or equal' one (%s)",
-        async lng => {
+        async (lng) => {
             await i18n.changeLanguage(lng);
 
-            expect(constants.MESSAGES.err_ord_lt(10)).not.toMatch(/or equal|ou égale/);
-            expect(constants.MESSAGES.err_ord_lte(10)).toMatch(/or equal|ou égale/);
+            expect(constants.MESSAGES.err_ord_lt(10)).not.toMatch(
+                /or equal|ou égale/
+            );
+            expect(constants.MESSAGES.err_ord_lte(10)).toMatch(
+                /or equal|ou égale/
+            );
         }
     );
 });
@@ -212,18 +232,26 @@ describe("KINDS_LABEL follows the active UI language", () => {
     test("default language (fr) exposes the French kind labels", async () => {
         await i18n.changeLanguage("fr");
 
-        expect(constants.KINDS_LABEL[INTERVAL_KINDS.AVAILABILITY]).toBe("Disponibilité");
+        expect(constants.KINDS_LABEL[INTERVAL_KINDS.AVAILABILITY]).toBe(
+            "Disponibilité"
+        );
         expect(constants.KINDS_LABEL[INTERVAL_KINDS.LESSON]).toBe("Cours");
-        expect(constants.KINDS_LABEL[INTERVAL_KINDS.EVALUATION]).toBe("Évaluation");
+        expect(constants.KINDS_LABEL[INTERVAL_KINDS.EVALUATION]).toBe(
+            "Évaluation"
+        );
         expect(constants.KINDS_LABEL[INTERVAL_KINDS.OPTION]).toBe("Option");
     });
 
     test("after changeLanguage('en') kind labels are re-read as English", async () => {
         await i18n.changeLanguage("en");
 
-        expect(constants.KINDS_LABEL[INTERVAL_KINDS.AVAILABILITY]).toBe("Availability");
+        expect(constants.KINDS_LABEL[INTERVAL_KINDS.AVAILABILITY]).toBe(
+            "Availability"
+        );
         expect(constants.KINDS_LABEL[INTERVAL_KINDS.LESSON]).toBe("Course");
-        expect(constants.KINDS_LABEL[INTERVAL_KINDS.EVALUATION]).toBe("Evaluation");
+        expect(constants.KINDS_LABEL[INTERVAL_KINDS.EVALUATION]).toBe(
+            "Evaluation"
+        );
         expect(constants.KINDS_LABEL[INTERVAL_KINDS.OPTION]).toBe("Option");
     });
 
@@ -249,31 +277,51 @@ describe("PRE_APPLICATION_ACTION_LABELS follows the active UI language", () => {
     test("default language (fr) exposes the French action labels", async () => {
         await i18n.changeLanguage("fr");
 
-        expect(constants.PRE_APPLICATION_ACTION_LABELS.new).toBe("Nouvelle inscription");
-        expect(constants.PRE_APPLICATION_ACTION_LABELS.renew).toBe("Renouvellement");
-        expect(constants.PRE_APPLICATION_ACTION_LABELS.change).toBe("Changement");
+        expect(constants.PRE_APPLICATION_ACTION_LABELS.new).toBe(
+            "Nouvelle inscription"
+        );
+        expect(constants.PRE_APPLICATION_ACTION_LABELS.renew).toBe(
+            "Renouvellement"
+        );
+        expect(constants.PRE_APPLICATION_ACTION_LABELS.change).toBe(
+            "Changement"
+        );
         expect(constants.PRE_APPLICATION_ACTION_LABELS.stop).toBe("Arrêt");
-        expect(constants.PRE_APPLICATION_ACTION_LABELS.pursue_childhood).toBe("Poursuite enfance");
-        expect(constants.PRE_APPLICATION_ACTION_LABELS.cham).toBe("Inscription CHAM");
+        expect(constants.PRE_APPLICATION_ACTION_LABELS.pursue_childhood).toBe(
+            "Poursuite enfance"
+        );
+        expect(constants.PRE_APPLICATION_ACTION_LABELS.cham).toBe(
+            "Inscription CHAM"
+        );
     });
 
     test("after changeLanguage('en') action labels are re-read as English", async () => {
         await i18n.changeLanguage("en");
 
-        expect(constants.PRE_APPLICATION_ACTION_LABELS.new).toBe("New enrollment");
+        expect(constants.PRE_APPLICATION_ACTION_LABELS.new).toBe(
+            "New enrollment"
+        );
         expect(constants.PRE_APPLICATION_ACTION_LABELS.renew).toBe("Renewal");
         expect(constants.PRE_APPLICATION_ACTION_LABELS.change).toBe("Change");
         expect(constants.PRE_APPLICATION_ACTION_LABELS.stop).toBe("Stop");
-        expect(constants.PRE_APPLICATION_ACTION_LABELS.pursue_childhood).toBe("Continuing from Kids");
-        expect(constants.PRE_APPLICATION_ACTION_LABELS.cham).toBe("CHAM enrollment");
+        expect(constants.PRE_APPLICATION_ACTION_LABELS.pursue_childhood).toBe(
+            "Continuing from Kids"
+        );
+        expect(constants.PRE_APPLICATION_ACTION_LABELS.cham).toBe(
+            "CHAM enrollment"
+        );
     });
 
     test("switching back to fr restores the French action labels", async () => {
         await i18n.changeLanguage("en");
-        expect(constants.PRE_APPLICATION_ACTION_LABELS.new).toBe("New enrollment");
+        expect(constants.PRE_APPLICATION_ACTION_LABELS.new).toBe(
+            "New enrollment"
+        );
 
         await i18n.changeLanguage("fr");
-        expect(constants.PRE_APPLICATION_ACTION_LABELS.new).toBe("Nouvelle inscription");
+        expect(constants.PRE_APPLICATION_ACTION_LABELS.new).toBe(
+            "Nouvelle inscription"
+        );
     });
 
     test("an aliased capture of PRE_APPLICATION_ACTION_LABELS freezes at its value", async () => {
@@ -282,7 +330,9 @@ describe("PRE_APPLICATION_ACTION_LABELS follows the active UI language", () => {
 
         await i18n.changeLanguage("en");
         expect(aliased.new).toBe("Nouvelle inscription"); // stale
-        expect(constants.PRE_APPLICATION_ACTION_LABELS.new).toBe("New enrollment"); // live
+        expect(constants.PRE_APPLICATION_ACTION_LABELS.new).toBe(
+            "New enrollment"
+        ); // live
     });
 
     // The fallback bug fixed alongside this lot's extraction (ActivitiesApplicationsList.jsx
@@ -347,5 +397,51 @@ describe("RECURRENCE_TYPES.toString follows the active UI language (no export le
         await i18n.changeLanguage("en");
         expect(RECURRENCE_TYPES.getDefault()).toBe("weekly");
         expect(RECURRENCE_TYPES.getAll()).toEqual(allFr);
+    });
+});
+
+// TIME_STEPS (docs/KnownIssues.md "activityApplications — small untranslated unit tokens"):
+// labels now go through activityApplications:units.{hours,minutes} instead of the hardcoded
+// "1h"/"45min"/"30min"/"15min" strings, following the same `export let` + `languageChanged`
+// live-binding pattern as WEEKDAYS/KINDS_LABEL above. `value` is a fraction-of-an-hour step size
+// consumed by tools/date.js, unrelated to locale, and must stay numerically unchanged.
+describe("TIME_STEPS follows the active UI language", () => {
+    test("default language (fr) exposes the French, spaced labels", async () => {
+        await i18n.changeLanguage("fr");
+
+        expect(constants.TIME_STEPS).toEqual([
+            { label: "1h", value: 1 },
+            { label: "45 min", value: 0.75 },
+            { label: "30 min", value: 0.5 },
+            { label: "15 min", value: 0.25 },
+        ]);
+    });
+
+    test("after changeLanguage('en') labels are re-read as English", async () => {
+        await i18n.changeLanguage("en");
+
+        expect(constants.TIME_STEPS).toEqual([
+            { label: "1h", value: 1 },
+            { label: "45 min", value: 0.75 },
+            { label: "30 min", value: 0.5 },
+            { label: "15 min", value: 0.25 },
+        ]);
+    });
+
+    test("the live binding updates for a named import, not only the namespace object", async () => {
+        await i18n.changeLanguage("fr");
+        expect(TIME_STEPS[1].label).toBe("45 min");
+
+        await i18n.changeLanguage("en");
+        expect(TIME_STEPS[1].label).toBe("45 min");
+    });
+
+    test("value entries never change across a locale switch", async () => {
+        await i18n.changeLanguage("fr");
+        const valuesFr = constants.TIME_STEPS.map((ts) => ts.value);
+
+        await i18n.changeLanguage("en");
+        expect(constants.TIME_STEPS.map((ts) => ts.value)).toEqual(valuesFr);
+        expect(valuesFr).toEqual([1, 0.75, 0.5, 0.25]);
     });
 });
