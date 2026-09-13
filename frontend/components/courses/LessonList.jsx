@@ -20,7 +20,11 @@ import {
     csrfToken,
     findAndGet,
 } from "../utils";
-import { formatActivityHeadcount, isActivityWithOnlyOneOption } from "../../tools/format";
+import {
+    formatActivityHeadcount,
+    isActivityWithOnlyOneOption,
+    dateOnly,
+} from "../../tools/format";
 import UserWithInfos from "../common/UserWithInfos";
 import _ from "lodash";
 import { averageAgeDisplay } from "../planning/TimeIntervalHelpers";
@@ -526,9 +530,9 @@ class LessonList extends React.Component {
             .filter(
                 u =>
                     referenceDate == undefined ||
-                    (u.begin_at <= referenceDate &&
-                        (u.stopped_at == undefined ||
-                            u.stopped_at > referenceDate)),
+                    (dateOnly(u.begin_at) <= referenceDate &&
+                        (dateOnly(u.stopped_at) == undefined ||
+                            dateOnly(u.stopped_at) > referenceDate)),
             )
             .compact()
             .map(u => u.id)
@@ -650,9 +654,9 @@ class LessonList extends React.Component {
             .filter(
                 u =>
                     referenceDate == undefined ||
-                    (u.begin_at <= referenceDate &&
-                        (u.stopped_at == undefined ||
-                            u.stopped_at > referenceDate)),
+                    (dateOnly(u.begin_at) <= referenceDate &&
+                        (dateOnly(u.stopped_at) == undefined ||
+                            dateOnly(u.stopped_at) > referenceDate)),
             )
             .compact()
             .uniqBy(u => u.id)
@@ -1202,9 +1206,9 @@ class LessonList extends React.Component {
                                 row.original.users.filter(
                                     u =>
                                         referenceDate == undefined ||
-                                        (u.begin_at <= referenceDate &&
-                                            (u.stopped_at == undefined ||
-                                                u.stopped_at > referenceDate)),
+                                        (dateOnly(u.begin_at) <= referenceDate &&
+                                            (dateOnly(u.stopped_at) == undefined ||
+                                                dateOnly(u.stopped_at) > referenceDate)),
                                 ).length > 0;
 
                             if (hasUser || row.original.options.length > 0) {
@@ -1340,8 +1344,11 @@ const UserRow = ({
     const customStyle = isOption ? { color: "#9575CD" } : {};
 
     if (referenceDate !== undefined) {
-        if (user.begin_at > referenceDate) customStyle.color = "#fca000";
-        if (user.stopped_at !== undefined && user.stopped_at <= referenceDate)
+        if (dateOnly(user.begin_at) > referenceDate) customStyle.color = "#fca000";
+        if (
+            dateOnly(user.stopped_at) !== undefined &&
+            dateOnly(user.stopped_at) <= referenceDate
+        )
             customStyle.color = "#ff001a";
     }
 

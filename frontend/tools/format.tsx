@@ -158,7 +158,10 @@ export const displayActivityRef = (ref: {
 // like-for-like without going through `Date`/timezone conversion (which would reintroduce the
 // browser-local-zone drift `PARIS_DATE_FORMAT_OPTIONS` works around elsewhere). `null`/`undefined`
 // pass through unchanged so the existing "missing date excludes the user" semantics are preserved.
-const dateOnly = (value?: string | null) => (value ? value.split("T")[0] : value);
+// Exported so every other begin_at/stopped_at-vs-referenceDate comparison in the app (e.g.
+// courses/LessonList.jsx's headcount/reminder-list/color-coding call sites) can use the same
+// date-only comparison instead of re-deriving (or forgetting) this fix independently.
+export const dateOnly = (value?: string | null) => (value ? value.split("T")[0] : value);
 
 export const occupationInfos = (
     activity: Activity,
@@ -199,9 +202,13 @@ export const occupationInfos = (
                 // A strict `=== undefined` check here misses the `null` case and ends up
                 // comparing dates against `null` below, which drops every user.
                 referenceDate == null ||
-                (dateOnly(u.begin_at) <= referenceDate &&
+                // `dateOnly`'s signature accepts `string | null` (it's shared with call sites
+                // that do pass a nullable value), which widens its return type here even though
+                // `User.begin_at`/`stopped_at` are non-nullable -- the `as string` casts don't
+                // change behavior, they just narrow back to what's already guaranteed.
+                ((dateOnly(u.begin_at) as string) <= referenceDate &&
                     (dateOnly(u.stopped_at) == undefined ||
-                        dateOnly(u.stopped_at) > referenceDate))
+                        (dateOnly(u.stopped_at) as string) > referenceDate))
         );
 
         headCount = activeUsers.length + optionsUserIds.length;

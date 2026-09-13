@@ -935,8 +935,12 @@ class UsersController < ApplicationController
                .includes({
                            time_interval: {},
                            activity_ref: { activity_ref_kind: {} },
+                           room: {},
+                           location: {},
+                           options: {},
                            student_evaluations: %i[answers student],
                            users: {
+                             activity_refs: {},
                              levels: {
                                evaluation_level_ref: {},
                                activity_ref: { activity_ref_kind: {} }
@@ -965,7 +969,23 @@ class UsersController < ApplicationController
     season = Season.from_interval(@activity_ref.time_interval).first
     @season = season.next.as_json(methods: :previous) # les évaluations des étudiants sont associés à la saison n+1 si l'activity était en saison n
 
-    activities = @user.season_teacher_activities(season)
+    activities = @user
+                 .season_teacher_activities(season)
+                 .includes({
+                             time_interval: {},
+                             activity_ref: { activity_ref_kind: {} },
+                             room: {},
+                             location: {},
+                             options: {},
+                             student_evaluations: %i[answers student],
+                             users: {
+                               activity_refs: {},
+                               levels: {
+                                 evaluation_level_ref: {},
+                                 activity_ref: { activity_ref_kind: {} }
+                               }
+                             }
+                           })
     @activities = ActiveModelSerializers::SerializableResource.new(
       activities, each_serializer: ActivitySerializer
     ).as_json

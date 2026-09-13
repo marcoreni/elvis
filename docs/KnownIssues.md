@@ -778,8 +778,51 @@ serializer to unify with (no divergence to fix), and switching the reference-dat
 require wrapping each one in `ActiveModelSerializers::SerializableResource` for no behavioral gain
 since raw `as_json` is already a superset of what's read. Left alone per "keep the change as narrow
 as correctness allows" — don't extend this to those collections without a concrete new field need.
-`activities_instruments`/full `teacher` are still declared on `ActivitySerializer` but, like
-`options`, weren't read anywhere in the evaluation flow either; kept as-is (pre-existing, harmless).
+Correction: `ActivitySerializer`'s `has_many :activity_instances` is commented out (not
+`activities_instruments`, which never existed under that name) — it isn't serialized at all today,
+not "declared but unread." `options`/`teacher` ARE active associations on the serializer; the
+review that found the `season_activities`/`evaluate` N+1 regression below identified them
+(alongside `room`/`location`/`users.activity_refs`) as exactly the associations the new
+serializer-based path touches without eager-loading, so they're now included in both actions'
+`.includes()` tree even though the evaluation frontend doesn't read their fields — the N+1 fix
+needs to cover everything `default_includes = "**"` walks, not just what's consumed.
+
+**Code-review follow-up (applied to this same branch):** an independent review measured a real N+1
+regression from switching to the serializers — `evaluate`'s query count went 31 → 271 (8.7x) with
+10 activities / 20 students / 1 level each, because the original `.includes()` tree (carried over
+from before this change) didn't cover `options`/`room`/`location`/`users.activity_refs`, which
+`ActivitySerializer` now touches via `default_includes = "**"`. Fixed by extending both
+`season_activities`' and `evaluate`'s `.includes()` trees to match (the latter previously had none
+at all).
+
+The review's list also named `teacher` — that one is NOT includable and was removed after actually
+trying it (`.includes(teacher: {})` raised `ActiveRecord::ConfigurationError: Can't join 'Activity'
+to association named 'teacher'`, caught by re-running the controller spec, not by static reading).
+`Activity#teacher` (`app/models/activity.rb`) is a plain Ruby method, not an AR association —
+`teachers_activities.where(is_main: true).map(&:teacher).first`. Its own `.where` call always
+issues a fresh query against the association *regardless* of any `.includes()`, since calling
+`.where` on a preloaded `has_many` bypasses the preloaded in-memory array. So `ActivitySerializer`'s
+per-activity `teacher` lookup is N+1-prone independent of this fix, and always has been — fixing it
+for real means changing `Activity#teacher` itself (e.g. reading from an already-preloaded
+`teachers_activities` array in Ruby instead of re-querying), a model-behavior change out of scope
+here. Left as a known, pre-existing N+1, not introduced or fixed by this branch.
+
+Re-verified `options`/`room`/`location`/`users.activity_refs` are genuine eager-loadable
+associations (`belongs_to`/`has_many` in `app/models/activity.rb`/`user.rb`) and that
+`spec/controllers/users_season_activities_evaluate_controller_spec.rb` passes with the corrected
+tree. Did not get a clean before/after query count for the `teacher`-excluded fix due to Postgres
+contention from a concurrent, unrelated investigation sharing the same local test DB — worth a
+follow-up measurement when convenient, but the tree now at least matches what's actually
+`.includes()`-able rather than crashing on a fake association name.
+
+The same review found the `occupationInfos` date-comparison fix (`frontend/tools/format.tsx`) had
+**4 unfixed identical copies** of the same bug still live in
+`frontend/components/courses/LessonList.jsx` (the headcount-column filter, the reminder-email
+recipient filter ×2, and the row color-coding) — the fix only touched the one call site inside
+`occupationInfos`, leaving the same page internally inconsistent (a student starting exactly on the
+reference date now counts toward the headcount but is still excluded from the expandable user list
+and reminder emails, and mis-colored). Fixed by exporting `dateOnly` from `format.tsx` and using it
+at all 4 `LessonList.jsx` sites instead of the raw string comparison.
 
 **Verification:** `bundle exec rspec` (296 examples — the known `formule_i18n_spec.rb` order-dependent
 locale-leak flake reproduced once in the full run and passed cleanly in isolation, per the
