@@ -1,129 +1,129 @@
 name: CI
 
 on:
-  push:
-    branches: [develop, main]
-  pull_request:
-    branches: [develop, main]
+    push:
+        branches: [develop, main]
+    pull_request:
+        branches: [develop, main]
 
 # rubocop/tsc gate on regression past these baselines, not on the pre-existing backlog.
 env:
-  RUBOCOP_BASELINE_OFFENSES: 1037
-  TSC_BASELINE_ERRORS: 0
+    RUBOCOP_BASELINE_OFFENSES: 1037
+    TSC_BASELINE_ERRORS: 0
 
 jobs:
-  rspec:
-    runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: postgres:14.0
-        env:
-          POSTGRES_USER: elvis
-          POSTGRES_PASSWORD: elvis
-          POSTGRES_DB: elvis_test
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd "pg_isready -U elvis"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-      redis:
-        image: redis:latest
-        ports:
-          - 6379:6379
-        options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-    steps:
-      - uses: actions/checkout@v4
+    rspec:
+        runs-on: ubuntu-latest
+        services:
+            postgres:
+                image: postgres:14.0
+                env:
+                    POSTGRES_USER: elvis
+                    POSTGRES_PASSWORD: elvis
+                    POSTGRES_DB: elvis_test
+                ports:
+                    - 5432:5432
+                options: >-
+                    --health-cmd "pg_isready -U elvis"
+                    --health-interval 10s
+                    --health-timeout 5s
+                    --health-retries 5
+            redis:
+                image: redis:latest
+                ports:
+                    - 6379:6379
+                options: >-
+                    --health-cmd "redis-cli ping"
+                    --health-interval 10s
+                    --health-timeout 5s
+                    --health-retries 5
+        steps:
+            - uses: actions/checkout@v7
 
-      - uses: ruby/setup-ruby@v1
-        with:
-          bundler-cache: true
+            - uses: ruby/setup-ruby@v1
+              with:
+                  bundler-cache: true
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-          cache: yarn
+            - uses: actions/setup-node@v7
+              with:
+                  node-version: "22"
+                  cache: yarn
 
-      - run: yarn install --frozen-lockfile
+            - run: yarn install --frozen-lockfile
 
-      # plugins.json is gitignored/absent, so no plugin gems and no GITHUB_TOKEN needed.
-      - name: Prepare test database
-        env:
-          RAILS_ENV: test
-        run: bin/rails db:create db:schema:load
+            # plugins.json is gitignored/absent, so no plugin gems and no GITHUB_TOKEN needed.
+            - name: Prepare test database
+              env:
+                  RAILS_ENV: test
+              run: bin/rails db:create db:schema:load
 
-      # Build up front rather than relying on compile-on-demand's first-request latency.
-      - name: Build test Shakapacker manifest
-        env:
-          RAILS_ENV: test
-          NODE_ENV: test
-        run: bin/shakapacker
+            # Build up front rather than relying on compile-on-demand's first-request latency.
+            - name: Build test Shakapacker manifest
+              env:
+                  RAILS_ENV: test
+                  NODE_ENV: test
+              run: bin/shakapacker
 
-      - name: Run RSpec
-        env:
-          RAILS_ENV: test
-        run: bundle exec rspec
+            - name: Run RSpec
+              env:
+                  RAILS_ENV: test
+              run: bundle exec rspec
 
-  i18n-tasks:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ruby/setup-ruby@v1
-        with:
-          bundler-cache: true
-      - run: bin/i18n-tasks health
+    i18n-tasks:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v7
+            - uses: ruby/setup-ruby@v1
+              with:
+                  bundler-cache: true
+            - run: bin/i18n-tasks health
 
-  vitest:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-          cache: yarn
-      - run: yarn install --frozen-lockfile
-      - run: yarn vitest run
+    vitest:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v7
+            - uses: actions/setup-node@v7
+              with:
+                  node-version: "22"
+                  cache: yarn
+            - run: yarn install --frozen-lockfile
+            - run: yarn vitest run
 
-  tsc:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-          cache: yarn
-      - run: yarn install --frozen-lockfile
-      - name: Type-check (fails only on regression past baseline)
-        run: |
-          set +e
-          npx tsc --noEmit >tsc_output.log 2>&1
-          cat tsc_output.log
-          count=$(grep -c "error TS" tsc_output.log)
-          echo "TypeScript errors: $count (baseline: $TSC_BASELINE_ERRORS)"
-          if [ "$count" -gt "$TSC_BASELINE_ERRORS" ]; then
-            echo "::error::tsc errors increased ($count > $TSC_BASELINE_ERRORS baseline)"
-            exit 1
-          fi
+    tsc:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v7
+            - uses: actions/setup-node@v7
+              with:
+                  node-version: "22"
+                  cache: yarn
+            - run: yarn install --frozen-lockfile
+            - name: Type-check (fails only on regression past baseline)
+              run: |
+                  set +e
+                  npx tsc --noEmit >tsc_output.log 2>&1
+                  cat tsc_output.log
+                  count=$(grep -c "error TS" tsc_output.log)
+                  echo "TypeScript errors: $count (baseline: $TSC_BASELINE_ERRORS)"
+                  if [ "$count" -gt "$TSC_BASELINE_ERRORS" ]; then
+                    echo "::error::tsc errors increased ($count > $TSC_BASELINE_ERRORS baseline)"
+                    exit 1
+                  fi
 
-  rubocop:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ruby/setup-ruby@v1
-        with:
-          bundler-cache: true
-      - name: Rubocop (fails only on regression past baseline)
-        run: |
-          set +e
-          bundle exec rubocop --format simple --format json --out rubocop_output.json
-          count=$(ruby -rjson -e "puts JSON.parse(File.read('rubocop_output.json'))['summary']['offense_count']")
-          echo "Rubocop offenses: $count (baseline: $RUBOCOP_BASELINE_OFFENSES)"
-          if [ "$count" -gt "$RUBOCOP_BASELINE_OFFENSES" ]; then
-            echo "::error::rubocop offenses increased ($count > $RUBOCOP_BASELINE_OFFENSES baseline)"
-            exit 1
-          fi
+    rubocop:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v7
+            - uses: ruby/setup-ruby@v1
+              with:
+                  bundler-cache: true
+            - name: Rubocop (fails only on regression past baseline)
+              run: |
+                  set +e
+                  bundle exec rubocop --format simple --format json --out rubocop_output.json
+                  count=$(ruby -rjson -e "puts JSON.parse(File.read('rubocop_output.json'))['summary']['offense_count']")
+                  echo "Rubocop offenses: $count (baseline: $RUBOCOP_BASELINE_OFFENSES)"
+                  if [ "$count" -gt "$RUBOCOP_BASELINE_OFFENSES" ]; then
+                    echo "::error::rubocop offenses increased ($count > $RUBOCOP_BASELINE_OFFENSES baseline)"
+                    exit 1
+                  fi

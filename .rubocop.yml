@@ -1,11 +1,86 @@
 Metrics:
-  Enabled: false
+    Enabled: false
 Style/StringLiterals:
-  EnforcedStyle: double_quotes
+    EnforcedStyle: double_quotes
 
 # This repo's established convention (visible throughout the codebase) is to write no
 # top-level comments unless the *why* is genuinely non-obvious. Style/Documentation demands
 # a comment above every class/module, which conflicts with that convention — bulk-adding
 # boilerplate doc comments just to satisfy the cop would be noise, not a cleanup.
 Style/Documentation:
-  Enabled: false
+    Enabled: false
+
+Gemspec/AddRuntimeDependency: # new in 1.65
+    Enabled: true
+Gemspec/AttributeAssignment: # new in 1.77
+    Enabled: true
+Gemspec/DeprecatedAttributeAssignment: # new in 1.30
+    Enabled: true
+Gemspec/DevelopmentDependencies: # new in 1.44
+    Enabled: true
+Gemspec/RequireMFA: # new in 1.23
+    Enabled: true
+Layout/EmptyLinesAfterModuleInclusion: # new in 1.79
+    Enabled: true
+Layout/LineContinuationLeadingSpace: # new in 1.31
+    Enabled: true
+Layout/LineContinuationSpacing: # new in 1.31
+    Enabled: true
+Layout/LineEndStringConcatenationIndentation: # new in 1.18
+    Enabled: true
+Layout/SpaceBeforeBrackets: # new in 1.7
+    Enabled: true
+Lint/AmbiguousAssignment: # new in 1.7
+    Enabled: true
+Lint/AmbiguousOperatorPrecedence: # new in 1.21
+    Enabled: true
+Lint/AmbiguousRange: # new in 1.19
+    Enabled: true
+Lint/ArgumentMismatch: # new in 1.90
+    Enabled: true
+Lint/ArrayLiteralInRegexp: # new in 1.71
+    Enabled: true
+Lint/ConstantOverwrittenInRescue: # new in 1.31
+    Enabled: true
+Style/RedundantLineContinuation: # new in 1.49
+    Enabled: true
+Style/RedundantMinMaxBy: # new in 1.85
+    Enabled: true
+Style/RedundantRegexpArgument: # new in 1.53
+    Enabled: true
+Style/RedundantRegexpConstructor: # new in 1.52
+    Enabled: true
+Style/RedundantSelfAssignmentBranch: # new in 1.19
+    Enabled: true
+Style/RedundantStringEscape: # new in 1.37
+    Enabled: true
+Style/ReturnNilInPredicateMethodDefinition: # new in 1.53
+    Enabled: true
+Style/ReverseFind: # new in 1.84
+    Enabled: true
+Style/SafeNavigationChainLength: # new in 1.68
+    Enabled: true
+Style/SelectByKind: # new in 1.85
+    Enabled: true
+Style/SelectByRange: # new in 1.85
+    Enabled: true
+Style/SelectByRegexp: # new in 1.22
+    Enabled: true
+Style/SendWithLiteralMethodName: # new in 1.64
+    Enabled: true
+Style/SingleLineDoEndBlock: # new in 1.57
+    Enabled: true
+Style/StringChars: # new in 1.12
+    Enabled: true
+Style/SuperArguments: # new in 1.64
+    Enabled: true
+Style/SuperWithArgsParentheses: # new in 1.58
+    Enabled: true
+Style/SwapValues: # new in 1.1
+    Enabled: true
+Style/TallyMethod: # new in 1.85
+    Enabled: true
+Style/TimeNow: # new in 1.90
+    Enabled: true
+Style/YAMLFileRead: # new in 1.53
+    Enabled: true
