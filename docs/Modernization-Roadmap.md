@@ -7,40 +7,16 @@ of each item as it moves; when an item is fully done, remove it and note the fac
 commit/PR reference) rather than leaving a stale "done" entry — same discipline as
 `docs/KnownIssues.md`.
 
-## 1. CI workflow on develop/main — status: not started
+## 1. CI workflow on develop/main — done, see `.github/workflows/ci.yml` (pushed to develop 2026-09-13)
 
-Add a GitHub Actions workflow that runs on every push to `develop` and `main` (and ideally on
-PRs targeting them). This repo currently has **no CI at all** beyond `.github/workflows/main.yml`
-(an auto-release-on-tag workflow, unrelated) — this has been true since before the i18n work and
-is why several regressions in this codebase went unnoticed for a while.
-
-Run, at minimum:
-- `bundle exec rspec` (needs Postgres, Elasticsearch, Redis services — see `docker-compose.yml`
-  for versions: `postgres:14.0`, `docker.elastic.co/elasticsearch/elasticsearch:7.16.3`,
-  `redis:latest`). Needs a real `public/packs-test/` manifest with a `css/` subdirectory built
-  first (`yarn build` or equivalent) — a stale/missing one causes ~100+ spurious failures, a
-  repo-specific gotcha that has bitten multiple agents this project.
-- `bin/i18n-tasks health` (must show 0 missing/unused/inconsistent/reserved) — run `bundle
-  install`/`bin/i18n-tasks`, not `bundle exec i18n-tasks` (the global binstub crashes on a
-  missing logger, per repo lore).
-- `npx tsc --noEmit` (TypeScript check across `frontend/`) — as of 2026-09-13 baseline is 5
-  pre-existing errors (`AvailabilityCommentModal.tsx` ×2, `WysiwygViewer.tsx` ×2 missing
-  `@types/draft-js`+`draftjs-to-html`, `api.ts` ×1) — decide whether CI should fail on these or
-  only regress-check (i.e. fail if the count *increases*) until they're fixed separately.
-- `yarn vitest run` (currently 1270 examples passing).
-- `bundle exec rubocop` — currently 1037 offenses across 214 files (all pre-triaged/categorized
-  in `docs/KnownIssues.md`'s "Rubocop backlog" section); decide fail-on-any vs. fail-on-regression
-  here too, since a hard failure today would block on a huge pre-existing backlog rather than
-  new code.
-
-Versions/toolchain to match: Ruby `3.3.12` (`.ruby-version`), Node `^22.0.0` (`package.json`
-`engines`), Yarn `1.22.21`. `GITHUB_TOKEN` is needed to fetch private plugin gems in Docker — for
-CI, either vendor/skip plugin gems or use a repo secret.
-
-Recommended shape: fail on `rspec`/`i18n-tasks health`/`vitest` (these should always be green);
-for `tsc`/`rubocop`, snapshot the current baseline count and fail only if it goes up, so existing
-debt doesn't block unrelated PRs while still preventing new regressions. Push directly to
-`develop` once written (per the user's explicit instruction this round — no PR needed for this).
+Five jobs on push/PR to `develop`/`main`: `rspec` (with `postgres:14.0` + ES `7.16.3` + `redis`
+service containers, builds `public/packs-test/` via `RAILS_ENV=test bin/shakapacker` first — a
+stale/missing manifest otherwise causes ~100+ spurious failures), `i18n-tasks health`, `vitest`,
+and `tsc`/`rubocop` gated on regression past a checked-in baseline (5 / 1037) rather than failing
+on the pre-existing backlog. `plugins.json` is gitignored/absent from a fresh checkout, so
+`bundle install` installs zero plugin gems and no `GITHUB_TOKEN` secret is needed. Not yet
+confirmed green from an actual Actions run (no push happened from within this session before this
+was written) — worth checking the first real run.
 
 ## 2. Orphaned-code tracking file — status: not started
 
