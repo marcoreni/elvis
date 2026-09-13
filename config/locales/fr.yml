@@ -759,9 +759,6 @@ fr:
         greeting_html: Bonjour <strong>%{name}</strong>,
         login_link: Connectez-vous
         subscribe_notice: pour adhérer à une nouvelle activité.
-    admin:
-      edit_mail_settings:
-        heading: 'Paramètres avancés : Mails'
     application_mailer:
       notify_new_application:
         acknowledgement_html: |-
@@ -947,15 +944,6 @@ fr:
         terms_link: Politique de confidentialité (CGU)
         version: version %{number}
         version_dev: version dev
-      static_pages:
-        headline_1_html: Logiciel<br/> de gestion
-        headline_2_html: Cours collectifs <br/> Ateliers
-        next: Suivant
-        previous: Précédent
-        read_more: EN SAVOIR PLUS
-        sign_in: Connexion
-        sign_up: Inscription
-        toggle_navigation: Afficher la navigation
     locations:
       edit:
         title: Modification localisation
@@ -1234,14 +1222,6 @@ fr:
     shared:
       form_errors:
         heading: "%{count} erreur(s) empêchent l'enregistrement :"
-    static_pages:
-      about:
-        heading: À propos d’Elvis
-      landing:
-        collective_courses_heading: Super Cours Collectifs
-        details_link: Détails »
-        membership_heading: Adhésion
-        workshops_heading: Ateliers
     student_evaluations_stats:
       stats:
         heading: Synthèse des évaluations - %{season}

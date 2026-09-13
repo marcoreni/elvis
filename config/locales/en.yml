@@ -747,9 +747,6 @@ en:
         greeting_html: Hello <strong>%{name}</strong>,
         login_link: Sign in
         subscribe_notice: to join a new activity.
-    admin:
-      edit_mail_settings:
-        heading: 'Advanced settings: Emails'
     application_mailer:
       notify_new_application:
         acknowledgement_html: |-
@@ -927,15 +924,6 @@ en:
         terms_link: Privacy policy (Terms of Use)
         version: version %{number}
         version_dev: dev version
-      static_pages:
-        headline_1_html: Management<br/> software
-        headline_2_html: Group classes <br/> Workshops
-        next: Next
-        previous: Previous
-        read_more: READ MORE
-        sign_in: Sign in
-        sign_up: Sign up
-        toggle_navigation: Toggle navigation
     locations:
       edit:
         title: Edit location
@@ -1211,14 +1199,6 @@ en:
     shared:
       form_errors:
         heading: "%{count} error(s) prevented this record from being saved:"
-    static_pages:
-      about:
-        heading: About Elvis
-      landing:
-        collective_courses_heading: Group Classes
-        details_link: Details »
-        membership_heading: Membership
-        workshops_heading: Workshops
     student_evaluations_stats:
       stats:
         heading: Evaluation summary - %{season}
