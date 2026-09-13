@@ -180,6 +180,17 @@ code. **Explicit ask**: if migration turns out feasible, do it in one pass rathe
 "fixing" the existing `.fire()` call sites to work with the old version first and then
 re-touching them again for the real migration — avoid the double-churn.
 
+## 8. Do we need Elasticsearch at all? — status: not started, deep dive requested
+
+CI dropped ES entirely (item 1) since tests never touch it, but dev/prod still run it for 5 real
+chewy indices (`app/chewy/`: activities, activity_applications, adhesions, salles, users) backing
+`advancedSearch` and admin search UIs — not vestigial today. Open question: is ES actually earning
+its infra cost (a whole extra service to run/deploy/upgrade) vs. e.g. Postgres full-text search
+(`pg_trgm`/`tsvector`) for this app's actual query patterns (mostly autocomplete/name lookups per
+the index definitions, not complex aggregations). Needs: inventory what each index's search
+UI actually requires (fuzzy/prefix matching, faceting, ranking), whether Postgres could cover it,
+and a real migration-cost estimate — not a snap decision.
+
 ## Context this roadmap assumes (don't re-derive, just re-read if needed)
 
 - `docs/KnownIssues.md` (~273 lines as of this roadmap) and `docs/I18n-Roadmap.md` (Phase 07

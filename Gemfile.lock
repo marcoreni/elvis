@@ -663,7 +663,6 @@ DEPENDENCIES
   letter_opener
   liquid-rails!
   listen (>= 3.0.5)
-  logger
   memory_profiler
   mimemagic
   minitest-rails

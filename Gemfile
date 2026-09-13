@@ -10,7 +10,6 @@ git_source(:github) do |repo_name|
 end
 
 gem "base64"
-gem "logger"
 
 # Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
 gem "rails", "6.1.7.10"

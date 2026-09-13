@@ -251,10 +251,15 @@ differently-shaped flake (`spec/requests/locations_destroy_spec.rb` expecting a 
 and getting `nil`) co-occurs and also reproduces under plain (non-`--order random`) runs, confirming
 real wall-clock nondeterminism.
 
-Scope confirmed wider 2026-09-13: same "expected en, got fr" shape also seen in
-`remove_controller_display_class_name_spec.rb` and `formule_i18n_spec.rb` on a clean `develop`
-checkout — same Heisenbug, not three separate bugs. Now the priority (user wants CI reliably
-green, not just present).
+Scope confirmed wider 2026-09-13: same shape also seen in
+`remove_controller_display_class_name_spec.rb`, `formule_i18n_spec.rb`, `devise_mailer_spec.rb`
+(both examples), and `locations_destroy_spec.rb` — a different random subset fails each full run,
+zero connection to Elasticsearch (reproduces identically with no ES running at all). Always
+directional: expected-English-got-French, never the reverse — points at the English resolution
+path intermittently failing/short-circuiting to the base locale, not a random cross-contamination.
+`Parameter.get_value`'s `Rails.cache` + `available_locales`/`localization_settings`' per-request
+`@ivar` memoization were re-checked and are not it (both correctly scoped/cleared). Next step
+needs the TracePoint approach already flagged below — not done yet, real dedicated time required.
 
 Best lead so far: `ActiveSupport::Notifications.subscribe(/render_(template|partial)\.action_view/)`
 on a failing run shows the failing example's `mail.body.encoded` call produces **zero** render
