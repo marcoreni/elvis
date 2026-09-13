@@ -11,6 +11,8 @@ end
 
 gem "base64"
 gem "logger"
+# Ref: https://stackoverflow.com/questions/79360526/uninitialized-constant-activesupportloggerthreadsafelevellogger-nameerror - we need to keep this locked until rails 7.1 comes
+gem "concurrent-ruby", "1.3.4"
 
 # Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
 gem "rails", "6.1.7.10"
