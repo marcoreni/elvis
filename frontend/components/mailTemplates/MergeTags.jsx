@@ -1,129 +1,152 @@
-export const APPLICATION_TAGS = {
+import i18n from "../../i18n";
+
+// Merge-tag dictionaries consumed by TemplateEditor.jsx -> ElvisEditor.jsx's
+// `unlayer.setMergeTags(props.mergeTags)`. Per @unlayer/types' MergeTag interface
+// (node_modules/@unlayer/types/dist/editor/merge-tags.d.ts), `name` is purely the display label
+// shown in the unlayer merge-tag picker and `sample` is purely the preview/example text shown in
+// unlayer's "sample data" preview mode — neither is a lookup/matching key. `value` (the actual
+// `{{...}}` Liquid placeholder substituted server-side) and each dictionary's own object keys
+// (e.g. `first_name`, `applicationId` — the id unlayer indexes tags by) ARE load-bearing and stay
+// exactly as-is; only `name`/`sample` (and each loop tag's `rules.repeat.name`, itself a display
+// label — `rules.repeat.before`/`after` are literal Liquid `{% for %}` syntax, untouched) are
+// localized here. Docs/KnownIssues.md "Constant-module label dictionaries NOT extracted in P5".
+//
+// Same `export let` + `languageChanged` live-binding pattern as tools/constants.ts's
+// WEEKDAYS/KINDS_LABEL/etc. and utils/StopReasons.ts's STOP_REASONS.
+
+const _loadApplicationTags = () => ({
     first_name: {
-        name: "Prénom de l'utilisateur",
+        name: i18n.t("parameters:mailTemplates.mergeTags.application.firstName.name"),
         value: "{{first_name}}",
-        sample: "Prénom",
+        sample: i18n.t("parameters:mailTemplates.mergeTags.application.firstName.sample"),
     },
 
     last_name: {
-        name: "Nom de l'utilisateur",
+        name: i18n.t("parameters:mailTemplates.mergeTags.application.lastName.name"),
         value: "{{last_name}}",
-        sample: "Nom",
+        sample: i18n.t("parameters:mailTemplates.mergeTags.application.lastName.sample"),
     },
 
     applicationId: {
-        name: "ID de la demande d'inscription",
+        name: i18n.t("parameters:mailTemplates.mergeTags.application.applicationId.name"),
         value: "{{application.id}}",
-        sample: "ID de la demande d'inscription",
+        sample: i18n.t("parameters:mailTemplates.mergeTags.application.applicationId.sample"),
     },
 
     application_season_label: {
-        name: "Saison de la demande d'inscription",
+        name: i18n.t("parameters:mailTemplates.mergeTags.application.seasonLabel.name"),
         value: "{{application.season_label}}",
-        sample: "Saison de la demande d'inscription",
+        sample: i18n.t("parameters:mailTemplates.mergeTags.application.seasonLabel.sample"),
     },
 
     application_total_all_due_payments: {
-        name: "Total des paiements dus",
+        name: i18n.t("parameters:mailTemplates.mergeTags.application.totalAllDuePayments.name"),
         value: "{{application.total_all_due_payments}}",
-        sample: "Total des paiements dus",
+        sample: i18n.t("parameters:mailTemplates.mergeTags.application.totalAllDuePayments.sample"),
     },
 
     application_total_pending_due_payments: {
-        name: "Total des paiements dus restants",
+        name: i18n.t("parameters:mailTemplates.mergeTags.application.totalPendingDuePayments.name"),
         value: "{{application.total_pending_due_payments}}",
-        sample: "Total des paiements dus restants",
+        sample: i18n.t("parameters:mailTemplates.mergeTags.application.totalPendingDuePayments.sample"),
     },
-};
+});
 
-export const ACTIVITY_TAGS = {
+export let APPLICATION_TAGS = _loadApplicationTags();
+
+const _loadActivityTags = () => ({
     activity_day_in_week: {
-        name: "Jour de la semaine de l'activité",
+        name: i18n.t("parameters:mailTemplates.mergeTags.activity.dayInWeek.name"),
         value: "{{activity.day_in_week}}",
-        sample: "Jour de la semaine de l'activité",
+        sample: i18n.t("parameters:mailTemplates.mergeTags.activity.dayInWeek.sample"),
     },
 
     activity_start_date: {
-        name: "Date de début de l'activité",
+        name: i18n.t("parameters:mailTemplates.mergeTags.activity.startDate.name"),
         value: "{{activity.startDate}}",
-        sample: "Date de début de l'activité",
+        sample: i18n.t("parameters:mailTemplates.mergeTags.activity.startDate.sample"),
     },
 
     activity_start_hour: {
-        name: "Heure de début de l'activité",
+        name: i18n.t("parameters:mailTemplates.mergeTags.activity.startHour.name"),
         value: "{{activity.activity_start}}",
-        sample: "Heure de début de l'activité",
+        sample: i18n.t("parameters:mailTemplates.mergeTags.activity.startHour.sample"),
     },
 
     activity_end: {
-        name: "Heure de fin de l'activité",
+        name: i18n.t("parameters:mailTemplates.mergeTags.activity.end.name"),
         value: "{{activity.activity_end}}",
-        sample: "Heure de fin de l'activité",
+        sample: i18n.t("parameters:mailTemplates.mergeTags.activity.end.sample"),
     },
 
     activity_label: {
-        name: "Nom de l'activité",
+        name: i18n.t("parameters:mailTemplates.mergeTags.activity.label.name"),
         value: "{{activity.display_name}}",
-        sample: "Nom de l'activité",
+        sample: i18n.t("parameters:mailTemplates.mergeTags.activity.label.sample"),
     },
 
     activity_teacher_first_name: {
-        name: "Prénom du professeur",
+        name: i18n.t("parameters:mailTemplates.mergeTags.activity.teacherFirstName.name"),
         value: "{{activity.teacher_first_name}}",
-        sample: "Prénom du professeur",
+        sample: i18n.t("parameters:mailTemplates.mergeTags.activity.teacherFirstName.sample"),
     },
 
     activity_teacher_last_name: {
-        name: "Nom du professeur",
+        name: i18n.t("parameters:mailTemplates.mergeTags.activity.teacherLastName.name"),
         value: "{{activity.teacher_last_name}}",
-        sample: "Nom du professeur",
+        sample: i18n.t("parameters:mailTemplates.mergeTags.activity.teacherLastName.sample"),
     },
 
     activity_display_price: {
-        name: "Prix de l'activité",
+        name: i18n.t("parameters:mailTemplates.mergeTags.activity.displayPrice.name"),
         value: "{{activity.display_price}}",
-        sample: "Prix de l'activité",
+        sample: i18n.t("parameters:mailTemplates.mergeTags.activity.displayPrice.sample"),
     },
-};
-export const ACTIVITY_INSTANCE_TAGS = {
+});
+
+export let ACTIVITY_TAGS = _loadActivityTags();
+
+const _loadActivityInstanceTags = () => ({
     activity_day_in_week: {
-        name: "Jour de la semaine de l'activité",
+        name: i18n.t("parameters:mailTemplates.mergeTags.activityInstance.dayInWeek.name"),
         value: "{{activity.day_in_week}}",
-        sample: "Jour de la semaine de l'activité",
+        sample: i18n.t("parameters:mailTemplates.mergeTags.activityInstance.dayInWeek.sample"),
     },
 
     activity_start_date: {
-        name: "Date de début de la séance",
+        name: i18n.t("parameters:mailTemplates.mergeTags.activityInstance.startDate.name"),
         value: "{{activity_instance.start_date}}",
-        sample: "Date de début de la séance",
+        sample: i18n.t("parameters:mailTemplates.mergeTags.activityInstance.startDate.sample"),
     },
 
     activity_start_hour: {
-        name: "Heure de début de la séance",
+        name: i18n.t("parameters:mailTemplates.mergeTags.activityInstance.startHour.name"),
         value: "{{activity_instance.activity_start}}",
-        sample: "Heure de début de la séance",
+        sample: i18n.t("parameters:mailTemplates.mergeTags.activityInstance.startHour.sample"),
     },
 
     activity_end: {
-        name: "Heure de fin de la séance",
+        name: i18n.t("parameters:mailTemplates.mergeTags.activityInstance.end.name"),
         value: "{{activity_instance.activity_end}}",
-        sample: "Heure de fin de la séance",
+        sample: i18n.t("parameters:mailTemplates.mergeTags.activityInstance.end.sample"),
     },
 
     activity_teacher_first_name: {
-        name: "Prénom du professeur",
+        name: i18n.t("parameters:mailTemplates.mergeTags.activityInstance.teacherFirstName.name"),
         value: "{{activity_instance.teacher_first_name}}",
-        sample: "Prénom du professeur",
+        sample: i18n.t("parameters:mailTemplates.mergeTags.activityInstance.teacherFirstName.sample"),
     },
 
     activity_teacher_last_name: {
-        name: "Nom du professeur",
+        name: i18n.t("parameters:mailTemplates.mergeTags.activityInstance.teacherLastName.name"),
         value: "{{activity_instance.teacher_last_name}}",
-        sample: "Nom du professeur",
+        sample: i18n.t("parameters:mailTemplates.mergeTags.activityInstance.teacherLastName.sample"),
     },
-};
+});
 
-export const PAYMENT_TAGS = {
+export let ACTIVITY_INSTANCE_TAGS = _loadActivityInstanceTags();
+
+const _loadPaymentTags = () => ({
     // payment_schedule_id: {
     //     name: "payment_schedule_id",
     //     value: "{{payments.payment_schedule_id}}",
@@ -131,42 +154,44 @@ export const PAYMENT_TAGS = {
     // },
 
     season_label: {
-        name: "Saison du paiement",
+        name: i18n.t("parameters:mailTemplates.mergeTags.payment.seasonLabel.name"),
         value: "{{payments.season_of_payment}}",
-        sample: "Saison du paiement",
+        sample: i18n.t("parameters:mailTemplates.mergeTags.payment.seasonLabel.sample"),
     },
 
     previsional_date: {
-        name: "Date du paiement",
+        name: i18n.t("parameters:mailTemplates.mergeTags.payment.previsionalDate.name"),
         value: "{{payment.previsional_date}}",
-        sample: "Date du paiement",
+        sample: i18n.t("parameters:mailTemplates.mergeTags.payment.previsionalDate.sample"),
     },
 
     amount: {
-        name: "Montant du paiement",
+        name: i18n.t("parameters:mailTemplates.mergeTags.payment.amount.name"),
         value: "{{payment.amount}}",
-        sample: "Montant du paiement",
+        sample: i18n.t("parameters:mailTemplates.mergeTags.payment.amount.sample"),
     },
 
     status: {
-        name: "Statut du paiement",
+        name: i18n.t("parameters:mailTemplates.mergeTags.payment.status.name"),
         value: "{{payment.status}}",
-        sample: "Statut du paiement",
+        sample: i18n.t("parameters:mailTemplates.mergeTags.payment.status.sample"),
     },
 
     paymentsLoop: {
-        name: "Paiements",
+        name: i18n.t("parameters:mailTemplates.mergeTags.payment.paymentsLoop.name"),
         rules: {
             repeat: {
-                name: "Répeter pour chaque paiement",
+                name: i18n.t("parameters:mailTemplates.mergeTags.payment.paymentsLoop.repeatRuleName"),
                 before: "{% for payment in due_payments %}",
                 after: "{% endfor %}",
             },
         },
     },
-};
+});
 
-export const REGLEMENTS_TAGS = {
+export let PAYMENT_TAGS = _loadPaymentTags();
+
+const _loadReglementsTags = () => ({
     //
     // reglement_id: {
     //     name: "reglement_id",
@@ -181,53 +206,69 @@ export const REGLEMENTS_TAGS = {
     // },
 
     reglement_reception_date: {
-        name: "Date de réception du règlement",
+        name: i18n.t("parameters:mailTemplates.mergeTags.reglements.receptionDate.name"),
         value: "{{reglements.reglement_reception_date}}",
-        sample: "Date de réception du règlement",
+        sample: i18n.t("parameters:mailTemplates.mergeTags.reglements.receptionDate.sample"),
     },
 
     reglement_cashing_date: {
-        name: "Date d'encaissement du règlement",
+        name: i18n.t("parameters:mailTemplates.mergeTags.reglements.cashingDate.name"),
         value: "{{reglement.['cashing_date']}}",
-        sample: "Date d'encaissement du règlement",
+        sample: i18n.t("parameters:mailTemplates.mergeTags.reglements.cashingDate.sample"),
     },
 
     reglement_amount: {
-        name: "Montant du règlement",
+        name: i18n.t("parameters:mailTemplates.mergeTags.reglements.amount.name"),
         value: "{{reglement['amount']}}",
-        sample: "Montant du règlement",
+        sample: i18n.t("parameters:mailTemplates.mergeTags.reglements.amount.sample"),
     },
 
     reglement_status: {
-        name: "Statut du règlement",
+        name: i18n.t("parameters:mailTemplates.mergeTags.reglements.status.name"),
         value: "{{reglement['status']}}",
-        sample: "Statut du règlement",
+        sample: i18n.t("parameters:mailTemplates.mergeTags.reglements.status.sample"),
     },
 
     reglementsLoop: {
-        name: "Règlements",
+        name: i18n.t("parameters:mailTemplates.mergeTags.reglements.reglementsLoop.name"),
         rules: {
             repeat: {
-                name: "Répeter pour chaque règlement",
+                name: i18n.t("parameters:mailTemplates.mergeTags.reglements.reglementsLoop.repeatRuleName"),
                 before: "{% for reglement in reglements %}",
                 after: "{% endfor %}",
             },
         },
     },
-};
+});
 
-export const UTILS_TAGS = {
+export let REGLEMENTS_TAGS = _loadReglementsTags();
+
+const _loadUtilsTags = () => ({
     button_school_link: {
-        name: "Bouton vers le site de l'école",
+        name: i18n.t("parameters:mailTemplates.mergeTags.utils.buttonSchoolLink.name"),
         value: "{{school_link}}",
-        sample: "Bouton vers le site de l'école",
+        sample: i18n.t("parameters:mailTemplates.mergeTags.utils.buttonSchoolLink.sample"),
     },
-};
+});
 
-export const SCHOOL_LOGO_TAGS = {
+export let UTILS_TAGS = _loadUtilsTags();
+
+const _loadSchoolLogoTags = () => ({
     img_school_logo: {
-        name: "Logo de l'école",
+        name: i18n.t("parameters:mailTemplates.mergeTags.schoolLogo.imgSchoolLogo.name"),
         value: "{{school_logo}}",
-        sample: "Logo de l'école",
+        sample: i18n.t("parameters:mailTemplates.mergeTags.schoolLogo.imgSchoolLogo.sample"),
     },
-};
+});
+
+export let SCHOOL_LOGO_TAGS = _loadSchoolLogoTags();
+
+i18n.on("languageChanged", () => {
+    APPLICATION_TAGS = _loadApplicationTags();
+    ACTIVITY_TAGS = _loadActivityTags();
+    ACTIVITY_INSTANCE_TAGS = _loadActivityInstanceTags();
+    PAYMENT_TAGS = _loadPaymentTags();
+    REGLEMENTS_TAGS = _loadReglementsTags();
+    UTILS_TAGS = _loadUtilsTags();
+    SCHOOL_LOGO_TAGS = _loadSchoolLogoTags();
+});

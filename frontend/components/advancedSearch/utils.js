@@ -1,5 +1,6 @@
 import _ from "lodash";
 import QueryBuilder from "jQuery-QueryBuilder";
+import i18n from "../../i18n";
 // QueryBuilder Elasticsearch plugin
 // =================================
 /**
@@ -319,8 +320,84 @@ export const initializeElasticPlugin = () => {
 
 // QueryBuilder lang
 // =================================
+// jQuery-QueryBuilder has its own `regional`/`lang_code` i18n mechanism, separate from this app's
+// react-i18next setup — it is not a `t()`-driven live binding, so there is no `languageChanged`
+// re-read here; `getQueryBuilderLangCode()` is read once, at widget construction time in
+// AdvancedSearch.jsx's `componentDidMount` (a locale switch elsewhere in this app is a full page
+// reload, same rationale as the other frozen-at-construct-time notes in docs/KnownIssues.md).
+// The French pack below is this app's own long-standing verbatim copy; the English pack is copied
+// verbatim from the library's own official locale file
+// (node_modules/jQuery-QueryBuilder/dist/i18n/query-builder.en.js) rather than translated from the
+// French by hand, so English terminology matches the library's own upstream wording exactly.
+export const getQueryBuilderLangCode = () =>
+    i18n.language && i18n.language.startsWith("en") ? "en" : "fr";
+
 export const initializeLang = () => {
     const QueryBuilder = $.fn.queryBuilder;
+
+    // Copied verbatim from node_modules/jQuery-QueryBuilder/dist/i18n/query-builder.en.js
+    // (jQuery-QueryBuilder 2.5.3, English (en), Damien "Mistic" Sorel).
+    QueryBuilder.regional["en"] = {
+        __locale: "English (en)",
+        __author: 'Damien "Mistic" Sorel, http://www.strangeplanet.fr',
+        add_rule: "Add rule",
+        add_group: "Add group",
+        delete_rule: "Delete",
+        delete_group: "Delete",
+        conditions: {
+            AND: "AND",
+            OR: "OR",
+        },
+        operators: {
+            equal: "equal",
+            not_equal: "not equal",
+            in: "in",
+            not_in: "not in",
+            less: "less",
+            less_or_equal: "less or equal",
+            greater: "greater",
+            greater_or_equal: "greater or equal",
+            between: "between",
+            not_between: "not between",
+            begins_with: "begins with",
+            not_begins_with: "doesn't begin with",
+            contains: "contains",
+            not_contains: "doesn't contain",
+            ends_with: "ends with",
+            not_ends_with: "doesn't end with",
+            is_empty: "is empty",
+            is_not_empty: "is not empty",
+            is_null: "is null",
+            is_not_null: "is not null",
+        },
+        errors: {
+            no_filter: "No filter selected",
+            empty_group: "The group is empty",
+            radio_empty: "No value selected",
+            checkbox_empty: "No value selected",
+            select_empty: "No value selected",
+            string_empty: "Empty value",
+            string_exceed_min_length: "Must contain at least {0} characters",
+            string_exceed_max_length: "Must not contain more than {0} characters",
+            string_invalid_format: "Invalid format ({0})",
+            number_nan: "Not a number",
+            number_not_integer: "Not an integer",
+            number_not_double: "Not a real number",
+            number_exceed_min: "Must be greater than {0}",
+            number_exceed_max: "Must be lower than {0}",
+            number_wrong_step: "Must be a multiple of {0}",
+            number_between_invalid: "Invalid values, {0} is greater than {1}",
+            datetime_empty: "Empty value",
+            datetime_invalid: "Invalid date format ({0})",
+            datetime_exceed_min: "Must be after {0}",
+            datetime_exceed_max: "Must be before {0}",
+            datetime_between_invalid: "Invalid values, {0} is greater than {1}",
+            boolean_not_valid: "Not a boolean",
+            operator_not_multiple: 'Operator "{1}" cannot accept multiple values',
+        },
+        invert: "Invert",
+        NOT: "NOT",
+    };
 
     QueryBuilder.regional["fr"] = {
         __locale: "French (fr)",
@@ -388,24 +465,36 @@ export const initializeLang = () => {
         NOT: "NON",
     };
 
-    QueryBuilder.defaults({ lang_code: "fr" });
+    QueryBuilder.defaults({ lang_code: getQueryBuilderLangCode() });
 };
 
-export const PAYMENT_SCHEDULE_OPTIONS_PAYMENTS_NUMBERS = [
+// PAYMENT_SCHEDULE_OPTIONS_PAYMENTS_NUMBERS: `nb` is data (compared against
+// `paymentScheduleOption.payments_number` in PaymentScheduleOptionForm.jsx) and stays unchanged;
+// only `label` is display text, localized via `payments:terms.optionForm.paymentsNumbers.*` with
+// the same `export let` + `languageChanged` live-binding pattern as tools/constants.ts's
+// WEEKDAYS/KINDS_LABEL/etc.
+const _loadPaymentScheduleOptionsPaymentsNumbers = () => [
     {
         nb: 1,
-        label: "Annuel (1)"
+        label: i18n.t("payments:terms.optionForm.paymentsNumbers.annual"),
     },
     {
         nb: 2,
-        label: "Semestriel (2)"
+        label: i18n.t("payments:terms.optionForm.paymentsNumbers.biannual"),
     },
     {
         nb: 3,
-        label: "Trimestriel (3)"
+        label: i18n.t("payments:terms.optionForm.paymentsNumbers.quarterly"),
     },
     {
         nb: 9,
-        label: "Mensuel (9)"
-    }
+        label: i18n.t("payments:terms.optionForm.paymentsNumbers.monthly"),
+    },
 ];
+
+export let PAYMENT_SCHEDULE_OPTIONS_PAYMENTS_NUMBERS =
+    _loadPaymentScheduleOptionsPaymentsNumbers();
+
+i18n.on("languageChanged", () => {
+    PAYMENT_SCHEDULE_OPTIONS_PAYMENTS_NUMBERS = _loadPaymentScheduleOptionsPaymentsNumbers();
+});

@@ -425,11 +425,16 @@ Non-i18n code bugs still open, surfaced while extracting these files (none are l
   defaults to the translated string `t("payments.adhesion.modal.defaultLabel")`. If an EN-locale
   admin leaves the field untouched, that literal English string gets POSTed and persisted as data —
   a UI-string-as-data smell that should be an explicit server-side default, not a client i18n key.
-- `editParameters/SchoolParameters.jsx` — a bad email now correctly blocks submit
-  (`fix/wrong-property-refs` switched `pattern: validateEmail` → `validate:`), but a malformed
-  non-empty address renders the `emailRequired` copy ("L'email est requis"). Same shape as the
-  sibling `contactPhone` field. A dedicated `parameters:editParameters.school.emailInvalid` key
-  would fix the copy — parameters-domain follow-up.
+- `editParameters/SchoolParameters.jsx` — **fixed** (overnight batch, `i18n/overnight-constant-dictionaries`).
+  A malformed non-empty email used to render the `emailRequired` copy ("L'email est requis")
+  instead of a real "invalid email" message, because the `<p>` only checked `errors.email` was
+  truthy, not *why*. Added `parameters:editParameters.school.emailInvalid` (fr: "L'email n'est pas
+  valide" / en: "The email is not valid") and switched the JSX to branch on
+  `errors.email?.type === "required"` vs `"validate"` (react-hook-form's error `.type`, set by the
+  `required: true` / `validate: value => !!validateEmail(value)` rules respectively) so the two
+  cases now render distinct copy. `contactPhone` has the exact same "always shows Required" shape
+  (no `phoneInvalid` key either) — left as a separate, not-yet-fixed follow-up, since only the
+  email field was in this batch's scope.
 
 Reference — dedup opportunities intentionally not touched (each pair is a distinct source literal
 under the verbatim policy, not a bug): `activityChoice.*`/`formulaChoice.*`/
@@ -445,13 +450,23 @@ Surfaced during the i18n-06 activities lot-3a review; the `noIntervalMessage`/`t
 the `Validation.jsx` `<h3>` headings, and all three duration formatters
 (`SelectedActivitiesTable.jsx`, `FormulaActivitiesModal.jsx`, `Activity.jsx#displayDuration`) are
 now translated and consistent — via `activityApplications:units.{minutes,hoursMinutes}`, with
-`units.minutes` standardized to `"{{minutes}} min"` (spaced). What's left, low priority:
+`units.minutes` standardized to `"{{minutes}} min"` (spaced).
 
-- `frontend/tools/constants.js` `TIME_STEPS` still has hardcoded labels (`"1h"`, `"45min"`,
-  `"30min"`, `"15min"`) — a 4-element const array left out of the constants-i18n pass, and now
-  also inconsistent with the spaced `activityApplications:units.minutes` convention above.
-  Belongs in the roadmap Phase 07 planning/activity area (needs new fr+en keys → a `translator`
-  pass), not a bug batch.
+- `frontend/tools/constants.ts` `TIME_STEPS` — **fixed** (overnight batch,
+  `i18n/overnight-constant-dictionaries`). The 4-element array's hardcoded labels (`"1h"`,
+  `"45min"`, `"30min"`, `"15min"`) were left out of the constants-i18n pass and had drifted from
+  the spaced `units.minutes` convention above. `value` (consumed by `tools/date.js`'s
+  `adjustStartEndTime`) was already locale-independent and untouched; `label` is now built from
+  `activityApplications:units.minutes` (for the three `"N min"` steps) and a new
+  `activityApplications:units.hours` key (`"{{hours}}h"`, added because `units.hoursMinutes` is
+  `"{{hours}}h{{minutes}}"` — it always renders a minutes segment, so it can't produce the bare
+  `"1h"` this step needed; any zero-padding on `hoursMinutes`'s minutes happens at specific call
+  sites like `SelectedActivitiesTable.jsx`'s `padStart`, not in the key itself).
+  `TIME_STEPS` is now `export let` + re-read on `i18n`'s `languageChanged`, matching
+  `tools/constants.ts`'s existing WEEKDAYS/KINDS_LABEL pattern. (No component currently reads
+  `TIME_STEPS[].label` — only `tools/date.js` consumes `.value` — so this was latent, not
+  user-visible; fixed anyway for correctness/consistency and to remove the trap for a future
+  consumer.)
 
 ## `courses/LessonList.jsx` — remaining frozen-at-construct-time string
 
@@ -599,14 +614,40 @@ notes above, and harmless for the same reason (switching locale is a full server
   `react_component`. Left untouched (don't-delete-on-looks-dead); NOT extracted. Its broken sentence
   `"Aucun instrument sauvegardé Vous pouvez en suivant ce <a>lien</a>"` (missing punctuation/verb) is
   already fixed in the live `activityRef` copy's `activities:workGroup.noInstruments` key.
-- **Constant-module label dictionaries NOT extracted in P5** (they read as id-constant / enum-value
-  modules per the P5 exclusion list, and several feed backend-keyed comparisons):
-  `frontend/components/utils/StopReasons.js` (`STOP_REASONS` — the stop-reason `<select>` options in
-  `CurrentActivityItem` / `StopList`); `frontend/components/mailTemplates/MergeTags.jsx` (~35
-  merge-tag `name`/`sample` pairs consumed by the WYSIWYG's `setMergeTags()`, where `name` may be a
-  load-bearing key); `frontend/components/advancedSearch/utils.js` (a verbatim vendored
-  jQuery-QueryBuilder French language pack + a `PAYMENT_SCHEDULE_OPTIONS_PAYMENTS_NUMBERS` label
-  array). Each is a candidate for a dedicated constants-i18n follow-up.
+- **Constant-module label dictionaries NOT extracted in P5 — extracted in the overnight batch
+  (`i18n/overnight-constant-dictionaries`).** They read as id-constant / enum-value modules per the
+  P5 exclusion list, and several feed backend-keyed comparisons, so each was checked for a
+  load-bearing value before touching it:
+  - `frontend/components/utils/StopReasons.ts` (`STOP_REASONS` — the stop-reason `<select>` options
+    in `CurrentActivityItem` / `StopList`) — **fixed**. `id` (compared against `d.comment` /
+    `stopReasonValue` state) is untouched; `label` now comes from new
+    `activityApplications:stopReasons.*` keys via the same `export let` +
+    `languageChanged` pattern as `tools/constants.ts`. Pre-existing UX bug noticed while
+    extracting, not fixed here: `unsuitableLevel` (id 2) and `levelNotSuitable` (id 8) render
+    identical text in both fr and en — two distinct dropdown options a user can't actually tell
+    apart. Faithfully preserved as two separate keys since this batch is extraction, not a
+    content redesign; worth a product decision on whether one should be reworded or merged.
+  - `frontend/components/mailTemplates/MergeTags.jsx` (~35 merge-tag `name`/`sample` pairs consumed
+    by the WYSIWYG's `setMergeTags()`) — **fixed**. Traced `@unlayer/types`' `MergeTag` interface
+    (`node_modules/@unlayer/types/dist/editor/merge-tags.d.ts`): `name` is only the display label
+    shown in unlayer's merge-tag picker and `sample` is only the preview text — neither is a
+    lookup/matching key, so the "`name` may be load-bearing" caution in the original P5 note
+    doesn't hold up. `value` (the actual `{{...}}` Liquid placeholder substituted server-side),
+    each dictionary's own object keys (e.g. `first_name`, `applicationId` — the id unlayer indexes
+    tags by), and each loop tag's `rules.repeat.before`/`after` (literal `{% for %}` Liquid syntax)
+    are untouched; `name`/`sample`/`rules.repeat.name` now come from new
+    `parameters:mailTemplates.mergeTags.*` keys, same live-binding pattern.
+  - `frontend/components/advancedSearch/utils.js` — **fixed**. The vendored French
+    jQuery-QueryBuilder language pack is this library's own separate i18n mechanism
+    (`QueryBuilder.regional[...]`/`lang_code`), not react-i18next; added an English pack copied
+    verbatim from the library's own `node_modules/jQuery-QueryBuilder/dist/i18n/query-builder.en.js`
+    (not a hand translation of the French one, so English terminology matches upstream exactly),
+    plus a `getQueryBuilderLangCode()` helper (`i18n.language` read once at widget construction
+    time in `AdvancedSearch.jsx`'s `componentDidMount`, same frozen-at-construct rationale as
+    elsewhere in this doc — the widget isn't re-initialized on a live locale switch). Separately,
+    `PAYMENT_SCHEDULE_OPTIONS_PAYMENTS_NUMBERS`'s `nb` (compared against `payments_number` in
+    `PaymentScheduleOptionForm.jsx`) is untouched; `label` now comes from new
+    `payments:terms.optionForm.paymentsNumbers.*` keys, same live-binding pattern.
 - **`frontend/components/utils/DateFilter.tsx` `RangedSelect` throws `"the arguments need to be
   integers"` under some props** (visible as loud stderr in the Vitest run, inside otherwise-passing
   tests). Investigated in `fix/known-issues-easy-frontend`: the only place this throw fires under

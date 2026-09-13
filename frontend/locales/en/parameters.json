@@ -346,6 +346,7 @@
             "nameRequired": "The name is required",
             "emailLabel": "Contact email",
             "emailRequired": "The email is required",
+            "emailInvalid": "The email is not valid",
             "phoneLabel": "Contact phone",
             "phoneRequired": "The phone number is required",
             "streetLabel": "Street number and name",
@@ -392,6 +393,54 @@
             "created": "Template created",
             "modified": "Template modified",
             "deleted": "Template deleted"
+        },
+        "mergeTags": {
+            "application": {
+                "firstName": {"name": "User's first name", "sample": "First name"},
+                "lastName": {"name": "User's last name", "sample": "Last name"},
+                "applicationId": {"name": "Enrollment request ID", "sample": "Enrollment request ID"},
+                "seasonLabel": {"name": "Enrollment request season", "sample": "Enrollment request season"},
+                "totalAllDuePayments": {"name": "Total due payments", "sample": "Total due payments"},
+                "totalPendingDuePayments": {"name": "Total remaining due payments", "sample": "Total remaining due payments"}
+            },
+            "activity": {
+                "dayInWeek": {"name": "Day of the week of the activity", "sample": "Day of the week of the activity"},
+                "startDate": {"name": "Activity start date", "sample": "Activity start date"},
+                "startHour": {"name": "Activity start time", "sample": "Activity start time"},
+                "end": {"name": "Activity end time", "sample": "Activity end time"},
+                "label": {"name": "Activity name", "sample": "Activity name"},
+                "teacherFirstName": {"name": "Teacher's first name", "sample": "Teacher's first name"},
+                "teacherLastName": {"name": "Teacher's last name", "sample": "Teacher's last name"},
+                "displayPrice": {"name": "Activity price", "sample": "Activity price"}
+            },
+            "activityInstance": {
+                "dayInWeek": {"name": "Day of the week of the activity", "sample": "Day of the week of the activity"},
+                "startDate": {"name": "Session start date", "sample": "Session start date"},
+                "startHour": {"name": "Session start time", "sample": "Session start time"},
+                "end": {"name": "Session end time", "sample": "Session end time"},
+                "teacherFirstName": {"name": "Teacher's first name", "sample": "Teacher's first name"},
+                "teacherLastName": {"name": "Teacher's last name", "sample": "Teacher's last name"}
+            },
+            "payment": {
+                "seasonLabel": {"name": "Payment season", "sample": "Payment season"},
+                "previsionalDate": {"name": "Payment date", "sample": "Payment date"},
+                "amount": {"name": "Payment amount", "sample": "Payment amount"},
+                "status": {"name": "Payment status", "sample": "Payment status"},
+                "paymentsLoop": {"name": "Payments", "repeatRuleName": "Repeat for each payment"}
+            },
+            "reglements": {
+                "receptionDate": {"name": "Settlement reception date", "sample": "Settlement reception date"},
+                "cashingDate": {"name": "Settlement cashing date", "sample": "Settlement cashing date"},
+                "amount": {"name": "Settlement amount", "sample": "Settlement amount"},
+                "status": {"name": "Settlement status", "sample": "Settlement status"},
+                "reglementsLoop": {"name": "Settlements", "repeatRuleName": "Repeat for each settlement"}
+            },
+            "utils": {
+                "buttonSchoolLink": {"name": "Button to the school's website", "sample": "Button to the school's website"}
+            },
+            "schoolLogo": {
+                "imgSchoolLogo": {"name": "School logo", "sample": "School logo"}
+            }
         }
     },
     "eventsRules": {

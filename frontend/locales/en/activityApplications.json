@@ -35,6 +35,7 @@
         "estimatedTotal": "Estimated total"
     },
     "units": {
+        "hours": "{{hours}}h",
         "hoursMinutes": "{{hours}}h{{minutes}}",
         "minutes": "{{minutes}} min"
     },
@@ -393,6 +394,17 @@
             "noAlternative": "No alternative can be offered to you.",
             "stopAllQuestion": "Do you want to stop all musical activity and leave the school?"
         }
+    },
+    "stopReasons": {
+        "notSuitable": "The teaching methods do not suit me",
+        "unsuitableLevel": "The course level is not suitable",
+        "poorCohesion": "Poor group cohesion",
+        "wrongInstrument": "Wrong instrument choice",
+        "poorRepertoire": "Repertoire issue",
+        "scheduleChange": "Schedule change",
+        "moving": "Moving away",
+        "levelNotSuitable": "The course level is not suitable",
+        "other": "Other..."
     },
     "dashboard": {
         "totalMembersRequests": "Total members / requests",
