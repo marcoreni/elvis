@@ -19,6 +19,8 @@
 #
 
 class Season < ApplicationRecord
+  after_commit :expire_season_caches
+
   belongs_to :next_season, optional: true, class_name: "Season"
 
   has_many :holidays, dependent: :delete_all
@@ -207,6 +209,21 @@ class Season < ApplicationRecord
   end
 
   private
+
+  # .current and .current_apps_season cache their result (including a nil "no current season"
+  # result — Rails.cache.fetch writes nil results too, it only skips the write when the caller
+  # explicitly passes skip_nil:) for 12 hours with no invalidation, unlike Parameter (which has
+  # its own after_commit :expire_cache). Any create/update/destroy on a Season — including the
+  # is_current flip a Parameters-style admin action performs, or the season-bootstrap that
+  # ApplicationController#verify_season runs lazily on first admin request — must bust both keys
+  # immediately, or a caller that queried before the change (e.g. an earlier request in the same
+  # spec example, or another process sharing this Rails.cache store) keeps seeing the pre-change
+  # value for up to 12h. Same shape of bug as the Parameter cache-leak fixed elsewhere; this is
+  # the Season-specific instance of it.
+  def expire_season_caches
+    Rails.cache.delete("current_season")
+    Rails.cache.delete("current_apps_season")
+  end
 
   def neighbour_season(dir)
     sorted_seasons = Season.all.order("start #{dir}")

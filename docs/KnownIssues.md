@@ -735,3 +735,99 @@ case), each passing individually. So the file-count-sensitivity bug is real and 
 now, but it is NOT masking a much larger pre-existing failure count - don't let a future run
 without a proper asset manifest be mistaken for "the baseline was always this broken."
 
+**Third investigation (`chore/root-cause-spec-order-flake`, 2026-09-13): one confirmed sibling bug
+fixed, the original DeviseMailer/ApplicationController flip still not root-caused.** Tasked with
+actually root-causing this rather than adding a fourth "still happens" confirmation. Findings:
+
+*Reliable repro found, but it is timing-dependent, not purely example-order-dependent.*
+`bundle exec rspec --order random --seed 4` (full suite, single process, no special setup beyond a
+complete `public/packs-test/`) reproduced the exact `DeviseMailer#confirmation_instructions` /
+`#reset_password_instructions` "renders in French by default" flip (mail body comes back as the
+raw, un-interpolated `layouts/mailer.html.erb` HTML, exactly as previously documented) on most but
+not all runs at that same seed on identical code. RSpec's `--seed` only fixes *example order*, not
+all other sources of nondeterminism, and this run genuinely varied pass/fail at a fixed seed —
+confirming a real timing/scheduling component, not just an ordering one. Adding trivial diagnostic
+instrumentation (a `Kernel.puts` in an `around`/`before`/`after` hook, or an
+`ActiveSupport::Notifications.subscribe` on `render_template.action_view`) measurably changed the
+failure rate at the same seed, most likely by shifting thread-scheduling/IO-flush timing — a classic
+Heisenbug signature. This makes the failure much harder to pin down than the earlier
+`db/migrate/20240924141831` primary-key issue, which was a deterministic logic bug.
+
+*Ruled out, with evidence:*
+- No direct `I18n.locale =` or `I18n.default_locale =` assignment anywhere in `app/`, `lib/`,
+  `config/`, `spec/`, or `test/` — grepped the whole tree.
+- No `stub_const("Elvis::SUPPORTED_LOCALES", ...)` anywhere.
+- `I18n.with_locale` in the installed gem (`i18n` 1.15.2) is the standard `ensure`-protected
+  implementation (confirmed by reading `lib/i18n.rb`) — a raised exception inside the block still
+  restores the previous locale, so a naive "forgot to restore" bug in the gem itself is not the
+  cause.
+- `I18n::Config` in this i18n version is scoped via Ruby's Fiber storage (`Fiber[:i18n_config]`,
+  Ruby ≥ 3.2), not a plain `Thread.current` ivar — read the implementation to rule out a
+  Fiber/thread cross-contamination path; each OS thread's root Fiber gets its own config, so this
+  does not explain the leak either.
+- `BaseEventJob` (`app/jobs/base_event_job.rb`) hardcodes `self.queue_adapter = :async`, meaning
+  every `subscribe(true, &block)` listener (e.g. `ParameterListner`, which redundantly re-deletes
+  the `parameter_<label>` cache key that `Parameter#expire_cache`'s `after_commit` already deletes
+  synchronously) actually runs on a real background thread pool during tests, which looked like a
+  promising general explanation for timing-sensitive flakes. Tested directly: temporarily forcing
+  `self.queue_adapter = :inline` in the test env (so listener jobs run synchronously) did **not**
+  stop the `--seed 4` DeviseMailer flip from reproducing. Real finding, ruled out as *this*
+  bug's cause — but worth a separate look, since an unsynchronized background thread pool during
+  tests is a legitimate general hazard independent of this ticket.
+- Confirmed via `ActiveSupport::Notifications.subscribe(/render_(template|partial)\.action_view/)`
+  that on a failing run, the failing example's `mail.body.encoded` call produces **zero**
+  `render_template.action_view` events for either `devise/mailer/confirmation_instructions.html.erb`
+  or `layouts/mailer.html.erb` — the returned body is not being freshly rendered by that call at
+  all, yet its content is byte-for-byte the layout's own markup with a blank `yield`. This is a new,
+  concrete clue (not in earlier entries) that narrows the bug to something in the
+  ActionMailer/ActionView render-and-cache path returning already-produced content rather than to a
+  simple "locale variable holds the wrong value at render time" story — but the exact mechanism
+  (which cache/memoization layer is short-circuiting the render) was not identified within the
+  effort budget for this ticket, and attempts to instrument more precisely to find it perturbed the
+  timing enough to stop reproducing (see above).
+- Separately observed a second, differently-shaped flake co-occurring with the DeviseMailer one:
+  `spec/requests/locations_destroy_spec.rb`'s `"does not raise and re-renders the index with the
+  flash error when the location has dependent rooms"` example expects `flash[:error]` to hold a
+  French message and got `nil` instead. This showed up twice independently: once in a `--seed 4`
+  random-order run alongside the DeviseMailer failures, and again in a **plain, default-order**
+  `bundle exec rspec` run (no `--order random` at all) — 1 out of 3 consecutive plain full-suite
+  runs on identical code failed with exactly `DeviseMailer#reset_password_instructions` +
+  this `locations_destroy_spec` example, the other 2 runs were clean. That a *plain* run (RSpec's
+  default declaration order, not `--order random`) flakes too, and does so intermittently across
+  otherwise-identical consecutive invocations, confirms this is genuine wall-clock-timing
+  nondeterminism, not merely "the file list changes RSpec's declared example order." Not
+  investigated further; noting it here because it narrows the search space for whoever picks this
+  up next away from "what touches I18n" and toward "what varies in wall-clock timing across a
+  full run" (GC pauses, thread pool scheduling, I/O buffering) — start there instead.
+
+*One confirmed and fixed sibling bug* (the task explicitly asked to check for one, given the
+already-fixed `Parameter` cache-leak): `Season.current` and `Season.current_apps_season`
+(`app/models/season.rb`) cache their result via `Rails.cache.fetch(key, expires_in: 12.hours)`
+— including a cached `nil` "no season yet" result, since `Rails.cache.fetch` still writes a `nil`
+block result unless the caller passes `skip_nil:` — with **no invalidation hook**, unlike
+`Parameter` (`after_commit :expire_cache`). Confirmed this causes a real
+`ArgumentError: comparison of DateTime with nil failed` crash (in `Season#current_apps_season`,
+reached via `Ability#initialize` → `User#family`) by running two concurrent `bundle exec rspec`
+processes against the same worktree against separate Postgres databases: `Rails.cache` is a real
+on-disk `ActiveSupport::Cache::FileStore` in the test env (path is `Rails.root.join("tmp/cache")`,
+confirmed via `Rails.cache.inspect`), shared **by filesystem path**, so two processes racing the
+same on-disk cache can each poison the other's `current_season`/`current_apps_season` entry even
+though their databases are entirely separate. Two existing spec files
+(`spec/requests/evaluation_pages_spec.rb`, `spec/requests/payment_admin_pages_spec.rb`) already
+carry a hand-rolled `around` hook that deletes exactly these two cache keys before/after each
+example — evidence a previous author had already hit this exact hazard and worked around it
+locally without fixing the root cause. Fixed by adding `after_commit :expire_season_caches` to
+`Season`, mirroring `Parameter`'s existing pattern; regression coverage in
+`spec/models/season_spec.rb` (confirmed red without the fix, green with it). This does not appear
+to be the mechanism behind the DeviseMailer/ApplicationController flip specifically (mailer specs
+never touch `ApplicationController`/`Ability`/`Season` at all), but it is a real bug in its own
+right and was left unfixed until now.
+
+**Status: still open for the original DeviseMailer/ApplicationController flip.** Whoever picks
+this up next should start from the "zero render events, byte-identical stale content" clue above
+rather than from the locale-value theories in the earlier entries (those are now fairly well
+ruled out), and should expect the repro to be seed-stable-but-not-instrumentation-stable — prefer
+tools that don't add their own `puts`/notification overhead (e.g. a `TracePoint` filtered tightly
+enough not to fire on every line, or reading `ObjectSpace`/GC stats after the fact) over sprinkling
+print statements, since the latter measurably changes the failure rate.
+
