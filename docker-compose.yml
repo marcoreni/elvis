@@ -78,7 +78,7 @@ services:
     entrypoint: bundle exec sidekiq -C config/sidekiq.yml
 
   elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:7.16.3
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.28
     container_name: elasticsearch
     environment:
       - discovery.type=single-node

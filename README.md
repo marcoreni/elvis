@@ -200,8 +200,8 @@ Alternatively, run each service by hand:
   -  `docker pull redis:6.2.6`
   -  `docker run -p 127.0.0.1:6379:6379 redis:6.2.6`
 - Local elastic-search server
-  - `docker pull elasticsearch:7.16.3`
-  - `docker run -p 127.0.0.1:9200:9200 -p 127.0.0.1:9300:9300 -e "discovery.type=single-node" elasticsearch:7.16.3`
+  - `docker pull elasticsearch:7.17.28`
+  - `docker run -p 127.0.0.1:9200:9200 -p 127.0.0.1:9300:9300 -e "discovery.type=single-node" elasticsearch:7.17.28`
 
 ### Compile
 at the root of the repository :
@@ -231,7 +231,7 @@ u.save!
 - node v22
 - ruby v3.3.12
 - rails v6.1.7.8
-- elastic-search v7.16.3
+- elastic-search v7.17.28
 ## Soft restart
 - send `SIGUSR2` signal to process
 - change restart.txt in tmp folder (add any value)

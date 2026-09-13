@@ -7,14 +7,12 @@ of each item as it moves; when an item is fully done, remove it and note the fac
 commit/PR reference) rather than leaving a stale "done" entry — same discipline as
 `docs/KnownIssues.md`.
 
-## 1. CI workflow on develop/main — mostly done, see `.github/workflows/ci.yml`
+## 1. CI workflow on develop/main — done, see `.github/workflows/ci.yml`
 
-i18n-tasks/vitest/tsc (now 0 baseline, was 5)/rubocop green. `rspec` job still red: ES 7.16.3's
-bundled JDK NPEs on GH runners' cgroup v2 hosts (`anyController is null`). Tried and failed:
-`--cgroupns=host`, `-XX:-UseContainerSupport` via `ES_JAVA_OPTS` and `JAVA_TOOL_OPTIONS`,
-`--memory`/`--cpus` limits. Real fix is likely bumping ES's patch version (bundles a newer JDK)
-or a custom image with an external JDK — both bigger than a CI tweak since docker-compose.yml
-pins the same 7.16.3 for dev/prod; needs a decision, not another flag guess.
+All 5 jobs green. ES was bumped 7.16.3 → 7.17.28 everywhere (docker-compose.yml,
+docker-compose-dev.yml, README.md, CI) — 7.16.3's bundled JDK 17.0.1 NPEs on GH runners' cgroup v2
+hosts, a real JDK bug fixed upstream years ago; 7.17.28 bundles JDK 22.0.2. Same 7.x major, chewy's
+pinned client gem (7.13.3) unaffected — full local rspec run against 7.17.28 confirmed clean.
 
 Also fixed along the way: a broken production Rspack build on `develop` (stale `.js` extensions
 after a TS rename), locale YAML comments `i18n-tasks normalize` was stripping (moved to

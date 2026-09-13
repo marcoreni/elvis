@@ -28,10 +28,8 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-      # ES 7.16.3's bundled JDK NPEs on GH runners (cgroup-v2 "anyController is null").
-      # --memory/--cpus force dockerd to populate the controller files the old JDK expects.
       elasticsearch:
-        image: docker.elastic.co/elasticsearch/elasticsearch:7.16.3
+        image: docker.elastic.co/elasticsearch/elasticsearch:7.17.28
         env:
           discovery.type: single-node
           bootstrap.memory_lock: "true"
@@ -44,9 +42,6 @@ jobs:
           --health-timeout 5s
           --health-retries 10
           --ulimit memlock=-1:-1
-          --memory=2g
-          --cpus=2
-          --cgroupns=host
       redis:
         image: redis:latest
         ports:
