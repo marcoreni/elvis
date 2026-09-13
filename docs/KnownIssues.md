@@ -26,23 +26,24 @@ this drifted unnoticed.
 
 ## Frontend dependencies: major-version bumps still pending
 
-Surveyed 2026-08-27, updated after `feat/bump-shakapacker` (2026-09-05) cleared most of the list: the
-webpack+babel+postcss toolchain was replaced by rspack+swc, React went 16→17, several libraries were
-bumped across majors, and a few unmaintained ones were dropped. What's left:
+Surveyed 2026-08-27, updated after `feat/bump-shakapacker` (2026-09-05) cleared most of the list:
+the webpack+babel+postcss toolchain was replaced by rspack+swc, React went 16→17, several
+libraries were bumped across majors, and a few unmaintained ones were dropped. Re-checked
+2026-09-14 — `shakapacker` (10.3.2), `jsdom` (30), `sass-loader` (17.0.1), `react-select` (5.x,
+current latest), and `prettier` (3.9.6) are already done; removed from the list below. What's
+left:
 
 - **React 17 → 19**, two majors, real breaking boundaries: legacy string refs/legacy context API are
   removed in 19 (grep the ~118 class components first); `ReactDOM.render` is gone from 18+
   (`react_ujs`, currently `^2.4.3`, needs bumping in lockstep); React 18 changes effect/StrictMode
   timing enough to surface latent class-component lifecycle bugs. Stage 17→18 first, prove it out,
   then 18→19. `@testing-library/react` is pinned at `^12.1.5` until React moves past 17.
-- Downstream of the React bump (pinned below latest, bump after React itself): `react-select`,
-  `react-table`, `react-toastify`, `react-loader-spinner`, `react-autosuggest`, `react-switch`.
+- Downstream of the React bump (pinned below latest, bump after React itself): `react-table`,
+  `react-toastify`, `react-loader-spinner`, `react-autosuggest`, `react-switch`.
 - Independent, real API-surface jumps: `sweetalert2` 7→11 (callback API → promises, dozens of call
-  sites to review), `bootstrap` 4→5 (drops jQuery, markup/class changes — watch for the transitive
-  `bootstrap@3` pull-in that bit `feat/bump-shakapacker` once already), `prettier` 1→3 (would reformat
-  large parts of the codebase in one commit).
-- `shakapacker` 9.3.0 → 10 (one more major). Smaller/lower priority: `jquery` 3→4, `sass-loader`
-  16→17. `jsdom` 26→30 is unblocked now that Node is on 22, still pending.
+  sites to review — see roadmap item 7), `bootstrap` 4→5 (drops jQuery, markup/class changes —
+  watch for the transitive `bootstrap@3` pull-in that bit `feat/bump-shakapacker` once already).
+- Smaller/lower priority: `jquery` 3→4.
 
 ## Exotic (git-pinned) dependencies need a per-package decision, not a version bump
 
