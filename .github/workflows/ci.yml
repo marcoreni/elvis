@@ -6,10 +6,9 @@ on:
     pull_request:
         branches: [develop, main]
 
-# rubocop/tsc gate on regression past these baselines, not on the pre-existing backlog.
+# rubocop gate on regression past these baselines, not on the pre-existing backlog.
 env:
-    RUBOCOP_BASELINE_OFFENSES: 1036
-    TSC_BASELINE_ERRORS: 0
+    RUBOCOP_BASELINE_OFFENSES: 975
 
 jobs:
     rspec:
@@ -98,18 +97,8 @@ jobs:
                   node-version: "22"
                   cache: yarn
             - run: yarn install --frozen-lockfile
-            - name: Type-check (fails only on regression past baseline)
-              run: |
-                  set +e
-                  npx tsc --noEmit >tsc_output.log 2>&1
-                  cat tsc_output.log
-                  count=$(grep -c "error TS" tsc_output.log)
-                  echo "TypeScript errors: $count (baseline: $TSC_BASELINE_ERRORS)"
-                  if [ "$count" -gt "$TSC_BASELINE_ERRORS" ]; then
-                    echo "::error::tsc errors increased ($count > $TSC_BASELINE_ERRORS baseline)"
-                    exit 1
-                  fi
-
+            - name: Type-check
+              run: yarn tsc --noEmit
     rubocop:
         runs-on: ubuntu-latest
         steps:
