@@ -66,52 +66,20 @@ researched via `gh api` fork/compare metadata 2026-08-27:
 Whatever the per-package decision, pin to an exact commit SHA (or npm release) in the meantime —
 that alone removes the "can silently change under us" risk before the fork-vs-replace call is made.
 
-## Dead/unrouted code awaiting a plugin + production audit
+## Devise passwords/edit — reachable but unlinked, not dead
 
-This app prepends plugin routes before its own (`CLAUDE.md`'s plugin system section), so a 500
-(`AbstractController::ActionNotFound`), an unconditional redirect, or "no route in this checkout"
-does **not** prove something is truly unused — an activated plugin can supply the missing
-route/action, or a DB-stored `NotificationTemplate` (Liquid/WYSIWYG, outside static grep) could
-still link to it. Recover-don't-delete policy applies to everything below until someone audits
-activated plugins + production request logs / `NotificationTemplate` bodies.
+`app/views/devise/passwords/edit.html.erb` is still rendered by Devise's own stock route
+(`edit_user_password_url` → `PasswordsController#edit`), but the app's own reset-password email
+(`DeviseMailer#reset_password_instructions`) links to a different, custom route
+(`edit_password_url` → `UsersController#edit_password`) instead. Not dead code — just unlinked
+from the one email flow that would normally lead there. Unclear if intentional; not touched.
 
-- `app/views/devise/passwords/edit.html.erb` — Devise's own `edit_user_password_url` route
-  (`PasswordsController#edit`) renders this, but the actual reset-password email
-  (`DeviseMailer#reset_password_instructions`) links to a different, custom route
-  (`edit_password_url` → `UsersController#edit_password`) instead. No `edit_user_password_path`/`_url`
-  call exists anywhere in `app/`. Checked the local dev/test DB's `NotificationTemplate` rows for a
-  reference — none found, but that DB only has 1 seed row, so this doesn't rule out production.
-- `app/controllers/static_pages_controller.rb` (`landing`, `about`) and their views — no matching
-  route in `config/routes.rb` (confirmed by grep and by a live `GET /about` raising
-  `ActionController::RoutingError`). `app/views/layouts/static_pages.html.erb` still references
-  `about_path`, which would itself raise `NoMethodError` if ever rendered.
-- `app/views/admin/edit_mail_settings.html.erb` — no route or controller action (`AdminController`
-  has no `edit_mail_settings` method). Its live equivalent is
-  `ParametersController#mails_parameters_edit`. Looks like a leftover from before the `parameters`
-  controller consolidation.
-- `RemoveController#get_references` never renders its return value over HTTP — the endpoint always
-  responds `204 No Content` (Rails' implicit-render fallback), since the action computes an array but
-  never calls `render` and there's no `app/views/remove/get_references.*` template. No
-  `frontend/**` caller of `/references/:classname/:id` was found either (`RemoveComponent.jsx` only
-  calls the plain `generic_destroy` delete route). Either dead code with no consumer, or a plugin
-  supplies the render in production — needs the same audit as the rest of this section.
-- `frontend/components/WorkGroupTemplateEditor.jsx` (root-level `WorkGroupEditor`) — superseded by
-  `frontend/components/activityRef/WorkGroupTemplateEditor.jsx` (the only real import site) and not
-  mounted via any `react_component`.
-- `frontend/components/parameters/Rooms/RoomsParameters.jsx` isn't mounted by any core view
-  (`rooms_parameters/index.html.erb` mounts `Rooms/Localisations` directly); its only key is
-  exercised solely by the i18n parity test. `editParameters/FormulesParameters` is referenced by
-  `formules_parameters_edit.html.erb`'s `react_component` call but **the component file doesn't
-  exist** under `frontend/components/editParameters/` — likely a dead route or a plugin-provided
-  component.
-- Rails-scaffold placeholder views with no route reaching them for a real render:
-  `app/views/practice/bands/_form.html.erb` (bands new/edit mount React; failure paths never hit the
-  scaffold form), `activity/remove.html.erb`, `activity_instance/{delete,update}.html.erb`,
-  `activity_ref/{create,update}.html.erb`, `activities_applications/create.html.erb`,
-  `comments/{create,update,destroy}.html.erb`, `time_interval/validate.html.erb`,
-  `family_members/destroy.html.erb`, `family_member_users/destroy.html.erb`,
-  `evaluation_level_ref/show.html.erb`, `payment_statuses/show.html.erb`,
-  `due_payment/update.html.erb`, `payment_method` (no `show` action, but `resources` still routes it).
+## `editParameters/FormulesParameters` component missing
+
+`app/views/parameters/formules_parameters_edit.html.erb` calls
+`react_component("editParameters/FormulesParameters", ...)`, but
+`frontend/components/editParameters/FormulesParameters.jsx` doesn't exist — a live route with no
+implementation (the opposite of dead code). Needs its own investigation.
 
 ## Rubocop backlog
 

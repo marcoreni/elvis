@@ -26,35 +26,16 @@ rename), locale YAML comments `i18n-tasks normalize` was stripping (moved to `do
 `reference_i18n_tasks_binstub` memory); stick with `bin/i18n-tasks`. See item 5 for the flake this
 job will occasionally hit.
 
-## 2. Orphaned-code tracking file — status: not started
+## 2. Orphaned-code tracking file — done, see `docs/OrphanedCode.md`
 
-New file, e.g. `docs/OrphanedCode.md` (English). Purpose: a durable, searchable record of
-everything ever deleted from this codebase on suspicion of being dead/unrouted, so that when the
-user reports something like *"if I click here I get a 404, was there a view/controller for this
-that just got disconnected?"* there's a fast path to check instead of spelunking git log.
-
-Must include, for each deleted item: the commit SHA, what was deleted (file paths), what it was
-for (route/controller/feature), why it was believed dead, and the exact `git show <sha>^:<path>`
-recovery incantation. Known entries to seed it with:
-- **`9ad195d8279a362d455861f3ce74948f88d61f38`** — needs to be looked up and documented (not yet
-  investigated this session).
-- `app/views/evaluation_level_ref/{create,update}.html.erb` — deleted in `feature/i18n-06-extract-evaluation`
-  commit `48a6208` (merged via `4a32bac`). Already documented with recovery command in the current
-  `docs/KnownIssues.md` "Dead/unrouted code" section — migrate that entry here.
-- The dead `ConflictDisplayItem` component (removed during the `planning/Calendar.jsx` i18n lot,
-  per that KnownIssues section) — was referenced only from commented-out JSX, confirmed genuinely
-  unreachable, no plugin-recovery caveat needed, but still worth a line in the log for completeness.
-- Anything else found via `git log --diff-filter=D` across the session's many branches — worth a
-  systematic sweep, not just memory-recall, when this is picked up.
-
-**Then**: re-audit the current `docs/KnownIssues.md` "Dead/unrouted code awaiting a plugin +
-production audit" section item by item. For anything that, after double-checking (grep for
-routes/references, check plugin loader patterns, check `NotificationTemplate` bodies where
-relevant), still looks genuinely safe to delete — delete it now, and log it in the new
-`docs/OrphanedCode.md` with full recovery info. The user has explicitly pre-authorized this:
-*"If you want to delete more stuff that looks orphaned, after double checking... feel free to
-delete anything you see fit."* Update/shrink the `KnownIssues.md` section accordingly (or remove
-it entirely if everything in it gets resolved one way or the other).
+Created, seeded with the two prior deletion commits (`9ad195d8`, `48a62087`). Re-audited
+`docs/KnownIssues.md`'s "Dead/unrouted code" section item by item (route + controller action
+inspection, not just grep) and deleted 17 confirmed-dead files/routes/actions (logged with
+reasoning in `docs/OrphanedCode.md`), verified via a full local `bundle exec rspec` run (300
+examples, 0 failures) after. The KnownIssues section is gone — the 2 genuinely-still-open items
+(Devise passwords/edit reachable-but-unlinked, missing `editParameters/FormulesParameters`
+component) got their own smaller entries instead. README's old "Removed dead code" section now
+points at the new doc instead of duplicating it.
 
 ## 3. Move hardcoded `Europe/Paris` timezone into configuration — status: not started, mechanism TBD
 
