@@ -66,7 +66,7 @@ describe("PAYMENT_TAGS loop tag: name/rules.repeat.name localized, before/after 
             name: "Paiements",
             rules: {
                 repeat: {
-                    name: "Répeter pour chaque paiement",
+                    name: "Répéter pour chaque paiement",
                     before: "{% for payment in due_payments %}",
                     after: "{% endfor %}",
                 },
@@ -131,7 +131,7 @@ describe("REGLEMENTS_TAGS loop tag and value placeholders", () => {
             "Règlements"
         );
         expect(MergeTags.REGLEMENTS_TAGS.reglementsLoop.rules.repeat.name).toBe(
-            "Répeter pour chaque règlement"
+            "Répéter pour chaque règlement"
         );
     });
 });

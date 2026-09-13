@@ -458,8 +458,10 @@ now translated and consistent — via `activityApplications:units.{minutes,hours
   the spaced `units.minutes` convention above. `value` (consumed by `tools/date.js`'s
   `adjustStartEndTime`) was already locale-independent and untouched; `label` is now built from
   `activityApplications:units.minutes` (for the three `"N min"` steps) and a new
-  `activityApplications:units.hours` key (`"{{hours}}h"`, added because `units.hoursMinutes`
-  always zero-pads minutes — `"1h00"` — which doesn't fit the bare `"1h"` this step needed).
+  `activityApplications:units.hours` key (`"{{hours}}h"`, added because `units.hoursMinutes` is
+  `"{{hours}}h{{minutes}}"` — it always renders a minutes segment, so it can't produce the bare
+  `"1h"` this step needed; any zero-padding on `hoursMinutes`'s minutes happens at specific call
+  sites like `SelectedActivitiesTable.jsx`'s `padStart`, not in the key itself).
   `TIME_STEPS` is now `export let` + re-read on `i18n`'s `languageChanged`, matching
   `tools/constants.ts`'s existing WEEKDAYS/KINDS_LABEL pattern. (No component currently reads
   `TIME_STEPS[].label` — only `tools/date.js` consumes `.value` — so this was latent, not
@@ -620,7 +622,11 @@ notes above, and harmless for the same reason (switching locale is a full server
     in `CurrentActivityItem` / `StopList`) — **fixed**. `id` (compared against `d.comment` /
     `stopReasonValue` state) is untouched; `label` now comes from new
     `activityApplications:stopReasons.*` keys via the same `export let` +
-    `languageChanged` pattern as `tools/constants.ts`.
+    `languageChanged` pattern as `tools/constants.ts`. Pre-existing UX bug noticed while
+    extracting, not fixed here: `unsuitableLevel` (id 2) and `levelNotSuitable` (id 8) render
+    identical text in both fr and en — two distinct dropdown options a user can't actually tell
+    apart. Faithfully preserved as two separate keys since this batch is extraction, not a
+    content redesign; worth a product decision on whether one should be reworded or merged.
   - `frontend/components/mailTemplates/MergeTags.jsx` (~35 merge-tag `name`/`sample` pairs consumed
     by the WYSIWYG's `setMergeTags()`) — **fixed**. Traced `@unlayer/types`' `MergeTag` interface
     (`node_modules/@unlayer/types/dist/editor/merge-tags.d.ts`): `name` is only the display label

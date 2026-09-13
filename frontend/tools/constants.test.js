@@ -428,12 +428,37 @@ describe("TIME_STEPS follows the active UI language", () => {
         ]);
     });
 
-    test("the live binding updates for a named import, not only the namespace object", async () => {
+    // fr/en units.* are byte-identical, so a plain before/after assertion can't tell a live
+    // re-read from a frozen value captured at module load -- override the en catalogue at
+    // runtime (same technique as summary/Activity.test.jsx's "runtime override" case) so a
+    // regression back to a frozen `const TIME_STEPS` would actually fail this test.
+    test("the live binding re-reads the catalogue for a named import, not only the namespace object", async () => {
         await i18n.changeLanguage("fr");
         expect(TIME_STEPS[1].label).toBe("45 min");
 
-        await i18n.changeLanguage("en");
-        expect(TIME_STEPS[1].label).toBe("45 min");
+        // TIME_STEPS's languageChanged handler snapshots t() at the moment the event fires, so
+        // the override must be in place BEFORE changeLanguage runs, not after -- adding it while
+        // already on "en" would not retroactively update the already-taken snapshot.
+        i18n.addResourceBundle(
+            "en",
+            "activityApplications",
+            { units: { minutes: "{{minutes}} MINS" } },
+            true,
+            true
+        );
+        try {
+            await i18n.changeLanguage("en");
+            expect(TIME_STEPS[1].label).toBe("45 MINS");
+        } finally {
+            i18n.addResourceBundle(
+                "en",
+                "activityApplications",
+                { units: { minutes: "{{minutes}} min" } },
+                true,
+                true
+            );
+            await i18n.changeLanguage("fr");
+        }
     });
 
     test("value entries never change across a locale switch", async () => {
