@@ -13,4 +13,10 @@ ENV["BUNDLE_GEMFILE"] ||= File.expand_path("../Gemfile", __dir__)
 require "rubygems"
 require "bundler/setup"
 
+# i18n-tasks doesn't boot Rails (which requires "logger" as a side effect), and Ruby 3.3.5+
+# demoted logger to a bundled gem — activesupport crashes on a bare Logger constant without this.
+# Must come after bundler/setup (not e.g. a bare Gemfile-level require), so it resolves the
+# Gemfile.lock-pinned version instead of racing Bundler's own gem activation.
+require "logger"
+
 load Gem.bin_path("i18n-tasks", "i18n-tasks")
