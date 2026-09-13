@@ -1,15 +1,15 @@
 import React from "react";
 import _ from "lodash";
-import {withTranslation} from "react-i18next";
+import { withTranslation } from "react-i18next";
 
 import moment from "moment";
 
-import {csrfToken} from "./utils";
-import {makeDebounce} from "../tools/inputs";
+import { csrfToken } from "./utils";
+import { makeDebounce } from "../tools/inputs";
 import ReactTableFullScreen from "./ReactTableFullScreen";
 import * as api from "../tools/api";
 import swal from "sweetalert2";
-import {post} from "../tools/api";
+import { post } from "../tools/api";
 import Modal from "react-modal";
 import AttachAccount from "./AttachAccount";
 
@@ -31,7 +31,7 @@ const requestData = (pageSize, page, sorted, filtered, format) => {
     });
 };
 
-const isActive = adhesion => {
+const isActive = (adhesion) => {
     const now = moment();
     return (
         moment(adhesion.validity_start_date) < now &&
@@ -40,14 +40,14 @@ const isActive = adhesion => {
     );
 };
 
-const anyActive = adhesions => {
+const anyActive = (adhesions) => {
     return _.chain(adhesions)
-        .filter(adhesion => isActive(adhesion))
+        .filter((adhesion) => isActive(adhesion))
         .some()
         .value();
 };
 
-const hasActivity = d => {
+const hasActivity = (d) => {
     return d.activities.length > 0;
 };
 
@@ -60,9 +60,10 @@ class UserList extends React.Component {
         this.state = {
             data: [],
             pages: null,
+            total: 0,
             loading: true,
             filter: {},
-            selected: []
+            selected: [],
         };
 
         this.fetchData = this.fetchData.bind(this);
@@ -72,7 +73,7 @@ class UserList extends React.Component {
     }
 
     fetchData(state, instance) {
-        this.setState({loading: true, filter: state});
+        this.setState({ loading: true, filter: state });
 
         debounce(() => {
             requestData(
@@ -81,8 +82,8 @@ class UserList extends React.Component {
                 state.sorted,
                 state.filtered
             )
-                .then(response => response.json())
-                .then(data => {
+                .then((response) => response.json())
+                .then((data) => {
                     const res = {
                         data: data.users,
                         pages: data.pages,
@@ -91,7 +92,7 @@ class UserList extends React.Component {
 
                     return res;
                 })
-                .then(res => {
+                .then((res) => {
                     this.setState({
                         ...res,
                         loading: false,
@@ -102,11 +103,10 @@ class UserList extends React.Component {
 
     returnBlob(res) {
         if (res.headers.has("content-disposition")) {
-
             const content = res.headers.get("content-disposition");
             const match = content.match(/filename=\"(.*)\"/);
             if (match) {
-                this.filename = match[1]
+                this.filename = match[1];
             }
         }
         return res.blob();
@@ -114,9 +114,8 @@ class UserList extends React.Component {
 
     downloadFile(file) {
         const download = document.createElement("a");
-        download.download = this.filename || `${moment().format(
-            "DD_MM_YYYY-HH_mm_ss"
-        )}.csv`;
+        download.download =
+            this.filename || `${moment().format("DD_MM_YYYY-HH_mm_ss")}.csv`;
         download.href = URL.createObjectURL(file);
         document.body.appendChild(download);
         download.click();
@@ -124,14 +123,14 @@ class UserList extends React.Component {
     }
 
     onCsvExport() {
-        const {t} = this.props;
+        const { t } = this.props;
 
         swal({
             type: "info",
             title: t("list.csvExport.generatingTitle"),
             text: t("list.csvExport.pleaseWait"),
             allowEscapeKey: false,
-            allowOutsideClick: false
+            allowOutsideClick: false,
         });
         swal.showLoading();
 
@@ -142,41 +141,49 @@ class UserList extends React.Component {
             this.state.filter.filtered,
             "csv"
         )
-            .then(res => this.returnBlob(res))
-            .then(file => {
+            .then((res) => this.returnBlob(res))
+            .then((file) => {
                 this.downloadFile(file);
                 swal.close();
             })
-            .catch(err => {
+            .catch((err) => {
                 console.error(err);
                 swal({
                     type: "error",
                     title: t("list.csvExport.errorTitle"),
                     text: t("list.csvExport.errorText"),
-                    confirmButtonText: t("list.csvExport.ok")
+                    confirmButtonText: t("list.csvExport.ok"),
                 });
             });
     }
 
     sendConfirmationMail() {
-        const {t} = this.props;
+        const { t } = this.props;
 
         api.set()
             .success((datas) => {
                 if (!datas || datas.length === 0) {
                     swal({
-                        title: this.state.selected.length > 0
-                            ? t("list.confirmationMail.alreadyConfirmedTitleSelected")
-                            : t("list.confirmationMail.alreadyConfirmedTitleAll"),
+                        title:
+                            this.state.selected.length > 0
+                                ? t(
+                                      "list.confirmationMail.alreadyConfirmedTitleSelected"
+                                  )
+                                : t(
+                                      "list.confirmationMail.alreadyConfirmedTitleAll"
+                                  ),
                         type: "warning",
-                        confirmButtonText: t("list.confirmationMail.ok")
+                        confirmButtonText: t("list.confirmationMail.ok"),
                     });
                 } else {
                     swal({
                         title: t("list.confirmationMail.sentTitle"),
-                        html: "<ul>" + datas.map(d => `<li>${d}</li>`).join("") + "</ul>",
+                        html:
+                            "<ul>" +
+                            datas.map((d) => `<li>${d}</li>`).join("") +
+                            "</ul>",
                         type: "success",
-                        confirmButtonText: t("list.confirmationMail.ok")
+                        confirmButtonText: t("list.confirmationMail.ok"),
                     });
                 }
             })
@@ -184,70 +191,87 @@ class UserList extends React.Component {
                 swal({
                     title: t("list.confirmationMail.errorTitle"),
                     type: "error",
-                    confirmButtonText: t("list.confirmationMail.ok")
+                    confirmButtonText: t("list.confirmationMail.ok"),
                 });
             })
-            .post('/users/resend_confirmation', {ids: this.state.selected.length > 0 ? this.state.selected : this.state.data.map(d => d.id)});
+            .post("/users/resend_confirmation", {
+                ids:
+                    this.state.selected.length > 0
+                        ? this.state.selected
+                        : this.state.data.map((d) => d.id),
+            });
     }
 
-   handleDeleteUser = () => {
-    const {t} = this.props;
-    const selectedUserIds = this.state.selected;
-    let successCount = 0;
-    let errorCount = 0;
-    const isSingleUser = selectedUserIds.length === 1;
+    handleDeleteUser = () => {
+        const { t } = this.props;
+        const selectedUserIds = this.state.selected;
+        let successCount = 0;
+        let errorCount = 0;
+        const isSingleUser = selectedUserIds.length === 1;
 
-    swal({
-        title: isSingleUser
-            ? t("list.deleteUser.titleSingle")
-            : t("list.deleteUser.titleMultiple"),
-        html: `<h4>${isSingleUser
-            ? t("list.deleteUser.bodySingle")
-            : t("list.deleteUser.bodyMultiple")}</h4></br>
+        swal({
+            title: isSingleUser
+                ? t("list.deleteUser.titleSingle")
+                : t("list.deleteUser.titleMultiple"),
+            html: `<h4>${
+                isSingleUser
+                    ? t("list.deleteUser.bodySingle")
+                    : t("list.deleteUser.bodyMultiple")
+            }</h4></br>
                <p>${t("list.deleteUser.note")}</p>`,
-        type: "warning",
-        showCancelButton: true,
-        confirmButtonText: t("list.deleteUser.confirmButton"),
-        cancelButtonText: t("list.deleteUser.cancelButton")
-    }).then((result) => {
-        if (result.value) {
-            Promise.all(
-                selectedUserIds.map((id) =>
-                    api.set()
-                        .success(() => { successCount += 1; })
-                        .error(() => { errorCount += 1; })
-                        .del(`/destroy/User/${id}`)
+            type: "warning",
+            showCancelButton: true,
+            confirmButtonText: t("list.deleteUser.confirmButton"),
+            cancelButtonText: t("list.deleteUser.cancelButton"),
+        }).then((result) => {
+            if (result.value) {
+                Promise.all(
+                    selectedUserIds.map((id) =>
+                        api
+                            .set()
+                            .success(() => {
+                                successCount += 1;
+                            })
+                            .error(() => {
+                                errorCount += 1;
+                            })
+                            .del(`/destroy/User/${id}`)
+                    )
                 )
-            ).then(() => {
-                const successMessage = t("list.deleteUser.successMessage", {count: successCount});
-                const errorMessage = errorCount > 0 ?
-                    `<p>${t("list.deleteUser.errorCountMessage", {count: errorCount})}</p>` :
-                    "";
+                    .then(() => {
+                        const successMessage = t(
+                            "list.deleteUser.successMessage",
+                            { count: successCount }
+                        );
+                        const errorMessage =
+                            errorCount > 0
+                                ? `<p>${t("list.deleteUser.errorCountMessage", { count: errorCount })}</p>`
+                                : "";
 
-                swal({
-                    title: t("list.deleteUser.doneTitle"),
-                    html: `<p>${successMessage}</p>${errorMessage}`,
-                    type: successCount > 0 ? "success" : "error",
-                    confirmButtonText: t("list.deleteUser.ok")
-                });
-                this.fetchData(this.state.filter);
-                this.setState({ selected: [] });
-            }).catch(() => {
-                swal({
-                    title: t("list.deleteUser.bulkErrorTitle"),
-                    text: t("list.deleteUser.bulkErrorText"),
-                    type: "error",
-                    confirmButtonText: t("list.deleteUser.ok")
-                });
-            });
-        }
-    });
-};
-
+                        swal({
+                            title: t("list.deleteUser.doneTitle"),
+                            html: `<p>${successMessage}</p>${errorMessage}`,
+                            type: successCount > 0 ? "success" : "error",
+                            confirmButtonText: t("list.deleteUser.ok"),
+                        });
+                        this.fetchData(this.state.filter);
+                        this.setState({ selected: [] });
+                    })
+                    .catch(() => {
+                        swal({
+                            title: t("list.deleteUser.bulkErrorTitle"),
+                            text: t("list.deleteUser.bulkErrorText"),
+                            type: "error",
+                            confirmButtonText: t("list.deleteUser.ok"),
+                        });
+                    });
+            }
+        });
+    };
 
     render() {
-        const {data, pages, loading} = this.state;
-        const {t} = this.props;
+        const { data, pages, loading } = this.state;
+        const { t } = this.props;
 
         const columns = [
             {
@@ -255,35 +279,43 @@ class UserList extends React.Component {
                 id: "selection",
                 width: 25,
                 sortable: false,
-                accessor: d => this.state.selected.includes(d.id),
-                Filter: () => <input
-                    type="checkbox"
-                    checked={
-                        this.state.selected === "all" ||
-                        this.state.selected.length === data.length
-                    }
-                    onChange={e =>
-                        e.target.checked
-                            ? this.setState({
-                                selected: data.map(r => r.id),
+                accessor: (d) => this.state.selected.includes(d.id),
+                Filter: () => (
+                    <input
+                        type="checkbox"
+                        checked={
+                            this.state.selected === "all" ||
+                            this.state.selected.length === data.length
+                        }
+                        onChange={(e) =>
+                            e.target.checked
+                                ? this.setState({
+                                      selected: data.map((r) => r.id),
+                                  })
+                                : this.setState({ selected: [] })
+                        }
+                    />
+                ),
+                Cell: (d) => (
+                    <input
+                        type="checkbox"
+                        checked={this.state.selected === "all" || d.value}
+                        onChange={(e) =>
+                            this.setState({
+                                selected: e.target.checked
+                                    ? [...this.state.selected, d.original.id]
+                                    : this.state.selected.filter(
+                                          (id) => id !== d.original.id
+                                      ),
                             })
-                            : this.setState({selected: []})
-                    }
-                />,
-                Cell: d => <input
-                    type="checkbox"
-                    checked={this.state.selected === "all" || d.value}
-                    onChange={e =>
-                        this.setState({
-                            selected: e.target.checked ? [...this.state.selected, d.original.id] : this.state.selected.filter(id => id !== d.original.id),
-                        })
-                    }
-                />,
+                        }
+                    />
+                ),
             },
             {
                 Header: "#",
                 id: "adherent_number",
-                accessor: d => (
+                accessor: (d) => (
                     <a
                         href={`/users/${d.id}`}
                         className="w-100 d-flex text-dark"
@@ -297,7 +329,7 @@ class UserList extends React.Component {
                 Header: t("list.table.headers.role"),
                 id: "role",
                 width: 200,
-                accessor: d => {
+                accessor: (d) => {
                     if (d.is_admin) {
                         return (
                             <a
@@ -347,18 +379,30 @@ class UserList extends React.Component {
                 },
                 sortable: false,
                 filterable: !this.props.nofilter,
-                Filter: ({filter, onChange}) => (
+                Filter: ({ filter, onChange }) => (
                     <select
-                        onChange={event => onChange(event.target.value)}
-                        style={{width: "100%"}}
+                        onChange={(event) => onChange(event.target.value)}
+                        style={{ width: "100%" }}
                         value={filter ? filter.value : "all"}
                     >
-                        <option value="all">{t("list.table.roleFilter.all")}</option>
-                        <option value="adherent">{t("list.table.roleFilter.adherent")}</option>
-                        <option value="admin">{t("list.table.roleFilter.admin")}</option>
-                        <option value="user">{t("list.table.roleFilter.user")}</option>
-                        <option value="student">{t("list.table.roleFilter.student")}</option>
-                        <option value="teacher">{t("list.table.roleFilter.teacher")}</option>
+                        <option value="all">
+                            {t("list.table.roleFilter.all")}
+                        </option>
+                        <option value="adherent">
+                            {t("list.table.roleFilter.adherent")}
+                        </option>
+                        <option value="admin">
+                            {t("list.table.roleFilter.admin")}
+                        </option>
+                        <option value="user">
+                            {t("list.table.roleFilter.user")}
+                        </option>
+                        <option value="student">
+                            {t("list.table.roleFilter.student")}
+                        </option>
+                        <option value="teacher">
+                            {t("list.table.roleFilter.teacher")}
+                        </option>
                     </select>
                 ),
             },
@@ -368,25 +412,32 @@ class UserList extends React.Component {
                 Header: t("list.table.headers.accountType"),
                 sortable: false,
                 filterable: true,
-                Filter: ({filter, onChange}) => (
+                Filter: ({ filter, onChange }) => (
                     <select
-                        onChange={event => onChange(event.target.value)}
-                        style={{width: "100%"}}
+                        onChange={(event) => onChange(event.target.value)}
+                        style={{ width: "100%" }}
                         value={filter ? filter.value : "all"}
                     >
-                        <option value="">{t("list.table.accountTypeFilter.all")}</option>
-                        <option value="true">{t("list.table.accountTypeFilter.main")}</option>
-                        <option value="false">{t("list.table.accountTypeFilter.attached")}</option>
+                        <option value="">
+                            {t("list.table.accountTypeFilter.all")}
+                        </option>
+                        <option value="true">
+                            {t("list.table.accountTypeFilter.main")}
+                        </option>
+                        <option value="false">
+                            {t("list.table.accountTypeFilter.attached")}
+                        </option>
                     </select>
                 ),
-                accessor: d => d.attached_to_id
-                    ? t("list.table.accountType.attached")
-                    : t("list.table.accountType.main")
+                accessor: (d) =>
+                    d.attached_to_id
+                        ? t("list.table.accountType.attached")
+                        : t("list.table.accountType.main"),
             },
             {
                 id: "last_name",
                 Header: t("list.table.headers.lastName"),
-                accessor: d => (
+                accessor: (d) => (
                     <a
                         href={`/users/${d.id}`}
                         className="w-100 d-flex font-underlined"
@@ -398,7 +449,7 @@ class UserList extends React.Component {
             {
                 id: "first_name",
                 Header: t("list.table.headers.firstName"),
-                accessor: d => (
+                accessor: (d) => (
                     <a
                         href={`/users/${d.id}`}
                         className="w-100 d-flex font-underlined"
@@ -412,7 +463,7 @@ class UserList extends React.Component {
                 id: "birthday",
                 accessor: "birthday",
                 width: 150,
-                Cell: props => {
+                Cell: (props) => {
                     if (props.original.birthday) {
                         return (
                             <a
@@ -426,14 +477,14 @@ class UserList extends React.Component {
                         );
                     }
 
-                    return <p/>;
+                    return <p />;
                 },
                 filterable: false,
             },
             {
                 id: "actions",
                 Header: t("list.table.headers.actions"),
-                Cell: props => {
+                Cell: (props) => {
                     return (
                         <div className="btn-wrapper">
                             <div
@@ -448,8 +499,9 @@ class UserList extends React.Component {
                                         href={`/planning/${props.original.planning.id}`}
                                         className="btn btn-xs btn-primary m-b-sm"
                                     >
-                                        <i className="fas fa-calendar"/>
-                                        &nbsp; {t("list.table.actionsCell.planning")}
+                                        <i className="fas fa-calendar" />
+                                        &nbsp;{" "}
+                                        {t("list.table.actionsCell.planning")}
                                     </a>
                                 ) : null}
                             </div>
@@ -461,36 +513,41 @@ class UserList extends React.Component {
                                     display: "inline-block",
                                 }}
                             >
-                                {
-                                    anyActive(props.original.adhesions)
-                                    || props.original['any_users_self_is_paying_for?'] ? (
-                                        <a
-                                            href={`/payments/summary/${props.original.id}`}
-                                            className="btn btn-xs btn-primary m-r-sm m-b-sm"
-                                        >
-                                            <i className="fas fa-euro-sign"/>
-                                            &nbsp; {t("list.table.actionsCell.payments")}
-                                        </a>
-                                    ) : (
-                                        ""
-                                    )}
+                                {anyActive(props.original.adhesions) ||
+                                props.original[
+                                    "any_users_self_is_paying_for?"
+                                ] ? (
+                                    <a
+                                        href={`/payments/summary/${props.original.id}`}
+                                        className="btn btn-xs btn-primary m-r-sm m-b-sm"
+                                    >
+                                        <i className="fas fa-euro-sign" />
+                                        &nbsp;{" "}
+                                        {t("list.table.actionsCell.payments")}
+                                    </a>
+                                ) : (
+                                    ""
+                                )}
                             </div>
                             <div
                                 style={{
                                     display: "inline-block",
                                 }}
                             >
-                                { !props.original.attached_to_id ?
-                                <a
-                                    href={`/users/${props.original.id}/attach_view`}
-                                    className="btn btn-xs btn-primary m-r-sm m-b-sm"
-                                >
-                                    <i className="fas fa-user-friends"/>
-                                    &nbsp; {t("list.table.actionsCell.attachments")}
-                                </a>
-                                :
-                                ''
-                                }
+                                {!props.original.attached_to_id ? (
+                                    <a
+                                        href={`/users/${props.original.id}/attach_view`}
+                                        className="btn btn-xs btn-primary m-r-sm m-b-sm"
+                                    >
+                                        <i className="fas fa-user-friends" />
+                                        &nbsp;{" "}
+                                        {t(
+                                            "list.table.actionsCell.attachments"
+                                        )}
+                                    </a>
+                                ) : (
+                                    ""
+                                )}
                             </div>
                         </div>
                     );
@@ -509,42 +566,52 @@ class UserList extends React.Component {
                         className="btn btn-primary m-r"
                         onClick={() => this.onCsvExport()}
                     >
-                        <i className="fas fa-upload m-r-sm"/>
+                        <i className="fas fa-upload m-r-sm" />
                         {t("list.actions.exportCsv")}
                     </button>
 
-                    <a className="btn btn-primary m-r" href="/scripts/merge_users">
+                    <a
+                        className="btn btn-primary m-r"
+                        href="/scripts/merge_users"
+                    >
                         {t("list.actions.mergeDuplicates")}
                     </a>
 
                     <button
-                        data-tippy-content={t("list.actions.sendConfirmationMail")}
-                        className="btn btn-warning m-r" onClick={this.sendConfirmationMail}>
-                        <i className="fas fa-envelope"/>
+                        data-tippy-content={t(
+                            "list.actions.sendConfirmationMail"
+                        )}
+                        className="btn btn-warning m-r"
+                        onClick={this.sendConfirmationMail}
+                    >
+                        <i className="fas fa-envelope" />
                     </button>
 
                     {this.state.selected.length > 0 ? (
                         <button
-                            data-tippy-content={t("list.actions.deleteSelected")}
-                            className={"btn btn-danger m-r"} onClick={this.handleDeleteUser}>
-                            <i className="fas fa-trash"/>
+                            data-tippy-content={t(
+                                "list.actions.deleteSelected"
+                            )}
+                            className={"btn btn-danger m-r"}
+                            onClick={this.handleDeleteUser}
+                        >
+                            <i className="fas fa-trash" />
                         </button>
                     ) : null}
-
                 </div>
 
                 <ReactTableFullScreen
                     events={events}
-                    id="userTable"
+                    tableName="userTable"
                     data={data}
                     manual
                     pages={pages}
                     loading={loading}
                     onFetchData={this.fetchData}
                     columns={columns}
-                    defaultSorted={[{id: "adherent_number", desc: true}]}
+                    defaultSorted={[{ id: "adherent_number", desc: true }]}
                     filterable
-                    defaultFiltered={[{id: "role", value: this.props.filter}]}
+                    defaultFiltered={[{ id: "role", value: this.props.filter }]}
                     defaultFilterMethod={(filter, row) => {
                         if (row[filter.id] != null) {
                             return row[filter.id]
@@ -564,18 +631,23 @@ class UserList extends React.Component {
                 />
 
                 <div className="flex flex-center-justified m-t-xs">
-                    <h3>{t("list.totalCount", {count: this.state.total})}</h3>
+                    <h3>{t("list.totalCount", { count: this.state.total })}</h3>
                 </div>
 
                 <Modal
                     isOpen={this.state.showAttachAccountModal}
                     ariaHideApp={false}
-                    onRequestClose={() => this.setState({showAttachAccountModal: false})}
-                    className="modal-lg">
-                    <AttachAccount onSucess={() => {
-                        this.setState({showAttachAccountModal: false});
-                        this.fetchData(this.state.filter)
-                    }}/>
+                    onRequestClose={() =>
+                        this.setState({ showAttachAccountModal: false })
+                    }
+                    className="modal-lg"
+                >
+                    <AttachAccount
+                        onSucess={() => {
+                            this.setState({ showAttachAccountModal: false });
+                            this.fetchData(this.state.filter);
+                        }}
+                    />
                 </Modal>
             </div>
         );

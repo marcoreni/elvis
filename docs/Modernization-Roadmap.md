@@ -83,15 +83,15 @@ hardcoded frontend constants. Revisit if a DB-backed setting turns out to be pre
 (e.g. if the app ever moves toward runtime-configurable multi-school support — see the
 architectural-fit investigation from earlier in this project, if that doc still exists).
 
-## 4. i18n PRs #7–#10 — re-review to clear the KnownIssues entry — status: not started
+## 4. i18n PRs #7–#10 — done, see `fix/i18n-pr7-10-review-findings`
 
-`docs/KnownIssues.md` still lists these four early PRs (`extract-users`, `extract-evaluation`,
-`extract-payments`, `common-react-table-keys`) as never having gone through the specialized
-`code-reviewer` agent. User wants them double-checked now so the entry can be removed. Given the
-roadmap's own note that "every one of them has since been re-touched, tested, and reviewed by
-later lots," a full fresh-eyes review of current develop's state of those areas (rather than
-re-reviewing the original isolated diffs, which are ancient history at this point) is the more
-useful check. Dispatch `code-reviewer` for this; if clean, delete the KnownIssues entry.
+Fresh-eyes review of current develop's state of the 4 areas (not the ancient original diffs)
+found 2 real bugs: `UserList.jsx`'s `total` count rendered the raw i18n key on every page load
+until the debounced fetch resolved (missing `total: 0` initial state), and
+`StudentEvaluationsStats.tsx`'s react-table instance was the one consumer in the repo not passing
+the shared `common:reactTable.*` props, so its pagination chrome stayed English-only regardless of
+locale. Both fixed, plus a regression test for the second (verified it fails without the fix).
+KnownIssues entry removed.
 
 ## 5. `DeviseMailer`/`ApplicationController` order-dependent flake — resolved, see `fix/locale-flake-async-queue-adapter`
 

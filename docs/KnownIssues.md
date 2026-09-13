@@ -131,14 +131,6 @@ activated plugins + production request logs / `NotificationTemplate` bodies.
   real offense — it's an ERB-templated generator source with a `.rb` extension, never valid
   standalone Ruby.
 
-## i18n PRs #7–#10 never got a specialized code-review pass
-
-`extract-users`, `extract-evaluation`, `extract-payments`, `common-react-table-keys` were reviewed
-inline only, before the process switched to routing every i18n PR through the specialized
-`code-reviewer` agent (PR #11 onward). Still open but low priority — every one of them has since been
-re-touched, tested, and reviewed by later lots, so a fresh full-codebase review would be more useful
-than re-reviewing an isolated 2026-08 diff.
-
 ## Translated UI frozen at construct/mount time (harmless — locale switch is a full page reload)
 
 Several components resolve `t(...)` once — in a constructor, `componentDidMount`, or a module-level
