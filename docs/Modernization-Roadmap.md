@@ -14,9 +14,19 @@ service containers, builds `public/packs-test/` via `RAILS_ENV=test bin/shakapac
 stale/missing manifest otherwise causes ~100+ spurious failures), `i18n-tasks health`, `vitest`,
 and `tsc`/`rubocop` gated on regression past a checked-in baseline (5 / 1037) rather than failing
 on the pre-existing backlog. `plugins.json` is gitignored/absent from a fresh checkout, so
-`bundle install` installs zero plugin gems and no `GITHUB_TOKEN` secret is needed. Not yet
-confirmed green from an actual Actions run (no push happened from within this session before this
-was written) — worth checking the first real run.
+`bundle install` installs zero plugin gems and no `GITHUB_TOKEN` secret is needed.
+
+First real Actions run (on the fork, `marcoreni/elvis`) surfaced two real issues, both fixed in a
+follow-up commit: (1) ES 7.16.3's bundled JDK throws a `NullPointerException` probing cgroups
+under Docker's default private cgroup namespace on current GH-hosted runners — fixed with
+`--cgroupns=host` on the elasticsearch service's `options`. (2) `bin/i18n-tasks health` also runs
+`check-normalized`, and `config/locales/{fr,en}.yml`/`devise.en.yml` aren't currently
+normalize-clean — a large (~2800-line), purely-cosmetic reformat that's the `translator` agent's
+territory, not something to fold into a CI PR. The `i18n-tasks` job now runs the four checks the
+roadmap actually asked for (`missing`, `unused`, `check-consistent-interpolations`,
+`check-reserved-interpolations`) individually instead of the bundled `health` task. If someone
+runs `i18n-tasks normalize` for its own sake later, `health` can be swapped back in as the single
+gating command. Pushed as a follow-up fix commit; re-verifying the Actions run now.
 
 ## 2. Orphaned-code tracking file — status: not started
 
