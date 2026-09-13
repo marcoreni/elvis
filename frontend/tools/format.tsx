@@ -156,7 +156,7 @@ export const displayActivityRef = (ref: {
 // user is dropped from the headcount the very day they start (and kept one extra day after they
 // stop). Slicing off everything from "T" onward -- same trick as `toBirthday` above -- compares
 // like-for-like without going through `Date`/timezone conversion (which would reintroduce the
-// browser-local-zone drift `PARIS_DATE_FORMAT_OPTIONS` works around elsewhere). `null`/`undefined`
+// browser-local-zone drift `SCHOOL_DATE_FORMAT_OPTIONS` works around elsewhere). `null`/`undefined`
 // pass through unchanged so the existing "missing date excludes the user" semantics are preserved.
 // Exported so every other begin_at/stopped_at-vs-referenceDate comparison in the app (e.g.
 // courses/LessonList.jsx's headcount/reminder-list/color-coding call sites) can use the same

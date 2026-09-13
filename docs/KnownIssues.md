@@ -137,18 +137,6 @@ Two extra wrinkles worth flagging on top of the general pattern (not just "same 
   pagination props in `render()` while `state.columns` stays frozen — three different freshness
   states on one table.
 
-## Frontend date formatting hardcodes `Europe/Paris` — not per-installation configurable
-
-`courses/LessonList.jsx` and `activityApplications/summary/Activity.jsx` format `begin_at`/
-`stopped_at` with an explicit `timeZone: "Europe/Paris"` (each its own `PARIS_DATE_FORMAT_OPTIONS`
-constant) — correctly, since those fields are Paris-zone timestamps at local midnight
-(`config.time_zone = "Paris"`, `config/application.rb:50`) and the browser's own zone would silently
-roll the displayed date back a day for anyone west of Paris. This fixes today's single-tenant
-deployment but doesn't generalize: if Elvis is ever installed for a school outside the Paris
-timezone, both the backend `config.time_zone` and these two frontend constants would need to become
-a per-installation `Parameter`/`Settings` value rather than a source constant. Flagging so a future
-non-Paris deployment doesn't reintroduce the same day-off-by-one bug in reverse.
-
 ## Known duplicate translation keys (intentional, not deduped)
 
 Each is a separate key expressing the same concept in a different namespace/component, kept apart to

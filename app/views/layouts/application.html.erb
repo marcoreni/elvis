@@ -6,7 +6,7 @@
 <% end %>
 
 <!DOCTYPE html>
-<html lang="<%= I18n.locale %>">
+<html lang="<%= I18n.locale %>" data-timezone="<%= Elvis::SchoolTimezone.iana_name %>">
 <head>
   <title>Elvis</title>
   <%= csrf_meta_tags %>
