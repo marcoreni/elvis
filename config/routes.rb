@@ -413,7 +413,6 @@ Rails.application.routes.draw do
   # get "activity/generate", to: "activity#generate_instances"
 
   post "activity", to: "activity#create"
-  get "activity/remove"
   get "activity/:id/users", to: "activity#users_list"
   post "/activity/:id/desired/:desired_activity_id", to: "activity#add_student"
   post "/activity/:id/desired_option/:desired_activity_id", to: "activity#add_student_option"
@@ -444,7 +443,7 @@ Rails.application.routes.draw do
   patch "/activity_refs/:id/instruments", to: "activity_ref#set_instruments"
 
   #  Resources Referentials
-  resources :evaluation_level_ref
+  resources :evaluation_level_ref, except: [:show]
 
   get "/rooms", to: "rooms#index"
   get "/rooms/index_with_overlap", to: "rooms#index_with_overlap"
@@ -553,7 +552,7 @@ Rails.application.routes.draw do
 
   get "/jobs/:id/status", to: "jobs#show_status"
 
-  resources :payment_statuses
+  resources :payment_statuses, except: [:show]
   resources :payment_method
   resources :locations
 
