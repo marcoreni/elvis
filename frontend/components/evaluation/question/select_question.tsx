@@ -7,24 +7,31 @@ import { fullname } from "../../../tools/format";
 import type { Activity, EntityName, ReferenceData } from "../../utils/entities";
 import type { AnswerValue, SelectQuestion as TSelectQuestion } from "../types";
 
-function createTargetOptions(
+function unsupportedTargetFallback(selectTarget: EntityName): Option[] {
+    console.error(
+        "Target %s is not supported, please add it to select_question source"
+    );
+    return [{ label: `TARGET ${selectTarget} NOT SUPPORTED` }];
+}
+
+export function createTargetOptions(
     selectTarget: EntityName,
     referenceData: ReferenceData
 ): Option[] {
     const target = TARGETS[selectTarget];
+    const collection = target && referenceData[target.setName];
+
+    if (!target || !collection) return unsupportedTargetFallback(selectTarget);
 
     try {
-        return referenceData[target.setName].map(
+        return collection.map(
             reactOptionMapper({
                 id: target.valueAccessor,
                 label: target.labelAccessor,
             })
         );
     } catch (err) {
-        console.error(
-            "Target %s is not supported, please add it to select_question source"
-        );
-        return [{ label: `TARGET ${selectTarget} NOT SUPPORTED` }];
+        return unsupportedTargetFallback(selectTarget);
     }
 }
 

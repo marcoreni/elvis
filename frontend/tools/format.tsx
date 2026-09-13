@@ -161,7 +161,8 @@ export const displayActivityRef = (ref: {
 // Exported so every other begin_at/stopped_at-vs-referenceDate comparison in the app (e.g.
 // courses/LessonList.jsx's headcount/reminder-list/color-coding call sites) can use the same
 // date-only comparison instead of re-deriving (or forgetting) this fix independently.
-export const dateOnly = (value?: string | null) => (value ? value.split("T")[0] : value);
+export const dateOnly = (value?: string | null) =>
+    value ? value.split("T")[0] : value;
 
 export const occupationInfos = (
     activity: Activity,
@@ -173,15 +174,16 @@ export const occupationInfos = (
     let hasOption = false;
 
     if (activity?.activity_ref?.is_work_group) {
-        headCount = activity.activities_instruments.filter((ai) =>
+        const activitiesInstruments = activity.activities_instruments || [];
+        headCount = activitiesInstruments.filter((ai) =>
             Boolean(ai.user_id)
         ).length;
 
-        validatedHeadCount = activity.activities_instruments.filter(
+        validatedHeadCount = activitiesInstruments.filter(
             (ai) => Boolean(ai.user_id) && ai.is_validated
         ).length;
 
-        headCountLimit = activity.activities_instruments.length;
+        headCountLimit = activitiesInstruments.length;
         hasOption = headCount > validatedHeadCount;
     } else {
         const optionsUserIds = (activity.options || [])

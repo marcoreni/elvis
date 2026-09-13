@@ -30,7 +30,7 @@ export default function SelectTeachers({
                     <ul className="dropdown-menu m-t-xs">
                         {listTeacher.map((data, index) => {
                             const { first_name, last_name, planning } = data;
-                            if (currentUser === planning.id)
+                            if (currentUser === planning!.id)
                                 return (
                                     <li key={index}>
                                         <a href={`/planning/simple/${date}`}>
@@ -41,7 +41,7 @@ export default function SelectTeachers({
                             return (
                                 <li key={index}>
                                     <a
-                                        href={`/planning/simple/${date}/${planning.id}`}
+                                        href={`/planning/simple/${date}/${planning!.id}`}
                                     >
                                         {last_name} {first_name}
                                     </a>
