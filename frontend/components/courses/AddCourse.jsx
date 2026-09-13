@@ -10,7 +10,7 @@ import AddActivityForCourse from "./AddActivityForCourse";
 import AddSlotForCourse from "./AddSlotForCourse";
 import AddTeacherForCourse from "./AddTeacherForCourse";
 import AddLocationForCourse from "./AddLocationForCourse";
-import * as api from "../../tools/api.js";
+import * as api from "../../tools/api";
 import moment from "moment-timezone";
 import { csrfToken } from "../utils";
 

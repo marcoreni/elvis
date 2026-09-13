@@ -8,7 +8,7 @@ import ActivityRefApplication from "./ActivityRefApplication";
 import TabbedComponent from "../utils/ui/tabs";
 import WorkGroupTemplateEditor from "./WorkGroupTemplateEditor";
 import {Form} from "react-final-form";
-import * as api from "../../tools/api.js";
+import * as api from "../../tools/api";
 import {redirectTo} from "../../tools/url";
 import ActivityRefTeachers from "./ActivityRefTeachers";
 import arrayMutators from "final-form-arrays";

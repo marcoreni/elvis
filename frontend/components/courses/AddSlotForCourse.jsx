@@ -5,7 +5,7 @@ import { toast } from "react-toastify";
 import { MESSAGES } from "../../tools/constants";
 import { checkStartEndTime } from "../../tools/date";
 import moment from "moment";
-import * as api from "../../tools/api.js";
+import * as api from "../../tools/api";
 import AddCourseSummary from "./AddCourseSummary";
 
 export default class AddSlotForCourse extends React.Component {

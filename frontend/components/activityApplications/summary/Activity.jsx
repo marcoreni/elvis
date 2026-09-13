@@ -12,7 +12,7 @@ import * as api from "../../../tools/api";
 import * as TimeIntervalHelpers from "../../planning/TimeIntervalHelpers";
 import {csrfToken, FR_DATE_FORMAT, findAndGet, optionMapper} from "../../utils";
 import {radioValue} from "../../evaluation/question/radio_question";
-import {PRE_APPLICATION_ACTION_LABELS, modalStyle, WEEKDAYS} from "../../../tools/constants.js";
+import {PRE_APPLICATION_ACTION_LABELS, modalStyle, WEEKDAYS} from "../../../tools/constants";
 import {displayActivityRef, formatActivityHeadcount, occupationInfos, toAge} from "../../../tools/format";
 import WorkGroupEditor from "./WorkGroupEditor";
 

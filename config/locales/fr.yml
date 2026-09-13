@@ -1,1306 +1,1391 @@
+---
 fr:
-    time:
-        formats:
-            date_month_concise: '%d %B %Y'
-            long_date: '%e %B %Y'
-            day: '%A'
-            short_time: '%Hh%M'
-    date:
-        formats:
-            date_month_concise: '%d %B %Y'
-            long_date: '%e %B %Y'
-
-    # Explicit override matching rails-i18n's own fr.yml currency block verbatim - the fr locale
-    # already got this for free from the gem, but writing it out here keeps fr and en symmetrical
-    # and self-documenting rather than leaving en's identical override look unexplained.
-    number:
-        currency:
-            format:
-                delimiter: " "
-                format: "%n %u"
-                precision: 2
-                separator: ","
-                significant: false
-                strip_insignificant_zeros: false
-                unit: "€"
-
-    common:
-        actions:
-            validate: Valider
-            save: Sauvegarder
-            add: Ajouter
-            edit: Éditer
-            delete: Supprimer
-            back: Retour
-        labels:
-            actions: Actions
-            active: Actif
-            inactive: Inactif
-            "yes": "Oui"
-            "no": "Non"
-        confirm:
-            sure: Êtes-vous sûr ?
-        errors:
-            access_denied: Vous n'avez pas le droit de faire cela
-
-    menu:
-        plugins: Plugins
-        plugins_list: Liste des plugins
-        users: Utilisateurs
-        inscriptions: Inscriptions
-        adhesions: Adhésions
-        applications: Demandes d'inscription
-        packs: Packs
-        new_application: Nouvelle inscription
-        params: Paramétrage
-        plannings: Plannings
-        presences: Présences
-        seasons: Gestion des saisons
-        courses_list: Liste des cours
-        planning_teachers: Professeurs
-        planning_rooms: Salles de cours
-        replicate_courses: Répliquer des cours
-        monitoring: Suivi
-        absences: Suivi des absences
-        payments: Paiements
-        rooms_sites: Salles et sites
-        activities: Activités musicales
-        activity_families: Familles d'activités
-        instruments: Instruments
-        activity_refs: Activités
-        formulas: Formules
-        evaluations: Évaluation
-        evaluations_summary: Synthèse des évaluations
-        evaluations_management: Gestion des évaluations
-        students_without_slots: Élèves sans créneaux
-        parameters: Paramètres
-        my_planning: Mon planning
-        my_availabilities: Mes disponibilités
-        my_evaluations: Mes évaluations
-        planning_simulation: Simulation de planning
-        home: Accueil
-        my_applications: Mes demandes d'inscription
-        my_profile: Mon profil
-        logout: Se déconnecter
-
-    activerecord:
-        attributes:
-            activity_ref:
-                activity_type_list:
-                    child: Enfance
-                    cham: CHAM
-                    chorale_ma: Chorale MA
-                    eveil_musical: Éveil musical
-                    actions_culturelles: Actions culturelles
-            activity_application_status:
-                label: Libellé
-                is_stopping: Arrêt ?
-                is_active: Actif
-            user:
-                last_name: Nom
-                first_name: Prénom
-                birthday: Date de naissance
-                is_admin: Administrateur
-                is_teacher: Professeur
-                adherent: Adhérent
-            evaluation_level_ref:
-                label: Libellé
-                value: Numéro
-            payment_method:
-                label: Libellé
-                is_special: Est spécial
-                is_credit_note: A crédit
-                show_payment_method_to_user: Afficher au client ?
-            payment_status:
-                label: Libellé
-                color: Couleur
-            band:
-                name: Nom
-                band_type_id: Type de groupe
-                music_genre_id: Genre musical
-                blacklisted: Blacklisté
-            band_type:
-                name: Nom
-            flat_rate:
-                name: Nom
-                nb_hour: Nombre d'heures
-                solo_duo_rate: Prix solo / duo
-                group_rate: Prix groupe
-            location:
-                label: Nom du site
-            material:
-                name: Nom
-                prix: Prix de location
-            music_genre:
-                name: Nom
-            room_features:
-                name: Nom
-            season:
-                label: Nom de la saison
-                nb_lessons: Nombre de leçons
-                start: Début
-                end: Fin
-                opening_date_for_applications: Date d'ouverture des ré-inscriptions
-                opening_date_for_new_applications: Date d'ouverture des nouvelles inscriptions
-                closing_date_for_applications: Date de clôture des inscriptions
-                date_for_teacher_planning_validation: Date de validation du planning par les professeurs
-                is_current: Saison en cours
-                next_season_id: Saison suivante
-        errors:
-            models:
-                user:
-                    attributes:
-                        password_confirmation:
-                            confirmation: "Le mot de passe ne concorde pas."
-                        base:
-                            duplicate_identity: "Un compte existe déjà avec cette combinaison nom - prénom - date de naissance."
-                            duplicate_email: "Un compte existe déjà avec cet email."
-                adhesion_price:
-                    attributes:
-                        label:
-                            blank: Le libellé est obligatoire
-                        price:
-                            blank: Le prix est obligatoire
-                            greater_than_or_equal_to: "Le prix doit être supérieur ou égal à %{count}"
-                        season_id:
-                            taken: Il existe déjà un tarif pour cette saison
-                activity_ref_kind:
-                    attributes:
-                        name:
-                            blank: ne peut être vide
-                            taken: existe déjà
-                        default_activity_ref:
-                            same_family: doit être de la même famille d'activité
-                season:
-                    attributes:
-                        end:
-                            after_start: doit être postérieur au début de saison
-                        opening_date_for_applications:
-                            before_season_start: doit être antérieur au début de saison
-                            after_previous_season_closing: "doit être postérieur à la date de clôture des inscriptions de la saison précédente"
-                        opening_date_for_new_applications:
-                            after_applications_opening: "doit être postérieur à la date d'ouverture des ré-inscriptions"
-                            before_applications_closing: doit être antérieur à la date de clôture des inscriptions
-                            after_previous_season_closing: "doit être postérieur à la date de clôture des inscriptions de la saison précédente"
-                        closing_date_for_applications:
-                            before_season_end: doit être antérieur à la fin de saison
-                activity_ref:
-                    attributes:
-                        to_age:
-                            greater_than_from_age: doit être supérieur à l'âge min
-                        occupation_hard_limit:
-                            greater_than_occupation_limit: doit être supérieur au nombre de places
-                formule:
-                    attributes:
-                        number_of_items:
-                            exceeds_available_activities: "ne peut pas dépasser le nombre total d'activités disponibles (%{count})"
-                        base:
-                            at_least_one_activity: "La formule doit contenir au moins une activité ou famille d'activités"
-                level:
-                    attributes:
-                        base:
-                            duplicate: "Ce niveau existe déjà pour la saison %{season}, l'activité %{activity} et l'utilisateur %{user}"
-                payer_payment_terms:
-                    attributes:
-                        base:
-                            duplicate: "Des modalités de paiement existent déjà pour la saison %{season} et le payeur %{payer} : veuillez faire une mise à jour"
-        # Human-readable model names for ApplicationRecord#display_class_name (see
-        # app/models/application_record.rb), resolved dynamically per model via
-        # `self.model_name.human(count:)` - see config/i18n-tasks.yml's ignore_unused note for
-        # activerecord.models.*. Each value moved here verbatim from the model's former
-        # `self.display_class_name` override (fix/remove-controller-display-class-name-i18n).
-        models:
-            activities_instrument:
-                one: association cours/instruments
-                other: associations cours/instruments
-            activity:
-                one: cours
-                other: cours
-            activity_application:
-                one: "demande d'inscription"
-                other: "demandes d'inscription"
-            activity_application_status:
-                one: "Statut d'inscription"
-                other: "Statuts d'inscription"
-            activity_instance:
-                one: séance de cours
-                other: séances de cours
-            activity_ref:
-                one: activité
-                other: activités
-            activity_ref_cycle:
-                one: "enchaînement d'activités"
-                other: "enchaînements d'activités"
-            activity_ref_kind:
-                one: "famille d'activité"
-                other: "familles d'activités"
-            activity_ref_pricing:
-                one: Tarif
-                other: Tarifs
-            activity_refs_instrument:
-                one: association activité / instruments
-                other: associations activité / instruments
-            additional_student:
-                one: élève supplémentaire
-                other: élèves supplémentaires
-            address:
-                one: adresse
-                other: adresses
-            adhesion:
-                one: adhésion
-                other: adhésions
-            answer:
-                one: réponse
-                other: réponses
-            application_change_questionnaire:
-                one: "questionnaire de changement d'inscription"
-                other: "questionnaires de changement d'inscription"
-            band:
-                one: groupe de musique
-                other: groupes de musique
-            band_type:
-                one: type de groupe de musique
-                other: types de groupe de musique
-            bands_user:
-                one: membre de groupe de musique
-                other: membres de groupes de musique
-            comment:
-                one: commentaire
-                other: commentaires
-            conflict:
-                one: conflit
-                other: conflits
-            consent_document:
-                one: document de consentement
-                other: documents de consentement
-            desired_activity:
-                one: activité souhaitée
-                other: activités souhaitées
-            desired_time_interval:
-                one: créneau souhaité
-                other: créneaux souhaités
-            due_payment:
-                one: échéance
-                other: échéances
-            due_payment_status:
-                one: "statut d'échéance"
-                other: "statuts d'échéance"
-            evaluation_appointment:
-                one: "RDV d'évaluation"
-                other: "RDV d'évaluation"
-            evaluation_level_ref:
-                one: "référentiel d'évaluation"
-                other: "référentiels d'évaluation"
-            event_rules:
-                one: EventRules
-                other: EventRules
-            event_subscription:
-                one: "souscription d'événement"
-                other: "souscriptions d'événement"
-            export_template:
-                one: "modèle d'export"
-                other: "modèles d'export"
-            failed_payment_import:
-                one: "import d'échecs de paiements"
-                other: "imports d'échecs de paiements"
-            failed_payment_import_reason:
-                one: "motif d'import d'échecs de paiements"
-                other: "motifs d'import d'échecs de paiements"
-            family_member_user:
-                one: membre de famille
-                other: membres de famille
-            flat_rate:
-                one: forfait
-                other: forfaits
-            formule:
-                one: Formule
-                other: Formules
-            formule_item:
-                one: Item
-                other: Items
-            formule_pricing:
-                one: Tarif
-                other: Tarifs
-            holiday:
-                one: congé
-                other: congés
-            hours_sheet:
-                one: "feuille d'heure"
-                other: "feuilles d'heure"
-            instrument:
-                one: instrument
-                other: instruments
-            level:
-                one: niveau
-                other: niveaux
-            location:
-                one: lieu
-                other: lieux
-            material:
-                one: matériel
-                other: matériels
-            message:
-                one: message
-                other: messages
-            message_recipient:
-                one: destinataire de message
-                other: destinataires de message
-            music_genre:
-                one: genre musical
-                other: genres musicaux
-            new_student_level_questionnaire:
-                one: questionnaire de niveau pour nouvel élève
-                other: questionnaires de niveau pour nouvel élève
-            option:
-                one: option
-                other: options
-            pack:
-                one: Pack
-                other: Packs
-            payer_payment_terms:
-                one: modalité de paiement pour un payeur
-                other: modalités de paiement pour les payeurs
-            payment:
-                one: règlement
-                other: règlements
-            payment_method:
-                one: moyen de paiement
-                other: moyens de paiement
-            payment_schedule:
-                one: échéancier
-                other: échéanciers
-            payment_schedule_options:
-                one: "option d'échéancier de paiement"
-                other: "options d'échéancier de paiement"
-            payment_schedule_status:
-                one: "statut d'échéancier"
-                other: "statuts d'échéancier"
-            payment_status:
-                one: statut de paiement
-                other: statuts de paiement
-            planning:
-                one: planning
-                other: planning
-            planning_conflict:
-                one: conflit de planning
-                other: conflits de planning
-            plugin:
-                one: plugin
-                other: plugins
-            practice_room_parameter:
-                one: paramètre de salle de répétition
-                other: paramètres de salles de répétition
-            practice_room_planning:
-                one: planning de salle de répétition
-                other: plannings des salles de répétition
-            practice_session:
-                one: séance de répétition
-                other: séances de répétition
-            pre_application:
-                one: pré-inscription
-                other: pré-inscriptions
-            pre_application_activity:
-                one: "cours attribué dans le cadre d'une réinscription"
-                other: "cours attribués dans le cadre d'une réinscription"
-            pre_application_desired_activity:
-                one: "cours souhaité dans le cadre d'une réinscription"
-                other: "cours souhaités dans le cadre d'une réinscription"
-            pricing_category:
-                one: Catégorie prix
-                other: Catégories prix
-            question:
-                one: question
-                other: questions
-            room:
-                one: salle
-                other: salles
-            room_activity:
-                one: association activité / salle
-                other: associations activités / salles
-            room_features:
-                one: caractéristique de salle
-                other: caractéristiques des salles
-            room_room_feature:
-                one: association salle / caractéristiques
-                other: associations salles / caractéristiques
-            school:
-                one: école
-                other: écoles
-            season:
-                one: saison
-                other: saisons
-            setting:
-                one: configuration
-                other: configurations
-            student:
-                one: élève
-                other: élèves
-            student_attendance:
-                one: inscription aux séances
-                other: inscriptions aux séances
-            student_evaluation:
-                one: "évaluation d'élève"
-                other: "évaluations d'élèves"
-            teacher_season:
-                one: association professeur / saison
-                other: associations professeurs / saisons
-            teachers_activity:
-                one: cours de professeur
-                other: cours de professeurs
-            teachers_activity_instance:
-                one: séance de cours de professeur
-                other: séances de cours des professeurs
-            teachers_activity_ref:
-                one: activité de professeur
-                other: activités des professeurs
-            telephone:
-                one: téléphone
-                other: téléphones
-            time_interval:
-                one: créneau
-                other: créneaux
-            time_interval_preference:
-                one: préférence horaire
-                other: préférences horaires
-            time_slot:
-                one: créneau de planning
-                other: créneaux des plannings
-            user:
-                one: utilisateur
-                other: utilisateurs
-            user_address:
-                one: association utilisateur / adresse
-                other: associations utilisateurs / adresses
-            users_instrument:
-                one: association utilisateur / instrument
-                other: associations utilisateurs / instruments
-
-    views:
-        layouts:
-            application:
-                my_planning: Mon planning
-                version_dev: version dev
-                version: version %{number}
-                powered_by: propulsé par
-                other_accounts: "Autres comptes :"
-                help_center: Centre d'aide
-                terms_link: Politique de confidentialité (CGU)
-                base_seasons_created:
-                    title: Message
-                    text: 3 saisons ont été créées par défaut en fonction de la date actuelle
-            static_pages:
-                sign_in: Connexion
-                sign_up: Inscription
-                read_more: EN SAVOIR PLUS
-                toggle_navigation: Afficher la navigation
-                previous: Précédent
-                next: Suivant
-                headline_1_html: Logiciel<br/> de gestion
-                headline_2_html: Cours collectifs <br/> Ateliers
-        devise:
-            sessions:
-                new:
-                    title: Accédez à votre espace
-                    login_label: Courriel ou Numéro d'adhérent
-                    remember_me: Rester connecté
-                    no_account_title: Vous n'avez pas de compte ?
-                    no_account_body: Vous pouvez créer votre espace en cliquant sur le bouton ci-dessous
-            registrations:
-                new:
-                    heading: Inscriptions
-                    pre_application_notice_html: "La période des ré-inscriptions en ligne est ouverte. Si vous êtes déjà adhérent, vous pouvez vous rendre dans votre %{link}."
-                    personal_space_link: espace personnel
-                    new_applications_notice_html: "Pour les nouvelles inscriptions, rendez-vous le %{date} sur cette page."
-                    closed_body: "Les inscriptions en ligne pour la nouvelle saison sont actuellement fermées. Vous pouvez nous contacter par téléphone pour que nous traitions votre demande."
-                registration:
-                    last_name_label: Votre Nom
-                    first_name_label: Votre Prénom
-                    birthday_label: Votre date de naissance
-                    password_confirmation_label: Confirmer mot de passe
-                edit:
-                    title: Modifier mon profil
-                    password_length_hint:
-                        one: "Votre mot de passe doit contenir au moins %{count} caractère minimum"
-                        other: "Votre mot de passe doit contenir au moins %{count} caractères minimum"
-                    password_confirmation_label: Confirmation du nouveau mot de passe
-                    submit: Mettre à jour
-            passwords:
-                new:
-                    subtitle: Réinitialisation par Email
-                    login_label: Courriel
-                    submit: Envoyer un mail de récupération
-                edit:
-                    title: Changez votre mot de passe
-                    password_confirmation_label: Confirmation
-            shared:
-                links:
-                    sign_in_link: Lien vers la page de Connexion
-                    confirmation_link: Mail de validation non reçu ?
-                    unlock_link: Mail de déblocage non reçu ?
-            mailer:
-                confirmation_instructions:
-                    greeting_html: "Bonjour <strong>%{name}</strong>,"
-                    account_created_html: "Votre compte a bien été créé sur la plateforme de <strong>%{app_name}</strong>."
-                    instruction: "Confirmer votre email et créer un mot de passe via le lien ci-dessous :"
-                    confirm_button: Confirmer mon compte
-                reset_password_instructions:
-                    greeting_html: "Bonjour <strong>%{name}</strong>,"
-                    instruction: "Vous avez demandé à réinitialiser votre mot de passe. Pour le modifier, cliquez sur le bouton ci-dessous :"
-                    instruction_2: "Si vous n’êtes pas à l’origine de cette demande, vous pouvez ignorer cet email. Votre mot de passe restera inchangé tant que vous ne cliquez pas sur le lien."
-        oidc/authorizations:
-            new:
-                heading: "Autorisez-vous l’accès de %{client} à ces informations ?"
-                requested_information: Informations demandées
-                authorize: Autoriser
-                deny: Refuser
-        activity_assigned_mailer:
-            activity_assigned:
-                greeting_html: "Bonjour <strong>%{name}</strong>,"
-                proposed_slot_html: "Un créneau vous a été proposé pour le cours <br />\n<strong>\"%{activity}\"</strong>."
-                request_info_html: "Demande n°<span style=\"color:#0079bf\">%{id}</span> concernant %{first_name} %{last_name}"
-                schedule_info_html: "Pour la <strong>%{season}</strong>, le cours se déroulera le : <br />\n<strong>%{day}</strong> <br />\nde <strong>%{start_time}</strong>\nà <strong>%{end_time}</strong> <br />\navec le professeur <strong>%{teacher}</strong>"
-                validate_or_refuse: Valider ou refuser la proposition en cliquant sur le bouton ci-dessous.
-                cta_button: "Se rendre sur %{name}"
-        adhesion_mailer:
-            reminder_email:
-                greeting_html: "Bonjour <strong>%{name}</strong>,"
-                expiring_notice: Votre adhésion se termine dans 30 jours.
-                login_link: Connectez-vous
-                subscribe_notice: pour adhérer à une nouvelle activité.
-        application_mailer:
-            notify_new_application:
-                greeting: Bonjour,
-                acknowledgement_html: "Nous accusons réception de votre demande d'inscription pour la saison <strong>%{season}</strong>, pour l'élève <strong>%{student}</strong>\nà l'activité <strong>%{activities}</strong>"
-                application_number_html: "Voici son numéro de demande : <span style=\"color: darkred\">%{id}</span>"
-        partials:
-            mailer:
-                users_info_partial:
-                    adherent_number_html: "Votre numéro d'identification : <b>%{number}</b>"
-                    adherent_number_hint_html: "Ce numéro vous permet de vous authentifier sur %{app_name}"
-        sessions:
-            pick_user:
-                title_html: "Choisissez le compte pour %{email}"
-                submit: Se connecter
-        users:
-            _family:
-                heading: "Foyer :"
-                subtitle_self: Personnes dont vous gérez les inscriptions
-                subtitle_other: "Personnes dont les inscriptions sont gérées par %{name}"
-                add_contact: Ajouter un contact
-                relation_attached: Utilisateur rattaché
-                to_call_title: À contacter en premier
-                paying_title: Payeur
-                legal_referent_title: Représentant légal
-                family_link_heading: Lien Familial
-                edit_family_link: Edition du lien familial
-                no_family_link_heading: Pas de lien familial
-                profile_heading: Profil
-                view_action: Voir
-                activities_heading: Activités
-                preregister_action: Pré-inscrire
-                empty_state_html: "Si vous souhaitez inscrire un membre de votre famille à une activité, cliquez sur le bouton <b>ajouter un nouveau membre</b>, puis cliquez sur le bouton <b>pré-inscrire</b> correspondant"
-                empty_state_heading: Pas de membres de famille renseignés pour le moment
-            adherent_card:
-                title: Carte adhérent
-                course: "> Cours de %{activity} (%{civility} %{last_name})"
-                room_at_location: "Salle %{room} à %{location} / %{day}, %{time}"
-                civility_mr: M
-                civility_mrs: Mme
-            attach_view:
-                heading: Rattachements de
-                attached_notice: Ce compte est rattaché à
-            create_account:
-                email_prompt_missing: Veuillez completer votre email
-                email_prompt_confirm: Est-ce bien votre email ?
-                password_label: Mot de passe
-                password_confirmation_label: Confirmation de votre mot de passe
-            edit_activities:
-                heading: "Activités de l'utilisateur %{name}"
-            edit_password:
-                heading: Définissez votre mot de passe
-                already_set_notice: Mot de passe déjà défini, veuillez vous connecter avec votre login/mot de passe
-                redirect_link: Redirection vers la page de login
-                new_password_label: Nouveau mot de passe
-                confirm_password_label: Confirmation du nouveau mot de passe
-            evaluate:
-                heading: Évaluations des élèves
-                info_notice: Ces évaluations serviront pour inscrire les élèves sur la prochaine saison
-            first_login:
-                heading: Bienvenue !
-                email_prompt_missing: Veuillez completer votre email
-                email_prompt_confirm: Est-ce bien votre email ?
-            index:
-                heading: Liste des utilisateurs
-                create_user: Créer un utilisateur
-                import_users: Importer utilisateurs
-            new:
-                heading: Créer un nouvel utilisateur
-                attached_account_label: Compte rattaché à
-                confirm_email_label: Envoyer un mail de confirmation
-                activities_label: Activités
-                submit: Création
-            presence_sheet:
-                heading: Feuille de présence
-                teacher_heading: "Professeur: %{name}"
-                previous_week_title: Semaine précédente
-                previous_day_title: Jour précédent
-                next_day_title: Jour suivant
-                next_week_title: Semaine suivante
-            previsional_groups:
-                heading: Simulation de planning
-                info_notice: "Cet aperçu est produit à partir des réponses portant sur les changements de groupes. Ces réponses sont trouvables dans les questionnaires d'évaluation des élèves remplis en fin d'année par le professeur."
-                legend_heading: Légende
-                no_group_change: Pas de changement de groupe
-                group_change_informed: Changement de groupe informé
-                group_change_uninformed: Changement de groupe non informé
-                continues_next_season: L'élève continue la saison prochaine
-                stops_next_season: L'élève ne continue pas la saison prochaine
-                uncertain: L'élève est incertain
-            season_activities:
-                heading: Evaluation des élèves
-                info_notice: "Les niveaux affichés sont ceux préconisés pour la saison suivante (%{season})."
-            show:
-                attached_badge: Utilisateur rattaché
-                student_badge: Élève
-                user_badge: Utilisateur
-                member_number: "Adhérent n°%{number}"
-                adhesion_valid_until: Adhésion valide jusqu'au
-                expires_in_days:
-                    one: Expire dans %{count} jour
-                    other: Expire dans %{count} jours
-                attached_to_label: Utilisateur rattaché à
-                age_years:
-                    one: "%{count} an"
-                    other: "%{count} ans"
-                email_label: Mail
-                phone_label: Téléphone
-                no_phone: Pas de numéro de téléphone
-                address_label:
-                    one: Adresse
-                    other: Adresses
-                register_action: S'inscrire
-                edit_profile_action: Éditer le profil
-                edit_password_action: Éditer le Mot de passe
-                planning_action: Planning
-                hours_sheet_action: Feuille d'heures
-                season_courses_action: Cours de la saison
-                payments_action: Règlements
-                application_request_action: Demande d'inscription
-                preregistrations_action: Pré-inscriptions
-                reset_password_button: Réinitialiser le mot de passe
-                reset_password_error: "Le mot de passe n'a pas pu être réinitialisé. Veuillez réessayer."
-                reset_password_success: Un email a été envoyé à l'utilisateur pour réinitialiser son mot de passe.
-                delete_user_button: Supprimer cet utilisateur
-                delete_user_confirm: Cela supprimera l'utilisateur, ses liens familiaux ainsi que son adhésion. Êtes-vous sûr ?
-                delete_user_additional_message: "Les éventuels utilisateurs rattachés seront automatiquement détachés et un email leur seront adressés pour créer leur mot de passe (s'ils ont un email différent de ce compte)."
-                tab_activities: Activités
-                tab_family: Liens familiaux
-                tab_absences: Absences
-                no_activity: Aucune activité
-                unknown_schedule: Horaire inconnu
-                stopped_on: Arrêt le
-                error_title: Erreur
-            upload_csv:
-                heading: Import de votre communauté
-        adhesion:
-            index:
-                heading: Liste des adhésions
-                create: Nouvelle adhésion
-            new:
-                heading: Créer une adhésion
-        activity:
-            index:
-                title: Liste des cours
-                add_course: Ajouter un cours
-        activities_applications:
-            index:
-                title: Demandes d'inscription
-                create: Créer une inscription
-        activity_application_statuses:
-            index:
-                heading: Liste des statuts d'inscription
-                new_button: Nouveau statut
-                error_title: Erreur
-                message_title: Message
-                cols:
-                    label: Libellé
-                    stopping: Arrêt ?
-            new:
-                title: Créer un statut d'inscription
-            edit:
-                title: Éditer un statut d'inscription
+  activerecord:
+    attributes:
+      activity_application_status:
+        is_active: Actif
+        is_stopping: Arrêt ?
+        label: Libellé
+      activity_ref:
+        activity_type_list:
+          actions_culturelles: Actions culturelles
+          cham: CHAM
+          child: Enfance
+          chorale_ma: Chorale MA
+          eveil_musical: Éveil musical
+      band:
+        band_type_id: Type de groupe
+        blacklisted: Blacklisté
+        music_genre_id: Genre musical
+        name: Nom
+      band_type:
+        name: Nom
+      evaluation_level_ref:
+        label: Libellé
+        value: Numéro
+      flat_rate:
+        group_rate: Prix groupe
+        name: Nom
+        nb_hour: Nombre d'heures
+        solo_duo_rate: Prix solo / duo
+      location:
+        label: Nom du site
+      material:
+        name: Nom
+        prix: Prix de location
+      music_genre:
+        name: Nom
+      payment_method:
+        is_credit_note: A crédit
+        is_special: Est spécial
+        label: Libellé
+        show_payment_method_to_user: Afficher au client ?
+      payment_status:
+        color: Couleur
+        label: Libellé
+      room_features:
+        name: Nom
+      season:
+        closing_date_for_applications: Date de clôture des inscriptions
+        date_for_teacher_planning_validation: Date de validation du planning par les
+          professeurs
+        end: Fin
+        is_current: Saison en cours
+        label: Nom de la saison
+        nb_lessons: Nombre de leçons
+        next_season_id: Saison suivante
+        opening_date_for_applications: Date d'ouverture des ré-inscriptions
+        opening_date_for_new_applications: Date d'ouverture des nouvelles inscriptions
+        start: Début
+      user:
+        adherent: Adhérent
+        birthday: Date de naissance
+        first_name: Prénom
+        is_admin: Administrateur
+        is_teacher: Professeur
+        last_name: Nom
+    errors:
+      models:
         activity_ref:
-            index:
-                heading: Référentiel des activités
-                add: Ajouter une activité
-                export: Exporter
-                type: "Type: %{kind}"
-                places: "Places possibles: %{limit} (max: %{hard_limit})"
-                duration_hours: "Durée: %{hours}h%{minutes}"
-                duration_minutes: "Durée: %{minutes} minutes"
-                destroy_error_title: Erreur
-                destroy_error: Vous ne pouvez pas supprimer l'activité car elle est liée à d'autres données.
-            edit:
-                heading: "Éditer l'activité \"%{label}\""
-            new:
-                heading: Ajouter une activité
+          attributes:
+            occupation_hard_limit:
+              greater_than_occupation_limit: doit être supérieur au nombre de places
+            to_age:
+              greater_than_from_age: doit être supérieur à l'âge min
         activity_ref_kind:
-            index:
-                heading: Familles d'activités
-            new:
-                heading: Ajouter une famille d'activité
-            form:
-                name_label: Nom
-                default_activity: Activité par défaut
-        instruments:
-            index:
-                heading: Instruments
-            new:
-                heading: Ajouter un instrument
-            form:
-                label_field: Nom de l'instrument
-        evaluation_appointments:
-            incomplete:
-                heading: Liste des nouveaux élèves sans créneau d'évaluation
-        evaluation_level_ref:
-            index:
-                heading: Niveaux d'évaluation
-                add_level: Ajouter un niveau
-            new:
-                heading: Ajouter un Niveau
-            edit:
-                heading: 'Edition du niveau "%{label}"'
-        student_evaluations_stats:
-            stats:
-                heading: 'Synthèse des évaluations - %{season}'
-        failed_payment_imports:
-            index:
-                heading: Liste des imports de paiements ratés
-        formules:
-            index:
-                heading: Formules
-            new:
-                heading: Créer une formule
-            edit:
-                heading: Modifier une formule
-        parameters:
-            index:
-                heading: Paramètres
-                edit: Éditer
-                sections:
-                    général: Général
-                    personnalisation: Personnalisation
-                cards:
-                    school:
-                        title: Votre école
-                        text: "Définissez les informations générales de votre école : nom, adresse postale, etc."
-                    languages:
-                        title: Langues
-                        text: Choisissez la langue par défaut de l'installation et les langues proposées aux utilisateurs.
-                    emails:
-                        title: Emails
-                        text: Paramétrez votre serveur d'envoi de mails, l'adresse de l'expéditeur et vos destinataires.
-                    csv:
-                        title: Exports CSV
-                        text: Paramétrez vos exports CSV.
-                    notifications:
-                        title: Notifications
-                        text: Paramétrez et modifiez vos templates emails.
-                    teachers:
-                        title: Professeurs
-                        text: Gérez les permissions au planning et les informations affichées à l'élève.
-                    packages:
-                        title: Formules
-                        text: Activez ou désactivez l'affichage des formules.
-            activity_application_parameters:
-                index:
-                    heading: Paramétrage des inscriptions
-            planning_parameters:
-                index:
-                    heading: Paramétrage du planning
-            rooms_parameters:
-                index:
-                    heading: Liste des sites
-                    new_site: Créer un nouveau site
-            localization_parameters:
-                index:
-                    heading: Langues
-            school_parameters:
-                edit:
-                    no_name: Pas de nom
-            teachers_parameters:
-                edit:
-                    heading: Paramétrage des droits des professeurs
-            rules_parameters:
-                edit:
-                    heading: Règlement intérieur
-            mails_parameters:
-                edit:
-                    heading: "Paramètres avancés : Mails"
-            csv_parameters:
-                edit:
-                    heading: "Paramètres avancés : Exports CSV"
-            formules_parameters:
-                edit:
-                    heading: "Paramètres : Formules"
-        payment_method:
-            index:
-                heading: Moyens de paiement
-                create: Créer un moyen de paiement
-            new:
-                heading: Création d'une méthode de paiement
-            edit:
-                heading: Modification d'une méthode de paiement
-            form:
-                built_in_notice: Comme il s'agit d'un moyen de paiement intégré, vous ne pouvez pas modifier son nom.
-        payment_statuses:
-            index:
-                heading: Statuts de paiement
-                create: Créer un statut de paiement
-            new:
-                heading: Nouveau statut de paiement
-            edit:
-                heading: Modification d'un statut de paiement
-        payments:
-            index:
-                heading: Suivi des paiements
-        planning:
-            actions:
-                lock_the_planning: Verrouiller le planning
-                unlock_the_planning: Déverrouiller le planning
-                edit: Modifier
-            validation_alert:
-                warning: Attention
-                teacher: "Vous avez jusqu'au %{date} pour valider votre planning !"
-                admin: "Les professeurs ont jusqu'au %{date} pour valider leur planning. Ils en sont informés."
-            index_for_rooms:
-                heading: Plannings des Salles de Cours
-                new_room: Créer une nouvelle salle
-                empty: "Aucune salle de cours n'est enregistrée."
-            index_for_teachers:
-                heading: Plannings des professeurs
-            show:
-                my_planning: Mon Planning
-                planning_of: Planning de
-            show_generic:
-                my_availabilities_for: "Mes disponibilités pour %{season}"
-                planning_of_user: "Planning de %{first_name} %{last_name}"
-                change_teacher: Changer de professeur
-            show_availabilities:
-                heading: Mes disponibilités
-                next_season_title: Cours de la prochaine Saison
-                next_season_text: "Mes disponibilités pour les cours de la %{season}."
-                eval_title: Evaluations des nouveaux élèves
-                eval_text: "Mes disponibilités pour les évaluations de la %{season}."
-            show_availabilities_for_date:
-                heading: "Mes disponibilités :"
-                eval_range: "Evaluations du %{from} au %{to}"
-                copy_link_label: Copier le planning de la saison en cours
-                copy_link_message: "Voulez-vous vraiment importer le planning de la saison en cours ? Cela supprimera toutes les modifications pour la saison prochaine."
-                lock_link_message: "Voulez-vous vraiment verrouiller le planning ? Vous devrez vous adresser à un.e permanent.e pour tout changement."
-            show_for_conflict:
-                heading: Résolution du conflit
-            show_for_room:
-                heading: Planning de la salle
-        locations:
-            index:
-                title: Localisations
-                create_button: Nouvelle localisation
-                error_title: Erreur
-                cols:
-                    name: Nom
-            new:
-                title: Nouvelle localisation
-            edit:
-                title: Modification localisation
-        practice:
-            band_types:
-                index:
-                    title: Types de groupes
-                    create_button: Nouveau type de groupe
-                    cols:
-                        name: Nom
-                new:
-                    title: Nouveau type de groupe
-                edit:
-                    title: Modification type de groupe
-            bands:
-                index:
-                    title: Groupes
-                    create_button: Nouveau groupe
-                    view: Voir
-                    cols:
-                        band: Groupe
-                        type: Type de groupe
-                        music_genre: Genre musical
-                new:
-                    title: Nouveau groupe
-                show:
-                    name_label: "Nom :"
-                    band_type_label: "Type de groupe :"
-                    music_genre_label: "Genre musical :"
-                    blacklisted_label: "Blacklisté :"
-            flat_rates:
-                index:
-                    title: Forfaits
-                    create_button: Nouveau forfait
-                    cols:
-                        name: Nom
-                        nb_hours: Nombre d'heures
-                        solo_duo_rate: Prix solo / duo
-                        group_rate: Prix groupe
-                new:
-                    title: Nouveau forfait
-                edit:
-                    title: Modification forfait
-            materials:
-                index:
-                    title: Matériels
-                    create_button: Nouveau matériel
-                    cols:
-                        name: Nom
-                        rental_price: Prix de location
-                new:
-                    title: Nouveau matériel
-                edit:
-                    title: Modification matériel
-            music_genres:
-                index:
-                    title: Genres musicaux
-                    create_button: Nouveau genre musical
-                    cols:
-                        name: Nom
-                new:
-                    title: Nouveau genre musical
-                edit:
-                    title: Modification genre musical
-                show:
-                    name_label: "Nom :"
-            room_features:
-                index:
-                    title: Caractéristiques des salles
-                    create_button: Nouvelle caractéristique
-                    cols:
-                        name: Nom
-                form:
-                    active_label: "Actif :"
-                new:
-                    title: Nouvelle caractéristique
-                edit:
-                    title: Modification caractéristique
-        rooms:
-            index:
-                title: Référentiel des salles
-                add_room: Ajouter une salle
-                floor: "Étage %{number}"
-                ground_floor: Rez-de-chaussée
-                room_kind: "Salle de %{kind}"
-                location_line: "Lieu : %{location}, étage %{floor}"
-                activities_label: "Activités :"
-                features_label: "Caractéristiques :"
-                planning_button: Planning
-                delete_disabled_title: "Des activités sont reliées à cette salle, vous ne pouvez pas la supprimer. Merci de supprimer les activités en amont."
-            new:
-                title: Ajouter une salle
-                location_title: Localisation
-                choose_image: Choisir Image
-                change_image: Changer
-                activities_title: Activités
-            edit:
-                title: "Éditer la salle \"%{label}\""
-                location_title: Localisation
-                image_title: Image
-                activities_title: Activités
-            edit_activities:
-                title: "Activités de la salle %{label}"
-        seasons:
-            index:
-                heading: Gestion des saisons
-                create: Créer une nouvelle saison
-            new:
-                heading: Nouvelle saison
-            edit:
-                heading: 'Éditer "%{label}"'
-                warning: 'Attention :'
-                autosave_notice: Toutes les modifications sur le tableau seront directement enregistrées, même sans appuyer sur les boutons de sauvegarde.
-            form:
-                save_error_title: Impossible de sauvegarder la saison.
-                save_error_body: Veuillez corriger les champs en rouge ci-dessous.
-                for_the_season: Pour la saison
-                no_next_season: "<aucune>"
-        teachers:
-            index:
-                heading: Informations sur les professeurs
-        students:
-            index:
-                title: "Liste des cours de %{teacher}"
-                lesson_slot: "%{day} de %{start} à %{end} : cours de %{activity}"
-                group: "groupe %{name}"
-                room: "salle %{name}"
-                from_date: "à partir du %{date}"
-                until_date: "jusqu'au %{date}"
-        errors:
-            base_renderer_error:
-                heading: "Erreur %{code}"
-        static_pages:
-            landing:
-                collective_courses_heading: Super Cours Collectifs
-                workshops_heading: Ateliers
-                membership_heading: Adhésion
-                details_link: "Détails »"
-            about:
-                heading: À propos d’Elvis
-        cgu:
-            index:
-                title: Politique de confidentialité et traitement des données personnelles.
-                gdpr_intro: "Le Règlement Général sur la Protection des données (Règlement UE 2016/679) désigné par « RGPD » est entré en vigueur le 25 mai 2018 et %{school_name} se doit d’être en conformité avec celui-ci pour tous les traitements de données personnelles existants au sein d'Elvis."
-                objectives_intro: "Ce règlement poursuit 3 objectifs :"
-                objective_1: Adapter le contexte juridique pour suivre les évolutions des technologies et de nos sociétés
-                objective_2: "Il s’inscrit dans la continuité de la Loi française Informatique et Libertés de 1978 et renforce le contrôle par les citoyens de l’utilisation qui peut être faite des données les concernant."
-                objective_3: Harmoniser les règles en Europe pour offrir un cadre juridique unique aux professionnels.
-                internal_procedures: "%{school_name} met également en œuvre les procédures internes adéquates afin de sensibiliser ses employés et d’assurer le respect de ces règles au sein de son organisation."
-                obligations_heading: "Quels sont les obligations de %{school_name} en matière de protection des données personnelles ?"
-                obligations_guarantee: "%{school_name} doit garantir un niveau de protection élevé des données personnelles des Utilisateurs de tous ses services."
-                obligations_principles_intro: "%{school_name} doit respecter la réglementation applicable à l’ensemble des traitements de données personnelles qu’elle met en œuvre. Plus particulièrement, %{school_name_lower} s’engage notamment à respecter les principes suivants :"
-                principle_1: "vos données personnelles sont traitées de manière licite, loyale et transparente (licéité, loyauté, transparence) ;"
-                principle_2: "vos données personnelles sont collectées pour des finalités déterminées, explicites et légitimes, et ne sont pas traitées ultérieurement d’une manière incompatible avec ces finalités (limitation des finalités) ;"
-                principle_3: "vos données personnelles sont conservées de manière adéquate, pertinente et sont limitées à ce qui est nécessaire au regard des finalités pour lesquelles elles sont traitées (minimisation des données) ;"
-                principle_4: "vos données personnelles sont exactes, tenues à jour et toutes les mesures raisonnables sont prises pour que les données inexactes, eu égard aux finalités pour lesquelles elles sont traitées, soient effacées ou rectifiées sans tarder (exactitude)."
-                security_measures: "%{school_name} met en œuvre les mesures techniques et organisationnelles appropriées afin de garantir un niveau de sécurité adapté au risque inhérent à ses opérations de traitement, répondre aux exigences réglementaires et protéger les droits et les données des personnes concernées dès la conception des opérations de traitement."
-                final_commitment: "Enfin, %{school_name} s’engage à respecter tout autre principe s’imposant au regard de la réglementation applicable en matière de protection des données personnelles, et plus précisément concernant les droits conférés aux personnes concernées, les durées de conservation des données personnelles ainsi que les obligations relatives aux transferts transfrontaliers de données personnelles."
-                rights_heading: Vos droits
-                rights_guarantee: "%{school_name} garantit à l’utilisateur un droit d’opposition, d’accès et de rectification sur les données le concernant"
-                rights_how_to_question: "Comment faire valoir vos droits ?"
-                rights_how_to_email: En envoyant un message à l’adresse
-                registration_heading: Dans le cadre d'une inscription sur la plateforme Elvis
-                purposes_heading: "Quelles sont les finalités ?"
-                purpose_1: Traiter votre demande d’inscription
-                purpose_2: Trouver le meilleur cours pour l’élève
-                purpose_3: Avoir un suivi pédagogique et administratif sur une saison scolaire
-                storage_heading: "Où sont stockées vos données ?"
-                storage_sixmon: Elvis est un logiciel développé par l’entreprise havraise Sixmon
-                storage_azure_prefix: Elvis est hébergé sur une infrastructure Microsoft Azure
-                storage_azure_suffix: située en France et gérée par Sixmon.
-                access_heading: "Qui est susceptible d’accéder à vos données personnelles ?"
-                access_staff: "Le personnel de %{school_name} en charge des inscriptions, du suivi administratif et pédagogique est susceptible d’accéder à vos données personnelles."
-                access_teachers: "Les professeurs ont accès aux informations de contacts (email, téléphone, adresse) de leurs élèves."
-        admin:
-            edit_mail_settings:
-                heading: "Paramètres avancés : Mails"
-        settings:
-            plugin:
-                title: "Plugins - %{name}"
-                submit: Appliquer
-        events_rules:
-            index:
-                heading: Liste des évènements
-        shared:
-            form_errors:
-                heading: "%{count} erreur(s) empêchent l'enregistrement :"
-    # Mailer subjects below are picked up by ActionMailer's own auto-resolution
-    # convention (Mailer#default_i18n_subject), whose i18n scope is
-    # [mailer_name, action_name] with no extra "views"/"mailers" wrapper -
-    # hence these live as flat top-level nodes rather than nested under `views`.
-    activity_accepted_mailer:
-        activity_accepted:
-            subject: "%{name} - Proposition acceptée"
-    activity_assigned_mailer:
-        activity_assigned:
-            subject: "%{name} - Confirmation d'attribution de cours"
-    activity_proposed_mailer:
-        activity_proposed:
-            subject: "%{name} - Proposition de cours en attente"
-    adhesion_mailer:
-        reminder_email:
-            subject: "%{name} - Votre adhésion va bientôt expirer"
-    admin_cancelled_attendance_mailer:
-        cancelled_attendance:
-            subject: "%{name} - Annulation de cours par un élève"
-    application_mailer:
-        notify_new_application:
-            subject: "%{name} - Confirmation de demande d'inscription"
-            subject_no_school: Confirmation de demande d'inscription
-    payment_reminder_mailer:
-        send_payment_reminder:
-            subject: "%{name} - Rappel de paiement"
-    reglement_reminder_mailer:
-        send_reglement_reminder:
-            subject: "%{name} - Rappel de paiement"
-    upcoming_payment_mailer:
-        upcoming_payment:
-            subject: "%{name} - Paiement à venir"
-    user_cancelled_attendance_mailer:
-        cancelled_attendance:
-            subject: "%{name} - Confirmation d'annulation de cours"
-
-    controllers:
-        absences:
-            days:
-                monday: Lundi
-                tuesday: Mardi
-                wednesday: Mercredi
-                thursday: Jeudi
-                friday: Vendredi
-                saturday: Samedi
-                sunday: Dimanche
-        settings:
-            plugin:
-                update_success: Mise à jour réussie
-        practice:
-            band_types:
-                destroy:
-                    success: Le type de groupe a été supprimé avec succès.
-            music_genres:
-                destroy:
-                    success: Le genre musical a été supprimé avec succès.
-            bands:
-                destroy:
-                    success: Le groupe a été supprimé avec succès.
-        locations:
-            destroy:
-                linked_data_error: "La localisation est reliée à d'autres données (des cours par exemple)"
-        adhesion:
-            create:
-                failure: Impossible de créer l'adhésion
-        activity_application_statuses:
-            destroy:
-                linked_applications:
-                    one: "Ce statut est lié à %{count} demande d'inscription, vous ne pouvez donc pas le supprimer."
-                    other: "Ce statut est lié à %{count} demandes d'inscription, vous ne pouvez donc pas le supprimer."
-                success: La suppression s'est déroulée avec succès.
-        remove:
-            no_elements: Aucun élément à supprimer
-            class_not_found: La classe n'a pas été trouvée.
-            object_not_found: L'objet n'a pas été trouvé.
-            generic_error: Une erreur est survenue lors de la suppression de l'objet.
-            destroy_multiple:
-                success: Suppression terminée
-        organizations:
-            create:
-                failure: "L'organisation n'a pas été créée."
-            update_from_user:
-                failure: "Le numéro de TVA n'a pas été mis à jour."
-        planning:
-            no_default_planning: "Aucun planning par défaut n'a été défini par l'école"
-        activities_applications:
-            send_all_confirmation_mail:
-                no_users_selected: "Vous n'avez pas sélectionné d'utilisateurs"
-                already_processed: "Les utilisateurs sélectionnés ont déjà reçu le mail ou ne sont pas en cours attribué / cours proposé"
-        formules:
-            destroy:
-                in_use_error: "Cette formule est utilisée par une ou plusieurs inscriptions : elle ne peut pas être supprimée."
-                success: Formule supprimée
-        users:
-            reset_password:
-                email_sent: Email envoyé
-            attach_users:
-                main_account_not_found: Compte de rattachement introuvable
-            detach_user:
-                not_found: Utilisateur introuvable
-        activity_ref_kind:
-            destroy:
-                linked_activities: "Vous ne pouvez pas supprimer cette famille car des activités y sont attachées"
-        payment_schedule_options:
-            destroy:
-                success: Option d'échéancier de paiement supprimée
-            create:
-                success: Option d'échéancier de paiement créée
-            update:
-                success: Option d'échéancier de paiement mise à jour
-
-    models:
-        application_record:
-            build_subject:
-                vowel: "l'%{name}"
-                feminine: "la %{name}"
-                masculine: "le %{name}"
-                plural: "les %{name}"
-            success_message: "%{subject} a bien été supprimé%{suffix}"
-            destroy_params:
-                undeletable_message: "Impossible de supprimer parce que : <br/>"
-                deletable_message: "Il faut d'abord : <br/>"
-            undeletable_instruction:
-                default: "supprimer (si possible) les \"%{class_name}\" relié(e)s"
-        user:
-            destroy_params:
-                undeletable_message: "L'utilisateur ne peut pas être supprimé parce que : <br/>"
-            pre_destroy:
-                detach_error: "Impossible de détacher l'utilisateur %{name}. Veuillez le faire manuellement ou contacter un administrateur."
-        activity_application:
-            undeletable_instruction:
-                default: "supprimer la demande d'inscription numéro %{id}"
-            pre_destroy:
-                processing_error: "La demande d'inscription ne peut être supprimée, car l'administration est en train de la traiter ou doit encore le faire."
+          attributes:
+            default_activity_ref:
+              same_family: doit être de la même famille d'activité
+            name:
+              blank: ne peut être vide
+              taken: existe déjà
+        adhesion_price:
+          attributes:
+            label:
+              blank: Le libellé est obligatoire
+            price:
+              blank: Le prix est obligatoire
+              greater_than_or_equal_to: Le prix doit être supérieur ou égal à %{count}
+            season_id:
+              taken: Il existe déjà un tarif pour cette saison
+        formule:
+          attributes:
+            base:
+              at_least_one_activity: La formule doit contenir au moins une activité
+                ou famille d'activités
+            number_of_items:
+              exceeds_available_activities: ne peut pas dépasser le nombre total d'activités
+                disponibles (%{count})
+        level:
+          attributes:
+            base:
+              duplicate: Ce niveau existe déjà pour la saison %{season}, l'activité
+                %{activity} et l'utilisateur %{user}
+        payer_payment_terms:
+          attributes:
+            base:
+              duplicate: 'Des modalités de paiement existent déjà pour la saison %{season}
+                et le payeur %{payer} : veuillez faire une mise à jour'
         season:
-            pre_destroy:
-                current_season_error: Impossible de supprimer la saison en cours
-        payment:
-            undeletable_instruction:
-                has_payments: Il a déjà effectué des paiements
-        adhesion:
-            undeletable_instruction:
-                default: "supprimer l'adhésion de %{name}"
-        payment_schedule:
-            undeletable_instruction:
-                linked_payments: des paiements sont reliés à cette saison
-        pre_application:
-            undeletable_instruction:
-                pre_registered: "L'utilisateur s'est pré-inscrit. Il ne vous est pas possible de supprimer cette donnée."
-
-    csv_exports:
-        student_columns:
-            adherent_number: "N° adhérent de l'élève"
-            last_name: "Nom de l'élève"
-            first_name: "Prénom de l'élève"
-            gender: "Sexe de l'élève"
-            age: "Âge de l'élève"
-            email: "Adresse mail de l'élève"
-            address: "Adresse postale de l'élève"
-            phone: "N° de téléphone de l'élève"
-            guardian_first_name: "Prénom du responsable légal"
-            guardian_last_name: "Nom du responsable légal"
-            guardian_phone: "N° de téléphone du responsable légal"
-        applications_list:
-            request_number: "N° demande"
-            activities: "Activité(s)"
-            level: Niveau
-            action: Action
-            status: Statut
-            season: Saison
-            availabilities: Disponibilités
-            comments: Commentaires
-        users_list:
-            adherent_number: "N° adhérent"
-            last_name: Nom
-            first_name: Prénom
-            email: Email
-            phone: "N° de téléphone"
-            birthday: Date de naissance
-        absences_export:
-            student: Élève
-            adherent_number: "N° adhérent"
-            day: Jour
-            day_index: "Index du jour"
-            activity: "Cours / activité"
-            teacher: Professeur
-            date: Date
-            type: Type
-            remark: Remarque
-            justified: Justifiée
-            unjustified: Injustifiée
-
-    jobs:
-        csv_importer:
-            initializing: Initialisation
-            handler_not_found: "Le handler spécifié est introuvable."
-            handler_init_error: "Une erreur est survenue lors de l'initialisation du handler."
-            invalid_format: "Le format du fichier ne convient pas. Veuillez importer un fichier au format CSV."
-            unexpected_headers: "Le fichier CSV n'a pas les en-têtes attendus."
-            progress:
-                one: "%{count} ligne traitée"
-                other: "%{count} lignes traitées"
-            completed: "%{count} lignes traitées - %{created} inscriptions créées et %{ignored} inscriptions existantes ignorées."
-
-    services:
-        tes_import_handler:
-            activity_not_identified: "Impossible d'identifier l'activité demandée par l'élève dans le référentiel d'activités (%{activity} / %{instrument})"
+          attributes:
+            closing_date_for_applications:
+              before_season_end: doit être antérieur à la fin de saison
+            end:
+              after_start: doit être postérieur au début de saison
+            opening_date_for_applications:
+              after_previous_season_closing: doit être postérieur à la date de clôture
+                des inscriptions de la saison précédente
+              before_season_start: doit être antérieur au début de saison
+            opening_date_for_new_applications:
+              after_applications_opening: doit être postérieur à la date d'ouverture
+                des ré-inscriptions
+              after_previous_season_closing: doit être postérieur à la date de clôture
+                des inscriptions de la saison précédente
+              before_applications_closing: doit être antérieur à la date de clôture
+                des inscriptions
+        user:
+          attributes:
+            base:
+              duplicate_email: Un compte existe déjà avec cet email.
+              duplicate_identity: Un compte existe déjà avec cette combinaison nom
+                - prénom - date de naissance.
+            password_confirmation:
+              confirmation: Le mot de passe ne concorde pas.
+    models:
+      activities_instrument:
+        one: association cours/instruments
+        other: associations cours/instruments
+      activity:
+        one: cours
+        other: cours
+      activity_application:
+        one: demande d'inscription
+        other: demandes d'inscription
+      activity_application_status:
+        one: Statut d'inscription
+        other: Statuts d'inscription
+      activity_instance:
+        one: séance de cours
+        other: séances de cours
+      activity_ref:
+        one: activité
+        other: activités
+      activity_ref_cycle:
+        one: enchaînement d'activités
+        other: enchaînements d'activités
+      activity_ref_kind:
+        one: famille d'activité
+        other: familles d'activités
+      activity_ref_pricing:
+        one: Tarif
+        other: Tarifs
+      activity_refs_instrument:
+        one: association activité / instruments
+        other: associations activité / instruments
+      additional_student:
+        one: élève supplémentaire
+        other: élèves supplémentaires
+      address:
+        one: adresse
+        other: adresses
+      adhesion:
+        one: adhésion
+        other: adhésions
+      answer:
+        one: réponse
+        other: réponses
+      application_change_questionnaire:
+        one: questionnaire de changement d'inscription
+        other: questionnaires de changement d'inscription
+      band:
+        one: groupe de musique
+        other: groupes de musique
+      band_type:
+        one: type de groupe de musique
+        other: types de groupe de musique
+      bands_user:
+        one: membre de groupe de musique
+        other: membres de groupes de musique
+      comment:
+        one: commentaire
+        other: commentaires
+      conflict:
+        one: conflit
+        other: conflits
+      consent_document:
+        one: document de consentement
+        other: documents de consentement
+      desired_activity:
+        one: activité souhaitée
+        other: activités souhaitées
+      desired_time_interval:
+        one: créneau souhaité
+        other: créneaux souhaités
+      due_payment:
+        one: échéance
+        other: échéances
+      due_payment_status:
+        one: statut d'échéance
+        other: statuts d'échéance
+      evaluation_appointment:
+        one: RDV d'évaluation
+        other: RDV d'évaluation
+      evaluation_level_ref:
+        one: référentiel d'évaluation
+        other: référentiels d'évaluation
+      event_rules:
+        one: EventRules
+        other: EventRules
+      event_subscription:
+        one: souscription d'événement
+        other: souscriptions d'événement
+      export_template:
+        one: modèle d'export
+        other: modèles d'export
+      failed_payment_import:
+        one: import d'échecs de paiements
+        other: imports d'échecs de paiements
+      failed_payment_import_reason:
+        one: motif d'import d'échecs de paiements
+        other: motifs d'import d'échecs de paiements
+      family_member_user:
+        one: membre de famille
+        other: membres de famille
+      flat_rate:
+        one: forfait
+        other: forfaits
+      formule:
+        one: Formule
+        other: Formules
+      formule_item:
+        one: Item
+        other: Items
+      formule_pricing:
+        one: Tarif
+        other: Tarifs
+      holiday:
+        one: congé
+        other: congés
+      hours_sheet:
+        one: feuille d'heure
+        other: feuilles d'heure
+      instrument:
+        one: instrument
+        other: instruments
+      level:
+        one: niveau
+        other: niveaux
+      location:
+        one: lieu
+        other: lieux
+      material:
+        one: matériel
+        other: matériels
+      message:
+        one: message
+        other: messages
+      message_recipient:
+        one: destinataire de message
+        other: destinataires de message
+      music_genre:
+        one: genre musical
+        other: genres musicaux
+      new_student_level_questionnaire:
+        one: questionnaire de niveau pour nouvel élève
+        other: questionnaires de niveau pour nouvel élève
+      option:
+        one: option
+        other: options
+      pack:
+        one: Pack
+        other: Packs
+      payer_payment_terms:
+        one: modalité de paiement pour un payeur
+        other: modalités de paiement pour les payeurs
+      payment:
+        one: règlement
+        other: règlements
+      payment_method:
+        one: moyen de paiement
+        other: moyens de paiement
+      payment_schedule:
+        one: échéancier
+        other: échéanciers
+      payment_schedule_options:
+        one: option d'échéancier de paiement
+        other: options d'échéancier de paiement
+      payment_schedule_status:
+        one: statut d'échéancier
+        other: statuts d'échéancier
+      payment_status:
+        one: statut de paiement
+        other: statuts de paiement
+      planning:
+        one: planning
+        other: planning
+      planning_conflict:
+        one: conflit de planning
+        other: conflits de planning
+      plugin:
+        one: plugin
+        other: plugins
+      practice_room_parameter:
+        one: paramètre de salle de répétition
+        other: paramètres de salles de répétition
+      practice_room_planning:
+        one: planning de salle de répétition
+        other: plannings des salles de répétition
+      practice_session:
+        one: séance de répétition
+        other: séances de répétition
+      pre_application:
+        one: pré-inscription
+        other: pré-inscriptions
+      pre_application_activity:
+        one: cours attribué dans le cadre d'une réinscription
+        other: cours attribués dans le cadre d'une réinscription
+      pre_application_desired_activity:
+        one: cours souhaité dans le cadre d'une réinscription
+        other: cours souhaités dans le cadre d'une réinscription
+      pricing_category:
+        one: Catégorie prix
+        other: Catégories prix
+      question:
+        one: question
+        other: questions
+      room:
+        one: salle
+        other: salles
+      room_activity:
+        one: association activité / salle
+        other: associations activités / salles
+      room_features:
+        one: caractéristique de salle
+        other: caractéristiques des salles
+      room_room_feature:
+        one: association salle / caractéristiques
+        other: associations salles / caractéristiques
+      school:
+        one: école
+        other: écoles
+      season:
+        one: saison
+        other: saisons
+      setting:
+        one: configuration
+        other: configurations
+      student:
+        one: élève
+        other: élèves
+      student_attendance:
+        one: inscription aux séances
+        other: inscriptions aux séances
+      student_evaluation:
+        one: évaluation d'élève
+        other: évaluations d'élèves
+      teacher_season:
+        one: association professeur / saison
+        other: associations professeurs / saisons
+      teachers_activity:
+        one: cours de professeur
+        other: cours de professeurs
+      teachers_activity_instance:
+        one: séance de cours de professeur
+        other: séances de cours des professeurs
+      teachers_activity_ref:
+        one: activité de professeur
+        other: activités des professeurs
+      telephone:
+        one: téléphone
+        other: téléphones
+      time_interval:
+        one: créneau
+        other: créneaux
+      time_interval_preference:
+        one: préférence horaire
+        other: préférences horaires
+      time_slot:
+        one: créneau de planning
+        other: créneaux des plannings
+      user:
+        one: utilisateur
+        other: utilisateurs
+      user_address:
+        one: association utilisateur / adresse
+        other: associations utilisateurs / adresses
+      users_instrument:
+        one: association utilisateur / instrument
+        other: associations utilisateurs / instruments
+  activity_accepted_mailer:
+    activity_accepted:
+      subject: "%{name} - Proposition acceptée"
+  activity_assigned_mailer:
+    activity_assigned:
+      subject: "%{name} - Confirmation d'attribution de cours"
+  activity_proposed_mailer:
+    activity_proposed:
+      subject: "%{name} - Proposition de cours en attente"
+  adhesion_mailer:
+    reminder_email:
+      subject: "%{name} - Votre adhésion va bientôt expirer"
+  admin_cancelled_attendance_mailer:
+    cancelled_attendance:
+      subject: "%{name} - Annulation de cours par un élève"
+  application_mailer:
+    notify_new_application:
+      subject: "%{name} - Confirmation de demande d'inscription"
+      subject_no_school: Confirmation de demande d'inscription
+  common:
+    actions:
+      add: Ajouter
+      back: Retour
+      delete: Supprimer
+      edit: Éditer
+      save: Sauvegarder
+      validate: Valider
+    confirm:
+      sure: Êtes-vous sûr ?
+    errors:
+      access_denied: Vous n'avez pas le droit de faire cela
+    labels:
+      actions: Actions
+      active: Actif
+      inactive: Inactif
+      'no': Non
+      'yes': Oui
+  controllers:
+    absences:
+      days:
+        friday: Vendredi
+        monday: Lundi
+        saturday: Samedi
+        sunday: Dimanche
+        thursday: Jeudi
+        tuesday: Mardi
+        wednesday: Mercredi
+    activities_applications:
+      send_all_confirmation_mail:
+        already_processed: Les utilisateurs sélectionnés ont déjà reçu le mail ou
+          ne sont pas en cours attribué / cours proposé
+        no_users_selected: Vous n'avez pas sélectionné d'utilisateurs
+    activity_application_statuses:
+      destroy:
+        linked_applications:
+          one: Ce statut est lié à %{count} demande d'inscription, vous ne pouvez
+            donc pas le supprimer.
+          other: Ce statut est lié à %{count} demandes d'inscription, vous ne pouvez
+            donc pas le supprimer.
+        success: La suppression s'est déroulée avec succès.
+    activity_ref_kind:
+      destroy:
+        linked_activities: Vous ne pouvez pas supprimer cette famille car des activités
+          y sont attachées
+    adhesion:
+      create:
+        failure: Impossible de créer l'adhésion
+    formules:
+      destroy:
+        in_use_error: 'Cette formule est utilisée par une ou plusieurs inscriptions
+          : elle ne peut pas être supprimée.'
+        success: Formule supprimée
+    locations:
+      destroy:
+        linked_data_error: La localisation est reliée à d'autres données (des cours
+          par exemple)
+    organizations:
+      create:
+        failure: L'organisation n'a pas été créée.
+      update_from_user:
+        failure: Le numéro de TVA n'a pas été mis à jour.
+    payment_schedule_options:
+      create:
+        success: Option d'échéancier de paiement créée
+      destroy:
+        success: Option d'échéancier de paiement supprimée
+      update:
+        success: Option d'échéancier de paiement mise à jour
+    planning:
+      no_default_planning: Aucun planning par défaut n'a été défini par l'école
+    practice:
+      band_types:
+        destroy:
+          success: Le type de groupe a été supprimé avec succès.
+      bands:
+        destroy:
+          success: Le groupe a été supprimé avec succès.
+      music_genres:
+        destroy:
+          success: Le genre musical a été supprimé avec succès.
+    remove:
+      class_not_found: La classe n'a pas été trouvée.
+      destroy_multiple:
+        success: Suppression terminée
+      generic_error: Une erreur est survenue lors de la suppression de l'objet.
+      no_elements: Aucun élément à supprimer
+      object_not_found: L'objet n'a pas été trouvé.
+    settings:
+      plugin:
+        update_success: Mise à jour réussie
+    users:
+      attach_users:
+        main_account_not_found: Compte de rattachement introuvable
+      detach_user:
+        not_found: Utilisateur introuvable
+      reset_password:
+        email_sent: Email envoyé
+  csv_exports:
+    absences_export:
+      activity: Cours / activité
+      adherent_number: N° adhérent
+      date: Date
+      day: Jour
+      day_index: Index du jour
+      justified: Justifiée
+      remark: Remarque
+      student: Élève
+      teacher: Professeur
+      type: Type
+      unjustified: Injustifiée
+    applications_list:
+      action: Action
+      activities: Activité(s)
+      availabilities: Disponibilités
+      comments: Commentaires
+      level: Niveau
+      request_number: N° demande
+      season: Saison
+      status: Statut
+    student_columns:
+      address: Adresse postale de l'élève
+      adherent_number: N° adhérent de l'élève
+      age: Âge de l'élève
+      email: Adresse mail de l'élève
+      first_name: Prénom de l'élève
+      gender: Sexe de l'élève
+      guardian_first_name: Prénom du responsable légal
+      guardian_last_name: Nom du responsable légal
+      guardian_phone: N° de téléphone du responsable légal
+      last_name: Nom de l'élève
+      phone: N° de téléphone de l'élève
+    users_list:
+      adherent_number: N° adhérent
+      birthday: Date de naissance
+      email: Email
+      first_name: Prénom
+      last_name: Nom
+      phone: N° de téléphone
+  date:
+    formats:
+      date_month_concise: "%d %B %Y"
+      long_date: "%e %B %Y"
+  jobs:
+    csv_importer:
+      completed: "%{count} lignes traitées - %{created} inscriptions créées et %{ignored}
+        inscriptions existantes ignorées."
+      handler_init_error: Une erreur est survenue lors de l'initialisation du handler.
+      handler_not_found: Le handler spécifié est introuvable.
+      initializing: Initialisation
+      invalid_format: Le format du fichier ne convient pas. Veuillez importer un fichier
+        au format CSV.
+      progress:
+        one: "%{count} ligne traitée"
+        other: "%{count} lignes traitées"
+      unexpected_headers: Le fichier CSV n'a pas les en-têtes attendus.
+  menu:
+    absences: Suivi des absences
+    activities: Activités musicales
+    activity_families: Familles d'activités
+    activity_refs: Activités
+    adhesions: Adhésions
+    applications: Demandes d'inscription
+    courses_list: Liste des cours
+    evaluations: Évaluation
+    evaluations_management: Gestion des évaluations
+    evaluations_summary: Synthèse des évaluations
+    formulas: Formules
+    home: Accueil
+    inscriptions: Inscriptions
+    instruments: Instruments
+    logout: Se déconnecter
+    monitoring: Suivi
+    my_applications: Mes demandes d'inscription
+    my_availabilities: Mes disponibilités
+    my_evaluations: Mes évaluations
+    my_planning: Mon planning
+    my_profile: Mon profil
+    new_application: Nouvelle inscription
+    packs: Packs
+    parameters: Paramètres
+    params: Paramétrage
+    payments: Paiements
+    planning_rooms: Salles de cours
+    planning_simulation: Simulation de planning
+    planning_teachers: Professeurs
+    plannings: Plannings
+    plugins: Plugins
+    plugins_list: Liste des plugins
+    presences: Présences
+    replicate_courses: Répliquer des cours
+    rooms_sites: Salles et sites
+    seasons: Gestion des saisons
+    students_without_slots: Élèves sans créneaux
+    users: Utilisateurs
+  models:
+    activity_application:
+      pre_destroy:
+        processing_error: La demande d'inscription ne peut être supprimée, car l'administration
+          est en train de la traiter ou doit encore le faire.
+      undeletable_instruction:
+        default: supprimer la demande d'inscription numéro %{id}
+    adhesion:
+      undeletable_instruction:
+        default: supprimer l'adhésion de %{name}
+    application_record:
+      build_subject:
+        feminine: la %{name}
+        masculine: le %{name}
+        plural: les %{name}
+        vowel: l'%{name}
+      destroy_params:
+        deletable_message: 'Il faut d''abord : <br/>'
+        undeletable_message: 'Impossible de supprimer parce que : <br/>'
+      success_message: "%{subject} a bien été supprimé%{suffix}"
+      undeletable_instruction:
+        default: supprimer (si possible) les "%{class_name}" relié(e)s
+    payment:
+      undeletable_instruction:
+        has_payments: Il a déjà effectué des paiements
+    payment_schedule:
+      undeletable_instruction:
+        linked_payments: des paiements sont reliés à cette saison
+    pre_application:
+      undeletable_instruction:
+        pre_registered: L'utilisateur s'est pré-inscrit. Il ne vous est pas possible
+          de supprimer cette donnée.
+    season:
+      pre_destroy:
+        current_season_error: Impossible de supprimer la saison en cours
+    user:
+      destroy_params:
+        undeletable_message: 'L''utilisateur ne peut pas être supprimé parce que :
+          <br/>'
+      pre_destroy:
+        detach_error: Impossible de détacher l'utilisateur %{name}. Veuillez le faire
+          manuellement ou contacter un administrateur.
+  number:
+    currency:
+      format:
+        delimiter: " "
+        format: "%n %u"
+        precision: 2
+        separator: ","
+        significant: false
+        strip_insignificant_zeros: false
+        unit: "€"
+  payment_reminder_mailer:
+    send_payment_reminder:
+      subject: "%{name} - Rappel de paiement"
+  reglement_reminder_mailer:
+    send_reglement_reminder:
+      subject: "%{name} - Rappel de paiement"
+  services:
+    tes_import_handler:
+      activity_not_identified: Impossible d'identifier l'activité demandée par l'élève
+        dans le référentiel d'activités (%{activity} / %{instrument})
+  time:
+    formats:
+      date_month_concise: "%d %B %Y"
+      day: "%A"
+      long_date: "%e %B %Y"
+      short_time: "%Hh%M"
+  upcoming_payment_mailer:
+    upcoming_payment:
+      subject: "%{name} - Paiement à venir"
+  user_cancelled_attendance_mailer:
+    cancelled_attendance:
+      subject: "%{name} - Confirmation d'annulation de cours"
+  views:
+    activities_applications:
+      index:
+        create: Créer une inscription
+        title: Demandes d'inscription
+    activity:
+      index:
+        add_course: Ajouter un cours
+        title: Liste des cours
+    activity_application_statuses:
+      edit:
+        title: Éditer un statut d'inscription
+      index:
+        cols:
+          label: Libellé
+          stopping: Arrêt ?
+        error_title: Erreur
+        heading: Liste des statuts d'inscription
+        message_title: Message
+        new_button: Nouveau statut
+      new:
+        title: Créer un statut d'inscription
+    activity_assigned_mailer:
+      activity_assigned:
+        cta_button: Se rendre sur %{name}
+        greeting_html: Bonjour <strong>%{name}</strong>,
+        proposed_slot_html: |-
+          Un créneau vous a été proposé pour le cours <br />
+          <strong>"%{activity}"</strong>.
+        request_info_html: Demande n°<span style="color:#0079bf">%{id}</span> concernant
+          %{first_name} %{last_name}
+        schedule_info_html: |-
+          Pour la <strong>%{season}</strong>, le cours se déroulera le : <br />
+          <strong>%{day}</strong> <br />
+          de <strong>%{start_time}</strong>
+          à <strong>%{end_time}</strong> <br />
+          avec le professeur <strong>%{teacher}</strong>
+        validate_or_refuse: Valider ou refuser la proposition en cliquant sur le bouton
+          ci-dessous.
+    activity_ref:
+      edit:
+        heading: Éditer l'activité "%{label}"
+      index:
+        add: Ajouter une activité
+        destroy_error: Vous ne pouvez pas supprimer l'activité car elle est liée à
+          d'autres données.
+        destroy_error_title: Erreur
+        duration_hours: 'Durée: %{hours}h%{minutes}'
+        duration_minutes: 'Durée: %{minutes} minutes'
+        export: Exporter
+        heading: Référentiel des activités
+        places: 'Places possibles: %{limit} (max: %{hard_limit})'
+        type: 'Type: %{kind}'
+      new:
+        heading: Ajouter une activité
+    activity_ref_kind:
+      form:
+        default_activity: Activité par défaut
+        name_label: Nom
+      index:
+        heading: Familles d'activités
+      new:
+        heading: Ajouter une famille d'activité
+    adhesion:
+      index:
+        create: Nouvelle adhésion
+        heading: Liste des adhésions
+      new:
+        heading: Créer une adhésion
+    adhesion_mailer:
+      reminder_email:
+        expiring_notice: Votre adhésion se termine dans 30 jours.
+        greeting_html: Bonjour <strong>%{name}</strong>,
+        login_link: Connectez-vous
+        subscribe_notice: pour adhérer à une nouvelle activité.
+    admin:
+      edit_mail_settings:
+        heading: 'Paramètres avancés : Mails'
+    application_mailer:
+      notify_new_application:
+        acknowledgement_html: |-
+          Nous accusons réception de votre demande d'inscription pour la saison <strong>%{season}</strong>, pour l'élève <strong>%{student}</strong>
+          à l'activité <strong>%{activities}</strong>
+        application_number_html: 'Voici son numéro de demande : <span style="color:
+          darkred">%{id}</span>'
+        greeting: Bonjour,
+    cgu:
+      index:
+        access_heading: Qui est susceptible d’accéder à vos données personnelles ?
+        access_staff: Le personnel de %{school_name} en charge des inscriptions, du
+          suivi administratif et pédagogique est susceptible d’accéder à vos données
+          personnelles.
+        access_teachers: Les professeurs ont accès aux informations de contacts (email,
+          téléphone, adresse) de leurs élèves.
+        final_commitment: Enfin, %{school_name} s’engage à respecter tout autre principe
+          s’imposant au regard de la réglementation applicable en matière de protection
+          des données personnelles, et plus précisément concernant les droits conférés
+          aux personnes concernées, les durées de conservation des données personnelles
+          ainsi que les obligations relatives aux transferts transfrontaliers de données
+          personnelles.
+        gdpr_intro: Le Règlement Général sur la Protection des données (Règlement
+          UE 2016/679) désigné par « RGPD » est entré en vigueur le 25 mai 2018 et
+          %{school_name} se doit d’être en conformité avec celui-ci pour tous les
+          traitements de données personnelles existants au sein d'Elvis.
+        internal_procedures: "%{school_name} met également en œuvre les procédures
+          internes adéquates afin de sensibiliser ses employés et d’assurer le respect
+          de ces règles au sein de son organisation."
+        objective_1: Adapter le contexte juridique pour suivre les évolutions des
+          technologies et de nos sociétés
+        objective_2: Il s’inscrit dans la continuité de la Loi française Informatique
+          et Libertés de 1978 et renforce le contrôle par les citoyens de l’utilisation
+          qui peut être faite des données les concernant.
+        objective_3: Harmoniser les règles en Europe pour offrir un cadre juridique
+          unique aux professionnels.
+        objectives_intro: 'Ce règlement poursuit 3 objectifs :'
+        obligations_guarantee: "%{school_name} doit garantir un niveau de protection
+          élevé des données personnelles des Utilisateurs de tous ses services."
+        obligations_heading: Quels sont les obligations de %{school_name} en matière
+          de protection des données personnelles ?
+        obligations_principles_intro: "%{school_name} doit respecter la réglementation
+          applicable à l’ensemble des traitements de données personnelles qu’elle
+          met en œuvre. Plus particulièrement, %{school_name_lower} s’engage notamment
+          à respecter les principes suivants :"
+        principle_1: vos données personnelles sont traitées de manière licite, loyale
+          et transparente (licéité, loyauté, transparence) ;
+        principle_2: vos données personnelles sont collectées pour des finalités déterminées,
+          explicites et légitimes, et ne sont pas traitées ultérieurement d’une manière
+          incompatible avec ces finalités (limitation des finalités) ;
+        principle_3: vos données personnelles sont conservées de manière adéquate,
+          pertinente et sont limitées à ce qui est nécessaire au regard des finalités
+          pour lesquelles elles sont traitées (minimisation des données) ;
+        principle_4: vos données personnelles sont exactes, tenues à jour et toutes
+          les mesures raisonnables sont prises pour que les données inexactes, eu
+          égard aux finalités pour lesquelles elles sont traitées, soient effacées
+          ou rectifiées sans tarder (exactitude).
+        purpose_1: Traiter votre demande d’inscription
+        purpose_2: Trouver le meilleur cours pour l’élève
+        purpose_3: Avoir un suivi pédagogique et administratif sur une saison scolaire
+        purposes_heading: Quelles sont les finalités ?
+        registration_heading: Dans le cadre d'une inscription sur la plateforme Elvis
+        rights_guarantee: "%{school_name} garantit à l’utilisateur un droit d’opposition,
+          d’accès et de rectification sur les données le concernant"
+        rights_heading: Vos droits
+        rights_how_to_email: En envoyant un message à l’adresse
+        rights_how_to_question: Comment faire valoir vos droits ?
+        security_measures: "%{school_name} met en œuvre les mesures techniques et
+          organisationnelles appropriées afin de garantir un niveau de sécurité adapté
+          au risque inhérent à ses opérations de traitement, répondre aux exigences
+          réglementaires et protéger les droits et les données des personnes concernées
+          dès la conception des opérations de traitement."
+        storage_azure_prefix: Elvis est hébergé sur une infrastructure Microsoft Azure
+        storage_azure_suffix: située en France et gérée par Sixmon.
+        storage_heading: Où sont stockées vos données ?
+        storage_sixmon: Elvis est un logiciel développé par l’entreprise havraise
+          Sixmon
+        title: Politique de confidentialité et traitement des données personnelles.
+    devise:
+      mailer:
+        confirmation_instructions:
+          account_created_html: Votre compte a bien été créé sur la plateforme de
+            <strong>%{app_name}</strong>.
+          confirm_button: Confirmer mon compte
+          greeting_html: Bonjour <strong>%{name}</strong>,
+          instruction: 'Confirmer votre email et créer un mot de passe via le lien
+            ci-dessous :'
+        reset_password_instructions:
+          greeting_html: Bonjour <strong>%{name}</strong>,
+          instruction: 'Vous avez demandé à réinitialiser votre mot de passe. Pour
+            le modifier, cliquez sur le bouton ci-dessous :'
+          instruction_2: Si vous n’êtes pas à l’origine de cette demande, vous pouvez
+            ignorer cet email. Votre mot de passe restera inchangé tant que vous ne
+            cliquez pas sur le lien.
+      passwords:
+        edit:
+          password_confirmation_label: Confirmation
+          title: Changez votre mot de passe
+        new:
+          login_label: Courriel
+          submit: Envoyer un mail de récupération
+          subtitle: Réinitialisation par Email
+      registrations:
+        edit:
+          password_confirmation_label: Confirmation du nouveau mot de passe
+          password_length_hint:
+            one: Votre mot de passe doit contenir au moins %{count} caractère minimum
+            other: Votre mot de passe doit contenir au moins %{count} caractères minimum
+          submit: Mettre à jour
+          title: Modifier mon profil
+        new:
+          closed_body: Les inscriptions en ligne pour la nouvelle saison sont actuellement
+            fermées. Vous pouvez nous contacter par téléphone pour que nous traitions
+            votre demande.
+          heading: Inscriptions
+          new_applications_notice_html: Pour les nouvelles inscriptions, rendez-vous
+            le %{date} sur cette page.
+          personal_space_link: espace personnel
+          pre_application_notice_html: La période des ré-inscriptions en ligne est
+            ouverte. Si vous êtes déjà adhérent, vous pouvez vous rendre dans votre
+            %{link}.
+        registration:
+          birthday_label: Votre date de naissance
+          first_name_label: Votre Prénom
+          last_name_label: Votre Nom
+          password_confirmation_label: Confirmer mot de passe
+      sessions:
+        new:
+          login_label: Courriel ou Numéro d'adhérent
+          no_account_body: Vous pouvez créer votre espace en cliquant sur le bouton
+            ci-dessous
+          no_account_title: Vous n'avez pas de compte ?
+          remember_me: Rester connecté
+          title: Accédez à votre espace
+      shared:
+        links:
+          confirmation_link: Mail de validation non reçu ?
+          sign_in_link: Lien vers la page de Connexion
+          unlock_link: Mail de déblocage non reçu ?
+    errors:
+      base_renderer_error:
+        heading: Erreur %{code}
+    evaluation_appointments:
+      incomplete:
+        heading: Liste des nouveaux élèves sans créneau d'évaluation
+    evaluation_level_ref:
+      edit:
+        heading: Edition du niveau "%{label}"
+      index:
+        add_level: Ajouter un niveau
+        heading: Niveaux d'évaluation
+      new:
+        heading: Ajouter un Niveau
+    events_rules:
+      index:
+        heading: Liste des évènements
+    failed_payment_imports:
+      index:
+        heading: Liste des imports de paiements ratés
+    formules:
+      edit:
+        heading: Modifier une formule
+      index:
+        heading: Formules
+      new:
+        heading: Créer une formule
+    instruments:
+      form:
+        label_field: Nom de l'instrument
+      index:
+        heading: Instruments
+      new:
+        heading: Ajouter un instrument
+    layouts:
+      application:
+        base_seasons_created:
+          text: 3 saisons ont été créées par défaut en fonction de la date actuelle
+          title: Message
+        help_center: Centre d'aide
+        my_planning: Mon planning
+        other_accounts: 'Autres comptes :'
+        powered_by: propulsé par
+        terms_link: Politique de confidentialité (CGU)
+        version: version %{number}
+        version_dev: version dev
+      static_pages:
+        headline_1_html: Logiciel<br/> de gestion
+        headline_2_html: Cours collectifs <br/> Ateliers
+        next: Suivant
+        previous: Précédent
+        read_more: EN SAVOIR PLUS
+        sign_in: Connexion
+        sign_up: Inscription
+        toggle_navigation: Afficher la navigation
+    locations:
+      edit:
+        title: Modification localisation
+      index:
+        cols:
+          name: Nom
+        create_button: Nouvelle localisation
+        error_title: Erreur
+        title: Localisations
+      new:
+        title: Nouvelle localisation
+    oidc/authorizations:
+      new:
+        authorize: Autoriser
+        deny: Refuser
+        heading: Autorisez-vous l’accès de %{client} à ces informations ?
+        requested_information: Informations demandées
+    parameters:
+      activity_application_parameters:
+        index:
+          heading: Paramétrage des inscriptions
+      csv_parameters:
+        edit:
+          heading: 'Paramètres avancés : Exports CSV'
+      formules_parameters:
+        edit:
+          heading: 'Paramètres : Formules'
+      index:
+        cards:
+          csv:
+            text: Paramétrez vos exports CSV.
+            title: Exports CSV
+          emails:
+            text: Paramétrez votre serveur d'envoi de mails, l'adresse de l'expéditeur
+              et vos destinataires.
+            title: Emails
+          languages:
+            text: Choisissez la langue par défaut de l'installation et les langues
+              proposées aux utilisateurs.
+            title: Langues
+          notifications:
+            text: Paramétrez et modifiez vos templates emails.
+            title: Notifications
+          packages:
+            text: Activez ou désactivez l'affichage des formules.
+            title: Formules
+          school:
+            text: 'Définissez les informations générales de votre école : nom, adresse
+              postale, etc.'
+            title: Votre école
+          teachers:
+            text: Gérez les permissions au planning et les informations affichées
+              à l'élève.
+            title: Professeurs
+        edit: Éditer
+        heading: Paramètres
+        sections:
+          général: Général
+          personnalisation: Personnalisation
+      localization_parameters:
+        index:
+          heading: Langues
+      mails_parameters:
+        edit:
+          heading: 'Paramètres avancés : Mails'
+      planning_parameters:
+        index:
+          heading: Paramétrage du planning
+      rooms_parameters:
+        index:
+          heading: Liste des sites
+          new_site: Créer un nouveau site
+      rules_parameters:
+        edit:
+          heading: Règlement intérieur
+      school_parameters:
+        edit:
+          no_name: Pas de nom
+      teachers_parameters:
+        edit:
+          heading: Paramétrage des droits des professeurs
+    partials:
+      mailer:
+        users_info_partial:
+          adherent_number_hint_html: Ce numéro vous permet de vous authentifier sur
+            %{app_name}
+          adherent_number_html: 'Votre numéro d''identification : <b>%{number}</b>'
+    payment_method:
+      edit:
+        heading: Modification d'une méthode de paiement
+      form:
+        built_in_notice: Comme il s'agit d'un moyen de paiement intégré, vous ne pouvez
+          pas modifier son nom.
+      index:
+        create: Créer un moyen de paiement
+        heading: Moyens de paiement
+      new:
+        heading: Création d'une méthode de paiement
+    payment_statuses:
+      edit:
+        heading: Modification d'un statut de paiement
+      index:
+        create: Créer un statut de paiement
+        heading: Statuts de paiement
+      new:
+        heading: Nouveau statut de paiement
+    payments:
+      index:
+        heading: Suivi des paiements
+    planning:
+      actions:
+        edit: Modifier
+        lock_the_planning: Verrouiller le planning
+        unlock_the_planning: Déverrouiller le planning
+      index_for_rooms:
+        empty: Aucune salle de cours n'est enregistrée.
+        heading: Plannings des Salles de Cours
+        new_room: Créer une nouvelle salle
+      index_for_teachers:
+        heading: Plannings des professeurs
+      show:
+        my_planning: Mon Planning
+        planning_of: Planning de
+      show_availabilities:
+        eval_text: Mes disponibilités pour les évaluations de la %{season}.
+        eval_title: Evaluations des nouveaux élèves
+        heading: Mes disponibilités
+        next_season_text: Mes disponibilités pour les cours de la %{season}.
+        next_season_title: Cours de la prochaine Saison
+      show_availabilities_for_date:
+        copy_link_label: Copier le planning de la saison en cours
+        copy_link_message: Voulez-vous vraiment importer le planning de la saison
+          en cours ? Cela supprimera toutes les modifications pour la saison prochaine.
+        eval_range: Evaluations du %{from} au %{to}
+        heading: 'Mes disponibilités :'
+        lock_link_message: Voulez-vous vraiment verrouiller le planning ? Vous devrez
+          vous adresser à un.e permanent.e pour tout changement.
+      show_for_conflict:
+        heading: Résolution du conflit
+      show_for_room:
+        heading: Planning de la salle
+      show_generic:
+        change_teacher: Changer de professeur
+        my_availabilities_for: Mes disponibilités pour %{season}
+        planning_of_user: Planning de %{first_name} %{last_name}
+      validation_alert:
+        admin: Les professeurs ont jusqu'au %{date} pour valider leur planning. Ils
+          en sont informés.
+        teacher: Vous avez jusqu'au %{date} pour valider votre planning !
+        warning: Attention
+    practice:
+      band_types:
+        edit:
+          title: Modification type de groupe
+        index:
+          cols:
+            name: Nom
+          create_button: Nouveau type de groupe
+          title: Types de groupes
+        new:
+          title: Nouveau type de groupe
+      bands:
+        index:
+          cols:
+            band: Groupe
+            music_genre: Genre musical
+            type: Type de groupe
+          create_button: Nouveau groupe
+          title: Groupes
+          view: Voir
+        new:
+          title: Nouveau groupe
+        show:
+          band_type_label: 'Type de groupe :'
+          blacklisted_label: 'Blacklisté :'
+          music_genre_label: 'Genre musical :'
+          name_label: 'Nom :'
+      flat_rates:
+        edit:
+          title: Modification forfait
+        index:
+          cols:
+            group_rate: Prix groupe
+            name: Nom
+            nb_hours: Nombre d'heures
+            solo_duo_rate: Prix solo / duo
+          create_button: Nouveau forfait
+          title: Forfaits
+        new:
+          title: Nouveau forfait
+      materials:
+        edit:
+          title: Modification matériel
+        index:
+          cols:
+            name: Nom
+            rental_price: Prix de location
+          create_button: Nouveau matériel
+          title: Matériels
+        new:
+          title: Nouveau matériel
+      music_genres:
+        edit:
+          title: Modification genre musical
+        index:
+          cols:
+            name: Nom
+          create_button: Nouveau genre musical
+          title: Genres musicaux
+        new:
+          title: Nouveau genre musical
+        show:
+          name_label: 'Nom :'
+      room_features:
+        edit:
+          title: Modification caractéristique
+        form:
+          active_label: 'Actif :'
+        index:
+          cols:
+            name: Nom
+          create_button: Nouvelle caractéristique
+          title: Caractéristiques des salles
+        new:
+          title: Nouvelle caractéristique
+    rooms:
+      edit:
+        activities_title: Activités
+        image_title: Image
+        location_title: Localisation
+        title: Éditer la salle "%{label}"
+      edit_activities:
+        title: Activités de la salle %{label}
+      index:
+        activities_label: 'Activités :'
+        add_room: Ajouter une salle
+        delete_disabled_title: Des activités sont reliées à cette salle, vous ne pouvez
+          pas la supprimer. Merci de supprimer les activités en amont.
+        features_label: 'Caractéristiques :'
+        floor: Étage %{number}
+        ground_floor: Rez-de-chaussée
+        location_line: 'Lieu : %{location}, étage %{floor}'
+        planning_button: Planning
+        room_kind: Salle de %{kind}
+        title: Référentiel des salles
+      new:
+        activities_title: Activités
+        change_image: Changer
+        choose_image: Choisir Image
+        location_title: Localisation
+        title: Ajouter une salle
+    seasons:
+      edit:
+        autosave_notice: Toutes les modifications sur le tableau seront directement
+          enregistrées, même sans appuyer sur les boutons de sauvegarde.
+        heading: Éditer "%{label}"
+        warning: 'Attention :'
+      form:
+        for_the_season: Pour la saison
+        no_next_season: "<aucune>"
+        save_error_body: Veuillez corriger les champs en rouge ci-dessous.
+        save_error_title: Impossible de sauvegarder la saison.
+      index:
+        create: Créer une nouvelle saison
+        heading: Gestion des saisons
+      new:
+        heading: Nouvelle saison
+    sessions:
+      pick_user:
+        submit: Se connecter
+        title_html: Choisissez le compte pour %{email}
+    settings:
+      plugin:
+        submit: Appliquer
+        title: Plugins - %{name}
+    shared:
+      form_errors:
+        heading: "%{count} erreur(s) empêchent l'enregistrement :"
+    static_pages:
+      about:
+        heading: À propos d’Elvis
+      landing:
+        collective_courses_heading: Super Cours Collectifs
+        details_link: Détails »
+        membership_heading: Adhésion
+        workshops_heading: Ateliers
+    student_evaluations_stats:
+      stats:
+        heading: Synthèse des évaluations - %{season}
+    students:
+      index:
+        from_date: à partir du %{date}
+        group: groupe %{name}
+        lesson_slot: "%{day} de %{start} à %{end} : cours de %{activity}"
+        room: salle %{name}
+        title: Liste des cours de %{teacher}
+        until_date: jusqu'au %{date}
+    teachers:
+      index:
+        heading: Informations sur les professeurs
+    users:
+      _family:
+        activities_heading: Activités
+        add_contact: Ajouter un contact
+        edit_family_link: Edition du lien familial
+        empty_state_heading: Pas de membres de famille renseignés pour le moment
+        empty_state_html: Si vous souhaitez inscrire un membre de votre famille à
+          une activité, cliquez sur le bouton <b>ajouter un nouveau membre</b>, puis
+          cliquez sur le bouton <b>pré-inscrire</b> correspondant
+        family_link_heading: Lien Familial
+        heading: 'Foyer :'
+        legal_referent_title: Représentant légal
+        no_family_link_heading: Pas de lien familial
+        paying_title: Payeur
+        preregister_action: Pré-inscrire
+        profile_heading: Profil
+        relation_attached: Utilisateur rattaché
+        subtitle_other: Personnes dont les inscriptions sont gérées par %{name}
+        subtitle_self: Personnes dont vous gérez les inscriptions
+        to_call_title: À contacter en premier
+        view_action: Voir
+      adherent_card:
+        civility_mr: M
+        civility_mrs: Mme
+        course: "> Cours de %{activity} (%{civility} %{last_name})"
+        room_at_location: Salle %{room} à %{location} / %{day}, %{time}
+        title: Carte adhérent
+      attach_view:
+        attached_notice: Ce compte est rattaché à
+        heading: Rattachements de
+      create_account:
+        email_prompt_confirm: Est-ce bien votre email ?
+        email_prompt_missing: Veuillez completer votre email
+        password_confirmation_label: Confirmation de votre mot de passe
+        password_label: Mot de passe
+      edit_activities:
+        heading: Activités de l'utilisateur %{name}
+      edit_password:
+        already_set_notice: Mot de passe déjà défini, veuillez vous connecter avec
+          votre login/mot de passe
+        confirm_password_label: Confirmation du nouveau mot de passe
+        heading: Définissez votre mot de passe
+        new_password_label: Nouveau mot de passe
+        redirect_link: Redirection vers la page de login
+      evaluate:
+        heading: Évaluations des élèves
+        info_notice: Ces évaluations serviront pour inscrire les élèves sur la prochaine
+          saison
+      first_login:
+        email_prompt_confirm: Est-ce bien votre email ?
+        email_prompt_missing: Veuillez completer votre email
+        heading: Bienvenue !
+      index:
+        create_user: Créer un utilisateur
+        heading: Liste des utilisateurs
+        import_users: Importer utilisateurs
+      new:
+        activities_label: Activités
+        attached_account_label: Compte rattaché à
+        confirm_email_label: Envoyer un mail de confirmation
+        heading: Créer un nouvel utilisateur
+        submit: Création
+      presence_sheet:
+        heading: Feuille de présence
+        next_day_title: Jour suivant
+        next_week_title: Semaine suivante
+        previous_day_title: Jour précédent
+        previous_week_title: Semaine précédente
+        teacher_heading: 'Professeur: %{name}'
+      previsional_groups:
+        continues_next_season: L'élève continue la saison prochaine
+        group_change_informed: Changement de groupe informé
+        group_change_uninformed: Changement de groupe non informé
+        heading: Simulation de planning
+        info_notice: Cet aperçu est produit à partir des réponses portant sur les
+          changements de groupes. Ces réponses sont trouvables dans les questionnaires
+          d'évaluation des élèves remplis en fin d'année par le professeur.
+        legend_heading: Légende
+        no_group_change: Pas de changement de groupe
+        stops_next_season: L'élève ne continue pas la saison prochaine
+        uncertain: L'élève est incertain
+      season_activities:
+        heading: Evaluation des élèves
+        info_notice: Les niveaux affichés sont ceux préconisés pour la saison suivante
+          (%{season}).
+      show:
+        address_label:
+          one: Adresse
+          other: Adresses
+        adhesion_valid_until: Adhésion valide jusqu'au
+        age_years:
+          one: "%{count} an"
+          other: "%{count} ans"
+        application_request_action: Demande d'inscription
+        attached_badge: Utilisateur rattaché
+        attached_to_label: Utilisateur rattaché à
+        delete_user_additional_message: Les éventuels utilisateurs rattachés seront
+          automatiquement détachés et un email leur seront adressés pour créer leur
+          mot de passe (s'ils ont un email différent de ce compte).
+        delete_user_button: Supprimer cet utilisateur
+        delete_user_confirm: Cela supprimera l'utilisateur, ses liens familiaux ainsi
+          que son adhésion. Êtes-vous sûr ?
+        edit_password_action: Éditer le Mot de passe
+        edit_profile_action: Éditer le profil
+        email_label: Mail
+        error_title: Erreur
+        expires_in_days:
+          one: Expire dans %{count} jour
+          other: Expire dans %{count} jours
+        hours_sheet_action: Feuille d'heures
+        member_number: Adhérent n°%{number}
+        no_activity: Aucune activité
+        no_phone: Pas de numéro de téléphone
+        payments_action: Règlements
+        phone_label: Téléphone
+        planning_action: Planning
+        preregistrations_action: Pré-inscriptions
+        register_action: S'inscrire
+        reset_password_button: Réinitialiser le mot de passe
+        reset_password_error: Le mot de passe n'a pas pu être réinitialisé. Veuillez
+          réessayer.
+        reset_password_success: Un email a été envoyé à l'utilisateur pour réinitialiser
+          son mot de passe.
+        season_courses_action: Cours de la saison
+        stopped_on: Arrêt le
+        student_badge: Élève
+        tab_absences: Absences
+        tab_activities: Activités
+        tab_family: Liens familiaux
+        unknown_schedule: Horaire inconnu
+        user_badge: Utilisateur
+      upload_csv:
+        heading: Import de votre communauté

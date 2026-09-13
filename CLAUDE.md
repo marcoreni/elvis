@@ -7,7 +7,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 Elvis (formerly "Ziggy") is a Rails 6.1 web application for managing a music school: member/student
 management, activity registration, scheduling, evaluations, and payments. Backend is Ruby on Rails with
 PostgreSQL, Elasticsearch (via `chewy`), Redis, and Sidekiq for background jobs. Frontend is React
-rendered into ERB views via `react-rails`/`shakapacker` (webpack), not a separate SPA.
+rendered into ERB views via `react-rails`/`shakapacker` (Rspack, via `assets_bundler: "rspack"` in
+`config/shakapacker.yml` — not webpack), not a separate SPA.
 
 ## Running the app
 
@@ -25,7 +26,7 @@ postgresql 14, and optionally a local redis and elasticsearch. Then:
 bundle install
 yarn
 rails db:prepare     # first run, or `rails db:migrate` against an existing db
-foreman start         # runs web + webpack dev server per Procfile
+foreman start         # runs web + Shakapacker dev server per Procfile
 ```
 
 Create an admin user via `rails console`:
@@ -43,13 +44,13 @@ u.save!
 - RSpec (primary test suite): `bundle exec rspec`, single file: `bundle exec rspec spec/models/foo_spec.rb`
 - Minitest (legacy/secondary suite, still in use under `test/`): `bin/rails test`, single file:
   `bin/rails test test/models/foo_test.rb`
-- Frontend build: `yarn build` (production webpack bundle); `yarn start` runs `react-scripts` dev server
-  (in practice frontend assets are usually served through `shakapacker`/webpacker during `foreman start`,
-  not `yarn start`)
+- Frontend build: `yarn build` (production Rspack bundle via Shakapacker); `yarn start` runs
+  `react-scripts` dev server (in practice frontend assets are usually served through
+  `shakapacker-dev-server` during `foreman start`, not `yarn start`)
 - Frontend tests: `yarn test` (Vitest, added alongside the i18n frontend work — `vitest.config.mjs`,
   colocated `*.test.js`/`*.test.jsx` files under `frontend/`). Any `.js` file under `frontend/`
   containing JSX must be named `.jsx` — Vite's esbuild/oxc integration only parses JSX in
-  `.jsx`/`.tsx` by default, unlike this app's actual webpack// build, which doesn't care about
+  `.jsx`/`.tsx` by default, unlike this app's actual Rspack build, which doesn't care about
   the extension. Component-rendering tests use `@testing-library/react@^12`
   (`@testing-library/jest-dom@6.9.1`/`@testing-library/user-event@^13`) — pinned below their
   latest majors for this app's React 16/Node 20, not because of a Vite/Vitest constraint.

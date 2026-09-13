@@ -1,1305 +1,1365 @@
-# English translations. See docs/I18n.md for the key-naming convention and how to extend this
-# file — filled in incrementally as app/views/app/models strings get extracted (see
-# docs/I18n-Roadmap.md, branches feature/i18n-04 onward). Structure mirrors fr.yml, the base
-# locale.
+---
 en:
-    time:
-        formats:
-            date_month_concise: '%B %d, %Y'
-            long_date: '%B %e, %Y'
-            day: '%A'
-            short_time: '%H:%M'
-    date:
-        formats:
-            date_month_concise: '%B %d, %Y'
-            long_date: '%B %e, %Y'
-
-    # This app always deals in EUR regardless of UI language (a French music school's fees don't
-    # change currency when an admin switches the interface to English), so number_to_currency
-    # keeps the € symbol and French grouping/decimal convention ("1 234,56 €") here too, matching
-    # rails-i18n's own fr.yml currency block verbatim rather than falling back to rails-i18n's
-    # en.yml default (which is USD-formatted: "$1,234.56").
-    number:
-        currency:
-            format:
-                delimiter: " "
-                format: "%n %u"
-                precision: 2
-                separator: ","
-                significant: false
-                strip_insignificant_zeros: false
-                unit: "€"
-
-    common:
-        actions:
-            validate: Submit
-            save: Save
-            add: Add
-            edit: Edit
-            delete: Delete
-            back: Back
-        labels:
-            actions: Actions
-            active: Active
-            inactive: Inactive
-            "yes": "Yes"
-            "no": "No"
-        confirm:
-            sure: Are you sure?
-        errors:
-            access_denied: You are not allowed to do that
-
-    menu:
-        plugins: Plugins
-        plugins_list: Plugin list
-        users: Users
-        inscriptions: Registrations
-        adhesions: Memberships
-        applications: Enrollment requests
-        packs: Packs
-        new_application: New registration
-        params: Settings
-        plannings: Plannings
-        presences: Attendance
-        seasons: Season management
-        courses_list: Course list
-        planning_teachers: Teachers
-        planning_rooms: Classrooms
-        replicate_courses: Replicate courses
-        monitoring: Monitoring
-        absences: Absence tracking
-        payments: Payments
-        rooms_sites: Rooms and sites
-        activities: Music activities
-        activity_families: Activity families
-        instruments: Instruments
-        activity_refs: Activities
-        formulas: Packages
-        evaluations: Evaluation
-        evaluations_summary: Evaluation summary
-        evaluations_management: Evaluation management
-        students_without_slots: Students without slots
-        parameters: Settings
-        my_planning: My planning
-        my_availabilities: My availability
-        my_evaluations: My evaluations
-        planning_simulation: Schedule simulation
-        home: Home
-        my_applications: My enrollment requests
-        my_profile: My profile
-        logout: Sign out
-
-    activerecord:
-        attributes:
-            activity_application_status:
-                label: Label
-                is_stopping: Stopping?
-                is_active: Active
-            user:
-                last_name: Last name
-                first_name: First name
-                birthday: Date of birth
-                is_admin: Administrator
-                is_teacher: Teacher
-                adherent: Member
-            evaluation_level_ref:
-                label: Label
-                value: Number
-            payment_method:
-                label: Label
-                is_special: Is special
-                is_credit_note: Is credit note
-                show_payment_method_to_user: Show to customer?
-            payment_status:
-                label: Label
-                color: Color
-            band:
-                name: Name
-                band_type_id: Band type
-                music_genre_id: Music genre
-                blacklisted: Blacklisted
-            band_type:
-                name: Name
-            flat_rate:
-                name: Name
-                nb_hour: Number of hours
-                solo_duo_rate: Solo / duo price
-                group_rate: Group price
-            location:
-                label: Site name
-            material:
-                name: Name
-                prix: Rental price
-            music_genre:
-                name: Name
-            room_features:
-                name: Name
-            season:
-                label: Season name
-                nb_lessons: Number of lessons
-                start: Start
-                end: End
-                opening_date_for_applications: Re-enrollment opening date
-                opening_date_for_new_applications: New enrollment opening date
-                closing_date_for_applications: Enrollment closing date
-                date_for_teacher_planning_validation: Teacher planning validation date
-                is_current: Current season
-                next_season_id: Next season
-        errors:
-            models:
-                user:
-                    attributes:
-                        password_confirmation:
-                            confirmation: "Password confirmation doesn't match."
-                        base:
-                            duplicate_identity: "An account already exists with this combination of last name, first name, and date of birth."
-                            duplicate_email: "An account already exists with this email."
-                adhesion_price:
-                    attributes:
-                        label:
-                            blank: The label is required
-                        price:
-                            blank: The price is required
-                            greater_than_or_equal_to: "The price must be greater than or equal to %{count}"
-                        season_id:
-                            taken: A price already exists for this season
-                activity_ref_kind:
-                    attributes:
-                        name:
-                            blank: cannot be empty
-                            taken: already exists
-                        default_activity_ref:
-                            same_family: must belong to the same activity family
-                season:
-                    attributes:
-                        end:
-                            after_start: must be after the season start
-                        opening_date_for_applications:
-                            before_season_start: must be before the season start
-                            after_previous_season_closing: "must be after the previous season's enrollment closing date"
-                        opening_date_for_new_applications:
-                            after_applications_opening: must be after the re-enrollment opening date
-                            before_applications_closing: must be before the enrollment closing date
-                            after_previous_season_closing: "must be after the previous season's enrollment closing date"
-                        closing_date_for_applications:
-                            before_season_end: must be before the season end
-                activity_ref:
-                    attributes:
-                        to_age:
-                            greater_than_from_age: must be greater than the minimum age
-                        occupation_hard_limit:
-                            greater_than_occupation_limit: must be greater than the number of spots
-                formule:
-                    attributes:
-                        number_of_items:
-                            exceeds_available_activities: "cannot exceed the total number of available activities (%{count})"
-                        base:
-                            at_least_one_activity: "The package must contain at least one activity or activity family"
-                level:
-                    attributes:
-                        base:
-                            duplicate: "This level already exists for season %{season}, activity %{activity} and user %{user}"
-                payer_payment_terms:
-                    attributes:
-                        base:
-                            duplicate: "Payment terms already exist for season %{season} and payer %{payer}: please update them"
-        # Human-readable model names for ApplicationRecord#display_class_name (see
-        # app/models/application_record.rb), resolved dynamically per model via
-        # `self.model_name.human(count:)` - see config/i18n-tasks.yml's ignore_unused note for
-        # activerecord.models.*. Each value moved here verbatim from the model's former
-        # `self.display_class_name` override (fix/remove-controller-display-class-name-i18n).
-        models:
-            activities_instrument:
-                one: course/instrument association
-                other: course/instrument associations
-            activity:
-                one: course
-                other: courses
-            activity_application:
-                one: registration request
-                other: registration requests
-            activity_application_status:
-                one: Enrollment status
-                other: Enrollment statuses
-            activity_instance:
-                one: class session
-                other: class sessions
-            activity_ref:
-                one: activity
-                other: activities
-            activity_ref_cycle:
-                one: activity sequence
-                other: activity sequences
-            activity_ref_kind:
-                one: activity family
-                other: activity families
-            activity_ref_pricing:
-                one: Rate
-                other: Rates
-            activity_refs_instrument:
-                one: activity/instrument association
-                other: activity/instrument associations
-            additional_student:
-                one: additional student
-                other: additional students
-            address:
-                one: address
-                other: addresses
-            adhesion:
-                one: membership
-                other: memberships
-            answer:
-                one: answer
-                other: answers
-            application_change_questionnaire:
-                one: registration change questionnaire
-                other: registration change questionnaires
-            band:
-                one: band
-                other: bands
-            band_type:
-                one: band type
-                other: band types
-            bands_user:
-                one: band member
-                other: band members
-            comment:
-                one: comment
-                other: comments
-            conflict:
-                one: conflict
-                other: conflicts
-            consent_document:
-                one: consent document
-                other: consent documents
-            desired_activity:
-                one: desired activity
-                other: desired activities
-            desired_time_interval:
-                one: desired time slot
-                other: desired time slots
-            due_payment:
-                one: due payment
-                other: due payments
-            due_payment_status:
-                one: due payment status
-                other: due payment statuses
-            evaluation_appointment:
-                one: evaluation appointment
-                other: evaluation appointments
-            evaluation_level_ref:
-                one: evaluation level reference
-                other: evaluation level references
-            event_rules:
-                one: EventRules
-                other: EventRules
-            event_subscription:
-                one: event subscription
-                other: event subscriptions
-            export_template:
-                one: export template
-                other: export templates
-            failed_payment_import:
-                one: failed payment import
-                other: failed payment imports
-            failed_payment_import_reason:
-                one: failed payment import reason
-                other: failed payment import reasons
-            family_member_user:
-                one: family member
-                other: family members
-            flat_rate:
-                one: flat rate
-                other: flat rates
-            formule:
-                one: Package
-                other: Packages
-            formule_item:
-                one: Item
-                other: Items
-            formule_pricing:
-                one: Rate
-                other: Rates
-            holiday:
-                one: holiday
-                other: holidays
-            hours_sheet:
-                one: hours sheet
-                other: hours sheets
-            instrument:
-                one: instrument
-                other: instruments
-            level:
-                one: level
-                other: levels
-            location:
-                one: location
-                other: locations
-            material:
-                one: equipment
-                other: equipment
-            message:
-                one: message
-                other: messages
-            message_recipient:
-                one: message recipient
-                other: message recipients
-            music_genre:
-                one: music genre
-                other: music genres
-            new_student_level_questionnaire:
-                one: new student level questionnaire
-                other: new student level questionnaires
-            option:
-                one: option
-                other: options
-            pack:
-                one: Pack
-                other: Packs
-            payer_payment_terms:
-                one: payment terms for a payer
-                other: payment terms for payers
-            payment:
-                one: payment
-                other: payments
-            payment_method:
-                one: payment method
-                other: payment methods
-            payment_schedule:
-                one: payment schedule
-                other: payment schedules
-            payment_schedule_options:
-                one: payment schedule option
-                other: payment schedule options
-            payment_schedule_status:
-                one: payment schedule status
-                other: payment schedule statuses
-            payment_status:
-                one: payment status
-                other: payment statuses
-            planning:
-                one: planning
-                other: plannings
-            planning_conflict:
-                one: planning conflict
-                other: planning conflicts
-            plugin:
-                one: plugin
-                other: plugins
-            practice_room_parameter:
-                one: practice room parameter
-                other: practice room parameters
-            practice_room_planning:
-                one: practice room planning
-                other: practice room plannings
-            practice_session:
-                one: practice session
-                other: practice sessions
-            pre_application:
-                one: pre-registration
-                other: pre-registrations
-            pre_application_activity:
-                one: course assigned as part of a re-registration
-                other: courses assigned as part of a re-registration
-            pre_application_desired_activity:
-                one: desired course as part of a re-registration
-                other: desired courses as part of a re-registration
-            pricing_category:
-                one: Price category
-                other: Price categories
-            question:
-                one: question
-                other: questions
-            room:
-                one: room
-                other: rooms
-            room_activity:
-                one: activity/room association
-                other: activity/room associations
-            room_features:
-                one: room feature
-                other: room features
-            room_room_feature:
-                one: room/feature association
-                other: room/feature associations
-            school:
-                one: school
-                other: schools
-            season:
-                one: season
-                other: seasons
-            setting:
-                one: setting
-                other: settings
-            student:
-                one: student
-                other: students
-            student_attendance:
-                one: session registration
-                other: session registrations
-            student_evaluation:
-                one: student evaluation
-                other: student evaluations
-            teacher_season:
-                one: teacher/season association
-                other: teacher/season associations
-            teachers_activity:
-                one: teacher course
-                other: teacher courses
-            teachers_activity_instance:
-                one: teacher class session
-                other: teacher class sessions
-            teachers_activity_ref:
-                one: teacher activity
-                other: teacher activities
-            telephone:
-                one: phone
-                other: phones
-            time_interval:
-                one: time slot
-                other: time slots
-            time_interval_preference:
-                one: time preference
-                other: time preferences
-            time_slot:
-                one: planning time slot
-                other: planning time slots
-            user:
-                one: user
-                other: users
-            user_address:
-                one: user/address association
-                other: user/address associations
-            users_instrument:
-                one: user/instrument association
-                other: user/instrument associations
-
-    views:
-        layouts:
-            application:
-                my_planning: My planning
-                version_dev: dev version
-                version: version %{number}
-                powered_by: powered by
-                other_accounts: "Other accounts:"
-                help_center: Help center
-                terms_link: Privacy policy (Terms of Use)
-                base_seasons_created:
-                    title: Message
-                    text: 3 seasons were created by default based on the current date
-            static_pages:
-                sign_in: Sign in
-                sign_up: Sign up
-                read_more: READ MORE
-                toggle_navigation: Toggle navigation
-                previous: Previous
-                next: Next
-                headline_1_html: Management<br/> software
-                headline_2_html: Group classes <br/> Workshops
-        devise:
-            sessions:
-                new:
-                    title: Access your account
-                    login_label: Email or Member number
-                    remember_me: Stay signed in
-                    no_account_title: Don't have an account?
-                    no_account_body: You can create your account by clicking the button below
-            registrations:
-                new:
-                    heading: Registrations
-                    pre_application_notice_html: "The online re-registration period is open. If you are already a member, you can go to your %{link}."
-                    personal_space_link: personal space
-                    new_applications_notice_html: "For new registrations, come back to this page on %{date}."
-                    closed_body: "Online registrations for the new season are currently closed. You can contact us by phone so we can process your request."
-                registration:
-                    last_name_label: Your last name
-                    first_name_label: Your first name
-                    birthday_label: Your date of birth
-                    password_confirmation_label: Confirm password
-                edit:
-                    title: Edit my profile
-                    password_length_hint:
-                        one: "Your password must contain at least %{count} character"
-                        other: "Your password must contain at least %{count} characters"
-                    password_confirmation_label: Confirm new password
-                    submit: Update
-            passwords:
-                new:
-                    subtitle: Reset by Email
-                    login_label: Email
-                    submit: Send a recovery email
-                edit:
-                    title: Change your password
-                    password_confirmation_label: Confirmation
-            shared:
-                links:
-                    sign_in_link: Link to the sign-in page
-                    confirmation_link: Didn't receive the confirmation email?
-                    unlock_link: Didn't receive the unlock email?
-            mailer:
-                confirmation_instructions:
-                    greeting_html: "Hello <strong>%{name}</strong>,"
-                    account_created_html: "Your account has been created on the <strong>%{app_name}</strong> platform."
-                    instruction: "Confirm your email and create a password using the link below:"
-                    confirm_button: Confirm my account
-                reset_password_instructions:
-                    greeting_html: "Hello <strong>%{name}</strong>,"
-                    instruction: "You requested to reset your password. To change it, click the button below:"
-                    instruction_2: "If you did not make this request, you can ignore this email. Your password will remain unchanged until you click the link."
-        oidc/authorizations:
-            new:
-                heading: "Do you authorize %{client} to access this information?"
-                requested_information: Requested information
-                authorize: Authorize
-                deny: Deny
-        activity_assigned_mailer:
-            activity_assigned:
-                greeting_html: "Hello <strong>%{name}</strong>,"
-                proposed_slot_html: "A time slot has been offered to you for the course <br />\n<strong>\"%{activity}\"</strong>."
-                request_info_html: "Request #<span style=\"color:#0079bf\">%{id}</span> concerning %{first_name} %{last_name}"
-                schedule_info_html: "For the <strong>%{season}</strong> season, the course will take place on: <br />\n<strong>%{day}</strong> <br />\nfrom <strong>%{start_time}</strong>\nto <strong>%{end_time}</strong> <br />\nwith teacher <strong>%{teacher}</strong>"
-                validate_or_refuse: Accept or decline the offer by clicking the button below.
-                cta_button: "Go to %{name}"
-        adhesion_mailer:
-            reminder_email:
-                greeting_html: "Hello <strong>%{name}</strong>,"
-                expiring_notice: Your membership ends in 30 days.
-                login_link: Sign in
-                subscribe_notice: to join a new activity.
-        application_mailer:
-            notify_new_application:
-                greeting: Hello,
-                acknowledgement_html: "We acknowledge receipt of your registration request for the <strong>%{season}</strong> season, for student <strong>%{student}</strong>\nfor the activity <strong>%{activities}</strong>"
-                application_number_html: "Here is the request number: <span style=\"color: darkred\">%{id}</span>"
-        partials:
-            mailer:
-                users_info_partial:
-                    adherent_number_html: "Your identification number: <b>%{number}</b>"
-                    adherent_number_hint_html: "This number lets you sign in to %{app_name}"
-        sessions:
-            pick_user:
-                title_html: "Choose the account for %{email}"
-                submit: Sign in
-        users:
-            _family:
-                heading: "Household:"
-                subtitle_self: People whose registrations you manage
-                subtitle_other: "People whose registrations are managed by %{name}"
-                add_contact: Add a contact
-                relation_attached: Linked user
-                to_call_title: Contact first
-                paying_title: Payer
-                legal_referent_title: Legal guardian
-                family_link_heading: Family link
-                edit_family_link: Edit family link
-                no_family_link_heading: No family link
-                profile_heading: Profile
-                view_action: View
-                activities_heading: Activities
-                preregister_action: Pre-register
-                empty_state_html: "If you would like to register a family member for an activity, click the <b>add a new member</b> button, then click the corresponding <b>pre-register</b> button"
-                empty_state_heading: No family members added yet
-            adherent_card:
-                title: Member card
-                course: "> %{activity} course (%{civility} %{last_name})"
-                room_at_location: "Room %{room} at %{location} / %{day}, %{time}"
-                civility_mr: Mr
-                civility_mrs: Mrs
-            attach_view:
-                heading: Linked accounts for
-                attached_notice: This account is linked to
-            create_account:
-                email_prompt_missing: Please complete your email
-                email_prompt_confirm: Is this your email?
-                password_label: Password
-                password_confirmation_label: Confirm your password
-            edit_activities:
-                heading: "%{name}'s activities"
-            edit_password:
-                heading: Set your password
-                already_set_notice: Password already set, please sign in with your login/password
-                redirect_link: Go to the sign-in page
-                new_password_label: New password
-                confirm_password_label: Confirm new password
-            evaluate:
-                heading: Student evaluations
-                info_notice: These evaluations will be used to register students for the next season
-            first_login:
-                heading: Welcome!
-                email_prompt_missing: Please complete your email
-                email_prompt_confirm: Is this your email?
-            index:
-                heading: User list
-                create_user: Create a user
-                import_users: Import users
-            new:
-                heading: Create a new user
-                attached_account_label: Linked account
-                confirm_email_label: Send a confirmation email
-                activities_label: Activities
-                submit: Create
-            presence_sheet:
-                heading: Attendance sheet
-                teacher_heading: "Teacher: %{name}"
-                previous_week_title: Previous week
-                previous_day_title: Previous day
-                next_day_title: Next day
-                next_week_title: Next week
-            previsional_groups:
-                heading: Schedule simulation
-                info_notice: "This preview is generated from the answers about group changes. These answers can be found in the student evaluation questionnaires filled in by the teacher at the end of the year."
-                legend_heading: Legend
-                no_group_change: No group change
-                group_change_informed: Group change, informed
-                group_change_uninformed: Group change, not informed
-                continues_next_season: The student is continuing next season
-                stops_next_season: The student is not continuing next season
-                uncertain: The student is undecided
-            season_activities:
-                heading: Student evaluation
-                info_notice: "The levels shown are those recommended for the next season (%{season})."
-            show:
-                attached_badge: Linked user
-                student_badge: Student
-                user_badge: User
-                member_number: "Member No. %{number}"
-                adhesion_valid_until: Membership valid until
-                expires_in_days:
-                    one: Expires in %{count} day
-                    other: Expires in %{count} days
-                attached_to_label: Linked to user
-                age_years:
-                    one: "%{count} year"
-                    other: "%{count} years"
-                email_label: Email
-                phone_label: Phone
-                no_phone: No phone number
-                address_label:
-                    one: Address
-                    other: Addresses
-                register_action: Register
-                edit_profile_action: Edit profile
-                edit_password_action: Edit password
-                planning_action: Schedule
-                hours_sheet_action: Hours sheet
-                season_courses_action: Season courses
-                payments_action: Payments
-                application_request_action: Application request
-                preregistrations_action: Pre-registrations
-                reset_password_button: Reset password
-                reset_password_error: "The password could not be reset. Please try again."
-                reset_password_success: An email has been sent to the user to reset their password.
-                delete_user_button: Delete this user
-                delete_user_confirm: This will delete the user, their family links, and their membership. Are you sure?
-                delete_user_additional_message: "Any linked users will automatically be detached and sent an email to create their password (if they have an email different from this account)."
-                tab_activities: Activities
-                tab_family: Family links
-                tab_absences: Absences
-                no_activity: No activity
-                unknown_schedule: Unknown schedule
-                stopped_on: Stopped on
-                error_title: Error
-            upload_csv:
-                heading: Import your community
-        adhesion:
-            index:
-                heading: Membership list
-                create: New membership
-            new:
-                heading: Create a membership
-        activity:
-            index:
-                title: Course list
-                add_course: Add a course
-        activities_applications:
-            index:
-                title: Enrollment requests
-                create: Create an enrollment
-        activity_application_statuses:
-            index:
-                heading: Enrollment status list
-                new_button: New status
-                error_title: Error
-                message_title: Message
-                cols:
-                    label: Label
-                    stopping: Stopping?
-            new:
-                title: Create an enrollment status
-            edit:
-                title: Edit an enrollment status
+  activerecord:
+    attributes:
+      activity_application_status:
+        is_active: Active
+        is_stopping: Stopping?
+        label: Label
+      band:
+        band_type_id: Band type
+        blacklisted: Blacklisted
+        music_genre_id: Music genre
+        name: Name
+      band_type:
+        name: Name
+      evaluation_level_ref:
+        label: Label
+        value: Number
+      flat_rate:
+        group_rate: Group price
+        name: Name
+        nb_hour: Number of hours
+        solo_duo_rate: Solo / duo price
+      location:
+        label: Site name
+      material:
+        name: Name
+        prix: Rental price
+      music_genre:
+        name: Name
+      payment_method:
+        is_credit_note: Is credit note
+        is_special: Is special
+        label: Label
+        show_payment_method_to_user: Show to customer?
+      payment_status:
+        color: Color
+        label: Label
+      room_features:
+        name: Name
+      season:
+        closing_date_for_applications: Enrollment closing date
+        date_for_teacher_planning_validation: Teacher planning validation date
+        end: End
+        is_current: Current season
+        label: Season name
+        nb_lessons: Number of lessons
+        next_season_id: Next season
+        opening_date_for_applications: Re-enrollment opening date
+        opening_date_for_new_applications: New enrollment opening date
+        start: Start
+      user:
+        adherent: Member
+        birthday: Date of birth
+        first_name: First name
+        is_admin: Administrator
+        is_teacher: Teacher
+        last_name: Last name
+    errors:
+      models:
         activity_ref:
-            index:
-                heading: Activities reference list
-                add: Add an activity
-                export: Export
-                type: "Type: %{kind}"
-                places: "Possible spots: %{limit} (max: %{hard_limit})"
-                duration_hours: "Duration: %{hours}h%{minutes}"
-                duration_minutes: "Duration: %{minutes} minutes"
-                destroy_error_title: Error
-                destroy_error: You cannot delete the activity because it is linked to other data.
-            edit:
-                heading: 'Editing activity "%{label}"'
-            new:
-                heading: Add an activity
+          attributes:
+            occupation_hard_limit:
+              greater_than_occupation_limit: must be greater than the number of spots
+            to_age:
+              greater_than_from_age: must be greater than the minimum age
         activity_ref_kind:
-            index:
-                heading: Activity families
-            new:
-                heading: Add an activity family
-            form:
-                name_label: Name
-                default_activity: Default activity
-        instruments:
-            index:
-                heading: Instruments
-            new:
-                heading: Add an instrument
-            form:
-                label_field: Instrument name
-        evaluation_appointments:
-            incomplete:
-                heading: New students without an evaluation slot
-        evaluation_level_ref:
-            index:
-                heading: Evaluation levels
-                add_level: Add a level
-            new:
-                heading: Add a level
-            edit:
-                heading: 'Editing level "%{label}"'
-        student_evaluations_stats:
-            stats:
-                heading: 'Evaluation summary - %{season}'
-        failed_payment_imports:
-            index:
-                heading: Failed payment imports
-        formules:
-            index:
-                heading: Packages
-            new:
-                heading: Create a package
-            edit:
-                heading: Edit a package
-        parameters:
-            index:
-                heading: Settings
-                edit: Edit
-                sections:
-                    général: General
-                    personnalisation: Customization
-                cards:
-                    school:
-                        title: Your school
-                        text: "Set your school's general information: name, postal address, etc."
-                    languages:
-                        title: Languages
-                        text: Choose the installation's default language and the languages offered to users.
-                    emails:
-                        title: Emails
-                        text: Configure your outgoing mail server, the sender address and your recipients.
-                    csv:
-                        title: CSV exports
-                        text: Configure your CSV exports.
-                    notifications:
-                        title: Notifications
-                        text: Configure and edit your email templates.
-                    teachers:
-                        title: Teachers
-                        text: Manage schedule permissions and the information shown to the student.
-                    packages:
-                        title: Packages
-                        text: Enable or disable the display of packages.
-            activity_application_parameters:
-                index:
-                    heading: Enrollment settings
-            planning_parameters:
-                index:
-                    heading: Schedule settings
-            rooms_parameters:
-                index:
-                    heading: List of locations
-                    new_site: Create a new location
-            localization_parameters:
-                index:
-                    heading: Languages
-            school_parameters:
-                edit:
-                    no_name: No name
-            teachers_parameters:
-                edit:
-                    heading: Teacher rights settings
-            rules_parameters:
-                edit:
-                    heading: Internal rules
-            mails_parameters:
-                edit:
-                    heading: "Advanced settings: Emails"
-            csv_parameters:
-                edit:
-                    heading: "Advanced settings: CSV exports"
-            formules_parameters:
-                edit:
-                    heading: "Settings: Packages"
-        payment_method:
-            index:
-                heading: Payment methods
-                create: Create a payment method
-            new:
-                heading: Creating a payment method
-            edit:
-                heading: Editing a payment method
-            form:
-                built_in_notice: As this is a built-in payment method, you cannot change its name.
-        payment_statuses:
-            index:
-                heading: Payment statuses
-                create: Create a payment status
-            new:
-                heading: New payment status
-            edit:
-                heading: Editing a payment status
-        payments:
-            index:
-                heading: Payment tracking
-        planning:
-            actions:
-                lock_the_planning: Lock the planning
-                unlock_the_planning: Unlock the planning
-                edit: Edit
-            validation_alert:
-                warning: Warning
-                teacher: "You have until %{date} to validate your planning!"
-                admin: "Teachers have until %{date} to validate their planning. They have been notified."
-            index_for_rooms:
-                heading: Classroom plannings
-                new_room: Create a new classroom
-                empty: "No classroom is registered."
-            index_for_teachers:
-                heading: Teacher plannings
-            show:
-                my_planning: My planning
-                planning_of: Planning of
-            show_generic:
-                my_availabilities_for: "My availability for %{season}"
-                planning_of_user: "Planning of %{first_name} %{last_name}"
-                change_teacher: Change teacher
-            show_availabilities:
-                heading: My availability
-                next_season_title: Next season's classes
-                next_season_text: "My availability for the %{season} classes."
-                eval_title: New student evaluations
-                eval_text: "My availability for the %{season} evaluations."
-            show_availabilities_for_date:
-                heading: "My availability:"
-                eval_range: "Evaluations from %{from} to %{to}"
-                copy_link_label: Copy the current season's planning
-                copy_link_message: "Do you really want to import the current season's planning? This will delete all changes for next season."
-                lock_link_message: "Do you really want to lock the planning? You will need to contact a staff member for any change."
-            show_for_conflict:
-                heading: Conflict resolution
-            show_for_room:
-                heading: Planning of the classroom
-        locations:
-            index:
-                title: Locations
-                create_button: New location
-                error_title: Error
-                cols:
-                    name: Name
-            new:
-                title: New location
-            edit:
-                title: Edit location
-        practice:
-            band_types:
-                index:
-                    title: Band types
-                    create_button: New band type
-                    cols:
-                        name: Name
-                new:
-                    title: New band type
-                edit:
-                    title: Edit band type
-            bands:
-                index:
-                    title: Bands
-                    create_button: New band
-                    view: View
-                    cols:
-                        band: Band
-                        type: Band type
-                        music_genre: Music genre
-                new:
-                    title: New band
-                show:
-                    name_label: "Name:"
-                    band_type_label: "Band type:"
-                    music_genre_label: "Music genre:"
-                    blacklisted_label: "Blacklisted:"
-            flat_rates:
-                index:
-                    title: Flat rates
-                    create_button: New flat rate
-                    cols:
-                        name: Name
-                        nb_hours: Number of hours
-                        solo_duo_rate: Solo / duo price
-                        group_rate: Group price
-                new:
-                    title: New flat rate
-                edit:
-                    title: Edit flat rate
-            materials:
-                index:
-                    title: Equipment
-                    create_button: New equipment
-                    cols:
-                        name: Name
-                        rental_price: Rental price
-                new:
-                    title: New equipment
-                edit:
-                    title: Edit equipment
-            music_genres:
-                index:
-                    title: Music genres
-                    create_button: New music genre
-                    cols:
-                        name: Name
-                new:
-                    title: New music genre
-                edit:
-                    title: Edit music genre
-                show:
-                    name_label: "Name:"
-            room_features:
-                index:
-                    title: Room features
-                    create_button: New feature
-                    cols:
-                        name: Name
-                form:
-                    active_label: "Active:"
-                new:
-                    title: New feature
-                edit:
-                    title: Edit feature
-        rooms:
-            index:
-                title: Room reference list
-                add_room: Add a room
-                floor: "Floor %{number}"
-                ground_floor: Ground floor
-                room_kind: "%{kind} room"
-                location_line: "Location: %{location}, floor %{floor}"
-                activities_label: "Activities:"
-                features_label: "Features:"
-                planning_button: Planning
-                delete_disabled_title: "Activities are linked to this room; you cannot delete it. Please delete the activities first."
-            new:
-                title: Add a room
-                location_title: Location
-                choose_image: Choose image
-                change_image: Change
-                activities_title: Activities
-            edit:
-                title: "Edit room \"%{label}\""
-                location_title: Location
-                image_title: Image
-                activities_title: Activities
-            edit_activities:
-                title: "Room activities: %{label}"
-        seasons:
-            index:
-                heading: Season management
-                create: Create a new season
-            new:
-                heading: New season
-            edit:
-                heading: 'Edit "%{label}"'
-                warning: 'Warning:'
-                autosave_notice: Any change made to the table is saved immediately, even without pressing the save buttons.
-            form:
-                save_error_title: Unable to save the season.
-                save_error_body: Please correct the fields highlighted in red below.
-                for_the_season: For the season
-                no_next_season: "<none>"
-        teachers:
-            index:
-                heading: Teacher information
-        students:
-            index:
-                title: "%{teacher}'s course list"
-                lesson_slot: "%{day} from %{start} to %{end}: %{activity} lesson"
-                group: "group %{name}"
-                room: "room %{name}"
-                from_date: "from %{date}"
-                until_date: "until %{date}"
-        errors:
-            base_renderer_error:
-                heading: "Error %{code}"
-        static_pages:
-            landing:
-                collective_courses_heading: Group Classes
-                workshops_heading: Workshops
-                membership_heading: Membership
-                details_link: "Details »"
-            about:
-                heading: About Elvis
-        cgu:
-            index:
-                title: Privacy policy and personal data processing.
-                gdpr_intro: "The General Data Protection Regulation (EU Regulation 2016/679), referred to as the \"GDPR,\" came into force on May 25, 2018, and %{school_name} is committed to complying with it for all personal data processing carried out within Elvis."
-                objectives_intro: "This regulation pursues 3 objectives:"
-                objective_1: Adapt the legal framework to keep pace with changes in technology and society
-                objective_2: "It continues the French Data Protection Act (Loi Informatique et Libertés) of 1978 and strengthens citizens' control over how data concerning them may be used."
-                objective_3: Harmonize rules across Europe to provide a single legal framework for professionals.
-                internal_procedures: "%{school_name} also implements appropriate internal procedures to raise its employees' awareness and to ensure these rules are followed within its organization."
-                obligations_heading: "What are %{school_name}'s obligations regarding the protection of personal data?"
-                obligations_guarantee: "%{school_name} must guarantee a high level of protection for the personal data of all Users of its services."
-                obligations_principles_intro: "%{school_name} must comply with the regulations applicable to all the personal data processing it carries out. In particular, %{school_name_lower} undertakes to comply with the following principles:"
-                principle_1: "your personal data is processed lawfully, fairly and transparently (lawfulness, fairness, transparency);"
-                principle_2: "your personal data is collected for specified, explicit and legitimate purposes, and is not further processed in a way incompatible with those purposes (purpose limitation);"
-                principle_3: "your personal data is kept adequate, relevant and limited to what is necessary in relation to the purposes for which it is processed (data minimization);"
-                principle_4: "your personal data is accurate, kept up to date, and every reasonable step is taken to ensure that inaccurate data, having regard to the purposes for which it is processed, is erased or rectified without delay (accuracy)."
-                security_measures: "%{school_name} implements appropriate technical and organizational measures to guarantee a level of security suited to the risk inherent in its processing operations, to meet regulatory requirements, and to protect the rights and data of the individuals concerned from the design stage of its processing operations."
-                final_commitment: "Finally, %{school_name} undertakes to comply with any other principle required by the regulations applicable to the protection of personal data, and more specifically regarding the rights granted to the individuals concerned, the retention periods for personal data, and obligations relating to cross-border transfers of personal data."
-                rights_heading: Your rights
-                rights_guarantee: "%{school_name} guarantees users a right to object, to access, and to rectify data concerning them"
-                rights_how_to_question: "How can you exercise your rights?"
-                rights_how_to_email: By sending a message to the address
-                registration_heading: As part of a registration on the Elvis platform
-                purposes_heading: "What are the purposes?"
-                purpose_1: Process your registration request
-                purpose_2: Find the best course for the student
-                purpose_3: Provide educational and administrative follow-up over a school season
-                storage_heading: "Where is your data stored?"
-                storage_sixmon: Elvis is software developed by Sixmon, a company based in Le Havre
-                storage_azure_prefix: Elvis is hosted on Microsoft Azure infrastructure
-                storage_azure_suffix: located in France and managed by Sixmon.
-                access_heading: "Who is likely to access your personal data?"
-                access_staff: "%{school_name} staff in charge of registrations and administrative and educational follow-up may access your personal data."
-                access_teachers: "Teachers have access to their students' contact information (email, phone, address)."
-        admin:
-            edit_mail_settings:
-                heading: "Advanced settings: Emails"
-        settings:
-            plugin:
-                title: "Plugins - %{name}"
-                submit: Apply
-        events_rules:
-            index:
-                heading: List of events
-        shared:
-            form_errors:
-                heading: "%{count} error(s) prevented this record from being saved:"
-    # Mailer subjects below are picked up by ActionMailer's own auto-resolution
-    # convention (Mailer#default_i18n_subject), whose i18n scope is
-    # [mailer_name, action_name] with no extra "views"/"mailers" wrapper -
-    # hence these live as flat top-level nodes rather than nested under `views`.
-    activity_accepted_mailer:
-        activity_accepted:
-            subject: "%{name} - Course proposal accepted"
-    activity_assigned_mailer:
-        activity_assigned:
-            subject: "%{name} - Course assignment confirmation"
-    activity_proposed_mailer:
-        activity_proposed:
-            subject: "%{name} - Pending course proposal"
-    adhesion_mailer:
-        reminder_email:
-            subject: "%{name} - Your membership will expire soon"
-    admin_cancelled_attendance_mailer:
-        cancelled_attendance:
-            subject: "%{name} - Course cancelled by a student"
-    application_mailer:
-        notify_new_application:
-            subject: "%{name} - Registration request confirmation"
-            subject_no_school: Registration request confirmation
-    payment_reminder_mailer:
-        send_payment_reminder:
-            subject: "%{name} - Payment reminder"
-    reglement_reminder_mailer:
-        send_reglement_reminder:
-            subject: "%{name} - Payment reminder"
-    upcoming_payment_mailer:
-        upcoming_payment:
-            subject: "%{name} - Upcoming payment"
-    user_cancelled_attendance_mailer:
-        cancelled_attendance:
-            subject: "%{name} - Course cancellation confirmation"
-
-    controllers:
-        absences:
-            days:
-                monday: Monday
-                tuesday: Tuesday
-                wednesday: Wednesday
-                thursday: Thursday
-                friday: Friday
-                saturday: Saturday
-                sunday: Sunday
-        settings:
-            plugin:
-                update_success: Update successful
-        practice:
-            band_types:
-                destroy:
-                    success: The band type was successfully deleted.
-            music_genres:
-                destroy:
-                    success: The music genre was successfully deleted.
-            bands:
-                destroy:
-                    success: The band was successfully deleted.
-        locations:
-            destroy:
-                linked_data_error: "This location is linked to other data (courses, for example)"
-        adhesion:
-            create:
-                failure: Unable to create the membership
-        activity_application_statuses:
-            destroy:
-                linked_applications:
-                    one: "This status is linked to %{count} registration request, so it cannot be deleted."
-                    other: "This status is linked to %{count} registration requests, so it cannot be deleted."
-                success: Deletion completed successfully.
-        remove:
-            no_elements: No item to delete
-            class_not_found: The class could not be found.
-            object_not_found: The object could not be found.
-            generic_error: An error occurred while deleting the object.
-            destroy_multiple:
-                success: Deletion complete
-        organizations:
-            create:
-                failure: "The organization could not be created."
-            update_from_user:
-                failure: "The VAT number could not be updated."
-        planning:
-            no_default_planning: "No default schedule set by the school"
-        activities_applications:
-            send_all_confirmation_mail:
-                no_users_selected: "You have not selected any users"
-                already_processed: "The selected users have already received the email or are not in an assigned/proposed course status"
-        formules:
-            destroy:
-                in_use_error: "This package is used by one or more registrations: it cannot be deleted."
-                success: Package deleted
-        users:
-            reset_password:
-                email_sent: Email sent
-            attach_users:
-                main_account_not_found: Main account not found
-            detach_user:
-                not_found: User not found
-        activity_ref_kind:
-            destroy:
-                linked_activities: "You cannot delete this family because activities are attached to it"
-        payment_schedule_options:
-            destroy:
-                success: Payment schedule option deleted
-            create:
-                success: Payment schedule option created
-            update:
-                success: Payment schedule option updated
-
-    models:
-        application_record:
-            build_subject:
-                vowel: "the %{name}"
-                feminine: "the %{name}"
-                masculine: "the %{name}"
-                plural: "the %{name}"
-            success_message: "%{subject} was successfully deleted%{suffix}"
-            destroy_params:
-                undeletable_message: "Cannot be deleted because: <br/>"
-                deletable_message: "You must first: <br/>"
-            undeletable_instruction:
-                default: "delete (if possible) the linked \"%{class_name}\""
-        user:
-            destroy_params:
-                undeletable_message: "The user cannot be deleted because: <br/>"
-            pre_destroy:
-                detach_error: "Unable to detach user %{name}. Please do it manually or contact an administrator."
-        activity_application:
-            undeletable_instruction:
-                default: "delete registration request number %{id}"
-            pre_destroy:
-                processing_error: "This registration request cannot be deleted, because the administration is processing or has yet to process it."
+          attributes:
+            default_activity_ref:
+              same_family: must belong to the same activity family
+            name:
+              blank: cannot be empty
+              taken: already exists
+        adhesion_price:
+          attributes:
+            label:
+              blank: The label is required
+            price:
+              blank: The price is required
+              greater_than_or_equal_to: The price must be greater than or equal to
+                %{count}
+            season_id:
+              taken: A price already exists for this season
+        formule:
+          attributes:
+            base:
+              at_least_one_activity: The package must contain at least one activity
+                or activity family
+            number_of_items:
+              exceeds_available_activities: cannot exceed the total number of available
+                activities (%{count})
+        level:
+          attributes:
+            base:
+              duplicate: This level already exists for season %{season}, activity
+                %{activity} and user %{user}
+        payer_payment_terms:
+          attributes:
+            base:
+              duplicate: 'Payment terms already exist for season %{season} and payer
+                %{payer}: please update them'
         season:
-            pre_destroy:
-                current_season_error: Cannot delete the current season
-        payment:
-            undeletable_instruction:
-                has_payments: They have already made payments
-        adhesion:
-            undeletable_instruction:
-                default: "delete %{name}'s membership"
-        payment_schedule:
-            undeletable_instruction:
-                linked_payments: payments are linked to this season
-        pre_application:
-            undeletable_instruction:
-                pre_registered: "This user has pre-registered. It is not possible to delete this data."
-
-    csv_exports:
-        student_columns:
-            adherent_number: Student member number
-            last_name: Student last name
-            first_name: Student first name
-            gender: Student gender
-            age: Student age
-            email: Student email address
-            address: Student postal address
-            phone: Student phone number
-            guardian_first_name: Guardian first name
-            guardian_last_name: Guardian last name
-            guardian_phone: Guardian phone number
-        applications_list:
-            request_number: "Request #"
-            activities: Activities
-            level: Level
-            action: Action
-            status: Status
-            season: Season
-            availabilities: Availabilities
-            comments: Comments
-        users_list:
-            adherent_number: Member number
-            last_name: Last name
-            first_name: First name
-            email: Email
-            phone: Phone number
-            birthday: Date of birth
-        absences_export:
-            student: Student
-            adherent_number: Member number
-            day: Day
-            day_index: Day index
-            activity: Course / activity
-            teacher: Teacher
-            date: Date
-            type: Type
-            remark: Remark
-            justified: Justified
-            unjustified: Unjustified
-
-    jobs:
-        csv_importer:
-            initializing: Initializing
-            handler_not_found: "The specified handler could not be found."
-            handler_init_error: "An error occurred while initializing the handler."
-            invalid_format: "The file format is not suitable. Please import a CSV file."
-            unexpected_headers: "The CSV file does not have the expected headers."
-            progress:
-                one: "%{count} row processed"
-                other: "%{count} rows processed"
-            completed: "%{count} rows processed - %{created} registrations created and %{ignored} existing registrations ignored."
-
-    services:
-        tes_import_handler:
-            activity_not_identified: "Unable to identify the activity requested by the student in the activity catalog (%{activity} / %{instrument})"
+          attributes:
+            closing_date_for_applications:
+              before_season_end: must be before the season end
+            end:
+              after_start: must be after the season start
+            opening_date_for_applications:
+              after_previous_season_closing: must be after the previous season's enrollment
+                closing date
+              before_season_start: must be before the season start
+            opening_date_for_new_applications:
+              after_applications_opening: must be after the re-enrollment opening
+                date
+              after_previous_season_closing: must be after the previous season's enrollment
+                closing date
+              before_applications_closing: must be before the enrollment closing date
+        user:
+          attributes:
+            base:
+              duplicate_email: An account already exists with this email.
+              duplicate_identity: An account already exists with this combination
+                of last name, first name, and date of birth.
+            password_confirmation:
+              confirmation: Password confirmation doesn't match.
+    models:
+      activities_instrument:
+        one: course/instrument association
+        other: course/instrument associations
+      activity:
+        one: course
+        other: courses
+      activity_application:
+        one: registration request
+        other: registration requests
+      activity_application_status:
+        one: Enrollment status
+        other: Enrollment statuses
+      activity_instance:
+        one: class session
+        other: class sessions
+      activity_ref:
+        one: activity
+        other: activities
+      activity_ref_cycle:
+        one: activity sequence
+        other: activity sequences
+      activity_ref_kind:
+        one: activity family
+        other: activity families
+      activity_ref_pricing:
+        one: Rate
+        other: Rates
+      activity_refs_instrument:
+        one: activity/instrument association
+        other: activity/instrument associations
+      additional_student:
+        one: additional student
+        other: additional students
+      address:
+        one: address
+        other: addresses
+      adhesion:
+        one: membership
+        other: memberships
+      answer:
+        one: answer
+        other: answers
+      application_change_questionnaire:
+        one: registration change questionnaire
+        other: registration change questionnaires
+      band:
+        one: band
+        other: bands
+      band_type:
+        one: band type
+        other: band types
+      bands_user:
+        one: band member
+        other: band members
+      comment:
+        one: comment
+        other: comments
+      conflict:
+        one: conflict
+        other: conflicts
+      consent_document:
+        one: consent document
+        other: consent documents
+      desired_activity:
+        one: desired activity
+        other: desired activities
+      desired_time_interval:
+        one: desired time slot
+        other: desired time slots
+      due_payment:
+        one: due payment
+        other: due payments
+      due_payment_status:
+        one: due payment status
+        other: due payment statuses
+      evaluation_appointment:
+        one: evaluation appointment
+        other: evaluation appointments
+      evaluation_level_ref:
+        one: evaluation level reference
+        other: evaluation level references
+      event_rules:
+        one: EventRules
+        other: EventRules
+      event_subscription:
+        one: event subscription
+        other: event subscriptions
+      export_template:
+        one: export template
+        other: export templates
+      failed_payment_import:
+        one: failed payment import
+        other: failed payment imports
+      failed_payment_import_reason:
+        one: failed payment import reason
+        other: failed payment import reasons
+      family_member_user:
+        one: family member
+        other: family members
+      flat_rate:
+        one: flat rate
+        other: flat rates
+      formule:
+        one: Package
+        other: Packages
+      formule_item:
+        one: Item
+        other: Items
+      formule_pricing:
+        one: Rate
+        other: Rates
+      holiday:
+        one: holiday
+        other: holidays
+      hours_sheet:
+        one: hours sheet
+        other: hours sheets
+      instrument:
+        one: instrument
+        other: instruments
+      level:
+        one: level
+        other: levels
+      location:
+        one: location
+        other: locations
+      material:
+        one: equipment
+        other: equipment
+      message:
+        one: message
+        other: messages
+      message_recipient:
+        one: message recipient
+        other: message recipients
+      music_genre:
+        one: music genre
+        other: music genres
+      new_student_level_questionnaire:
+        one: new student level questionnaire
+        other: new student level questionnaires
+      option:
+        one: option
+        other: options
+      pack:
+        one: Pack
+        other: Packs
+      payer_payment_terms:
+        one: payment terms for a payer
+        other: payment terms for payers
+      payment:
+        one: payment
+        other: payments
+      payment_method:
+        one: payment method
+        other: payment methods
+      payment_schedule:
+        one: payment schedule
+        other: payment schedules
+      payment_schedule_options:
+        one: payment schedule option
+        other: payment schedule options
+      payment_schedule_status:
+        one: payment schedule status
+        other: payment schedule statuses
+      payment_status:
+        one: payment status
+        other: payment statuses
+      planning:
+        one: planning
+        other: plannings
+      planning_conflict:
+        one: planning conflict
+        other: planning conflicts
+      plugin:
+        one: plugin
+        other: plugins
+      practice_room_parameter:
+        one: practice room parameter
+        other: practice room parameters
+      practice_room_planning:
+        one: practice room planning
+        other: practice room plannings
+      practice_session:
+        one: practice session
+        other: practice sessions
+      pre_application:
+        one: pre-registration
+        other: pre-registrations
+      pre_application_activity:
+        one: course assigned as part of a re-registration
+        other: courses assigned as part of a re-registration
+      pre_application_desired_activity:
+        one: desired course as part of a re-registration
+        other: desired courses as part of a re-registration
+      pricing_category:
+        one: Price category
+        other: Price categories
+      question:
+        one: question
+        other: questions
+      room:
+        one: room
+        other: rooms
+      room_activity:
+        one: activity/room association
+        other: activity/room associations
+      room_features:
+        one: room feature
+        other: room features
+      room_room_feature:
+        one: room/feature association
+        other: room/feature associations
+      school:
+        one: school
+        other: schools
+      season:
+        one: season
+        other: seasons
+      setting:
+        one: setting
+        other: settings
+      student:
+        one: student
+        other: students
+      student_attendance:
+        one: session registration
+        other: session registrations
+      student_evaluation:
+        one: student evaluation
+        other: student evaluations
+      teacher_season:
+        one: teacher/season association
+        other: teacher/season associations
+      teachers_activity:
+        one: teacher course
+        other: teacher courses
+      teachers_activity_instance:
+        one: teacher class session
+        other: teacher class sessions
+      teachers_activity_ref:
+        one: teacher activity
+        other: teacher activities
+      telephone:
+        one: phone
+        other: phones
+      time_interval:
+        one: time slot
+        other: time slots
+      time_interval_preference:
+        one: time preference
+        other: time preferences
+      time_slot:
+        one: planning time slot
+        other: planning time slots
+      user:
+        one: user
+        other: users
+      user_address:
+        one: user/address association
+        other: user/address associations
+      users_instrument:
+        one: user/instrument association
+        other: user/instrument associations
+  activity_accepted_mailer:
+    activity_accepted:
+      subject: "%{name} - Course proposal accepted"
+  activity_assigned_mailer:
+    activity_assigned:
+      subject: "%{name} - Course assignment confirmation"
+  activity_proposed_mailer:
+    activity_proposed:
+      subject: "%{name} - Pending course proposal"
+  adhesion_mailer:
+    reminder_email:
+      subject: "%{name} - Your membership will expire soon"
+  admin_cancelled_attendance_mailer:
+    cancelled_attendance:
+      subject: "%{name} - Course cancelled by a student"
+  application_mailer:
+    notify_new_application:
+      subject: "%{name} - Registration request confirmation"
+      subject_no_school: Registration request confirmation
+  common:
+    actions:
+      add: Add
+      back: Back
+      delete: Delete
+      edit: Edit
+      save: Save
+      validate: Submit
+    confirm:
+      sure: Are you sure?
+    errors:
+      access_denied: You are not allowed to do that
+    labels:
+      actions: Actions
+      active: Active
+      inactive: Inactive
+      'no': 'No'
+      'yes': 'Yes'
+  controllers:
+    absences:
+      days:
+        friday: Friday
+        monday: Monday
+        saturday: Saturday
+        sunday: Sunday
+        thursday: Thursday
+        tuesday: Tuesday
+        wednesday: Wednesday
+    activities_applications:
+      send_all_confirmation_mail:
+        already_processed: The selected users have already received the email or are
+          not in an assigned/proposed course status
+        no_users_selected: You have not selected any users
+    activity_application_statuses:
+      destroy:
+        linked_applications:
+          one: This status is linked to %{count} registration request, so it cannot
+            be deleted.
+          other: This status is linked to %{count} registration requests, so it cannot
+            be deleted.
+        success: Deletion completed successfully.
+    activity_ref_kind:
+      destroy:
+        linked_activities: You cannot delete this family because activities are attached
+          to it
+    adhesion:
+      create:
+        failure: Unable to create the membership
+    formules:
+      destroy:
+        in_use_error: 'This package is used by one or more registrations: it cannot
+          be deleted.'
+        success: Package deleted
+    locations:
+      destroy:
+        linked_data_error: This location is linked to other data (courses, for example)
+    organizations:
+      create:
+        failure: The organization could not be created.
+      update_from_user:
+        failure: The VAT number could not be updated.
+    payment_schedule_options:
+      create:
+        success: Payment schedule option created
+      destroy:
+        success: Payment schedule option deleted
+      update:
+        success: Payment schedule option updated
+    planning:
+      no_default_planning: No default schedule set by the school
+    practice:
+      band_types:
+        destroy:
+          success: The band type was successfully deleted.
+      bands:
+        destroy:
+          success: The band was successfully deleted.
+      music_genres:
+        destroy:
+          success: The music genre was successfully deleted.
+    remove:
+      class_not_found: The class could not be found.
+      destroy_multiple:
+        success: Deletion complete
+      generic_error: An error occurred while deleting the object.
+      no_elements: No item to delete
+      object_not_found: The object could not be found.
+    settings:
+      plugin:
+        update_success: Update successful
+    users:
+      attach_users:
+        main_account_not_found: Main account not found
+      detach_user:
+        not_found: User not found
+      reset_password:
+        email_sent: Email sent
+  csv_exports:
+    absences_export:
+      activity: Course / activity
+      adherent_number: Member number
+      date: Date
+      day: Day
+      day_index: Day index
+      justified: Justified
+      remark: Remark
+      student: Student
+      teacher: Teacher
+      type: Type
+      unjustified: Unjustified
+    applications_list:
+      action: Action
+      activities: Activities
+      availabilities: Availabilities
+      comments: Comments
+      level: Level
+      request_number: 'Request #'
+      season: Season
+      status: Status
+    student_columns:
+      address: Student postal address
+      adherent_number: Student member number
+      age: Student age
+      email: Student email address
+      first_name: Student first name
+      gender: Student gender
+      guardian_first_name: Guardian first name
+      guardian_last_name: Guardian last name
+      guardian_phone: Guardian phone number
+      last_name: Student last name
+      phone: Student phone number
+    users_list:
+      adherent_number: Member number
+      birthday: Date of birth
+      email: Email
+      first_name: First name
+      last_name: Last name
+      phone: Phone number
+  date:
+    formats:
+      date_month_concise: "%B %d, %Y"
+      long_date: "%B %e, %Y"
+  jobs:
+    csv_importer:
+      completed: "%{count} rows processed - %{created} registrations created and %{ignored}
+        existing registrations ignored."
+      handler_init_error: An error occurred while initializing the handler.
+      handler_not_found: The specified handler could not be found.
+      initializing: Initializing
+      invalid_format: The file format is not suitable. Please import a CSV file.
+      progress:
+        one: "%{count} row processed"
+        other: "%{count} rows processed"
+      unexpected_headers: The CSV file does not have the expected headers.
+  menu:
+    absences: Absence tracking
+    activities: Music activities
+    activity_families: Activity families
+    activity_refs: Activities
+    adhesions: Memberships
+    applications: Enrollment requests
+    courses_list: Course list
+    evaluations: Evaluation
+    evaluations_management: Evaluation management
+    evaluations_summary: Evaluation summary
+    formulas: Packages
+    home: Home
+    inscriptions: Registrations
+    instruments: Instruments
+    logout: Sign out
+    monitoring: Monitoring
+    my_applications: My enrollment requests
+    my_availabilities: My availability
+    my_evaluations: My evaluations
+    my_planning: My planning
+    my_profile: My profile
+    new_application: New registration
+    packs: Packs
+    parameters: Settings
+    params: Settings
+    payments: Payments
+    planning_rooms: Classrooms
+    planning_simulation: Schedule simulation
+    planning_teachers: Teachers
+    plannings: Plannings
+    plugins: Plugins
+    plugins_list: Plugin list
+    presences: Attendance
+    replicate_courses: Replicate courses
+    rooms_sites: Rooms and sites
+    seasons: Season management
+    students_without_slots: Students without slots
+    users: Users
+  models:
+    activity_application:
+      pre_destroy:
+        processing_error: This registration request cannot be deleted, because the
+          administration is processing or has yet to process it.
+      undeletable_instruction:
+        default: delete registration request number %{id}
+    adhesion:
+      undeletable_instruction:
+        default: delete %{name}'s membership
+    application_record:
+      build_subject:
+        feminine: the %{name}
+        masculine: the %{name}
+        plural: the %{name}
+        vowel: the %{name}
+      destroy_params:
+        deletable_message: 'You must first: <br/>'
+        undeletable_message: 'Cannot be deleted because: <br/>'
+      success_message: "%{subject} was successfully deleted%{suffix}"
+      undeletable_instruction:
+        default: delete (if possible) the linked "%{class_name}"
+    payment:
+      undeletable_instruction:
+        has_payments: They have already made payments
+    payment_schedule:
+      undeletable_instruction:
+        linked_payments: payments are linked to this season
+    pre_application:
+      undeletable_instruction:
+        pre_registered: This user has pre-registered. It is not possible to delete
+          this data.
+    season:
+      pre_destroy:
+        current_season_error: Cannot delete the current season
+    user:
+      destroy_params:
+        undeletable_message: 'The user cannot be deleted because: <br/>'
+      pre_destroy:
+        detach_error: Unable to detach user %{name}. Please do it manually or contact
+          an administrator.
+  number:
+    currency:
+      format:
+        delimiter: " "
+        format: "%n %u"
+        precision: 2
+        separator: ","
+        significant: false
+        strip_insignificant_zeros: false
+        unit: "€"
+  payment_reminder_mailer:
+    send_payment_reminder:
+      subject: "%{name} - Payment reminder"
+  reglement_reminder_mailer:
+    send_reglement_reminder:
+      subject: "%{name} - Payment reminder"
+  services:
+    tes_import_handler:
+      activity_not_identified: Unable to identify the activity requested by the student
+        in the activity catalog (%{activity} / %{instrument})
+  time:
+    formats:
+      date_month_concise: "%B %d, %Y"
+      day: "%A"
+      long_date: "%B %e, %Y"
+      short_time: "%H:%M"
+  upcoming_payment_mailer:
+    upcoming_payment:
+      subject: "%{name} - Upcoming payment"
+  user_cancelled_attendance_mailer:
+    cancelled_attendance:
+      subject: "%{name} - Course cancellation confirmation"
+  views:
+    activities_applications:
+      index:
+        create: Create an enrollment
+        title: Enrollment requests
+    activity:
+      index:
+        add_course: Add a course
+        title: Course list
+    activity_application_statuses:
+      edit:
+        title: Edit an enrollment status
+      index:
+        cols:
+          label: Label
+          stopping: Stopping?
+        error_title: Error
+        heading: Enrollment status list
+        message_title: Message
+        new_button: New status
+      new:
+        title: Create an enrollment status
+    activity_assigned_mailer:
+      activity_assigned:
+        cta_button: Go to %{name}
+        greeting_html: Hello <strong>%{name}</strong>,
+        proposed_slot_html: |-
+          A time slot has been offered to you for the course <br />
+          <strong>"%{activity}"</strong>.
+        request_info_html: 'Request #<span style="color:#0079bf">%{id}</span> concerning
+          %{first_name} %{last_name}'
+        schedule_info_html: |-
+          For the <strong>%{season}</strong> season, the course will take place on: <br />
+          <strong>%{day}</strong> <br />
+          from <strong>%{start_time}</strong>
+          to <strong>%{end_time}</strong> <br />
+          with teacher <strong>%{teacher}</strong>
+        validate_or_refuse: Accept or decline the offer by clicking the button below.
+    activity_ref:
+      edit:
+        heading: Editing activity "%{label}"
+      index:
+        add: Add an activity
+        destroy_error: You cannot delete the activity because it is linked to other
+          data.
+        destroy_error_title: Error
+        duration_hours: 'Duration: %{hours}h%{minutes}'
+        duration_minutes: 'Duration: %{minutes} minutes'
+        export: Export
+        heading: Activities reference list
+        places: 'Possible spots: %{limit} (max: %{hard_limit})'
+        type: 'Type: %{kind}'
+      new:
+        heading: Add an activity
+    activity_ref_kind:
+      form:
+        default_activity: Default activity
+        name_label: Name
+      index:
+        heading: Activity families
+      new:
+        heading: Add an activity family
+    adhesion:
+      index:
+        create: New membership
+        heading: Membership list
+      new:
+        heading: Create a membership
+    adhesion_mailer:
+      reminder_email:
+        expiring_notice: Your membership ends in 30 days.
+        greeting_html: Hello <strong>%{name}</strong>,
+        login_link: Sign in
+        subscribe_notice: to join a new activity.
+    admin:
+      edit_mail_settings:
+        heading: 'Advanced settings: Emails'
+    application_mailer:
+      notify_new_application:
+        acknowledgement_html: |-
+          We acknowledge receipt of your registration request for the <strong>%{season}</strong> season, for student <strong>%{student}</strong>
+          for the activity <strong>%{activities}</strong>
+        application_number_html: 'Here is the request number: <span style="color:
+          darkred">%{id}</span>'
+        greeting: Hello,
+    cgu:
+      index:
+        access_heading: Who is likely to access your personal data?
+        access_staff: "%{school_name} staff in charge of registrations and administrative
+          and educational follow-up may access your personal data."
+        access_teachers: Teachers have access to their students' contact information
+          (email, phone, address).
+        final_commitment: Finally, %{school_name} undertakes to comply with any other
+          principle required by the regulations applicable to the protection of personal
+          data, and more specifically regarding the rights granted to the individuals
+          concerned, the retention periods for personal data, and obligations relating
+          to cross-border transfers of personal data.
+        gdpr_intro: The General Data Protection Regulation (EU Regulation 2016/679),
+          referred to as the "GDPR," came into force on May 25, 2018, and %{school_name}
+          is committed to complying with it for all personal data processing carried
+          out within Elvis.
+        internal_procedures: "%{school_name} also implements appropriate internal
+          procedures to raise its employees' awareness and to ensure these rules are
+          followed within its organization."
+        objective_1: Adapt the legal framework to keep pace with changes in technology
+          and society
+        objective_2: It continues the French Data Protection Act (Loi Informatique
+          et Libertés) of 1978 and strengthens citizens' control over how data concerning
+          them may be used.
+        objective_3: Harmonize rules across Europe to provide a single legal framework
+          for professionals.
+        objectives_intro: 'This regulation pursues 3 objectives:'
+        obligations_guarantee: "%{school_name} must guarantee a high level of protection
+          for the personal data of all Users of its services."
+        obligations_heading: What are %{school_name}'s obligations regarding the protection
+          of personal data?
+        obligations_principles_intro: "%{school_name} must comply with the regulations
+          applicable to all the personal data processing it carries out. In particular,
+          %{school_name_lower} undertakes to comply with the following principles:"
+        principle_1: your personal data is processed lawfully, fairly and transparently
+          (lawfulness, fairness, transparency);
+        principle_2: your personal data is collected for specified, explicit and legitimate
+          purposes, and is not further processed in a way incompatible with those
+          purposes (purpose limitation);
+        principle_3: your personal data is kept adequate, relevant and limited to
+          what is necessary in relation to the purposes for which it is processed
+          (data minimization);
+        principle_4: your personal data is accurate, kept up to date, and every reasonable
+          step is taken to ensure that inaccurate data, having regard to the purposes
+          for which it is processed, is erased or rectified without delay (accuracy).
+        purpose_1: Process your registration request
+        purpose_2: Find the best course for the student
+        purpose_3: Provide educational and administrative follow-up over a school
+          season
+        purposes_heading: What are the purposes?
+        registration_heading: As part of a registration on the Elvis platform
+        rights_guarantee: "%{school_name} guarantees users a right to object, to access,
+          and to rectify data concerning them"
+        rights_heading: Your rights
+        rights_how_to_email: By sending a message to the address
+        rights_how_to_question: How can you exercise your rights?
+        security_measures: "%{school_name} implements appropriate technical and organizational
+          measures to guarantee a level of security suited to the risk inherent in
+          its processing operations, to meet regulatory requirements, and to protect
+          the rights and data of the individuals concerned from the design stage of
+          its processing operations."
+        storage_azure_prefix: Elvis is hosted on Microsoft Azure infrastructure
+        storage_azure_suffix: located in France and managed by Sixmon.
+        storage_heading: Where is your data stored?
+        storage_sixmon: Elvis is software developed by Sixmon, a company based in
+          Le Havre
+        title: Privacy policy and personal data processing.
+    devise:
+      mailer:
+        confirmation_instructions:
+          account_created_html: Your account has been created on the <strong>%{app_name}</strong>
+            platform.
+          confirm_button: Confirm my account
+          greeting_html: Hello <strong>%{name}</strong>,
+          instruction: 'Confirm your email and create a password using the link below:'
+        reset_password_instructions:
+          greeting_html: Hello <strong>%{name}</strong>,
+          instruction: 'You requested to reset your password. To change it, click
+            the button below:'
+          instruction_2: If you did not make this request, you can ignore this email.
+            Your password will remain unchanged until you click the link.
+      passwords:
+        edit:
+          password_confirmation_label: Confirmation
+          title: Change your password
+        new:
+          login_label: Email
+          submit: Send a recovery email
+          subtitle: Reset by Email
+      registrations:
+        edit:
+          password_confirmation_label: Confirm new password
+          password_length_hint:
+            one: Your password must contain at least %{count} character
+            other: Your password must contain at least %{count} characters
+          submit: Update
+          title: Edit my profile
+        new:
+          closed_body: Online registrations for the new season are currently closed.
+            You can contact us by phone so we can process your request.
+          heading: Registrations
+          new_applications_notice_html: For new registrations, come back to this page
+            on %{date}.
+          personal_space_link: personal space
+          pre_application_notice_html: The online re-registration period is open.
+            If you are already a member, you can go to your %{link}.
+        registration:
+          birthday_label: Your date of birth
+          first_name_label: Your first name
+          last_name_label: Your last name
+          password_confirmation_label: Confirm password
+      sessions:
+        new:
+          login_label: Email or Member number
+          no_account_body: You can create your account by clicking the button below
+          no_account_title: Don't have an account?
+          remember_me: Stay signed in
+          title: Access your account
+      shared:
+        links:
+          confirmation_link: Didn't receive the confirmation email?
+          sign_in_link: Link to the sign-in page
+          unlock_link: Didn't receive the unlock email?
+    errors:
+      base_renderer_error:
+        heading: Error %{code}
+    evaluation_appointments:
+      incomplete:
+        heading: New students without an evaluation slot
+    evaluation_level_ref:
+      edit:
+        heading: Editing level "%{label}"
+      index:
+        add_level: Add a level
+        heading: Evaluation levels
+      new:
+        heading: Add a level
+    events_rules:
+      index:
+        heading: List of events
+    failed_payment_imports:
+      index:
+        heading: Failed payment imports
+    formules:
+      edit:
+        heading: Edit a package
+      index:
+        heading: Packages
+      new:
+        heading: Create a package
+    instruments:
+      form:
+        label_field: Instrument name
+      index:
+        heading: Instruments
+      new:
+        heading: Add an instrument
+    layouts:
+      application:
+        base_seasons_created:
+          text: 3 seasons were created by default based on the current date
+          title: Message
+        help_center: Help center
+        my_planning: My planning
+        other_accounts: 'Other accounts:'
+        powered_by: powered by
+        terms_link: Privacy policy (Terms of Use)
+        version: version %{number}
+        version_dev: dev version
+      static_pages:
+        headline_1_html: Management<br/> software
+        headline_2_html: Group classes <br/> Workshops
+        next: Next
+        previous: Previous
+        read_more: READ MORE
+        sign_in: Sign in
+        sign_up: Sign up
+        toggle_navigation: Toggle navigation
+    locations:
+      edit:
+        title: Edit location
+      index:
+        cols:
+          name: Name
+        create_button: New location
+        error_title: Error
+        title: Locations
+      new:
+        title: New location
+    oidc/authorizations:
+      new:
+        authorize: Authorize
+        deny: Deny
+        heading: Do you authorize %{client} to access this information?
+        requested_information: Requested information
+    parameters:
+      activity_application_parameters:
+        index:
+          heading: Enrollment settings
+      csv_parameters:
+        edit:
+          heading: 'Advanced settings: CSV exports'
+      formules_parameters:
+        edit:
+          heading: 'Settings: Packages'
+      index:
+        cards:
+          csv:
+            text: Configure your CSV exports.
+            title: CSV exports
+          emails:
+            text: Configure your outgoing mail server, the sender address and your
+              recipients.
+            title: Emails
+          languages:
+            text: Choose the installation's default language and the languages offered
+              to users.
+            title: Languages
+          notifications:
+            text: Configure and edit your email templates.
+            title: Notifications
+          packages:
+            text: Enable or disable the display of packages.
+            title: Packages
+          school:
+            text: 'Set your school''s general information: name, postal address, etc.'
+            title: Your school
+          teachers:
+            text: Manage schedule permissions and the information shown to the student.
+            title: Teachers
+        edit: Edit
+        heading: Settings
+        sections:
+          général: General
+          personnalisation: Customization
+      localization_parameters:
+        index:
+          heading: Languages
+      mails_parameters:
+        edit:
+          heading: 'Advanced settings: Emails'
+      planning_parameters:
+        index:
+          heading: Schedule settings
+      rooms_parameters:
+        index:
+          heading: List of locations
+          new_site: Create a new location
+      rules_parameters:
+        edit:
+          heading: Internal rules
+      school_parameters:
+        edit:
+          no_name: No name
+      teachers_parameters:
+        edit:
+          heading: Teacher rights settings
+    partials:
+      mailer:
+        users_info_partial:
+          adherent_number_hint_html: This number lets you sign in to %{app_name}
+          adherent_number_html: 'Your identification number: <b>%{number}</b>'
+    payment_method:
+      edit:
+        heading: Editing a payment method
+      form:
+        built_in_notice: As this is a built-in payment method, you cannot change its
+          name.
+      index:
+        create: Create a payment method
+        heading: Payment methods
+      new:
+        heading: Creating a payment method
+    payment_statuses:
+      edit:
+        heading: Editing a payment status
+      index:
+        create: Create a payment status
+        heading: Payment statuses
+      new:
+        heading: New payment status
+    payments:
+      index:
+        heading: Payment tracking
+    planning:
+      actions:
+        edit: Edit
+        lock_the_planning: Lock the planning
+        unlock_the_planning: Unlock the planning
+      index_for_rooms:
+        empty: No classroom is registered.
+        heading: Classroom plannings
+        new_room: Create a new classroom
+      index_for_teachers:
+        heading: Teacher plannings
+      show:
+        my_planning: My planning
+        planning_of: Planning of
+      show_availabilities:
+        eval_text: My availability for the %{season} evaluations.
+        eval_title: New student evaluations
+        heading: My availability
+        next_season_text: My availability for the %{season} classes.
+        next_season_title: Next season's classes
+      show_availabilities_for_date:
+        copy_link_label: Copy the current season's planning
+        copy_link_message: Do you really want to import the current season's planning?
+          This will delete all changes for next season.
+        eval_range: Evaluations from %{from} to %{to}
+        heading: 'My availability:'
+        lock_link_message: Do you really want to lock the planning? You will need
+          to contact a staff member for any change.
+      show_for_conflict:
+        heading: Conflict resolution
+      show_for_room:
+        heading: Planning of the classroom
+      show_generic:
+        change_teacher: Change teacher
+        my_availabilities_for: My availability for %{season}
+        planning_of_user: Planning of %{first_name} %{last_name}
+      validation_alert:
+        admin: Teachers have until %{date} to validate their planning. They have been
+          notified.
+        teacher: You have until %{date} to validate your planning!
+        warning: Warning
+    practice:
+      band_types:
+        edit:
+          title: Edit band type
+        index:
+          cols:
+            name: Name
+          create_button: New band type
+          title: Band types
+        new:
+          title: New band type
+      bands:
+        index:
+          cols:
+            band: Band
+            music_genre: Music genre
+            type: Band type
+          create_button: New band
+          title: Bands
+          view: View
+        new:
+          title: New band
+        show:
+          band_type_label: 'Band type:'
+          blacklisted_label: 'Blacklisted:'
+          music_genre_label: 'Music genre:'
+          name_label: 'Name:'
+      flat_rates:
+        edit:
+          title: Edit flat rate
+        index:
+          cols:
+            group_rate: Group price
+            name: Name
+            nb_hours: Number of hours
+            solo_duo_rate: Solo / duo price
+          create_button: New flat rate
+          title: Flat rates
+        new:
+          title: New flat rate
+      materials:
+        edit:
+          title: Edit equipment
+        index:
+          cols:
+            name: Name
+            rental_price: Rental price
+          create_button: New equipment
+          title: Equipment
+        new:
+          title: New equipment
+      music_genres:
+        edit:
+          title: Edit music genre
+        index:
+          cols:
+            name: Name
+          create_button: New music genre
+          title: Music genres
+        new:
+          title: New music genre
+        show:
+          name_label: 'Name:'
+      room_features:
+        edit:
+          title: Edit feature
+        form:
+          active_label: 'Active:'
+        index:
+          cols:
+            name: Name
+          create_button: New feature
+          title: Room features
+        new:
+          title: New feature
+    rooms:
+      edit:
+        activities_title: Activities
+        image_title: Image
+        location_title: Location
+        title: Edit room "%{label}"
+      edit_activities:
+        title: 'Room activities: %{label}'
+      index:
+        activities_label: 'Activities:'
+        add_room: Add a room
+        delete_disabled_title: Activities are linked to this room; you cannot delete
+          it. Please delete the activities first.
+        features_label: 'Features:'
+        floor: Floor %{number}
+        ground_floor: Ground floor
+        location_line: 'Location: %{location}, floor %{floor}'
+        planning_button: Planning
+        room_kind: "%{kind} room"
+        title: Room reference list
+      new:
+        activities_title: Activities
+        change_image: Change
+        choose_image: Choose image
+        location_title: Location
+        title: Add a room
+    seasons:
+      edit:
+        autosave_notice: Any change made to the table is saved immediately, even without
+          pressing the save buttons.
+        heading: Edit "%{label}"
+        warning: 'Warning:'
+      form:
+        for_the_season: For the season
+        no_next_season: "<none>"
+        save_error_body: Please correct the fields highlighted in red below.
+        save_error_title: Unable to save the season.
+      index:
+        create: Create a new season
+        heading: Season management
+      new:
+        heading: New season
+    sessions:
+      pick_user:
+        submit: Sign in
+        title_html: Choose the account for %{email}
+    settings:
+      plugin:
+        submit: Apply
+        title: Plugins - %{name}
+    shared:
+      form_errors:
+        heading: "%{count} error(s) prevented this record from being saved:"
+    static_pages:
+      about:
+        heading: About Elvis
+      landing:
+        collective_courses_heading: Group Classes
+        details_link: Details »
+        membership_heading: Membership
+        workshops_heading: Workshops
+    student_evaluations_stats:
+      stats:
+        heading: Evaluation summary - %{season}
+    students:
+      index:
+        from_date: from %{date}
+        group: group %{name}
+        lesson_slot: "%{day} from %{start} to %{end}: %{activity} lesson"
+        room: room %{name}
+        title: "%{teacher}'s course list"
+        until_date: until %{date}
+    teachers:
+      index:
+        heading: Teacher information
+    users:
+      _family:
+        activities_heading: Activities
+        add_contact: Add a contact
+        edit_family_link: Edit family link
+        empty_state_heading: No family members added yet
+        empty_state_html: If you would like to register a family member for an activity,
+          click the <b>add a new member</b> button, then click the corresponding <b>pre-register</b>
+          button
+        family_link_heading: Family link
+        heading: 'Household:'
+        legal_referent_title: Legal guardian
+        no_family_link_heading: No family link
+        paying_title: Payer
+        preregister_action: Pre-register
+        profile_heading: Profile
+        relation_attached: Linked user
+        subtitle_other: People whose registrations are managed by %{name}
+        subtitle_self: People whose registrations you manage
+        to_call_title: Contact first
+        view_action: View
+      adherent_card:
+        civility_mr: Mr
+        civility_mrs: Mrs
+        course: "> %{activity} course (%{civility} %{last_name})"
+        room_at_location: Room %{room} at %{location} / %{day}, %{time}
+        title: Member card
+      attach_view:
+        attached_notice: This account is linked to
+        heading: Linked accounts for
+      create_account:
+        email_prompt_confirm: Is this your email?
+        email_prompt_missing: Please complete your email
+        password_confirmation_label: Confirm your password
+        password_label: Password
+      edit_activities:
+        heading: "%{name}'s activities"
+      edit_password:
+        already_set_notice: Password already set, please sign in with your login/password
+        confirm_password_label: Confirm new password
+        heading: Set your password
+        new_password_label: New password
+        redirect_link: Go to the sign-in page
+      evaluate:
+        heading: Student evaluations
+        info_notice: These evaluations will be used to register students for the next
+          season
+      first_login:
+        email_prompt_confirm: Is this your email?
+        email_prompt_missing: Please complete your email
+        heading: Welcome!
+      index:
+        create_user: Create a user
+        heading: User list
+        import_users: Import users
+      new:
+        activities_label: Activities
+        attached_account_label: Linked account
+        confirm_email_label: Send a confirmation email
+        heading: Create a new user
+        submit: Create
+      presence_sheet:
+        heading: Attendance sheet
+        next_day_title: Next day
+        next_week_title: Next week
+        previous_day_title: Previous day
+        previous_week_title: Previous week
+        teacher_heading: 'Teacher: %{name}'
+      previsional_groups:
+        continues_next_season: The student is continuing next season
+        group_change_informed: Group change, informed
+        group_change_uninformed: Group change, not informed
+        heading: Schedule simulation
+        info_notice: This preview is generated from the answers about group changes.
+          These answers can be found in the student evaluation questionnaires filled
+          in by the teacher at the end of the year.
+        legend_heading: Legend
+        no_group_change: No group change
+        stops_next_season: The student is not continuing next season
+        uncertain: The student is undecided
+      season_activities:
+        heading: Student evaluation
+        info_notice: The levels shown are those recommended for the next season (%{season}).
+      show:
+        address_label:
+          one: Address
+          other: Addresses
+        adhesion_valid_until: Membership valid until
+        age_years:
+          one: "%{count} year"
+          other: "%{count} years"
+        application_request_action: Application request
+        attached_badge: Linked user
+        attached_to_label: Linked to user
+        delete_user_additional_message: Any linked users will automatically be detached
+          and sent an email to create their password (if they have an email different
+          from this account).
+        delete_user_button: Delete this user
+        delete_user_confirm: This will delete the user, their family links, and their
+          membership. Are you sure?
+        edit_password_action: Edit password
+        edit_profile_action: Edit profile
+        email_label: Email
+        error_title: Error
+        expires_in_days:
+          one: Expires in %{count} day
+          other: Expires in %{count} days
+        hours_sheet_action: Hours sheet
+        member_number: Member No. %{number}
+        no_activity: No activity
+        no_phone: No phone number
+        payments_action: Payments
+        phone_label: Phone
+        planning_action: Schedule
+        preregistrations_action: Pre-registrations
+        register_action: Register
+        reset_password_button: Reset password
+        reset_password_error: The password could not be reset. Please try again.
+        reset_password_success: An email has been sent to the user to reset their
+          password.
+        season_courses_action: Season courses
+        stopped_on: Stopped on
+        student_badge: Student
+        tab_absences: Absences
+        tab_activities: Activities
+        tab_family: Family links
+        unknown_schedule: Unknown schedule
+        user_badge: User
+      upload_csv:
+        heading: Import your community

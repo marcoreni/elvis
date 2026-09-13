@@ -2,7 +2,7 @@ import React from "react";
 import { MESSAGES } from "../../tools/constants";
 import InputSelect from "../common/InputSelect";
 import { toast } from "react-toastify";
-import * as api from "../../tools/api.js";
+import * as api from "../../tools/api";
 import AddCourseSummary from "./AddCourseSummary";
 
 // NOTE: exported as a plain class, not withTranslation()-wrapped. This is a

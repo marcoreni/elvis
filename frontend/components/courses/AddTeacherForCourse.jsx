@@ -1,6 +1,6 @@
 import React from "react";
 import InputSelect from "../common/InputSelect";
-import * as api from "../../tools/api.js";
+import * as api from "../../tools/api";
 import { toast } from "react-toastify";
 import { MESSAGES } from "../../tools/constants";
 import AddCourseSummary from "./AddCourseSummary";

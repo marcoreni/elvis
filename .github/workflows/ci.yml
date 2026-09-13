@@ -31,16 +31,19 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-      # --cgroupns=host works around a NullPointerException in ES 7.16.3's bundled JDK when it
-      # probes cgroups under a container's own (private) cgroup namespace, which is the default
-      # on current GH-hosted runners (cgroup v2 host + Docker's default private cgroupns) -
-      # confirmed by reproducing the crash against this exact image/runner combination.
+      # ES 7.16.3's bundled JDK NPEs on startup (`Could not reconfigure JMX ... anyController is
+      # null`, in jdk.internal.platform.cgroupv2.CgroupV2Subsystem) while probing cgroups for its
+      # own container-aware JMX/OS-bean setup, on current GH-hosted runners' cgroup-v2-only hosts.
+      # `--cgroupns=host` alone did not fix it (confirmed by reproducing the crash with it set);
+      # `-XX:-UseContainerSupport` below disables that JVM cgroup probing outright, which is safe
+      # here since heap size is already pinned explicitly via ES_JAVA_OPTS rather than relying on
+      # container-aware auto-sizing.
       elasticsearch:
         image: docker.elastic.co/elasticsearch/elasticsearch:7.16.3
         env:
           discovery.type: single-node
           bootstrap.memory_lock: "true"
-          ES_JAVA_OPTS: "-Xms512m -Xmx512m"
+          ES_JAVA_OPTS: "-Xms512m -Xmx512m -XX:-UseContainerSupport"
         ports:
           - 9200:9200
         options: >-
@@ -91,7 +94,7 @@ jobs:
       # request/feature specs that render react_component views — build it up front rather than
       # relying on shakapacker's test-env compile-on-demand (config/shakapacker.yml `compile: true`
       # under `test:`), which isn't reliable in CI. See docs/Modernization-Roadmap.md item 1.
-      - name: Build test webpack manifest
+      - name: Build test Shakapacker manifest
         env:
           RAILS_ENV: test
           NODE_ENV: test
@@ -110,14 +113,11 @@ jobs:
         with:
           bundler-cache: true
       # bin/i18n-tasks, not `bundle exec i18n-tasks` — the global binstub crashes on a missing
-      # logger in this repo (see docs/ i18n notes). Run the four content checks individually
-      # rather than the bundled `health` task, which also runs `check-normalized` — the locale
-      # YAML files aren't currently normalize-clean (a large, purely-cosmetic reformat, out of
-      # scope for this workflow) and that's not one of the checks this job is meant to gate on.
-      - run: bin/i18n-tasks missing
-      - run: bin/i18n-tasks unused
-      - run: bin/i18n-tasks check-consistent-interpolations
-      - run: bin/i18n-tasks check-reserved-interpolations
+      # logger in this repo (see docs/ i18n notes). `health` includes `check-normalized`, which
+      # requires config/locales/*.yml to already be in normalize's canonical (comment-stripping)
+      # form — see docs/I18n.md's "Note on config/locales/*.yml comments" for where any inline
+      # documentation that used to live in these files now lives instead.
+      - run: bin/i18n-tasks health
 
   vitest:
     runs-on: ubuntu-latest

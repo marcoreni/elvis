@@ -18,7 +18,7 @@ import TimePreferencesStep, {
     PREFERENCES_MODE,
 } from "./TimePreferencesStep";
 import EvaluationIntervalChoice from "./EvaluationIntervalChoice";
-import * as api from "../../tools/api.js";
+import * as api from "../../tools/api";
 import {generateUserInfos, infosFromUser} from "../../tools/obj";
 import {toast} from "react-toastify";
 import ApplicationChangeQuestionnaire from "./ApplicationChangeQuestionnaire";

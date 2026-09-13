@@ -2,7 +2,7 @@ import React from "react";
 import InputSelect from "../common/InputSelect";
 import { toast } from "react-toastify";
 import { MESSAGES } from "../../tools/constants";
-import * as api from "../../tools/api.js";
+import * as api from "../../tools/api";
 import AddCourseSummary from "./AddCourseSummary";
 
 export default class AddLocationForCourse extends React.Component {

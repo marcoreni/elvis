@@ -1,6 +1,6 @@
 import React from "react";
 import Swal from 'sweetalert2';
-import * as api from "../../tools/api.js";
+import * as api from "../../tools/api";
 import { csrfToken } from "../utils";
 import { withTranslation } from "react-i18next";
 

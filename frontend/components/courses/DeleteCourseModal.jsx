@@ -6,7 +6,7 @@ import { withTranslation } from "react-i18next";
 import * as TimeIntervalHelpers from "../planning/TimeIntervalHelpers";
 import YearlyCalendar from "../planning/YearlyCalendar";
 import { ISO_DATE_FORMAT } from "../utils";
-import * as api from "../../tools/api.js";
+import * as api from "../../tools/api";
 import swal from "sweetalert2";
 
 class DeleteCourseModal extends React.Component {

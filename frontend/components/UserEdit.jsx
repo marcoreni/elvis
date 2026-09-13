@@ -5,7 +5,7 @@ import {withTranslation} from "react-i18next";
 import LevelInfos from "./personalInfos/LevelInfos";
 import UserForm from "./userForm/UserForm";
 import TabbedComponent from "./utils/ui/tabs";
-import * as api from "../tools/api.js";
+import * as api from "../tools/api";
 import {redirectTo} from "../tools/url";
 import {infosFromUser} from "../tools/obj";
 import {fullname} from "../tools/format";
