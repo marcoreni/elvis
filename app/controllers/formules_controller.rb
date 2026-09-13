@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class FormulesController < ApplicationController
   def index
     @formules = Formule.all

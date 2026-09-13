@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module ActivityApplications
   class UnregisterStudentFromActivityInstances
     def initialize(application, from_date = nil, to_date = nil)

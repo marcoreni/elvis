@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class PluginsController < ApplicationController
   before_action :set_current_user
 

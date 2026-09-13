@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class AddSubstitutableToActivityRef < ActiveRecord::Migration[6.1]
   def up
     add_column :activity_refs, :substitutable, :boolean, default: true

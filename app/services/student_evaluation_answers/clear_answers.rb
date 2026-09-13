@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module StudentEvaluationAnswers
   class ClearAnswers
     def initialize(evaluation, question, value)

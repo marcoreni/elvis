@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Activities
   class ConflictsChecker
     def initialize(instances_to_check)

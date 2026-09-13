@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class AddAvailabilityMessageToParameters < ActiveRecord::Migration[6.0]
   def up
     Parameter.create!(

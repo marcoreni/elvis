@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class FailedPaymentImportsController < ApplicationController
   def index
     @failed_imports = FailedPaymentImport.all

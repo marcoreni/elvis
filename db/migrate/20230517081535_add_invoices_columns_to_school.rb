@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class AddInvoicesColumnsToSchool < ActiveRecord::Migration[6.1]
   def up
     add_column :schools, :entity_subject_to_vat, :boolean, default: false

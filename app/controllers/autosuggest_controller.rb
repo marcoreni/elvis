@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class AutosuggestController < ApplicationController
   def cities
     cities = User.select(:city)

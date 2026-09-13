@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Practices
   class CreateSession
     def initialize(band, room, start, stop)

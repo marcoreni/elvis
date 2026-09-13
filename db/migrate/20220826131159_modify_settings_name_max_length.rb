@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class ModifySettingsNameMaxLength < ActiveRecord::Migration[6.1]
   def up
     change_column :settings, :name, :string, limit: 100

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Holidays
   # récupère les vacances de l'année scolaire en appelant l'API du gouvernement français
   class SchoolHolidays

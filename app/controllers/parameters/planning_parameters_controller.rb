@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class Parameters::PlanningParametersController < ApplicationController
   def index
     show_availabilities = Parameter.find_or_create_by(

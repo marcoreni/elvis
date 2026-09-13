@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class AddActivityProposedAndFixDataToNotificationTemplates < ActiveRecord::Migration[6.1]
   def change
     NotificationTemplate.create_or_find_by!(

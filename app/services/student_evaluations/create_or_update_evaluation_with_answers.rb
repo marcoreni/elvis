@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module StudentEvaluations
   class CreateOrUpdateEvaluationWithAnswers
     def initialize(teacher, student, activity, season, answers = nil)

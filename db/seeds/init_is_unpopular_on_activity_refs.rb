@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 unpopular_refs = ActivityRef.joins(:activity_ref_kind).where(activity_ref_kinds: { name: ["MANDOLINE", "UKULELE",
                                                                                           "GUITARE & CHANT"] })
 

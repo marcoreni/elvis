@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class PaymentScheduleController < ApplicationController
   def show
     @current_user = current_user

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class StudentAttendancesController < ApplicationController
   def update
     attendance = StudentAttendance.find(params[:id])

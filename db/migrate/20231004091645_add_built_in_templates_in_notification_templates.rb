@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class AddBuiltInTemplatesInNotificationTemplates < ActiveRecord::Migration[6.1]
   def change
     if NotificationTemplate.find_by(id: 1).nil?

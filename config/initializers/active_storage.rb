@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 Rails.configuration.to_prepare do
   ActiveStorage::Blob.class_eval do
     before_create :generate_key_with_prefix

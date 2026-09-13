@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class FixMissingDurationInActivityRef < ActiveRecord::Migration[6.1]
   def up
     return if column_exists? :activity_refs, :duration

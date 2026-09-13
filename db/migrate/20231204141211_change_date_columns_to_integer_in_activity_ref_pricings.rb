@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class ChangeDateColumnsToIntegerInActivityRefPricings < ActiveRecord::Migration[6.1]
   def up
     remove_column :activity_ref_pricings, :from

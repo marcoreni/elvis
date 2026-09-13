@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class UserCreationValidator < ActiveModel::Validator
 end
 

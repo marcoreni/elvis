@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class UsersIndex < Chewy::Index
   settings analysis: {
     filter: {

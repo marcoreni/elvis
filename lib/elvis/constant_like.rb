@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Elvis
   module ConstantLike
     def self.included(mod)

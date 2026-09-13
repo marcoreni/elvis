@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class PaymentStatusesController < ApplicationController
   before_action :set_current_user
   before_action -> { authorize! :manage, PaymentStatus }

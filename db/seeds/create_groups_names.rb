@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 def determine_group_name(ref)
   if ref.activity_ref_kind.name == "ACTIONS CULTURELLES"
     "AC"

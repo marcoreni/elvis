@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module EvaluationAppointments
   class CreateOrUpdate
     def initialize(student, activity_application, activity_ref, teacher, time_interval, season)

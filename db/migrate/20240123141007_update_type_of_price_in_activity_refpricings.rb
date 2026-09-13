@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class UpdateTypeOfPriceInActivityRefpricings < ActiveRecord::Migration[6.1]
   def up
     change_column :activity_ref_pricings, :price, :float

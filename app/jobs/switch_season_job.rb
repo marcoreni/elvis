@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class SwitchSeasonJob < ApplicationJob
   def perform(params)
     new_season = Season.find(params.is_a?(Array) ? params[0] : params)

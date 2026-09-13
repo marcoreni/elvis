@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class Parameters::ActivityApplicationParametersController < ApplicationController
   def index; end
 

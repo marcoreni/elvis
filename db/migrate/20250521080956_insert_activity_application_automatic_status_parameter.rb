@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class InsertActivityApplicationAutomaticStatusParameter < ActiveRecord::Migration[6.1]
   def up
     execute <<~SQL

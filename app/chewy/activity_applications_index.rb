@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class ActivityApplicationsIndex < Chewy::Index
   settings analysis: {
     filter: {

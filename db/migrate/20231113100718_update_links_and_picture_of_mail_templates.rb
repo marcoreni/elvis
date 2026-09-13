@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class UpdateLinksAndPictureOfMailTemplates < ActiveRecord::Migration[6.1]
   def up
     NotificationTemplate.reset_column_information

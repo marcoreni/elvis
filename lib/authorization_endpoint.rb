@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class AuthorizationEndpoint
   attr_accessor :app, :account, :client, :redirect_uri, :response_type, :scopes, :_request_, :request_uri,
                 :request_object

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Activities
   class CheckUniqGroup
     def initialize(group_name, teacher, time_interval)

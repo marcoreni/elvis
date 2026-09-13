@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # to see mailers previews :
 # `http://localhost:7212/rails/mailers`
 class DeviseMailerPreview < ActionMailer::Preview

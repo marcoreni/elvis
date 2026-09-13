@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Payments
   # Service class for file import
   # Reads and parses a csv file to

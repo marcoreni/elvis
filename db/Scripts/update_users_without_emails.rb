@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 updated_rows = []
 
 ActiveRecord::Base.transaction do

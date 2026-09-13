@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class MinorChangesInActivityRefPricingsAndPricingCategories < ActiveRecord::Migration[6.1]
   def change
     change_column :pricing_categories, :number_lessons, :integer, null: true

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 un_a_deux_enfance = ActivityRef.find_by(label: "Eveil 12/24 mois")
 deux_a_trois_enfance = ActivityRef.find_by(label: "Eveil 24 mois / 3 ans")
 trois_a_quatre_enfance = ActivityRef.find_by(label: "Eveil 3/4 ans")

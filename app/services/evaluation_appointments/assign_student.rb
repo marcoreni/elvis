@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module EvaluationAppointments
   class AssignStudent
     def initialize(time_interval, student, activity_application)

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 EVALUABLE_KINDS = [
   "BASSE",
   "PIANO",

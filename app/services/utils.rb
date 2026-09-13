@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Utils
   def self.format_for_suggestion(user, activity, from_date)
     instance = activity.closest_instance(from_date)

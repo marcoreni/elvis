@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class UpdateNotificationTemplatesName < ActiveRecord::Migration[6.1]
   def up
     NotificationTemplate.where(path: "application_mailer/notify_new_application")

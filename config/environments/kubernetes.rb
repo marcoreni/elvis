@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 ##########################################################
 # Ce fichier est dédié à l'environnement de prod d'ELVIS
 ##########################################################

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class AddInvoicesColumnsToSchools < ActiveRecord::Migration[6.1]
   def up
     add_column :schools, :contact_user, :integer

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class MaxActivityRefPriceForSeason < ApplicationRecord
   belongs_to :season
 

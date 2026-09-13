@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class EvaluationLevelRefController < ApplicationController
   load_and_authorize_resource param_method: :evaluation_level_params
 

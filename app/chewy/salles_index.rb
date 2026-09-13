@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class SallesIndex < Chewy::Index
   settings analysis: {
     filter: {

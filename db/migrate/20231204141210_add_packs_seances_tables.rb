@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class AddPacksSeancesTables < ActiveRecord::Migration[6.1]
   def change
     create_table :pricing_categories do |t|

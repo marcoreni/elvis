@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Seasons
   # ajoute les jours fériés à la saison
   class PopulateHolidays

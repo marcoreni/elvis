@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class RenameShowFormulesInParameters < ActiveRecord::Migration[6.1]
   def up
     parameter = Parameter.find_by(label: "show_formules")

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Users
   class SearchUser
     def initialize(last_name, first_name, birthday, season_id, adherent_number, includes, exact_search = true,

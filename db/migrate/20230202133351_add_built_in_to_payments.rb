@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class AddBuiltInToPayments < ActiveRecord::Migration[6.1]
   def self.up
     add_column :payment_statuses, :built_in, :boolean, default: false

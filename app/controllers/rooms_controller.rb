@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class RoomsController < ApplicationController
   load_and_authorize_resource param_method: :room_params
 

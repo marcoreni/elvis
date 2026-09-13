@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class RemoveVersionFromPlugin < ActiveRecord::Migration[6.1]
   def self.up
     remove_column :plugins, :version

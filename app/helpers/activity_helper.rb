@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module ActivityHelper
   def format_for_display(activity)
     ref = activity.activity_ref.label

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class StudentEvaluationsController < ApplicationController
   def create
     teacher = User.find(params[:teacher_id])

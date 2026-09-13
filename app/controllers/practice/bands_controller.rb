@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class Practice::BandsController < ApplicationController
   before_action :set_band, only: %i[show edit update destroy]
   before_action :set_current_user

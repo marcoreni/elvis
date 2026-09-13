@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 current_season = Season.current
 next_season = Season.next
 FamilyMemberUser.transaction do

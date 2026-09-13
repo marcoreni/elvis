@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class FormuleItem < ApplicationRecord
   belongs_to :formule
   belongs_to :item, polymorphic: true

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class AddMessageMailerToNotificationTemplates < ActiveRecord::Migration[6.1]
   def up
     ActiveRecord::Base.connection.reset_pk_sequence!(:notification_templates)

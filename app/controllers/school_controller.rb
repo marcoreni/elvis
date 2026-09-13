@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class SchoolController < ApplicationController
   def get_zone_by_address
     address = params[:address]

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 Question.create!(
   question_type: "application_change_questionnaire",
   is_required: true,

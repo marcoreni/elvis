@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class AdhesionMailer < LayoutMailer
   prepend_view_path NotificationTemplate.resolver
   default from: Parameter.get_value("app.application_mailer.default_from")

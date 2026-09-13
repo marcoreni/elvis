@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 s = Season.find(5) # cela correspond à la saison 2020-2022 sur la prod, à changer si besoin
 
 # les jours sur lesquels il manque des cours à cause du fait qu'il y ait des vacances dessus

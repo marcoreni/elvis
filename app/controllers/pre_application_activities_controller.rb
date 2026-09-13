@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class PreApplicationActivitiesController < ApplicationController
   # (pour admin ??) mise à jour du statut de la préinscription
   def update
