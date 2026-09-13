@@ -88,7 +88,20 @@ const StudentEvaluationStats: React.FC<StudentEvaluationStatsProps> = ({
         },
     ];
 
-    return <Table columns={columns} data={stats} sortable />;
+    return (
+        <Table
+            columns={columns}
+            data={stats}
+            sortable
+            previousText={t("common:reactTable.previousText")}
+            nextText={t("common:reactTable.nextText")}
+            loadingText={t("common:reactTable.loadingText")}
+            noDataText={t("common:reactTable.noDataText")}
+            pageText={t("common:reactTable.pageText")}
+            ofText={t("common:reactTable.ofText")}
+            rowsText={t("common:reactTable.rowsText")}
+        />
+    );
 };
 
 export default StudentEvaluationStats;
