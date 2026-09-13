@@ -251,16 +251,10 @@ differently-shaped flake (`spec/requests/locations_destroy_spec.rb` expecting a 
 and getting `nil`) co-occurs and also reproduces under plain (non-`--order random`) runs, confirming
 real wall-clock nondeterminism.
 
-Scope confirmed wider 2026-09-13 while validating the new `.github/workflows/ci.yml` (see
-`docs/Modernization-Roadmap.md` item 1): two full local `bundle exec rspec` runs against a clean
-`develop` checkout (no code changes, services via plain `docker run` matching CI's
-postgres:14.0/ES:7.16.3/redis versions) hit the same "expected en, got fr" shape in
-`spec/controllers/remove_controller_display_class_name_spec.rb` and
-`spec/models/formule_i18n_spec.rb` as well — different specs failed on each of two consecutive
-runs, consistent with this being the same underlying Heisenbug rather than three separate bugs.
-CI's `rspec` job (fail-on-any-failure) will occasionally redden because of this pre-existing issue;
-that's expected until this is actually fixed, not a sign something is wrong with the workflow
-itself.
+Scope confirmed wider 2026-09-13: same "expected en, got fr" shape also seen in
+`remove_controller_display_class_name_spec.rb` and `formule_i18n_spec.rb` on a clean `develop`
+checkout — same Heisenbug, not three separate bugs. Now the priority (user wants CI reliably
+green, not just present).
 
 Best lead so far: `ActiveSupport::Notifications.subscribe(/render_(template|partial)\.action_view/)`
 on a failing run shows the failing example's `mail.body.encoded` call produces **zero** render

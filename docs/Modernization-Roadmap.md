@@ -7,56 +7,16 @@ of each item as it moves; when an item is fully done, remove it and note the fac
 commit/PR reference) rather than leaving a stale "done" entry — same discipline as
 `docs/KnownIssues.md`.
 
-## 1. CI workflow on develop/main — done, see `.github/workflows/ci.yml` (pushed to develop 2026-09-13)
+## 1. CI workflow on develop/main — mostly done, see `.github/workflows/ci.yml`
 
-Five jobs on push/PR to `develop`/`main`: `rspec` (with `postgres:14.0` + ES `7.16.3` + `redis`
-service containers, builds `public/packs-test/` via `RAILS_ENV=test bin/shakapacker` first — a
-stale/missing manifest otherwise causes ~100+ spurious failures), `i18n-tasks health`, `vitest`,
-and `tsc`/`rubocop` gated on regression past a checked-in baseline (5 / 1037) rather than failing
-on the pre-existing backlog. `plugins.json` is gitignored/absent from a fresh checkout, so
-`bundle install` installs zero plugin gems and no `GITHUB_TOKEN` secret is needed.
-
-Getting this fully green (not just "workflow file exists") surfaced four real, independent
-pre-existing issues on `develop` — the first Actions run only got past "Initialize containers" on
-attempt three, and the manifest-build/rspec steps had never actually executed in CI before that:
-
-1. **ES 7.16.3's bundled JDK crashes on startup** (`Could not reconfigure JMX ... anyController is
-   null`, in `jdk.internal.platform.cgroupv2.CgroupV2Subsystem`) on current GH-hosted runners'
-   cgroup-v2-only hosts. `--cgroupns=host` alone did not fix it (tested, still crashed); fixed by
-   adding `-XX:-UseContainerSupport` to `ES_JAVA_OPTS`, which disables the JVM's container-cgroup
-   probing outright — safe here since heap size is already pinned explicitly.
-2. **`i18n-tasks health`'s `check-normalized` failed** — `config/locales/{fr,en,devise.en}.yml`
-   weren't normalize-clean, and `i18n-tasks normalize` strips YAML comments on its round-trip.
-   Rather than either lose real documentation (currency-formatting rationale, dynamic-key
-   resolution notes, mailer auto-subject convention) or leave the files un-normalized, the four
-   comment blocks that existed were relocated to `docs/I18n.md`'s new "Note on
-   `config/locales/*.yml` comments" section (content verified byte-identical before/after via a
-   parsed-YAML deep-equality check, not just visual diff), then `normalize` was run for real. The
-   `i18n-tasks` job runs the full `health` task again.
-3. **The test-env Shakapacker/Rspack build itself failed outright** (exit 1, 11 module-not-found
-   errors) — 10 components under `frontend/components/` imported `../../tools/api.js` /
-   `../../../tools/constants.js` with an explicit `.js` extension, but both files were renamed to
-   `.ts` during an in-flight, separate TS-conversion effort; the other ~46 call sites already
-   import without an extension (the working convention). This was breaking `yarn build` (the real
-   production bundle) on `develop` already, independent of CI — fixed by dropping the stale
-   extension at all 10 call sites (plus one `vi.mock(...)` specifier in
-   `AddPreAppFromStopApp.test.jsx` that needed to keep matching its component's import path).
-4. **`spec/controllers/application_controller_spec.rb`'s pre-existing "expected en, got fr" flake
-   (`docs/KnownIssues.md`) is wider than previously documented** — two clean-`develop` local
-   `rspec` runs (services via plain `docker run` on the exact CI-pinned image versions, zero code
-   changes) each hit a different one of three specs with the same failure shape
-   (`application_controller_spec.rb`, `remove_controller_display_class_name_spec.rb`,
-   `formule_i18n_spec.rb`). Confirmed pre-existing and unrelated to anything in this session — not
-   fixed here, `docs/KnownIssues.md` updated with the wider scope. CI's `rspec` job will
-   occasionally redden because of it until roadmap item 5 actually resolves it.
-
-Also fixed while verifying this locally: CLAUDE.md called this app's bundler "webpack" in four
-places — it's actually Rspack (`assets_bundler: "rspack"` in `config/shakapacker.yml`, `@rspack/*`
-in `package.json`, `bin/shakapacker-dev-server` in `Procfile`); corrected.
-
-Verified via two full local `bundle exec rspec` runs (300 examples, only the known flake above
-failing) plus `yarn vitest run` (1273/1273) and a clean `bin/shakapacker` test build, all against
-service containers matching CI's exact pinned versions — not just re-reading a green Actions UI.
+i18n-tasks/vitest/tsc/rubocop green. `rspec` job still red in Actions: ES 7.16.3's bundled JDK
+NPEs on GH runners' cgroup v2 hosts (`anyController is null`); `--cgroupns=host` and
+`-XX:-UseContainerSupport` (via both `ES_JAVA_OPTS` and `JAVA_TOOL_OPTIONS`) didn't fix it,
+currently trying explicit `--memory`/`--cpus` limits. Also fixed along the way: a genuinely broken
+production Rspack build on `develop` (10 components importing `tools/api.js`/`tools/constants.js`
+with a stale `.js` extension after a TS rename), and locale YAML comments that `i18n-tasks
+normalize` was silently stripping — moved to `docs/I18n.md`. See item 5 for the flake this job
+will occasionally hit even once ES is fixed.
 
 ## 2. Orphaned-code tracking file — status: not started
 

@@ -6,10 +6,7 @@ on:
   pull_request:
     branches: [develop, main]
 
-# rubocop/tsc have large pre-existing backlogs (see docs/KnownIssues.md and
-# docs/Modernization-Roadmap.md item 1) that shouldn't block unrelated PRs. Their jobs below
-# gate on the count *increasing* past these baselines rather than on any offense/error at all.
-# Lower the baseline whenever debt is paid down; raising it should only happen with a good reason.
+# rubocop/tsc gate on regression past these baselines, not on the pre-existing backlog.
 env:
   RUBOCOP_BASELINE_OFFENSES: 1037
   TSC_BASELINE_ERRORS: 5
@@ -31,25 +28,14 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-      # ES 7.16.3's bundled JDK NPEs on GH-hosted runners' cgroup-v2-only hosts
-      # (`Cannot invoke "jdk.internal.platform.CgroupInfo.getMountPoint()" because
-      # "anyController" is null`). Confirmed (by reading the actual crash trace across two CI
-      # attempts) that this happens in ES's own `JvmOptionsParser` bootstrap helper - a *separate*
-      # small `java` invocation that `bin/elasticsearch` runs first to compute default JVM
-      # options, before the main ES process starts - not in the main ES JVM itself. `ES_JAVA_OPTS`
-      # (tried first, with -XX:-UseContainerSupport added: didn't fix it) is only read by the
-      # main process's launch script, so it never reaches that bootstrap helper.
-      # `JAVA_TOOL_OPTIONS` is a JVM-level env var every `java` invocation in the container picks
-      # up automatically (prints a harmless "Picked up JAVA_TOOL_OPTIONS" line), including the
-      # bootstrap helper - so -XX:-UseContainerSupport actually reaches the JVM that's crashing.
-      # `--cgroupns=host` alone (tried first) did not fix it either.
+      # ES 7.16.3's bundled JDK NPEs on GH runners (cgroup-v2 "anyController is null").
+      # --memory/--cpus force dockerd to populate the controller files the old JDK expects.
       elasticsearch:
         image: docker.elastic.co/elasticsearch/elasticsearch:7.16.3
         env:
           discovery.type: single-node
           bootstrap.memory_lock: "true"
           ES_JAVA_OPTS: "-Xms512m -Xmx512m"
-          JAVA_TOOL_OPTIONS: "-XX:-UseContainerSupport"
         ports:
           - 9200:9200
         options: >-
@@ -58,6 +44,8 @@ jobs:
           --health-timeout 5s
           --health-retries 10
           --ulimit memlock=-1:-1
+          --memory=2g
+          --cpus=2
           --cgroupns=host
       redis:
         image: redis:latest
@@ -71,9 +59,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Recent GitHub-hosted Ubuntu runners already default vm.max_map_count high enough for
-      # ES 7.x, but bump it explicitly so this doesn't silently start failing on a runner-image
-      # change (see docker-compose.yml, which relies on the same ES version).
       - name: Raise vm.max_map_count for Elasticsearch
         run: sudo sysctl -w vm.max_map_count=262144
 
@@ -88,18 +73,13 @@ jobs:
 
       - run: yarn install --frozen-lockfile
 
-      # plugins.json is gitignored and absent from a fresh checkout, so PluginGemUtils installs
-      # zero plugin gems here (see lib/elvis/plugin_gem_utils.rb) — no GITHUB_TOKEN needed for
-      # core CI. Plugin-gem coverage is out of scope for this workflow.
+      # plugins.json is gitignored/absent, so no plugin gems and no GITHUB_TOKEN needed.
       - name: Prepare test database
         env:
           RAILS_ENV: test
         run: bin/rails db:create db:schema:load
 
-      # A stale/missing public/packs-test/ manifest causes ~100+ spurious RSpec failures in
-      # request/feature specs that render react_component views — build it up front rather than
-      # relying on shakapacker's test-env compile-on-demand (config/shakapacker.yml `compile: true`
-      # under `test:`), which isn't reliable in CI. See docs/Modernization-Roadmap.md item 1.
+      # Stale/missing manifest causes ~100+ spurious spec failures; build it up front.
       - name: Build test Shakapacker manifest
         env:
           RAILS_ENV: test
@@ -118,11 +98,7 @@ jobs:
       - uses: ruby/setup-ruby@v1
         with:
           bundler-cache: true
-      # bin/i18n-tasks, not `bundle exec i18n-tasks` — the global binstub crashes on a missing
-      # logger in this repo (see docs/ i18n notes). `health` includes `check-normalized`, which
-      # requires config/locales/*.yml to already be in normalize's canonical (comment-stripping)
-      # form — see docs/I18n.md's "Note on config/locales/*.yml comments" for where any inline
-      # documentation that used to live in these files now lives instead.
+      # bin/i18n-tasks, not `bundle exec i18n-tasks` (binstub crashes otherwise).
       - run: bin/i18n-tasks health
 
   vitest:
@@ -153,7 +129,7 @@ jobs:
           count=$(grep -c "error TS" tsc_output.log)
           echo "TypeScript errors: $count (baseline: $TSC_BASELINE_ERRORS)"
           if [ "$count" -gt "$TSC_BASELINE_ERRORS" ]; then
-            echo "::error::tsc error count increased ($count > $TSC_BASELINE_ERRORS baseline) - fix the regression, or if these are pre-existing errors being paid down, lower TSC_BASELINE_ERRORS in .github/workflows/ci.yml"
+            echo "::error::tsc errors increased ($count > $TSC_BASELINE_ERRORS baseline)"
             exit 1
           fi
 
@@ -171,6 +147,6 @@ jobs:
           count=$(ruby -rjson -e "puts JSON.parse(File.read('rubocop_output.json'))['summary']['offense_count']")
           echo "Rubocop offenses: $count (baseline: $RUBOCOP_BASELINE_OFFENSES)"
           if [ "$count" -gt "$RUBOCOP_BASELINE_OFFENSES" ]; then
-            echo "::error::rubocop offense count increased ($count > $RUBOCOP_BASELINE_OFFENSES baseline) - fix the regression, or if this is pre-existing debt being paid down, lower RUBOCOP_BASELINE_OFFENSES in .github/workflows/ci.yml"
+            echo "::error::rubocop offenses increased ($count > $RUBOCOP_BASELINE_OFFENSES baseline)"
             exit 1
           fi
