@@ -9,7 +9,7 @@ class PluginGemUtils
   class << self
     # @return [Array<PluginGemObject>]
     def get_plugins_to_install(include_libraries: false)
-      plugins_list_download_url = ENV["PLUGINS_LIST_DOWNLOAD_URL"]
+      plugins_list_download_url = ENV.fetch("PLUGINS_LIST_DOWNLOAD_URL", nil)
 
       begin
         if plugins_list_download_url.nil? || "#{plugins_list_download_url}".strip.length == 0

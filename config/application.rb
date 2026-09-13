@@ -57,7 +57,7 @@ module RailsStarter
     # TODO: env var
 
     config.action_mailer.asset_host = if Rails.env.kubernetes?
-                                        "https://#{ENV['DOMAIN']}/"
+                                        "https://#{ENV.fetch('DOMAIN', nil)}/"
                                       else
                                         "http://localhost:7212/"
                                       end

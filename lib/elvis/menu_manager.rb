@@ -135,6 +135,7 @@ module Elvis
 
     class MenuNode
       include Enumerable
+
       attr_accessor :parent
       attr_reader :last_items_count, :name
 
@@ -144,9 +145,9 @@ module Elvis
         @last_items_count = 0
       end
 
-      def children(&block)
+      def children(&)
         if block_given?
-          @children.sort_by(&:position).each(&block)
+          @children.sort_by(&:position).each(&)
         else
           @children.sort_by(&:position)
         end
@@ -261,7 +262,7 @@ module Elvis
         @last = options[:last] || false
         @position = options[:position] || Elvis::MenuManager.menu_length(:side_menu)
 
-        super @name.to_sym
+        super(@name.to_sym)
       end
 
       def url(obj = self)

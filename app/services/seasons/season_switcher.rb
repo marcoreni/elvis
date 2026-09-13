@@ -33,8 +33,8 @@ module Seasons
       false
     end
 
-    def self.execute(*args)
-      new(*args).execute
+    def self.execute(*)
+      new(*).execute
     end
 
     private

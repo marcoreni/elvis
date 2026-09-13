@@ -302,7 +302,7 @@ class UsersController < ApplicationController
       { user: u, fml: u.family_link_with(@user, @season),
         attached_to: u.attached_to }
     end
-                                    .sort_by { |d| -2 * (d.dig(:fml)&.is_to_call || false).to_i - (d.dig(:fml)&.is_paying_for || false).to_i }
+                                    .sort_by { |d| (-2 * (d.dig(:fml)&.is_to_call || false).to_i) - (d.dig(:fml)&.is_paying_for || false).to_i }
     @users_to_show_in_family_list += attached_account_to_show.map do |u|
       { user: u, fml: nil, attached_to: u.attached_to }
     end
@@ -605,10 +605,7 @@ class UsersController < ApplicationController
     # existing_sheet = user.hours_sheets.find_by(year: year, month: month)
     existing_sheet = nil
 
-    if !existing_sheet.nil?
-      # sends the stored json object to the requester
-      render json: existing_sheet.json_sheet
-    else
+    if existing_sheet.nil?
       # calculates the object associating hours
       # worked in each activity kind
 
@@ -665,7 +662,7 @@ class UsersController < ApplicationController
 
           acc[key][:total] += duration
         rescue StandardError
-          print "ERROR: On Interval \##{i.id}"
+          print "ERROR: On Interval ##{i.id}"
         end
 
         {
@@ -682,6 +679,9 @@ class UsersController < ApplicationController
       end
 
       render json: hours_sheet
+    else
+      # sends the stored json object to the requester
+      render json: existing_sheet.json_sheet
     end
   end
 
@@ -805,7 +805,7 @@ class UsersController < ApplicationController
     organizations = Organization.all
     @organizationOptions = []
     organizations.each do |o|
-      @organizationOptions.push('label': o.name, 'value': o.id)
+      @organizationOptions.push(label: o.name, value: o.id)
     end
   end
 
@@ -1922,7 +1922,7 @@ class UsersController < ApplicationController
           u.first_name,
           u.email,
           telephone_number,
-          u.birthday && u.birthday.strftime("%d/%m/%Y") || "?"
+          (u.birthday && u.birthday.strftime("%d/%m/%Y")) || "?"
         ]
       end
     end

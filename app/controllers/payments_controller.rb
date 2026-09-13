@@ -735,10 +735,10 @@ class PaymentsController < ApplicationController
                                .to_a
                                .each_with_object({}) do |due, h|
         key = due.previsional_date.strftime("%Y-%m-%d")
-        if !h[key].nil?
-          h[key] << due
-        else
+        if h[key].nil?
           h[key] = [due]
+        else
+          h[key] << due
         end
       end
 
@@ -820,10 +820,7 @@ class PaymentsController < ApplicationController
           user_id: to_insert[6]
         )
 
-        if !imp.nil?
-          total_ignored += 1
-          nil
-        else
+        if imp.nil?
           FailedPaymentImport.create!(
             first_name: to_insert[0],
             last_name: to_insert[1],
@@ -833,6 +830,9 @@ class PaymentsController < ApplicationController
             failed_payment_import_reason: to_insert[5],
             user_id: to_insert[6]
           )
+        else
+          total_ignored += 1
+          nil
         end
       end
                                      .compact

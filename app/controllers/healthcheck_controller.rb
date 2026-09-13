@@ -2,8 +2,8 @@
 
 class HealthcheckController < ActionController::Base
   if ENV["HEALTH_CHECK_USER"].present? && ENV["HEALTH_CHECK_PASSWORD"].present?
-    http_basic_authenticate_with name: "#{ENV['HEALTH_CHECK_USER']}",
-                                 password: "#{ENV['HEALTH_CHECK_PASSWORD']}"
+    http_basic_authenticate_with name: "#{ENV.fetch('HEALTH_CHECK_USER', nil)}",
+                                 password: "#{ENV.fetch('HEALTH_CHECK_PASSWORD', nil)}"
   end
 
   def index

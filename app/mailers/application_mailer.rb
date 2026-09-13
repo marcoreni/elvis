@@ -8,7 +8,7 @@ class ApplicationMailer < LayoutMailer
   prepend_view_path NotificationTemplate.resolver
 
   def self.application_url
-    ApplicationUrl.main_root_url || (Rails.env.kubernetes? ? "https://#{ENV['DOMAIN']}" : "http://localhost:7212")
+    ApplicationUrl.main_root_url || (Rails.env.kubernetes? ? "https://#{ENV.fetch('DOMAIN', nil)}" : "http://localhost:7212")
   end
 
   def notify_new_application(params)

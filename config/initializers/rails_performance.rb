@@ -5,7 +5,7 @@ if defined?(RailsPerformance)
     config.debug = false # currently not used>
     config.enabled = !ENV["REDIS_URL"].nil? && (Rails.env.kubernetes? || ENV["RAILS_PERFORMANCE_ENABLED"] == "true")
 
-    redis = Redis.new(url: ENV["REDIS_URL"])
+    redis = Redis.new(url: ENV.fetch("REDIS_URL", nil))
 
     config.redis = Redis::Namespace.new("#{ENV['INSTANCE_NAME'] || 'development'}-#{Rails.env}-rails-performance",
                                         redis: redis)

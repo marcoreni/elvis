@@ -43,7 +43,7 @@ class Practice::BandsController < ApplicationController
       if user[:id].zero?
         createUser = User.new
         createUser.first_name = user[:first_name]
-        createUser.last_name = user [:last_name]
+        createUser.last_name = user[:last_name]
         createUser.save
 
         @band.bands_users.create(user: createUser, instrument_id: user[:instrument_id])

@@ -46,9 +46,7 @@ module ActivityApplications
       matches = (matches&.to_a || []).compact
 
       # return with or without active/inactive students
-      if !@do_format
-        matches
-      else
+      if @do_format
         matches.map do |activity|
           from_date = application.stopped_at ? Time.zone.now : application.begin_at
 
@@ -56,6 +54,8 @@ module ActivityApplications
             Utils.format_for_suggestion(application.user, activity, from_date)
           end
         end
+      else
+        matches
       end
     end
 

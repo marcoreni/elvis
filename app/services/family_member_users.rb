@@ -82,7 +82,7 @@ module FamilyMemberUsers
       fmu.update_addresses member[:addresses] unless member[:addresses].nil?
       user_id = user.id
       member_id = fmu.id
-      initial_is_inverse = !member[:initial_is_inverse].nil? ? member[:initial_is_inverse] : member[:is_inverse]
+      initial_is_inverse = member[:initial_is_inverse].nil? ? member[:is_inverse] : member[:initial_is_inverse]
 
       user_id, member_id = member_id, user_id if initial_is_inverse
 

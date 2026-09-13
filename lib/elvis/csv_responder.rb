@@ -20,9 +20,9 @@ module Elvis
       @controller.response_body = @stream
     end
 
-    def self.stream(controller, query, options, &block)
+    def self.stream(controller, query, options, &)
       filename = options[:filename]
-      enum     = Elvis::CsvExporter.new(query, options).enumerator(&block)
+      enum     = Elvis::CsvExporter.new(query, options).enumerator(&)
       new(controller, enum).stream!(filename)
     end
 

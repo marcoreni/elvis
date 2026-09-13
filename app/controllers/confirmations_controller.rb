@@ -36,7 +36,7 @@ class ConfirmationsController < Devise::ConfirmationsController
 
   protected
 
-  def with_unconfirmed_confirmable(&block)
+  def with_unconfirmed_confirmable(&)
     if params[:confirmation_token].present?
       @original_token = params[:confirmation_token]
     elsif params[resource_name].try(:[], :confirmation_token).present?
@@ -53,7 +53,7 @@ class ConfirmationsController < Devise::ConfirmationsController
 
     return if @confirmable.new_record?
 
-    @confirmable.only_if_unconfirmed(&block)
+    @confirmable.only_if_unconfirmed(&)
   end
 
   def do_show

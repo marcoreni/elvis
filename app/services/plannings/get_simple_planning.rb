@@ -4,7 +4,7 @@ module Plannings
   class GetSimplePlanning
     def initialize(user, day)
       @user = user
-      @day = !day.nil? ? Date.parse(day) : DateTime.now.to_date
+      @day = day.nil? ? DateTime.now.to_date : Date.parse(day)
     end
 
     def execute

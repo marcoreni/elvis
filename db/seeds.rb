@@ -169,15 +169,15 @@ def notification_template_create_if_not_exist(data)
   notification_template = NotificationTemplate.new(path: data[:path])
 
   notification_template.assign_attributes({
-                                            "body": data[:body],
-                                            "locale": data[:locale],
-                                            "handler": data[:handler],
-                                            "partial": data[:partial],
-                                            "format": data[:format],
-                                            "created_at": data[:created_at],
-                                            "updated_at": data[:updated_at],
-                                            "name": data[:name],
-                                            "json": data[:json]
+                                            body: data[:body],
+                                            locale: data[:locale],
+                                            handler: data[:handler],
+                                            partial: data[:partial],
+                                            format: data[:format],
+                                            created_at: data[:created_at],
+                                            updated_at: data[:updated_at],
+                                            name: data[:name],
+                                            json: data[:json]
                                           })
 
   template = notification_template.as_json

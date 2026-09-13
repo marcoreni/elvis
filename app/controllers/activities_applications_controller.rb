@@ -1910,7 +1910,7 @@ class ActivitiesApplicationsController < ApplicationController
                    .join(", ")
 
         address = user.addresses_csv[0]
-        address = address && "#{address.street_address} #{address.postcode} #{address.city&.upcase}" || "?"
+        address = (address && "#{address.street_address} #{address.postcode} #{address.city&.upcase}") || "?"
 
         legal_referent = user.family_links(s_for_links).select(&:is_legal_referent)[0]
         legal_referent &&= (legal_referent.user_id == user.id ? legal_referent.member : legal_referent.user)
@@ -1930,7 +1930,7 @@ class ActivitiesApplicationsController < ApplicationController
           user && app.user.adherent_number,
           user && app.user.last_name,
           user && app.user.first_name,
-          user.birthday && user.age || "?",
+          (user.birthday && user.age) || "?",
           user && app.user.email,
           address,
           user_telephone_number,

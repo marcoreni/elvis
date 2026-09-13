@@ -63,7 +63,7 @@ class Payment < ApplicationRecord
   end
 
   def as_json(options = {})
-    super options.merge(methods: :adjusted_amount)
+    super(options.merge(methods: :adjusted_amount))
   end
 
   # Instruction permettant de supprimer un objet utilisant la classe courante

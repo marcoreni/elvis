@@ -61,7 +61,7 @@ class ApplicationController < ActionController::Base
   def render(*args)
     self.call_render = true if call_render.nil?
 
-    super(*args) if call_render
+    super if call_render
   end
 
   protected
@@ -81,12 +81,12 @@ class ApplicationController < ActionController::Base
   #   4. I18n.default_locale as the final fallback
   # Runs as a prepended around_action so it wraps every other before_action (including
   # Devise's own, since Devise::*Controller inherits from ApplicationController by default).
-  def switch_locale(&action)
+  def switch_locale(&)
     locale = resolve_locale
 
     cookies[:locale] = locale_cookie(locale) if cookies[:locale] != locale.to_s
 
-    I18n.with_locale(locale, &action)
+    I18n.with_locale(locale, &)
   end
 
   # Shared by switch_locale and LocaleController#update so the cookie options can't drift

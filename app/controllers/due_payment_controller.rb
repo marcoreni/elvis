@@ -248,7 +248,7 @@ class DuePaymentController < ApplicationController
                   else
                     query.where(payment_method_id: val)
                   end
-        elsif prop == "due_payment_status_id" || prop == "location_id" && val.match?(/\d+/)
+        elsif prop == "due_payment_status_id" || (prop == "location_id" && val.match?(/\d+/))
           query = if val == "null"
                     query.where("due_payments.#{prop} is null OR due_payments.#{prop} = 0")
                   else
@@ -369,7 +369,7 @@ class DuePaymentController < ApplicationController
                 else
                   query.where(payment_method_id: val)
                 end
-      elsif prop == "due_payment_status_id" || prop == "location_id" && val.match?(/\d+/)
+      elsif prop == "due_payment_status_id" || (prop == "location_id" && val.match?(/\d+/))
         if val == "null"
           query = query.where("due_payments.#{prop} is null OR due_payments.#{prop} = 0")
         else

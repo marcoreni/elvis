@@ -23,7 +23,30 @@ class PaymentScheduleController < ApplicationController
   end
 
   def create
-    if !params[:schedule_id].nil?
+    if params[:schedule_id].nil? # Soit on en crée un nouveau
+      schedule = PaymentSchedule.new
+      params[:schedule][:duePayments].each do |dp|
+        newDue = DuePayment.create({
+                                     number: dp[:id],
+                                     amount: dp[:amount],
+                                     previsional_date: dp[:date],
+                                     payment_method_id: dp[:payment_method_id]
+                                   })
+        newDue.reevaluate_status
+        schedule.due_payments << newDue
+      end
+      schedule.payable_id = params[:schedule][:payer][:id]
+      schedule.season_id = params[:schedule][:season_id]
+      schedule.payable_type = params[:schedule][:payer][:class_name]
+      schedule.payment_schedule_status = PaymentScheduleStatus.find_by(label: "En attente de règlement")
+
+      schedule.save!
+      render json: schedule.as_json(include: {
+                                      due_payments: {
+                                        methods: :adjusted_amount
+                                      }
+                                    })
+    else
       # Soit on met à jour le schedule
       schedule = PaymentSchedule.find(params[:schedule_id])
       params[:schedule][:duePayments].each do |dp|
@@ -52,29 +75,6 @@ class PaymentScheduleController < ApplicationController
                                       }
                                     })
 
-    else # Soit on en crée un nouveau
-      schedule = PaymentSchedule.new
-      params[:schedule][:duePayments].each do |dp|
-        newDue = DuePayment.create({
-                                     number: dp[:id],
-                                     amount: dp[:amount],
-                                     previsional_date: dp[:date],
-                                     payment_method_id: dp[:payment_method_id]
-                                   })
-        newDue.reevaluate_status
-        schedule.due_payments << newDue
-      end
-      schedule.payable_id = params[:schedule][:payer][:id]
-      schedule.season_id = params[:schedule][:season_id]
-      schedule.payable_type = params[:schedule][:payer][:class_name]
-      schedule.payment_schedule_status = PaymentScheduleStatus.find_by(label: "En attente de règlement")
-
-      schedule.save!
-      render json: schedule.as_json(include: {
-                                      due_payments: {
-                                        methods: :adjusted_amount
-                                      }
-                                    })
     end
   end
 

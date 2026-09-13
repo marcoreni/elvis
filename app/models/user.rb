@@ -706,7 +706,7 @@ class User < ApplicationRecord
 
     # et on liste ensuite les adhésions des membres de sa famille
     family_links.each do |fm|
-      fm.user == self && fm.member || fm.user
+      (fm.user == self && fm.member) || fm.user
       personal = fm.user.get_last_adhesion
       adhesions << personal.user.id if fm.is_paying_for && !personal.nil?
     end
@@ -739,7 +739,7 @@ class User < ApplicationRecord
     if attached? && value == attached_to.email
       super(nil)
     else
-      super(value)
+      super
     end
   end
 
@@ -790,8 +790,8 @@ class User < ApplicationRecord
     encrypted_password.blank?
   end
 
-  def only_if_unconfirmed(&block)
-    pending_any_confirmation(&block)
+  def only_if_unconfirmed(&)
+    pending_any_confirmation(&)
   end
 
   def update_without_password(params, *options)
@@ -840,8 +840,8 @@ class User < ApplicationRecord
     find_first_by_auth_conditions(tainted_conditions)
   end
 
-  def send_devise_notification(notification, *args)
-    message = devise_mailer.send(notification, self, *args)
+  def send_devise_notification(notification, *)
+    message = devise_mailer.send(notification, self, *)
     # Remove once we move to Rails 4.2+ only
     if message.respond_to?(:deliver_now)
       message.deliver_now

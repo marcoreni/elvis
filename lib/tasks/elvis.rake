@@ -47,7 +47,7 @@ namespace :elvis do
     desc "Removes registered users that have not been activated after a number of days. Use DAYS to set the number of days, defaults to 30 days."
     task prune: :environment do
       days = 30
-      env_days = ENV["DAYS"]
+      env_days = ENV.fetch("DAYS", nil)
       if env_days
         if env_days.to_i <= 0
           abort "Invalid DAYS #{env_days} given. The value must be a integer."
@@ -93,7 +93,7 @@ namespace :elvis do
   end
 
   task fix_activities_ti: %i[environment] do
-    sidekiq_redis_url = ENV["SIDEKIQ_REDIS_URL"] || ENV["REDIS_URL"]
+    sidekiq_redis_url = ENV["SIDEKIQ_REDIS_URL"] || ENV.fetch("REDIS_URL", nil)
     if ENV["USE_SIDEKIQ"] == "true" && !sidekiq_redis_url.nil?
       ActivityTiCorrectorJob.perform_later
     else
@@ -223,9 +223,9 @@ namespace :elvis do
     end
 
     task :generate_pluginjson_from_url do
-      raise "PLUGINS_LIST_DOWNLOAD_URL is empty" if "#{ENV['PLUGINS_LIST_DOWNLOAD_URL']}".empty?
+      raise "PLUGINS_LIST_DOWNLOAD_URL is empty" if "#{ENV.fetch('PLUGINS_LIST_DOWNLOAD_URL', nil)}".empty?
 
-      puts "Downloading plugins list from #{ENV['PLUGINS_LIST_DOWNLOAD_URL']}"
+      puts "Downloading plugins list from #{ENV.fetch('PLUGINS_LIST_DOWNLOAD_URL', nil)}"
 
       plugins_from_internet = PluginGemUtils.get_plugins_to_install(include_libraries: true)
 
@@ -237,9 +237,7 @@ namespace :elvis do
 
       puts "Writing plugins list to plugins.json"
 
-      File.open("plugins.json", "w") do |f|
-        f.write(plugins.to_json)
-      end
+      File.write("plugins.json", plugins.to_json)
 
       puts "Plugins list written to plugins.json"
     end

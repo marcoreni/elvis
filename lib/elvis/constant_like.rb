@@ -13,12 +13,12 @@ module Elvis
     module ClassMethods
       const_set("BUILTIN_IDS", []) unless const_defined?("BUILTIN_IDS")
 
-      def find_or_create_by!(attributes, &block)
+      def find_or_create_by!(attributes, &)
         res = find_by(id: attributes[:id])
 
         return res if res.present?
 
-        res = create!(attributes, &block)
+        res = create!(attributes, &)
         const_set("MUST_RESET_PK_SEQUENCE", true) unless const_defined?("MUST_RESET_PK_SEQUENCE")
         res
       end

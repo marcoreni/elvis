@@ -21,7 +21,5 @@ ActiveRecord::Base.transaction do
     end
   end
 
-  File.open("updated_rows.txt", "w") do |f|
-    f.write(updated_rows)
-  end
+  File.write("updated_rows.txt", updated_rows)
 end

@@ -14,6 +14,7 @@
 
 class PaymentStatus < ApplicationRecord
   extend Elvis::ConstantLike
+
   def self.mark_as_built_in
     BUILTINS.map do |c|
       c.update! built_in: true

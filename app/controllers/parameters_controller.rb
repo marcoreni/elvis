@@ -202,12 +202,12 @@ class ParametersController < ApplicationController
     method_selected.save!
 
     if params[:selected] == "URL"
-      if !params[:rules_url].empty?
+      if params[:rules_url].empty?
+        @errors = "L'url ne peut pas être vide"
+      else
         rules_url = Parameter.find_or_create_by(label: "school.rules_of_procedure.url", value_type: "string")
         rules_url.value = params[:rules_url]
         rules_url.save!
-      else
-        @errors = "L'url ne peut pas être vide"
       end
     end
 
@@ -221,20 +221,18 @@ class ParametersController < ApplicationController
       @errors = "ne peut pas être vide" if !params[:document_cleared] && !params[:pdf_file]
 
       if params[:pdf_file]
-        if params[:pdf_file] != "empty"
-          if MimeMagic.by_magic(File.open(params[:pdf_file])).type == "application/pdf"
-            file = params[:pdf_file].open
-            blob = ActiveStorage::Blob.create_and_upload!(io: file, filename: params[:pdf_file].original_filename)
-            blob_ID = ActiveStorage::Blob.find_by(key: blob.key).id
-
-            rules_PDF = Parameter.find_or_create_by(label: "school.rules_of_procedure.blob_id", value_type: "int")
-            rules_PDF.value = blob_ID
-            rules_PDF.save!
-          else
-            @errors = "Mauvais format"
-          end
-        else
+        if params[:pdf_file] == "empty"
           @errors = "aaa"
+        elsif MimeMagic.by_magic(File.open(params[:pdf_file])).type == "application/pdf"
+          file = params[:pdf_file].open
+          blob = ActiveStorage::Blob.create_and_upload!(io: file, filename: params[:pdf_file].original_filename)
+          blob_ID = ActiveStorage::Blob.find_by(key: blob.key).id
+
+          rules_PDF = Parameter.find_or_create_by(label: "school.rules_of_procedure.blob_id", value_type: "int")
+          rules_PDF.value = blob_ID
+          rules_PDF.save!
+        else
+          @errors = "Mauvais format"
         end
       end
     end
