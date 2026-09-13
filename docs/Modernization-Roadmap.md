@@ -7,18 +7,24 @@ of each item as it moves; when an item is fully done, remove it and note the fac
 commit/PR reference) rather than leaving a stale "done" entry — same discipline as
 `docs/KnownIssues.md`.
 
-## 1. CI workflow on develop/main — done, see `.github/workflows/ci.yml`
+## 1. CI workflow on develop/main — see `.github/workflows/ci.yml`
 
-All 5 jobs green. ES was bumped 7.16.3 → 7.17.28 everywhere (docker-compose.yml,
-docker-compose-dev.yml, README.md, CI) — 7.16.3's bundled JDK 17.0.1 NPEs on GH runners' cgroup v2
-hosts, a real JDK bug fixed upstream years ago; 7.17.28 bundles JDK 22.0.2. Same 7.x major, chewy's
-pinned client gem (7.13.3) unaffected — full local rspec run against 7.17.28 confirmed clean.
+CI's `rspec` job has **no Elasticsearch service at all** — `config/environments/test.rb` sets
+`Chewy.strategy(:bypass)`, so specs never index/search; two full local runs with zero ES running
+produced zero ES-connection errors. Removes a whole class of infra flakiness (was the ES
+container's cgroup-v2 JDK crash, see below) from CI's critical path for free. Dev/prod
+(docker-compose.yml, docker-compose-dev.yml) still run ES 7.16.3 → bumped to 7.17.28 there, since
+those DO search for real — the old JDK NPEs on modern cgroup v2 hosts (verified with a real
+index/import/search round trip via `UsersIndex` against 7.17.28: works). Chewy 7.x + ES 7.17 is
+the officially-supported combo (the "8.x incompatible" risk floated was Chewy *8.x* needing ES
+8.x, not this).
 
-Also fixed along the way: a broken production Rspack build on `develop` (stale `.js` extensions
-after a TS rename), locale YAML comments `i18n-tasks normalize` was stripping (moved to
-`docs/I18n.md`), `bundle exec <tool>` crashing on a missing `logger` require (fixed at the
-Gemfile root, not per-binstub), and `RequestData`'s type not allowing numbers/booleans in request
-bodies. See item 5 for the flake this job will occasionally hit even once ES is fixed.
+Also fixed: a broken production Rspack build on `develop` (stale `.js` extensions after a TS
+rename), locale YAML comments `i18n-tasks normalize` was stripping (moved to `docs/I18n.md`), and
+`RequestData`'s type not allowing numbers/booleans in request bodies. A Gemfile-level fix for
+`bundle exec <tool>`'s logger crash was tried and reverted — broke Rails boot itself (see
+`reference_i18n_tasks_binstub` memory); stick with `bin/i18n-tasks`. See item 5 for the flake this
+job will occasionally hit.
 
 ## 2. Orphaned-code tracking file — status: not started
 
