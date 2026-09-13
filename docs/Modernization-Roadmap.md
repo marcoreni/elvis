@@ -120,33 +120,76 @@ feature this app actually uses maps to a native, free, stable FullCalendar v6 AP
   so there's no extra "convert working code" risk. Add real interaction tests (view switching, at
   minimum) as part of this, since none exist today.
 
-## 7. Migrate `sweetalert2` off the legacy callback API — status: not started, feasibility check requested first
+## 7. Migrate `sweetalert2` off the legacy API — feasibility check done 2026-09-14, migration not started
 
-Currently on sweetalert2 `7.33.1`(ish — confirm exact pinned version), latest is `11.26.25` — a
-callback-based `swal({...})` API vs. a promise-based `swal.fire({...})` API, with the breaking
-change landing somewhere in the 9.x line (per the existing `docs/KnownIssues.md`/dependency-bump
-research). User's specific concern, worth checking **before** committing to the migration:
+**Version facts**: `package.json`'s `^7.26.11` and the resolved `7.33.1` (in both `yarn.lock` and
+`node_modules`) are not a stale-lockfile mismatch — **7.33.1 is the actual final 7.x release**
+(next is `8.0.0`), so the semver range is already maxed out. Latest overall is `11.26.25`.
 
-> *"I think that in some cases old developers decided to use new syntax with current version
-> (`swal.fire()` instead of `swal()`). I don't think that new syntax is compatible [with the
-> currently-installed old version], so that may already be an issue."*
+**The `.fire()` question is resolved: not a bug.** 6 files already call `.fire()`
+(`ActivitiesApplicationsList.jsx`, `HandleFamilyMember.jsx`, `Absences.jsx`, `UserForm.jsx`,
+`Wizard.jsx`, `AddPreAppFromStopApp.jsx`). Checked directly against the installed
+`node_modules/sweetalert2/dist/sweetalert2.js`: `Swal.fire` is a real static method in 7.33.1
+(`Swal.fire = function fire() { return _construct(Swal, args) }`), an intentional alias for
+calling the default export directly. These 6 files are already using the more future-proof form
+— no live bug, nothing to fix independent of the migration.
 
-First step: audit every sweetalert2 call site (dozens, per the existing dependency-bump research
-— both direct component usage and any wrapper in `frontend/tools/api.js`) and classify each as
-using the **old callback syntax** (`swal(title, text, type, callback)` / object-config-with-legacy-shape)
-vs. **already using `.fire()`**. If `.fire()` calls already exist against the old package version,
-that's worth understanding on its own merits first (is it silently working via some shim/whatever
-sweetalert2 7.x actually exposes, or is it a latent bug independent of any migration?) — check this
-regardless of whether the bump happens, since it might be a real, currently-live bug.
+**No shared wrapper exists** — `SwalBackEndModal.jsx` and `BtnApiElement.jsx` looked like central
+wrappers but neither is imported by any other JS file (`SwalBackEndModal` is mounted standalone
+via `react_component(...)` from 4 separate ERB views, each passing its own props). **107 files**
+import sweetalert2 directly and call it independently — this is a ~107-independent-call-site
+migration, not a "fix a few wrappers" one.
 
-Then assess actual migration feasibility to `11.x`: confirm compatibility with the current
-React/webpack/babel-vs-rspack+swc stack (post `feat/bump-shakapacker`), inventory every
-call site's exact API surface used (icons, custom HTML, input types, chained `.then()`
-callback-argument shape changes, `swal.close()`/`swal.getPopup()`-style follow-up calls),
-and produce a real migration plan (or a "not feasible yet, here's why" writeup) before touching
-code. **Explicit ask**: if migration turns out feasible, do it in one pass rather than
-"fixing" the existing `.fire()` call sites to work with the old version first and then
-re-touching them again for the real migration — avoid the double-churn.
+**Call-site classification**:
+- Old positional/string-arg style (`swal("title", "text", "error")`): only ~4 live sites (2 more
+  are commented-out dead code) — small.
+- `type:` option (renamed to `icon:` in v8, removed by v9): **83 files, 224 occurrences** — the
+  single biggest breaking-change surface.
+- `.value` result-shape usage (v11 requires `.isConfirmed`/`.isDenied`/`.isDismissed` instead):
+  **70 files**, heavily overlapping with the above.
+- `onOpen`/`onClose`/`onBeforeOpen` callbacks (renamed `didOpen`/`didClose`/`willOpen` in v10.3.0):
+  6 files — small.
+- Bare `swal({...})` calls with no `.fire` (the majority pattern) **will hard-break in v11** — v11
+  only exposes `Swal` as a namespace object with `.fire()`/`.mixin()`/etc., no callable default
+  export. Effectively all 107 files need a `swal(...)` → `swal.fire(...)` rewrite on top of the
+  option renames.
+- 15 test files already `jest.mock`/`vi.mock` sweetalert2 — mocks need shape updates too.
+
+**Follow-up check (2026-09-14, against the real v11.26.25 package, not just changelogs) revises
+the verdict below** — pulled the actual `sweetalert2@11.26.25` tarball and its `.d.ts`/dist bundle
+to check what's *actually* breaking vs. cosmetic:
+
+- **`.value` is NOT breaking.** v11's `SweetAlertResult<T>` interface still has
+  `readonly value?: T` alongside `isConfirmed`/`isDenied`/`isDismissed` — existing
+  `result.value`-based branching keeps working unchanged after the bump. The 70-file bucket is a
+  pure style modernization, safe to defer indefinitely; it does **not** gate the version bump.
+- **Bare `swal(...)` calls hard-crash in v11** — verified by requiring the real v11 dist and
+  calling it bare: `Class constructor SweetAlert cannot be invoked without 'new'`. This is the one
+  truly mandatory, atomic-with-the-bump rewrite (all ~101 non-`.fire()` files).
+- **`type:` is a soft break** — v11's dist has no `defaultParams.type` and no icon-lookup keyed off
+  `params.type` at all; using it just warns `Unknown parameter "type"` to the console and renders
+  no icon. Not a crash, but silent enough in production to require fixing at the same time as the
+  bump rather than trusting a later pass to catch it.
+- **`onOpen`/`onClose`/`onBeforeOpen` are gone, replaced by `willOpen`/`didOpen`/`didClose`** —
+  confirmed both directions: v7.33.1's dist only recognizes the `on*` names (no `did*`/`will*` at
+  all), v11's dist only recognizes `did*`/`will*` (old names hit the same "Unknown parameter"
+  warning and silently never fire). Because neither version accepts both spellings, this rename
+  **cannot be done before or after the bump** — it's forced into the same atomic commit as the
+  bump, like `type:`/bare-call.
+- **CSS is unaffected** — both v7.33.1 and v11.26.25 resolve `main`/`browser` to the `.all.js`
+  bundle (styles auto-injected via JS), so there's no separate CSS import to add/change.
+
+**Revised verdict**: the truly breaking surface (bare-call→`.fire()`, `type:`→`icon:`,
+`on*`→`did*`/`will*`, the ~4 positional-arg sites) is forced into **one atomic PR** together with
+the version bump — a single global package version means there's no safe way to split it across
+independently-mergeable PRs without the app being broken in between. This piece is lower-risk than
+it sounds specifically *because* it's mechanical and scriptable (same substitution pattern applies
+uniformly), not because it's small. The **only** genuinely independent, safely-deferrable follow-up
+is the `.value`→`.isConfirmed`/`.isDenied`/`.isDismissed` modernization (non-breaking, so can land
+as its own later PR/PRs, domain-grouped, whenever convenient) plus adding interaction tests for
+the highest-traffic confirm/cancel flows (none exist today).
+
+Implementation: `chore/sweetalert2-v11-bump`.
 
 ## 8. Do we need Elasticsearch at all? — status: not started, deep dive requested
 
@@ -172,6 +215,33 @@ naming-convention/metaprogramming hook (chewy's own callback wiring, an `EventHa
 `docs/OrphanedCode.md` (item 2); if it turns out to be a missing wire-up (should be called
 somewhere but isn't), that's a different, possibly more interesting bug about chewy indexes not
 updating for these 5 models outside their `update_index` macro's own default hooks.
+
+## 10. Hardcoded `"fr"` locale in date formatting — status: not started, found 2026-09-14
+
+Same category of bug as item 3 (a hardcoded constant that should follow a runtime setting) but for
+*language*, not timezone — these format dates in French regardless of the viewer's actual
+`i18n.language`/`I18n.locale`:
+
+- **Frontend, straightforward fix**: `frontend/components/activityApplications/EvaluationIntervalChoice.jsx:9-10`
+  — `monthNameFormat`/`weekDayDateFormat` are module-level `new Intl.DateTimeFormat("fr", {...})`
+  constants, computed once at import time. Needs the same treatment `format.tsx`/`LessonList.jsx`
+  already use elsewhere (`Intl.DateTimeFormat(i18n.language, {...})`) — since language can change
+  at runtime (locale switcher), these can't stay module-level constants; compute them where
+  `i18n.language` is in scope (component render / a `useMemo`), not at import time.
+- **Backend, straightforward fix**: `app/views/devise/registrations/new.html.erb:68` —
+  the surrounding copy is properly extracted (`t("views.devise.registrations.new...")`, follows
+  the current locale), but the interpolated date uses `I18n.with_locale("fr") { I18n.l(...) }`,
+  hardcoding French into an otherwise-translated sentence. Should use the current `I18n.locale`
+  (i.e. drop the `with_locale("fr")` wrapper and just call `I18n.l(...)` directly).
+- **Backend, NOT a standalone fix — needs its own pass**: `app/views/payments/bill.html.erb:68,101`
+  have the same `I18n.with_locale("fr")` pattern, but that entire template (labels, headers,
+  "Téléphone:", "Reçu pour la", "Attestation de paiement", etc.) is hardcoded French prose that
+  was never i18n-extracted — it predates the i18n rollout and was presumably out of scope then.
+  Changing just the two date lines to follow `I18n.locale` would produce a document with a
+  translated date sitting inside otherwise all-French text, which is worse, not better. Fixing
+  this properly means extracting the whole template (a real, if small, i18n-extraction job), not
+  a one-line locale swap — track as its own follow-up rather than bundling with the two fixes
+  above.
 
 ## Context this roadmap assumes (don't re-derive, just re-read if needed)
 
