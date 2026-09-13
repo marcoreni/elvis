@@ -2,6 +2,12 @@
 
 require_relative "lib/elvis/plugin_gem_utils"
 
+# Ruby 3.3.5+ demoted `logger` from a default gem to bundled — no longer auto-loaded, so any
+# `bundle exec <tool>` that doesn't boot Rails (which requires it as a side effect) can crash on
+# a bare `Logger` constant (activesupport's logger_thread_safe_level.rb assumes it's already
+# loaded). Requiring it here fixes every bundle exec invocation, not just Rails boot.
+require "logger"
+
 source "https://rubygems.org"
 
 git_source(:github) do |repo_name|

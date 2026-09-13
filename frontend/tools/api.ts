@@ -38,10 +38,36 @@ interface Callbacks {
     loading?: boolean;
 }
 
-export type RequestData =
-    | Record<string, string | boolean | null | Record<string, string>>
-    | string[][]
-    | undefined;
+// Any JSON-serializable value — request bodies commonly nest numbers/booleans/null
+// (e.g. `{ comment: { user_id: 3, ... } }`), not just strings.
+export type JSONValue =
+    | string
+    | number
+    | boolean
+    | null
+    | JSONValue[]
+    | { [key: string]: JSONValue };
+
+export type RequestData = Record<string, JSONValue> | string[][] | undefined;
+
+// GET has no body — its `data` becomes the query string instead. URLSearchParams only accepts
+// flat string values at the type level, but coerces non-string values to strings at runtime the
+// same way this does explicitly, so this doesn't change behavior for existing callers.
+const toSearchParams = (data: RequestData): URLSearchParams => {
+    if (Array.isArray(data)) return new URLSearchParams(data);
+
+    const flat: Record<string, string> = {};
+    if (data) {
+        Object.entries(data).forEach(([key, value]) => {
+            if (value === null || value === undefined) return;
+            flat[key] =
+                typeof value === "object"
+                    ? JSON.stringify(value)
+                    : String(value);
+        });
+    }
+    return new URLSearchParams(flat);
+};
 
 // API REQUESTS
 const request =
@@ -59,7 +85,7 @@ const request =
         let body = undefined;
         if (data) {
             if (method === "GET") {
-                const searchParams = new URLSearchParams(data);
+                const searchParams = toSearchParams(data);
                 url = `${url}?${searchParams.toString()}`;
                 body = {};
             } else {

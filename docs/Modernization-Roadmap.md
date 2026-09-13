@@ -9,14 +9,18 @@ commit/PR reference) rather than leaving a stale "done" entry — same disciplin
 
 ## 1. CI workflow on develop/main — mostly done, see `.github/workflows/ci.yml`
 
-i18n-tasks/vitest/tsc/rubocop green. `rspec` job still red in Actions: ES 7.16.3's bundled JDK
-NPEs on GH runners' cgroup v2 hosts (`anyController is null`); `--cgroupns=host` and
-`-XX:-UseContainerSupport` (via both `ES_JAVA_OPTS` and `JAVA_TOOL_OPTIONS`) didn't fix it,
-currently trying explicit `--memory`/`--cpus` limits. Also fixed along the way: a genuinely broken
-production Rspack build on `develop` (10 components importing `tools/api.js`/`tools/constants.js`
-with a stale `.js` extension after a TS rename), and locale YAML comments that `i18n-tasks
-normalize` was silently stripping — moved to `docs/I18n.md`. See item 5 for the flake this job
-will occasionally hit even once ES is fixed.
+i18n-tasks/vitest/tsc (now 0 baseline, was 5)/rubocop green. `rspec` job still red: ES 7.16.3's
+bundled JDK NPEs on GH runners' cgroup v2 hosts (`anyController is null`). Tried and failed:
+`--cgroupns=host`, `-XX:-UseContainerSupport` via `ES_JAVA_OPTS` and `JAVA_TOOL_OPTIONS`,
+`--memory`/`--cpus` limits. Real fix is likely bumping ES's patch version (bundles a newer JDK)
+or a custom image with an external JDK — both bigger than a CI tweak since docker-compose.yml
+pins the same 7.16.3 for dev/prod; needs a decision, not another flag guess.
+
+Also fixed along the way: a broken production Rspack build on `develop` (stale `.js` extensions
+after a TS rename), locale YAML comments `i18n-tasks normalize` was stripping (moved to
+`docs/I18n.md`), `bundle exec <tool>` crashing on a missing `logger` require (fixed at the
+Gemfile root, not per-binstub), and `RequestData`'s type not allowing numbers/booleans in request
+bodies. See item 5 for the flake this job will occasionally hit even once ES is fixed.
 
 ## 2. Orphaned-code tracking file — status: not started
 

@@ -9,7 +9,7 @@ on:
 # rubocop/tsc gate on regression past these baselines, not on the pre-existing backlog.
 env:
   RUBOCOP_BASELINE_OFFENSES: 1037
-  TSC_BASELINE_ERRORS: 5
+  TSC_BASELINE_ERRORS: 0
 
 jobs:
   rspec:
@@ -79,7 +79,7 @@ jobs:
           RAILS_ENV: test
         run: bin/rails db:create db:schema:load
 
-      # Stale/missing manifest causes ~100+ spurious spec failures; build it up front.
+      # Build up front rather than relying on compile-on-demand's first-request latency.
       - name: Build test Shakapacker manifest
         env:
           RAILS_ENV: test
@@ -98,7 +98,6 @@ jobs:
       - uses: ruby/setup-ruby@v1
         with:
           bundler-cache: true
-      # bin/i18n-tasks, not `bundle exec i18n-tasks` (binstub crashes otherwise).
       - run: bin/i18n-tasks health
 
   vitest:
