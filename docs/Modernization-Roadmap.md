@@ -216,10 +216,10 @@ naming-convention/metaprogramming hook (chewy's own callback wiring, an `EventHa
 somewhere but isn't), that's a different, possibly more interesting bug about chewy indexes not
 updating for these 5 models outside their `update_index` macro's own default hooks.
 
-## 10. Hardcoded `"fr"` locale in date formatting — status: not started, found 2026-09-14
+## 10. Hardcoded `"fr"`/`"fr-FR"` locale in date/number formatting — status: not started, found 2026-09-14
 
 Same category of bug as item 3 (a hardcoded constant that should follow a runtime setting) but for
-*language*, not timezone — these format dates in French regardless of the viewer's actual
+*language*, not timezone — these format dates/numbers in French regardless of the viewer's actual
 `i18n.language`/`I18n.locale`:
 
 - **Frontend, straightforward fix**: `frontend/components/activityApplications/EvaluationIntervalChoice.jsx:9-10`
@@ -228,6 +228,13 @@ Same category of bug as item 3 (a hardcoded constant that should follow a runtim
   already use elsewhere (`Intl.DateTimeFormat(i18n.language, {...})`) — since language can change
   at runtime (locale switcher), these can't stay module-level constants; compute them where
   `i18n.language` is in scope (component render / a `useMemo`), not at import time.
+- **Frontend, same pattern for numbers**: `new Intl.NumberFormat("fr-FR", { style: "currency",
+  currency: "EUR" })` hardcoded in `generalPayments/DuePaymentList.jsx:1047,1056`,
+  `generalPayments/PaymentList.jsx:964`, `generalPayments/CheckList.jsx:403`. All 3 files are
+  class components using `withTranslation("payments")`, so `this.props.i18n.language` is already
+  available in scope — swap the literal `"fr-FR"` for it. (`currency: "EUR"` is a separate,
+  deliberately out-of-scope concern — a deployment/business decision like item 3's timezone, not
+  a locale bug — leave it as-is here.)
 - **Backend, straightforward fix**: `app/views/devise/registrations/new.html.erb:68` —
   the surrounding copy is properly extracted (`t("views.devise.registrations.new...")`, follows
   the current locale), but the interpolated date uses `I18n.with_locale("fr") { I18n.l(...) }`,
