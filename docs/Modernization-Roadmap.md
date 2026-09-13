@@ -37,32 +37,27 @@ examples, 0 failures) after. The KnownIssues section is gone — the 2 genuinely
 component) got their own smaller entries instead. README's old "Removed dead code" section now
 points at the new doc instead of duplicating it.
 
-## 3. Move hardcoded `Europe/Paris` timezone into configuration — status: not started, mechanism TBD
+## 3. Move hardcoded `Europe/Paris` timezone into configuration — done, `feat/school-timezone-config`
 
-Currently hardcoded in two places (see `docs/KnownIssues.md`'s "Frontend date formatting hardcodes
-Europe/Paris" entry, being superseded by this item):
-- Backend: `config.time_zone = "Paris"` in `config/application.rb:50`.
-- Frontend: `PARIS_DATE_FORMAT_OPTIONS` constants in `courses/LessonList.jsx` and
-  `activityApplications/summary/Activity.jsx`.
-
-User's instruction: *"put it into configuration (database or env/setup, I'll let you choose)."*
-Leaning toward **env/boot-time config** rather than a DB `Parameter` row, because:
-- `config.time_zone` is read at Rails boot, before any DB-backed `Parameter` lookup makes sense
-  (and changing it at runtime without a restart wouldn't reliably propagate through
-  already-open connections/caches anyway).
-- Per `CLAUDE.md`'s multi-tenancy section, this app is deployed **one Rails process per school**
-  (not a shared multi-tenant DB) — a timezone is a deploy-time/environment decision, same
-  category as `config.i18n.default_locale`, not admin-editable runtime content like
-  `NotificationTemplate` bodies.
-
-Proposed shape (confirm before implementing): an env var (e.g. `SCHOOL_TIMEZONE`, default
-`"Paris"` for backward compat) read in `config/application.rb`, exposed to the frontend the same
-way other boot-time config already reaches React (check how `i18n.language`/locale currently gets
-to the frontend — likely a bootstrap prop or a small `window.*` global set by a layout) so
-`PARIS_DATE_FORMAT_OPTIONS` becomes a computed constant off that value instead of two separate
-hardcoded frontend constants. Revisit if a DB-backed setting turns out to be preferred instead
-(e.g. if the app ever moves toward runtime-configurable multi-school support — see the
-architectural-fit investigation from earlier in this project, if that doc still exists).
+Shipped as env/boot-time config, matching `config.i18n.default_locale`'s category (deploy-time
+decision, one Rails process per school per `CLAUDE.md`'s multi-tenancy note) rather than a DB
+`Parameter` row:
+- Backend: `config.time_zone = ENV.fetch("SCHOOL_TIMEZONE", "Paris")` in `config/application.rb`
+  (default preserves today's behavior).
+- New `Elvis::SchoolTimezone.iana_name` (`lib/elvis/school_timezone.rb`) resolves Rails' short
+  zone name to the real IANA identifier the frontend needs, via
+  `ActiveSupport::TimeZone[...].tzinfo.name` — single source of truth, nothing hardcodes the IANA
+  name separately.
+- Exposed to the frontend the same way locale already is: `data-timezone="<%= ... %>"` on
+  `<html>` in all 3 layouts (`application`/`devise`/`simple.html.erb`), read once via
+  `document.documentElement.dataset.timezone`.
+- New `frontend/tools/timezone.ts` exports `SCHOOL_TIMEZONE`/`SCHOOL_DATE_FORMAT_OPTIONS`,
+  replacing the two separate hardcoded `PARIS_DATE_FORMAT_OPTIONS` constants in
+  `courses/LessonList.jsx` and `activityApplications/summary/Activity.jsx`.
+- Verified: `tsc --noEmit` clean, full `vitest run` (1275 tests) green, `bin/rails runner`
+  confirms `Elvis::SchoolTimezone.iana_name` resolves `"Paris"` → `"Europe/Paris"` at boot.
+  `docs/KnownIssues.md`'s "Frontend date formatting hardcodes Europe/Paris" entry removed
+  (resolved by this item).
 
 ## 4. i18n PRs #7–#10 — done, see `fix/i18n-pr7-10-review-findings`
 
@@ -109,7 +104,13 @@ feature this app actually uses maps to a native, free, stable FullCalendar v6 AP
   — manageable, no functional loss. v6→v7 is a much bigger jump (ESM-only, CSS theming rework,
   `temporal-polyfill` dep) — land on v6 for this pass, defer v7's rework to its own.
   `@fullcalendar/resource-timeline` (already used by `YearlyCalendar.jsx`) is confirmed a
-  **premium plugin** (free only under AGPLv3) — pre-existing, not new, but worth knowing.
+  **premium plugin**, tri-licensed: paid commercial license, CC BY-NC-ND (non-commercial only,
+  no source modifications), or free under **GPLv3** for open-source projects — verified against
+  the `LICENSE.md` shipped in the installed `^5.5.1` package and against v6.1.19 on unpkg (the v6
+  this item targets). Pre-existing, not new, but worth knowing. Note: FullCalendar's *upcoming*
+  v7 (still `7.0.0-rc.0` on npm, not stable) switches this tier to AGPLv3 per fullcalendar.io's
+  licensing page — irrelevant to the v5→v6 move this item scopes, but re-check if a future v7
+  upgrade is ever considered.
 - Real decision point (not silently assumed): the app's "compare multiple plannings" mode has
   always been one overlaid view, never true side-by-side columns. If that's ever wanted, it needs
   FullCalendar's paid resource-timeline tier or a switch to react-big-calendar (free, native

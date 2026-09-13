@@ -49,7 +49,11 @@ module RailsStarter
       g.channel        assets: false
     end
 
-    config.time_zone = "Paris"
+    # One Rails process per school (CLAUDE.md's multi-tenancy note) - a deploy-time/environment
+    # decision, same category as config.i18n.default_locale below, not admin-editable runtime
+    # content. "Paris" (not "Europe/Paris") is Rails' own TimeZone name; see
+    # Elvis::SchoolTimezone for how this is resolved to a real IANA name for the frontend.
+    config.time_zone = ENV.fetch("SCHOOL_TIMEZONE", "Paris")
 
     config.i18n.default_locale = :fr
     config.i18n.available_locales = Elvis::SUPPORTED_LOCALES
