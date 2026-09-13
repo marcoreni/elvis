@@ -250,6 +250,36 @@ Same category of bug as item 3 (a hardcoded constant that should follow a runtim
   a one-line locale swap — track as its own follow-up rather than bundling with the two fixes
   above.
 
+## 11. Hardcoded French UI strings outside the i18n rollout — status: not started, found 2026-09-14
+
+Found while auditing sweetalert2 call sites for item 7 — not a locale-follows-setting bug like
+item 10, just plain un-extracted French text that never went through `t()` at all, so it shows in
+French for every user regardless of `i18n.language`.
+
+- **Highest impact — `frontend/tools/api.ts:118-129`**: the generic fetch-error fallback (fires
+  whenever a request errors with no `.error()` callback registered — the app-wide catch-all) has a
+  hardcoded `title: "Oops... une erreur est survenue"` and hardcoded French body text, including a
+  typo (`"cod suivant"` should be `"code suivant"`). This is a shared low-level helper (`api.set()`
+  is used by nearly every component), so this is the single highest-traffic hardcoded string in
+  the app — every unhandled API error surfaces it. `frontend/tools/constants.ts` already
+  establishes the pattern for `t()` outside a component (`import i18n from "../i18n"` then
+  `i18n.t("common:apiErrors...")`) — reuse that here instead of a hook.
+- **`frontend/components/utils/BtnApiElement.jsx`**: hardcoded French swal text (`"Une erreur est
+  survenue."`, `"Email envoyé"`) and a suspicious `title: "error"` (line 16) — the literal English
+  word "error" as a dialog title looks like a copy-paste placeholder bug, not intentional copy;
+  worth checking what this button is actually used for before deciding the real title.
+- **`frontend/components/plugins/Plugins.jsx` and `PluginActivationModal.jsx`**: not just the swal
+  calls — the entire admin plugin-management UI (buttons, confirmation copy, "Êtes-vous sûr(e) de
+  vouloir désactiver/activer ce plugin ?", "Supprimer les données du plugin", etc.) was never
+  i18n-extracted. Same category as item 10's `bill.html.erb` finding: a real extraction job for
+  2 whole components, not a one-line fix — track as its own pass rather than folding into the
+  sweetalert2 migration or item 10's smaller fixes.
+- **Unrelated but adjacent, found while checking error pages**: `public/500.html`'s `<title>` reads
+  "The page you were looking for doesn't exist (404)" — copy-pasted from `404.html`, wrong for a
+  500. Not a locale issue (Rails' static crash pages are deliberately English/dependency-free,
+  served when Rails itself may be down — not worth translating), just a plain mislabeled title,
+  trivial one-line fix whenever someone's in that file.
+
 ## Context this roadmap assumes (don't re-derive, just re-read if needed)
 
 - `docs/KnownIssues.md` (~273 lines as of this roadmap) and `docs/I18n-Roadmap.md` (Phase 07
