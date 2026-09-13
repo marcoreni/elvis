@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require_relative "../../lib/elvis/event_handler"
 
 class ApplicationRecord < ActiveRecord::Base

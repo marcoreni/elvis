@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # Liste des jours de vacances et des jours férié pour l'année scolaire 2020-2022
 # METTRE A JOUR L'API DES VACANCES !
 

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Holidays
   class HolidaysPacker
     def self.pack_holidays(season)

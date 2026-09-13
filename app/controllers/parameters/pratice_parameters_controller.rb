@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class Parameters::PraticeParametersController < ApplicationController
   def index; end
 

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 Season.find(5) # cela correspond à la saison 2020-2022 sur la prod, à changer si besoin
 
 vendredi15 = DateTime.parse "2021-10-15" # changer ces deux date pour les autres vacance si besoin

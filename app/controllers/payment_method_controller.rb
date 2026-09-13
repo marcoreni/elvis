@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class PaymentMethodController < ApplicationController
   before_action :set_current_user
   before_action -> { render status: 401, json: { error: "forbidden" } and return },

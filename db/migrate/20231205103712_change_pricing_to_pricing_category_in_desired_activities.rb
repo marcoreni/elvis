@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class ChangePricingToPricingCategoryInDesiredActivities < ActiveRecord::Migration[6.1]
   def up
     add_column :desired_activities, :pricing_category_id, :bigint

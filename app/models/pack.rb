@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class Pack < ApplicationRecord
   belongs_to :user
   belongs_to :activity_ref_pricing

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 Question.create!(
   question_type: "student_evaluations",
   field_type: "select",

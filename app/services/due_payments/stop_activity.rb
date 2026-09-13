@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module DuePayments
   class StopActivity
     # @param [ActivityApplication] application

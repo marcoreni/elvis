@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # delete user nil in level
 ActiveRecord::Base.transaction do
   nil_user = Level.where(user_id: nil)

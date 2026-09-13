@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require_relative "liquid_drops/application_drop"
 require_relative "liquid_drops/activity_drop"
 class ActivityProposedMailer < LayoutMailer

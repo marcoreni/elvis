@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class UpdateBodyAndJsonOfActivityAssigned < ActiveRecord::Migration[6.1]
   def change
     @activity_assigned = NotificationTemplate.find_by(path: "activity_assigned_mailer/activity_assigned")

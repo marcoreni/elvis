@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # Delay all the courses from `start` to `stop` by `delay` time
 TimeInterval.transaction do
   # from sunday to sunday

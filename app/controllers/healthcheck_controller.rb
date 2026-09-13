@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class HealthcheckController < ActionController::Base
   if ENV["HEALTH_CHECK_USER"].present? && ENV["HEALTH_CHECK_PASSWORD"].present?
     http_basic_authenticate_with name: "#{ENV['HEALTH_CHECK_USER']}",

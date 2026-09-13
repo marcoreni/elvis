@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module DateHelper
   require "date"
   require "i18n"

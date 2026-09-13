@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # All activities
 ActivityRef.all.update({ from_age: 1, to_age: 150 })
 

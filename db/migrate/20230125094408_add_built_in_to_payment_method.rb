@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class AddBuiltInToPaymentMethod < ActiveRecord::Migration[6.1]
   def self.up
     add_column :payment_methods, :built_in, :boolean, default: false

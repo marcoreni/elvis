@@ -1,1 +1,3 @@
+# frozen_string_literal: true
+
 json.array! @flat_rates, partial: "flat_rates/flat_rate", as: :flat_rate

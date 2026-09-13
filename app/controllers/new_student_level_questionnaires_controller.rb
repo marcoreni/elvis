@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class NewStudentLevelQuestionnairesController < ApplicationController
   def find
     @new_student_level_questionnaire = NewStudentLevelQuestionnaire

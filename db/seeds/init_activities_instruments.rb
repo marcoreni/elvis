@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 activities = Activity
              .includes(activity_ref: :instruments)
              .joins(:time_interval)

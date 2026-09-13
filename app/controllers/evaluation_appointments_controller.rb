@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class EvaluationAppointmentsController < ApplicationController
   def index
     evaluation_availabilities = TimeInterval

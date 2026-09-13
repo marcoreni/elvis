@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class Formule < ApplicationRecord
   acts_as_paranoid
   has_many :formule_pricings, dependent: :destroy

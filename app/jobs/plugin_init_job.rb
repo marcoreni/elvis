@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require "elvis/plugin_loader"
 require "concurrent"
 

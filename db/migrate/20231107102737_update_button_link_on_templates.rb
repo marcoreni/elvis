@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class UpdateButtonLinkOnTemplates < ActiveRecord::Migration[6.1]
   def up
     execute "ALTER TABLE notification_templates DROP CONSTRAINT notification_templates_pkey;"

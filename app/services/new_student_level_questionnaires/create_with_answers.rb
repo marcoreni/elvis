@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module NewStudentLevelQuestionnaires
   class CreateWithAnswers
     def initialize(user, activity_ref, season, answers)

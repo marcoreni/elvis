@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require_relative "lib/elvis/plugin_gem_utils"
 
 source "https://rubygems.org"

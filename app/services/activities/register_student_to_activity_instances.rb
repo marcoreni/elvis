@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Activities
   # inscrit l'étudiant spécifié dans la DesiredActivity comme participant des instances du cours Activity
   # à partir de la date spécifiée dans la DesiredActivity

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 Question.create!(
   question_type: "new_student_level_questionnaire",
   field_type: "radio",

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 Rails.application.configure do
   config.web_console.permissions = "0.0.0.0/0"
   # In the development environment your application's code is reloaded on

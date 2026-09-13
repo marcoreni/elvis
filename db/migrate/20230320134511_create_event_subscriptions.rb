@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class CreateEventSubscriptions < ActiveRecord::Migration[6.1]
   def up
     create_table :event_subscriptions do |t|

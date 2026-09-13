@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class AdhesionController < ApplicationController
   def index
     @current_user = current_user

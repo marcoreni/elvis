@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class ActivityRefController < ApplicationController
   load_and_authorize_resource param_method: :ref_params
   require "elvis/csv_responder"

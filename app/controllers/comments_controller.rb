@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class CommentsController < ApplicationController
   def create
     @comment = Comment.create!(create_or_update_params)

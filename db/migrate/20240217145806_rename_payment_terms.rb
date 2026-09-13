@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class RenamePaymentTerms < ActiveRecord::Migration[6.1]
   def up
     # modifications sur la table payment_terms

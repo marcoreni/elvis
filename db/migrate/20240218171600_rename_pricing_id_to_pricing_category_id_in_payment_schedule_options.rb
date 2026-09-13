@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class RenamePricingIdToPricingCategoryIdInPaymentScheduleOptions < ActiveRecord::Migration[6.1]
   def up
     remove_foreign_key :payment_schedule_options, column: :pricing_id if foreign_key_exists?(:payment_schedule_options,

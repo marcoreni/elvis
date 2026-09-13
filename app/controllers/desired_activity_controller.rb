@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class DesiredActivityController < ApplicationController
   def update
     # @type [DesiredActivity]

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class ActivityRefKindController < ApplicationController
   before_action -> { @current_user = current_user }
 

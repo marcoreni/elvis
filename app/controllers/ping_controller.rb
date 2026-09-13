@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class PingController < ActionController::Base
   # do not log the request
   self.logger = nil

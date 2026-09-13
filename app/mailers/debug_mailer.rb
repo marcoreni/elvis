@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class DebugMailer < ApplicationMailer
   default from: Parameter.get_value("app.application_mailer.default_from")
   layout "mailer"

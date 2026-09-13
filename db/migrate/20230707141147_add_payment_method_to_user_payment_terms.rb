@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class AddPaymentMethodToUserPaymentTerms < ActiveRecord::Migration[6.1]
   def change
     # add foreign key

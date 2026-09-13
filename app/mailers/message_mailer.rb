@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class MessageMailer < LayoutMailer
   prepend_view_path NotificationTemplate.resolver
 

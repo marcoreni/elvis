@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class SessionsController < Devise::SessionsController
   def create
     matching_user = User

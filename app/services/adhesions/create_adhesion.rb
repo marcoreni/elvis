@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Adhesions
   class CreateAdhesion
     def initialize(id, validity_start_date = DateTime.now.to_s)

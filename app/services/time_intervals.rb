@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module TimeIntervals
   def self.available_appointments(season, do_format = true)
     intervals = TimeInterval

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module ActivityApplications
   class TesImportHandler
     def initialize; end

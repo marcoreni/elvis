@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module StudentEvaluations
   module Stats
     class CalculateStats

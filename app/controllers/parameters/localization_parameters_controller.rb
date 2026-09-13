@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class Parameters::LocalizationParametersController < ApplicationController
   def index; end
 

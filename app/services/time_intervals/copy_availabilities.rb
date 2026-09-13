@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module TimeIntervals
   class CopyAvailabilities
     def initialize(planning_id, from_season, to_season, kinds)

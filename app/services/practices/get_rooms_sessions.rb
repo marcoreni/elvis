@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Practices
   class GetRoomsSessions
     def initialize(rooms = nil, start = nil, stop = nil, band = nil)

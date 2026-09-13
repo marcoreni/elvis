@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class ChangeMailSentFromBooleanToDate < ActiveRecord::Migration[6.1]
   def up
     add_column :activity_applications, :mail_sent_at, :datetime, default: nil

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class MigrateAllSeasonPricingsToCategories < ActiveRecord::Migration[6.1]
   def up
     # verify if table pricings exists. return if not

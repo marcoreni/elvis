@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module TimeIntervals
   # Permet de créer un intervalle de temps de type "disponibilité" dans un planning.
   # Si des conflits sont détectés, l'intervalle ne sera pas créé.

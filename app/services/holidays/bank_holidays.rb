@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Holidays
   # zones valides pour la récupération des jours fériés
 

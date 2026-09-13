@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class AddDefaultPricingCategories < ActiveRecord::Migration[6.1]
   DEFAULT_CATEGORIES = %w[Annuel Mensuel].freeze
 

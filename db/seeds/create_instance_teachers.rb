@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 Activity.includes(:activity_instances).all.each_with_index do |a, i|
   teacher = a.teacher
 

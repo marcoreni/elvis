@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class AddFieldsToPlugin < ActiveRecord::Migration[6.1]
   def up
     add_column :plugins, :display_name, :string

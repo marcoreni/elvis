@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class Practice::MusicGenresController < ApplicationController
   before_action :set_music_genre, only: %i[edit update destroy]
   before_action :set_current_user

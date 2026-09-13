@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Users
   # the second user is merge into the first one, before beeing deleted
   class MergeUsers

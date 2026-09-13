@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Plannings
   class GetSimplePlanning
     def initialize(user, day)

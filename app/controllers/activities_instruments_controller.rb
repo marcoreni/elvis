@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class ActivitiesInstrumentsController < ApplicationController
   def create
     @activities_instrument = ActivitiesInstrument.create!(model_params)

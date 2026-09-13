@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Onboarding
   class StartupReporter
     def self.execute(*args)

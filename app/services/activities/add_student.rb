@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Activities
   # Assign student to each instance,
   # add intervals to their planning,

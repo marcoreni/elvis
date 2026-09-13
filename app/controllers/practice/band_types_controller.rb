@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Practice
   class BandTypesController < ApplicationController
     before_action :set_band_type, only: %i[show edit update destroy]

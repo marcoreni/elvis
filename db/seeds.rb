@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 def create_season(year, is_current)
   Season.create_or_find_by!(
     label: "Saison #{year}-#{year + 1}",

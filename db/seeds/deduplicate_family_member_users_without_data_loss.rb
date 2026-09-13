@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 def or_reduce(arr, field)
   arr.reduce(false) { |acc, member| acc or member[field] }
 end

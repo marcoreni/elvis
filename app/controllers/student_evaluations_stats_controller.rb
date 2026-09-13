@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class StudentEvaluationsStatsController < ApplicationController
   def stats
     @current_user = current_user

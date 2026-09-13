@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class AddDeletedAtToActivityRefPricings < ActiveRecord::Migration[6.1]
   def change
     add_column :activity_ref_pricings, :deleted_at, :datetime

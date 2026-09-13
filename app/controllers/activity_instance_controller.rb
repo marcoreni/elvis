@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class ActivityInstanceController < ApplicationController
   module InstancesUpdateScope
     SINGULAR = 0

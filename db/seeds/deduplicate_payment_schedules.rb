@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # Procédure rails de déduplication d'échéanciers:
 # Prendre tous les échéanciers en double(ou triple ou...) pour une même saison et un même utilisateur
 # Ne garder qu'un échéancier, en mettant les échéances et commentaires des autres dans celui qu'on garde.

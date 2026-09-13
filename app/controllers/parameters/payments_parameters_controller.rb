@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class Parameters::PaymentsParametersController < ApplicationController
   def index; end
 

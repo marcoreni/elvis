@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module ApplicationChangeQuestionnaires
   class CreateWithAnswers
     def initialize(user, activity, season, answers)

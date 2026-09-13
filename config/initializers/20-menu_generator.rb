@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module MenuGenerator
   def self.generate_menus
     generate_side_menu

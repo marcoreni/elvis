@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Activities
   class FindStudents
     def initialize(time_intervals)

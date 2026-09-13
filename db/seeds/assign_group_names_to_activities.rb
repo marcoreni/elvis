@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 season = Season.current
 
 User.teachers.each do |teacher|

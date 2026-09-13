@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 Season.all.each do |s, i|
   FamilyMemberUser.all.each do |fm|
     if i == 0

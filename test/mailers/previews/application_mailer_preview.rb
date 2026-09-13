@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class ApplicationMailerPreview < ActionMailer::Preview
   def notify_new_application
     # to see mailers previews :

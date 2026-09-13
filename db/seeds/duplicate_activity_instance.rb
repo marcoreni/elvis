@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 TimeInterval.transaction do
   start = Date.iso8601("2021-06-14")
   stop = Date.iso8601("2021-06-20")

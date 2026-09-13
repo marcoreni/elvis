@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class AdhesionPricesController < ApplicationController
   before_action -> { @current_user = current_user }
   before_action -> { authorize! :manage, AdhesionPrice }

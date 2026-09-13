@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class FormulePricing < ApplicationRecord
   belongs_to :formule
   belongs_to :pricing_category

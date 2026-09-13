@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class Practice::SessionsController < ApplicationController
   def create
     @current_user = User.find(params[:current_user][:id])
