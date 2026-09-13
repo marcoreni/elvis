@@ -393,6 +393,54 @@
             "created": "Template créé",
             "modified": "Template modifié",
             "deleted": "Template supprimé"
+        },
+        "mergeTags": {
+            "application": {
+                "firstName": {"name": "Prénom de l'utilisateur", "sample": "Prénom"},
+                "lastName": {"name": "Nom de l'utilisateur", "sample": "Nom"},
+                "applicationId": {"name": "ID de la demande d'inscription", "sample": "ID de la demande d'inscription"},
+                "seasonLabel": {"name": "Saison de la demande d'inscription", "sample": "Saison de la demande d'inscription"},
+                "totalAllDuePayments": {"name": "Total des paiements dus", "sample": "Total des paiements dus"},
+                "totalPendingDuePayments": {"name": "Total des paiements dus restants", "sample": "Total des paiements dus restants"}
+            },
+            "activity": {
+                "dayInWeek": {"name": "Jour de la semaine de l'activité", "sample": "Jour de la semaine de l'activité"},
+                "startDate": {"name": "Date de début de l'activité", "sample": "Date de début de l'activité"},
+                "startHour": {"name": "Heure de début de l'activité", "sample": "Heure de début de l'activité"},
+                "end": {"name": "Heure de fin de l'activité", "sample": "Heure de fin de l'activité"},
+                "label": {"name": "Nom de l'activité", "sample": "Nom de l'activité"},
+                "teacherFirstName": {"name": "Prénom du professeur", "sample": "Prénom du professeur"},
+                "teacherLastName": {"name": "Nom du professeur", "sample": "Nom du professeur"},
+                "displayPrice": {"name": "Prix de l'activité", "sample": "Prix de l'activité"}
+            },
+            "activityInstance": {
+                "dayInWeek": {"name": "Jour de la semaine de l'activité", "sample": "Jour de la semaine de l'activité"},
+                "startDate": {"name": "Date de début de la séance", "sample": "Date de début de la séance"},
+                "startHour": {"name": "Heure de début de la séance", "sample": "Heure de début de la séance"},
+                "end": {"name": "Heure de fin de la séance", "sample": "Heure de fin de la séance"},
+                "teacherFirstName": {"name": "Prénom du professeur", "sample": "Prénom du professeur"},
+                "teacherLastName": {"name": "Nom du professeur", "sample": "Nom du professeur"}
+            },
+            "payment": {
+                "seasonLabel": {"name": "Saison du paiement", "sample": "Saison du paiement"},
+                "previsionalDate": {"name": "Date du paiement", "sample": "Date du paiement"},
+                "amount": {"name": "Montant du paiement", "sample": "Montant du paiement"},
+                "status": {"name": "Statut du paiement", "sample": "Statut du paiement"},
+                "paymentsLoop": {"name": "Paiements", "repeatRuleName": "Répeter pour chaque paiement"}
+            },
+            "reglements": {
+                "receptionDate": {"name": "Date de réception du règlement", "sample": "Date de réception du règlement"},
+                "cashingDate": {"name": "Date d'encaissement du règlement", "sample": "Date d'encaissement du règlement"},
+                "amount": {"name": "Montant du règlement", "sample": "Montant du règlement"},
+                "status": {"name": "Statut du règlement", "sample": "Statut du règlement"},
+                "reglementsLoop": {"name": "Règlements", "repeatRuleName": "Répeter pour chaque règlement"}
+            },
+            "utils": {
+                "buttonSchoolLink": {"name": "Bouton vers le site de l'école", "sample": "Bouton vers le site de l'école"}
+            },
+            "schoolLogo": {
+                "imgSchoolLogo": {"name": "Logo de l'école", "sample": "Logo de l'école"}
+            }
         }
     },
     "eventsRules": {

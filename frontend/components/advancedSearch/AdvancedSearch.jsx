@@ -1,6 +1,6 @@
 import React from "react";
 import { withTranslation } from "react-i18next";
-import { initializeElasticPlugin, initializeLang } from "./utils.js";
+import { initializeElasticPlugin, initializeLang, getQueryBuilderLangCode } from "./utils.js";
 import { csrfToken } from "../utils";
 import _ from "lodash";
 
@@ -60,7 +60,7 @@ const initializeQueryBuilder = (element, t) => {
 
     $(element).queryBuilder({
         filters,
-        lang_code: "fr",
+        lang_code: getQueryBuilderLangCode(),
         icons: {
             add_group: "fas fa-plus",
             add_rule: "fas fa-plus",

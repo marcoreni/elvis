@@ -373,7 +373,13 @@
             "none": "Aucun",
             "selectMonths": "Sélectionner le ou les mois de règlement",
             "collectionDay": "Jour du règlement",
-            "collectionDayHelp": "Ajouter un ou plusieurs jours possibles de règlement. L'élève pourra choisir le jour souhaité."
+            "collectionDayHelp": "Ajouter un ou plusieurs jours possibles de règlement. L'élève pourra choisir le jour souhaité.",
+            "paymentsNumbers": {
+                "annual": "Annuel (1)",
+                "biannual": "Semestriel (2)",
+                "quarterly": "Trimestriel (3)",
+                "monthly": "Mensuel (9)"
+            }
         },
         "v2": {
             "prorataUpdateError": "Une erreur est survenue lors de la mise à jour du prorata",

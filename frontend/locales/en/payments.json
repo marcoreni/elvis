@@ -373,7 +373,13 @@
             "none": "None",
             "selectMonths": "Select the payment month(s)",
             "collectionDay": "Payment day",
-            "collectionDayHelp": "Add one or more possible payment days. The student will be able to choose the preferred day."
+            "collectionDayHelp": "Add one or more possible payment days. The student will be able to choose the preferred day.",
+            "paymentsNumbers": {
+                "annual": "Annual (1)",
+                "biannual": "Biannual (2)",
+                "quarterly": "Quarterly (3)",
+                "monthly": "Monthly (9)"
+            }
         },
         "v2": {
             "prorataUpdateError": "An error occurred while updating the prorata",
