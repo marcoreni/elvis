@@ -346,6 +346,7 @@
             "nameRequired": "Le nom est requis",
             "emailLabel": "Email de contact",
             "emailRequired": "L'email est requis",
+            "emailInvalid": "L'email n'est pas valide",
             "phoneLabel": "Téléphone de contact",
             "phoneRequired": "Le numéro de téléphone est requis",
             "streetLabel": "Numéro et nom de voie",

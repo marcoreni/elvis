@@ -157,7 +157,10 @@ export default function SchoolParameters(props) {
                         required: true,
                         validate: value => !!validateEmail(value)
                     })} defaultValue={props.school.email} className="form-control"/>
-                    <p className="text-danger">{errors.email && t("editParameters.school.emailRequired")}</p>
+                    <p className="text-danger">
+                        {errors.email?.type === "required" && t("editParameters.school.emailRequired")}
+                        {errors.email?.type === "validate" && t("editParameters.school.emailInvalid")}
+                    </p>
                 </div>
                 <div className="form-group">
                     <label>{t("editParameters.school.phoneLabel")} <span className="text-danger">*</span> :</label>

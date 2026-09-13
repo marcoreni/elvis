@@ -32,7 +32,7 @@
 // lot and are intentionally left untouched.
 
 import React from "react";
-import {render, screen, fireEvent, waitFor} from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import i18n from "../../i18n";
 import fr from "../../locales/fr/parameters.json";
 import en from "../../locales/en/parameters.json";
@@ -42,7 +42,7 @@ import en from "../../locales/en/parameters.json";
 vi.mock("sweetalert2", () => {
     const swal = vi.fn(() => Promise.resolve({}));
     swal.showLoading = vi.fn();
-    return {default: swal};
+    return { default: swal };
 });
 
 // --- tools/api: chainable no-op stub (used by `onAddressChange`, not under test here). -------
@@ -68,12 +68,14 @@ vi.mock("../../tools/api", () => ({
 // asserts the format check now actually blocks a malformed address on submit.
 
 // --- components/utils: only `csrfToken` is imported by SchoolParameters. --------------------
-vi.mock("../utils", () => ({csrfToken: "test-csrf-token"}));
+vi.mock("../utils", () => ({ csrfToken: "test-csrf-token" }));
 
 // --- DragAndDrop: prop-echoing stub (rendered for the Logo field; `textDisplayed` is a
 //     threaded translation). ------------------------------------------------------------------
 vi.mock("./DragAndDrop", () => ({
-    default: (props) => <div data-testid="drag-and-drop" data-text={props.textDisplayed} />,
+    default: (props) => (
+        <div data-testid="drag-and-drop" data-text={props.textDisplayed} />
+    ),
 }));
 
 import swal from "sweetalert2";
@@ -107,21 +109,28 @@ const baseProps = {
         academy: "Paris",
         zone: "",
     },
-    schoolAddress: {street_address: "1 rue X", city: "Paris", postcode: "75001", country: "FR"},
+    schoolAddress: {
+        street_address: "1 rue X",
+        city: "Paris",
+        postcode: "75001",
+        country: "FR",
+    },
     countries: [
         ["France", "FR"],
         ["Belgique", "BE"],
     ],
-    bankHolidaysZones: {m: "Métropole", g: "Guadeloupe"},
+    bankHolidaysZones: { m: "Métropole", g: "Guadeloupe" },
     bankHolidaysZone: "Métropole",
-    zones: {a: "A", b: "B", c: "C"},
+    zones: { a: "A", b: "B", c: "C" },
     zone_set_by_user: true,
     picture_url: "/logo.png",
     min_score_recaptcha: "0.5",
 };
 
 beforeEach(() => {
-    global.fetch = vi.fn().mockResolvedValue({ok: true, json: () => Promise.resolve({})});
+    global.fetch = vi
+        .fn()
+        .mockResolvedValue({ ok: true, json: () => Promise.resolve({}) });
 });
 
 afterEach(async () => {
@@ -143,25 +152,36 @@ describe("editParameters.school.* — i18n layer", () => {
     // `<p className="text-danger">` — both `t("...siretRnaError", {country: getValues("countryCode")})`.
     // Reaching the `validate` call site through RHF is awkward; asserting the substitution at the
     // i18n layer covers both.
-    test.each(["fr", "en"])("siretRnaError interpolates {{country}} in %s", (lng) => {
-        const v = tP(lng)("editParameters.school.siretRnaError", {country: "BE"});
-        expect(v).toContain("BE");
-        expect(v).not.toMatch(/\{[{}]/);
-    });
+    test.each(["fr", "en"])(
+        "siretRnaError interpolates {{country}} in %s",
+        (lng) => {
+            const v = tP(lng)("editParameters.school.siretRnaError", {
+                country: "BE",
+            });
+            expect(v).toContain("BE");
+            expect(v).not.toMatch(/\{[{}]/);
+        }
+    );
 
-    test.each(["fr", "en"])("academyLine interpolates {{academy}} in %s", (lng) => {
-        const v = tP(lng)("editParameters.school.academyLine", {academy: "Paris"});
-        expect(v).toContain("Paris");
-        expect(v).not.toMatch(/\{[{}]/);
-    });
+    test.each(["fr", "en"])(
+        "academyLine interpolates {{academy}} in %s",
+        (lng) => {
+            const v = tP(lng)("editParameters.school.academyLine", {
+                academy: "Paris",
+            });
+            expect(v).toContain("Paris");
+            expect(v).not.toMatch(/\{[{}]/);
+        }
+    );
 
     test.each(["fr", "en"])(
         "activitiesNotVatLabel keeps the <Trans> <1></1> markers in the JSON in %s",
         (lng) => {
-            const raw = (lng === "fr" ? fr : en).editParameters.school.activitiesNotVatLabel;
+            const raw = (lng === "fr" ? fr : en).editParameters.school
+                .activitiesNotVatLabel;
             expect(raw).toContain("<1>");
             expect(raw).toContain("</1>");
-        },
+        }
     );
 
     // "common:actions.save resolves to Enregistrer / Save" removed (Phase 07 P0) — pure
@@ -172,47 +192,72 @@ describe("editParameters.school.* — i18n layer", () => {
 // 2. Render — headings, labels, options, submit button
 // ============================================================================================
 describe("SchoolParameters — translated render", () => {
-    test.each(["fr", "en"])("the 4 <h3> headings render translated in %s", async (lng) => {
-        await i18n.changeLanguage(lng);
-        render(<SchoolParameters {...baseProps} />);
+    test.each(["fr", "en"])(
+        "the 4 <h3> headings render translated in %s",
+        async (lng) => {
+            await i18n.changeLanguage(lng);
+            render(<SchoolParameters {...baseProps} />);
 
-        for (const key of ["schoolInfoHeading", "contactsHeading", "holidaysHeading", "billingHeading"]) {
-            expect(
-                screen.getByRole("heading", {name: norm(tP(lng)(`editParameters.school.${key}`))}),
-            ).toBeInTheDocument();
+            for (const key of [
+                "schoolInfoHeading",
+                "contactsHeading",
+                "holidaysHeading",
+                "billingHeading",
+            ]) {
+                expect(
+                    screen.getByRole("heading", {
+                        name: norm(tP(lng)(`editParameters.school.${key}`)),
+                    })
+                ).toBeInTheDocument();
+            }
         }
-    });
+    );
 
-    test.each(["fr", "en"])("a representative set of <label>s render translated in %s", async (lng) => {
-        await i18n.changeLanguage(lng);
-        const {container} = render(<SchoolParameters {...baseProps} />);
+    test.each(["fr", "en"])(
+        "a representative set of <label>s render translated in %s",
+        async (lng) => {
+            await i18n.changeLanguage(lng);
+            const { container } = render(<SchoolParameters {...baseProps} />);
 
-        for (const key of [
-            "nameLabel",
-            "emailLabel",
-            "streetLabel",
-            "cityLabel",
-            "postalCodeLabel",
-            "countryLabel",
-            "bankHolidaysZoneLabel",
-            "schoolHolidaysZoneLabel", // leading + trailing space — the one most likely to regress under a trim
-            "siretRnaLabel",
-            "rcsLabel",
-            "vatLabel",
-        ]) {
-            expect(hasLabel(container, tP(lng)(`editParameters.school.${key}`))).toBe(true);
+            for (const key of [
+                "nameLabel",
+                "emailLabel",
+                "streetLabel",
+                "cityLabel",
+                "postalCodeLabel",
+                "countryLabel",
+                "bankHolidaysZoneLabel",
+                "schoolHolidaysZoneLabel", // leading + trailing space — the one most likely to regress under a trim
+                "siretRnaLabel",
+                "rcsLabel",
+                "vatLabel",
+            ]) {
+                expect(
+                    hasLabel(container, tP(lng)(`editParameters.school.${key}`))
+                ).toBe(true);
+            }
         }
-    });
+    );
 
-    test.each(["fr", "en"])("a blank required field renders its translated error <p> in %s", async (lng) => {
-        await i18n.changeLanguage(lng);
-        const {container} = render(<SchoolParameters {...baseProps} school={{...baseProps.school, name: ""}} />);
+    test.each(["fr", "en"])(
+        "a blank required field renders its translated error <p> in %s",
+        async (lng) => {
+            await i18n.changeLanguage(lng);
+            const { container } = render(
+                <SchoolParameters
+                    {...baseProps}
+                    school={{ ...baseProps.school, name: "" }}
+                />
+            );
 
-        fireEvent.submit(container.querySelector("form"));
+            fireEvent.submit(container.querySelector("form"));
 
-        // the <p className="text-danger"> for `name` is `t("editParameters.school.nameRequired")`
-        await screen.findByText(tP(lng)("editParameters.school.nameRequired"));
-    });
+            // the <p className="text-danger"> for `name` is `t("editParameters.school.nameRequired")`
+            await screen.findByText(
+                tP(lng)("editParameters.school.nameRequired")
+            );
+        }
+    );
 
     test.each(["fr", "en"])(
         "the optional <small>, both VAT <option>s and the submit button render translated in %s",
@@ -220,28 +265,37 @@ describe("SchoolParameters — translated render", () => {
             await i18n.changeLanguage(lng);
             render(<SchoolParameters {...baseProps} />);
 
-            expect(screen.getByText(tP(lng)("editParameters.school.optional"))).toBeInTheDocument();
             expect(
-                screen.getByRole("option", {name: tP(lng)("editParameters.school.vatTaxable")}),
+                screen.getByText(tP(lng)("editParameters.school.optional"))
             ).toBeInTheDocument();
             expect(
-                screen.getByRole("option", {name: tP(lng)("editParameters.school.vatExempt")}),
+                screen.getByRole("option", {
+                    name: tP(lng)("editParameters.school.vatTaxable"),
+                })
             ).toBeInTheDocument();
             expect(
-                screen.getByRole("button", {name: tC(lng)("actions.save")}),
+                screen.getByRole("option", {
+                    name: tP(lng)("editParameters.school.vatExempt"),
+                })
             ).toBeInTheDocument();
-        },
+            expect(
+                screen.getByRole("button", { name: tC(lng)("actions.save") })
+            ).toBeInTheDocument();
+        }
     );
 
-    test.each(["fr", "en"])("threads the translated logoDropText into DragAndDrop in %s", async (lng) => {
-        await i18n.changeLanguage(lng);
-        render(<SchoolParameters {...baseProps} />);
+    test.each(["fr", "en"])(
+        "threads the translated logoDropText into DragAndDrop in %s",
+        async (lng) => {
+            await i18n.changeLanguage(lng);
+            render(<SchoolParameters {...baseProps} />);
 
-        expect(screen.getByTestId("drag-and-drop")).toHaveAttribute(
-            "data-text",
-            tP(lng)("editParameters.school.logoDropText"),
-        );
-    });
+            expect(screen.getByTestId("drag-and-drop")).toHaveAttribute(
+                "data-text",
+                tP(lng)("editParameters.school.logoDropText")
+            );
+        }
+    );
 });
 
 // ============================================================================================
@@ -249,20 +303,29 @@ describe("SchoolParameters — translated render", () => {
 // ============================================================================================
 describe("SchoolParameters — <Trans> activitiesNotVatLabel", () => {
     test.each([
-        ["fr", "Les activités musicales ne sont pas assujetties à la TVA", "ne sont pas assujetties"],
+        [
+            "fr",
+            "Les activités musicales ne sont pas assujetties à la TVA",
+            "ne sont pas assujetties",
+        ],
         ["en", "Music activities are not subject to VAT", "are not subject"],
-    ])("renders the <u>-wrapped fragment via the indexed <1> in %s", async (lng, full, underlined) => {
-        await i18n.changeLanguage(lng);
-        const {container} = render(<SchoolParameters {...baseProps} />);
+    ])(
+        "renders the <u>-wrapped fragment via the indexed <1> in %s",
+        async (lng, full, underlined) => {
+            await i18n.changeLanguage(lng);
+            const { container } = render(<SchoolParameters {...baseProps} />);
 
-        const label = container.querySelector('label[for="activitiesNotSubjectToVat"]');
-        expect(label).toBeTruthy();
-        expect(norm(label.textContent)).toBe(full);
+            const label = container.querySelector(
+                'label[for="activitiesNotSubjectToVat"]'
+            );
+            expect(label).toBeTruthy();
+            expect(norm(label.textContent)).toBe(full);
 
-        const u = label.querySelector("u");
-        expect(u).toBeTruthy();
-        expect(norm(u.textContent)).toBe(underlined);
-    });
+            const u = label.querySelector("u");
+            expect(u).toBeTruthy();
+            expect(norm(u.textContent)).toBe(underlined);
+        }
+    );
 });
 
 // ============================================================================================
@@ -274,7 +337,7 @@ describe("SchoolParameters — academyLine (zone not set by user)", () => {
     const zoneProps = {
         ...baseProps,
         zone_set_by_user: false,
-        school: {...baseProps.school, zone: "B", academy: "Paris"},
+        school: { ...baseProps.school, zone: "B", academy: "Paris" },
     };
 
     test.each([
@@ -295,7 +358,9 @@ describe("SchoolParameters — submit / swal", () => {
     // Fill every RHF-required field so `handleSubmit` actually invokes `onSubmit`.
     const fillRequired = (container) => {
         const set = (name, value) =>
-            fireEvent.change(container.querySelector(`[name="${name}"]`), {target: {value}});
+            fireEvent.change(container.querySelector(`[name="${name}"]`), {
+                target: { value },
+            });
         set("name", "My School");
         set("email", "school@example.com");
         set("contactPhone", "0601020304");
@@ -312,9 +377,10 @@ describe("SchoolParameters — submit / swal", () => {
             await i18n.changeLanguage(lng);
             global.fetch = vi.fn().mockResolvedValue({
                 ok: true,
-                json: () => Promise.resolve({academy: "X", zone: "Y", picture: "z"}),
+                json: () =>
+                    Promise.resolve({ academy: "X", zone: "Y", picture: "z" }),
             });
-            const {container} = render(<SchoolParameters {...baseProps} />);
+            const { container } = render(<SchoolParameters {...baseProps} />);
             fillRequired(container);
 
             fireEvent.submit(container.querySelector("form"));
@@ -325,15 +391,15 @@ describe("SchoolParameters — submit / swal", () => {
                 type: "success",
                 title: tP(lng)("shared.saveCompleted"),
             });
-        },
+        }
     );
 
     test.each(["fr", "en"])(
         "fetch !ok -> swal(loadingTitle) then swal(genericError) in %s",
         async (lng) => {
             await i18n.changeLanguage(lng);
-            global.fetch = vi.fn().mockResolvedValue({ok: false});
-            const {container} = render(<SchoolParameters {...baseProps} />);
+            global.fetch = vi.fn().mockResolvedValue({ ok: false });
+            const { container } = render(<SchoolParameters {...baseProps} />);
             fillRequired(container);
 
             fireEvent.submit(container.querySelector("form"));
@@ -344,7 +410,7 @@ describe("SchoolParameters — submit / swal", () => {
                 type: "error",
                 title: tP(lng)("shared.genericErrorShort"),
             });
-        },
+        }
     );
 });
 
@@ -356,7 +422,9 @@ describe("SchoolParameters — submit / swal", () => {
 describe("SchoolParameters — email format validation", () => {
     const fillOtherRequired = (container) => {
         const set = (name, value) =>
-            fireEvent.change(container.querySelector(`[name="${name}"]`), {target: {value}});
+            fireEvent.change(container.querySelector(`[name="${name}"]`), {
+                target: { value },
+            });
         set("name", "My School");
         set("contactPhone", "0601020304");
         set("street", "1 rue de la Paix");
@@ -366,30 +434,63 @@ describe("SchoolParameters — email format validation", () => {
     };
 
     test.each(["fr", "en"])(
-        "a malformed email renders the emailRequired <p> and blocks onSubmit in %s",
+        "a malformed non-empty email renders the emailInvalid <p> (not emailRequired) and blocks onSubmit in %s",
         async (lng) => {
             await i18n.changeLanguage(lng);
-            const {container} = render(<SchoolParameters {...baseProps} />);
+            const { container } = render(<SchoolParameters {...baseProps} />);
             fillOtherRequired(container);
             fireEvent.change(container.querySelector('[name="email"]'), {
-                target: {value: "not-an-email"},
+                target: { value: "not-an-email" },
             });
 
             fireEvent.submit(container.querySelector("form"));
 
-            await screen.findByText(tP(lng)("editParameters.school.emailRequired"));
+            await screen.findByText(
+                tP(lng)("editParameters.school.emailInvalid")
+            );
+            expect(
+                screen.queryByText(
+                    tP(lng)("editParameters.school.emailRequired")
+                )
+            ).not.toBeInTheDocument();
             // handleSubmit must NOT have reached onSubmit -> no loading swal
             expect(swal).not.toHaveBeenCalled();
-        },
+        }
+    );
+
+    test.each(["fr", "en"])(
+        "an empty email renders the emailRequired <p> (not emailInvalid) and blocks onSubmit in %s",
+        async (lng) => {
+            await i18n.changeLanguage(lng);
+            const { container } = render(<SchoolParameters {...baseProps} />);
+            fillOtherRequired(container);
+            fireEvent.change(container.querySelector('[name="email"]'), {
+                target: { value: "" },
+            });
+
+            fireEvent.submit(container.querySelector("form"));
+
+            await screen.findByText(
+                tP(lng)("editParameters.school.emailRequired")
+            );
+            expect(
+                screen.queryByText(
+                    tP(lng)("editParameters.school.emailInvalid")
+                )
+            ).not.toBeInTheDocument();
+            expect(swal).not.toHaveBeenCalled();
+        }
     );
 
     test("a well-formed email passes validation and onSubmit fires", async () => {
         await i18n.changeLanguage("fr");
-        global.fetch = vi.fn().mockResolvedValue({ok: true, json: () => Promise.resolve({})});
-        const {container} = render(<SchoolParameters {...baseProps} />);
+        global.fetch = vi
+            .fn()
+            .mockResolvedValue({ ok: true, json: () => Promise.resolve({}) });
+        const { container } = render(<SchoolParameters {...baseProps} />);
         fillOtherRequired(container);
         fireEvent.change(container.querySelector('[name="email"]'), {
-            target: {value: "valid@example.com"},
+            target: { value: "valid@example.com" },
         });
 
         fireEvent.submit(container.querySelector("form"));
@@ -397,7 +498,7 @@ describe("SchoolParameters — email format validation", () => {
         await waitFor(() => expect(swal).toHaveBeenCalled());
         expect(swal.mock.calls[0][0].title).toBe(tC("fr")("loading"));
         expect(
-            screen.queryByText(tP("fr")("editParameters.school.emailRequired")),
+            screen.queryByText(tP("fr")("editParameters.school.emailRequired"))
         ).not.toBeInTheDocument();
     });
 });
