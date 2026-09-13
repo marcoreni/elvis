@@ -10,7 +10,7 @@ IGNORED_ERROR_CLASSES = [
 
 module RaiseOverride
   def initialize(message = nil, code = nil)
-    super(message, code)
+    super
 
     if is_a?(BaseRendererError) &&
        !IGNORED_ERROR_CLASSES.include?(self.class) &&

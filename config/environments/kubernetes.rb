@@ -47,7 +47,7 @@ Rails.application.configure do
   # Use a different cache store in production.
   config.cache_store = if !ENV["REDIS_URL"].nil? && ENV["USE_REDIS_FOR_CACHING"] == "true"
                          [:redis_cache_store, {
-                           url: ENV["REDIS_URL"],
+                           url: ENV.fetch("REDIS_URL", nil),
                            namespace: "#{ENV['INSTANCE_NAME'] || 'development'}-#{Rails.env}-cache_store"
                          }]
                        else
@@ -56,13 +56,13 @@ Rails.application.configure do
 
   # config.active_job.queue_name_prefix = "rails-starter_#{Rails.env}"
   config.action_mailer.perform_caching = false
-  config.action_mailer.default_url_options = { host: ENV["SMTP_DOMAIN"] }
+  config.action_mailer.default_url_options = { host: ENV.fetch("SMTP_DOMAIN", nil) }
   config.action_mailer.delivery_method = :smtp
   config.action_mailer.smtp_settings = {
-    port: ENV["SMTP_PORT"],
-    address: ENV["SMTP_URL"],
-    user_name: ENV["SMTP_ACCESS_KEY"],
-    password: ENV["SMTP_SECRET_KEY"],
+    port: ENV.fetch("SMTP_PORT", nil),
+    address: ENV.fetch("SMTP_URL", nil),
+    user_name: ENV.fetch("SMTP_ACCESS_KEY", nil),
+    password: ENV.fetch("SMTP_SECRET_KEY", nil),
     authentication: :login,
     enable_starttls_auto: true
   }
@@ -118,7 +118,7 @@ Rails.application.configure do
   # Prepend all log lines with the following tags.
   config.log_tags = {
     request_id: :request_id,
-    instance: ENV["INSTANCE_SLUG"]
+    instance: ENV.fetch("INSTANCE_SLUG", nil)
   }
 
   ##################
@@ -146,8 +146,8 @@ Rails.application.configure do
   config.active_job.queue_adapter = ENV["USE_SIDEKIQ"] == "true" ? :sidekiq : :async
 
   Recaptcha.configure do |config|
-    config.site_key = ENV["SITE_KEY"]
-    config.secret_key = ENV["SECRET_KEY"]
+    config.site_key = ENV.fetch("SITE_KEY", nil)
+    config.secret_key = ENV.fetch("SECRET_KEY", nil)
   end
 
   # redis_conn = proc {

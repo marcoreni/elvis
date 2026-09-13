@@ -12,7 +12,9 @@ class EventsRulesController < ApplicationController
   end
 
   def update
-    if !params.nil?
+    if params.nil?
+      render json: { status: "not ok" }, status: 500
+    else
 
       event = EventRules.find(params[:id])
       event.update(name: params[:name], templateName: params[:templateName].to_json, sendMail: false, sendSMS: false,
@@ -31,25 +33,25 @@ class EventsRulesController < ApplicationController
       event.save!
 
       render json: { status: "ok" }, status: 200
-    else
-      render json: { status: "not ok" }, status: 500
     end
   end
 
   def destroy
-    if !params.nil?
+    if params.nil?
+      render json: { status: "not ok" }, status: 500
+    else
       rule = EventRules.find(params[:id])
       rule.delete
       render json: { status: "ok" }, status: 200
-    else
-      render json: { status: "not ok" }, status: 500
     end
   end
 
   def new; end
 
   def create
-    if !params.nil?
+    if params.nil?
+      render json: { status: "not ok" }, status: 500
+    else
       event = EventRules.new(name: params[:name], sendSMS: false, sendMail: false, event: params[:event].to_json,
                              subject: "", eventName: params[:event][:value])
 
@@ -64,8 +66,6 @@ class EventsRulesController < ApplicationController
 
       event.save!
       render json: { status: "ok" }, status: 200
-    else
-      render json: { status: "not ok" }, status: 500
     end
   end
 

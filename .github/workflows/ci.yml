@@ -8,7 +8,7 @@ on:
 
 # rubocop/tsc gate on regression past these baselines, not on the pre-existing backlog.
 env:
-    RUBOCOP_BASELINE_OFFENSES: 1037
+    RUBOCOP_BASELINE_OFFENSES: 1036
     TSC_BASELINE_ERRORS: 0
 
 jobs:

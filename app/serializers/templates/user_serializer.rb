@@ -33,7 +33,7 @@ module Templates
     end
 
     def birthday
-      object.birthday && object.birthday.strftime("%d/%m/%Y") || "?"
+      (object.birthday && object.birthday.strftime("%d/%m/%Y")) || "?"
     end
   end
 end

@@ -90,7 +90,7 @@ class TimeInterval < ApplicationRecord
 
     if only_from_now_on
       today = Date.today
-      season_start = today > season_start ? today : season_start
+      season_start = today if today > season_start
     end
 
     cwday = start.to_date.cwday
@@ -112,8 +112,8 @@ class TimeInterval < ApplicationRecord
       end_date = self.end.to_datetime
 
       intervals << {
-        "start": start.change({ year: d.year, month: d.month, day: d.day }),
-        "end": end_date.change({ year: d.year, month: d.month, day: d.day })
+        start: start.change({ year: d.year, month: d.month, day: d.day }),
+        end: end_date.change({ year: d.year, month: d.month, day: d.day })
       }
     end
 

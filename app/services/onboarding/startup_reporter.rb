@@ -2,8 +2,8 @@
 
 module Onboarding
   class StartupReporter
-    def self.execute(*args)
-      new(*args).execute
+    def self.execute(*)
+      new(*).execute
     end
 
     def initialize(step)

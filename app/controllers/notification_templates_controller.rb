@@ -22,38 +22,38 @@ class NotificationTemplatesController < ApplicationController
   end
 
   def update
-    if !params.nil?
+    if params.nil?
+      render json: { status: "not ok" }, status: 500
+    else
       template = NotificationTemplate.find(params[:id])
       template.body = params[:html]
       template.json = params[:json].to_json
       template.save!
       render json: { status: "ok" }, status: 200
-    else
-      render json: { status: "not ok" }, status: 500
     end
   end
 
   def destroy
-    if !params.nil?
+    if params.nil?
+      render json: { status: "not ok" }, status: 500
+    else
       template = NotificationTemplate.find(params[:id])
       template.delete
       render json: { status: "ok" }, status: 200
-    else
-      render json: { status: "not ok" }, status: 500
     end
   end
 
   def new; end
 
   def create
-    if !params.nil?
+    if params.nil?
+      render json: { status: "not ok" }, status: 500
+    else
       template = NotificationTemplate.new(name: params[:name], body: params[:html], path: params[:path],
                                           json: params[:json].to_json, partial: false, format: "html", handler: "liquid")
       template.save!
 
       render json: { status: "ok" }, status: 200
-    else
-      render json: { status: "not ok" }, status: 500
     end
   end
 

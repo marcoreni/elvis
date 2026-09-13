@@ -37,7 +37,7 @@ class PlanningController < ApplicationController
 
     @planning = PlanningSerializer.new(planning).as_json
 
-    day = !params[:day].nil? ? Date.parse(params[:day]) : DateTime.now.to_date
+    day = params[:day].nil? ? DateTime.now.to_date : Date.parse(params[:day])
 
     @day = day.beginning_of_week
 

@@ -661,7 +661,7 @@ class ActivityController < ApplicationController
         user_telephone_number = telephone&.number || "?"
 
         address = user.addresses.first
-        address = address && "#{address.street_address} #{address.postcode} #{address.city&.upcase}" || "?"
+        address = (address && "#{address.street_address} #{address.postcode} #{address.city&.upcase}") || "?"
 
         legal_referent = user.family_links.select(&:is_legal_referent).first
         legal_referent &&= (legal_referent.user == user ? legal_referent.member : legal_referent.user)
@@ -881,7 +881,7 @@ class ActivityController < ApplicationController
     # Filter by occupation
     if filter_by_occupation
       reference_date_filter = json_query[:filtered].find { |f| f[:id] === "reference_date" }
-      reference_date = reference_date_filter && Date.parse(reference_date_filter[:value]) || Date.today
+      reference_date = (reference_date_filter && Date.parse(reference_date_filter[:value])) || Date.today
 
       case filter_by_occupation
       when "FULL"

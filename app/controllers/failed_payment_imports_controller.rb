@@ -72,10 +72,10 @@ class FailedPaymentImportsController < ApplicationController
                              .to_a
                              .each_with_object({}) do |due, h|
                                key = due.previsional_date.strftime("%Y-%m-%d")
-                               if !h[key].nil?
-                                 h[key] << due
-                               else
+                               if h[key].nil?
                                  h[key] = [due]
+                               else
+                                 h[key] << due
                                end
                              end
 

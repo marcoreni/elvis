@@ -141,7 +141,7 @@ class Activity < ApplicationRecord
 
     #  Update teacher planning
     # Already done before in time_interval_controller
-    teacher.planning.time_intervals << time_interval_instances - [time_interval]
+    teacher.planning.time_intervals << (time_interval_instances - [time_interval])
     teacher.planning.save
 
     time_slots_to_add = []

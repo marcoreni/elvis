@@ -3,9 +3,9 @@
 module ApplicationHelper
   include Elvis::Hook::Helper
 
-  def component(component_name, locals = {}, &block)
+  def component(component_name, locals = {}, &)
     name = component_name.split("_").first
-    render("components/#{name}/#{component_name}", locals, &block)
+    render("components/#{name}/#{component_name}", locals, &)
   end
 
   # Méthode permettant de corrigé une erreure lors de l'ajout de romm_feature.

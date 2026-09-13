@@ -6,7 +6,7 @@ module Practices
       @rooms = rooms || Room.practice
       @band = band || Band.all
       @start = start || Time.now.beginning_of_day
-      @stop = stop || Time.now.beginning_of_day + 1.day
+      @stop = stop || (Time.now.beginning_of_day + 1.day)
     end
 
     def execute

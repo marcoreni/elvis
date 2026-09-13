@@ -84,11 +84,7 @@ ActiveRecord::Base.transaction do
 
   # LOGS
 
-  File.open("updated_rows.txt", "w") do |f|
-    f.write(list_updated)
-  end
+  File.write("updated_rows.txt", list_updated)
 
-  File.open("deleted_rows.txt", "w") do |f|
-    f.write(list_delete)
-  end
+  File.write("deleted_rows.txt", list_delete)
 end

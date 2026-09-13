@@ -67,6 +67,7 @@
 
 class ActivityRef < ApplicationRecord
   include TranslateEnum
+
   acts_as_paranoid
 
   validates :occupation_limit, presence: true

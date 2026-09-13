@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-sidekiq_redis_url = ENV["SIDEKIQ_REDIS_URL"] || ENV["REDIS_URL"]
+sidekiq_redis_url = ENV["SIDEKIQ_REDIS_URL"] || ENV.fetch("REDIS_URL", nil)
 
 if ENV["USE_SIDEKIQ"] == "true" && !sidekiq_redis_url.nil?
   require "sidekiq/web"

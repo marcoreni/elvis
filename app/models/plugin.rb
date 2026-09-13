@@ -76,9 +76,9 @@ class Plugin < ApplicationRecord
     if self.class.used_partials[partial]
       Rails.logger.warn(
         "WARNING: settings partial '#{partial}' is declared in '#{name}' plugin " \
-          "but it is already used by plugin '#{self.class.used_partials[partial]}'. " \
-          "Only one settings view will be used. " \
-          "You may want to contact those plugins authors to fix this."
+        "but it is already used by plugin '#{self.class.used_partials[partial]}'. " \
+        "Only one settings view will be used. " \
+        "You may want to contact those plugins authors to fix this."
       )
     end
     self.class.used_partials[partial] = name
@@ -270,20 +270,20 @@ class Plugin < ApplicationRecord
   end
 
   class MigrationContext < ActiveRecord::MigrationContext
-    def up(target_version = nil, &block)
+    def up(target_version = nil, &)
       selected_migrations =
         if block_given?
-          migrations.select(&block)
+          migrations.select(&)
         else
           migrations
         end
       Migrator.new(:up, selected_migrations, schema_migration, target_version).migrate
     end
 
-    def down(target_version = nil, &block)
+    def down(target_version = nil, &)
       selected_migrations =
         if block_given?
-          migrations.select(&block)
+          migrations.select(&)
         else
           migrations
         end

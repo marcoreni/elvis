@@ -12,3 +12,13 @@ Style/Documentation:
 
 AllCops:
     NewCops: enable
+    # bin/* here are gem/bundler-generated binstubs (shakapacker, i18n-tasks, rails, ...), not
+    # app code - regenerate via `bundle exec rake shakapacker:binstubs` / `bundle binstubs <gem>`
+    # rather than hand-fixing lint offenses on them.
+    Exclude:
+        - "bin/**/*"
+        - "db/schema.rb"
+        - "db/migrate/**/*"
+        # ERB generator templates (`<%= %>` placeholders), not real Ruby - RuboCop's parser
+        # chokes on them as syntax errors.
+        - "lib/generators/**/templates/**/*"
