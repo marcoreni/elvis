@@ -19,10 +19,14 @@ class ActivitySerializer < ActiveModel::Serializer
   # has_many :activity_instances
   has_many :options
   has_many :users
+  has_many :student_evaluations
   has_one :activity_ref
   has_one :room
   has_one :teacher
+  has_one :time_interval
   belongs_to :location
 
-  attributes :id, :group_name
+  # activity_ref_id is read directly (flat FK, not through the nested activity_ref object) by
+  # frontend/components/evaluation/Evaluation.tsx -- see docs/KnownIssues.md.
+  attributes :id, :group_name, :activity_ref_id
 end

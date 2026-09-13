@@ -30,5 +30,10 @@
 
 class ActivityRefSerializer < ActiveModel::Serializer
   # include FastJsonapi::ObjectSerializer
-  attributes :id, :label, :kind, :occupation_limit
+  belongs_to :activity_ref_kind
+
+  # is_work_group and activity_ref_kind_id are read directly by frontend consumers (e.g.
+  # frontend/tools/format.tsx's occupationInfos, frontend/components/evaluation/Evaluation.tsx)
+  # that used to only ever see them through a raw ActivityRef.as_json path -- see docs/KnownIssues.md.
+  attributes :id, :label, :kind, :occupation_limit, :is_work_group, :activity_ref_kind_id
 end

@@ -735,3 +735,101 @@ case), each passing individually. So the file-count-sensitivity bug is real and 
 now, but it is NOT masking a much larger pre-existing failure count - don't let a future run
 without a proper asset manifest be mistaken for "the baseline was always this broken."
 
+## `UsersController#season_activities`/`#evaluate` switched from raw `as_json` to `ActiveModel::Serializer` — scope and boundary
+
+Found/fixed 2026-09-13 on `chore/scope-serializer-unification`, while auditing
+`frontend/components/utils/entities.ts` against real backend shapes (separate, in-progress work in
+another worktree). `season_activities` and `evaluate` built their `evaluation/EvaluationMenu` and
+`evaluation/Evaluation` react_component props from raw `SomeModel.as_json(include: {...})` trees,
+which dump every DB column, while `ActivitySerializer`/`ActivityRefSerializer` (used elsewhere in
+the app for the same models) had a narrower, drifted attribute list. Two real bugs came from this
+drift: `ActivityRefSerializer` omitted `is_work_group`/`activity_ref_kind_id`, and
+`frontend/tools/format.tsx`'s `occupationInfos` read `begin_at`/`stopped_at` off the wrong object
+(fixed separately in this same branch, see the format.tsx commit).
+
+**What changed:** `ActivitySerializer` gained `activity_ref_id` (flat FK, read directly by
+`Evaluation.tsx`), `has_one :time_interval`, and `has_many :student_evaluations` (new
+`StudentEvaluationSerializer`/`AnswerSerializer`, curated to `id`/`student_id`/`teacher_id`/
+`activity_id`/`season_id` + nested `answers` — the raw path's nested `student` object was dropped
+since nothing in `frontend/components/evaluation/**` reads it). `ActivityRefSerializer` gained
+`is_work_group`, `activity_ref_kind_id`, and a `belongs_to :activity_ref_kind` (new
+`ActivityRefKindSerializer`, `id`/`name`) — this also closes the latent `is_work_group` trap for
+any other future consumer of `ActivityRefSerializer`. `LevelSerializer`/`UserSerializer`/
+`TimeIntervalSerializer` needed **no changes**: this app's `ActiveModelSerializers.config.default_includes
+= "**"` (see `config/initializers/active_model_serializer.rb`) means even a bare
+`FooSerializer.new(obj).as_json` already embeds nested `belongs_to`/`has_many` associations
+recursively (verified empirically — `LevelSerializer.new(level).as_json` returns both the flat
+`activity_ref_id` attribute AND a fully nested `activity_ref: {...}` object), so `LevelSerializer`'s
+existing `belongs_to :evaluation_level_ref`/`belongs_to :activity_ref` already produced exactly the
+nested shape `Evaluation.tsx` needs (`level.evaluation_level_ref.label`,
+`level.activity_ref.activity_ref_kind_id`) once `ActivityRefSerializer` had the missing field. The
+two controller actions now build `@activities_json`/`@activities`/`@activity_json`/
+`@evaluations_json` via `ActivitySerializer`/`StudentEvaluationSerializer` (`ActiveModelSerializers::SerializableResource.new(collection,
+each_serializer: ...)` for collections, `FooSerializer.new(obj).as_json` for single records —
+matching the idiom already used in `planning_controller.rb`).
+
+**Deliberately left untouched:** the `referenceData` bundle in both views (`@rooms`, `@locations`,
+`@seasons`, `@teachers`, `@payment_methods`, `@evaluation_level_refs`, `@activity_refs` — all raw
+`Model.all`) and the top-level `@season` (`season.as_json(methods: :previous)`). These are consumed
+generically by `frontend/components/evaluation/question/select_targets.tsx` via `id`/`label` (or
+`first_name`/`last_name`) accessors only — confirmed by grepping every `TARGETS` entry and every
+`referenceData.` read in `frontend/components/evaluation/**`. There is no pre-existing `Season`
+serializer to unify with (no divergence to fix), and switching the reference-data collections would
+require wrapping each one in `ActiveModelSerializers::SerializableResource` for no behavioral gain
+since raw `as_json` is already a superset of what's read. Left alone per "keep the change as narrow
+as correctness allows" — don't extend this to those collections without a concrete new field need.
+Correction: `ActivitySerializer`'s `has_many :activity_instances` is commented out (not
+`activities_instruments`, which never existed under that name) — it isn't serialized at all today,
+not "declared but unread." `options`/`teacher` ARE active associations on the serializer; the
+review that found the `season_activities`/`evaluate` N+1 regression below identified them
+(alongside `room`/`location`/`users.activity_refs`) as exactly the associations the new
+serializer-based path touches without eager-loading, so they're now included in both actions'
+`.includes()` tree even though the evaluation frontend doesn't read their fields — the N+1 fix
+needs to cover everything `default_includes = "**"` walks, not just what's consumed.
+
+**Code-review follow-up (applied to this same branch):** an independent review measured a real N+1
+regression from switching to the serializers — `evaluate`'s query count went 31 → 271 (8.7x) with
+10 activities / 20 students / 1 level each, because the original `.includes()` tree (carried over
+from before this change) didn't cover `options`/`room`/`location`/`users.activity_refs`, which
+`ActivitySerializer` now touches via `default_includes = "**"`. Fixed by extending both
+`season_activities`' and `evaluate`'s `.includes()` trees to match (the latter previously had none
+at all).
+
+The review's list also named `teacher` — that one is NOT includable and was removed after actually
+trying it (`.includes(teacher: {})` raised `ActiveRecord::ConfigurationError: Can't join 'Activity'
+to association named 'teacher'`, caught by re-running the controller spec, not by static reading).
+`Activity#teacher` (`app/models/activity.rb`) is a plain Ruby method, not an AR association —
+`teachers_activities.where(is_main: true).map(&:teacher).first`. Its own `.where` call always
+issues a fresh query against the association *regardless* of any `.includes()`, since calling
+`.where` on a preloaded `has_many` bypasses the preloaded in-memory array. So `ActivitySerializer`'s
+per-activity `teacher` lookup is N+1-prone independent of this fix, and always has been — fixing it
+for real means changing `Activity#teacher` itself (e.g. reading from an already-preloaded
+`teachers_activities` array in Ruby instead of re-querying), a model-behavior change out of scope
+here. Left as a known, pre-existing N+1, not introduced or fixed by this branch.
+
+Re-verified `options`/`room`/`location`/`users.activity_refs` are genuine eager-loadable
+associations (`belongs_to`/`has_many` in `app/models/activity.rb`/`user.rb`) and that
+`spec/controllers/users_season_activities_evaluate_controller_spec.rb` passes with the corrected
+tree. Did not get a clean before/after query count for the `teacher`-excluded fix due to Postgres
+contention from a concurrent, unrelated investigation sharing the same local test DB — worth a
+follow-up measurement when convenient, but the tree now at least matches what's actually
+`.includes()`-able rather than crashing on a fake association name.
+
+The same review found the `occupationInfos` date-comparison fix (`frontend/tools/format.tsx`) had
+**4 unfixed identical copies** of the same bug still live in
+`frontend/components/courses/LessonList.jsx` (the headcount-column filter, the reminder-email
+recipient filter ×2, and the row color-coding) — the fix only touched the one call site inside
+`occupationInfos`, leaving the same page internally inconsistent (a student starting exactly on the
+reference date now counts toward the headcount but is still excluded from the expandable user list
+and reminder emails, and mis-colored). Fixed by exporting `dateOnly` from `format.tsx` and using it
+at all 4 `LessonList.jsx` sites instead of the raw string comparison.
+
+**Verification:** `bundle exec rspec` (296 examples — the known `formule_i18n_spec.rb` order-dependent
+locale-leak flake reproduced once in the full run and passed cleanly in isolation, per the
+file-count-sensitivity entry above; not caused by this change). New coverage:
+`spec/controllers/users_season_activities_evaluate_controller_spec.rb` asserts both actions return
+200 and that `activity_ref_id`/`time_interval`/`is_work_group`/`activity_ref_kind_id`/
+`activity_ref_kind.name`/`student_evaluations` land in the expected places. `bundle exec rubocop`
+clean (new serializer files only carry the same pre-existing missing-frozen-string-literal
+convention gap as every other file in `app/serializers/`).
+

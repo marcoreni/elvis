@@ -126,6 +126,47 @@ describe("occupationInfos — referenceDate handling", () => {
         expect(validatedHeadCount).toBe(1);
     });
 
+    // Regression test for a real bug found while auditing frontend/components/utils/entities.ts
+    // against actual backend response shapes: `begin_at`/`stopped_at` are full ISO timestamps
+    // in production (e.g. from ActivityController#list's per-user ActivityApplication flattening),
+    // not the bare "YYYY-MM-DD" strings the earlier tests above use. occupationInfos used to
+    // compare those timestamps against `referenceDate` with raw string `<=`/`>`, which is wrong
+    // on the exact boundary day: a user beginning (or stopping) exactly on referenceDate was
+    // dropped from / kept in the headcount incorrectly because the longer timestamp string sorts
+    // after the shorter bare-date string. See docs/KnownIssues.md.
+    test("a full ISO timestamp begin_at/stopped_at compares correctly against a bare-date referenceDate on the exact boundary day", () => {
+        const activity = {
+            activity_ref: { is_work_group: false, occupation_limit: 5 },
+            activities_instruments: [],
+            options: [],
+            users: [
+                // begins exactly on the reference date -> already active that day, must count
+                { id: 1, begin_at: "2024-06-01T00:00:00.000+02:00", stopped_at: null },
+                // begins the day after the reference date -> not yet active, excluded
+                { id: 2, begin_at: "2024-06-02T00:00:00.000+02:00", stopped_at: null },
+                // stops exactly on the reference date -> no longer active that day, excluded
+                {
+                    id: 3,
+                    begin_at: "2020-01-01T00:00:00.000+01:00",
+                    stopped_at: "2024-06-01T00:00:00.000+02:00",
+                },
+                // stops the day after the reference date -> still active that day, must count
+                {
+                    id: 4,
+                    begin_at: "2020-01-01T00:00:00.000+01:00",
+                    stopped_at: "2024-06-02T00:00:00.000+02:00",
+                },
+            ],
+        };
+
+        const { headCount, validatedHeadCount } = occupationInfos(
+            activity,
+            "2024-06-01"
+        );
+        expect(headCount).toBe(2);
+        expect(validatedHeadCount).toBe(2);
+    });
+
     test("work-group activities ignore referenceDate entirely (undefined/null/date all agree)", () => {
         const workGroupActivity = {
             activity_ref: { is_work_group: true },

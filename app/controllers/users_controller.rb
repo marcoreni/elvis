@@ -935,8 +935,12 @@ class UsersController < ApplicationController
                .includes({
                            time_interval: {},
                            activity_ref: { activity_ref_kind: {} },
+                           room: {},
+                           location: {},
+                           options: {},
                            student_evaluations: %i[answers student],
                            users: {
+                             activity_refs: {},
                              levels: {
                                evaluation_level_ref: {},
                                activity_ref: { activity_ref_kind: {} }
@@ -948,25 +952,14 @@ class UsersController < ApplicationController
                           .order(Arel.sql("extract(isodow from time_intervals.start)::text || time_intervals.start::time::text asc"))
     # order regardless of date in year, just day of week and time
 
-    @activities_json = @activities.as_json(include: {
-                                             time_interval: {},
-                                             activity_ref: { include: :activity_ref_kind },
-                                             student_evaluations: {
-                                               include: %i[answers student]
-                                             },
-                                             users: {
-                                               include: {
-                                                 levels: {
-                                                   include: {
-                                                     evaluation_level_ref: {},
-                                                     activity_ref: { include: :activity_ref_kind }
-                                                   }
-                                                 }
-                                               }
-                                             }
-                                           })
-
-    @activities = @activities.as_json(include: :users)
+    # Both @activities_json and the referenceData.activities used by SelectQuestion's
+    # "activities" target are served from ActivitySerializer -- see docs/KnownIssues.md for why
+    # this replaced two separate raw Activity.as_json(include: {...}) trees that had drifted from
+    # the ActiveModel::Serializer used for the same models elsewhere in the app.
+    @activities_json = ActiveModelSerializers::SerializableResource.new(
+      @activities, each_serializer: ActivitySerializer
+    ).as_json
+    @activities = @activities_json
   end
 
   def evaluate
@@ -976,8 +969,26 @@ class UsersController < ApplicationController
     season = Season.from_interval(@activity_ref.time_interval).first
     @season = season.next.as_json(methods: :previous) # les évaluations des étudiants sont associés à la saison n+1 si l'activity était en saison n
 
-    activities = @user.season_teacher_activities(season)
-    @activities = activities.as_json(include: { users: {}, activity_ref: { activity_ref_kind: {} } })
+    activities = @user
+                 .season_teacher_activities(season)
+                 .includes({
+                             time_interval: {},
+                             activity_ref: { activity_ref_kind: {} },
+                             room: {},
+                             location: {},
+                             options: {},
+                             student_evaluations: %i[answers student],
+                             users: {
+                               activity_refs: {},
+                               levels: {
+                                 evaluation_level_ref: {},
+                                 activity_ref: { activity_ref_kind: {} }
+                               }
+                             }
+                           })
+    @activities = ActiveModelSerializers::SerializableResource.new(
+      activities, each_serializer: ActivitySerializer
+    ).as_json
     @questions = Question.student_evaluation_questions.all
 
     @evaluation_level_refs = EvaluationLevelRef.all
@@ -988,27 +999,18 @@ class UsersController < ApplicationController
     @teachers = User.teachers.all
     @payment_methods = PaymentMethod.all
 
-    @evaluations_json = StudentEvaluation.where(
-      teacher: @user,
-      activity: @activity_ref,
-      season: @season["id"]
-    ).as_json(include: :answers)
+    @evaluations_json = ActiveModelSerializers::SerializableResource.new(
+      StudentEvaluation.where(
+        teacher: @user,
+        activity: @activity_ref,
+        season: @season["id"]
+      ),
+      each_serializer: StudentEvaluationSerializer
+    ).as_json
 
-    @activity_json = @activity_ref.as_json({
-                                             include: {
-                                               users: {
-                                                 include: {
-                                                   levels: {
-                                                     include: {
-                                                       evaluation_level_ref: {},
-                                                       activity_ref: { include: { activity_ref_kind: {} } }
-                                                     }
-                                                   }
-                                                 }
-                                               },
-                                               activity_ref: { include: { activity_ref_kind: {} } }
-                                             }
-                                           })
+    # @activity_ref is an Activity despite its name (see the `.find(params[:activity_id])` above) --
+    # served from ActivitySerializer for the same reason as @activities_json above.
+    @activity_json = ActivitySerializer.new(@activity_ref).as_json
   end
 
   def previsional_groups
