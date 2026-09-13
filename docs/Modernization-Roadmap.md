@@ -85,51 +85,39 @@ it out — that only covered one caller of the same shared thread pool; Rails' o
 was the wider, actual source. Confirmed via 19 consecutive clean full-suite runs (previously
 reproduced within 1-3 runs).
 
-## 6. Replace `tui-calendar` — status: not started, planning phase only requested
+## 6. Replace `tui-calendar` — planning done 2026-09-14, migration not started
 
-Full context: `tui-calendar` is a git-pinned fork (`SIXMON/tui.calendar` of `nhn/tui.calendar`),
-1426 commits behind upstream, with 14 commits of real app-specific behavior (data-model
-conformance + scheduling-precision tweaks — see `docs/KnownIssues.md`'s "Exotic dependencies"
-section for the existing research). User wants to get rid of it entirely. Candidates already in
-mind: **FullCalendar** (already a project dependency, currently `@fullcalendar/*` `^5.5.1`/`^5.5.0`
-— used elsewhere, e.g. `YearlyCalendar.jsx` was already migrated onto it during
-`feat/bump-shakapacker`) or **react-big-calendar** (not currently a dependency).
+**Recommendation: FullCalendar, bumped to v6 first** (standalone step, before migrating) — every
+feature this app actually uses maps to a native, free, stable FullCalendar v6 API; nothing lost.
 
-User's explicit planning steps, in order — **do the planning/research first, do not start
-migrating code yet**:
-1. **List tui-calendar's feature surface as actually used**, pinned at the version in use
-   (`1.8.0` per the user — confirm against `package.json`/lockfile). This means: audit every
-   feature of tui-calendar this app actually exercises (week/day views, drag-to-create,
-   drag-to-resize, the custom `monthGridHeaderExceed`/`weekDayname` template functions, the
-   15-minute-step/minimum-duration/nearest-threshold scheduling-precision behavior, whatever
-   `planning/Calendar.jsx` and any other tui-calendar consumer actually use) — not a
-  generic tui-calendar feature list, the subset this app depends on.
-2. **Map what the fork actually changed vs. upstream** —
-   `https://github.com/nhn/tui.calendar/compare/main...SIXMON:tui.calendar:master` — turn the
-   already-known "14 commits, 2 conformance + scheduling-precision tweaks" summary into a
-   concrete, itemized feature list (what exact behavior each commit adds), since that's the part
-   that has to be explicitly re-implemented or found in a replacement, not just "migrate and hope."
-3. **For each item from 1+2, check feasibility in FullCalendar (free tier) and in
-   react-big-calendar** — does the target library support it natively, via a plugin/premium
-   add-on (note if something needs FullCalendar's paid premium plugins — flag as a real decision
-   point, not silently assumed), or not at all. Produce a feature-by-feature matrix, then a
-   recommendation.
-
-**Before any of that**, consider bumping FullCalendar to its latest version first (currently on
-`^5.x`, latest is much newer) — check for breaking/layout changes in the intervening majors, since
-doing that bump *before* the tui-calendar migration avoids doing the FullCalendar upgrade twice
-(once now, once mid-migration).
-
-**Migration principle** (explicit from the user): retain all existing functionality, custom or
-not. If something would be lost (layout/UI/UX-level, not just data-level), that has to be called
-out explicitly as a decision point — "is losing X acceptable, or do we need to (re)implement it on
-the new library" — not silently dropped.
-
-**Opportunistic scope while touching this code**: the user is open to migrating the components
-that currently use tui-calendar (`planning/Calendar.jsx` and any siblings) to **functional
-components + TypeScript** as part of this work, matching the user's own in-flight, separate
-TS-conversion effort elsewhere in the frontend. Bundle this in if it doesn't meaningfully increase
-migration risk; don't force it if it does.
+- Real consumer: only `planning/Calendar.jsx` (587 lines, one caller: `Planning.jsx`). A second
+  `import ti from "tui-calendar"` in `evaluationAppointments/EvaluationAppointmentsManager.jsx` is
+  dead (unused import, `ti` elsewhere in that file is an unrelated loop variable) — delete
+  separately, zero risk. tui-calendar pinned at `1.8.2` (not `1.8.0`).
+- Feature surface: month/week/day views, drag-to-create/move/resize, a large custom per-event HTML
+  template (teacher/room labels, icons, roster/occupation/level), custom day-header content
+  (teacher presence-sheet link), read-only/multi-select overlay mode. Built-in tui-calendar popups
+  are explicitly disabled (`useCreationPopup/useDetailPopup: false`) — not in scope at all.
+  Near-zero existing test coverage of the actual widget integration (only the pure template
+  function is tested).
+- Fork vs upstream (14 commits): only 2 things are real, load-bearing behavior — **15-minute
+  snap** on create/move/resize (fork lowered tui-calendar's 30-min default) and **raw domain
+  fields grafted onto each event** (`kind`/`teacher`/`activity`/etc., for the custom template).
+  The other ~7 commits are for tui-calendar's native popups, which the app doesn't use — nothing
+  to replicate there.
+- FullCalendar v5→v6: import path changes, `eventContent` semantics, no bundler CSS loader needed
+  — manageable, no functional loss. v6→v7 is a much bigger jump (ESM-only, CSS theming rework,
+  `temporal-polyfill` dep) — land on v6 for this pass, defer v7's rework to its own.
+  `@fullcalendar/resource-timeline` (already used by `YearlyCalendar.jsx`) is confirmed a
+  **premium plugin** (free only under AGPLv3) — pre-existing, not new, but worth knowing.
+- Real decision point (not silently assumed): the app's "compare multiple plannings" mode has
+  always been one overlaid view, never true side-by-side columns. If that's ever wanted, it needs
+  FullCalendar's paid resource-timeline tier or a switch to react-big-calendar (free, native
+  resource columns) — not needed for today's feature parity.
+- Bundling functional-component + TS conversion while doing this: low-to-moderate risk, worth it —
+  the calendar-engine integration code is being written fresh against the new library regardless,
+  so there's no extra "convert working code" risk. Add real interaction tests (view switching, at
+  minimum) as part of this, since none exist today.
 
 ## 7. Migrate `sweetalert2` off the legacy callback API — status: not started, feasibility check requested first
 

@@ -4,7 +4,6 @@ import moment from "moment";
 import { withTranslation } from "react-i18next";
 import { set } from "../../tools/api";
 import EvaluationAvailabilityEditor from "./EvaluationAvailabilityEditor";
-import ti from "tui-calendar";
 
 class EvaluationAppointmentsManager extends Component {
     constructor(props) {
