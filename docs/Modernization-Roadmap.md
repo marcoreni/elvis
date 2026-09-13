@@ -189,6 +189,20 @@ the index definitions, not complex aggregations). Needs: inventory what each ind
 UI actually requires (fuzzy/prefix matching, faceting, ranking), whether Postgres could cover it,
 and a real migration-cost estimate — not a snap decision.
 
+## 9. Dead `run_chewy_callbacks`/`base_chewy_callbacks` — status: not started, small
+
+Found while investigating item 5's flake: `run_chewy_callbacks` is defined in 5 models
+(`app/models/{adhesion,room,activity_application,activity_ref,user}.rb`) and calls
+`base_chewy_callbacks` (`app/models/application_record.rb`), which spawns a real background
+thread per call (`AsyncExecutor` includes `Concurrent::Async`) to run `chewy_callbacks` under
+`Chewy.strategy(:active_job)`. `run_chewy_callbacks` itself is called nowhere in the codebase
+(checked via plain grep across `app/`/`lib/`) — likely dead, but confirm it's not invoked via a
+naming-convention/metaprogramming hook (chewy's own callback wiring, an `EventHandler` subscriber,
+`method_missing`) before deleting. Small either way: if genuinely dead, delete the method + log in
+`docs/OrphanedCode.md` (item 2); if it turns out to be a missing wire-up (should be called
+somewhere but isn't), that's a different, possibly more interesting bug about chewy indexes not
+updating for these 5 models outside their `update_index` macro's own default hooks.
+
 ## Context this roadmap assumes (don't re-derive, just re-read if needed)
 
 - `docs/KnownIssues.md` (~273 lines as of this roadmap) and `docs/I18n-Roadmap.md` (Phase 07
