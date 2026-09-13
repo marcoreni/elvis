@@ -31,19 +31,25 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-      # ES 7.16.3's bundled JDK NPEs on startup (`Could not reconfigure JMX ... anyController is
-      # null`, in jdk.internal.platform.cgroupv2.CgroupV2Subsystem) while probing cgroups for its
-      # own container-aware JMX/OS-bean setup, on current GH-hosted runners' cgroup-v2-only hosts.
-      # `--cgroupns=host` alone did not fix it (confirmed by reproducing the crash with it set);
-      # `-XX:-UseContainerSupport` below disables that JVM cgroup probing outright, which is safe
-      # here since heap size is already pinned explicitly via ES_JAVA_OPTS rather than relying on
-      # container-aware auto-sizing.
+      # ES 7.16.3's bundled JDK NPEs on GH-hosted runners' cgroup-v2-only hosts
+      # (`Cannot invoke "jdk.internal.platform.CgroupInfo.getMountPoint()" because
+      # "anyController" is null`). Confirmed (by reading the actual crash trace across two CI
+      # attempts) that this happens in ES's own `JvmOptionsParser` bootstrap helper - a *separate*
+      # small `java` invocation that `bin/elasticsearch` runs first to compute default JVM
+      # options, before the main ES process starts - not in the main ES JVM itself. `ES_JAVA_OPTS`
+      # (tried first, with -XX:-UseContainerSupport added: didn't fix it) is only read by the
+      # main process's launch script, so it never reaches that bootstrap helper.
+      # `JAVA_TOOL_OPTIONS` is a JVM-level env var every `java` invocation in the container picks
+      # up automatically (prints a harmless "Picked up JAVA_TOOL_OPTIONS" line), including the
+      # bootstrap helper - so -XX:-UseContainerSupport actually reaches the JVM that's crashing.
+      # `--cgroupns=host` alone (tried first) did not fix it either.
       elasticsearch:
         image: docker.elastic.co/elasticsearch/elasticsearch:7.16.3
         env:
           discovery.type: single-node
           bootstrap.memory_lock: "true"
-          ES_JAVA_OPTS: "-Xms512m -Xmx512m -XX:-UseContainerSupport"
+          ES_JAVA_OPTS: "-Xms512m -Xmx512m"
+          JAVA_TOOL_OPTIONS: "-XX:-UseContainerSupport"
         ports:
           - 9200:9200
         options: >-
