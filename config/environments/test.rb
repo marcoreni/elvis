@@ -49,4 +49,9 @@ Rails.application.configure do
 
   # Disable chewy for this environement
   Chewy.strategy(:bypass)
+
+  # Was defaulting to Rails' global :async adapter - real background threads for the whole
+  # suite, racing the main thread on I18n's shared translation cache. Root cause of the
+  # long-standing locale flake, see docs/KnownIssues.md.
+  config.active_job.queue_adapter = :test
 end

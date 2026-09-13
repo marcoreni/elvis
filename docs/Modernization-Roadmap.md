@@ -93,18 +93,16 @@ later lots," a full fresh-eyes review of current develop's state of those areas 
 re-reviewing the original isolated diffs, which are ancient history at this point) is the more
 useful check. Dispatch `code-reviewer` for this; if clean, delete the KnownIssues entry.
 
-## 5. `DeviseMailer`/`ApplicationController` order-dependent flake — status: not started, wants a real resolution
+## 5. `DeviseMailer`/`ApplicationController` order-dependent flake — resolved, see `fix/locale-flake-async-queue-adapter`
 
-User: *"I would prefer things to be clear."* This is the one remaining genuinely-unresolved
-investigation in `docs/KnownIssues.md` — a wall-clock-timing Heisenbug (not simple ordering),
-confirmed across three separate investigation passes already (see that section's full writeup:
-best lead so far is that a failing example's `mail.body.encoded` produces **zero** render events
-yet returns byte-identical stale layout content — points at something in the
-ActionMailer/ActionView render-and-cache path, not a locale-variable bug). Needs a dedicated,
-patient investigation pass — possibly using `TracePoint`/`ObjectSpace` introspection rather than
-`puts`/notification subscribers (which perturb the timing enough to stop the repro, per prior
-attempts). Worth deciding up front how much budget to spend before accepting "documented but
-unresolved" as the final state — this bug has already resisted three investigation passes.
+Root cause: `config/environments/test.rb` had no `config.active_job.queue_adapter` override, so
+Rails' global default (`:async`, a persistent `concurrent-ruby` thread pool) applied — real
+background threads ran for the whole suite, racing the main thread on I18n's shared translation
+lookup and silently resolving via the `en -> fr` fallback safety net on a miss. Fixed by setting
+`queue_adapter = :test`. A prior pass had tried `BaseEventJob.queue_adapter = :inline` and ruled
+it out — that only covered one caller of the same shared thread pool; Rails' own default adapter
+was the wider, actual source. Confirmed via 19 consecutive clean full-suite runs (previously
+reproduced within 1-3 runs).
 
 ## 6. Replace `tui-calendar` — status: not started, planning phase only requested
 
