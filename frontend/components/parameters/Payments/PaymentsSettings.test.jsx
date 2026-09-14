@@ -29,19 +29,25 @@
 // `payments.tabs.*` (5), which a lot-C script bug briefly dropped (regression guard below).
 
 import React from "react";
-import {render, screen, waitFor, act} from "@testing-library/react";
-import {Form} from "react-final-form";
+import { render, screen, waitFor, act } from "@testing-library/react";
+import { Form } from "react-final-form";
 import i18n from "../../../i18n";
 import fr from "../../../locales/fr/parameters.json";
 import en from "../../../locales/en/parameters.json";
 
 // --- api: chainable no-op stub; last success/error callbacks captured for hand-firing --------
-const apiState = vi.hoisted(() => ({lastSuccess: null, lastError: null}));
+const apiState = vi.hoisted(() => ({ lastSuccess: null, lastError: null }));
 vi.mock("../../../tools/api", () => ({
     set: () => {
         const c = {};
-        c.success = (fn) => { apiState.lastSuccess = fn; return c; };
-        c.error = (fn) => { apiState.lastError = fn; return c; };
+        c.success = (fn) => {
+            apiState.lastSuccess = fn;
+            return c;
+        };
+        c.error = (fn) => {
+            apiState.lastError = fn;
+            return c;
+        };
         c.get = () => c;
         c.post = () => c;
         c.put = () => c;
@@ -54,7 +60,7 @@ vi.mock("../../../tools/api", () => ({
 //     column's `Cell` once against `globalThis.__rtRow` so `Cell`-internal i18n (Oui/Non, the
 //     AdhesionSettings trash button -> `deleteStatus`) is reachable without real table data. ---
 vi.mock("react-table", () => ({
-    default: ({columns = []}) => (
+    default: ({ columns = [] }) => (
         <div data-testid="react-table">
             {columns.map((col, i) => (
                 <span key={i} data-testid="col-header">
@@ -69,14 +75,19 @@ vi.mock("react-table", () => ({
                             value: (globalThis.__rtRow || {}).value,
                         })}
                     </span>
-                ) : null,
+                ) : null
             )}
         </div>
     ),
 }));
 
 // --- sweetalert2 stub -----------------------------------------------------------------------
-vi.mock("sweetalert2", () => ({default: vi.fn(() => Promise.resolve({}))}));
+vi.mock("sweetalert2", () => ({
+    default: Object.assign(
+        vi.fn(() => Promise.resolve({})),
+        { fire: vi.fn(() => Promise.resolve({})) }
+    ),
+}));
 
 // --- Coupons' functional BaseDataTable: render headers / Cells / resource-type-names /
 //     createButton / formContentComponent (inside a real <Form> for the <Field>s) ------------
@@ -94,15 +105,22 @@ vi.mock("../../common/baseDataTable/BaseDataTable", () => ({
                 {(props.columns || []).map((col, i) =>
                     col.Cell ? (
                         <span key={`cc-${i}`} data-testid="coupon-col-cell">
-                            {col.Cell({value: true})}
+                            {col.Cell({ value: true })}
                         </span>
-                    ) : null,
+                    ) : null
                 )}
-                <span data-testid="one-resource-type">{props.oneResourceTypeName}</span>
-                <span data-testid="this-resource-type">{props.thisResourceTypeName}</span>
+                <span data-testid="one-resource-type">
+                    {props.oneResourceTypeName}
+                </span>
+                <span data-testid="this-resource-type">
+                    {props.thisResourceTypeName}
+                </span>
                 {CreateButton ? <CreateButton onCreate={() => {}} /> : null}
                 {FormContent ? (
-                    <Form onSubmit={() => {}} render={() => <FormContent isUpdate={false} />} />
+                    <Form
+                        onSubmit={() => {}}
+                        render={() => <FormContent isUpdate={false} />}
+                    />
                 ) : null}
             </div>
         );
@@ -120,23 +138,29 @@ vi.mock("../../common/Checkbox", () => ({
 
 // --- AdhesionSettings' heavy child (real one exercised separately via vi.importActual) -------
 vi.mock("./AdhesionEditModal", () => ({
-    default: ({children}) => <span data-testid="adhesion-edit-modal-stub">{children}</span>,
+    default: ({ children }) => (
+        <span data-testid="adhesion-edit-modal-stub">{children}</span>
+    ),
 }));
 
 // --- react-modal: render children unconditionally so the modal body is inspectable ----------
 vi.mock("react-modal", () => ({
-    default: ({children}) => <div data-testid="react-modal">{children}</div>,
+    default: ({ children }) => <div data-testid="react-modal">{children}</div>,
 }));
 
 // --- EditPaymentScheduleOptions' heavy deps ------------------------------------------------
-vi.mock("react-draft-wysiwyg", () => ({Editor: () => <div data-testid="wysiwyg-editor" />}));
+vi.mock("react-draft-wysiwyg", () => ({
+    Editor: () => <div data-testid="wysiwyg-editor" />,
+}));
 vi.mock("draft-js", () => ({
-    EditorState: {createEmpty: () => ({}), createWithContent: () => ({})},
+    EditorState: { createEmpty: () => ({}), createWithContent: () => ({}) },
     convertToRaw: () => ({}),
     convertFromRaw: () => ({}),
-    ContentState: {createFromText: () => ({})},
+    ContentState: { createFromText: () => ({}) },
 }));
-vi.mock("react-toastify", () => ({toast: {success: vi.fn(), error: vi.fn()}}));
+vi.mock("react-toastify", () => ({
+    toast: { success: vi.fn(), error: vi.fn() },
+}));
 
 import swal from "sweetalert2";
 import BaseDataTable from "../BaseDataTable";
@@ -149,15 +173,16 @@ import EditPaymentScheduleOptions from "./EditPaymentScheduleOptions";
 
 let RealAdhesionEditModal;
 beforeAll(async () => {
-    RealAdhesionEditModal = (await vi.importActual("./AdhesionEditModal")).default;
+    RealAdhesionEditModal = (await vi.importActual("./AdhesionEditModal"))
+        .default;
 });
 
 const tP = (lng) => i18n.getFixedT(lng, "parameters");
 const tC = (lng) => i18n.getFixedT(lng, "common");
 
 beforeEach(() => {
-    swal.mockClear();
-    swal.mockImplementation(() => Promise.resolve({}));
+    swal.fire.mockClear();
+    swal.fire.mockImplementation(() => Promise.resolve({}));
     apiState.lastSuccess = null;
     apiState.lastError = null;
     globalThis.__rtRow = {};
@@ -181,7 +206,9 @@ afterEach(async () => {
 describe("parameters shared.* + payments.* — i18n layer", () => {
     const flatten = (obj, prefix = "") =>
         Object.entries(obj).flatMap(([k, v]) =>
-            v && typeof v === "object" ? flatten(v, `${prefix}${k}.`) : [`${prefix}${k}`],
+            v && typeof v === "object"
+                ? flatten(v, `${prefix}${k}.`)
+                : [`${prefix}${k}`]
         );
 
     // Phase 07 P0 (docs/I18n-Roadmap.md §P0): the shared.*+payments.* key-set parity check, the
@@ -191,26 +218,38 @@ describe("parameters shared.* + payments.* — i18n layer", () => {
     // interpolation paths and the lot-A tab-survival regression.
 
     // The four interpolating keys must embed the passed value and leave no braces.
-    const NAME_KEYS = ["payments.methods.deleteConfirm", "shared.deleteStatusConfirm"];
-    const LABEL_KEYS = ["payments.adhesion.deleteConfirm", "payments.adhesion.deleteImpossibleText"];
+    const NAME_KEYS = [
+        "payments.methods.deleteConfirm",
+        "shared.deleteStatusConfirm",
+    ];
+    const LABEL_KEYS = [
+        "payments.adhesion.deleteConfirm",
+        "payments.adhesion.deleteImpossibleText",
+    ];
 
-    test.each(["fr", "en"])("{{name}} interpolation keys embed the value in %s", (lng) => {
-        const t = tP(lng);
-        for (const key of NAME_KEYS) {
-            const v = t(key, {name: "Zephyr"});
-            expect(v).toContain("Zephyr");
-            expect(v).not.toMatch(/\{\{/);
+    test.each(["fr", "en"])(
+        "{{name}} interpolation keys embed the value in %s",
+        (lng) => {
+            const t = tP(lng);
+            for (const key of NAME_KEYS) {
+                const v = t(key, { name: "Zephyr" });
+                expect(v).toContain("Zephyr");
+                expect(v).not.toMatch(/\{\{/);
+            }
         }
-    });
+    );
 
-    test.each(["fr", "en"])("{{label}} interpolation keys embed the value in %s", (lng) => {
-        const t = tP(lng);
-        for (const key of LABEL_KEYS) {
-            const v = t(key, {label: "Zephyr"});
-            expect(v).toContain("Zephyr");
-            expect(v).not.toMatch(/\{\{/);
+    test.each(["fr", "en"])(
+        "{{label}} interpolation keys embed the value in %s",
+        (lng) => {
+            const t = tP(lng);
+            for (const key of LABEL_KEYS) {
+                const v = t(key, { label: "Zephyr" });
+                expect(v).toContain("Zephyr");
+                expect(v).not.toMatch(/\{\{/);
+            }
         }
-    });
+    );
 
     // "shared.deleteConfirmYes / deleteConfirmNo resolve to lowercase oui/non" removed
     // (Phase 07 P0) — pure string-echo.
@@ -219,7 +258,7 @@ describe("parameters shared.* + payments.* — i18n layer", () => {
         expect(tP("fr")("payments.tabs.adhesion")).toBe("Adhésion");
         expect(tP("en")("payments.tabs.adhesion")).toBe("Membership");
         // the whole lot-A tab set is still there
-        expect(flatten({x: fr.payments.tabs})).toHaveLength(5);
+        expect(flatten({ x: fr.payments.tabs })).toHaveLength(5);
     });
 });
 
@@ -231,8 +270,22 @@ describe("PaymentsMethods / PaymentsStatus — class tables extending BaseDataTa
         PaymentsMethods: {
             Component: PaymentsMethods,
             deleteKey: "payments.methods.deleteConfirm",
-            fr: ["#", "Libellé", "Afficher au client ?", "Est spécial ?", "Est à crédit ?", "Actions"],
-            en: ["#", "Label", "Show to customer?", "Is special?", "Is credit note?", "Actions"],
+            fr: [
+                "#",
+                "Libellé",
+                "Afficher au client ?",
+                "Est spécial ?",
+                "Est à crédit ?",
+                "Actions",
+            ],
+            en: [
+                "#",
+                "Label",
+                "Show to customer?",
+                "Is special?",
+                "Is credit note?",
+                "Actions",
+            ],
         },
         PaymentsStatus: {
             Component: PaymentsStatus,
@@ -252,24 +305,29 @@ describe("PaymentsMethods / PaymentsStatus — class tables extending BaseDataTa
                 tReady
                 urlListData="/x"
                 urlNew="/x/new"
-                ref={(r) => { inst = r; }}
-            />,
+                ref={(r) => {
+                    inst = r;
+                }}
+            />
         );
         return inst;
     }
 
     for (const [name, cfg] of Object.entries(HEADERS)) {
         describe(name, () => {
-            test.each(["fr", "en"])("renders the translated column headers in %s", async (lng) => {
-                await i18n.changeLanguage(lng);
-                render(<cfg.Component urlListData="/x" urlNew="/x/new" />);
+            test.each(["fr", "en"])(
+                "renders the translated column headers in %s",
+                async (lng) => {
+                    await i18n.changeLanguage(lng);
+                    render(<cfg.Component urlListData="/x" urlNew="/x/new" />);
 
-                const got = screen
-                    .getAllByTestId("col-header")
-                    .map((el) => el.textContent)
-                    .filter(Boolean);
-                expect(got).toEqual(cfg[lng]);
-            });
+                    const got = screen
+                        .getAllByTestId("col-header")
+                        .map((el) => el.textContent)
+                        .filter(Boolean);
+                    expect(got).toEqual(cfg[lng]);
+                }
+            );
 
             test.each(["fr", "en"])(
                 "deleteStatus builds a %s-translated swal (title + cancel + confirm)",
@@ -278,16 +336,20 @@ describe("PaymentsMethods / PaymentsStatus — class tables extending BaseDataTa
                     const t = tP(lng);
                     const inst = mountInstance(cfg.Component, lng);
 
-                    inst.deleteStatus({id: 1, label: "Visa"});
+                    inst.deleteStatus({ id: 1, label: "Visa" });
 
-                    expect(swal).toHaveBeenCalledTimes(1);
-                    const opts = swal.mock.calls[0][0];
-                    expect(opts.title).toBe(t(cfg.deleteKey, {name: "Visa"}));
+                    expect(swal.fire).toHaveBeenCalledTimes(1);
+                    const opts = swal.fire.mock.calls[0][0];
+                    expect(opts.title).toBe(t(cfg.deleteKey, { name: "Visa" }));
                     expect(opts.title).toContain("Visa");
                     expect(opts.title).not.toMatch(/\{\{/);
-                    expect(opts.cancelButtonText).toBe(t("shared.deleteConfirmNo"));
-                    expect(opts.confirmButtonText).toBe(t("shared.deleteConfirmYes"));
-                },
+                    expect(opts.cancelButtonText).toBe(
+                        t("shared.deleteConfirmNo")
+                    );
+                    expect(opts.confirmButtonText).toBe(
+                        t("shared.deleteConfirmYes")
+                    );
+                }
             );
 
             test.each(["fr", "en"])(
@@ -295,21 +357,25 @@ describe("PaymentsMethods / PaymentsStatus — class tables extending BaseDataTa
                 async (lng) => {
                     await i18n.changeLanguage(lng);
                     const t = tP(lng);
-                    swal.mockImplementation(() => Promise.resolve({value: true}));
+                    swal.fire.mockImplementation(() =>
+                        Promise.resolve({ value: true })
+                    );
                     global.fetch = vi.fn().mockResolvedValue({
                         status: 422,
                         text: () => Promise.resolve("boom"),
                     });
 
                     const inst = mountInstance(cfg.Component, lng);
-                    inst.deleteStatus({id: 1, label: "Visa"});
+                    inst.deleteStatus({ id: 1, label: "Visa" });
                     await new Promise((r) => setTimeout(r, 0));
                     await new Promise((r) => setTimeout(r, 0));
 
-                    expect(swal).toHaveBeenCalledTimes(2);
-                    expect(swal.mock.calls[1][0].title).toBe(t("shared.errorTitle"));
-                    expect(swal.mock.calls[1][0].text).toBe("boom");
-                },
+                    expect(swal.fire).toHaveBeenCalledTimes(2);
+                    expect(swal.fire.mock.calls[1][0].title).toBe(
+                        t("shared.errorTitle")
+                    );
+                    expect(swal.fire.mock.calls[1][0].text).toBe("boom");
+                }
             );
         });
     }
@@ -320,32 +386,54 @@ describe("PaymentsMethods / PaymentsStatus — class tables extending BaseDataTa
             await i18n.changeLanguage(lng);
             const t = tP(lng);
             const inst = mountInstance(PaymentsMethods, lng);
-            const col = inst.state.columns.find((c) => c.id === "show_payment_method_to_user");
+            const col = inst.state.columns.find(
+                (c) => c.id === "show_payment_method_to_user"
+            );
 
-            const {rerender, container} = render(
-                <div>{col.Cell({original: {show_payment_method_to_user: true}})}</div>,
+            const { rerender, container } = render(
+                <div>
+                    {col.Cell({
+                        original: { show_payment_method_to_user: true },
+                    })}
+                </div>
             );
             expect(container.textContent).toBe(t("shared.yes"));
 
-            rerender(<div>{col.Cell({original: {show_payment_method_to_user: false}})}</div>);
+            rerender(
+                <div>
+                    {col.Cell({
+                        original: { show_payment_method_to_user: false },
+                    })}
+                </div>
+            );
             expect(container.textContent).toBe(t("shared.no"));
-        },
+        }
     );
 
     test("explicit fr / en strings (PaymentsStatus deleteStatus)", async () => {
         await i18n.changeLanguage("fr");
-        mountInstance(PaymentsStatus, "fr").deleteStatus({id: 1, label: "Réglé"});
-        let opts = swal.mock.calls[0][0];
-        expect(opts.title).toBe("Voulez-vous vraiment supprimer le statut 'Réglé' ?");
+        mountInstance(PaymentsStatus, "fr").deleteStatus({
+            id: 1,
+            label: "Réglé",
+        });
+        let opts = swal.fire.mock.calls[0][0];
+        expect(opts.title).toBe(
+            "Voulez-vous vraiment supprimer le statut 'Réglé' ?"
+        );
         expect(opts.cancelButtonText).toBe("non");
         expect(opts.confirmButtonText).toBe("oui");
 
-        swal.mockClear();
+        swal.fire.mockClear();
 
         await i18n.changeLanguage("en");
-        mountInstance(PaymentsStatus, "en").deleteStatus({id: 1, label: "Réglé"});
-        opts = swal.mock.calls[0][0];
-        expect(opts.title).toBe("Do you really want to delete the status 'Réglé'?");
+        mountInstance(PaymentsStatus, "en").deleteStatus({
+            id: 1,
+            label: "Réglé",
+        });
+        opts = swal.fire.mock.calls[0][0];
+        expect(opts.title).toBe(
+            "Do you really want to delete the status 'Réglé'?"
+        );
         expect(opts.cancelButtonText).toBe("no");
         expect(opts.confirmButtonText).toBe("yes");
     });
@@ -364,22 +452,30 @@ describe("Coupons + CouponFormContent", () => {
         en: ["Discount rate name", "Discount rate (%)", "Enabled"],
     };
 
-    test.each(["fr", "en"])("column headers are translated in %s", async (lng) => {
-        await i18n.changeLanguage(lng);
-        render(<Coupons />);
-        const got = screen
-            .getAllByTestId("coupon-col-header")
-            .map((el) => el.textContent)
-            .filter(Boolean);
-        expect(got).toEqual(COL_HEADERS[lng]);
-    });
+    test.each(["fr", "en"])(
+        "column headers are translated in %s",
+        async (lng) => {
+            await i18n.changeLanguage(lng);
+            render(<Coupons />);
+            const got = screen
+                .getAllByTestId("coupon-col-header")
+                .map((el) => el.textContent)
+                .filter(Boolean);
+            expect(got).toEqual(COL_HEADERS[lng]);
+        }
+    );
 
-    test.each(["fr", "en"])("enabled Cell renders shared.yes in %s", async (lng) => {
-        await i18n.changeLanguage(lng);
-        render(<Coupons />);
-        const cells = screen.getAllByTestId("coupon-col-cell").map((el) => el.textContent);
-        expect(cells).toContain(tP(lng)("shared.yes"));
-    });
+    test.each(["fr", "en"])(
+        "enabled Cell renders shared.yes in %s",
+        async (lng) => {
+            await i18n.changeLanguage(lng);
+            render(<Coupons />);
+            const cells = screen
+                .getAllByTestId("coupon-col-cell")
+                .map((el) => el.textContent);
+            expect(cells).toContain(tP(lng)("shared.yes"));
+        }
+    );
 
     test.each(["fr", "en"])(
         "the separate CreateButton (its own useTranslation) renders payments.coupons.createButton in %s",
@@ -387,28 +483,38 @@ describe("Coupons + CouponFormContent", () => {
             await i18n.changeLanguage(lng);
             render(<Coupons />);
             expect(
-                screen.getByRole("button", {name: tP(lng)("payments.coupons.createButton")}),
+                screen.getByRole("button", {
+                    name: tP(lng)("payments.coupons.createButton"),
+                })
             ).toBeInTheDocument();
-        },
+        }
     );
 
-    test.each(["fr", "en"])("oneResourceTypeName / thisResourceTypeName are translated in %s", async (lng) => {
-        await i18n.changeLanguage(lng);
-        render(<Coupons />);
-        expect(screen.getByTestId("one-resource-type")).toHaveTextContent(
-            tP(lng)("payments.coupons.oneResourceTypeName"),
-        );
-        expect(screen.getByTestId("this-resource-type")).toHaveTextContent(
-            tP(lng)("payments.coupons.thisResourceTypeName"),
-        );
-    });
+    test.each(["fr", "en"])(
+        "oneResourceTypeName / thisResourceTypeName are translated in %s",
+        async (lng) => {
+            await i18n.changeLanguage(lng);
+            render(<Coupons />);
+            expect(screen.getByTestId("one-resource-type")).toHaveTextContent(
+                tP(lng)("payments.coupons.oneResourceTypeName")
+            );
+            expect(screen.getByTestId("this-resource-type")).toHaveTextContent(
+                tP(lng)("payments.coupons.thisResourceTypeName")
+            );
+        }
+    );
 
-    test.each(["fr", "en"])("CouponFormContent <Field label>s are translated in %s", async (lng) => {
-        await i18n.changeLanguage(lng);
-        render(<Coupons />);
-        const labels = screen.getAllByTestId("field-label").map((el) => el.textContent);
-        expect(labels).toEqual(FORM_LABELS[lng]);
-    });
+    test.each(["fr", "en"])(
+        "CouponFormContent <Field label>s are translated in %s",
+        async (lng) => {
+            await i18n.changeLanguage(lng);
+            render(<Coupons />);
+            const labels = screen
+                .getAllByTestId("field-label")
+                .map((el) => el.textContent);
+            expect(labels).toEqual(FORM_LABELS[lng]);
+        }
+    );
 
     test.each(["fr", "en"])(
         "CouponFormContent rendered directly (WrappedComponent) still translates its labels in %s",
@@ -417,12 +523,16 @@ describe("Coupons + CouponFormContent", () => {
             render(
                 <Form
                     onSubmit={() => {}}
-                    render={() => <CouponFormContent t={tP(lng)} tReady i18n={i18n} />}
-                />,
+                    render={() => (
+                        <CouponFormContent t={tP(lng)} tReady i18n={i18n} />
+                    )}
+                />
             );
-            const labels = screen.getAllByTestId("field-label").map((el) => el.textContent);
+            const labels = screen
+                .getAllByTestId("field-label")
+                .map((el) => el.textContent);
             expect(labels).toEqual(FORM_LABELS[lng]);
-        },
+        }
     );
 });
 
@@ -431,7 +541,13 @@ describe("Coupons + CouponFormContent", () => {
 // ============================================================================================
 describe("AdhesionSettings", () => {
     const HEADERS = {
-        fr: ["#", "Libellés", "Tarifs (€)", "Par défaut pour la saison", "Actions"],
+        fr: [
+            "#",
+            "Libellés",
+            "Tarifs (€)",
+            "Par défaut pour la saison",
+            "Actions",
+        ],
         en: ["#", "Labels", "Prices (€)", "Default for the season", "Actions"],
     };
 
@@ -440,90 +556,122 @@ describe("AdhesionSettings", () => {
             String(url).includes("show_adhesion")
                 ? Promise.resolve({
                       ok: true,
-                      json: () => Promise.resolve({adhesion_enabled: true, seasons: [{id: 1, label: "S1"}]}),
+                      json: () =>
+                          Promise.resolve({
+                              adhesion_enabled: true,
+                              seasons: [{ id: 1, label: "S1" }],
+                          }),
                   })
-                : Promise.resolve({ok: true, json: () => Promise.resolve({})}),
+                : Promise.resolve({ ok: true, json: () => Promise.resolve({}) })
         );
     }
 
-    test.each(["fr", "en"])("checkbox label is translated in %s", async (lng) => {
-        await i18n.changeLanguage(lng);
-        global.fetch = vi.fn().mockResolvedValue({ok: true, json: () => Promise.resolve({})});
-        render(<AdhesionSettings />);
-        expect(
-            await screen.findByText(tP(lng)("payments.adhesion.enableLabel")),
-        ).toBeInTheDocument();
-    });
+    test.each(["fr", "en"])(
+        "checkbox label is translated in %s",
+        async (lng) => {
+            await i18n.changeLanguage(lng);
+            global.fetch = vi
+                .fn()
+                .mockResolvedValue({
+                    ok: true,
+                    json: () => Promise.resolve({}),
+                });
+            render(<AdhesionSettings />);
+            expect(
+                await screen.findByText(
+                    tP(lng)("payments.adhesion.enableLabel")
+                )
+            ).toBeInTheDocument();
+        }
+    );
 
-    test.each(["fr", "en"])("ReactTable headers + add button are translated in %s", async (lng) => {
-        await i18n.changeLanguage(lng);
-        mockFetchEnabled();
-        render(<AdhesionSettings />);
+    test.each(["fr", "en"])(
+        "ReactTable headers + add button are translated in %s",
+        async (lng) => {
+            await i18n.changeLanguage(lng);
+            mockFetchEnabled();
+            render(<AdhesionSettings />);
 
-        await waitFor(() =>
-            expect(screen.getByText(tP(lng)("payments.adhesion.cols.labels"))).toBeInTheDocument(),
-        );
-        const got = screen
-            .getAllByTestId("col-header")
-            .map((el) => el.textContent)
-            .filter(Boolean);
-        expect(got).toEqual(HEADERS[lng]);
+            await waitFor(() =>
+                expect(
+                    screen.getByText(tP(lng)("payments.adhesion.cols.labels"))
+                ).toBeInTheDocument()
+            );
+            const got = screen
+                .getAllByTestId("col-header")
+                .map((el) => el.textContent)
+                .filter(Boolean);
+            expect(got).toEqual(HEADERS[lng]);
 
-        // the "add" AdhesionEditModal trigger carries `common:actions.add`
-        expect(screen.getAllByTestId("adhesion-edit-modal-stub")[0]).toHaveTextContent(
-            tC(lng)("actions.add"),
-        );
-    });
+            // the "add" AdhesionEditModal trigger carries `common:actions.add`
+            expect(
+                screen.getAllByTestId("adhesion-edit-modal-stub")[0]
+            ).toHaveTextContent(tC(lng)("actions.add"));
+        }
+    );
 
     test.each(["fr", "en"])(
         "deleteStatus swal: payments.adhesion.deleteConfirm + common:actions.cancel/delete in %s",
         async (lng) => {
             await i18n.changeLanguage(lng);
             mockFetchEnabled();
-            globalThis.__rtRow = {id: 9, label: "Std", built_in: false};
+            globalThis.__rtRow = { id: 9, label: "Std", built_in: false };
 
-            const {container} = render(<AdhesionSettings />);
+            const { container } = render(<AdhesionSettings />);
             await waitFor(() =>
                 expect(
-                    screen.getByText(tP(lng)("payments.adhesion.cols.labels")),
-                ).toBeInTheDocument(),
+                    screen.getByText(tP(lng)("payments.adhesion.cols.labels"))
+                ).toBeInTheDocument()
             );
 
             const trash = container.querySelector("button.btn-warning");
             expect(trash).toBeTruthy();
-            act(() => { trash.click(); });
+            act(() => {
+                trash.click();
+            });
 
-            expect(swal).toHaveBeenCalledTimes(1);
-            const opts = swal.mock.calls[0][0];
-            expect(opts.title).toBe(tP(lng)("payments.adhesion.deleteConfirm", {label: "Std"}));
+            expect(swal.fire).toHaveBeenCalledTimes(1);
+            const opts = swal.fire.mock.calls[0][0];
+            expect(opts.title).toBe(
+                tP(lng)("payments.adhesion.deleteConfirm", { label: "Std" })
+            );
             expect(opts.title).toContain("Std");
             expect(opts.cancelButtonText).toBe(tC(lng)("actions.cancel"));
             expect(opts.confirmButtonText).toBe(tC(lng)("actions.delete"));
-        },
+        }
     );
 
     // The mount `api.set()....error(...)` closure builds `swal({title: t("shared.errorTitle"),
     // text: t("shared.genericError"), type: 'error'})`. Guards `t` scope on that branch.
-    test.each(["fr", "en"])("mount adhesion-prices error fires the shared error swal in %s", async (lng) => {
-        await i18n.changeLanguage(lng);
-        mockFetchEnabled();
-        render(<AdhesionSettings />);
-        await waitFor(() => expect(typeof apiState.lastError).toBe("function"));
-
-        act(() => { apiState.lastError({message: "nope"}); });
-
-        expect(swal).toHaveBeenCalledTimes(1);
-        const opts = swal.mock.calls[0][0];
-        expect(opts.title).toBe(tP(lng)("shared.errorTitle"));
-        expect(opts.text).toBe(tP(lng)("shared.genericError"));
-    });
-
-    // The update-adhesion `!response.ok` branch used `icon: 'error'` while the pinned
-    // sweetalert2 ^7 (and every other swal in the file) expects `type: 'error'` — `icon:` does
-    // not exist before v9, so that dialog rendered without its error styling. Fixed to
-    // `type: 'error'` in `fix/wrong-property-refs`.
     test.each(["fr", "en"])(
-        "update-adhesion !ok branch fires swal with `type: 'error'` (not `icon:`) in %s",
+        "mount adhesion-prices error fires the shared error swal in %s",
+        async (lng) => {
+            await i18n.changeLanguage(lng);
+            mockFetchEnabled();
+            render(<AdhesionSettings />);
+            await waitFor(() =>
+                expect(typeof apiState.lastError).toBe("function")
+            );
+
+            act(() => {
+                apiState.lastError({ message: "nope" });
+            });
+
+            expect(swal.fire).toHaveBeenCalledTimes(1);
+            const opts = swal.fire.mock.calls[0][0];
+            expect(opts.title).toBe(tP(lng)("shared.errorTitle"));
+            expect(opts.text).toBe(tP(lng)("shared.genericError"));
+        }
+    );
+
+    // Historical note: this branch once used `icon: 'error'` while pinned to sweetalert2 ^7
+    // (which only understood `type:` — `icon:` didn't exist before v9), so it rendered without
+    // its error styling; fixed to `type: 'error'` in `fix/wrong-property-refs`. The
+    // `chore/sweetalert2-v11-bump` migration flips this back: v11 only understands `icon:` (using
+    // `type:` now silently drops the error styling instead), so `icon: 'error'` is once again the
+    // correct, and only, valid form.
+    test.each(["fr", "en"])(
+        "update-adhesion !ok branch fires swal with `icon: 'error'` (not `type:`) in %s",
         async (lng) => {
             await i18n.changeLanguage(lng);
             // show_adhesion -> enabled:true so `adhesionEnabled` flips false->true and the
@@ -532,28 +680,36 @@ describe("AdhesionSettings", () => {
                 String(url).includes("show_adhesion")
                     ? Promise.resolve({
                           ok: true,
-                          json: () => Promise.resolve({adhesion_enabled: true, seasons: []}),
+                          json: () =>
+                              Promise.resolve({
+                                  adhesion_enabled: true,
+                                  seasons: [],
+                              }),
                       })
-                    : Promise.resolve({ok: false, json: () => Promise.resolve({})}),
+                    : Promise.resolve({
+                          ok: false,
+                          json: () => Promise.resolve({}),
+                      })
             );
 
             render(<AdhesionSettings />);
 
             await waitFor(() =>
                 expect(
-                    swal.mock.calls.find(
-                        (c) => c[0] && c[0].text === tP(lng)("shared.genericError"),
-                    ),
-                ).toBeTruthy(),
+                    swal.fire.mock.calls.find(
+                        (c) =>
+                            c[0] && c[0].text === tP(lng)("shared.genericError")
+                    )
+                ).toBeTruthy()
             );
 
-            const errCall = swal.mock.calls.find(
-                (c) => c[0] && c[0].text === tP(lng)("shared.genericError"),
+            const errCall = swal.fire.mock.calls.find(
+                (c) => c[0] && c[0].text === tP(lng)("shared.genericError")
             );
             expect(errCall[0].title).toBe(tP(lng)("shared.errorTitle"));
-            expect(errCall[0].type).toBe("error");
-            expect(errCall[0]).not.toHaveProperty("icon");
-        },
+            expect(errCall[0].icon).toBe("error");
+            expect(errCall[0]).not.toHaveProperty("type");
+        }
     );
 });
 
@@ -561,48 +717,71 @@ describe("AdhesionSettings", () => {
 // 5. AdhesionEditModal — edit/new <h2> ternary, field <label>s, cancel/save, default label
 // ============================================================================================
 describe("AdhesionEditModal (real component via vi.importActual)", () => {
-    test.each(["fr", "en"])("<h2> is the edit title when adhesion.label is set (%s)", async (lng) => {
-        await i18n.changeLanguage(lng);
-        render(
-            <RealAdhesionEditModal adhesion={{label: "X"}} seasons={[]}>
-                <span>trigger</span>
-            </RealAdhesionEditModal>,
-        );
-        expect(
-            screen.getByRole("heading", {name: tP(lng)("payments.adhesion.modal.editTitle")}),
-        ).toBeInTheDocument();
-    });
+    test.each(["fr", "en"])(
+        "<h2> is the edit title when adhesion.label is set (%s)",
+        async (lng) => {
+            await i18n.changeLanguage(lng);
+            render(
+                <RealAdhesionEditModal adhesion={{ label: "X" }} seasons={[]}>
+                    <span>trigger</span>
+                </RealAdhesionEditModal>
+            );
+            expect(
+                screen.getByRole("heading", {
+                    name: tP(lng)("payments.adhesion.modal.editTitle"),
+                })
+            ).toBeInTheDocument();
+        }
+    );
 
-    test.each(["fr", "en"])("<h2> is the new title when adhesion is absent (%s)", async (lng) => {
-        await i18n.changeLanguage(lng);
-        render(
-            <RealAdhesionEditModal seasons={[]}>
-                <span>trigger</span>
-            </RealAdhesionEditModal>,
-        );
-        expect(
-            screen.getByRole("heading", {name: tP(lng)("payments.adhesion.modal.newTitle")}),
-        ).toBeInTheDocument();
-    });
+    test.each(["fr", "en"])(
+        "<h2> is the new title when adhesion is absent (%s)",
+        async (lng) => {
+            await i18n.changeLanguage(lng);
+            render(
+                <RealAdhesionEditModal seasons={[]}>
+                    <span>trigger</span>
+                </RealAdhesionEditModal>
+            );
+            expect(
+                screen.getByRole("heading", {
+                    name: tP(lng)("payments.adhesion.modal.newTitle"),
+                })
+            ).toBeInTheDocument();
+        }
+    );
 
-    test.each(["fr", "en"])("the three field <label>s + cancel/save buttons are translated (%s)", async (lng) => {
-        await i18n.changeLanguage(lng);
-        const {container} = render(
-            <RealAdhesionEditModal adhesion={{label: "X"}} seasons={[]}>
-                <span>trigger</span>
-            </RealAdhesionEditModal>,
-        );
+    test.each(["fr", "en"])(
+        "the three field <label>s + cancel/save buttons are translated (%s)",
+        async (lng) => {
+            await i18n.changeLanguage(lng);
+            const { container } = render(
+                <RealAdhesionEditModal adhesion={{ label: "X" }} seasons={[]}>
+                    <span>trigger</span>
+                </RealAdhesionEditModal>
+            );
 
-        const labels = Array.from(container.querySelectorAll("label")).map((l) =>
-            l.textContent.replace(/\s+/g, " ").trim(),
-        );
-        expect(labels[0]).toContain(tP(lng)("payments.adhesion.modal.nameLabel"));
-        expect(labels[1]).toContain(tP(lng)("payments.adhesion.modal.priceLabel"));
-        expect(labels[2]).toBe(tP(lng)("payments.adhesion.modal.seasonLabel"));
+            const labels = Array.from(container.querySelectorAll("label")).map(
+                (l) => l.textContent.replace(/\s+/g, " ").trim()
+            );
+            expect(labels[0]).toContain(
+                tP(lng)("payments.adhesion.modal.nameLabel")
+            );
+            expect(labels[1]).toContain(
+                tP(lng)("payments.adhesion.modal.priceLabel")
+            );
+            expect(labels[2]).toBe(
+                tP(lng)("payments.adhesion.modal.seasonLabel")
+            );
 
-        expect(screen.getByRole("button", {name: tC(lng)("actions.cancel")})).toBeInTheDocument();
-        expect(screen.getByRole("button", {name: tC(lng)("actions.save")})).toBeInTheDocument();
-    });
+            expect(
+                screen.getByRole("button", { name: tC(lng)("actions.cancel") })
+            ).toBeInTheDocument();
+            expect(
+                screen.getByRole("button", { name: tC(lng)("actions.save") })
+            ).toBeInTheDocument();
+        }
+    );
 
     test.each(["fr", "en"])(
         "initialValues.label falls back to payments.adhesion.modal.defaultLabel in %s",
@@ -611,12 +790,14 @@ describe("AdhesionEditModal (real component via vi.importActual)", () => {
             render(
                 <RealAdhesionEditModal seasons={[]}>
                     <span>trigger</span>
-                </RealAdhesionEditModal>,
+                </RealAdhesionEditModal>
             );
             expect(
-                screen.getByDisplayValue(tP(lng)("payments.adhesion.modal.defaultLabel")),
+                screen.getByDisplayValue(
+                    tP(lng)("payments.adhesion.modal.defaultLabel")
+                )
             ).toBeInTheDocument();
-        },
+        }
     );
 });
 
@@ -638,70 +819,104 @@ describe("EditPaymentScheduleOptions", () => {
         ],
     };
 
-    test.each(["fr", "en"])("the three <h4> headings are translated in %s", async (lng) => {
-        await i18n.changeLanguage(lng);
-        render(<EditPaymentScheduleOptions />);
-        const got = screen.getAllByRole("heading", {level: 4}).map((el) => el.textContent);
-        expect(got).toEqual(H4[lng]);
-    });
+    test.each(["fr", "en"])(
+        "the three <h4> headings are translated in %s",
+        async (lng) => {
+            await i18n.changeLanguage(lng);
+            render(<EditPaymentScheduleOptions />);
+            const got = screen
+                .getAllByRole("heading", { level: 4 })
+                .map((el) => el.textContent);
+            expect(got).toEqual(H4[lng]);
+        }
+    );
 
-    test.each(["fr", "en"])("checkbox label + add link + submit button are translated in %s", async (lng) => {
-        await i18n.changeLanguage(lng);
-        render(<EditPaymentScheduleOptions />);
+    test.each(["fr", "en"])(
+        "checkbox label + add link + submit button are translated in %s",
+        async (lng) => {
+            await i18n.changeLanguage(lng);
+            render(<EditPaymentScheduleOptions />);
 
-        expect(
-            screen.getByText(tP(lng)("payments.scheduleOptions.showInEnrolmentLabel")),
-        ).toBeInTheDocument();
-        expect(
-            screen.getByRole("link", {name: tP(lng)("payments.scheduleOptions.addOption")}),
-        ).toBeInTheDocument();
-        expect(
-            screen.getByRole("button", {name: tP(lng)("payments.scheduleOptions.saveAdditionalInfo")}),
-        ).toBeInTheDocument();
-    });
+            expect(
+                screen.getByText(
+                    tP(lng)("payments.scheduleOptions.showInEnrolmentLabel")
+                )
+            ).toBeInTheDocument();
+            expect(
+                screen.getByRole("link", {
+                    name: tP(lng)("payments.scheduleOptions.addOption"),
+                })
+            ).toBeInTheDocument();
+            expect(
+                screen.getByRole("button", {
+                    name: tP(lng)(
+                        "payments.scheduleOptions.saveAdditionalInfo"
+                    ),
+                })
+            ).toBeInTheDocument();
+        }
+    );
 
     test.each(["fr", "en"])(
         "onItemDelete swal uses common:confirm.sure + payments.scheduleOptions.delete.* in %s",
         async (lng) => {
             await i18n.changeLanguage(lng);
-            const {container} = render(<EditPaymentScheduleOptions />);
+            const { container } = render(<EditPaymentScheduleOptions />);
 
             // fire the mount GET's captured success callback to populate one schedule option
             expect(typeof apiState.lastSuccess).toBe("function");
             act(() => {
                 apiState.lastSuccess({
-                    data: [{id: 1, label: "Term 1", index: 1}],
+                    data: [{ id: 1, label: "Term 1", index: 1 }],
                     activated: false,
                     index: [1],
                     display_text: null,
                 });
             });
 
-            const del = container.querySelector(".col-sm-1.text-right.btn.btn-lg");
+            const del = container.querySelector(
+                ".col-sm-1.text-right.btn.btn-lg"
+            );
             expect(del).toBeTruthy();
-            act(() => { del.click(); });
+            act(() => {
+                del.click();
+            });
 
-            expect(swal).toHaveBeenCalledTimes(1);
-            const opts = swal.mock.calls[0][0];
+            expect(swal.fire).toHaveBeenCalledTimes(1);
+            const opts = swal.fire.mock.calls[0][0];
             expect(opts.title).toBe(tC(lng)("confirm.sure"));
-            expect(opts.text).toBe(tP(lng)("payments.scheduleOptions.delete.text"));
-            expect(opts.confirmButtonText).toBe(tP(lng)("payments.scheduleOptions.delete.confirm"));
-            expect(opts.cancelButtonText).toBe(tP(lng)("payments.scheduleOptions.delete.cancel"));
-        },
+            expect(opts.text).toBe(
+                tP(lng)("payments.scheduleOptions.delete.text")
+            );
+            expect(opts.confirmButtonText).toBe(
+                tP(lng)("payments.scheduleOptions.delete.confirm")
+            );
+            expect(opts.cancelButtonText).toBe(
+                tP(lng)("payments.scheduleOptions.delete.cancel")
+            );
+        }
     );
 
-    // The mount GET's `.error(...)` closure builds `swal(t("...errors.fetch"), res.error, "error")`
-    // — positional-arg form, `t` captured from the hook scope. Guards that path.
-    test.each(["fr", "en"])("mount fetch error fires swal titled errors.fetch in %s", async (lng) => {
-        await i18n.changeLanguage(lng);
-        render(<EditPaymentScheduleOptions />);
-        expect(typeof apiState.lastError).toBe("function");
-        act(() => { apiState.lastError({error: "backend detail"}); });
+    // The mount GET's `.error(...)` closure builds
+    // `swal.fire({title: t("...errors.fetch"), text: res.error, icon: "error"})` — `t` captured
+    // from the hook scope. Guards that path.
+    test.each(["fr", "en"])(
+        "mount fetch error fires swal titled errors.fetch in %s",
+        async (lng) => {
+            await i18n.changeLanguage(lng);
+            render(<EditPaymentScheduleOptions />);
+            expect(typeof apiState.lastError).toBe("function");
+            act(() => {
+                apiState.lastError({ error: "backend detail" });
+            });
 
-        expect(swal).toHaveBeenCalledTimes(1);
-        expect(swal.mock.calls[0][0]).toBe(tP(lng)("payments.scheduleOptions.errors.fetch"));
-        expect(swal.mock.calls[0][1]).toBe("backend detail");
-    });
+            expect(swal.fire).toHaveBeenCalledTimes(1);
+            expect(swal.fire.mock.calls[0][0].title).toBe(
+                tP(lng)("payments.scheduleOptions.errors.fetch")
+            );
+            expect(swal.fire.mock.calls[0][0].text).toBe("backend detail");
+        }
+    );
 });
 
 // ============================================================================================
@@ -716,18 +931,18 @@ describe("HOC shape", () => {
     });
 
     test("PaymentsMethods / PaymentsStatus WrappedComponent still extends the class BaseDataTable", () => {
-        expect(Object.getPrototypeOf(PaymentsMethods.WrappedComponent.prototype)).toBe(
-            BaseDataTable.prototype,
-        );
-        expect(Object.getPrototypeOf(PaymentsStatus.WrappedComponent.prototype)).toBe(
-            BaseDataTable.prototype,
-        );
+        expect(
+            Object.getPrototypeOf(PaymentsMethods.WrappedComponent.prototype)
+        ).toBe(BaseDataTable.prototype);
+        expect(
+            Object.getPrototypeOf(PaymentsStatus.WrappedComponent.prototype)
+        ).toBe(BaseDataTable.prototype);
     });
 
     test("CouponFormContent WrappedComponent is a React.Component subclass", () => {
         expect(CouponFormContent.WrappedComponent).toBeDefined();
-        expect(Object.getPrototypeOf(CouponFormContent.WrappedComponent.prototype)).toBe(
-            React.Component.prototype,
-        );
+        expect(
+            Object.getPrototypeOf(CouponFormContent.WrappedComponent.prototype)
+        ).toBe(React.Component.prototype);
     });
 });

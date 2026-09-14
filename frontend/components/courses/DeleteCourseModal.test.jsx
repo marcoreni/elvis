@@ -129,8 +129,8 @@ describe("DeleteCourseModal — i18n", () => {
         );
         fireEvent.click(screen.getByRole("button", { name: "Valider" }));
 
-        await waitFor(() => expect(swal).toHaveBeenCalled());
-        expect(swal).toHaveBeenCalledWith(
+        await waitFor(() => expect(swal.fire).toHaveBeenCalled());
+        expect(swal.fire).toHaveBeenCalledWith(
             expect.objectContaining({
                 title: "Attention",
                 text: "Aucun cours ne peut être supprimé.",

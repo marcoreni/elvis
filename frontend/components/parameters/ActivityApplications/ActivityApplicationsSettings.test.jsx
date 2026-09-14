@@ -34,16 +34,28 @@
 // still be present (regression guard).
 
 import React from "react";
-import {render, screen, fireEvent, act, waitFor} from "@testing-library/react";
+import {
+    render,
+    screen,
+    fireEvent,
+    act,
+    waitFor,
+} from "@testing-library/react";
 import i18n from "../../../i18n";
 
 // --- api: chainable no-op stub; last success/error callbacks captured for hand-firing --------
-const apiState = vi.hoisted(() => ({lastSuccess: null, lastError: null}));
+const apiState = vi.hoisted(() => ({ lastSuccess: null, lastError: null }));
 vi.mock("../../../tools/api", () => ({
     set: () => {
         const c = {};
-        c.success = (fn) => { apiState.lastSuccess = fn; return c; };
-        c.error = (fn) => { apiState.lastError = fn; return c; };
+        c.success = (fn) => {
+            apiState.lastSuccess = fn;
+            return c;
+        };
+        c.error = (fn) => {
+            apiState.lastError = fn;
+            return c;
+        };
         c.before = () => c;
         c.useLoading = () => c;
         c.get = () => c;
@@ -55,13 +67,18 @@ vi.mock("../../../tools/api", () => ({
 }));
 
 // --- sweetalert2 stub ---------------------------------------------------------------------------
-vi.mock("sweetalert2", () => ({default: vi.fn(() => Promise.resolve({}))}));
+vi.mock("sweetalert2", () => ({
+    default: Object.assign(
+        vi.fn(() => Promise.resolve({})),
+        { fire: vi.fn(() => Promise.resolve({})) }
+    ),
+}));
 
 // --- react-table stub: surface every column's string `Header` in order, and render every
 //     column's `Cell` once against `globalThis.__rtRow` so Cell-internal i18n (Oui/Non) is
 //     reachable without real table data. --------------------------------------------------------
 vi.mock("react-table", () => ({
-    default: ({columns = []}) => (
+    default: ({ columns = [] }) => (
         <div data-testid="react-table">
             {columns.map((col, i) => (
                 <span key={i} data-testid="col-header">
@@ -71,9 +88,9 @@ vi.mock("react-table", () => ({
             {columns.map((col, i) =>
                 col.Cell ? (
                     <span key={`cell-${i}`} data-testid="col-cell">
-                        {col.Cell({original: globalThis.__rtRow || {}})}
+                        {col.Cell({ original: globalThis.__rtRow || {} })}
                     </span>
-                ) : null,
+                ) : null
             )}
         </div>
     ),
@@ -81,9 +98,12 @@ vi.mock("react-table", () => ({
 
 // --- react-modal: render children unconditionally; expose setAppElement (ConsentDocumentsList) --
 vi.mock("react-modal", () => ({
-    default: Object.assign(({children}) => <div data-testid="react-modal">{children}</div>, {
-        setAppElement: vi.fn(),
-    }),
+    default: Object.assign(
+        ({ children }) => <div data-testid="react-modal">{children}</div>,
+        {
+            setAppElement: vi.fn(),
+        }
+    ),
 }));
 
 // --- common form primitives: prop-echoing stubs ----------------------------------------------
@@ -94,11 +114,15 @@ vi.mock("../../common/Input", () => ({
             <span data-testid="field-placeholder">
                 {props.htmlOptions && props.htmlOptions.placeholder}
             </span>
-            <span data-testid="field-error">{props.meta && props.meta.error}</span>
+            <span data-testid="field-error">
+                {props.meta && props.meta.error}
+            </span>
         </div>
     ),
 }));
-vi.mock("../../common/InputSelect", () => ({default: () => <div data-testid="input-select" />}));
+vi.mock("../../common/InputSelect", () => ({
+    default: () => <div data-testid="input-select" />,
+}));
 vi.mock("../../common/Checkbox", () => ({
     default: (props) => (
         <div data-testid="checkbox-field">
@@ -115,20 +139,28 @@ vi.mock("../../editParameters/DragAndDrop", () => ({
             {/* Simulates picking a file, for the fileHasChanged-reset regression test below.
                 type="button" matters: this renders inside ConsentDocumentModal's <form>, and a
                 plain <button> defaults to type="submit" there. */}
-            <button type="button" data-testid="dnd-pick-file" onClick={() => props.setFile(new File([""], "consent.pdf"))} />
+            <button
+                type="button"
+                data-testid="dnd-pick-file"
+                onClick={() => props.setFile(new File([""], "consent.pdf"))}
+            />
         </div>
     ),
 }));
 
 // --- ApplicationStepParameters' heavy deps -------------------------------------------------------
-vi.mock("react-draft-wysiwyg", () => ({Editor: () => <div data-testid="wysiwyg-editor" />}));
+vi.mock("react-draft-wysiwyg", () => ({
+    Editor: () => <div data-testid="wysiwyg-editor" />,
+}));
 vi.mock("draft-js", () => ({
-    EditorState: {createEmpty: () => ({}), createWithContent: () => ({})},
+    EditorState: { createEmpty: () => ({}), createWithContent: () => ({}) },
     convertToRaw: () => ({}),
     convertFromRaw: () => ({}),
-    ContentState: {createFromText: () => ({})},
+    ContentState: { createFromText: () => ({}) },
 }));
-vi.mock("react-toastify", () => ({toast: {success: vi.fn(), error: vi.fn()}}));
+vi.mock("react-toastify", () => ({
+    toast: { success: vi.fn(), error: vi.fn() },
+}));
 
 // --- ConsentDocumentsList's child modal: stub (the real one is exercised separately) ----------
 vi.mock("./ConsentDocumentModal", () => ({
@@ -144,15 +176,16 @@ import ApplicationStatusTable from "./ApplicationStatusTable";
 // the real ConsentDocumentModal, bypassing the stub above
 let ConsentDocumentModal;
 beforeAll(async () => {
-    ConsentDocumentModal = (await vi.importActual("./ConsentDocumentModal")).default;
+    ConsentDocumentModal = (await vi.importActual("./ConsentDocumentModal"))
+        .default;
 });
 
 const tP = (lng) => i18n.getFixedT(lng, "parameters");
 const tC = (lng) => i18n.getFixedT(lng, "common");
 
 beforeEach(() => {
-    swal.mockClear();
-    swal.mockImplementation(() => Promise.resolve({}));
+    swal.fire.mockClear();
+    swal.fire.mockImplementation(() => Promise.resolve({}));
     apiState.lastSuccess = null;
     apiState.lastError = null;
     globalThis.__rtRow = {};
@@ -183,28 +216,41 @@ describe("parameters activityApplications.* (lot D) — i18n layer", () => {
     test.each(["fr", "en"])(
         "statusTable.deleteConfirm interpolates {{name}} — value embedded, no leftover braces (%s)",
         (lng) => {
-            const v = tP(lng)("shared.deleteStatusConfirm", {name: "Traitée"});
+            const v = tP(lng)("shared.deleteStatusConfirm", {
+                name: "Traitée",
+            });
             expect(v).toContain("Traitée");
             expect(v).not.toContain("{");
-        },
+        }
     );
 
     test.each(["fr", "en"])(
         "consentModal.schoolNameHint keeps the literal {schoolName} token, un-interpolated (%s)",
         (lng) => {
-            const v = tP(lng)("activityApplications.consentModal.schoolNameHint", {name: "X"});
+            const v = tP(lng)(
+                "activityApplications.consentModal.schoolNameHint",
+                { name: "X" }
+            );
             expect(v).toContain("{schoolName}");
             expect(v).not.toMatch(/\{\{/);
-        },
+        }
     );
 
     // "explicit fr / en copy for a sample of lot-D keys" removed (Phase 07 P0) — pure string-echo.
 
     test("regression: lot-A activityApplications.tabs.* / stepDesc.* still resolve", () => {
-        expect(tP("fr")("activityApplications.tabs.statuses")).toBe("Statuts d'inscription");
-        expect(tP("en")("activityApplications.tabs.statuses")).toBe("Enrollment statuses");
-        expect(tP("fr")("activityApplications.stepDesc.pricing")).toBe("Message tarifs");
-        expect(tP("en")("activityApplications.stepDesc.pricing")).toBe("Pricing message");
+        expect(tP("fr")("activityApplications.tabs.statuses")).toBe(
+            "Statuts d'inscription"
+        );
+        expect(tP("en")("activityApplications.tabs.statuses")).toBe(
+            "Enrollment statuses"
+        );
+        expect(tP("fr")("activityApplications.stepDesc.pricing")).toBe(
+            "Message tarifs"
+        );
+        expect(tP("en")("activityApplications.stepDesc.pricing")).toBe(
+            "Pricing message"
+        );
     });
 });
 
@@ -213,25 +259,34 @@ describe("parameters activityApplications.* (lot D) — i18n layer", () => {
 // ============================================================================================
 describe("ApplicationParameters", () => {
     const HEADINGS = {
-        fr: ["Statut d'inscription par défaut", "Attribution automatique du statut cours attribué"],
-        en: ["Default enrollment status", "Automatic assignment of the 'course assigned' status"],
+        fr: [
+            "Statut d'inscription par défaut",
+            "Attribution automatique du statut cours attribué",
+        ],
+        en: [
+            "Default enrollment status",
+            "Automatic assignment of the 'course assigned' status",
+        ],
     };
 
     function fireLoaded() {
         act(() => {
             apiState.lastSuccess({
-                activityApplicationStatusList: [{id: 1, label: "S"}],
-                defaultActivityApplicationStatus: {id: 1},
+                activityApplicationStatusList: [{ id: 1, label: "S" }],
+                defaultActivityApplicationStatus: { id: 1 },
                 autoAssignEnabled: false,
             });
         });
     }
 
-    test.each(["fr", "en"])("shows the common:loading placeholder before data arrives in %s", async (lng) => {
-        await i18n.changeLanguage(lng);
-        render(<ApplicationParameters />);
-        expect(screen.getByText(tC(lng)("loading"))).toBeInTheDocument();
-    });
+    test.each(["fr", "en"])(
+        "shows the common:loading placeholder before data arrives in %s",
+        async (lng) => {
+            await i18n.changeLanguage(lng);
+            render(<ApplicationParameters />);
+            expect(screen.getByText(tC(lng)("loading"))).toBeInTheDocument();
+        }
+    );
 
     test.each(["fr", "en"])(
         "renders both <h3> + the hint <p> + the checkbox <label> + the validate button, translated in %s",
@@ -241,58 +296,89 @@ describe("ApplicationParameters", () => {
             fireLoaded();
 
             for (const h of HEADINGS[lng]) {
-                expect(screen.getByRole("heading", {name: h})).toBeInTheDocument();
+                expect(
+                    screen.getByRole("heading", { name: h })
+                ).toBeInTheDocument();
             }
             expect(
-                screen.getByText(tP(lng)("activityApplications.settings.defaultStatusHint")),
+                screen.getByText(
+                    tP(lng)("activityApplications.settings.defaultStatusHint")
+                )
             ).toBeInTheDocument();
             expect(
-                screen.getByText(tP(lng)("activityApplications.settings.enableLabel")),
+                screen.getByText(
+                    tP(lng)("activityApplications.settings.enableLabel")
+                )
             ).toBeInTheDocument();
             expect(
-                screen.getByRole("button", {name: tC(lng)("actions.validate")}),
+                screen.getByRole("button", {
+                    name: tC(lng)("actions.validate"),
+                })
             ).toBeInTheDocument();
-        },
+        }
     );
 
-    test.each(["fr", "en"])("mount load-error fires swal titled shared.loadParamsError in %s", async (lng) => {
-        await i18n.changeLanguage(lng);
-        render(<ApplicationParameters />);
-        act(() => { apiState.lastError(); });
+    test.each(["fr", "en"])(
+        "mount load-error fires swal titled shared.loadParamsError in %s",
+        async (lng) => {
+            await i18n.changeLanguage(lng);
+            render(<ApplicationParameters />);
+            act(() => {
+                apiState.lastError();
+            });
 
-        expect(swal).toHaveBeenCalledTimes(1);
-        expect(swal.mock.calls[0][0].title).toBe(
-            tP(lng)("shared.loadParamsError"),
-        );
-    });
+            expect(swal.fire).toHaveBeenCalledTimes(1);
+            expect(swal.fire.mock.calls[0][0].title).toBe(
+                tP(lng)("shared.loadParamsError")
+            );
+        }
+    );
 
-    test.each(["fr", "en"])("onSubmit success fires swal titled shared.saveSuccess in %s", async (lng) => {
-        await i18n.changeLanguage(lng);
-        render(<ApplicationParameters />);
-        fireLoaded();
+    test.each(["fr", "en"])(
+        "onSubmit success fires swal titled shared.saveSuccess in %s",
+        async (lng) => {
+            await i18n.changeLanguage(lng);
+            render(<ApplicationParameters />);
+            fireLoaded();
 
-        fireEvent.click(screen.getByRole("button", {name: tC(lng)("actions.validate")}));
-        act(() => { apiState.lastSuccess(); });
+            fireEvent.click(
+                screen.getByRole("button", {
+                    name: tC(lng)("actions.validate"),
+                })
+            );
+            act(() => {
+                apiState.lastSuccess();
+            });
 
-        expect(swal).toHaveBeenCalledTimes(1);
-        expect(swal.mock.calls[0][0].title).toBe(
-            tP(lng)("shared.saveSuccess"),
-        );
-    });
+            expect(swal.fire).toHaveBeenCalledTimes(1);
+            expect(swal.fire.mock.calls[0][0].title).toBe(
+                tP(lng)("shared.saveSuccess")
+            );
+        }
+    );
 
-    test.each(["fr", "en"])("onSubmit error fires swal titled shared.saveError in %s", async (lng) => {
-        await i18n.changeLanguage(lng);
-        render(<ApplicationParameters />);
-        fireLoaded();
+    test.each(["fr", "en"])(
+        "onSubmit error fires swal titled shared.saveError in %s",
+        async (lng) => {
+            await i18n.changeLanguage(lng);
+            render(<ApplicationParameters />);
+            fireLoaded();
 
-        fireEvent.click(screen.getByRole("button", {name: tC(lng)("actions.validate")}));
-        act(() => { apiState.lastError(); });
+            fireEvent.click(
+                screen.getByRole("button", {
+                    name: tC(lng)("actions.validate"),
+                })
+            );
+            act(() => {
+                apiState.lastError();
+            });
 
-        expect(swal).toHaveBeenCalledTimes(1);
-        expect(swal.mock.calls[0][0].title).toBe(
-            tP(lng)("shared.saveError"),
-        );
-    });
+            expect(swal.fire).toHaveBeenCalledTimes(1);
+            expect(swal.fire.mock.calls[0][0].title).toBe(
+                tP(lng)("shared.saveError")
+            );
+        }
+    );
 });
 
 // ============================================================================================
@@ -303,34 +389,53 @@ describe("ApplicationStepParameters", () => {
         "<h3> is the untranslated `desc` prop; checkbox label + save button are translated in %s",
         async (lng) => {
             await i18n.changeLanguage(lng);
-            render(<ApplicationStepParameters parameter_label="pricing" desc="Msg" />);
+            render(
+                <ApplicationStepParameters
+                    parameter_label="pricing"
+                    desc="Msg"
+                />
+            );
 
-            expect(screen.getByRole("heading", {name: "Msg"})).toBeInTheDocument();
             expect(
-                screen.getByText(tP(lng)("activityApplications.stepParams.showTextLabel")),
+                screen.getByRole("heading", { name: "Msg" })
             ).toBeInTheDocument();
             expect(
-                screen.getByRole("button", {name: tC(lng)("actions.save")}),
+                screen.getByText(
+                    tP(lng)("activityApplications.stepParams.showTextLabel")
+                )
             ).toBeInTheDocument();
-        },
+            expect(
+                screen.getByRole("button", { name: tC(lng)("actions.save") })
+            ).toBeInTheDocument();
+        }
     );
 
     // The mount `.error(err => ...)` closure calls
     //   swal(t("activityApplications.stepParams.loadError"), err.error, "error")
     // (the `res` -> `err` param-name bug was fixed in this lot).
-    test.each(["fr", "en"])("mount load-error swal is titled stepParams.loadError in %s", async (lng) => {
-        await i18n.changeLanguage(lng);
-        render(<ApplicationStepParameters parameter_label="pricing" desc="Msg" />);
+    test.each(["fr", "en"])(
+        "mount load-error swal is titled stepParams.loadError in %s",
+        async (lng) => {
+            await i18n.changeLanguage(lng);
+            render(
+                <ApplicationStepParameters
+                    parameter_label="pricing"
+                    desc="Msg"
+                />
+            );
 
-        expect(typeof apiState.lastError).toBe("function");
-        act(() => { apiState.lastError({error: "backend detail"}); });
+            expect(typeof apiState.lastError).toBe("function");
+            act(() => {
+                apiState.lastError({ error: "backend detail" });
+            });
 
-        expect(swal).toHaveBeenCalledTimes(1);
-        expect(swal.mock.calls[0][0]).toBe(
-            tP(lng)("activityApplications.stepParams.loadError"),
-        );
-        expect(swal.mock.calls[0][1]).toBe("backend detail");
-    });
+            expect(swal.fire).toHaveBeenCalledTimes(1);
+            expect(swal.fire.mock.calls[0][0].title).toBe(
+                tP(lng)("activityApplications.stepParams.loadError")
+            );
+            expect(swal.fire.mock.calls[0][0].text).toBe("backend detail");
+        }
+    );
 });
 
 // ============================================================================================
@@ -338,11 +443,16 @@ describe("ApplicationStepParameters", () => {
 //    buttons, `required` validator message
 // ============================================================================================
 describe("ConsentDocumentModal (real component via vi.importActual)", () => {
-    test.each(["fr", "en"])("renders nothing when isOpen is false (%s)", async (lng) => {
-        await i18n.changeLanguage(lng);
-        const {container} = render(<ConsentDocumentModal isOpen={false} document={{}} />);
-        expect(container).toBeEmptyDOMElement();
-    });
+    test.each(["fr", "en"])(
+        "renders nothing when isOpen is false (%s)",
+        async (lng) => {
+            await i18n.changeLanguage(lng);
+            const { container } = render(
+                <ConsentDocumentModal isOpen={false} document={{}} />
+            );
+            expect(container).toBeEmptyDOMElement();
+        }
+    );
 
     test.each(["fr", "en"])(
         "title <h3> + field labels + placeholders + hint + DnD + checkbox + buttons are translated in %s",
@@ -351,47 +461,61 @@ describe("ConsentDocumentModal (real component via vi.importActual)", () => {
             render(<ConsentDocumentModal isOpen document={{}} />);
 
             expect(
-                screen.getByRole("heading", {name: tP(lng)("activityApplications.consentModal.title")}),
+                screen.getByRole("heading", {
+                    name: tP(lng)("activityApplications.consentModal.title"),
+                })
             ).toBeInTheDocument();
 
-            const labels = screen.getAllByTestId("field-label").map((e) => e.textContent);
-            expect(labels).toContain(tP(lng)("activityApplications.consentModal.titleLabel"));
-            expect(labels).toContain(tP(lng)("activityApplications.consentModal.contentLabel"));
+            const labels = screen
+                .getAllByTestId("field-label")
+                .map((e) => e.textContent);
+            expect(labels).toContain(
+                tP(lng)("activityApplications.consentModal.titleLabel")
+            );
+            expect(labels).toContain(
+                tP(lng)("activityApplications.consentModal.contentLabel")
+            );
 
             const placeholders = screen
                 .getAllByTestId("field-placeholder")
                 .map((e) => e.textContent);
             expect(placeholders).toContain(
-                tP(lng)("activityApplications.consentModal.titlePlaceholder"),
+                tP(lng)("activityApplications.consentModal.titlePlaceholder")
             );
             expect(placeholders).toContain(
-                tP(lng)("activityApplications.consentModal.contentPlaceholder"),
+                tP(lng)("activityApplications.consentModal.contentPlaceholder")
             );
 
             // hint <span> — the literal `{schoolName}` token survives into the DOM
             expect(screen.getByText(/\{schoolName\}/)).toBeInTheDocument();
 
             expect(screen.getByTestId("dnd-file-label")).toHaveTextContent(
-                tP(lng)("activityApplications.consentModal.attachedFileLabel").trim(),
+                tP(lng)(
+                    "activityApplications.consentModal.attachedFileLabel"
+                ).trim()
             );
             expect(screen.getByTestId("dnd-text-displayed")).toHaveTextContent(
-                tP(lng)("activityApplications.consentModal.dropPdfText"),
+                tP(lng)("activityApplications.consentModal.dropPdfText")
             );
 
             expect(screen.getByTestId("checkbox-label")).toHaveTextContent(
-                tP(lng)("activityApplications.consentModal.consentCheckboxLabel"),
+                tP(lng)(
+                    "activityApplications.consentModal.consentCheckboxLabel"
+                )
             );
-            expect(screen.getByTestId("checkbox-extra-title")).toHaveTextContent(
-                tP(lng)("activityApplications.consentModal.consentExtraTitle"),
+            expect(
+                screen.getByTestId("checkbox-extra-title")
+            ).toHaveTextContent(
+                tP(lng)("activityApplications.consentModal.consentExtraTitle")
             );
 
             expect(
-                screen.getByRole("button", {name: tC(lng)("actions.cancel")}),
+                screen.getByRole("button", { name: tC(lng)("actions.cancel") })
             ).toBeInTheDocument();
             expect(
-                screen.getByRole("button", {name: tC(lng)("actions.save")}),
+                screen.getByRole("button", { name: tC(lng)("actions.save") })
             ).toBeInTheDocument();
-        },
+        }
     );
 
     test.each(["fr", "en"])(
@@ -405,9 +529,9 @@ describe("ConsentDocumentModal (real component via vi.importActual)", () => {
                 .map((e) => e.textContent)
                 .filter(Boolean);
             expect(errors).toContain(
-                tP(lng)("activityApplications.consentModal.requiredError"),
+                tP(lng)("activityApplications.consentModal.requiredError")
             );
-        },
+        }
     );
 
     // Guards the fileHasChanged reset behavior itself: ConsentDocumentModal never unmounts
@@ -422,24 +546,42 @@ describe("ConsentDocumentModal (real component via vi.importActual)", () => {
     test("fileHasChanged resets to false when the modal is reopened for a different document", async () => {
         await i18n.changeLanguage("fr");
         const onSubmitFirst = vi.fn().mockResolvedValue();
-        const {rerender} = render(
-            <ConsentDocumentModal isOpen document={{title: "A", content: "B"}} onSubmit={onSubmitFirst} />,
+        const { rerender } = render(
+            <ConsentDocumentModal
+                isOpen
+                document={{ title: "A", content: "B" }}
+                onSubmit={onSubmitFirst}
+            />
         );
 
         fireEvent.click(screen.getByTestId("dnd-pick-file"));
-        fireEvent.click(screen.getByRole("button", {name: tC("fr")("actions.save")}));
+        fireEvent.click(
+            screen.getByRole("button", { name: tC("fr")("actions.save") })
+        );
         await waitFor(() => expect(onSubmitFirst).toHaveBeenCalled());
         expect(onSubmitFirst.mock.calls[0][2]).toBe(true); // fileHasChanged
 
         // Modal closes -- ConsentDocumentsList sets editedDocument (and isOpen) back to null/false.
-        rerender(<ConsentDocumentModal isOpen={false} document={null} onSubmit={onSubmitFirst} />);
+        rerender(
+            <ConsentDocumentModal
+                isOpen={false}
+                document={null}
+                onSubmit={onSubmitFirst}
+            />
+        );
 
         // Modal reopens for a different document; no new file is picked this time.
         const onSubmitSecond = vi.fn().mockResolvedValue();
         rerender(
-            <ConsentDocumentModal isOpen document={{title: "C", content: "D"}} onSubmit={onSubmitSecond} />,
+            <ConsentDocumentModal
+                isOpen
+                document={{ title: "C", content: "D" }}
+                onSubmit={onSubmitSecond}
+            />
         );
-        fireEvent.click(screen.getByRole("button", {name: tC("fr")("actions.save")}));
+        fireEvent.click(
+            screen.getByRole("button", { name: tC("fr")("actions.save") })
+        );
         await waitFor(() => expect(onSubmitSecond).toHaveBeenCalled());
         expect(onSubmitSecond.mock.calls[0][2]).toBe(false); // fileHasChanged, NOT leaked from the first session
     });
@@ -449,30 +591,42 @@ describe("ConsentDocumentModal (real component via vi.importActual)", () => {
 // 5. ConsentDocumentsList — intro <p> + add button, fetch-error swal
 // ============================================================================================
 describe("ConsentDocumentsList", () => {
-    test.each(["fr", "en"])("intro <p> + add <button> are translated in %s", async (lng) => {
-        await i18n.changeLanguage(lng);
-        render(<ConsentDocumentsList />);
+    test.each(["fr", "en"])(
+        "intro <p> + add <button> are translated in %s",
+        async (lng) => {
+            await i18n.changeLanguage(lng);
+            render(<ConsentDocumentsList />);
 
-        expect(
-            screen.getByText(tP(lng)("activityApplications.consentList.intro")),
-        ).toBeInTheDocument();
-        expect(
-            screen.getByRole("button", {name: tP(lng)("activityApplications.consentList.addButton")}),
-        ).toBeInTheDocument();
-    });
+            expect(
+                screen.getByText(
+                    tP(lng)("activityApplications.consentList.intro")
+                )
+            ).toBeInTheDocument();
+            expect(
+                screen.getByRole("button", {
+                    name: tP(lng)("activityApplications.consentList.addButton"),
+                })
+            ).toBeInTheDocument();
+        }
+    );
 
-    test.each(["fr", "en"])("mount fetch-error fires swal titled consentList.fetchError in %s", async (lng) => {
-        await i18n.changeLanguage(lng);
-        render(<ConsentDocumentsList />);
+    test.each(["fr", "en"])(
+        "mount fetch-error fires swal titled consentList.fetchError in %s",
+        async (lng) => {
+            await i18n.changeLanguage(lng);
+            render(<ConsentDocumentsList />);
 
-        expect(typeof apiState.lastError).toBe("function");
-        act(() => { apiState.lastError(); });
+            expect(typeof apiState.lastError).toBe("function");
+            act(() => {
+                apiState.lastError();
+            });
 
-        expect(swal).toHaveBeenCalledTimes(1);
-        expect(swal.mock.calls[0][0].title).toBe(
-            tP(lng)("activityApplications.consentList.fetchError"),
-        );
-    });
+            expect(swal.fire).toHaveBeenCalledTimes(1);
+            expect(swal.fire.mock.calls[0][0].title).toBe(
+                tP(lng)("activityApplications.consentList.fetchError")
+            );
+        }
+    );
 });
 
 // ============================================================================================
@@ -486,28 +640,36 @@ describe("ApplicationStatusTable", () => {
 
     test("default export is withTranslation-wrapped over a plain React.Component (NOT BaseDataTable)", () => {
         expect(ApplicationStatusTable.WrappedComponent).toBeDefined();
-        expect(ApplicationStatusTable.WrappedComponent.prototype instanceof React.Component).toBe(true);
-        expect(Object.getPrototypeOf(ApplicationStatusTable.WrappedComponent.prototype)).toBe(
-            React.Component.prototype,
-        );
+        expect(
+            ApplicationStatusTable.WrappedComponent.prototype instanceof
+                React.Component
+        ).toBe(true);
+        expect(
+            Object.getPrototypeOf(
+                ApplicationStatusTable.WrappedComponent.prototype
+            )
+        ).toBe(React.Component.prototype);
     });
 
-    test.each(["fr", "en"])("renders the translated column headers in %s", async (lng) => {
-        await i18n.changeLanguage(lng);
-        render(<ApplicationStatusTable />);
+    test.each(["fr", "en"])(
+        "renders the translated column headers in %s",
+        async (lng) => {
+            await i18n.changeLanguage(lng);
+            render(<ApplicationStatusTable />);
 
-        const got = screen
-            .getAllByTestId("col-header")
-            .map((el) => el.textContent)
-            .filter(Boolean);
-        expect(got).toEqual(HEADERS[lng]);
-    });
+            const got = screen
+                .getAllByTestId("col-header")
+                .map((el) => el.textContent)
+                .filter(Boolean);
+            expect(got).toEqual(HEADERS[lng]);
+        }
+    );
 
     test.each(["fr", "en"])(
         "boolean Cells render shared.yes / shared.no in %s",
         async (lng) => {
             await i18n.changeLanguage(lng);
-            globalThis.__rtRow = {is_stopping: true, is_active: false};
+            globalThis.__rtRow = { is_stopping: true, is_active: false };
             render(<ApplicationStatusTable />);
 
             const cellText = screen
@@ -515,13 +677,22 @@ describe("ApplicationStatusTable", () => {
                 .map((el) => el.textContent);
             expect(cellText).toContain(tP(lng)("shared.yes"));
             expect(cellText).toContain(tP(lng)("shared.no"));
-        },
+        }
     );
 
     function mountInstance(lng) {
         const Klass = ApplicationStatusTable.WrappedComponent;
         let inst;
-        render(<Klass t={tP(lng)} i18n={i18n} tReady ref={(r) => { inst = r; }} />);
+        render(
+            <Klass
+                t={tP(lng)}
+                i18n={i18n}
+                tReady
+                ref={(r) => {
+                    inst = r;
+                }}
+            />
+        );
         return inst;
     }
 
@@ -532,18 +703,18 @@ describe("ApplicationStatusTable", () => {
             const t = tP(lng);
             const inst = mountInstance(lng);
 
-            inst.deleteStatus({id: 1, label: "Traitée"});
+            inst.deleteStatus({ id: 1, label: "Traitée" });
 
-            expect(swal).toHaveBeenCalledTimes(1);
-            const opts = swal.mock.calls[0][0];
+            expect(swal.fire).toHaveBeenCalledTimes(1);
+            const opts = swal.fire.mock.calls[0][0];
             expect(opts.title).toBe(
-                t("shared.deleteStatusConfirm", {name: "Traitée"}),
+                t("shared.deleteStatusConfirm", { name: "Traitée" })
             );
             expect(opts.title).toContain("Traitée");
             expect(opts.title).not.toContain("{");
             expect(opts.cancelButtonText).toBe(t("shared.deleteConfirmNo"));
             expect(opts.confirmButtonText).toBe(t("shared.deleteConfirmYes"));
-        },
+        }
     );
 
     test.each(["fr", "en"])(
@@ -551,37 +722,45 @@ describe("ApplicationStatusTable", () => {
         async (lng) => {
             await i18n.changeLanguage(lng);
             const t = tP(lng);
-            swal.mockImplementation(() => Promise.resolve({value: true}));
+            swal.fire.mockImplementation(() =>
+                Promise.resolve({ value: true })
+            );
             global.fetch = vi.fn().mockResolvedValue({
                 status: 422,
                 text: () => Promise.resolve("boom"),
             });
 
             const inst = mountInstance(lng);
-            inst.deleteStatus({id: 1, label: "Traitée"});
+            inst.deleteStatus({ id: 1, label: "Traitée" });
             await new Promise((r) => setTimeout(r, 0));
             await new Promise((r) => setTimeout(r, 0));
 
-            expect(swal).toHaveBeenCalledTimes(2);
-            expect(swal.mock.calls[1][0].title).toBe(t("shared.errorTitle"));
-            expect(swal.mock.calls[1][0].text).toBe("boom");
-        },
+            expect(swal.fire).toHaveBeenCalledTimes(2);
+            expect(swal.fire.mock.calls[1][0].title).toBe(
+                t("shared.errorTitle")
+            );
+            expect(swal.fire.mock.calls[1][0].text).toBe("boom");
+        }
     );
 
     test("explicit fr / en strings (deleteStatus swal)", async () => {
         await i18n.changeLanguage("fr");
-        mountInstance("fr").deleteStatus({id: 1, label: "Traitée"});
-        let opts = swal.mock.calls[0][0];
-        expect(opts.title).toBe("Voulez-vous vraiment supprimer le statut 'Traitée' ?");
+        mountInstance("fr").deleteStatus({ id: 1, label: "Traitée" });
+        let opts = swal.fire.mock.calls[0][0];
+        expect(opts.title).toBe(
+            "Voulez-vous vraiment supprimer le statut 'Traitée' ?"
+        );
         expect(opts.cancelButtonText).toBe("non");
         expect(opts.confirmButtonText).toBe("oui");
 
-        swal.mockClear();
+        swal.fire.mockClear();
 
         await i18n.changeLanguage("en");
-        mountInstance("en").deleteStatus({id: 1, label: "Traitée"});
-        opts = swal.mock.calls[0][0];
-        expect(opts.title).toBe("Do you really want to delete the status 'Traitée'?");
+        mountInstance("en").deleteStatus({ id: 1, label: "Traitée" });
+        opts = swal.fire.mock.calls[0][0];
+        expect(opts.title).toBe(
+            "Do you really want to delete the status 'Traitée'?"
+        );
         expect(opts.cancelButtonText).toBe("no");
         expect(opts.confirmButtonText).toBe("yes");
     });

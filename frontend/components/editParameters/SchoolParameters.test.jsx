@@ -23,8 +23,8 @@
 //     with a `<u>` wrap resolved through the indexed `<1>` marker (<u> is not in
 //     react-i18next's default transKeepBasicHtmlNodesFor).
 //   - swal on submit: {title: editParameters.school.loadingTitle} then, on fetch `.ok`,
-//     {type:"success", title: editParameters.school.saveSuccess}, else
-//     {type:"error", title: editParameters.school.genericError}.
+//     {icon:"success", title: editParameters.school.saveSuccess}, else
+//     {icon:"error", title: editParameters.school.genericError}.
 //   - submit <input value={t("common:actions.save")}>.
 //
 // `ParametersChrome.test.jsx` (exact 255 total + {country,academy} in its resolve loop) and
@@ -42,6 +42,7 @@ import en from "../../locales/en/parameters.json";
 vi.mock("sweetalert2", () => {
     const swal = vi.fn(() => Promise.resolve({}));
     swal.showLoading = vi.fn();
+    swal.fire = vi.fn(() => Promise.resolve({}));
     return { default: swal };
 });
 
@@ -385,10 +386,10 @@ describe("SchoolParameters — submit / swal", () => {
 
             fireEvent.submit(container.querySelector("form"));
 
-            await waitFor(() => expect(swal).toHaveBeenCalledTimes(2));
-            expect(swal.mock.calls[0][0].title).toBe(tC(lng)("loading"));
-            expect(swal.mock.calls[1][0]).toMatchObject({
-                type: "success",
+            await waitFor(() => expect(swal.fire).toHaveBeenCalledTimes(2));
+            expect(swal.fire.mock.calls[0][0].title).toBe(tC(lng)("loading"));
+            expect(swal.fire.mock.calls[1][0]).toMatchObject({
+                icon: "success",
                 title: tP(lng)("shared.saveCompleted"),
             });
         }
@@ -404,10 +405,10 @@ describe("SchoolParameters — submit / swal", () => {
 
             fireEvent.submit(container.querySelector("form"));
 
-            await waitFor(() => expect(swal).toHaveBeenCalledTimes(2));
-            expect(swal.mock.calls[0][0].title).toBe(tC(lng)("loading"));
-            expect(swal.mock.calls[1][0]).toMatchObject({
-                type: "error",
+            await waitFor(() => expect(swal.fire).toHaveBeenCalledTimes(2));
+            expect(swal.fire.mock.calls[0][0].title).toBe(tC(lng)("loading"));
+            expect(swal.fire.mock.calls[1][0]).toMatchObject({
+                icon: "error",
                 title: tP(lng)("shared.genericErrorShort"),
             });
         }
@@ -454,7 +455,7 @@ describe("SchoolParameters — email format validation", () => {
                 )
             ).not.toBeInTheDocument();
             // handleSubmit must NOT have reached onSubmit -> no loading swal
-            expect(swal).not.toHaveBeenCalled();
+            expect(swal.fire).not.toHaveBeenCalled();
         }
     );
 
@@ -478,7 +479,7 @@ describe("SchoolParameters — email format validation", () => {
                     tP(lng)("editParameters.school.emailInvalid")
                 )
             ).not.toBeInTheDocument();
-            expect(swal).not.toHaveBeenCalled();
+            expect(swal.fire).not.toHaveBeenCalled();
         }
     );
 
@@ -495,8 +496,8 @@ describe("SchoolParameters — email format validation", () => {
 
         fireEvent.submit(container.querySelector("form"));
 
-        await waitFor(() => expect(swal).toHaveBeenCalled());
-        expect(swal.mock.calls[0][0].title).toBe(tC("fr")("loading"));
+        await waitFor(() => expect(swal.fire).toHaveBeenCalled());
+        expect(swal.fire.mock.calls[0][0].title).toBe(tC("fr")("loading"));
         expect(
             screen.queryByText(tP("fr")("editParameters.school.emailRequired"))
         ).not.toBeInTheDocument();

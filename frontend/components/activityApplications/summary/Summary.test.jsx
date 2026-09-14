@@ -21,42 +21,55 @@
 //   - `../../../tools/api` is a chainable stub (not hit on mount/render).
 
 import React from "react";
-import {render, screen, waitFor, within} from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import swal from "sweetalert2";
-import {toast} from "react-toastify";
+import { toast } from "react-toastify";
 import i18n from "../../../i18n";
 import fr from "../../../locales/fr/activityApplications.json";
 import en from "../../../locales/en/activityApplications.json";
-import {CANCELED_ID} from "../../utils/ActivityApplicationsStatuses";
+import { CANCELED_ID } from "../../utils/ActivityApplicationsStatuses";
 import Summary from "./Summary";
 
 // --- mocks -------------------------------------------------------------------------------------
 
 vi.mock("react-modal", () => ({
-    default: ({children}) => <div data-testid="react-modal">{children}</div>,
+    default: ({ children }) => <div data-testid="react-modal">{children}</div>,
 }));
 
 // swal / toast are only reached from the handler methods (section E). Mocking them here is inert
 // for the render-path sections B/C, which never call them.
 vi.mock("sweetalert2", () => ({
-    default: Object.assign(vi.fn(() => Promise.resolve({})), {fire: vi.fn(() => Promise.resolve({}))}),
+    default: Object.assign(
+        vi.fn(() => Promise.resolve({})),
+        { fire: vi.fn(() => Promise.resolve({})) }
+    ),
 }));
-vi.mock("react-toastify", () => ({toast: vi.fn()}));
+vi.mock("react-toastify", () => ({ toast: vi.fn() }));
 
 vi.mock("@fullcalendar/react", () => ({
-    isValidDate: d => !Number.isNaN(new Date(d).getTime()),
+    isValidDate: (d) => !Number.isNaN(new Date(d).getTime()),
 }));
 
-vi.mock("./Activity", () => ({default: () => <div data-testid="activity-stub" />}));
-vi.mock("../../CommentSection", () => ({default: () => <div data-testid="comment-section-stub" />}));
-vi.mock("../../evaluation/EvaluationForm", () => ({default: () => <div data-testid="eval-form-stub" />}));
-vi.mock("../EvaluationChoice", () => ({default: () => <div data-testid="eval-choice-stub" />}));
+vi.mock("./Activity", () => ({
+    default: () => <div data-testid="activity-stub" />,
+}));
+vi.mock("../../CommentSection", () => ({
+    default: () => <div data-testid="comment-section-stub" />,
+}));
+vi.mock("../../evaluation/EvaluationForm", () => ({
+    default: () => <div data-testid="eval-form-stub" />,
+}));
+vi.mock("../EvaluationChoice", () => ({
+    default: () => <div data-testid="eval-choice-stub" />,
+}));
 vi.mock("../TimePreferencesStep", () => ({
     default: () => <div data-testid="time-prefs-stub" />,
     PLANNING_MODE: "PLANNING",
 }));
 vi.mock("../../common/UserWithInfos", () => ({
-    default: ({children}) => <span data-testid="user-with-infos">{children}</span>,
+    default: ({ children }) => (
+        <span data-testid="user-with-infos">{children}</span>
+    ),
 }));
 
 vi.mock("../../../tools/api", () => {
@@ -70,7 +83,10 @@ vi.mock("../../../tools/api", () => {
         patch: vi.fn(() => Promise.resolve()),
         del: vi.fn(() => Promise.resolve()),
     };
-    return {set: () => chain, patch: vi.fn(() => Promise.resolve({data: {}}))};
+    return {
+        set: () => chain,
+        patch: vi.fn(() => Promise.resolve({ data: {} })),
+    };
 });
 
 // --- props -----------------------------------------------------------------------------------
@@ -89,11 +105,11 @@ const baseApplication = () => ({
     mail_sent_at: null,
     stopped_at: null,
     reason_of_refusal: "",
-    activity_application_status: {id: 1, label: "En attente"},
+    activity_application_status: { id: 1, label: "En attente" },
     desired_activities: [],
     comments: [],
     evaluation_appointments: [],
-    season: {start: "2025-09-01", end: "2026-06-30"},
+    season: { start: "2025-09-01", end: "2026-06-30" },
     user: {
         id: 2,
         first_name: "Marie",
@@ -101,13 +117,13 @@ const baseApplication = () => ({
         birthday: "2010-05-04",
         adherent_number: 42,
         levels: [],
-        planning: {id: 1, time_intervals: []},
+        planning: { id: 1, time_intervals: [] },
         activity_applications: [
             {
                 id: 200,
                 season_id: 1,
                 desired_activities: [],
-                activity_application_status: {label: "Traitée"},
+                activity_application_status: { label: "Traitée" },
                 pre_application_activity: null,
                 pre_application_desired_activity: null,
             },
@@ -124,8 +140,8 @@ const baseProps = () => ({
     levels: [],
     isAdmin: false,
     user_id: 9,
-    student_evaluations: {forms: []},
-    application_change_questionnaires: {forms: []},
+    student_evaluations: { forms: [] },
+    application_change_questionnaires: { forms: [] },
     new_student_level_questionnaires: [],
     student_evaluation_questions: [],
     application_change_questions: [],
@@ -133,7 +149,9 @@ const baseProps = () => ({
 });
 
 beforeEach(() => {
-    global.fetch = vi.fn().mockResolvedValue({json: () => Promise.resolve([])});
+    global.fetch = vi
+        .fn()
+        .mockResolvedValue({ json: () => Promise.resolve([]) });
 });
 
 afterEach(async () => {
@@ -149,7 +167,9 @@ afterEach(async () => {
 describe("Summary — withTranslation HOC shape", () => {
     test("default export wraps a React.Component class", () => {
         expect(Summary.WrappedComponent).toBeDefined();
-        expect(Summary.WrappedComponent.prototype instanceof React.Component).toBe(true);
+        expect(
+            Summary.WrappedComponent.prototype instanceof React.Component
+        ).toBe(true);
     });
 });
 
@@ -211,13 +231,13 @@ describe("Summary — rendered copy per locale", () => {
         },
     };
 
-    const tip = s => document.querySelector(`[data-tippy-content="${s}"]`);
+    const tip = (s) => document.querySelector(`[data-tippy-content="${s}"]`);
 
-    test.each(["fr", "en"])("%s", async lng => {
+    test.each(["fr", "en"])("%s", async (lng) => {
         await i18n.changeLanguage(lng);
         const expected = CASES[lng];
 
-        const {container} = render(<Summary {...baseProps()} />);
+        const { container } = render(<Summary {...baseProps()} />);
 
         // header labels
         expect(screen.getAllByText(expected.status).length).toBeGreaterThan(0);
@@ -226,24 +246,36 @@ describe("Summary — rendered copy per locale", () => {
 
         // "other applications" block (needs the sibling activity_application fixture)
         expect(screen.getByText(expected.newRequest)).toBeInTheDocument();
-        expect(screen.getAllByText(expected.otherApplications).length).toBeGreaterThan(0);
+        expect(
+            screen.getAllByText(expected.otherApplications).length
+        ).toBeGreaterThan(0);
 
         // member line — {{age}} varies with the system clock, {{number}} is the fixture's 42.
         // (Two <h2>s render: the member line and the "other applications" modal title.)
         const heading = container.querySelector("h2.no-margins");
         expect(heading).toHaveTextContent(expected.ageYears);
         expect(heading).toHaveTextContent(expected.memberNumber);
-        expect(within(heading).getByText(expected.memberNumber)).toBeInTheDocument();
+        expect(
+            within(heading).getByText(expected.memberNumber)
+        ).toBeInTheDocument();
 
         // date labels
         expect(screen.getByText(expected.beginDate)).toBeInTheDocument();
 
         // <option> placeholders inside the (react-modal-mocked) questionnaire/evaluation modals
-        expect(screen.getAllByText(expected.selectQuestionnaire).length).toBeGreaterThan(0);
+        expect(
+            screen.getAllByText(expected.selectQuestionnaire).length
+        ).toBeGreaterThan(0);
         expect(screen.getByText(expected.selectEvaluation)).toBeInTheDocument();
-        expect(screen.getByText(expected.changeQuestionnaireTitle)).toBeInTheDocument();
-        expect(screen.getByText(expected.studentEvaluationsTitle)).toBeInTheDocument();
-        expect(screen.getAllByText(expected.availabilitiesTitle).length).toBeGreaterThan(0);
+        expect(
+            screen.getByText(expected.changeQuestionnaireTitle)
+        ).toBeInTheDocument();
+        expect(
+            screen.getByText(expected.studentEvaluationsTitle)
+        ).toBeInTheDocument();
+        expect(
+            screen.getAllByText(expected.availabilitiesTitle).length
+        ).toBeGreaterThan(0);
 
         // mail-sent status line
         expect(screen.getByText(expected.mailNotSent)).toBeInTheDocument();
@@ -279,7 +311,9 @@ describe("Summary — locale switch re-renders labels", () => {
 
         await i18n.changeLanguage("en");
 
-        await waitFor(() => expect(screen.getByText("Referent")).toBeInTheDocument());
+        await waitFor(() =>
+            expect(screen.getByText("Referent")).toBeInTheDocument()
+        );
         expect(screen.getAllByText("Status").length).toBeGreaterThan(0);
         expect(screen.queryByText("Référent.e")).not.toBeInTheDocument();
     });
@@ -294,7 +328,7 @@ describe("Summary — summary.* i18n layer", () => {
         Object.entries(obj).flatMap(([k, v]) =>
             v && typeof v === "object"
                 ? flatten(v, `${prefix}${k}.`)
-                : [[`${prefix}${k}`, v]],
+                : [[`${prefix}${k}`, v]]
         );
 
     const FR_KEYS = flatten(fr.summary).map(([k]) => k);
@@ -318,38 +352,56 @@ describe("Summary — summary.* i18n layer", () => {
         expect(FR_KEYS.length).toBeGreaterThan(40);
     });
 
-    test.each(["fr", "en"])("all summary.* keys resolve to real, fully-interpolated copy in %s", lng => {
-        const t = i18n.getFixedT(lng, "activityApplications");
-        for (const key of FR_KEYS) {
-            const v = t(`summary.${key}`, OPTS);
-            expect(typeof v).toBe("string");
-            expect(v.length).toBeGreaterThan(0);
-            expect(v).not.toBe(`summary.${key}`);
-            expect(v).not.toContain("{{");
-            expect(v).not.toContain("}}");
+    test.each(["fr", "en"])(
+        "all summary.* keys resolve to real, fully-interpolated copy in %s",
+        (lng) => {
+            const t = i18n.getFixedT(lng, "activityApplications");
+            for (const key of FR_KEYS) {
+                const v = t(`summary.${key}`, OPTS);
+                expect(typeof v).toBe("string");
+                expect(v.length).toBeGreaterThan(0);
+                expect(v).not.toBe(`summary.${key}`);
+                expect(v).not.toContain("{{");
+                expect(v).not.toContain("}}");
+            }
         }
-    });
+    );
 
     test("ageYears interpolates {{age}}", () => {
-        expect(i18n.getFixedT("fr", "activityApplications")("summary.ageYears", {age: 9})).toBe("9 ans");
-        expect(i18n.getFixedT("en", "activityApplications")("summary.ageYears", {age: 9})).toBe(
-            "9 years old",
-        );
+        expect(
+            i18n.getFixedT("fr", "activityApplications")("summary.ageYears", {
+                age: 9,
+            })
+        ).toBe("9 ans");
+        expect(
+            i18n.getFixedT("en", "activityApplications")("summary.ageYears", {
+                age: 9,
+            })
+        ).toBe("9 years old");
     });
 
     test("memberNumber interpolates {{number}} and keeps its leading ' - '", () => {
         expect(
-            i18n.getFixedT("fr", "activityApplications")("summary.memberNumber", {number: 42}),
+            i18n.getFixedT("fr", "activityApplications")(
+                "summary.memberNumber",
+                { number: 42 }
+            )
         ).toBe(" - Adhérent n°42");
         expect(
-            i18n.getFixedT("en", "activityApplications")("summary.memberNumber", {number: 42}),
+            i18n.getFixedT("en", "activityApplications")(
+                "summary.memberNumber",
+                { number: 42 }
+            )
         ).toBe(" - Member no. 42");
     });
 
     test("selectReferent has its accents restored (fr typo fixed)", () => {
-        expect(i18n.getFixedT("fr", "activityApplications")("summary.selectReferent")).toBe(
-            "SÉLECTIONNER UN RÉFÉRENT",
-        );
+        expect(
+            i18n.getFixedT(
+                "fr",
+                "activityApplications"
+            )("summary.selectReferent")
+        ).toBe("SÉLECTIONNER UN RÉFÉRENT");
     });
 
     test("courseOption / evaluationOption interpolate every placeholder", () => {
@@ -377,9 +429,9 @@ describe("Summary — summary.* i18n layer", () => {
     });
 
     test("evaluationRenderError (the renderEvaluationForm singleton branch) resolves", () => {
-        expect(i18n.t("activityApplications:summary.evaluationRenderError")).toBe(
-            "Échec du rendu : cette évaluation n'existe pas",
-        );
+        expect(
+            i18n.t("activityApplications:summary.evaluationRenderError")
+        ).toBe("Échec du rendu : cette évaluation n'existe pas");
     });
 
     test("beginDate / stopDate resolve in both locales", () => {
@@ -417,7 +469,7 @@ describe("Summary — handler i18n (swal / toast)", () => {
         let inst;
         render(
             <Summary.WrappedComponent
-                ref={r => {
+                ref={(r) => {
                     inst = r;
                 }}
                 {...baseProps()}
@@ -425,44 +477,53 @@ describe("Summary — handler i18n (swal / toast)", () => {
                 t={i18n.getFixedT(lng, "activityApplications")}
                 i18n={i18n}
                 tReady
-            />,
+            />
         );
         return inst;
     };
 
     test.each(["fr", "en"])(
         "handleSelectSuggestion error branch calls swal with the resolved title, no ReferenceError (%s)",
-        async lng => {
+        async (lng) => {
             global.fetch = vi.fn().mockResolvedValue({
-                json: () => Promise.resolve({activity: {id: 5}, error: "Cours complet"}),
+                json: () =>
+                    Promise.resolve({
+                        activity: { id: 5 },
+                        error: "Cours complet",
+                    }),
             });
             const inst = mountInstance(lng);
-            inst.state.suggestions = {7: [{id: 5, options: []}]};
-            inst.state.desiredActivities = [{id: 3, options: []}];
+            inst.state.suggestions = { 7: [{ id: 5, options: [] }] };
+            inst.state.desiredActivities = [{ id: 3, options: [] }];
 
             await expect(
-                inst.handleSelectSuggestion(99, 3, 7),
+                inst.handleSelectSuggestion(99, 3, 7)
             ).resolves.not.toThrow();
 
-            expect(swal).toHaveBeenCalledWith(
+            expect(swal.fire).toHaveBeenCalledWith(
                 expect.objectContaining({
-                    title: i18n.getFixedT(lng, "activityApplications")("summary.errorTitle"),
+                    title: i18n.getFixedT(
+                        lng,
+                        "activityApplications"
+                    )("summary.errorTitle"),
                     text: "Cours complet",
-                }),
+                })
             );
-        },
+        }
     );
 
     test("handleSaveStatus toasts the resolved stop-date-required message (fr)", () => {
-        const inst = mountInstance("fr", {statuses: [{id: 1, is_stopping: true}]});
+        const inst = mountInstance("fr", {
+            statuses: [{ id: 1, is_stopping: true }],
+        });
         inst.state.status_id = 1;
-        inst.stopDateInput.current = {value: ""};
+        inst.stopDateInput.current = { value: "" };
 
         inst.handleSaveStatus();
 
         expect(toast).toHaveBeenCalledWith(
             "Pour arrêter une inscription, veuillez renseigner une date d'arrêt.",
-            expect.objectContaining({type: "error"}),
+            expect.objectContaining({ type: "error" })
         );
     });
 
@@ -472,20 +533,20 @@ describe("Summary — handler i18n (swal / toast)", () => {
 
         inst.handleSaveStatus();
 
-        expect(swal).toHaveBeenCalledWith(
-            expect.objectContaining({title: "Attention !"}),
+        expect(swal.fire).toHaveBeenCalledWith(
+            expect.objectContaining({ title: "Attention !" })
         );
     });
 
     test("handleRemoveActivityApplication toasts the resolved must-remove message when an activity is validated (fr)", () => {
         const inst = mountInstance("fr");
-        inst.state.desiredActivities = [{is_validated: true}];
+        inst.state.desiredActivities = [{ is_validated: true }];
 
         inst.handleRemoveActivityApplication({});
 
         expect(toast).toHaveBeenCalledWith(
             "Les activités doivent toutes être retirées pour pouvoir supprimer cette demande",
-            expect.objectContaining({type: "warning"}),
+            expect.objectContaining({ type: "warning" })
         );
     });
 
@@ -494,11 +555,11 @@ describe("Summary — handler i18n (swal / toast)", () => {
 
         inst.sendConfirmationMail();
 
-        expect(swal).toHaveBeenCalledWith(
+        expect(swal.fire).toHaveBeenCalledWith(
             expect.objectContaining({
                 title: "Envoi mail confirmation",
                 text: "Êtes-vous sûr ?",
-            }),
+            })
         );
     });
 });
@@ -520,8 +581,8 @@ describe("Summary — courseOption label resolves the activityRef via activity_r
     const propsWithChangeForm = () => ({
         ...baseProps(),
         activityRefs: [
-            {id: 7, label: "Piano"},
-            {id: 8, label: "Guitare"},
+            { id: 7, label: "Piano" },
+            { id: 8, label: "Guitare" },
         ],
         application_change_questionnaires: {
             forms: [
@@ -531,7 +592,7 @@ describe("Summary — courseOption label resolves the activityRef via activity_r
                         activity: {
                             activity_ref_id: 7,
                             group_name: "Groupe A",
-                            teacher: {first_name: "Jean", last_name: "Bach"},
+                            teacher: { first_name: "Jean", last_name: "Bach" },
                         },
                     },
                 },
@@ -539,23 +600,30 @@ describe("Summary — courseOption label resolves the activityRef via activity_r
         },
     });
 
-    test.each(["fr", "en"])("the <option> shows the interpolated course label in %s", async (lng) => {
-        await i18n.changeLanguage(lng);
-        const t = i18n.getFixedT(lng, "activityApplications");
-        const expected = t("summary.courseOption", {
-            course: "Piano",
-            group: "Groupe A",
-            teacher: "Jean Bach",
-        });
+    test.each(["fr", "en"])(
+        "the <option> shows the interpolated course label in %s",
+        async (lng) => {
+            await i18n.changeLanguage(lng);
+            const t = i18n.getFixedT(lng, "activityApplications");
+            const expected = t("summary.courseOption", {
+                course: "Piano",
+                group: "Groupe A",
+                teacher: "Jean Bach",
+            });
 
-        render(<Summary {...propsWithChangeForm()} />);
+            render(<Summary {...propsWithChangeForm()} />);
 
-        const option = screen.getByRole("option", {name: expected});
-        expect(option).toBeInTheDocument();
-        expect(option.textContent).toContain("Piano");
-        // pre-fix (`activity_reéf_id` -> id === undefined -> no match) this dropped {{course}}:
-        expect(option.textContent).not.toBe(
-            t("summary.courseOption", {course: "", group: "Groupe A", teacher: "Jean Bach"}),
-        );
-    });
+            const option = screen.getByRole("option", { name: expected });
+            expect(option).toBeInTheDocument();
+            expect(option.textContent).toContain("Piano");
+            // pre-fix (`activity_reéf_id` -> id === undefined -> no match) this dropped {{course}}:
+            expect(option.textContent).not.toBe(
+                t("summary.courseOption", {
+                    course: "",
+                    group: "Groupe A",
+                    teacher: "Jean Bach",
+                })
+            );
+        }
+    );
 });
