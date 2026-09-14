@@ -111,9 +111,7 @@ describe("PluginActivationModal — confirmToggle resolves the right verb in bot
     // the one place this extraction went wrong once already (a caught-before-ship inverted
     // ternary). Asserts the full sentence, not just the verb: "activer" is a substring of
     // "désactiver" (same for activate/deactivate), so a regex/substring match on the verb alone
-    // would pass even if the wrong branch rendered. Note the "1" plugin id below plays the role of
-    // Object.keys(plugins)[0], the actual (pre-existing, tracked in docs/KnownIssues.md) source of
-    // which plugin the modal describes -- not something this test is meant to cover.
+    // would pass even if the wrong branch rendered.
     test.each([
         ["fr", true, "Êtes-vous sûr(e) de vouloir activer ce plugin ?"],
         ["fr", false, "Êtes-vous sûr(e) de vouloir désactiver ce plugin ?"],
@@ -126,7 +124,7 @@ describe("PluginActivationModal — confirmToggle resolves the right verb in bot
             render(
                 <PluginActivationModal
                     isOpen={true}
-                    plugins={{ 1: true }}
+                    pluginID={1}
                     activatedPlugins={{ 1: isActivated }}
                     onCancel={() => {}}
                     onClose={() => {}}
@@ -137,6 +135,30 @@ describe("PluginActivationModal — confirmToggle resolves the right verb in bot
             expect(screen.getByText(expectedSentence)).toBeInTheDocument();
         }
     );
+
+    test("keys off pluginID, not the first key in activatedPlugins", async () => {
+        // Regression test for the wrong-plugin bug: toggling plugin 1 then plugin 2 used to leave
+        // the modal describing plugin 1 (Object.keys(...)[0]) instead of the plugin actually being
+        // confirmed. Plugin 1 is activated, plugin 2 is being deactivated -- the modal must
+        // describe plugin 2.
+        await i18n.changeLanguage("fr");
+        render(
+            <PluginActivationModal
+                isOpen={true}
+                pluginID={2}
+                activatedPlugins={{ 1: true, 2: false }}
+                onCancel={() => {}}
+                onClose={() => {}}
+                handleSaveAndRestart={() => {}}
+            />
+        );
+
+        expect(
+            screen.getByText(
+                "Êtes-vous sûr(e) de vouloir désactiver ce plugin ?"
+            )
+        ).toBeInTheDocument();
+    });
 });
 
 describe("Plugins — Cancel reverts the accumulated selectedPlugins entry (regression)", () => {

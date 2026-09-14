@@ -173,13 +173,6 @@ restructuring ad hoc across already-merged domains.
   `RangedSelect`, which throws if either arrives as a non-integer. Not currently reachable
   (`users_controller.rb`'s `@min_year`/`@max_year` are always Ruby `Integer`s), but a fragile
   implicit contract — harden with a `Number(...)` coercion if that ever changes.
-- `plugins/PluginActivationModal.jsx` derives the activate/deactivate confirmation text from
-  `Object.keys(selectedPlugins)[0]`, not the plugin actually being confirmed (`Plugins.jsx` tracks
-  that separately as `pluginID` but never passes it down). `selectedPlugins` accumulates every
-  plugin toggled in the session, so after toggling plugin A then plugin B, the modal can ask
-  "activer" while B is actually being deactivated. Pre-existing, found (not introduced) during the
-  item-11 i18n extraction — the confirmToggle ternary itself is a faithful copy of the original
-  logic. Fix: pass `pluginID` down and key off `activatedPlugins[pluginID]` instead.
 - `PluginActivationModal.jsx`'s `handleConfirm` does `await handleSaveAndRestart()`, but that
   function is synchronous (fires an async API call internally and returns `undefined`) — the
   `await` resolves immediately, before the actual save completes. Its `.success`/`.error`
