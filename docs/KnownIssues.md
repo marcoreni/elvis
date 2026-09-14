@@ -217,6 +217,8 @@ in its diff) — logged here as found, not investigated further.
 - Active locale intermittently reverts to `fr` mid-session even with `en` selected, then recovers on
   a later navigation — seen between "Registration - New Registration" and "Registration - settings",
   not yet reproduced systematically enough to isolate.
+- `/seasons/:id/edit`: no edit button/affordance for existing holidays (only, presumably, add/delete)
+  — not investigated further, flagged during the same testing pass.
 
 ## `Activity#teacher` is N+1-prone independent of `.includes()`
 

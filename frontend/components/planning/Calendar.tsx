@@ -384,13 +384,13 @@ function CustomCalendar(props: CalendarProps) {
     const eventContent = useCallback(
         (arg: EventContentArg) => {
             if (arg.event.allDay) {
-                // fa-refresh doesn't exist in this app's Font Awesome 5 install (it's a v4 name)
-                // and rendered nothing even before this migration -- fa-sync is the FA5 icon this
-                // was presumably meant to be, and matches the icon already used for
-                // schedule.recurrenceRule below.
-                return {
-                    html: arg.event.title + ' <i class="fas fa-sync"></i>',
-                };
+                // All-day entries today are only season holidays (formatHolidays), never
+                // recurring/refreshing anything -- the icon here used to be fa-refresh (a v4 name,
+                // rendered nothing in this app's FA5 install even before this migration), which
+                // read as a stray "sync" glyph next to a holiday name and nothing else. Dropped
+                // rather than swapped to another icon, since no icon is actually more informative
+                // than a misleading one for a plain read-only date label.
+                return { html: arg.event.title };
             }
 
             const schedule = reconstructSchedule(arg.event);
