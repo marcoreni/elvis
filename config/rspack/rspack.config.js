@@ -1,4 +1,5 @@
 // config/rspack/rspack.config.js
+const path = require("path");
 const { generateRspackConfig, merge } = require("shakapacker/rspack");
 const { rspack } = require("@rspack/core");
 const { RsdoctorRspackPlugin } = require("@rsdoctor/rspack-plugin");
@@ -46,6 +47,17 @@ const customConfig = {
                         loader: "sass-loader",
                         options: {
                             api: "modern-compiler",
+                            sassOptions: {
+                                // frontend/inspinia is a vendored (not npm-managed) copy of the
+                                // Inspinia Bootstrap admin theme -- loading it through a Sass load
+                                // path (rather than a path relative to application.scss) makes
+                                // Dart Sass treat it as a dependency, so quietDeps below silences
+                                // its deprecation warnings without editing any of its ~25 files.
+                                loadPaths: [
+                                    path.resolve(__dirname, "../../frontend"),
+                                ],
+                                quietDeps: true,
+                            },
                         },
                     },
                 ],
