@@ -1,134 +1,162 @@
-import React, {Fragment, useEffect, useState} from "react";
+import React, { Fragment, useEffect, useState } from "react";
 import * as api from "../../../tools/api";
 import swal from "sweetalert2";
-import {toast} from "react-toastify";
-import {useTranslation} from "react-i18next";
-import { EditorState, convertToRaw, convertFromRaw, ContentState } from 'draft-js';
-import { Editor } from 'react-draft-wysiwyg';
+import { toast } from "react-toastify";
+import { useTranslation } from "react-i18next";
+import {
+    EditorState,
+    convertToRaw,
+    convertFromRaw,
+    ContentState,
+} from "draft-js";
+import { Editor } from "react-draft-wysiwyg";
 
-export default function EditPaymentScheduleOptions()
-{
-    const {t} = useTranslation("parameters");
+export default function EditPaymentScheduleOptions() {
+    const { t } = useTranslation("parameters");
     const [paymentScheduleOptions, setPaymentScheduleOptions] = useState([]);
     const [indexValues, setIndexValues] = useState([]);
-    const [paymentScheduleOptionsActivated, setPaymentScheduleOptionsActivated] = useState(false);
+    const [
+        paymentScheduleOptionsActivated,
+        setPaymentScheduleOptionsActivated,
+    ] = useState(false);
     const [init, setInit] = useState(true);
-    const [editorState, setEditorState] = useState(
-        () => EditorState.createEmpty(),
+    const [editorState, setEditorState] = useState(() =>
+        EditorState.createEmpty()
     );
 
-    useEffect(() =>
-    {
-       api.set()
-           .success(res =>
-           {
+    useEffect(() => {
+        api.set()
+            .success((res) => {
                 setPaymentScheduleOptions(res.data);
                 setPaymentScheduleOptionsActivated(res.activated);
                 setInit(false);
-                setIndexValues(res.index)
+                setIndexValues(res.index);
 
                 // Convertir le contenu JSON brut en ContentState
-               let savedContentRaw = null;
-               let savedContentState = null;
-               if (res.display_text != null) {
-                   try {
-                       savedContentRaw = JSON.parse(res.display_text);
-                       savedContentState = convertFromRaw(savedContentRaw);
-                   } catch (e) {
-                       savedContentState = ContentState.createFromText(res.display_text);
-                   }
-                   setEditorState(EditorState.createWithContent(savedContentState));
-               }
-           })
-           .error(res =>
-           {
-               swal(t("payments.scheduleOptions.errors.fetch"), res.error, "error");
-           })
-           .get("/payment_schedule_options", {});
+                let savedContentRaw = null;
+                let savedContentState = null;
+                if (res.display_text != null) {
+                    try {
+                        savedContentRaw = JSON.parse(res.display_text);
+                        savedContentState = convertFromRaw(savedContentRaw);
+                    } catch (e) {
+                        savedContentState = ContentState.createFromText(
+                            res.display_text
+                        );
+                    }
+                    setEditorState(
+                        EditorState.createWithContent(savedContentState)
+                    );
+                }
+            })
+            .error((res) => {
+                swal.fire({
+                    title: t("payments.scheduleOptions.errors.fetch"),
+                    text: res.error,
+                    icon: "error",
+                });
+            })
+            .get("/payment_schedule_options", {});
     }, []);
 
-    useEffect(() =>
-    {
-        if(!init)
-        {
+    useEffect(() => {
+        if (!init) {
             api.set()
-                .error(res =>
-                {
-                    swal(t("payments.scheduleOptions.errors.updateConditions"), res.error, "error");
+                .error((res) => {
+                    swal.fire({
+                        title: t(
+                            "payments.scheduleOptions.errors.updateConditions"
+                        ),
+                        text: res.error,
+                        icon: "error",
+                    });
                 })
-                .post("/payment_schedule_options/activated", {activated: paymentScheduleOptionsActivated});
+                .post("/payment_schedule_options/activated", {
+                    activated: paymentScheduleOptionsActivated,
+                });
         }
-
     }, [paymentScheduleOptionsActivated]);
 
-    const onItemDelete = (paymentScheduleOption) =>
-    {
-        swal({
+    const onItemDelete = (paymentScheduleOption) => {
+        swal.fire({
             title: t("common:confirm.sure"),
             text: t("payments.scheduleOptions.delete.text"),
-            type: "warning",
+            icon: "warning",
             showCancelButton: true,
             confirmButtonText: t("payments.scheduleOptions.delete.confirm"),
             cancelButtonText: t("payments.scheduleOptions.delete.cancel"),
-        }).then((result) =>
-        {
-            if (result.value)
-            {
+        }).then((result) => {
+            if (result.value) {
                 api.set()
-                    .success(res =>
-                    {
-                        setPaymentScheduleOptions(paymentScheduleOptions.filter(p => p.id !== paymentScheduleOption.id));
+                    .success((res) => {
+                        setPaymentScheduleOptions(
+                            paymentScheduleOptions.filter(
+                                (p) => p.id !== paymentScheduleOption.id
+                            )
+                        );
                     })
-                    .error(res =>
-                    {
-                        swal(t("payments.scheduleOptions.errors.delete"), res.error, "error");
+                    .error((res) => {
+                        swal.fire({
+                            title: t("payments.scheduleOptions.errors.delete"),
+                            text: res.error,
+                            icon: "error",
+                        });
                     })
-                    .del(`/payment_schedule_options/${paymentScheduleOption.id}`, {});
+                    .del(
+                        `/payment_schedule_options/${paymentScheduleOption.id}`,
+                        {}
+                    );
             }
         });
     };
 
-    const onSaveDisplayText = () =>
-    {
+    const onSaveDisplayText = () => {
         api.set()
-            .success(res => {
+            .success((res) => {
                 toast.success(t("payments.scheduleOptions.displayTextSaved"));
-            }).error(res => {
-                swal(t("payments.scheduleOptions.errors.updateDisplayText"), res.error, "error");
             })
-            .post("/payment_schedule_options/display_text", {display_text: JSON.stringify(convertToRaw(editorState.getCurrentContent()))});
+            .error((res) => {
+                swal.fire({
+                    title: t(
+                        "payments.scheduleOptions.errors.updateDisplayText"
+                    ),
+                    text: res.error,
+                    icon: "error",
+                });
+            })
+            .post("/payment_schedule_options/display_text", {
+                display_text: JSON.stringify(
+                    convertToRaw(editorState.getCurrentContent())
+                ),
+            });
     };
 
     function handleMoveUp(paymentId) {
         api.set()
-            .success(payment => {
+            .success((payment) => {
                 setPaymentScheduleOptions(payment);
             })
             .error(() => {
-                swal({
+                swal.fire({
                     title: t("payments.scheduleOptions.errors.fetchData"),
-                    type: "error",
+                    icon: "error",
                 });
             })
-            .post(`/payment_schedule_options/move_up`,
-                {id: paymentId}
-            );
+            .post(`/payment_schedule_options/move_up`, { id: paymentId });
     }
 
     function handleMoveDown(paymentId) {
         api.set()
-            .success(payment => {
+            .success((payment) => {
                 setPaymentScheduleOptions(payment);
             })
             .error(() => {
-                swal({
+                swal.fire({
                     title: t("payments.scheduleOptions.errors.fetchData"),
-                    type: "error",
+                    icon: "error",
                 });
             })
-            .post(`/payment_schedule_options/move_down`,
-                {id: paymentId}
-            );
+            .post(`/payment_schedule_options/move_down`, { id: paymentId });
     }
 
     /**
@@ -138,133 +166,213 @@ export default function EditPaymentScheduleOptions()
      * @returns {number}
      */
     function compareIndices(d1, d2) {
-        if (d1.index && d2.index)
-            return d1.index - d2.index;
-        else
-            return 0;
+        if (d1.index && d2.index) return d1.index - d2.index;
+        else return 0;
     }
 
-    return <Fragment>
-        <div className="row">
-            <div className="col-sm-12">
-                <h4>{t("payments.scheduleOptions.headings.visibility")}</h4>
+    return (
+        <Fragment>
+            <div className="row">
+                <div className="col-sm-12">
+                    <h4>{t("payments.scheduleOptions.headings.visibility")}</h4>
 
-                <div className="checkbox checkbox-primary">
-                    <input
-                        type="checkbox"
-                        id={"paymentScheduleOptionsActivated"}
-                        className=""
-                        checked={paymentScheduleOptionsActivated}
-                        onChange={e => setPaymentScheduleOptionsActivated(e.target.checked)}
-                    />
-                    <label htmlFor={"paymentScheduleOptionsActivated"}>{t("payments.scheduleOptions.showInEnrolmentLabel")}</label>
+                    <div className="checkbox checkbox-primary">
+                        <input
+                            type="checkbox"
+                            id={"paymentScheduleOptionsActivated"}
+                            className=""
+                            checked={paymentScheduleOptionsActivated}
+                            onChange={(e) =>
+                                setPaymentScheduleOptionsActivated(
+                                    e.target.checked
+                                )
+                            }
+                        />
+                        <label htmlFor={"paymentScheduleOptionsActivated"}>
+                            {t("payments.scheduleOptions.showInEnrolmentLabel")}
+                        </label>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <div className="row mt-5">
-            <div className="col-sm-12">
-                <h4>{t("payments.scheduleOptions.headings.addTerms")}</h4>
-            </div>
-
-            <div className="col-sm-12 text-right">
-                <a className={"btn btn-primary"} href={`/payment_schedule_options/new?returnUrl=${encodeURIComponent(window.location)}`}>
-                    <i className="fas fa-plus"></i> {t("payments.scheduleOptions.addOption")}
-                </a>
-            </div>
-        </div>
-
-        <div className="row">
-            <div className="col-sm-12">
-                {paymentScheduleOptions
-                    .sort(compareIndices)
-                    .map((paymentScheduleOption, index) =>
-                {
-                    return <EditPaymentScheduleOptionItem
-                                key={paymentScheduleOption.id}
-                                paymentScheduleOption={paymentScheduleOption}
-                                index={index} onDelete={onItemDelete}
-                                onMoveUp={handleMoveUp}
-                                onMoveDown={handleMoveDown}
-                                isFirst={paymentScheduleOption.index === Math.min(...indexValues)}
-                                isLast={paymentScheduleOption.index === Math.max(...indexValues)}
-                    />
-                })}
-            </div>
-        </div>
-
-        <div className={"row mt-5"}>
-            <div className="col-sm-12">
-                <h4>{t("payments.scheduleOptions.headings.additionalInfo")}</h4>
-            </div>
-
-            <form onSubmit={e => {e.preventDefault(); onSaveDisplayText()}}>
-                <div className={"col-sm-12"}>
-                    <Editor
-                        wrapperStyle={{border: "1px solid #e7eaec", padding: "5px", borderRadius:"5px"}}
-                        editorState={editorState}
-                        onEditorStateChange={setEditorState}
-                        toolbarClassName="toolbarClassName"
-                        wrapperClassName="wrapperClassName"
-                        editorClassName="editorClassName"
-                        toolbar={{
-                            options: ['inline', 'blockType', 'emoji', 'list', 'link'],
-                            inline: {
-                                options: ['bold', 'italic', 'underline', 'strikethrough'],
-                            },
-                            blockType: {
-                                inDropdown: true,
-                                options: ['Normal', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'Blockquote'],
-                            },
-                            link: {
-                                inDropdown: false,
-                                showOpenOptionOnHover: true,
-                                defaultTargetOption: '_self',
-                                options: ['link', 'unlink'],
-                            },
-                        }}
-                    />
+            <div className="row mt-5">
+                <div className="col-sm-12">
+                    <h4>{t("payments.scheduleOptions.headings.addTerms")}</h4>
                 </div>
 
-                <div className={"col-sm-12"}>
-                    <button type="submit" className={"btn btn-primary mt-3 animated fadeInLeft pull-right"}>
-                        {t("payments.scheduleOptions.saveAdditionalInfo")}
-                    </button>
+                <div className="col-sm-12 text-right">
+                    <a
+                        className={"btn btn-primary"}
+                        href={`/payment_schedule_options/new?returnUrl=${encodeURIComponent(window.location)}`}
+                    >
+                        <i className="fas fa-plus"></i>{" "}
+                        {t("payments.scheduleOptions.addOption")}
+                    </a>
                 </div>
-            </form>
-        </div>
-    </Fragment>
+            </div>
+
+            <div className="row">
+                <div className="col-sm-12">
+                    {paymentScheduleOptions
+                        .sort(compareIndices)
+                        .map((paymentScheduleOption, index) => {
+                            return (
+                                <EditPaymentScheduleOptionItem
+                                    key={paymentScheduleOption.id}
+                                    paymentScheduleOption={
+                                        paymentScheduleOption
+                                    }
+                                    index={index}
+                                    onDelete={onItemDelete}
+                                    onMoveUp={handleMoveUp}
+                                    onMoveDown={handleMoveDown}
+                                    isFirst={
+                                        paymentScheduleOption.index ===
+                                        Math.min(...indexValues)
+                                    }
+                                    isLast={
+                                        paymentScheduleOption.index ===
+                                        Math.max(...indexValues)
+                                    }
+                                />
+                            );
+                        })}
+                </div>
+            </div>
+
+            <div className={"row mt-5"}>
+                <div className="col-sm-12">
+                    <h4>
+                        {t("payments.scheduleOptions.headings.additionalInfo")}
+                    </h4>
+                </div>
+
+                <form
+                    onSubmit={(e) => {
+                        e.preventDefault();
+                        onSaveDisplayText();
+                    }}
+                >
+                    <div className={"col-sm-12"}>
+                        <Editor
+                            wrapperStyle={{
+                                border: "1px solid #e7eaec",
+                                padding: "5px",
+                                borderRadius: "5px",
+                            }}
+                            editorState={editorState}
+                            onEditorStateChange={setEditorState}
+                            toolbarClassName="toolbarClassName"
+                            wrapperClassName="wrapperClassName"
+                            editorClassName="editorClassName"
+                            toolbar={{
+                                options: [
+                                    "inline",
+                                    "blockType",
+                                    "emoji",
+                                    "list",
+                                    "link",
+                                ],
+                                inline: {
+                                    options: [
+                                        "bold",
+                                        "italic",
+                                        "underline",
+                                        "strikethrough",
+                                    ],
+                                },
+                                blockType: {
+                                    inDropdown: true,
+                                    options: [
+                                        "Normal",
+                                        "H1",
+                                        "H2",
+                                        "H3",
+                                        "H4",
+                                        "H5",
+                                        "H6",
+                                        "Blockquote",
+                                    ],
+                                },
+                                link: {
+                                    inDropdown: false,
+                                    showOpenOptionOnHover: true,
+                                    defaultTargetOption: "_self",
+                                    options: ["link", "unlink"],
+                                },
+                            }}
+                        />
+                    </div>
+
+                    <div className={"col-sm-12"}>
+                        <button
+                            type="submit"
+                            className={
+                                "btn btn-primary mt-3 animated fadeInLeft pull-right"
+                            }
+                        >
+                            {t("payments.scheduleOptions.saveAdditionalInfo")}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </Fragment>
+    );
 }
 
-const EditPaymentScheduleOptionItem = ({paymentScheduleOption, index, isFirst, isLast, onDelete, onMoveUp, onMoveDown}) =>
-{
-    return <div className="row mx-0 my-3 border-hover" style={{
-        backgroundColor: "rgb(226,237,243)",
-        color: "black",
-        borderColor: "black",
-        borderWidth: "2px",
-        borderStyle: "solid",
-        borderRadius: "5px",
-    }}>
-
-        <div className="col-sm-1">
-            <div className="btn btn-md"
-                 onClick={() => isFirst ? "" : onMoveUp(paymentScheduleOption.id)}>
-                {isFirst || <i className="fas fa-chevron-up"></i>}&nbsp;
+const EditPaymentScheduleOptionItem = ({
+    paymentScheduleOption,
+    index,
+    isFirst,
+    isLast,
+    onDelete,
+    onMoveUp,
+    onMoveDown,
+}) => {
+    return (
+        <div
+            className="row mx-0 my-3 border-hover"
+            style={{
+                backgroundColor: "rgb(226,237,243)",
+                color: "black",
+                borderColor: "black",
+                borderWidth: "2px",
+                borderStyle: "solid",
+                borderRadius: "5px",
+            }}
+        >
+            <div className="col-sm-1">
+                <div
+                    className="btn btn-md"
+                    onClick={() =>
+                        isFirst ? "" : onMoveUp(paymentScheduleOption.id)
+                    }
+                >
+                    {isFirst || <i className="fas fa-chevron-up"></i>}&nbsp;
+                </div>
+                <div
+                    className="btn btn-md"
+                    onClick={() =>
+                        isLast ? "" : onMoveDown(paymentScheduleOption.id)
+                    }
+                >
+                    {isLast || <i className="fas fa-chevron-down"></i>}&nbsp;
+                </div>
             </div>
+
+            <a
+                className="col-sm-10 btn btn-lg text-dark text-decoration-none"
+                href={`/payment_schedule_options/${paymentScheduleOption.id}/edit?returnUrl=${encodeURIComponent(window.location)}`}
+            >
+                {paymentScheduleOption.label}
+            </a>
+
             <div
-                className="btn btn-md"
-                onClick={() => isLast ? "" : onMoveDown(paymentScheduleOption.id)}>
-                {isLast || <i className="fas fa-chevron-down"></i>}&nbsp;
+                className="col-sm-1 text-right btn btn-lg"
+                onClick={() => onDelete(paymentScheduleOption)}
+            >
+                <i className="fas fa-times" />
             </div>
         </div>
-
-        <a className="col-sm-10 btn btn-lg text-dark text-decoration-none" href={`/payment_schedule_options/${paymentScheduleOption.id}/edit?returnUrl=${encodeURIComponent(window.location)}`}>
-            {paymentScheduleOption.label}
-        </a>
-
-        <div className="col-sm-1 text-right btn btn-lg" onClick={() => onDelete(paymentScheduleOption)}>
-            <i className="fas fa-times" />
-        </div>
-    </div>
+    );
 };

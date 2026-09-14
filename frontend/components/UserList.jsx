@@ -125,8 +125,8 @@ class UserList extends React.Component {
     onCsvExport() {
         const { t } = this.props;
 
-        swal({
-            type: "info",
+        swal.fire({
+            icon: "info",
             title: t("list.csvExport.generatingTitle"),
             text: t("list.csvExport.pleaseWait"),
             allowEscapeKey: false,
@@ -148,8 +148,8 @@ class UserList extends React.Component {
             })
             .catch((err) => {
                 console.error(err);
-                swal({
-                    type: "error",
+                swal.fire({
+                    icon: "error",
                     title: t("list.csvExport.errorTitle"),
                     text: t("list.csvExport.errorText"),
                     confirmButtonText: t("list.csvExport.ok"),
@@ -163,7 +163,7 @@ class UserList extends React.Component {
         api.set()
             .success((datas) => {
                 if (!datas || datas.length === 0) {
-                    swal({
+                    swal.fire({
                         title:
                             this.state.selected.length > 0
                                 ? t(
@@ -172,25 +172,25 @@ class UserList extends React.Component {
                                 : t(
                                       "list.confirmationMail.alreadyConfirmedTitleAll"
                                   ),
-                        type: "warning",
+                        icon: "warning",
                         confirmButtonText: t("list.confirmationMail.ok"),
                     });
                 } else {
-                    swal({
+                    swal.fire({
                         title: t("list.confirmationMail.sentTitle"),
                         html:
                             "<ul>" +
                             datas.map((d) => `<li>${d}</li>`).join("") +
                             "</ul>",
-                        type: "success",
+                        icon: "success",
                         confirmButtonText: t("list.confirmationMail.ok"),
                     });
                 }
             })
             .error((error) => {
-                swal({
+                swal.fire({
                     title: t("list.confirmationMail.errorTitle"),
-                    type: "error",
+                    icon: "error",
                     confirmButtonText: t("list.confirmationMail.ok"),
                 });
             })
@@ -209,7 +209,7 @@ class UserList extends React.Component {
         let errorCount = 0;
         const isSingleUser = selectedUserIds.length === 1;
 
-        swal({
+        swal.fire({
             title: isSingleUser
                 ? t("list.deleteUser.titleSingle")
                 : t("list.deleteUser.titleMultiple"),
@@ -219,7 +219,7 @@ class UserList extends React.Component {
                     : t("list.deleteUser.bodyMultiple")
             }</h4></br>
                <p>${t("list.deleteUser.note")}</p>`,
-            type: "warning",
+            icon: "warning",
             showCancelButton: true,
             confirmButtonText: t("list.deleteUser.confirmButton"),
             cancelButtonText: t("list.deleteUser.cancelButton"),
@@ -248,20 +248,20 @@ class UserList extends React.Component {
                                 ? `<p>${t("list.deleteUser.errorCountMessage", { count: errorCount })}</p>`
                                 : "";
 
-                        swal({
+                        swal.fire({
                             title: t("list.deleteUser.doneTitle"),
                             html: `<p>${successMessage}</p>${errorMessage}`,
-                            type: successCount > 0 ? "success" : "error",
+                            icon: successCount > 0 ? "success" : "error",
                             confirmButtonText: t("list.deleteUser.ok"),
                         });
                         this.fetchData(this.state.filter);
                         this.setState({ selected: [] });
                     })
                     .catch(() => {
-                        swal({
+                        swal.fire({
                             title: t("list.deleteUser.bulkErrorTitle"),
                             text: t("list.deleteUser.bulkErrorText"),
-                            type: "error",
+                            icon: "error",
                             confirmButtonText: t("list.deleteUser.ok"),
                         });
                     });

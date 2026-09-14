@@ -1,26 +1,26 @@
-import React, {Fragment} from "react";
+import React, { Fragment } from "react";
 
 import swal from "sweetalert2";
 import { withTranslation } from "react-i18next";
 import _ from "lodash";
 
-import {toast} from "react-toastify";
+import { toast } from "react-toastify";
 
 import PaymentsSummary from "./PaymentsSummary";
 import DuePaymentsList from "./DuePaymentsList";
 import PaymentsList from "./PaymentsList";
 import CommentSection from "./../CommentSection";
 
-import {indexById, csrfToken, findAndGet} from "../utils/";
+import { indexById, csrfToken, findAndGet } from "../utils/";
 import SwitchPayerModal from "./SwitchPayerModal";
-import {set} from "../../tools/api";
+import { set } from "../../tools/api";
 import * as api from "../../tools/api";
 
 const SEASON_STORED_KEY = "PaymentsSummarySelectedSeason";
 
 function calculateTotals(duePayments, payments, itemsForPayment) {
     const totalDue = _.reduce(
-        _.filter(itemsForPayment, item => !item.isFormulaItem),
+        _.filter(itemsForPayment, (item) => !item.isFormulaItem),
         (sum, item) => sum + (item.discountedTotal || 0),
         0.0
     );
@@ -28,34 +28,34 @@ function calculateTotals(duePayments, payments, itemsForPayment) {
     const previsionalTotal = _.chain(duePayments)
         .values()
         .flatten()
-        .map(dp => parseFloat(dp.adjusted_amount))
-        .reduce((sum, n) => (sum + n), 0)
+        .map((dp) => parseFloat(dp.adjusted_amount))
+        .reduce((sum, n) => sum + n, 0)
         .value();
 
     const totalPayments = _.chain(payments)
         .values()
         .flatten()
-        .map(p => parseFloat(p.adjusted_amount))
-        .reduce((sum, n) => (sum + n), 0)
+        .map((p) => parseFloat(p.adjusted_amount))
+        .reduce((sum, n) => sum + n, 0)
         .value();
 
     const totalPayback = _.chain(payments)
         .values()
         .flatten()
-        .map(p => parseFloat(p.adjusted_amount))
+        .map((p) => parseFloat(p.adjusted_amount))
         .compact()
-        .reduce((sum, n) => (sum + n), 0)
+        .reduce((sum, n) => sum + n, 0)
         .value();
 
     const totalPaymentsToDay = _.chain(payments)
         .values()
         .flatten()
         .filter(
-            p =>
+            (p) =>
                 !p.payment_status_id && Date.parse(p.cashing_date) <= Date.now()
         )
-        .map(p => parseFloat(p.adjusted_amount))
-        .reduce((sum, n) => (sum + n), 0)
+        .map((p) => parseFloat(p.adjusted_amount))
+        .reduce((sum, n) => sum + n, 0)
         .value();
 
     return {
@@ -77,30 +77,30 @@ function getDiscountedAmount(amount, percentOff) {
 }
 
 function generateDataForPaymentSummaryTable({
-                                                activities,
-                                                desired,
-                                                options,
-                                                seasonId,
-                                                seasons,
-                                                adhesions,
-                                                adhesionPrices,
-                                                adhesionEnabled,
-                                                packs,
-                                                user,
-                                                formulas = []
-                                            }) {
+    activities,
+    desired,
+    options,
+    seasonId,
+    seasons,
+    adhesions,
+    adhesionPrices,
+    adhesionEnabled,
+    packs,
+    user,
+    formulas = [],
+}) {
     let data = [];
 
     const formulaActivities = {};
     const nonFormulaActivities = [];
-    const seasonActivities = activities.filter(a =>
-        desired.find(d => d.activity_id === a.activity.id)
+    const seasonActivities = activities.filter((a) =>
+        desired.find((d) => d.activity_id === a.activity.id)
     );
 
-    seasonActivities.forEach(act => {
+    seasonActivities.forEach((act) => {
         const a = act.activity;
         const des = desired.find(
-            d =>
+            (d) =>
                 d.activity_id === act.activity_id &&
                 d.activity_application.user_id === act.user_id
         );
@@ -120,24 +120,25 @@ function generateDataForPaymentSummaryTable({
 
     nonFormulaActivities.forEach(({ act, des, activity: a }) => {
         const activityNbLessons = a.intended_nb_lessons;
-        const season = seasons.find(s => s.id === seasonId);
+        const season = seasons.find((s) => s.id === seasonId);
         const priceAssociations = [];
-        a.activity_ref.activity_ref_pricing.forEach(arp => {
+        a.activity_ref.activity_ref_pricing.forEach((arp) => {
             if (
                 new Date(arp.from_season.start) <= new Date(season.start) &&
-                (!arp.to_season || new Date(arp.to_season.end) >= new Date(season.end))
+                (!arp.to_season ||
+                    new Date(arp.to_season.end) >= new Date(season.end))
             ) {
                 priceAssociations.push(arp);
             }
         });
         const priceAssociation = priceAssociations.find(
-            pa => pa.pricing_category_id === des.pricing_category_id
+            (pa) => pa.pricing_category_id === des.pricing_category_id
         );
         let amount = 0;
         if (priceAssociation && priceAssociation.price) {
             amount = _.round(
                 (priceAssociation.price / activityNbLessons) *
-                (des.prorata || activityNbLessons),
+                    (des.prorata || activityNbLessons),
                 2
             );
         }
@@ -164,26 +165,34 @@ function generateDataForPaymentSummaryTable({
                     ? _.round(priceAssociation.price / activityNbLessons, 2)
                     : 0,
             formula: null,
-            isFormula: false
+            isFormula: false,
         });
     });
 
     _.forEach(formulaActivities, (activitiesArray, formulaId) => {
-        const formula = _.find(formulas, f => String(f.id) === String(formulaId));
+        const formula = _.find(
+            formulas,
+            (f) => String(f.id) === String(formulaId)
+        );
 
         const user = activitiesArray[0].act.user;
-        const formulaPricing = formula.formule_pricings && formula.formule_pricings[0];
+        const formulaPricing =
+            formula.formule_pricings && formula.formule_pricings[0];
         const formulaPrice = formulaPricing ? formulaPricing.price : 0;
 
         const coupon = _.get(formula, "discount.coupon", {});
         const percentOff = _.get(formula, "discount.coupon.percent_off", 0);
-        const discountedFormulaPrice = getDiscountedAmount(formulaPrice, percentOff);
+        const discountedFormulaPrice = getDiscountedAmount(
+            formulaPrice,
+            percentOff
+        );
 
         data.push({
             id: `formula-${formula.id}`,
             activity: `${formula.name}`,
             subActivities: activitiesArray.map(
-                ({ activity: a }) => `${a.activity_ref.label} (${a.activity_ref.kind})`
+                ({ activity: a }) =>
+                    `${a.activity_ref.label} (${a.activity_ref.kind})`
             ),
             frequency: 1,
             initial_total: formulaPrice,
@@ -194,46 +203,56 @@ function generateDataForPaymentSummaryTable({
             user: user,
             studentId: user.id,
             formulaId: formula.id,
-            formula_activities: activitiesArray.map(item => item.des["id"]),
+            formula_activities: activitiesArray.map((item) => item.des["id"]),
             isFormula: true,
-            formula: formula
+            formula: formula,
         });
     });
 
-
     if (options && options.length > 0) {
-        const taken = seasonActivities.map(act => act.activity.id);
+        const taken = seasonActivities.map((act) => act.activity.id);
         const takenDesired = data
-            .filter(d => !d.isFormula)
-            .map(d => d.id)
-            .filter(id => typeof id === 'number');
+            .filter((d) => !d.isFormula)
+            .map((d) => d.id)
+            .filter((id) => typeof id === "number");
 
-        options.forEach(option => {
+        options.forEach((option) => {
             if (taken.includes(option.activity.id)) return;
 
             const a = option.activity;
-            const des = desired.find(d => d.id === option.desired_activity_id);
+            const des = desired.find(
+                (d) => d.id === option.desired_activity_id
+            );
 
             if (!des || takenDesired.includes(des.id)) return;
 
             takenDesired.push(des.id);
 
             const activity_nb_lessons = a.intended_nb_lessons;
-            const season = seasons.find(s => s.id === seasonId);
+            const season = seasons.find((s) => s.id === seasonId);
             const priceAssociations = [];
 
-            a.activity_ref.activity_ref_pricing.forEach(arp => {
-                if (new Date(arp.from_season.start) <= new Date(season.start) &&
-                    (!arp.to_season || new Date(arp.to_season.end) >= new Date(season.end))) {
+            a.activity_ref.activity_ref_pricing.forEach((arp) => {
+                if (
+                    new Date(arp.from_season.start) <= new Date(season.start) &&
+                    (!arp.to_season ||
+                        new Date(arp.to_season.end) >= new Date(season.end))
+                ) {
                     priceAssociations.push(arp);
                 }
             });
 
-            const priceAssociation = priceAssociations.find(pa => pa.pricing_category_id === des.pricing_category_id);
+            const priceAssociation = priceAssociations.find(
+                (pa) => pa.pricing_category_id === des.pricing_category_id
+            );
 
             let amount = 0;
             if (priceAssociation && priceAssociation.price) {
-                amount = _.round((priceAssociation.price / activity_nb_lessons) * (des.prorata || activity_nb_lessons), 2);
+                amount = _.round(
+                    (priceAssociation.price / activity_nb_lessons) *
+                        (des.prorata || activity_nb_lessons),
+                    2
+                );
             }
 
             const coupon = _.get(des, "discount.coupon", 0);
@@ -254,18 +273,31 @@ function generateDataForPaymentSummaryTable({
                 due_total: amount || 0,
                 discountedTotal: getDiscountedAmount(amount, percentOff),
                 isOption: true,
-                unitPrice: priceAssociation && priceAssociation.price ? _.round((priceAssociation.price / activity_nb_lessons), 2) : 0
+                unitPrice:
+                    priceAssociation && priceAssociation.price
+                        ? _.round(
+                              priceAssociation.price / activity_nb_lessons,
+                              2
+                          )
+                        : 0,
             });
         });
     }
 
     if (adhesionEnabled && adhesions && adhesions.length > 0) {
-        adhesions.forEach(adhesion => {
-            const adhesionPrice = adhesionPrices.find(p => p.id === adhesion.adhesion_price_id) || {};
+        adhesions.forEach((adhesion) => {
+            const adhesionPrice =
+                adhesionPrices.find(
+                    (p) => p.id === adhesion.adhesion_price_id
+                ) || {};
 
             if (adhesionPrice) {
                 const coupon = _.get(adhesion, "discount.coupon", 0);
-                const percentOff = _.get(adhesion, "discount.coupon.percent_off", 0);
+                const percentOff = _.get(
+                    adhesion,
+                    "discount.coupon.percent_off",
+                    0
+                );
 
                 data.push({
                     id: 0,
@@ -274,25 +306,32 @@ function generateDataForPaymentSummaryTable({
                     initial_total: 1,
                     due_total: adhesionPrice.price || 0,
                     coupon: coupon,
-                    discountedTotal: getDiscountedAmount(adhesionPrice.price, percentOff),
+                    discountedTotal: getDiscountedAmount(
+                        adhesionPrice.price,
+                        percentOff
+                    ),
                     unitPrice: adhesionPrice.price || 0,
                     user: adhesion.user,
                     studentId: adhesion.user.id,
                     adhesionPriceId: adhesionPrice.id,
-                    adhesionId: adhesion.id
+                    adhesionId: adhesion.id,
                 });
             }
         });
     }
 
     if (packs && packs.length > 0) {
-        const userPacks = packs.filter(p => p);
+        const userPacks = packs.filter((p) => p);
 
         if (userPacks.length > 0) {
-            userPacks.forEach(pack => {
+            userPacks.forEach((pack) => {
                 const pack_price = pack.activity_ref_pricing.price;
                 const coupon = _.get(pack, "discount.coupon", 0);
-                const percentOff = _.get(pack, "discount.coupon.percent_off", 0);
+                const percentOff = _.get(
+                    pack,
+                    "discount.coupon.percent_off",
+                    0
+                );
 
                 data.push({
                     id: 0,
@@ -301,12 +340,15 @@ function generateDataForPaymentSummaryTable({
                     initial_total: 1,
                     due_total: pack_price || 0,
                     coupon: coupon,
-                    discountedTotal: getDiscountedAmount(pack_price || 0, percentOff),
+                    discountedTotal: getDiscountedAmount(
+                        pack_price || 0,
+                        percentOff
+                    ),
                     unitPrice: pack_price || 0,
                     user: user,
                     studentId: user.id,
                     packPrice: pack.activity_ref_pricing,
-                    packId: pack.id
+                    packId: pack.id,
                 });
             });
         }
@@ -314,7 +356,6 @@ function generateDataForPaymentSummaryTable({
 
     return data;
 }
-
 
 class PaymentsManagement extends React.Component {
     constructor(props) {
@@ -357,15 +398,12 @@ class PaymentsManagement extends React.Component {
     }
 
     getStatus(schedules, statuses) {
-        const schedule = _.chain(schedules)
-            .values()
-            .head()
-            .value();
+        const schedule = _.chain(schedules).values().head().value();
 
         if (schedule) {
             return _.find(
                 statuses,
-                s => s.id == schedule.payment_schedule_status_id
+                (s) => s.id == schedule.payment_schedule_status_id
             );
         } else {
             return null;
@@ -380,30 +418,32 @@ class PaymentsManagement extends React.Component {
     getSeasonDependentState(seasonId) {
         const payments = this.state.paymentsBySeason[seasonId] || {};
         const desiredActivities = this.props.desiredActivities[seasonId] || [];
-        const adhesions = this.props.adhesions.filter(adh => adh.season_id == seasonId);
+        const adhesions = this.props.adhesions.filter(
+            (adh) => adh.season_id == seasonId
+        );
         const schedules = this.state.schedulesBySeason[seasonId] || {};
         const payers =
             findAndGet(
                 this.state.payersBySeason,
-                ps => parseInt(ps.season_id) === seasonId,
+                (ps) => parseInt(ps.season_id) === seasonId,
                 "payers"
             ) || {};
 
         const duePayments = _.reduce(
             schedules,
-            (acc, s) => ({...acc, [s.payable_id]: s.due_payments}),
+            (acc, s) => ({ ...acc, [s.payable_id]: s.due_payments }),
             {}
         );
 
         const comments = _.chain(schedules)
             .values()
-            .map(s => s.comments)
+            .map((s) => s.comments)
             .flatten()
             .value();
 
         const contextId = _.chain(schedules)
             .values()
-            .map(s => s.id)
+            .map((s) => s.id)
             .head()
             .value();
 
@@ -436,13 +476,13 @@ class PaymentsManagement extends React.Component {
                     },
                 }),
             })
-                .then(response => response.json())
-                .then(payment => {
+                .then((response) => response.json())
+                .then((payment) => {
                     let payments = this.state.payments[payment.payable_id];
 
                     const index = _.findIndex(
                         payments,
-                        p => p.id == payment.id
+                        (p) => p.id == payment.id
                     );
                     payments.splice(index, 1, payment);
 
@@ -469,9 +509,9 @@ class PaymentsManagement extends React.Component {
                     payment,
                 }),
             })
-                .then(response => response.json())
-                .then(newPayment => {
-                    const duePayments = {...this.state.duePayments};
+                .then((response) => response.json())
+                .then((newPayment) => {
+                    const duePayments = { ...this.state.duePayments };
 
                     if (newPayment.due_payment)
                         duePayments[newPayment.payable_id] = Object.values({
@@ -487,11 +527,11 @@ class PaymentsManagement extends React.Component {
                                 undefined
                                     ? [newPayment]
                                     : [
-                                        ...this.state.payments[
-                                            newPayment.payable_id
-                                            ],
-                                        newPayment,
-                                    ],
+                                          ...this.state.payments[
+                                              newPayment.payable_id
+                                          ],
+                                          newPayment,
+                                      ],
                         },
                         duePayments,
                     });
@@ -519,8 +559,8 @@ class PaymentsManagement extends React.Component {
                 schedule_id: targetSchedule ? targetSchedule.id : null,
             }),
         })
-            .then(response => response.json())
-            .then(schedule => {
+            .then((response) => response.json())
+            .then((schedule) => {
                 let payableId = schedule.payable_id;
 
                 this.setState({
@@ -538,16 +578,18 @@ class PaymentsManagement extends React.Component {
     }
 
     handleChangePricingChoice(desId, userId, evt) {
-        const pricing = this.props.pricingCategories.find(p => p.id == evt.target.value);
+        const pricing = this.props.pricingCategories.find(
+            (p) => p.id == evt.target.value
+        );
 
-        let dess = {...this.state.desiredActivities};
+        let dess = { ...this.state.desiredActivities };
         let des = _.find(
             dess,
-            i => i.activity_application.user_id === userId && i.id == desId
+            (i) => i.activity_application.user_id === userId && i.id == desId
         );
 
         if (pricing && des) {
-            dess = _.filter(dess, i => i.id != des.id);
+            dess = _.filter(dess, (i) => i.id != des.id);
 
             des.pricing_category_id = pricing.id;
 
@@ -564,7 +606,7 @@ class PaymentsManagement extends React.Component {
                     pricing_category_id: pricing.id,
                 }),
             }).then(() => {
-                this.setState({desiredActivities: dess});
+                this.setState({ desiredActivities: dess });
             });
         }
     }
@@ -574,15 +616,24 @@ class PaymentsManagement extends React.Component {
 
         api.set()
             .success(() => {
-                const adhesion = this.state.adhesions.find(adhesion => adhesion.id === adhesionId);
+                const adhesion = this.state.adhesions.find(
+                    (adhesion) => adhesion.id === adhesionId
+                );
                 adhesion.adhesion_price_id = parseInt(newAdhesionPricingId, 10);
-                this.setState({activities: [...this.state.activities]});
+                this.setState({ activities: [...this.state.activities] });
             })
             .error((e) => {
-                console.error(e)
-                swal(t("general.reminder.errorTitle"), t("general.paymentMail.errorTitle"), "error");
+                console.error(e);
+                swal.fire({
+                    title: t("general.reminder.errorTitle"),
+                    text: t("general.paymentMail.errorTitle"),
+                    icon: "error",
+                });
             })
-            .post(`/adhesions/${adhesionId}/update_adhesion_pricing?adhesion_price_id=${newAdhesionPricingId}`, {});
+            .post(
+                `/adhesions/${adhesionId}/update_adhesion_pricing?adhesion_price_id=${newAdhesionPricingId}`,
+                {}
+            );
     }
 
     setStateWithCoupon(discountable_id, discountable_type, coupon) {
@@ -592,91 +643,114 @@ class PaymentsManagement extends React.Component {
             case "Adhesion":
                 const adhesions = [...this.state.adhesions];
                 const index = this.state.adhesions.findIndex(
-                    adh => adh.id === discountable_id
+                    (adh) => adh.id === discountable_id
                 );
                 if (index === -1) return null;
                 oldCoupon = _.get(adhesions[index], "discount.coupon", null);
 
                 const adhesion = {
                     ...adhesions[index],
-                    discount: {coupon: {...coupon}}
+                    discount: { coupon: { ...coupon } },
                 };
 
                 adhesions[index] = adhesion;
-                this.setState({adhesions});
+                this.setState({ adhesions });
                 break;
 
             case "DesiredActivity":
                 let dess = [...this.state.desiredActivities];
                 const des = this.state.desiredActivities.find(
-                    i => i.id === discountable_id
+                    (i) => i.id === discountable_id
                 );
                 if (!des) return null;
                 oldCoupon = _.get(des, "discount.coupon", null);
 
-                des.discount = {coupon: {...coupon}};
+                des.discount = { coupon: { ...coupon } };
                 dess = [...dess, des];
-                this.setState({desiredActivities: dess});
+                this.setState({ desiredActivities: dess });
                 break;
 
-                case "Formula":
+            case "Formula":
                 let formulas = [...this.state.formulas];
-                const formulaIndex = formulas.findIndex(f => f.id === discountable_id);
+                const formulaIndex = formulas.findIndex(
+                    (f) => f.id === discountable_id
+                );
                 if (formulaIndex === -1) return null;
-                oldCoupon = _.get(formulas[formulaIndex], "discount.coupon", null);
+                oldCoupon = _.get(
+                    formulas[formulaIndex],
+                    "discount.coupon",
+                    null
+                );
 
                 const updatedCoupon = coupon ? { ...coupon } : {};
                 if (coupon && !updatedCoupon.id) {
-                    updatedCoupon.id = coupon.id || coupon.coupon_id || coupon.label;
+                    updatedCoupon.id =
+                        coupon.id || coupon.coupon_id || coupon.label;
                 }
 
                 formulas[formulaIndex] = {
                     ...formulas[formulaIndex],
                     discount: { coupon: updatedCoupon },
-                    discount_percent: coupon ? coupon.percent_off : 0
+                    discount_percent: coupon ? coupon.percent_off : 0,
                 };
 
                 this.setState({ formulas });
-                break;        }
+                break;
+        }
 
         return oldCoupon;
     }
     handleChangePercentOffChoice(discountable_id, discountable_type, couponId) {
         const { t } = this.props;
-        const coupon = _.find(this.props.coupons, c => c.id == couponId);
+        const coupon = _.find(this.props.coupons, (c) => c.id == couponId);
 
-        const oldCoupon = this.setStateWithCoupon(discountable_id, discountable_type, coupon);
+        const oldCoupon = this.setStateWithCoupon(
+            discountable_id,
+            discountable_type,
+            coupon
+        );
 
-
-        const fetcher = api.set()
-            .error((e) => {
-                console.error(e);
-                this.setStateWithCoupon(discountable_id, discountable_type, oldCoupon);
-                swal(t("general.reminder.errorTitle"), t("general.paymentMail.errorTitle"), "error");
+        const fetcher = api.set().error((e) => {
+            console.error(e);
+            this.setStateWithCoupon(
+                discountable_id,
+                discountable_type,
+                oldCoupon
+            );
+            swal.fire({
+                title: t("general.reminder.errorTitle"),
+                text: t("general.paymentMail.errorTitle"),
+                icon: "error",
             });
+        });
 
         if (parseInt(couponId) === 0) {
             fetcher.del(`/discounts`, {
                 discountable_id: discountable_id,
-                discountable_type: discountable_type === "Formula" ? "Formule" : discountable_type
+                discountable_type:
+                    discountable_type === "Formula"
+                        ? "Formule"
+                        : discountable_type,
             });
         } else {
             fetcher.post(`/discounts/upsert`, {
                 discountable_id: discountable_id,
-                discountable_type: discountable_type === "Formula" ? "Formule" : discountable_type,
-                coupon_id: couponId
+                discountable_type:
+                    discountable_type === "Formula"
+                        ? "Formule"
+                        : discountable_type,
+                coupon_id: couponId,
             });
         }
-
     }
 
     handleChangeActivityPaymentMethod(id, evt) {
         const method = parseInt(evt.target.value, 10);
-        let items = {...this.state.activities};
+        let items = { ...this.state.activities };
 
         if (id != 0) {
-            let item = _.find(items, i => i.id == id);
-            items = _.filter(items, i => i.id != item.id);
+            let item = _.find(items, (i) => i.id == id);
+            items = _.filter(items, (i) => i.id != item.id);
 
             item.payment_method_id = method;
 
@@ -698,20 +772,20 @@ class PaymentsManagement extends React.Component {
             }),
         }).then(() => {
             if (id == 0) {
-                this.setState({adhesion_payment_method: method});
+                this.setState({ adhesion_payment_method: method });
             } else {
-                this.setState({activities: items});
+                this.setState({ activities: items });
             }
         });
     }
 
     handleChangeProrataForDesiredActivity(id, prorata) {
         const { t } = this.props;
-        let dess = {...this.state.desiredActivities};
-        let des = _.find(dess, i => i.id == id);
+        let dess = { ...this.state.desiredActivities };
+        let des = _.find(dess, (i) => i.id == id);
 
         if (des) {
-            dess = _.filter(dess, i => i.id != des.id);
+            dess = _.filter(dess, (i) => i.id != des.id);
             des.prorata = prorata;
             dess = [...dess, des];
 
@@ -724,20 +798,30 @@ class PaymentsManagement extends React.Component {
                     Accept: "application/json",
                 },
                 body: JSON.stringify({
-                    prorata: prorata
+                    prorata: prorata,
                 }),
             })
-            .then(response => {
-                if (response.ok) {
-                    this.setState({desiredActivities: dess});
-                    this.forceUpdate();
-                } else {
-                    swal(t("general.reminder.errorTitle"), t("userPayments.management.prorataUpdateFailed"), "error");
-                }
-            })
-            .catch(() => {
-                swal(t("general.reminder.errorTitle"), t("userPayments.management.prorataUpdateError"), "error");
-            });
+                .then((response) => {
+                    if (response.ok) {
+                        this.setState({ desiredActivities: dess });
+                        this.forceUpdate();
+                    } else {
+                        swal.fire({
+                            title: t("general.reminder.errorTitle"),
+                            text: t(
+                                "userPayments.management.prorataUpdateFailed"
+                            ),
+                            icon: "error",
+                        });
+                    }
+                })
+                .catch(() => {
+                    swal.fire({
+                        title: t("general.reminder.errorTitle"),
+                        text: t("userPayments.management.prorataUpdateError"),
+                        icon: "error",
+                    });
+                });
         }
     }
 
@@ -760,8 +844,8 @@ class PaymentsManagement extends React.Component {
                 },
             }),
         })
-            .then(response => response.json())
-            .then(schedule => {
+            .then((response) => response.json())
+            .then((schedule) => {
                 // let duePayments = this.state.duePayments;
                 // duePayments[duePayment.payer.id].push(newDue);
 
@@ -789,7 +873,7 @@ class PaymentsManagement extends React.Component {
     }
 
     handleSwitchPayer(newPayerId) {
-        const {toSwitchPayerId: payerId} = this.state;
+        const { toSwitchPayerId: payerId } = this.state;
 
         const scheduleId = _.get(this.state.schedules[payerId], "id");
 
@@ -816,13 +900,13 @@ class PaymentsManagement extends React.Component {
                 due_payment: duePayment,
             }),
         })
-            .then(response => response.json())
-            .then(duePayment => {
+            .then((response) => response.json())
+            .then((duePayment) => {
                 let duePayments = this.state.duePayments[payerId];
 
                 const index = _.findIndex(
                     duePayments,
-                    dp => dp.id == duePayment.id
+                    (dp) => dp.id == duePayment.id
                 );
                 duePayments.splice(index, 1, duePayment);
 
@@ -845,12 +929,12 @@ class PaymentsManagement extends React.Component {
                 Accept: "application/json",
             },
         })
-            .then(res => res.json())
-            .then(duePayment => {
-                let newPayments = {...this.state.payments};
+            .then((res) => res.json())
+            .then((duePayment) => {
+                let newPayments = { ...this.state.payments };
                 newPayments[payerId] = _.filter(
                     newPayments[payerId],
-                    p => p.id != id
+                    (p) => p.id != id
                 );
 
                 let duePayments = [...this.state.duePayments[payerId]];
@@ -858,7 +942,7 @@ class PaymentsManagement extends React.Component {
                 if (duePayment) {
                     const index = _.findIndex(
                         duePayments,
-                        dp => dp.id == duePayment.id
+                        (dp) => dp.id == duePayment.id
                     );
 
                     duePayments.splice(index, 1, duePayment);
@@ -887,11 +971,11 @@ class PaymentsManagement extends React.Component {
                     "Content-Type": "application/json",
                     Accept: "application/json",
                 },
-                body: JSON.stringify({targets}),
+                body: JSON.stringify({ targets }),
             }
         )
-            .then(response => response.json())
-            .then(dues => {
+            .then((response) => response.json())
+            .then((dues) => {
                 const newDuePayments = {
                     ...this.state.duePayments,
                     [payerId]: Object.values({
@@ -906,7 +990,7 @@ class PaymentsManagement extends React.Component {
                         ...indexById(this.state.payments[payerId]),
                         ...indexById(
                             _(dues)
-                                .map(d => d.payments)
+                                .map((d) => d.payments)
                                 .flatten()
                                 .value()
                         ),
@@ -930,16 +1014,16 @@ class PaymentsManagement extends React.Component {
                 Accept: "application/json",
             },
         }).then(() => {
-            let newDuePayments = {...this.state.duePayments};
+            let newDuePayments = { ...this.state.duePayments };
             newDuePayments[payerId] = _.filter(
                 newDuePayments[payerId],
-                dp => dp.id != id
+                (dp) => dp.id != id
             );
 
-            let newPayments = {...this.state.payments};
+            let newPayments = { ...this.state.payments };
             newPayments[payerId] = _.filter(
                 newPayments[payerId],
-                p => p.due_payment_id != id
+                (p) => p.due_payment_id != id
             );
 
             this.setState({
@@ -952,7 +1036,7 @@ class PaymentsManagement extends React.Component {
     handleSwitchLocation(scheduleId, locationId) {
         const { t } = this.props;
         let schedules =
-            scheduleId || Object.values(this.state.schedules).map(v => v.id);
+            scheduleId || Object.values(this.state.schedules).map((v) => v.id);
 
         fetch(`/payment_schedules/location`, {
             method: "PATCH",
@@ -965,13 +1049,13 @@ class PaymentsManagement extends React.Component {
                 schedulesIds: schedules,
                 locationId: locationId,
             }),
-        }).then(res => {
+        }).then((res) => {
             if (res.ok) {
                 const oldSchedules = this.state.schedules;
                 const newSchedules = {};
 
                 Object.keys(oldSchedules).forEach(
-                    k =>
+                    (k) =>
                         (newSchedules[k] = {
                             ...oldSchedules[k],
                             location_id: locationId,
@@ -1001,7 +1085,7 @@ class PaymentsManagement extends React.Component {
 
         //Transfer current state data for this season to the season stores
         //for due payments
-        let newSchedulesBySeason = {...this.state.schedulesBySeason};
+        let newSchedulesBySeason = { ...this.state.schedulesBySeason };
 
         newSchedulesBySeason[this.state.season] = this.state.schedules;
 
@@ -1010,7 +1094,7 @@ class PaymentsManagement extends React.Component {
         });
 
         //for payments
-        const newPaymentsBySeason = {...this.state.paymentsBySeason};
+        const newPaymentsBySeason = { ...this.state.paymentsBySeason };
 
         Object.entries(this.state.payments).forEach(([key, val]) => {
             newPaymentsBySeason[this.state.season][key] = val;
@@ -1031,7 +1115,7 @@ class PaymentsManagement extends React.Component {
             if (scheduleId) {
                 const schedule = Object.values(
                     newSchedulesBySeason[this.state.season]
-                ).find(s => s.id == scheduleId);
+                ).find((s) => s.id == scheduleId);
 
                 if (schedule) schedule.comments = comments;
             }
@@ -1068,18 +1152,18 @@ class PaymentsManagement extends React.Component {
             body: JSON.stringify({
                 targets: dues,
             }),
-        }).then(res => {
+        }).then((res) => {
             if (res.ok) {
                 //updates data to mimic reproduce backend's delete operation
-                const newDuePayments = {...this.state.duePayments};
-                const newPayments = {...this.state.payments};
+                const newDuePayments = { ...this.state.duePayments };
+                const newPayments = { ...this.state.payments };
 
                 newDuePayments[payerId] = newDuePayments[payerId].filter(
-                    d => !dues.includes(d.id)
+                    (d) => !dues.includes(d.id)
                 );
 
                 newPayments[payerId] = newPayments[payerId].filter(
-                    d => !dues.includes(d.due_payment_id)
+                    (d) => !dues.includes(d.due_payment_id)
                 );
 
                 this.setState({
@@ -1101,13 +1185,13 @@ class PaymentsManagement extends React.Component {
                 targets,
             }),
         })
-            .then(res => res.json())
-            .then(dues => {
+            .then((res) => res.json())
+            .then((dues) => {
                 //updates data to mimic reproduce backend's delete operation
-                const newPayments = {...this.state.payments};
+                const newPayments = { ...this.state.payments };
 
                 newPayments[payerId] = newPayments[payerId].filter(
-                    p => !targets.includes(p.id)
+                    (p) => !targets.includes(p.id)
                 );
 
                 const newDuePayments = {
@@ -1142,11 +1226,11 @@ class PaymentsManagement extends React.Component {
             },
             body: JSON.stringify(body),
         })
-            .then(res => res.json())
-            .then(dues => {
+            .then((res) => res.json())
+            .then((dues) => {
                 let newPayerDuePayments = [...this.state.duePayments[payerId]];
-                newPayerDuePayments = _.map(newPayerDuePayments, due => {
-                    const newDue = _.find(dues, d => d.id === due.id);
+                newPayerDuePayments = _.map(newPayerDuePayments, (due) => {
+                    const newDue = _.find(dues, (d) => d.id === due.id);
 
                     if (newDue) {
                         return newDue;
@@ -1156,14 +1240,14 @@ class PaymentsManagement extends React.Component {
                 });
 
                 const newPayerPayments = [...this.state.payments[payerId]].map(
-                    pay => {
+                    (pay) => {
                         const newDue = dues.find(
-                            d => d.id === pay.due_payment_id
+                            (d) => d.id === pay.due_payment_id
                         );
 
                         if (newDue) {
                             const newPay = newDue.payments.find(
-                                p => p.id === pay.id
+                                (p) => p.id === pay.id
                             );
 
                             //this should always be true
@@ -1203,11 +1287,11 @@ class PaymentsManagement extends React.Component {
             },
             body: JSON.stringify(body),
         })
-            .then(res => res.json())
-            .then(pays => {
+            .then((res) => res.json())
+            .then((pays) => {
                 const newPayerPayments = [...this.state.payments[payerId]].map(
-                    pay => {
-                        const newPay = pays.find(p => p.id === pay.id);
+                    (pay) => {
+                        const newPay = pays.find((p) => p.id === pay.id);
 
                         if (newPay) return newPay;
 
@@ -1219,7 +1303,7 @@ class PaymentsManagement extends React.Component {
                     ...this.state.duePayments,
                     [payerId]: Object.values({
                         ...indexById(this.state.duePayments[payerId]),
-                        ...indexById(_.compact(pays.map(p => p.due_payment))),
+                        ...indexById(_.compact(pays.map((p) => p.due_payment))),
                     }),
                 };
 
@@ -1234,11 +1318,11 @@ class PaymentsManagement extends React.Component {
     }
 
     handleChangeStatus(e) {
-        this.setState({schedule_status_id: e.target.value});
+        this.setState({ schedule_status_id: e.target.value });
     }
 
     handleSaveStatus() {
-        const scheduleActions = _.map(_.values(this.state.schedules), s => {
+        const scheduleActions = _.map(_.values(this.state.schedules), (s) => {
             fetch(`/payment_schedule/${s.id}`, {
                 method: "PATCH",
                 credentials: "same-origin",
@@ -1258,20 +1342,20 @@ class PaymentsManagement extends React.Component {
         Promise.all(scheduleActions).then(() => {
             const newStatus = _.find(
                 this.props.schedule_statuses,
-                ss => ss.id == this.state.schedule_status_id
+                (ss) => ss.id == this.state.schedule_status_id
             );
-            this.setState({scheduleStatus: newStatus});
+            this.setState({ scheduleStatus: newStatus });
         });
     }
 
     // COMMENT HANDLERS
     handleCommentEdition(comment_id) {
-        const comment = _.find(this.state.comments, c => c.id == comment_id);
-        this.setState({editedComment: comment});
+        const comment = _.find(this.state.comments, (c) => c.id == comment_id);
+        this.setState({ editedComment: comment });
     }
 
     handleUpdateNewCommentContent(e) {
-        this.setState({newComment: e.target.value});
+        this.setState({ newComment: e.target.value });
     }
 
     handleUpdateEditedCommentContent(e) {
@@ -1302,9 +1386,9 @@ class PaymentsManagement extends React.Component {
                 },
             }),
         })
-            .then(response => response.json())
-            .then(comments => {
-                this.setState({comments, newComment: ""});
+            .then((response) => response.json())
+            .then((comments) => {
+                this.setState({ comments, newComment: "" });
             });
     }
 
@@ -1322,29 +1406,29 @@ class PaymentsManagement extends React.Component {
                 comment: this.state.editedComment,
             }),
         })
-            .then(response => response.json())
-            .then(comments => {
-                this.setState({comments, editedComment: null});
+            .then((response) => response.json())
+            .then((comments) => {
+                this.setState({ comments, editedComment: null });
             });
     }
 
     handlePromptPaymentStatusEdit(payer, paymentId, newStatusId) {
         const { t } = this.props;
 
-        swal({
+        swal.fire({
             title: t("general.statusEdit.title"),
-            type: "warning",
+            icon: "warning",
             confirmButtonText: t("common:actions.validate"),
             input: "select",
             inputOptions: _.zipObject(
-                this.props.paymentStatuses.map(status => status.id),
-                this.props.paymentStatuses.map(status => status.label)
+                this.props.paymentStatuses.map((status) => status.id),
+                this.props.paymentStatuses.map((status) => status.label)
             ),
             inputClass: "form-control",
             inputValue: newStatusId,
             showCancelButton: true,
             cancelButtonText: t("common:actions.cancel"),
-        }).then(res => {
+        }).then((res) => {
             const newStatusId = res.value;
             if (newStatusId) {
                 fetch("/payments/edit_status", {
@@ -1353,14 +1437,19 @@ class PaymentsManagement extends React.Component {
                         "Content-Type": "application/json",
                         "X-CSRF-Token": csrfToken,
                     },
-                    body: JSON.stringify({id: paymentId, status: res.value}),
-                }).then(res => {
-                    if (!res.ok) swal(t("general.statusEditFailed"), "", "error");
+                    body: JSON.stringify({ id: paymentId, status: res.value }),
+                }).then((res) => {
+                    if (!res.ok)
+                        swal.fire({
+                            title: t("general.statusEditFailed"),
+                            text: "",
+                            icon: "error",
+                        });
                     else {
                         let payments = this.state.payments[payer.id];
                         const index = _.findIndex(
                             payments,
-                            p => p.id == paymentId
+                            (p) => p.id == paymentId
                         );
                         payments[index].payment_status_id = newStatusId;
 
@@ -1368,7 +1457,7 @@ class PaymentsManagement extends React.Component {
                         this.setState({
                             payments: {
                                 ...this.state.payments,
-                                [payer.id]: payments
+                                [payer.id]: payments,
                             },
                         });
                     }
@@ -1377,41 +1466,47 @@ class PaymentsManagement extends React.Component {
         });
     }
 
-    sendUpcominPayment()
-    {
+    sendUpcominPayment() {
         const { t } = this.props;
 
-        swal({
-            type: "question",
+        swal.fire({
+            icon: "question",
             title: t("common:confirm.sure"),
             text: t("userPayments.management.sendUpcomingText"),
             showCancelButton: true,
             confirmButtonText: t("common:actions.send"),
             cancelButtonText: t("common:actions.cancel"),
-        })
-            .then((res) =>
-            {
-                if (res.value)
-                {
-                    swal.showLoading();
+        }).then((res) => {
+            if (res.value) {
+                swal.showLoading();
 
-                    api.set()
-                        .success(() =>
-                        {
-                            swal(t("userPayments.management.mailSentTitle"), t("userPayments.management.mailSentText"), "success");
-                        })
-                        .error((e) =>
-                        {
-                            console.error(e)
+                api.set()
+                    .success(() => {
+                        swal.fire({
+                            title: t("userPayments.management.mailSentTitle"),
+                            text: t("userPayments.management.mailSentText"),
+                            icon: "success",
+                        });
+                    })
+                    .error((e) => {
+                        console.error(e);
 
-                            swal(t("general.reminder.errorTitle"), t("general.paymentMail.errorTitle"), "error");
-                        })
-                        .post("/payments/send_upcoming_payment_mail", {
+                        swal.fire({
+                            title: t("general.reminder.errorTitle"),
+                            text: t("general.paymentMail.errorTitle"),
+                            icon: "error",
+                        });
+                    })
+                    .post(
+                        "/payments/send_upcoming_payment_mail",
+                        {
                             season_id: this.state.season,
-                            user_id: this.props.user.id
-                        }, {});
-                }
-            });
+                            user_id: this.props.user.id,
+                        },
+                        {}
+                    );
+            }
+        });
     }
 
     render() {
@@ -1429,8 +1524,6 @@ class PaymentsManagement extends React.Component {
             user: this.props.user,
             formulas: this.state.formulas,
         });
-
-
 
         const {
             totalDue,
@@ -1463,7 +1556,7 @@ class PaymentsManagement extends React.Component {
                             name="status"
                             value={s.id}
                             checked={this.state.schedule_status_id == s.id}
-                            onChange={e => this.handleChangeStatus(e)}
+                            onChange={(e) => this.handleChangeStatus(e)}
                             id={s.id}
                         />
                         <label htmlFor={s.id}>
@@ -1476,7 +1569,7 @@ class PaymentsManagement extends React.Component {
 
         const previousSeason = findAndGet(
             this.props.seasons,
-            s => s.id === this.state.season,
+            (s) => s.id === this.state.season,
             "previous"
         );
 
@@ -1492,7 +1585,7 @@ class PaymentsManagement extends React.Component {
                         (_, sId) => previousSeason.id == sId
                     )
                 )
-                    .map(a => a)
+                    .map((a) => a)
                     .flatten()
                     .filter("payment_method.is_credit_note")
                     .value();
@@ -1500,25 +1593,25 @@ class PaymentsManagement extends React.Component {
             const previousSeasonState =
                 previousSeason &&
                 this.getSeasonDependentState(previousSeason.id);
-            const {previsionalTotal, totalPayments} =
-            previousSeason &&
-            calculateTotals(
-                previousSeasonState.duePayments,
-                previousSeasonState.payments,
-                generateDataForPaymentSummaryTable({
-                    activities: this.state.activities,
-                    desired: previousSeasonState.desiredActivities,
-                    options: this.state.options,
-                    seasonId: previousSeason.id,
-                    seasons: this.props.seasons,
-                    adhesionPrices: this.props.adhesionPrices,
-                    adhesionEnabled: this.props.adhesionEnabled,
-                    adhesions: previousSeasonState.adhesions,
-                    packs: (this.props.packs || {})[this.state.season],
-                    user: this.props.user,
-                    formulas: this.state.formulas,
-                })
-            );
+            const { previsionalTotal, totalPayments } =
+                previousSeason &&
+                calculateTotals(
+                    previousSeasonState.duePayments,
+                    previousSeasonState.payments,
+                    generateDataForPaymentSummaryTable({
+                        activities: this.state.activities,
+                        desired: previousSeasonState.desiredActivities,
+                        options: this.state.options,
+                        seasonId: previousSeason.id,
+                        seasons: this.props.seasons,
+                        adhesionPrices: this.props.adhesionPrices,
+                        adhesionEnabled: this.props.adhesionEnabled,
+                        adhesions: previousSeasonState.adhesions,
+                        packs: (this.props.packs || {})[this.state.season],
+                        user: this.props.user,
+                        formulas: this.state.formulas,
+                    })
+                );
 
             previousSeasonBalance = _.floor(
                 previsionalTotal - totalPayments,
@@ -1533,10 +1626,10 @@ class PaymentsManagement extends React.Component {
                         <div className="row">
                             <div className="col-xs-8">
                                 {_(this.props.activities)
-                                    .map(a => a.user)
+                                    .map((a) => a.user)
                                     .compact()
-                                    .uniqBy(u => u.id)
-                                    .map(u => (
+                                    .uniqBy((u) => u.id)
+                                    .map((u) => (
                                         <p
                                             key={u.id}
                                         >{`${u.first_name} ${u.last_name} N°${u.adherent_number}`}</p>
@@ -1547,7 +1640,7 @@ class PaymentsManagement extends React.Component {
                                 <p>
                                     {
                                         this.props.seasons.find(
-                                            s => s.id === this.state.season
+                                            (s) => s.id === this.state.season
                                         ).label
                                     }
                                 </p>
@@ -1565,11 +1658,13 @@ class PaymentsManagement extends React.Component {
                             ))}
                         </h3>
 
-                        <hr/>
+                        <hr />
 
                         <div className="row payment-print-checkbox-section">
                             <div className="col-xs-6">
-                                <h2>{t("userPayments.management.paymentMethod")}</h2>
+                                <h2>
+                                    {t("userPayments.management.paymentMethod")}
+                                </h2>
                                 <h3>
                                     <span className="payment-print-checkbox"></span>
                                     {t("userPayments.management.directDebit")}
@@ -1584,7 +1679,9 @@ class PaymentsManagement extends React.Component {
                                 </h3>
                             </div>
                             <div className="col-xs-6">
-                                <h2>{t("userPayments.management.numberOfDues")}</h2>
+                                <h2>
+                                    {t("userPayments.management.numberOfDues")}
+                                </h2>
                                 <h3>
                                     <span className="payment-print-checkbox"></span>
                                     {t("userPayments.management.annual")}
@@ -1601,7 +1698,11 @@ class PaymentsManagement extends React.Component {
                         </div>
                         <div className="row payment-print-checkbox-section">
                             <div className="col-xs-6">
-                                <h2>{t("userPayments.management.debitDatePreference")}</h2>
+                                <h2>
+                                    {t(
+                                        "userPayments.management.debitDatePreference"
+                                    )}
+                                </h2>
                                 <h3>
                                     <span className="payment-print-checkbox"></span>
                                     {t("userPayments.management.day5")}
@@ -1619,7 +1720,11 @@ class PaymentsManagement extends React.Component {
                         <div className="row payment-print-checkbox-section">
                             <div className="col-lg-12">
                                 <div>
-                                    <h2>{t("userPayments.management.membershipPaidSeparately")}</h2>{" "}
+                                    <h2>
+                                        {t(
+                                            "userPayments.management.membershipPaidSeparately"
+                                        )}
+                                    </h2>{" "}
                                     <h3>
                                         <span className="payment-print-checkbox"></span>
                                         {t("userPayments.management.yes")}{" "}
@@ -1631,7 +1736,9 @@ class PaymentsManagement extends React.Component {
                         </div>
                         <div className="row payment-print-checkbox-section">
                             <div className="col-xs-6">
-                                <h3>{t("userPayments.management.paymentMethod")}</h3>
+                                <h3>
+                                    {t("userPayments.management.paymentMethod")}
+                                </h3>
                             </div>
                             <div className="col-xs-6">
                                 <h3>
@@ -1646,7 +1753,9 @@ class PaymentsManagement extends React.Component {
                         </div>
                         <div className="row payment-print-checkbox-section">
                             <div className="col-xs-6">
-                                <h2>{t("userPayments.management.commentsLabel")}</h2>
+                                <h2>
+                                    {t("userPayments.management.commentsLabel")}
+                                </h2>
                             </div>
                         </div>
                     </div>
@@ -1654,32 +1763,49 @@ class PaymentsManagement extends React.Component {
                 <div className="payment-page">
                     <div className="row wrapper border-bottom white-bg page-heading">
                         <div className="col-sm-12">
-                            <h2>{t("userPayments.management.heading", { name: this.props.user.first_name + " " + this.props.user.last_name })}</h2>
+                            <h2>
+                                {t("userPayments.management.heading", {
+                                    name:
+                                        this.props.user.first_name +
+                                        " " +
+                                        this.props.user.last_name,
+                                })}
+                            </h2>
                             <div className="flex flex-space-between-justified">
                                 <div className="flex flex-row">
                                     <button
                                         className="btn btn-primary m-t-sm"
                                         onClick={() => window.print()}
                                     >
-                                        <i className="fas fa-print m-r-xs"/>
+                                        <i className="fas fa-print m-r-xs" />
                                         {t("userPayments.management.print")}
                                     </button>
 
-                                    {
-                                        this.props.is_upcoming_payment_defined && itemsForPayment.every(i => i.pricingCategoryId != undefined || i.adhesionPriceId != undefined) && <button
-                                            className="btn btn-primary m-t-sm m-l-sm"
-                                            onClick={this.sendUpcominPayment.bind(this)}
-                                        >
-                                            <i className="fas fa-paper-plane m-r-xs"/>
-                                            {t("common:actions.send")}
-                                        </button>
-                                    }
+                                    {this.props.is_upcoming_payment_defined &&
+                                        itemsForPayment.every(
+                                            (i) =>
+                                                i.pricingCategoryId !=
+                                                    undefined ||
+                                                i.adhesionPriceId != undefined
+                                        ) && (
+                                            <button
+                                                className="btn btn-primary m-t-sm m-l-sm"
+                                                onClick={this.sendUpcominPayment.bind(
+                                                    this
+                                                )}
+                                            >
+                                                <i className="fas fa-paper-plane m-r-xs" />
+                                                {t("common:actions.send")}
+                                            </button>
+                                        )}
                                 </div>
                                 <div>
                                     <p>
                                         {this.state.scheduleStatus
                                             ? this.state.scheduleStatus.label
-                                            : t("userPayments.management.noStatus")}
+                                            : t(
+                                                  "userPayments.management.noStatus"
+                                              )}
                                     </p>
                                     <button
                                         type="button"
@@ -1687,7 +1813,9 @@ class PaymentsManagement extends React.Component {
                                         data-toggle="modal"
                                         data-target="#statusModal"
                                     >
-                                        {t("userPayments.management.changeStatus")}
+                                        {t(
+                                            "userPayments.management.changeStatus"
+                                        )}
                                     </button>
                                     <div
                                         className="modal inmodal"
@@ -1699,7 +1827,11 @@ class PaymentsManagement extends React.Component {
                                         <div className="modal-dialog">
                                             <div className="modal-content animated">
                                                 <div className="modal-header">
-                                                    <p>{t("userPayments.management.paymentsStatus")}</p>
+                                                    <p>
+                                                        {t(
+                                                            "userPayments.management.paymentsStatus"
+                                                        )}
+                                                    </p>
                                                 </div>
                                                 <div className="modal-body">
                                                     {generateStatusSelection}
@@ -1711,7 +1843,9 @@ class PaymentsManagement extends React.Component {
                                                         data-dismiss="modal"
                                                     >
                                                         <i className="fas fa-times m-r-sm"></i>
-                                                        {t("common:actions.cancel")}
+                                                        {t(
+                                                            "common:actions.cancel"
+                                                        )}
                                                     </button>
                                                     <button
                                                         className="btn btn-primary"
@@ -1721,7 +1855,9 @@ class PaymentsManagement extends React.Component {
                                                         }
                                                     >
                                                         <i className="fas fa-check m-r-sm"></i>
-                                                        {t("common:actions.validate")}
+                                                        {t(
+                                                            "common:actions.validate"
+                                                        )}
                                                     </button>
                                                 </div>
                                             </div>
@@ -1735,7 +1871,11 @@ class PaymentsManagement extends React.Component {
                         <div className="row">
                             <div className="col-lg-4 col-md-6 col-sm-12">
                                 <div className="form-group">
-                                    <label>{t("userPayments.management.seasonLabel")}</label>
+                                    <label>
+                                        {t(
+                                            "userPayments.management.seasonLabel"
+                                        )}
+                                    </label>
                                     <select
                                         className="form-control"
                                         onChange={this.handleChangeSeason.bind(
@@ -1743,7 +1883,7 @@ class PaymentsManagement extends React.Component {
                                         )}
                                         value={this.state.season}
                                     >
-                                        {this.props.seasons.map(s => (
+                                        {this.props.seasons.map((s) => (
                                             <option key={s.id} value={s.id}>
                                                 {s.label}
                                             </option>
@@ -1763,7 +1903,9 @@ class PaymentsManagement extends React.Component {
                                     locations={this.props.locations}
                                     season={this.state.season}
                                     seasons={this.props.seasons}
-                                    pricingCategories={this.props.pricingCategories}
+                                    pricingCategories={
+                                        this.props.pricingCategories
+                                    }
                                     data={itemsForPayment}
                                     coupons={this.props.coupons}
                                     totalDue={isNaN(totalDue) ? null : totalDue}
@@ -1772,14 +1914,57 @@ class PaymentsManagement extends React.Component {
                                     totalPaymentsToDay={totalPaymentsToDay}
                                     previsionalTotal={previsionalTotal}
                                     schedules={this.state.schedules}
-                                    handleChangePricingChoice={(desId, userId, evt) => this.handleChangePricingChoice(desId, userId, evt)}
-                                    handleChangePaymentMethod={(id, evt) => this.handleChangeActivityPaymentMethod(id, evt)}
-                                    handleSwitchLocation={(id, location) => this.handleSwitchLocation(id, location)}
-                                    handleChangePercentOffChoice={(discountable_id, discountable_type, couponId) => this.handleChangePercentOffChoice(discountable_id, discountable_type, couponId)}
+                                    handleChangePricingChoice={(
+                                        desId,
+                                        userId,
+                                        evt
+                                    ) =>
+                                        this.handleChangePricingChoice(
+                                            desId,
+                                            userId,
+                                            evt
+                                        )
+                                    }
+                                    handleChangePaymentMethod={(id, evt) =>
+                                        this.handleChangeActivityPaymentMethod(
+                                            id,
+                                            evt
+                                        )
+                                    }
+                                    handleSwitchLocation={(id, location) =>
+                                        this.handleSwitchLocation(id, location)
+                                    }
+                                    handleChangePercentOffChoice={(
+                                        discountable_id,
+                                        discountable_type,
+                                        couponId
+                                    ) =>
+                                        this.handleChangePercentOffChoice(
+                                            discountable_id,
+                                            discountable_type,
+                                            couponId
+                                        )
+                                    }
                                     adhesionPrices={this.props.adhesionPrices}
-                                    handleChangeAdhesionPricingChoice={(userId, evt) => this.handleChangeAdhesionPricingChoice(userId, evt)}
+                                    handleChangeAdhesionPricingChoice={(
+                                        userId,
+                                        evt
+                                    ) =>
+                                        this.handleChangeAdhesionPricingChoice(
+                                            userId,
+                                            evt
+                                        )
+                                    }
                                     formulas={this.props.formulas}
-                                    handleChangeProrataForDesiredActivity={(id, prorata) => this.handleChangeProrataForDesiredActivity(id, prorata)}
+                                    handleChangeProrataForDesiredActivity={(
+                                        id,
+                                        prorata
+                                    ) =>
+                                        this.handleChangeProrataForDesiredActivity(
+                                            id,
+                                            prorata
+                                        )
+                                    }
                                 />
                             </div>
                         </div>
@@ -1788,11 +1973,14 @@ class PaymentsManagement extends React.Component {
                                 <div className="col-lg-4 col-md-6">
                                     <div className="alert alert-warning">
                                         <h4>
-                                            {t("userPayments.management.creditNoteOn", { season: previousSeason.label })}
+                                            {t(
+                                                "userPayments.management.creditNoteOn",
+                                                { season: previousSeason.label }
+                                            )}
                                         </h4>
                                         <ul>
                                             {previousSeasonCreditNotes.map(
-                                                p => (
+                                                (p) => (
                                                     <li key={p.id}>
                                                         {_.get(
                                                             p,
@@ -1810,7 +1998,10 @@ class PaymentsManagement extends React.Component {
                                 <div className="col-lg-4 col-md-6">
                                     <div className="alert alert-warning">
                                         <h4>
-                                            {t("userPayments.management.nonZeroBalanceOn", { season: previousSeason.label })}
+                                            {t(
+                                                "userPayments.management.nonZeroBalanceOn",
+                                                { season: previousSeason.label }
+                                            )}
                                         </h4>
                                         <h3 className="no-margins">
                                             {previousSeasonBalance}€
@@ -1820,158 +2011,286 @@ class PaymentsManagement extends React.Component {
                             )}
                         </div>
 
-                        {this.state.payers.length == 0 ?
-                            t("userPayments.management.noScheduleForSeason")
-                            :
-                            _.map(this.state.payers, payer => {
-                                const previsionalTotal = _.chain(
-                                    this.state.duePayments[payer.id]
-                                )
-                                    .values()
-                                    .flatten()
-                                    .map(dp => dp.amount)
-                                    .reduce(
-                                        (sum, n) =>
-                                            (
-                                                parseFloat(sum) + parseFloat(n)
-                                            ).toFixed(2),
-                                        "0"
-                                    )
-                                    .value();
+                        {this.state.payers.length == 0
+                            ? t("userPayments.management.noScheduleForSeason")
+                            : _.map(this.state.payers, (payer) => {
+                                  const previsionalTotal = _.chain(
+                                      this.state.duePayments[payer.id]
+                                  )
+                                      .values()
+                                      .flatten()
+                                      .map((dp) => dp.amount)
+                                      .reduce(
+                                          (sum, n) =>
+                                              (
+                                                  parseFloat(sum) +
+                                                  parseFloat(n)
+                                              ).toFixed(2),
+                                          "0"
+                                      )
+                                      .value();
 
+                                  return (
+                                      <div className="row" key={payer.id}>
+                                          <SwitchPayerModal
+                                              payer={_.find(this.state.payers, {
+                                                  id: this.state
+                                                      .toSwitchPayerId,
+                                              })}
+                                              payers={this.state.payers}
+                                              isOpen={Boolean(
+                                                  this.state.toSwitchPayerId
+                                              )}
+                                              onRequestClose={() =>
+                                                  this.handleSetToSwitchPayerId(
+                                                      null
+                                                  )
+                                              }
+                                              onSubmit={(newPayerId) =>
+                                                  this.handleSwitchPayer(
+                                                      newPayerId
+                                                  )
+                                              }
+                                          />
+                                          <div className="col-lg-12 col-md-12 flex flex-center-aligned m-b-sm">
+                                              <h3 className="m-r-sm">
+                                                  {t(
+                                                      "userPayments.management.paymentsBy"
+                                                  )}{" "}
+                                                  <a
+                                                      href={`/${
+                                                          payer.class_name ==
+                                                          "User"
+                                                              ? "users"
+                                                              : "contacts"
+                                                      }/${payer.id}`}
+                                                  >
+                                                      {`${payer.first_name} ${payer.last_name}`}
+                                                  </a>
+                                                  {payer[
+                                                      "payer_paying_for_current_season?"
+                                                  ] ? (
+                                                      ""
+                                                  ) : (
+                                                      <span
+                                                          className="badge badge-danger m-l-sm"
+                                                          data-tippy-content={t(
+                                                              "userPayments.management.noLongerPayerTooltip"
+                                                          )}
+                                                      >
+                                                          {t(
+                                                              "userPayments.management.noLongerPayer"
+                                                          )}
+                                                      </span>
+                                                  )}
+                                              </h3>
+                                              {this.state.payers.length > 1 && (
+                                                  <button
+                                                      onClick={() =>
+                                                          this.handleSetToSwitchPayerId(
+                                                              payer.id
+                                                          )
+                                                      }
+                                                      data-tippy-content={t(
+                                                          "userPayments.management.changePayerTooltip"
+                                                      )}
+                                                      data-toggle="modal"
+                                                      data-target="#switch-payer-modal"
+                                                      className="btn btn-sm btn-outline btn-primary"
+                                                  >
+                                                      <i
+                                                          className="fas fa-exchange-alt"
+                                                          style={{
+                                                              marginRight: "0",
+                                                          }}
+                                                      ></i>
+                                                  </button>
+                                              )}
+                                          </div>
 
-                                return (
-                                    <div className="row" key={payer.id}>
-                                        <SwitchPayerModal
-                                            payer={_.find(this.state.payers, {
-                                                id: this.state.toSwitchPayerId,
-                                            })}
-                                            payers={this.state.payers}
-                                            isOpen={Boolean(
-                                                this.state.toSwitchPayerId
-                                            )}
-                                            onRequestClose={() =>
-                                                this.handleSetToSwitchPayerId(null)
-                                            }
-                                            onSubmit={newPayerId =>
-                                                this.handleSwitchPayer(newPayerId)
-                                            }
-                                        />
-                                        <div className="col-lg-12 col-md-12 flex flex-center-aligned m-b-sm">
-                                            <h3 className="m-r-sm">
-                                                {t("userPayments.management.paymentsBy")}{" "}
-                                                <a
-                                                    href={`/${payer.class_name == "User"
-                                                        ? "users"
-                                                        : "contacts"
-                                                    }/${payer.id}`}
-                                                >
-                                                    {`${payer.first_name} ${payer.last_name}`}
-                                                </a>
+                                          {payer.payment_terms_summary && (
+                                              <Fragment>
+                                                  <div className="col-lg-12 col-md-6 d-flex justify-content-between m-b-sm">
+                                                      <div className="alert alert-info w-100">
+                                                          {t(
+                                                              "userPayments.management.desiredPaymentTerms",
+                                                              {
+                                                                  summary:
+                                                                      payer.payment_terms_summary,
+                                                              }
+                                                          )}
+                                                      </div>
+                                                  </div>
+                                              </Fragment>
+                                          )}
 
-                                                {payer["payer_paying_for_current_season?"] ? "" : <span
-                                                    className="badge badge-danger m-l-sm"
-                                                    data-tippy-content={t("userPayments.management.noLongerPayerTooltip")}
-                                                    >
-                                                        {t("userPayments.management.noLongerPayer")}
-                                                </span>}
-                                            </h3>
-                                            {this.state.payers.length > 1 &&
-                                                <button
-                                                    onClick={() =>
-                                                        this.handleSetToSwitchPayerId(
-                                                            payer.id
-                                                        )
-                                                    }
-                                                    data-tippy-content={t("userPayments.management.changePayerTooltip")}
-                                                    data-toggle="modal"
-                                                    data-target="#switch-payer-modal"
-                                                    className="btn btn-sm btn-outline btn-primary"
-                                                >
-                                                    <i
-                                                        className="fas fa-exchange-alt"
-                                                        style={{marginRight: "0"}}
-                                                    ></i>
-                                                </button>
-                                            }
-                                        </div>
+                                          {this.state.payments[payer.id] &&
+                                              this.state.payments[payer.id]
+                                                  .length > 0 && (
+                                                  <Fragment>
+                                                      <div className="col-lg-12 col-md-12 d-flex justify-content-between m-b-sm">
+                                                          <button
+                                                              type="button"
+                                                              className="btn btn-primary btn-xs"
+                                                              onClick={() =>
+                                                                  window.open(
+                                                                      `/payments/summary/${this.props.user.id}.pdf?season_id=${this.state.season}&payer_id=${payer.id}`
+                                                                  )
+                                                              }
+                                                          >
+                                                              <i className="fas fa-print text-primary mr-1" />
+                                                              {t(
+                                                                  "userPayments.management.printPaymentCertificate"
+                                                              )}
+                                                          </button>
 
-                                        {payer.payment_terms_summary &&
-                                            <Fragment>
-                                                <div className="col-lg-12 col-md-6 d-flex justify-content-between m-b-sm">
-                                                    <div className="alert alert-info w-100">
-                                                        {t("userPayments.management.desiredPaymentTerms", { summary: payer.payment_terms_summary })}
-                                                    </div>
-                                                </div>
-                                            </Fragment>
-                                        }
+                                                          <button
+                                                              type="button"
+                                                              className="btn btn-primary btn-xs"
+                                                              onClick={() =>
+                                                                  window.open(
+                                                                      `/payment_schedule/${this.state.schedules[payer.id] && this.state.schedules[payer.id].id}.pdf`
+                                                                  )
+                                                              }
+                                                          >
+                                                              <i className="fas fa-print text-primary mr-1" />
+                                                              {t(
+                                                                  "userPayments.management.printSchedule"
+                                                              )}
+                                                          </button>
+                                                      </div>
 
+                                                      <div className="col-lg-12 col-md-12 print-none">
+                                                          &nbsp;
+                                                      </div>
+                                                  </Fragment>
+                                              )}
 
-                                        {this.state.payments[payer.id] && this.state.payments[payer.id].length > 0 &&
-                                            <Fragment>
-                                                <div
-                                                    className="col-lg-12 col-md-12 d-flex justify-content-between m-b-sm">
-                                                    <button
-                                                        type="button"
-                                                        className="btn btn-primary btn-xs"
-                                                        onClick={() => window.open(`/payments/summary/${this.props.user.id}.pdf?season_id=${this.state.season}&payer_id=${payer.id}`)}>
-                                                        <i className="fas fa-print text-primary mr-1"/>
-                                                        {t("userPayments.management.printPaymentCertificate")}
-                                                    </button>
-
-                                                    <button
-                                                        type="button"
-                                                        className="btn btn-primary btn-xs"
-                                                        onClick={() => window.open(`/payment_schedule/${(this.state.schedules[payer.id] && this.state.schedules[payer.id].id)}.pdf`)}>
-                                                        <i className="fas fa-print text-primary mr-1"/>
-                                                        {t("userPayments.management.printSchedule")}
-                                                    </button>
-                                                </div>
-
-                                                <div className="col-lg-12 col-md-12 print-none">
-                                                    &nbsp;
-                                                </div>
-                                            </Fragment>
-                                        }
-
-                                        <div className="col-lg-6 col-md-6 m-b-lg print-none">
-                                            <DuePaymentsList
-                                                key={payer.id}
-                                                adhesionEnabled={this.props.adhesionEnabled}
-                                                data={this.state.duePayments[payer.id] || []}
-                                                payer={payer}
-                                                scheduleId={(this.state.schedules[payer.id] && this.state.schedules[payer.id].id) || null}
-                                                payersNumber={this.state.payers.length}
-                                                paymentMethods={this.props.paymentMethods}
-                                                statuses={this.props.duePaymentStatuses}
-                                                itemsForPayment={itemsForPayment}
-                                                handleCreatePaymentSchedule={ps => this.handleCreatePaymentSchedule(ps)}
-                                                handleCreatePayments={this.handleCreatePayments.bind(this)}
-                                                handleSaveNewDuePayment={dp => this.handleSaveNewDuePayment(dp)}
-                                                handleSaveDuePayment={(p, payerId) => this.handleSaveDuePayment(p, payerId)}
-                                                handleDeleteDuePayment={(id, payerId) => this.handleDeleteDuePayment(id, payerId)}
-                                                handleBulkDelete={this.handleBulkDeleteDuePayments.bind(this)}
-                                                handleBulkEditCommit={this.handleBulkEditDuePayments.bind(this)}
-                                                seasonId={this.state.season}
-                                            />{" "}
-                                        </div>
-                                        <div className="col-lg-6 col-md-6 m-b-lg print-none">
-                                            <PaymentsList
-                                                payer={payer}
-                                                payments={this.state.payments[payer.id]}
-                                                paymentMethods={this.props.paymentMethods}
-                                                duePayments={this.state.duePayments[payer.id]}
-                                                statuses={this.props.paymentStatuses}
-                                                handleCreateNewPayment={p => this.handleCreateNewPayment(p)}
-                                                handleDeletePayment={(id, payerId) => this.handleDeletePayment(id, payerId)}
-                                                handleBulkDelete={this.handleBulkDeletePayments.bind(this)}
-                                                handleBulkEditPayments={this.handleBulkEditPayments.bind(this)}
-                                                handlePromptStatusEdit={this.handlePromptPaymentStatusEdit.bind(this)}
-                                            />
-                                        </div>
-                                    </div>
-                                );
-                            })}
+                                          <div className="col-lg-6 col-md-6 m-b-lg print-none">
+                                              <DuePaymentsList
+                                                  key={payer.id}
+                                                  adhesionEnabled={
+                                                      this.props.adhesionEnabled
+                                                  }
+                                                  data={
+                                                      this.state.duePayments[
+                                                          payer.id
+                                                      ] || []
+                                                  }
+                                                  payer={payer}
+                                                  scheduleId={
+                                                      (this.state.schedules[
+                                                          payer.id
+                                                      ] &&
+                                                          this.state.schedules[
+                                                              payer.id
+                                                          ].id) ||
+                                                      null
+                                                  }
+                                                  payersNumber={
+                                                      this.state.payers.length
+                                                  }
+                                                  paymentMethods={
+                                                      this.props.paymentMethods
+                                                  }
+                                                  statuses={
+                                                      this.props
+                                                          .duePaymentStatuses
+                                                  }
+                                                  itemsForPayment={
+                                                      itemsForPayment
+                                                  }
+                                                  handleCreatePaymentSchedule={(
+                                                      ps
+                                                  ) =>
+                                                      this.handleCreatePaymentSchedule(
+                                                          ps
+                                                      )
+                                                  }
+                                                  handleCreatePayments={this.handleCreatePayments.bind(
+                                                      this
+                                                  )}
+                                                  handleSaveNewDuePayment={(
+                                                      dp
+                                                  ) =>
+                                                      this.handleSaveNewDuePayment(
+                                                          dp
+                                                      )
+                                                  }
+                                                  handleSaveDuePayment={(
+                                                      p,
+                                                      payerId
+                                                  ) =>
+                                                      this.handleSaveDuePayment(
+                                                          p,
+                                                          payerId
+                                                      )
+                                                  }
+                                                  handleDeleteDuePayment={(
+                                                      id,
+                                                      payerId
+                                                  ) =>
+                                                      this.handleDeleteDuePayment(
+                                                          id,
+                                                          payerId
+                                                      )
+                                                  }
+                                                  handleBulkDelete={this.handleBulkDeleteDuePayments.bind(
+                                                      this
+                                                  )}
+                                                  handleBulkEditCommit={this.handleBulkEditDuePayments.bind(
+                                                      this
+                                                  )}
+                                                  seasonId={this.state.season}
+                                              />{" "}
+                                          </div>
+                                          <div className="col-lg-6 col-md-6 m-b-lg print-none">
+                                              <PaymentsList
+                                                  payer={payer}
+                                                  payments={
+                                                      this.state.payments[
+                                                          payer.id
+                                                      ]
+                                                  }
+                                                  paymentMethods={
+                                                      this.props.paymentMethods
+                                                  }
+                                                  duePayments={
+                                                      this.state.duePayments[
+                                                          payer.id
+                                                      ]
+                                                  }
+                                                  statuses={
+                                                      this.props.paymentStatuses
+                                                  }
+                                                  handleCreateNewPayment={(p) =>
+                                                      this.handleCreateNewPayment(
+                                                          p
+                                                      )
+                                                  }
+                                                  handleDeletePayment={(
+                                                      id,
+                                                      payerId
+                                                  ) =>
+                                                      this.handleDeletePayment(
+                                                          id,
+                                                          payerId
+                                                      )
+                                                  }
+                                                  handleBulkDelete={this.handleBulkDeletePayments.bind(
+                                                      this
+                                                  )}
+                                                  handleBulkEditPayments={this.handleBulkEditPayments.bind(
+                                                      this
+                                                  )}
+                                                  handlePromptStatusEdit={this.handlePromptPaymentStatusEdit.bind(
+                                                      this
+                                                  )}
+                                              />
+                                          </div>
+                                      </div>
+                                  );
+                              })}
 
                         <div className="row print-none">
                             <div className="col-lg-8 col-md-8">
@@ -1982,19 +2301,19 @@ class PaymentsManagement extends React.Component {
                                     contextId={this.state.contextId}
                                     newComment={this.state.newComment}
                                     editedComment={this.state.editedComment}
-                                    handleUpdateNewCommentContent={e =>
+                                    handleUpdateNewCommentContent={(e) =>
                                         this.handleUpdateNewCommentContent(e)
                                     }
                                     handleSaveComment={() =>
                                         this.handleSaveComment()
                                     }
-                                    handleUpdateEditedCommentContent={e =>
+                                    handleUpdateEditedCommentContent={(e) =>
                                         this.handleUpdateEditedCommentContent(e)
                                     }
                                     handleSaveCommentEdition={() =>
                                         this.handleSaveCommentEdition()
                                     }
-                                    handleCommentEdition={id =>
+                                    handleCommentEdition={(id) =>
                                         this.handleCommentEdition(id)
                                     }
                                 />

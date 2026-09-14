@@ -21,9 +21,9 @@ export default function Roles({ user, lessonsPlanned, onSubmit }) {
     function removeLessons() {
         api.set()
             .success(() => {
-                swal({
+                swal.fire({
                     title: t("users:roles.successTitle"),
-                    type: "success",
+                    icon: "success",
                     text: t("users:roles.lessonsDeleted"),
                     width: "400px",
                     confirmButtonText: t("users:roles.ok"),
@@ -31,10 +31,10 @@ export default function Roles({ user, lessonsPlanned, onSubmit }) {
                     setIsTeacher(false);
                 });
             })
-            .error(errorMsg => {
+            .error((errorMsg) => {
                 console.error("error deleting activity instances : ", errorMsg);
-                swal({
-                    type: "error",
+                swal.fire({
+                    icon: "error",
                     title: t("users:roles.errorTitle"),
                 });
             })
@@ -58,7 +58,7 @@ export default function Roles({ user, lessonsPlanned, onSubmit }) {
     function getActivitiesList() {
         return api
             .set()
-            .success(activities => {
+            .success((activities) => {
                 let res = "";
                 const htmlText =
                     t("users:roles.coursesListIntro", { n: lessonsPlanned }) +
@@ -69,18 +69,18 @@ export default function Roles({ user, lessonsPlanned, onSubmit }) {
                         res
                     );
 
-                swal({
+                swal.fire({
                     title: t("users:roles.coursesToReplace"),
-                    type: "success",
+                    icon: "success",
                     html: htmlText,
                     confirmButtonText: t("users:roles.ok"),
                     width: 600,
                 });
             })
-            .error(errorMsg => {
+            .error((errorMsg) => {
                 console.error("error fetching lessons : ", errorMsg);
-                swal({
-                    type: "error",
+                swal.fire({
+                    icon: "error",
                     title: t("users:roles.errorTitle"),
                 });
             })
@@ -90,7 +90,7 @@ export default function Roles({ user, lessonsPlanned, onSubmit }) {
     function onChangeIsTeacher(isTeacher) {
         // dans le cas où on cherche à désactiver le rôle professeur, on doit prendre quelques précautions
         if (isTeacher && lessonsPlanned > 0) {
-            swal({
+            swal.fire({
                 title: t("common:confirm.sure"),
                 html: t("users:roles.hasUpcomingLessons", {
                     n: lessonsPlanned,
@@ -98,7 +98,7 @@ export default function Roles({ user, lessonsPlanned, onSubmit }) {
                 confirmButtonText: t("users:roles.deleteThem"),
                 cancelButtonText: t("users:roles.cancelAndView"),
                 showCancelButton: true,
-            }).then(res => {
+            }).then((res) => {
                 if (res.value) {
                     removeLessons();
                 } else {

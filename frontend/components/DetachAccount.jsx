@@ -16,7 +16,7 @@ export default function DetachAccount({ user, user_id, reload_data }) {
     useEffect(() => {
         if (!user) {
             api.set()
-                .success(u => setUserToDetach(u))
+                .success((u) => setUserToDetach(u))
                 .error(() => setUserToDetach(null))
                 .get(`/users/${user_id}/infos`);
         }
@@ -40,16 +40,16 @@ export default function DetachAccount({ user, user_id, reload_data }) {
 
         api.set()
             .success(() => {
-                swal({
-                    type: "success",
+                swal.fire({
+                    icon: "success",
                     text: t("users:detachAccount.success"),
                 }).then(() => reload_data());
             })
-            .error(err => {
-                swal({
+            .error((err) => {
+                swal.fire({
                     title: t("users:detachAccount.errorTitle"),
                     text: err.message || t("users:detachAccount.genericError"),
-                    type: "error",
+                    icon: "error",
                 });
             })
             .del(`/users/${userToDetach.id}/detach`, sendData, {});

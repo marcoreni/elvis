@@ -1,10 +1,10 @@
 import React, { useEffect } from "react";
 import * as api from "../../../tools/api";
 import swal from "sweetalert2";
-import {useTranslation} from "react-i18next";
+import { useTranslation } from "react-i18next";
 
 export default function PlanningDisplayParameters() {
-    const {t} = useTranslation("parameters");
+    const { t } = useTranslation("parameters");
     const [showActivityCode, setShowActivityCode] = React.useState(false);
     const [recurrenceActivated, setRecurrenceActivated] = React.useState(false);
     const [availabilityMessage, setAvailabilityMessage] = React.useState("");
@@ -17,9 +17,9 @@ export default function PlanningDisplayParameters() {
                 setAvailabilityMessage(data.availability_message || "");
             })
             .error(() => {
-                swal({
+                swal.fire({
                     title: t("shared.loadParamsError"),
-                    type: "error",
+                    icon: "error",
                 });
             })
             .get("/parameters/planning/school_planning_params", {});
@@ -28,21 +28,21 @@ export default function PlanningDisplayParameters() {
     const onSubmit = (e) => {
         api.set()
             .success(() => {
-                swal({
+                swal.fire({
                     title: t("plannings.displayParams.saveSuccess"),
-                    type: "success",
+                    icon: "success",
                 });
             })
             .error(() => {
-                swal({
+                swal.fire({
                     title: t("plannings.displayParams.saveError"),
-                    type: "error",
+                    icon: "error",
                 });
             })
             .post("/parameters/planning/school_planning_params", {
                 show_activity_code: showActivityCode,
                 recurrence_activated: recurrenceActivated,
-                availability_message: availabilityMessage
+                availability_message: availabilityMessage,
             });
     };
 
@@ -58,7 +58,10 @@ export default function PlanningDisplayParameters() {
                         checked={showActivityCode}
                         onChange={() => setShowActivityCode(!showActivityCode)}
                     />
-                    <label htmlFor="show_activity_code" className="ml-2 font-normal">
+                    <label
+                        htmlFor="show_activity_code"
+                        className="ml-2 font-normal"
+                    >
                         {t("plannings.displayParams.showActivityCodeLabel")}
                     </label>
                 </div>
@@ -68,15 +71,23 @@ export default function PlanningDisplayParameters() {
                         id="recurrence_activated"
                         type="checkbox"
                         checked={recurrenceActivated}
-                        onChange={() => setRecurrenceActivated(!recurrenceActivated)}
+                        onChange={() =>
+                            setRecurrenceActivated(!recurrenceActivated)
+                        }
                     />
-                    <label htmlFor="recurrence_activated" className="ml-2 font-normal">
+                    <label
+                        htmlFor="recurrence_activated"
+                        className="ml-2 font-normal"
+                    >
                         {t("plannings.displayParams.recurrenceLabel")}
                     </label>
                 </div>
 
                 <div className="form-group mb-3">
-                    <label htmlFor="availability_message" className="font-normal">
+                    <label
+                        htmlFor="availability_message"
+                        className="font-normal"
+                    >
                         {t("plannings.displayParams.availabilityMessageLabel")}
                     </label>
                     <input
@@ -88,7 +99,10 @@ export default function PlanningDisplayParameters() {
                     />
                 </div>
 
-                <button className="btn btn-success pull-right mt-5" onClick={onSubmit}>
+                <button
+                    className="btn btn-success pull-right mt-5"
+                    onClick={onSubmit}
+                >
                     {t("common:actions.validate")}
                 </button>
             </div>

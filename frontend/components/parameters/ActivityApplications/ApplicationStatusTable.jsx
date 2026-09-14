@@ -4,7 +4,7 @@ import { makeDebounce } from "../../../tools/inputs";
 import moment from "moment";
 import ReactTable from "react-table";
 import swal from "sweetalert2";
-import {withTranslation} from "react-i18next";
+import { withTranslation } from "react-i18next";
 
 const requestData = (pageSize, page, sorted, filtered, format) => {
     return fetch(
@@ -63,15 +63,15 @@ class ApplicationStatusTable extends Component {
                 state.sorted,
                 state.filtered
             )
-                .then(response => response.json())
-                .then(data => {
+                .then((response) => response.json())
+                .then((data) => {
                     return {
                         data: data.status,
                         pages: data.pages,
                         total: data.total,
                     };
                 })
-                .then(res => {
+                .then((res) => {
                     this.setState({
                         ...res,
                         loading: false,
@@ -81,7 +81,7 @@ class ApplicationStatusTable extends Component {
     }
 
     render() {
-        const {t} = this.props;
+        const { t } = this.props;
         const { data, pages, loading } = this.state;
 
         const columns = [
@@ -93,29 +93,39 @@ class ApplicationStatusTable extends Component {
             {
                 id: "label",
                 Header: t("shared.colLabel"),
-                accessor: d => d.label,
+                accessor: (d) => d.label,
             },
             {
                 id: "is_stopping",
                 Header: t("activityApplications.statusTable.colStopping"),
-                accessor: d => d.is_stopping,
-                Cell: props => (
-                    <p>{props.original.is_stopping ? t("shared.yes") : t("shared.no")}</p>
+                accessor: (d) => d.is_stopping,
+                Cell: (props) => (
+                    <p>
+                        {props.original.is_stopping
+                            ? t("shared.yes")
+                            : t("shared.no")}
+                    </p>
                 ),
             },
             {
                 id: "is_active",
                 Header: t("activityApplications.statusTable.colActive"),
-                accessor: d => d.is_active,
-                Cell: props => (
-                    <p>{props.original.is_active ? t("shared.yes") : t("shared.no")}</p>
+                accessor: (d) => d.is_active,
+                Cell: (props) => (
+                    <p>
+                        {props.original.is_active
+                            ? t("shared.yes")
+                            : t("shared.no")}
+                    </p>
                 ),
             },
             {
                 id: "actions",
                 Header: t("shared.actions"),
-                Cell: props => {
-                    return props.original.built_in ? "" :
+                Cell: (props) => {
+                    return props.original.built_in ? (
+                        ""
+                    ) : (
                         <div className="btn-wrapper">
                             <a
                                 className="btn-sm btn-primary m-r-sm"
@@ -137,6 +147,7 @@ class ApplicationStatusTable extends Component {
                                 <i className="fas fa-trash" />
                             </a>
                         </div>
+                    );
                 },
                 sortable: false,
                 filterable: false,
@@ -176,14 +187,14 @@ class ApplicationStatusTable extends Component {
     }
 
     deleteStatus(status) {
-        const {t} = this.props;
-        swal({
-            title: t("shared.deleteStatusConfirm", {name: status.label}),
-            type: "warning",
+        const { t } = this.props;
+        swal.fire({
+            title: t("shared.deleteStatusConfirm", { name: status.label }),
+            icon: "warning",
             showCancelButton: true,
             cancelButtonText: t("shared.deleteConfirmNo"),
             confirmButtonText: t("shared.deleteConfirmYes"),
-        }).then(res => {
+        }).then((res) => {
             if (res.value) {
                 fetch(`/activity_application_statuses/${status.id}`, {
                     method: "DELETE",
@@ -193,14 +204,14 @@ class ApplicationStatusTable extends Component {
                         "Content-Type": "application/json",
                         Accept: "application/json",
                     },
-                }).then(result => {
+                }).then((result) => {
                     if (result.status === 200) {
                         this.fetchData(this.state.tableState);
                     } else {
-                        result.text().then(text => {
-                            swal({
+                        result.text().then((text) => {
+                            swal.fire({
                                 title: t("shared.errorTitle"),
-                                type: "error",
+                                icon: "error",
                                 text: text,
                             });
                         });

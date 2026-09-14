@@ -65,7 +65,14 @@ class DuePaymentsList extends React.Component {
         const newDuePayment = { ...this.state.newDuePayment };
         newDuePayment.isAdhesionDue = !newDuePayment.isAdhesionDue;
 
-        newDuePayment.amount = _.round(this.props.adhesionEnabled ? this.props.itemsForPayment.filter(item => item.adhesionPriceId).reduce((acc, i) => acc + i.discountedTotal, 0) : 0, 2);
+        newDuePayment.amount = _.round(
+            this.props.adhesionEnabled
+                ? this.props.itemsForPayment
+                      .filter((item) => item.adhesionPriceId)
+                      .reduce((acc, i) => acc + i.discountedTotal, 0)
+                : 0,
+            2
+        );
         this.setState({
             newDuePayment,
         });
@@ -183,18 +190,22 @@ class DuePaymentsList extends React.Component {
 
     //Conditions: a starting date, a number of dues and valid special dues (each one has both fields filled)
     canGenerateDuePayments(numberOfDuePayments, startingDate, specialDues) {
-        const areSpecialDuesOK = _.reduce(specialDues, (acc, d) => acc && d.count && d.amount, true);
+        const areSpecialDuesOK = _.reduce(
+            specialDues,
+            (acc, d) => acc && d.count && d.amount,
+            true
+        );
         return numberOfDuePayments > 0 && startingDate && areSpecialDuesOK;
     }
 
     generateDuePayments({
-                            startingDate,
-                            n,
-                            payment_method_id = null,
-                            specialDues = {},
-                            adhesionNewDuePayment = false,
-                            isolateAdhesion = false,
-                        }) {
+        startingDate,
+        n,
+        payment_method_id = null,
+        specialDues = {},
+        adhesionNewDuePayment = false,
+        isolateAdhesion = false,
+    }) {
         if (!this.canGenerateDuePayments(n, startingDate, specialDues))
             return this.state.generatedDuePayments;
 
@@ -204,12 +215,12 @@ class DuePaymentsList extends React.Component {
             if (number == 3) {
                 dates = _.chain(0)
                     .range(parseInt(number, 10))
-                    .map(inc => moment(startingDate).add(inc * 3, "month"))
+                    .map((inc) => moment(startingDate).add(inc * 3, "month"))
                     .value();
             } else {
                 dates = _.chain(0)
                     .range(parseInt(number, 10))
-                    .map(n => moment(startingDate).add(n, "month"))
+                    .map((n) => moment(startingDate).add(n, "month"))
                     .value();
             }
         }
@@ -217,13 +228,17 @@ class DuePaymentsList extends React.Component {
         const starting_number =
             this.props.data.length > 0
                 ? _.chain(this.props.data)
-                    .map(d => d.number)
-                    .max()
-                    .value()
+                      .map((d) => d.number)
+                      .max()
+                      .value()
                 : 0;
 
         let results = [];
-        let adhesionPrice = this.props.adhesionEnabled ? this.props.itemsForPayment.filter(item => item.adhesionPriceId).reduce((acc, i) => acc + i.discountedTotal, 0) : 0;
+        let adhesionPrice = this.props.adhesionEnabled
+            ? this.props.itemsForPayment
+                  .filter((item) => item.adhesionPriceId)
+                  .reduce((acc, i) => acc + i.discountedTotal, 0)
+            : 0;
 
         adhesionPrice = _.round(adhesionPrice, 2);
 
@@ -237,11 +252,21 @@ class DuePaymentsList extends React.Component {
             });
         }
 
-        const totalLeft = this.props.itemsForPayment
-            // On ne garde l'adhésion que dans le cas où
-            // l'on veut créer une adh isolée
-            .filter(item => adhesionNewDuePayment && isolateAdhesion || item.adhesionPriceId == null)
-            .reduce((acc, i) => acc + i.discountedTotal, 0) - _.reduce(specialDues, (acc, due) => acc + due.count * due.amount, 0);
+        const totalLeft =
+            this.props.itemsForPayment
+                // On ne garde l'adhésion que dans le cas où
+                // l'on veut créer une adh isolée
+                .filter(
+                    (item) =>
+                        (adhesionNewDuePayment && isolateAdhesion) ||
+                        item.adhesionPriceId == null
+                )
+                .reduce((acc, i) => acc + i.discountedTotal, 0) -
+            _.reduce(
+                specialDues,
+                (acc, due) => acc + due.count * due.amount,
+                0
+            );
 
         // Répartir l'adhesionPrice sur toutes les échéances si dates.length et adhesionPrice > 0
         let distributedAdhesionPrice = 0;
@@ -250,7 +275,7 @@ class DuePaymentsList extends React.Component {
         }
 
         const duePayments = _.map(dates, (date, i) => {
-            let amount = (totalLeft / number);
+            let amount = totalLeft / number;
 
             if (i == 0 && adhesionNewDuePayment && isolateAdhesion)
                 amount -= adhesionPrice;
@@ -296,7 +321,7 @@ class DuePaymentsList extends React.Component {
     }
 
     handleSelectDuePaymentToEdit(id) {
-        const duePayment = _.find(this.props.data, d => d.id == id);
+        const duePayment = _.find(this.props.data, (d) => d.id == id);
         this.setState({
             duePaymentToEdit: {
                 ...duePayment,
@@ -363,7 +388,8 @@ class DuePaymentsList extends React.Component {
             value = parseInt(value, 10);
         }
         this.setState({
-            numberOfDuePayments: value, generatedDuePayments: this.generateDuePayments({
+            numberOfDuePayments: value,
+            generatedDuePayments: this.generateDuePayments({
                 startingDate: this.state.startingDate,
                 n: value,
                 payment_method_id: this.state.payment_method_id,
@@ -377,7 +403,7 @@ class DuePaymentsList extends React.Component {
     handleSaveDuePayment() {
         this.props.handleSaveDuePayment(
             this.state.duePaymentToEdit,
-            this.props.payer.id,
+            this.props.payer.id
         );
         this.setState({
             ...this.state,
@@ -391,7 +417,7 @@ class DuePaymentsList extends React.Component {
 
     handleAllRowsSelected(e) {
         const selectedRows = e.target.checked
-            ? this.props.data.map(dP => dP.id)
+            ? this.props.data.map((dP) => dP.id)
             : [];
         this.setState({ selectedRows });
     }
@@ -430,7 +456,7 @@ class DuePaymentsList extends React.Component {
         this.props.handleBulkEditCommit(
             this.props.payer.id,
             this.state.selectedRows,
-            this.state.bulkEdit,
+            this.state.bulkEdit
         );
     }
 
@@ -438,18 +464,22 @@ class DuePaymentsList extends React.Component {
         const { t } = this.props;
 
         if (this.state.selectedRows.length > 0)
-            swal({
+            swal.fire({
                 title: t("userPayments.paymentsList.bulkDeleteTitle"),
-                text: t("userPayments.paymentsList.bulkDeleteText", { n: this.state.selectedRows.length }),
-                type: "warning",
-                confirmButtonText: t("userPayments.paymentsList.bulkDeleteConfirm"),
+                text: t("userPayments.paymentsList.bulkDeleteText", {
+                    n: this.state.selectedRows.length,
+                }),
+                icon: "warning",
+                confirmButtonText: t(
+                    "userPayments.paymentsList.bulkDeleteConfirm"
+                ),
                 showCancelButton: true,
                 cancelButtonText: t("common:actions.cancel"),
-            }).then(v => {
+            }).then((v) => {
                 if (v.value) {
                     this.props.handleBulkDelete(
                         this.props.payer.id,
-                        this.state.selectedRows,
+                        this.state.selectedRows
                     );
                 }
             });
@@ -459,7 +489,7 @@ class DuePaymentsList extends React.Component {
         if (cell.value) {
             let status = _.find(
                 this.props.statuses,
-                status => status.id == cell.value,
+                (status) => status.id == cell.value
             );
 
             return status ? (
@@ -470,7 +500,7 @@ class DuePaymentsList extends React.Component {
                         background: status.color,
                         color: "white",
                     }}
-                    onClick={e =>
+                    onClick={(e) =>
                         this.promptStatusEdit(cell.original.id, status.id)
                     }
                 >
@@ -484,46 +514,51 @@ class DuePaymentsList extends React.Component {
     render() {
         const { t } = this.props;
         const selectedRows = this.state.selectedRows;
-        const headSelectorColumn =
-            [{
+        const headSelectorColumn = [
+            {
                 Header: () => (
                     <input
                         type="checkbox"
-                        checked={this.state.selectedRows.length && this.state.selectedRows.length === this.props.data.length}
-                        onChange={e => this.handleAllRowsSelected(e)}
+                        checked={
+                            this.state.selectedRows.length &&
+                            this.state.selectedRows.length ===
+                                this.props.data.length
+                        }
+                        onChange={(e) => this.handleAllRowsSelected(e)}
                     />
                 ),
                 sortable: false,
-                Cell: d => (
+                Cell: (d) => (
                     <input
                         type="checkbox"
                         value={d.original.id}
                         checked={selectedRows.includes(d.original.id)}
-                        onChange={e => this.handleRowSelected(e)}
+                        onChange={(e) => this.handleRowSelected(e)}
                     />
                 ),
                 width: 25,
                 className: "flex flex-center-justified",
-            }];
+            },
+        ];
         let columns = [
             {
                 Header: t("userPayments.duePaymentsList.columns.number"),
                 id: "number",
                 maxWidth: 30,
-                accessor: d => d.number,
+                accessor: (d) => d.number,
             },
             {
                 Header: t("userPayments.duePaymentsList.columns.status"),
                 id: "payment_status_id",
                 maxWidth: 75,
                 className: "flex flex-center-justified",
-                accessor: d => d.due_payment_status_id,
-                Cell: c => this.renderStatus(c),
+                accessor: (d) => d.due_payment_status_id,
+                Cell: (c) => this.renderStatus(c),
             },
             {
                 Header: t("userPayments.duePaymentsList.columns.date"),
                 id: "date",
-                accessor: d =>
+                accessor: (d) =>
                     d.previsional_date != null
                         ? moment(d.previsional_date).format("DD-MM-YYYY")
                         : null,
@@ -531,10 +566,10 @@ class DuePaymentsList extends React.Component {
             {
                 Header: t("userPayments.duePaymentsList.columns.method"),
                 id: "payment_method",
-                accessor: d => {
+                accessor: (d) => {
                     const pm = _.find(
                         this.props.paymentMethods,
-                        pm => pm.id == d.payment_method_id,
+                        (pm) => pm.id == d.payment_method_id
                     );
                     return pm ? pm.label : null;
                 },
@@ -547,7 +582,7 @@ class DuePaymentsList extends React.Component {
                     display: "block",
                     textAlign: "right",
                 },
-                accessor: d => `(${d.operation}) ${d.amount} €`,
+                accessor: (d) => `(${d.operation}) ${d.amount} €`,
             },
             {
                 Header: t("userPayments.duePaymentsList.columns.actions"),
@@ -557,22 +592,23 @@ class DuePaymentsList extends React.Component {
                     display: "block",
                     textAlign: "right",
                 },
-                Cell: props => {
-
+                Cell: (props) => {
                     return (
                         <div className="flex flex-center-justified">
-                            {this.props.isStudentView ?
-                                "" :
+                            {this.props.isStudentView ? (
+                                ""
+                            ) : (
                                 <Fragment>
                                     <button
                                         className="btn btn-primary btn-xs m-r-sm"
                                         data-toggle="modal"
-                                        data-target={`#due-payments-modal-edit-${this.props.payer.id
+                                        data-target={`#due-payments-modal-edit-${
+                                            this.props.payer.id
                                         }`}
                                         key="edit"
-                                        onClick={id =>
+                                        onClick={(id) =>
                                             this.handleSelectDuePaymentToEdit(
-                                                props.original.id,
+                                                props.original.id
                                             )
                                         }
                                     >
@@ -581,31 +617,37 @@ class DuePaymentsList extends React.Component {
                                     <button
                                         className="btn btn-xs btn-warning m-r-sm"
                                         key="delete"
-                                        onClick={id =>
+                                        onClick={(id) =>
                                             this.props.handleDeleteDuePayment(
                                                 props.original.id,
-                                                this.props.payer.id,
+                                                this.props.payer.id
                                             )
                                         }
                                     >
                                         <i className="fas fa-trash" />
                                     </button>
                                 </Fragment>
-                            }
+                            )}
 
                             {(this.props.extraButtons || []).map((button) => {
-                                if (button.shouldDisplay != undefined && button.shouldDisplay(props.original.id))
+                                if (
+                                    button.shouldDisplay != undefined &&
+                                    button.shouldDisplay(props.original.id)
+                                )
                                     return (
                                         <button
                                             className={button.class}
                                             key={button.key}
-                                            onClick={() => button.onClick(props.original.id)}
+                                            onClick={() =>
+                                                button.onClick(
+                                                    props.original.id
+                                                )
+                                            }
                                         >
                                             <i className={button.icon} />
                                         </button>
                                     );
-                                else
-                                    return "";
+                                else return "";
                             })}
                         </div>
                     );
@@ -620,8 +662,9 @@ class DuePaymentsList extends React.Component {
             <div className="ibox m-b-md">
                 <div className="ibox-title">
                     <h5>{t("userPayments.duePaymentsList.heading")} </h5>
-                    {this.props.isStudentView ?
-                        "" :
+                    {this.props.isStudentView ? (
+                        ""
+                    ) : (
                         <div className="ibox-tools">
                             <button
                                 className="btn btn-primary btn-xs dropdown-toggle"
@@ -631,7 +674,10 @@ class DuePaymentsList extends React.Component {
                                 aria-haspopup="true"
                                 aria-expanded="true"
                             >
-                                {t("userPayments.duePaymentsList.actionsDropdown")} <span className="caret" />
+                                {t(
+                                    "userPayments.duePaymentsList.actionsDropdown"
+                                )}{" "}
+                                <span className="caret" />
                             </button>
                             <ul
                                 className="dropdown-menu"
@@ -641,36 +687,45 @@ class DuePaymentsList extends React.Component {
                                     <a
                                         href="#"
                                         data-toggle="modal"
-                                        data-target={`#due-payments-modal-${this.props.payer.id
+                                        data-target={`#due-payments-modal-${
+                                            this.props.payer.id
                                         }`}
                                     >
                                         <i className="fas fa-calendar m-r-sm" />
-                                        {t("userPayments.duePaymentsList.createSchedule")}
+                                        {t(
+                                            "userPayments.duePaymentsList.createSchedule"
+                                        )}
                                     </a>
                                 </li>
                                 <li>
                                     <a
                                         href="#"
                                         data-toggle="modal"
-                                        data-target={`#due-payment-modal-${this.props.payer.id
+                                        data-target={`#due-payment-modal-${
+                                            this.props.payer.id
                                         }`}
                                         disabled={
                                             this.state.selectedRows.length === 0
                                         }
                                     >
                                         <i className="fas fa-plus m-r-sm" />
-                                        {t("userPayments.duePaymentsList.createSingleDue")}
+                                        {t(
+                                            "userPayments.duePaymentsList.createSingleDue"
+                                        )}
                                     </a>
                                 </li>
                                 <li>
                                     <a
                                         href="#"
                                         data-toggle="modal"
-                                        data-target={`#due-payment-bulk-edit-modal-${this.props.payer.id
+                                        data-target={`#due-payment-bulk-edit-modal-${
+                                            this.props.payer.id
                                         }`}
                                     >
                                         <i className="fas fa-edit m-r-sm" />
-                                        {t("userPayments.paymentsList.bulkEdit")}
+                                        {t(
+                                            "userPayments.paymentsList.bulkEdit"
+                                        )}
                                     </a>
                                 </li>
                                 <li>
@@ -678,24 +733,28 @@ class DuePaymentsList extends React.Component {
                                         onClick={() =>
                                             this.props.handleCreatePayments(
                                                 this.props.payer.id,
-                                                this.state.selectedRows,
+                                                this.state.selectedRows
                                             )
                                         }
                                     >
                                         <i className="fas fa-arrow-right m-r-sm" />
-                                        {t("userPayments.duePaymentsList.generatePayments")}
+                                        {t(
+                                            "userPayments.duePaymentsList.generatePayments"
+                                        )}
                                     </a>
                                 </li>
                                 <li className="dropdown-divider" />
                                 <li>
                                     <a onClick={() => this.handleBulkDelete()}>
                                         <i className="fas fa-trash m-r-sm" />
-                                        {t("userPayments.paymentsList.bulkDelete")}
+                                        {t(
+                                            "userPayments.paymentsList.bulkDelete"
+                                        )}
                                     </a>
                                 </li>
                             </ul>
                         </div>
-                    }
+                    )}
                 </div>
 
                 <ReactTable
@@ -725,64 +784,91 @@ class DuePaymentsList extends React.Component {
                     <div className="modal-dialog">
                         <div className="modal-content animated">
                             <div className="modal-header">
-                                <h3> {t("userPayments.duePaymentsList.createDueTitle")} </h3>
+                                <h3>
+                                    {" "}
+                                    {t(
+                                        "userPayments.duePaymentsList.createDueTitle"
+                                    )}{" "}
+                                </h3>
                             </div>
                             <div className="modal-body">
                                 {this.alertPaymentTerm(this.props.payer)}
 
-                                {this.props.adhesionEnabled && <div className="form-group">
-                                    <input
-                                        type="checkbox"
-                                        id="forAdhesionDue"
-                                        style={{ marginRight: "5px" }}
-                                        onClick={e =>
-                                            this.handleCheckIsAdhesionDue(e)
-                                        }
-                                    />
-                                    <label htmlFor="forAdhesionDue">{t("userPayments.duePaymentsList.dueForMembership")}</label>
-                                </div>}
+                                {this.props.adhesionEnabled && (
+                                    <div className="form-group">
+                                        <input
+                                            type="checkbox"
+                                            id="forAdhesionDue"
+                                            style={{ marginRight: "5px" }}
+                                            onClick={(e) =>
+                                                this.handleCheckIsAdhesionDue(e)
+                                            }
+                                        />
+                                        <label htmlFor="forAdhesionDue">
+                                            {t(
+                                                "userPayments.duePaymentsList.dueForMembership"
+                                            )}
+                                        </label>
+                                    </div>
+                                )}
                                 <div className="form-group">
-                                    <label>{t("userPayments.paymentsList.amountShortLabel")}</label>
+                                    <label>
+                                        {t(
+                                            "userPayments.paymentsList.amountShortLabel"
+                                        )}
+                                    </label>
                                     <input
                                         type="text"
                                         className="form-control"
-                                        placeholder={t("userPayments.paymentsList.amountPlaceholder")}
+                                        placeholder={t(
+                                            "userPayments.paymentsList.amountPlaceholder"
+                                        )}
                                         value={
                                             this.state.newDuePayment.amount ||
                                             ""
                                         }
-                                        onChange={e =>
+                                        onChange={(e) =>
                                             this.handleChangeNewDuePaymentAmount(
-                                                e,
+                                                e
                                             )
                                         }
                                     />
                                 </div>
                                 <div className="form-group">
-                                    <label>{t("userPayments.duePaymentsList.previsionalDateLabel")}</label>
+                                    <label>
+                                        {t(
+                                            "userPayments.duePaymentsList.previsionalDateLabel"
+                                        )}
+                                    </label>
                                     <input
                                         type="date"
                                         className="form-control"
-                                        onChange={e =>
+                                        onChange={(e) =>
                                             this.handleChangeNewDuePaymentDate(
-                                                e,
+                                                e
                                             )
                                         }
                                     />
                                 </div>
                                 <div className="form-group">
-                                    <label>{t("userPayments.paymentsList.paymentMethodLabel")}</label>
+                                    <label>
+                                        {t(
+                                            "userPayments.paymentsList.paymentMethodLabel"
+                                        )}
+                                    </label>
                                     <select
                                         className="form-control"
                                         defaultValue="placeholder"
-                                        onChange={e =>
+                                        onChange={(e) =>
                                             this.handleSelectPaymentMethodForNewDuePayment(
-                                                e,
+                                                e
                                             )
                                         }
                                     >
                                         <option value="placeholder" disabled>
-                                            {t("userPayments.paymentsList.selectPaymentMethod")}
+                                            {t(
+                                                "userPayments.paymentsList.selectPaymentMethod"
+                                            )}
                                         </option>
                                         <option value="" />
                                         {_.map(
@@ -796,23 +882,31 @@ class DuePaymentsList extends React.Component {
                                                         {pm.label}
                                                     </option>
                                                 );
-                                            },
+                                            }
                                         )}
                                     </select>
                                 </div>
                                 <div className="form-group">
-                                    <label>{t("userPayments.paymentsList.statusLabel")}</label>
+                                    <label>
+                                        {t(
+                                            "userPayments.paymentsList.statusLabel"
+                                        )}
+                                    </label>
                                     <select
                                         className="form-control"
                                         defaultValue=""
-                                        onChange={e =>
+                                        onChange={(e) =>
                                             this.handleSelectStatusForNewDuePayment(
-                                                e,
+                                                e
                                             )
                                         }
                                     >
-                                        <option value="">{t("userPayments.paymentsList.noStatus")}</option>
-                                        {this.props.statuses.map(status => (
+                                        <option value="">
+                                            {t(
+                                                "userPayments.paymentsList.noStatus"
+                                            )}
+                                        </option>
+                                        {this.props.statuses.map((status) => (
                                             <option
                                                 key={status.id}
                                                 value={status.id}
@@ -827,7 +921,8 @@ class DuePaymentsList extends React.Component {
                                 <button
                                     type="button"
                                     className="btn"
-                                    data-dismiss="modal">
+                                    data-dismiss="modal"
+                                >
                                     <i className="fas fa-times m-r-sm"></i>
                                     {t("common:actions.cancel")}
                                 </button>
@@ -836,7 +931,7 @@ class DuePaymentsList extends React.Component {
                                     data-dismiss="modal"
                                     onClick={() =>
                                         this.props.handleSaveNewDuePayment(
-                                            this.state.newDuePayment,
+                                            this.state.newDuePayment
                                         )
                                     }
                                 >
@@ -858,17 +953,29 @@ class DuePaymentsList extends React.Component {
                     <div className="modal-dialog">
                         <div className="modal-content animated">
                             <div className="modal-header">
-                                <h3> {t("userPayments.duePaymentsList.bulkEditTitle")} </h3>
+                                <h3>
+                                    {" "}
+                                    {t(
+                                        "userPayments.duePaymentsList.bulkEditTitle"
+                                    )}{" "}
+                                </h3>
                             </div>
                             <BulkEditModalAlert />
                             <div className="modal-body">
                                 <div className="form-group">
-                                    <label>{t("userPayments.paymentsList.amountShortLabel")}</label>
+                                    <label>
+                                        {t(
+                                            "userPayments.paymentsList.amountShortLabel"
+                                        )}
+                                    </label>
                                     <div className="flex">
                                         <select
                                             name="operation"
                                             defaultValue={""}
-                                            onChange={e => this.handleBulkEditChange(e)}>
+                                            onChange={(e) =>
+                                                this.handleBulkEditChange(e)
+                                            }
+                                        >
                                             <option value=""></option>
                                             <option value="+">+</option>
                                             <option value="-">-</option>
@@ -880,23 +987,29 @@ class DuePaymentsList extends React.Component {
                                             placeholder="XX €"
                                             name="amount"
                                             onChange={this.handleBulkEditChange.bind(
-                                                this,
+                                                this
                                             )}
                                         />
                                     </div>
                                 </div>
                                 <div className="form-group">
-                                    <label>{t("userPayments.paymentsList.paymentMethodLabel")}</label>
+                                    <label>
+                                        {t(
+                                            "userPayments.paymentsList.paymentMethodLabel"
+                                        )}
+                                    </label>
                                     <select
                                         className="form-control"
                                         name="payment_method_id"
                                         onChange={this.handleBulkEditChange.bind(
-                                            this,
+                                            this
                                         )}
                                         defaultValue="placeholder"
                                     >
                                         <option value="placeholder" disabled>
-                                            {t("userPayments.paymentsList.selectPaymentMethod")}
+                                            {t(
+                                                "userPayments.paymentsList.selectPaymentMethod"
+                                            )}
                                         </option>
                                         <option value="" />
                                         {_.map(
@@ -910,7 +1023,7 @@ class DuePaymentsList extends React.Component {
                                                         {pm.label}
                                                     </option>
                                                 );
-                                            },
+                                            }
                                         )}
                                     </select>
                                 </div>
@@ -919,7 +1032,8 @@ class DuePaymentsList extends React.Component {
                                 <button
                                     type="button"
                                     className="btn"
-                                    data-dismiss="modal">
+                                    data-dismiss="modal"
+                                >
                                     <i className="fas fa-times m-r-sm"></i>
                                     {t("common:actions.cancel")}
                                 </button>
@@ -945,24 +1059,43 @@ class DuePaymentsList extends React.Component {
                     id={`due-payments-modal-edit-${this.props.payer.id}`}
                     tabIndex="-1"
                     role="dialog"
-                    aria-hidden="true">
+                    aria-hidden="true"
+                >
                     <div className="modal-dialog">
                         <div className="modal-content animated">
                             <div className="modal-header">
                                 <h3>
-                                    {t("userPayments.duePaymentsList.editDueTitle", { n: this.state.duePaymentToEdit.number })}
+                                    {t(
+                                        "userPayments.duePaymentsList.editDueTitle",
+                                        {
+                                            n: this.state.duePaymentToEdit
+                                                .number,
+                                        }
+                                    )}
                                 </h3>
                             </div>
                             <div className="modal-body">
                                 {this.alertPaymentTerm(this.props.payer)}
                                 <div className="form-group">
-                                    <label>{t("userPayments.paymentsList.amountShortLabel")}</label>
+                                    <label>
+                                        {t(
+                                            "userPayments.paymentsList.amountShortLabel"
+                                        )}
+                                    </label>
                                     <div className="flex">
                                         <select
                                             name="operation"
-                                            value={this.state.duePaymentToEdit.operation}
+                                            value={
+                                                this.state.duePaymentToEdit
+                                                    .operation
+                                            }
                                             defaultValue={"+"}
-                                            onChange={e => this.handleChangeDuePaymentOperation(e)}>
+                                            onChange={(e) =>
+                                                this.handleChangeDuePaymentOperation(
+                                                    e
+                                                )
+                                            }
+                                        >
                                             <option value="+">+</option>
                                             <option value="-">-</option>
                                             <option value="0">0</option>
@@ -971,15 +1104,23 @@ class DuePaymentsList extends React.Component {
                                             type="text"
                                             className="form-control"
                                             value={
-                                                this.state.duePaymentToEdit.amount || ""
+                                                this.state.duePaymentToEdit
+                                                    .amount || ""
                                             }
-                                            onChange={e =>
-                                                this.handleChangeDuePaymentAmount(e)
-                                            } />
+                                            onChange={(e) =>
+                                                this.handleChangeDuePaymentAmount(
+                                                    e
+                                                )
+                                            }
+                                        />
                                     </div>
                                 </div>
                                 <div className="form-group">
-                                    <label>{t("userPayments.duePaymentsList.previsionalDateLabel")}</label>
+                                    <label>
+                                        {t(
+                                            "userPayments.duePaymentsList.previsionalDateLabel"
+                                        )}
+                                    </label>
                                     <input
                                         type="date"
                                         className="form-control"
@@ -987,25 +1128,31 @@ class DuePaymentsList extends React.Component {
                                             this.state.duePaymentToEdit
                                                 .previsional_date || ""
                                         }
-                                        onChange={e =>
+                                        onChange={(e) =>
                                             this.handleChangeDuePaymentDate(e)
                                         }
                                     />
                                 </div>
                                 <div className="form-group">
-                                    <label>{t("userPayments.paymentsList.paymentMethodLabel")}</label>
+                                    <label>
+                                        {t(
+                                            "userPayments.paymentsList.paymentMethodLabel"
+                                        )}
+                                    </label>
                                     <select
                                         className="form-control"
                                         value={
                                             this.state.duePaymentToEdit
                                                 .payment_method_id
                                         }
-                                        onChange={e =>
+                                        onChange={(e) =>
                                             this.handleSelectPaymentMethod(e)
                                         }
                                     >
                                         <option value={0} disabled>
-                                            {t("userPayments.paymentsList.selectPaymentMethod")}
+                                            {t(
+                                                "userPayments.paymentsList.selectPaymentMethod"
+                                            )}
                                         </option>
                                         <option value="" />
                                         {_.map(
@@ -1019,7 +1166,7 @@ class DuePaymentsList extends React.Component {
                                                         {pm.label}
                                                     </option>
                                                 );
-                                            },
+                                            }
                                         )}
                                     </select>
                                 </div>
@@ -1028,7 +1175,8 @@ class DuePaymentsList extends React.Component {
                                 <button
                                     type="button"
                                     className="btn"
-                                    data-dismiss="modal">
+                                    data-dismiss="modal"
+                                >
                                     <i className="fas fa-times m-r-sm"></i>
                                     {t("common:actions.cancel")}
                                 </button>
@@ -1054,12 +1202,16 @@ class DuePaymentsList extends React.Component {
                     <div className="modal-dialog">
                         <div className="modal-content animated">
                             <div className="modal-header">
-                                <h3>{t("userPayments.duePaymentsList.newScheduleTitle")}</h3>
+                                <h3>
+                                    {t(
+                                        "userPayments.duePaymentsList.newScheduleTitle"
+                                    )}
+                                </h3>
                             </div>
                             <div className="modal-body">
                                 {this.alertPaymentTerm(this.props.payer)}
 
-                                {this.props.adhesionEnabled &&
+                                {this.props.adhesionEnabled && (
                                     <Fragment>
                                         <div className="form-group">
                                             <div className="checkbox checkbox-primary">
@@ -1068,11 +1220,12 @@ class DuePaymentsList extends React.Component {
                                                     id="new"
                                                     name="new"
                                                     checked={
-                                                        this.state.adhesionNewDuePayment
+                                                        this.state
+                                                            .adhesionNewDuePayment
                                                     }
-                                                    onChange={e =>
+                                                    onChange={(e) =>
                                                         this.handleCreateDuePaymentForAdhesion(
-                                                            e,
+                                                            e
                                                         )
                                                     }
                                                 />
@@ -1080,52 +1233,55 @@ class DuePaymentsList extends React.Component {
                                                     className="control-label"
                                                     htmlFor="new"
                                                 >
-                                                    {t("userPayments.duePaymentsList.createMembershipDue")}
+                                                    {t(
+                                                        "userPayments.duePaymentsList.createMembershipDue"
+                                                    )}
                                                 </label>
                                             </div>
                                         </div>
                                         {/*<div className="form-group">*/}
-                                            {/*<div className="checkbox checkbox-primary">*/}
-                                            {/*    <input*/}
-                                            {/*        type="checkbox"*/}
-                                            {/*        id="isolate"*/}
-                                            {/*        name="isolate"*/}
-                                            {/*        checked={*/}
-                                            {/*            this.state.isolateAdhesion*/}
-                                            {/*        }*/}
-                                            {/*        onChange={e => this.handleIsolateDuePaymentForAdhesion(e)}*/}
-                                            {/*    />*/}
-                                            {/*    <label*/}
-                                            {/*        className="control-label"*/}
-                                            {/*        htmlFor="isolate">*/}
-                                            {/*        Montant adhésion à déduire de la première échéance*/}
-                                            {/*    </label>*/}
-                                            {/*</div>*/}
+                                        {/*<div className="checkbox checkbox-primary">*/}
+                                        {/*    <input*/}
+                                        {/*        type="checkbox"*/}
+                                        {/*        id="isolate"*/}
+                                        {/*        name="isolate"*/}
+                                        {/*        checked={*/}
+                                        {/*            this.state.isolateAdhesion*/}
+                                        {/*        }*/}
+                                        {/*        onChange={e => this.handleIsolateDuePaymentForAdhesion(e)}*/}
+                                        {/*    />*/}
+                                        {/*    <label*/}
+                                        {/*        className="control-label"*/}
+                                        {/*        htmlFor="isolate">*/}
+                                        {/*        Montant adhésion à déduire de la première échéance*/}
+                                        {/*    </label>*/}
                                         {/*</div>*/}
-                                    </Fragment>}
+                                        {/*</div>*/}
+                                    </Fragment>
+                                )}
                                 {/*<div className="form-group">*/}
-                                    {/*<div className="checkbox checkbox-primary">*/}
-                                    {/*    <input*/}
-                                    {/*        type="checkbox"*/}
-                                    {/*        onChange={e => this.setState({*/}
-                                    {/*            areSpecialDues: e.target.checked,*/}
-                                    {/*            specialDues: {},*/}
-                                    {/*            generatedDuePayments: this.generateDuePayments({*/}
-                                    {/*                startingDate: this.state.startingDate,*/}
-                                    {/*                n: this.state.numberOfDuePayments,*/}
-                                    {/*                payment_method_id: this.state.payment_method_id,*/}
-                                    {/*                adhesionNewDuePayment: this.state.adhesionNewDuePayment,*/}
-                                    {/*                isolateAdhesion: this.state.adhesionIsolated,*/}
-                                    {/*            }),*/}
-                                    {/*        })}*/}
-                                    {/*        checked={this.state.areSpecialDues}*/}
-                                    {/*        id={"special"} />*/}
-                                    {/*    <label*/}
-                                    {/*        className="control-label"*/}
-                                    {/*        htmlFor="special">*/}
-                                    {/*        Échéances spéciales*/}
-                                    {/*    </label>*/}
-                                    {/*</div>*/}
+                                {/*<div className="checkbox checkbox-primary">*/}
+                                {/*    <input*/}
+                                {/*        type="checkbox"*/}
+                                {/*        onChange={e => this.setState({*/}
+                                {/*            areSpecialDues: e.target.checked,*/}
+                                {/*            specialDues: {},*/}
+                                {/*            generatedDuePayments: this.generateDuePayments({*/}
+                                {/*                startingDate: this.state.startingDate,*/}
+                                {/*                n: this.state.numberOfDuePayments,*/}
+                                {/*                payment_method_id: this.state.payment_method_id,*/}
+                                {/*                adhesionNewDuePayment: this.state.adhesionNewDuePayment,*/}
+                                {/*                isolateAdhesion: this.state.adhesionIsolated,*/}
+                                {/*            }),*/}
+                                {/*        })}*/}
+                                {/*        checked={this.state.areSpecialDues}*/}
+                                {/*        id={"special"} />*/}
+                                {/*    <label*/}
+                                {/*        className="control-label"*/}
+                                {/*        htmlFor="special">*/}
+                                {/*        Échéances spéciales*/}
+                                {/*    </label>*/}
+                                {/*</div>*/}
                                 {/*</div>*/}
                                 {/*{*/}
                                 {/*    this.state.areSpecialDues ?*/}
@@ -1203,27 +1359,47 @@ class DuePaymentsList extends React.Component {
                                 {/*        : null*/}
                                 {/*}*/}
                                 <div className="form-group">
-                                    <label>{t("userPayments.duePaymentsList.numberOfDuesLabel")}</label>
+                                    <label>
+                                        {t(
+                                            "userPayments.duePaymentsList.numberOfDuesLabel"
+                                        )}
+                                    </label>
                                     <select
                                         className="form-control"
                                         value={
                                             this.state.numberOfDuePaymentsSelect
                                         }
-                                        onChange={e =>
+                                        onChange={(e) =>
                                             this.handleSelectDuePaymentsNumber(
-                                                e,
+                                                e
                                             )
                                         }
                                     >
                                         <option value={0} disabled>
-                                            {t("userPayments.duePaymentsList.selectNumberOfDues")}
+                                            {t(
+                                                "userPayments.duePaymentsList.selectNumberOfDues"
+                                            )}
                                         </option>
-                                        <option value={1}>{t("userPayments.duePaymentsList.annual")}</option>
+                                        <option value={1}>
+                                            {t(
+                                                "userPayments.duePaymentsList.annual"
+                                            )}
+                                        </option>
                                         <option value={3}>
-                                            {t("userPayments.duePaymentsList.quarterly")}
+                                            {t(
+                                                "userPayments.duePaymentsList.quarterly"
+                                            )}
                                         </option>
-                                        <option value={10}>{t("userPayments.duePaymentsList.monthly")}</option>
-                                        <option value={11}>{t("userPayments.duePaymentsList.other")}</option>
+                                        <option value={10}>
+                                            {t(
+                                                "userPayments.duePaymentsList.monthly"
+                                            )}
+                                        </option>
+                                        <option value={11}>
+                                            {t(
+                                                "userPayments.duePaymentsList.other"
+                                            )}
+                                        </option>
                                     </select>
 
                                     {this.state.arbitraryNumberOfDuePayments ? (
@@ -1233,42 +1409,52 @@ class DuePaymentsList extends React.Component {
                                             value={
                                                 this.state.numberOfDuePayments
                                             }
-                                            onChange={e =>
+                                            onChange={(e) =>
                                                 this.handleArbitraryNumberOfDuePaymentChange(
-                                                    e,
+                                                    e
                                                 )
                                             }
                                         />
                                     ) : null}
                                 </div>
                                 <div className="form-group">
-                                    <label>{t("userPayments.duePaymentsList.firstDueDateLabel")}</label>
+                                    <label>
+                                        {t(
+                                            "userPayments.duePaymentsList.firstDueDateLabel"
+                                        )}
+                                    </label>
                                     <input
                                         type="date"
                                         className="form-control"
                                         value={this.state.startingDate}
-                                        onChange={e =>
+                                        onChange={(e) =>
                                             this.handleSelectStartingDate(e)
                                         }
                                     />
                                 </div>
                                 <div className="form-group">
-                                    <label>{t("userPayments.paymentsList.paymentMethodLabel")}</label>
+                                    <label>
+                                        {t(
+                                            "userPayments.paymentsList.paymentMethodLabel"
+                                        )}
+                                    </label>
                                     <select
                                         className="form-control"
                                         value={this.state.payment_method_id}
-                                        onChange={e =>
+                                        onChange={(e) =>
                                             this.handleSelectPaymentMethodToGenerate(
-                                                e,
+                                                e
                                             )
                                         }
                                     >
                                         <option value="placeholder" disabled>
-                                            {t("userPayments.paymentsList.selectPaymentMethod")}
+                                            {t(
+                                                "userPayments.paymentsList.selectPaymentMethod"
+                                            )}
                                         </option>
                                         <option value="" />
                                         {_(this.props.paymentMethods)
-                                            .filter(pm => !pm.is_special)
+                                            .filter((pm) => !pm.is_special)
                                             .map((pm, i) => {
                                                 return (
                                                     <option
@@ -1279,8 +1465,7 @@ class DuePaymentsList extends React.Component {
                                                     </option>
                                                 );
                                             })
-                                            .value()
-                                        }
+                                            .value()}
                                     </select>
                                 </div>
 
@@ -1289,32 +1474,58 @@ class DuePaymentsList extends React.Component {
                                 this.state.startingDate != "" > 0 ? (
                                     <table className="table">
                                         <thead>
-                                        <tr>
-                                            <th>{t("userPayments.duePaymentsList.previewColumns.number")}</th>
-                                            <th>{t("userPayments.duePaymentsList.previewColumns.paymentMethod")}</th>
-                                            <th>{t("userPayments.duePaymentsList.previewColumns.date")}</th>
-                                            <th>{t("userPayments.duePaymentsList.previewColumns.amount")}</th>
-                                        </tr>
+                                            <tr>
+                                                <th>
+                                                    {t(
+                                                        "userPayments.duePaymentsList.previewColumns.number"
+                                                    )}
+                                                </th>
+                                                <th>
+                                                    {t(
+                                                        "userPayments.duePaymentsList.previewColumns.paymentMethod"
+                                                    )}
+                                                </th>
+                                                <th>
+                                                    {t(
+                                                        "userPayments.duePaymentsList.previewColumns.date"
+                                                    )}
+                                                </th>
+                                                <th>
+                                                    {t(
+                                                        "userPayments.duePaymentsList.previewColumns.amount"
+                                                    )}
+                                                </th>
+                                            </tr>
                                         </thead>
                                         <tbody>
-                                        {_.map(
-                                            this.state.generatedDuePayments,
-                                            (dp, i) => (
-                                                <tr key={i}>
-                                                    <td>{dp.id}</td>
-                                                    <td>{(() => {
-                                                        const pm = this.props.paymentMethods.find(pm => pm.id == dp.payment_method_id);
-                                                        return pm && pm.label;
-                                                    })()}</td>
-                                                    <td>
-                                                        {dp.date.format(
-                                                            "DD-MM-YYYY",
-                                                        )}
-                                                    </td>
-                                                    <td>{dp.amount} €</td>
-                                                </tr>
-                                            ),
-                                        )}
+                                            {_.map(
+                                                this.state.generatedDuePayments,
+                                                (dp, i) => (
+                                                    <tr key={i}>
+                                                        <td>{dp.id}</td>
+                                                        <td>
+                                                            {(() => {
+                                                                const pm =
+                                                                    this.props.paymentMethods.find(
+                                                                        (pm) =>
+                                                                            pm.id ==
+                                                                            dp.payment_method_id
+                                                                    );
+                                                                return (
+                                                                    pm &&
+                                                                    pm.label
+                                                                );
+                                                            })()}
+                                                        </td>
+                                                        <td>
+                                                            {dp.date.format(
+                                                                "DD-MM-YYYY"
+                                                            )}
+                                                        </td>
+                                                        <td>{dp.amount} €</td>
+                                                    </tr>
+                                                )
+                                            )}
                                         </tbody>
                                     </table>
                                 ) : null}
@@ -1323,7 +1534,8 @@ class DuePaymentsList extends React.Component {
                                 <button
                                     type="button"
                                     className="btn"
-                                    data-dismiss="modal">
+                                    data-dismiss="modal"
+                                >
                                     <i className="fas fa-times m-r-sm"></i>
                                     {t("common:actions.cancel")}
                                 </button>
@@ -1348,13 +1560,14 @@ class DuePaymentsList extends React.Component {
     alertPaymentTerm(payer) {
         const { t } = this.props;
 
-        if (!payer.payment_terms_summary)
-            return "";
+        if (!payer.payment_terms_summary) return "";
 
-        return <div className={"alert alert-info"}>
-            {t("userPayments.duePaymentsList.paymentTermPreference")} <br />
-            <strong>{payer.payment_terms_summary}</strong>
-        </div>;
+        return (
+            <div className={"alert alert-info"}>
+                {t("userPayments.duePaymentsList.paymentTermPreference")} <br />
+                <strong>{payer.payment_terms_summary}</strong>
+            </div>
+        );
     }
 }
 

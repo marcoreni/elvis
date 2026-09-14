@@ -264,6 +264,6 @@
         });
     });
 </script>
-<%= react_component("utils/SwalBackEndModal", { swal_props: { title: t("views.layouts.application.base_seasons_created.title"), type: 'info', text: t("views.layouts.application.base_seasons_created.text") } }) if @base_season_created %>
+<%= react_component("utils/SwalBackEndModal", { swal_props: { title: t("views.layouts.application.base_seasons_created.title"), icon: 'info', text: t("views.layouts.application.base_seasons_created.text") } }) if @base_season_created %>
 </body>
 </html>

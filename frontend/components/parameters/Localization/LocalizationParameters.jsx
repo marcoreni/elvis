@@ -1,7 +1,7 @@
-import React, {Fragment, useEffect, useState} from "react";
+import React, { Fragment, useEffect, useState } from "react";
 import * as api from "../../../tools/api";
 import swal from "sweetalert2";
-import {useTranslation} from "react-i18next";
+import { useTranslation } from "react-i18next";
 
 const LOCALE_LABELS = {
     fr: "Français",
@@ -9,7 +9,7 @@ const LOCALE_LABELS = {
 };
 
 export default function LocalizationParameters() {
-    const {t} = useTranslation("parameters");
+    const { t } = useTranslation("parameters");
     const [isLoading, setIsLoading] = useState(true);
     const [supportedLocales, setSupportedLocales] = useState([]);
     const [defaultLanguage, setDefaultLanguage] = useState("fr");
@@ -25,9 +25,9 @@ export default function LocalizationParameters() {
             })
             .error(() => {
                 setIsLoading(false);
-                swal({
+                swal.fire({
                     title: t("shared.loadParamsError"),
-                    type: "error",
+                    icon: "error",
                 });
             })
             .get("/parameters/localization_parameters/show", {});
@@ -51,9 +51,9 @@ export default function LocalizationParameters() {
 
     const onSubmit = () => {
         if (!availableLanguages.includes(defaultLanguage)) {
-            swal({
+            swal.fire({
                 title: t("localization.defaultMustBeAvailable"),
-                type: "error",
+                icon: "error",
             });
             return;
         }
@@ -61,14 +61,17 @@ export default function LocalizationParameters() {
         api.set()
             .useLoading()
             .success(() => {
-                swal({title: t("shared.saveSuccess"), type: "success"});
+                swal.fire({ title: t("shared.saveSuccess"), icon: "success" });
             })
             .error(() => {
-                swal({title: t("shared.saveError"), type: "error"});
+                swal.fire({ title: t("shared.saveError"), icon: "error" });
             })
             .post(
                 "/parameters/localization_parameters/update",
-                {default_language: defaultLanguage, available_languages: availableLanguages},
+                {
+                    default_language: defaultLanguage,
+                    available_languages: availableLanguages,
+                },
                 {}
             );
     };
@@ -110,17 +113,18 @@ export default function LocalizationParameters() {
                         <select
                             className="form-control"
                             value={defaultLanguage}
-                            onChange={(event) => setDefaultLanguage(event.target.value)}
+                            onChange={(event) =>
+                                setDefaultLanguage(event.target.value)
+                            }
                         >
                             {availableLanguages.map((locale) => (
                                 <option key={locale} value={locale}>
-                                    {LOCALE_LABELS[locale] || locale.toUpperCase()}
+                                    {LOCALE_LABELS[locale] ||
+                                        locale.toUpperCase()}
                                 </option>
                             ))}
                         </select>
-                        <p className="mt-3">
-                            {t("localization.defaultHint")}
-                        </p>
+                        <p className="mt-3">{t("localization.defaultHint")}</p>
                     </div>
                 </div>
             </div>

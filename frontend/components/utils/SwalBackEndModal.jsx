@@ -1,23 +1,18 @@
 import React from "react";
-import swal from 'sweetalert2';
+import swal from "sweetalert2";
 
-
-export default class SwalBackEndModal extends React.Component
-{
-    constructor(props)
-    {
+export default class SwalBackEndModal extends React.Component {
+    constructor(props) {
         super(props);
 
         this.state = {
-            isLaunched: false
+            isLaunched: false,
         };
     }
 
-    render()
-    {
-        if(!this.state.isLaunched)
-        {
-            new Promise(() => swal(this.props.swal_props));
+    render() {
+        if (!this.state.isLaunched) {
+            new Promise(() => swal.fire(this.props.swal_props));
 
             this.state.isLaunched = false;
         }
@@ -25,8 +20,7 @@ export default class SwalBackEndModal extends React.Component
         return null;
     }
 
-    show()
-    {
-        this.setState({isLaunched: false});
+    show() {
+        this.setState({ isLaunched: false });
     }
 }

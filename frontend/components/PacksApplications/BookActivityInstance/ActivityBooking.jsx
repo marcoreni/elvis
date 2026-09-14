@@ -26,7 +26,7 @@ export default function ActivityBooking() {
             await api
                 .set()
                 .useLoading()
-                .success(res => {
+                .success((res) => {
                     setUser(res.user);
                     setActivities(sortActivitiesByMonth(res.availabilities));
                     setMyActivities(sortActivitiesByMonth(res.my_activities));
@@ -35,12 +35,12 @@ export default function ActivityBooking() {
                     setActivityRefPricing(res.activity_ref_pricing);
                     setPack(res.pack);
                 })
-                .error(res => {
-                    swal(
-                        t("activityApplications:packs.fetchError"),
-                        res.error,
-                        "error"
-                    );
+                .error((res) => {
+                    swal.fire({
+                        title: t("activityApplications:packs.fetchError"),
+                        text: res.error,
+                        icon: "error",
+                    });
                 })
                 .get(
                     `/get_bookings_and_availabilities` +
@@ -48,7 +48,11 @@ export default function ActivityBooking() {
                     {}
                 );
         } catch (error) {
-            swal(t("activityApplications:packs.fetchError"), error, "error");
+            swal.fire({
+                title: t("activityApplications:packs.fetchError"),
+                text: error,
+                icon: "error",
+            });
         } finally {
             setLoading(false);
         }
@@ -65,7 +69,7 @@ export default function ActivityBooking() {
     function sortActivitiesByMonth(data) {
         let sortedActivities = {};
 
-        data.forEach(activity => {
+        data.forEach((activity) => {
             const month = moment(activity.time_interval.start).format("MMMM");
             if (sortedActivities[month] === undefined) {
                 sortedActivities[month] = [];
@@ -74,12 +78,13 @@ export default function ActivityBooking() {
         });
 
         // retirer les doublons par date
-        Object.keys(sortedActivities).forEach(month => {
+        Object.keys(sortedActivities).forEach((month) => {
             sortedActivities[month] = sortedActivities[month].filter(
                 (thing, index, self) =>
                     index ===
                     self.findIndex(
-                        t => t.time_interval.start === thing.time_interval.start
+                        (t) =>
+                            t.time_interval.start === thing.time_interval.start
                     )
             );
         });
@@ -89,11 +94,15 @@ export default function ActivityBooking() {
 
     function addToWishList(activity) {
         wishList.length >= pack.lessons_remaining
-            ? swal(
-                  t("activityApplications:packs.booking.tooManySlotsTitle"),
-                  t("activityApplications:packs.booking.tooManySlotsText"),
-                  "error"
-              )
+            ? swal.fire({
+                  title: t(
+                      "activityApplications:packs.booking.tooManySlotsTitle"
+                  ),
+                  text: t(
+                      "activityApplications:packs.booking.tooManySlotsText"
+                  ),
+                  icon: "error",
+              })
             : !wishList.includes(activity) &&
               setWishList([...wishList, activity]);
     }
@@ -101,32 +110,38 @@ export default function ActivityBooking() {
     function removeFromWishList(activity) {
         const index = wishList.indexOf(activity);
         if (index > -1) {
-            setWishList(wishList.filter(item => item !== activity));
+            setWishList(wishList.filter((item) => item !== activity));
         }
     }
 
     function submitWishList() {
         if (wishList.length === 0) {
-            swal(
-                t("activityApplications:packs.booking.noneSelectedTitle"),
-                t("activityApplications:packs.booking.noneSelectedText"),
-                "error"
-            );
+            swal.fire({
+                title: t(
+                    "activityApplications:packs.booking.noneSelectedTitle"
+                ),
+                text: t("activityApplications:packs.booking.noneSelectedText"),
+                icon: "error",
+            });
             return;
         }
 
         api.set()
             .useLoading()
-            .success(res => {
-                swal(
-                    t("activityApplications:packs.booking.wishesSaved"),
-                    "",
-                    "success"
-                );
+            .success((res) => {
+                swal.fire({
+                    title: t("activityApplications:packs.booking.wishesSaved"),
+                    text: "",
+                    icon: "success",
+                });
                 setActiveTab(1);
             })
-            .error(res => {
-                swal(res.message, res.error, "error");
+            .error((res) => {
+                swal.fire({
+                    title: res.message,
+                    text: res.error,
+                    icon: "error",
+                });
             })
             .post(`/submit_user_wish_list`, {
                 user_id: user.id,
@@ -139,36 +154,36 @@ export default function ActivityBooking() {
     }
 
     function removeAttendance(activity) {
-        swal({
+        swal.fire({
             title: t("activityApplications:packs.booking.unregisterTitle"),
             text: t("activityApplications:packs.booking.unregisterText"),
-            type: "warning",
+            icon: "warning",
             buttons: true,
             showCancelButton: true,
             confirmButtonText: t("activityApplications:packs.booking.confirm"),
             cancelButtonText: t("common:actions.cancel"),
         })
-            .then(willPost => {
+            .then((willPost) => {
                 if (willPost.value) {
                     api.set()
                         .useLoading()
-                        .success(res => {
-                            swal(
-                                t(
+                        .success((res) => {
+                            swal.fire({
+                                title: t(
                                     "activityApplications:packs.booking.unregisterSuccess"
                                 ),
-                                res.message,
-                                "success"
-                            );
+                                text: res.message,
+                                icon: "success",
+                            });
                         })
-                        .error(res => {
-                            swal(
-                                t(
+                        .error((res) => {
+                            swal.fire({
+                                title: t(
                                     "activityApplications:packs.booking.unregisterError"
                                 ),
-                                res.error,
-                                "error"
-                            );
+                                text: res.error,
+                                icon: "error",
+                            });
                         })
                         .post(`/remove_wished_attendance`, {
                             activity_instance: activity,

@@ -37,9 +37,8 @@ class NewActivityItem extends React.Component {
                     .activity_application_id,
         };
         this.updateReasonRefused = this.updateReasonRefused.bind(this);
-        this.handleProcessModifyApplication = this.handleProcessModifyApplication.bind(
-            this
-        );
+        this.handleProcessModifyApplication =
+            this.handleProcessModifyApplication.bind(this);
     }
 
     openAssignationRefusedModal() {
@@ -83,40 +82,40 @@ class NewActivityItem extends React.Component {
             body: JSON.stringify({
                 application: application,
                 id: this.props.new_activity_application.activity_application_id,
-                activity_application: this.props.new_activity_application
-                    .activity_application,
+                activity_application:
+                    this.props.new_activity_application.activity_application,
                 reason_of_refusal: this.state.reasonOfRefusal,
             }),
         })
-            .then(response => {
+            .then((response) => {
                 if (!response.ok)
-                    swal(
-                        t(
+                    swal.fire({
+                        title: t(
                             "activityApplications:activityItems.toasts.errorTitle"
                         ),
-                        t(
+                        text: t(
                             "activityApplications:activityItems.toasts.routingError"
                         ),
-                        "error"
-                    );
+                        icon: "error",
+                    });
 
                 return response.json();
             })
-            .then(json => {
+            .then((json) => {
                 this.setState({
                     proposalAnswered:
                         json.activity_application_status_id ===
                         ActivityApplicationStatus.PROPOSAL_REFUSED_ID,
                 });
-                swal(
-                    t(
+                swal.fire({
+                    title: t(
                         "activityApplications:activityItems.toasts.proposalRefusedTitle"
                     ),
-                    t(
+                    text: t(
                         "activityApplications:activityItems.toasts.reasonsCommunicated"
                     ),
-                    "info"
-                );
+                    icon: "info",
+                });
             });
     }
 
@@ -141,37 +140,39 @@ class NewActivityItem extends React.Component {
             body: JSON.stringify({
                 application: application,
                 id: this.props.new_activity_application.activity_application_id,
-                activity_application: this.props.new_activity_application
-                    .activity_application,
+                activity_application:
+                    this.props.new_activity_application.activity_application,
             }),
         })
-            .then(response => {
+            .then((response) => {
                 if (!response.ok)
-                    swal(
-                        t(
+                    swal.fire({
+                        title: t(
                             "activityApplications:activityItems.toasts.errorTitle"
                         ),
-                        t(
+                        text: t(
                             "activityApplications:activityItems.toasts.routingError"
                         ),
-                        "error"
-                    );
+                        icon: "error",
+                    });
 
                 return response.json();
             })
-            .then(json => {
+            .then((json) => {
                 this.setState({
                     proposalAnswered:
                         json.activity_application_status_id ===
                         ActivityApplicationStatus.PROPOSAL_ACCEPTED_ID,
                 });
-                swal(
-                    t("activityApplications:activityItems.toasts.successTitle"),
-                    t(
+                swal.fire({
+                    title: t(
+                        "activityApplications:activityItems.toasts.successTitle"
+                    ),
+                    text: t(
                         "activityApplications:activityItems.toasts.proposalAccepted"
                     ),
-                    "success"
-                );
+                    icon: "success",
+                });
             });
     }
 
@@ -179,11 +180,11 @@ class NewActivityItem extends React.Component {
         const { t } = this.props;
         api.set()
             .error(() => {
-                swal({
+                swal.fire({
                     title: t(
                         "activityApplications:activityItems.toasts.commentSendError"
                     ),
-                    type: "error",
+                    icon: "error",
                 });
             })
             .post(
@@ -286,8 +287,9 @@ class NewActivityItem extends React.Component {
                         return (
                             <Fragment>
                                 <div
-                                    className={`d-inline-flex align-items-top pt-0 row ${activity &&
-                                        "pb-sm-0"}`}
+                                    className={`d-inline-flex align-items-top pt-0 row ${
+                                        activity && "pb-sm-0"
+                                    }`}
                                 >
                                     <div className="col-sm-6">
                                         {i === 0 &&
@@ -331,10 +333,9 @@ class NewActivityItem extends React.Component {
                                                                 {t(
                                                                     "activityApplications:activityItems.inRoom",
                                                                     {
-                                                                        room:
-                                                                            activity
-                                                                                .room
-                                                                                .label,
+                                                                        room: activity
+                                                                            .room
+                                                                            .label,
                                                                     }
                                                                 )}
                                                             </Fragment>
@@ -359,16 +360,12 @@ class NewActivityItem extends React.Component {
                                                 t
                                             )}
                                         </div>
-                                    ) : (
-                                        undefined
-                                    )}
+                                    ) : undefined}
                                 </div>
 
                                 {i < desiredActivities.length - 1 ? (
                                     <hr className="d-inline-flex align-items-top pt-0 row " />
-                                ) : (
-                                    undefined
-                                )}
+                                ) : undefined}
                             </Fragment>
                         );
                     })}

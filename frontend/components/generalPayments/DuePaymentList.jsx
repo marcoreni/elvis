@@ -1,10 +1,10 @@
-import _, {isDate} from "lodash";
+import _, { isDate } from "lodash";
 import React from "react";
 import Select from "react-select";
 import ReactTableFullScreen from "../ReactTableFullScreen";
 import swal from "sweetalert2";
 import { withTranslation } from "react-i18next";
-import {makeDebounce} from "../../tools/inputs";
+import { makeDebounce } from "../../tools/inputs";
 import {
     csrfToken,
     findAndGet,
@@ -16,9 +16,8 @@ import MessageModal from "./MessageModal";
 import SubPaymentList from "./SubPaymentList";
 import DateRangePicker from "../utils/DateRangePicker";
 import * as api from "../../tools/api";
-import * as DuePaymentStatus from '../utils/DuePaymentStatuses'
-import {UNPAID_ID} from "../utils/DuePaymentStatuses";
-
+import * as DuePaymentStatus from "../utils/DuePaymentStatuses";
+import { UNPAID_ID } from "../utils/DuePaymentStatuses";
 
 import moment from "moment";
 
@@ -27,7 +26,7 @@ const FILTER_STORAGE_KEY = "general_due_payments_list_filters";
 const defaultTableProps = () => ({
     page: 0,
     pageSize: 12,
-    sorted: [{id: "previsional_date"}],
+    sorted: [{ id: "previsional_date" }],
     filtered: [],
     resized: [],
     expanded: {},
@@ -54,14 +53,14 @@ const requestData = (pageSize, page, sorted, filtered, format) => {
             filtered,
         }),
     })
-        .catch(reason => alert(reason))
-        .then(response => {
+        .catch((reason) => alert(reason))
+        .then((response) => {
             if (!format || format === "json") return response.json();
             else {
                 return response.blob();
             }
         })
-        .then(data => {
+        .then((data) => {
             if (!format || format === "json") {
                 return {
                     data: data.payments,
@@ -109,28 +108,40 @@ class DuePaymentList extends React.Component {
                             this.state.targets === "all" ||
                             this.state.targets.length === this.state.data.length
                         }
-                        onChange={e =>
+                        onChange={(e) =>
                             e.target.checked
                                 ? this.setState({
-                                    targets: this.state.data.map(r => r.id),
-                                    targetStatus: (this.state.data.filter(r => {return r.due_payment_status_id === DuePaymentStatus.UNPAID_ID})
-                                                                  .map(r => r.id)),
-                                })
+                                      targets: this.state.data.map((r) => r.id),
+                                      targetStatus: this.state.data
+                                          .filter((r) => {
+                                              return (
+                                                  r.due_payment_status_id ===
+                                                  DuePaymentStatus.UNPAID_ID
+                                              );
+                                          })
+                                          .map((r) => r.id),
+                                  })
                                 : this.setState({
-                                    targets: [],
-                                    targetStatus: []
-                                })
+                                      targets: [],
+                                      targetStatus: [],
+                                  })
                         }
                     />
                 ),
-                Cell: d => (
+                Cell: (d) => (
                     <input
                         type="checkbox"
-                        checked={this.state.targets === "all" || this.state.targets.includes(d.original.id)}
-                        onChange={e => {
-                                this.updateTarget(d.original.id, e.target.checked, d.original.due_payment_status_id)
-                            }
+                        checked={
+                            this.state.targets === "all" ||
+                            this.state.targets.includes(d.original.id)
                         }
+                        onChange={(e) => {
+                            this.updateTarget(
+                                d.original.id,
+                                e.target.checked,
+                                d.original.due_payment_status_id
+                            );
+                        }}
                     />
                 ),
             },
@@ -138,18 +149,18 @@ class DuePaymentList extends React.Component {
                 Header: t("general.dueDates.columns.validity"),
                 id: "validity",
                 maxWidth: 50,
-                accessor: d => this.state.validityMap[d.id],
+                accessor: (d) => this.state.validityMap[d.id],
                 sortable: false,
-                Filter: ({filter, onChange}) => {
+                Filter: ({ filter, onChange }) => {
                     const options = [
-                        {value: null, color: "white"},
-                        {value: "N", color: "#ff2e00"},
-                        {value: "NE", color: "#ffbf00"},
-                        {value: "E", color: "#57d500"},
+                        { value: null, color: "white" },
+                        { value: "N", color: "#ff2e00" },
+                        { value: "NE", color: "#ffbf00" },
+                        { value: "E", color: "#57d500" },
                     ];
 
                     const value = options.find(
-                        o => o.value == (filter && filter.value)
+                        (o) => o.value == (filter && filter.value)
                     );
 
                     return (
@@ -157,28 +168,28 @@ class DuePaymentList extends React.Component {
                             options={options}
                             defaultValue={options[0]}
                             value={value}
-                            onChange={v => onChange(v.value)}
+                            onChange={(v) => onChange(v.value)}
                             isSearchable={false}
                             isMulti={false}
                             getOptionLabel={() => "●"}
                             styles={{
-                                option: (styles, {data}) => {
+                                option: (styles, { data }) => {
                                     return {
                                         ...styles,
                                         color: data.color,
                                         fontSize: "25px",
                                     };
                                 },
-                                singleValue: (styles, {data}) => ({
+                                singleValue: (styles, { data }) => ({
                                     ...styles,
                                     color: data.color,
                                     fontSize: "25px",
                                 }),
-                                dropdownIndicator: styles => ({
+                                dropdownIndicator: (styles) => ({
                                     ...styles,
                                     display: "none",
                                 }),
-                                indicatorSeparator: styles => ({
+                                indicatorSeparator: (styles) => ({
                                     ...styles,
                                     display: "none",
                                 }),
@@ -186,7 +197,7 @@ class DuePaymentList extends React.Component {
                         />
                     );
                 },
-                Cell: row => {
+                Cell: (row) => {
                     let color = "";
 
                     switch (row.value) {
@@ -203,7 +214,7 @@ class DuePaymentList extends React.Component {
 
                     return (
                         <div className="flex flex-center-start flex-center-justified">
-                            <span style={{color, fontSize: "25px"}}>
+                            <span style={{ color, fontSize: "25px" }}>
                                 &#x25cf;
                             </span>
                         </div>
@@ -214,8 +225,8 @@ class DuePaymentList extends React.Component {
                 Header: t("general.dueDates.columns.number"),
                 id: "number",
                 maxWidth: 70,
-                accessor: d => d.number,
-                Filter: ({onChange, filter}) => {
+                accessor: (d) => d.number,
+                Filter: ({ onChange, filter }) => {
                     let nextValue = "t";
                     let badgeClass = "badge ";
                     let label = t("general.numberFilter.all");
@@ -235,7 +246,7 @@ class DuePaymentList extends React.Component {
 
                     return (
                         <div
-                            style={{height: "100%"}}
+                            style={{ height: "100%" }}
                             className="flex flex-center-aligned flex-center-justified"
                         >
                             <span
@@ -244,7 +255,7 @@ class DuePaymentList extends React.Component {
                                     padding: "initial 10px initial 10px",
                                     cursor: "pointer",
                                 }}
-                                onClick={e => onChange(nextValue)}
+                                onClick={(e) => onChange(nextValue)}
                             >
                                 {label}
                             </span>
@@ -257,16 +268,16 @@ class DuePaymentList extends React.Component {
                 id: "due_payment_status_id",
                 maxWidth: 100,
                 className: "flex flex-center-justified",
-                accessor: d => d.due_payment_status_id,
-                Cell: c => this.renderStatus(c),
-                Filter: ({filter, onChange}) => (
+                accessor: (d) => d.due_payment_status_id,
+                Cell: (c) => this.renderStatus(c),
+                Filter: ({ filter, onChange }) => (
                     <select
-                        onChange={event => onChange(event.target.value)}
-                        style={{width: "100%"}}
+                        onChange={(event) => onChange(event.target.value)}
+                        style={{ width: "100%" }}
                         value={filter ? filter.value : ""}
                     >
-                        <option value=""/>
-                        {this.props.statuses.map(method => (
+                        <option value="" />
+                        {this.props.statuses.map((method) => (
                             <option key={method.id} value={method.id}>
                                 {method.label}
                             </option>
@@ -278,9 +289,9 @@ class DuePaymentList extends React.Component {
                 Header: t("general.dueDates.columns.previsionalDate"),
                 id: "previsional_date",
                 width: 250,
-                accessor: d => moment(d.previsional_date).format("DD/MM/YYYY"),
-                Filter: ({filter, onChange}) => {
-
+                accessor: (d) =>
+                    moment(d.previsional_date).format("DD/MM/YYYY"),
+                Filter: ({ filter, onChange }) => {
                     let start = _.get(filter, "value.start");
                     let end = _.get(filter, "value.end");
 
@@ -299,15 +310,15 @@ class DuePaymentList extends React.Component {
                 Header: t("general.dueDates.columns.paymentMethod"),
                 id: "payment_method_id",
                 maxWidth: 300,
-                accessor: d => {
+                accessor: (d) => {
                     const pm = _.find(
                         this.props.paymentMethods,
-                        pm => pm.id == d.payment_method_id
+                        (pm) => pm.id == d.payment_method_id
                     );
                     return pm ? pm.label : "#";
                 },
                 sortable: false,
-                Filter: ({filter, onChange}) => (
+                Filter: ({ filter, onChange }) => (
                     <Select
                         options={duePaymentMethodsOptions}
                         isMulti={true}
@@ -315,19 +326,19 @@ class DuePaymentList extends React.Component {
                         defaultValue={
                             filter &&
                             filter.value &&
-                            duePaymentMethodsOptions.filter(o =>
+                            duePaymentMethodsOptions.filter((o) =>
                                 filter.value.includes(o.value)
                             )
                         }
-                        onChange={v =>
-                            onChange((v.length && v.map(v => v.value)) || "")
+                        onChange={(v) =>
+                            onChange((v.length && v.map((v) => v.value)) || "")
                         }
                         styles={{
-                            option: base => ({
+                            option: (base) => ({
                                 ...base,
                                 textAlign: "left",
                             }),
-                            dropdownIndicator: base => ({
+                            dropdownIndicator: (base) => ({
                                 ...base,
                                 display: "none",
                             }),
@@ -339,7 +350,7 @@ class DuePaymentList extends React.Component {
                 Header: t("general.dueDates.columns.payer"),
                 maxWidth: 175,
                 id: "payer_name",
-                Cell: props => {
+                Cell: (props) => {
                     const user = _.get(props.original, "payment_schedule.user");
                     return (
                         (user && (
@@ -355,18 +366,18 @@ class DuePaymentList extends React.Component {
                 Header: t("general.dueDates.columns.location"),
                 id: "location_id",
                 maxWidth: 120,
-                accessor: d =>
+                accessor: (d) =>
                     d.location_id && this.props.locations[d.location_id].label,
-                Filter: ({filter, onChange}) => (
+                Filter: ({ filter, onChange }) => (
                     <select
                         value={(filter && filter.value) || ""}
-                        onChange={e => onChange(e.target.value)}
+                        onChange={(e) => onChange(e.target.value)}
                     >
-                        <option value=""/>
+                        <option value="" />
                         {_.orderBy(
                             Object.values(this.props.locations),
-                            l => l.label
-                        ).map(l => (
+                            (l) => l.label
+                        ).map((l) => (
                             <option key={l.id} value={l.id}>
                                 {l.label}
                             </option>
@@ -382,7 +393,7 @@ class DuePaymentList extends React.Component {
                     display: "block",
                     textAlign: "right",
                 },
-                accessor: d => `${d.amount || "?"} €`,
+                accessor: (d) => `${d.amount || "?"} €`,
                 filterable: false,
                 sortable: false,
             },
@@ -464,18 +475,18 @@ class DuePaymentList extends React.Component {
     }
 
     fetchData(filter, delay = 400) {
-        this.setState({filter});
+        this.setState({ filter });
 
         debounce(() => {
             if (!this.mounted) return;
-            this.setState({loading: true, file: undefined});
+            this.setState({ loading: true, file: undefined });
             requestData(
                 filter.pageSize,
                 filter.page,
                 filter.sorted,
                 filter.filtered,
                 "json"
-            ).then(res => {
+            ).then((res) => {
                 if (!this.mounted) return;
                 const validityMap = _.reduce(
                     res.data,
@@ -521,17 +532,17 @@ class DuePaymentList extends React.Component {
             FILTER_STORAGE_KEY,
             JSON.stringify(defaultTableProps())
         );
-        this.setState({filter: defaultTableProps()}, () => {
+        this.setState({ filter: defaultTableProps() }, () => {
             this.fetchData(this.state.filter);
         });
     }
 
     handleChangeSeason(value) {
-        const filter = {...this.state.filter};
+        const filter = { ...this.state.filter };
 
         const indexFiltered = _.keyBy(filter.filtered, "id");
 
-        if (value) indexFiltered.season_id = {id: "season_id", value};
+        if (value) indexFiltered.season_id = { id: "season_id", value };
         else delete indexFiltered.season_id;
 
         filter.filtered = Object.values(indexFiltered);
@@ -541,11 +552,10 @@ class DuePaymentList extends React.Component {
 
     returnBlob(res) {
         if (res.headers.has("content-disposition")) {
-
             const content = res.headers.get("content-disposition");
             const match = content.match(/filename=\"(.*)\"/);
             if (match) {
-                this.filename = match[1]
+                this.filename = match[1];
             }
         }
         return res.blob();
@@ -553,27 +563,26 @@ class DuePaymentList extends React.Component {
 
     downloadFile(file) {
         const download = document.createElement("a");
-        download.download = this.filename || `${moment().format(
-            "DD_MM_YYYY-HH_mm_ss"
-        )}.csv`;
+        download.download =
+            this.filename || `${moment().format("DD_MM_YYYY-HH_mm_ss")}.csv`;
         download.href = URL.createObjectURL(file);
         document.body.appendChild(download);
         download.click();
         document.body.removeChild(download);
     }
 
-     onCsvExport() {
-        this.setState({csv_export_loading: true})
+    onCsvExport() {
+        this.setState({ csv_export_loading: true });
         const filter = this.state.filter.filtered;
         let ids = [];
 
-        if(this.state.targets === "all")
-        {
+        if (this.state.targets === "all") {
             ids = "all";
-        }
-        else
-        {
-            ids = this.state.targets && this.state.targets.length > 0 ? this.state.targets : this.state.data.map(d => d.id);
+        } else {
+            ids =
+                this.state.targets && this.state.targets.length > 0
+                    ? this.state.targets
+                    : this.state.data.map((d) => d.id);
         }
 
         let searchParams;
@@ -581,26 +590,27 @@ class DuePaymentList extends React.Component {
         if (ids === "all") {
             searchParams = new URLSearchParams({
                 filtered: JSON.stringify(filter),
-                stream: true
+                stream: true,
             });
         } else {
             searchParams = new URLSearchParams({
                 list: JSON.stringify(ids),
-                stream: true
+                stream: true,
             });
         }
 
-        const url = `/due_payments/export?${searchParams.toString()}`
+        const url = `/due_payments/export?${searchParams.toString()}`;
         fetch(url, {
             method: "GET",
             credentials: "same-origin",
             headers: {
                 "X-CSRF-Token": csrfToken,
                 "Content-Type": "application/json",
-            }
-        }).then(res => this.returnBlob(res))
-            .then(file => this.downloadFile(file))
-            .then(() => this.setState({csv_export_loading: false}));
+            },
+        })
+            .then((res) => this.returnBlob(res))
+            .then((file) => this.downloadFile(file))
+            .then(() => this.setState({ csv_export_loading: false }));
     }
 
     sendReminderMail() {
@@ -609,21 +619,21 @@ class DuePaymentList extends React.Component {
         const to = _.uniq(
             this.state.data
                 .filter(
-                    ({id}) =>
+                    ({ id }) =>
                         this.state.targets.includes(id) &&
                         this.state.validityMap[id] === "N"
                 )
-                .map(d => _.get(d, "payment_schedule.user.id"))
-                .filter(id => id)
+                .map((d) => _.get(d, "payment_schedule.user.id"))
+                .filter((id) => id)
         );
 
-        swal({
+        swal.fire({
             title: t("general.reminder.confirmSendTitle"),
             text: t("common:confirm.sure"),
-            type: "question",
+            icon: "question",
             showCancelButton: true,
         })
-            .then(v => {
+            .then((v) => {
                 if (v.value) {
                     return fetch("/messages/create", {
                         method: "POST",
@@ -638,13 +648,13 @@ class DuePaymentList extends React.Component {
                     });
                 }
             })
-            .then(res => {
+            .then((res) => {
                 if (res) {
                     if (res.ok)
-                        swal({
+                        swal.fire({
                             title: t("general.reminder.successTitle"),
                             text: t("general.reminder.successText"),
-                            type: "success",
+                            icon: "success",
                         });
                     else
                         throw new Error(
@@ -655,11 +665,11 @@ class DuePaymentList extends React.Component {
                         );
                 }
             })
-            .catch(reason =>
-                swal({
+            .catch((reason) =>
+                swal.fire({
                     title: t("general.reminder.errorTitle"),
                     text: reason,
-                    type: "error",
+                    icon: "error",
                 })
             );
     }
@@ -667,31 +677,33 @@ class DuePaymentList extends React.Component {
     sendPaymentMail() {
         const { t } = this.props;
 
-        swal({
+        swal.fire({
             title: t("general.paymentMail.title"),
             text: t("general.dueDates.paymentMailText"),
-            type: "question",
+            icon: "question",
             showCancelButton: true,
             cancelButtonText: t("common:actions.cancel"),
-        }).then(res => {
+        }).then((res) => {
             if (res.value) {
                 api.set()
-                    .success(res => {
+                    .success((res) => {
                         if (res.status === "success")
-                            swal({title: t("general.paymentMail.successTitle"), text: t("general.paymentMail.successText"), type: "success"});
+                            swal.fire({
+                                title: t("general.paymentMail.successTitle"),
+                                text: t("general.paymentMail.successText"),
+                                icon: "success",
+                            });
                     })
-                    .error(errorMsg => {
-                        swal({
-                            type: "error",
+                    .error((errorMsg) => {
+                        swal.fire({
+                            icon: "error",
                             title: t("general.paymentMail.errorTitle"),
                             text: errorMsg,
                         });
                     })
-                    .post(
-                        `/due_payments/send_payment_mail`,{
-                            targets: this.state.targetStatus,
-                        }
-                    );
+                    .post(`/due_payments/send_payment_mail`, {
+                        targets: this.state.targetStatus,
+                    });
             }
         });
     }
@@ -710,14 +722,14 @@ class DuePaymentList extends React.Component {
                     ...this.state.bulkEdit,
                 },
             }),
-        }).then(res => {
+        }).then((res) => {
             if (res.ok) {
                 let targets =
                     this.state.targets === "all"
-                        ? this.state.data.map(d => d.id)
+                        ? this.state.data.map((d) => d.id)
                         : this.state.targets;
 
-                let data = [...this.state.data].map(d => {
+                let data = [...this.state.data].map((d) => {
                     if (targets.includes(d.id))
                         return {
                             ...d,
@@ -739,20 +751,20 @@ class DuePaymentList extends React.Component {
     promptStatusEdit(id, statusId) {
         const { t } = this.props;
 
-        swal({
+        swal.fire({
             title: t("general.statusEdit.title"),
-            type: "warning",
+            icon: "warning",
             confirmButtonText: t("common:actions.validate"),
             input: "select",
             inputOptions: _.zipObject(
-                this.props.statuses.map(status => status.id),
-                this.props.statuses.map(status => status.label)
+                this.props.statuses.map((status) => status.id),
+                this.props.statuses.map((status) => status.label)
             ),
             inputClass: "form-control",
             inputValue: statusId,
             showCancelButton: true,
             cancelButtonText: t("common:actions.cancel"),
-        }).then(res => {
+        }).then((res) => {
             const newStatusId = res.value;
             if (newStatusId) {
                 fetch("/due_payments/edit_status", {
@@ -761,18 +773,22 @@ class DuePaymentList extends React.Component {
                         "Content-Type": "application/json",
                         "X-CSRF-Token": csrfToken,
                     },
-                    body: JSON.stringify({id, status: res.value}),
-                }).then(res => {
-                    if (!res.ok) swal(t("general.statusEditFailed"), "", "error");
+                    body: JSON.stringify({ id, status: res.value }),
+                }).then((res) => {
+                    if (!res.ok)
+                        swal.fire({
+                            title: t("general.statusEditFailed"),
+                            text: "",
+                            icon: "error",
+                        });
                     else
                         this.setState({
-                            data: this.state.data.map(dp => {
+                            data: this.state.data.map((dp) => {
                                 if (dp.id === id) {
                                     return {
                                         ...dp,
-                                        due_payment_status_id: parseInt(
-                                            newStatusId
-                                        ),
+                                        due_payment_status_id:
+                                            parseInt(newStatusId),
                                     };
                                 }
 
@@ -786,7 +802,7 @@ class DuePaymentList extends React.Component {
 
     renderStatus(cell) {
         if (cell.value) {
-            let status = this.props.statuses.find(s => s.id === cell.value);
+            let status = this.props.statuses.find((s) => s.id === cell.value);
             let dueId = cell.original.id;
 
             return status ? (
@@ -798,7 +814,7 @@ class DuePaymentList extends React.Component {
                         color: "white",
                         cursor: "pointer",
                     }}
-                    onClick={e => this.promptStatusEdit(dueId, status.id)}
+                    onClick={(e) => this.promptStatusEdit(dueId, status.id)}
                 >
                     {status.label}
                 </div>
@@ -811,23 +827,26 @@ class DuePaymentList extends React.Component {
         if (checked) {
             //add target to bulk targets list
             this.setState({
-                targets: [...this.state.targets, id]
+                targets: [...this.state.targets, id],
             });
 
             if (status === DuePaymentStatus.UNPAID_ID)
-                this.setState({targetStatus: [...this.state.targetStatus, id]});
-
+                this.setState({
+                    targetStatus: [...this.state.targetStatus, id],
+                });
         } else {
             if (this.state.targets === "all")
                 this.setState({
                     targets: this.state.data
-                        .map(d => d.id)
-                        .filter(d => d !== id),
+                        .map((d) => d.id)
+                        .filter((d) => d !== id),
                 });
             else
                 this.setState({
-                    targets: this.state.targets.filter(r => r !== id),
-                    targetStatus: this.state.targetStatus.filter(r => r !== id),
+                    targets: this.state.targets.filter((r) => r !== id),
+                    targetStatus: this.state.targetStatus.filter(
+                        (r) => r !== id
+                    ),
                 });
         }
     }
@@ -837,13 +856,13 @@ class DuePaymentList extends React.Component {
             this.setState({
                 targetStatus: {
                     ...this.state.targetStatus,
-                    [id]: status
-                }
-            })
+                    [id]: status,
+                },
+            });
         } else {
             this.setState({
-                targetStatus: _.omit(this.state.targetStatus, id)
-            })
+                targetStatus: _.omit(this.state.targetStatus, id),
+            });
         }
     }
 
@@ -856,7 +875,7 @@ class DuePaymentList extends React.Component {
             this.state.targets.length;
 
         return (
-            <div className="alert alert-info m-t-sm" style={{width: "100%"}}>
+            <div className="alert alert-info m-t-sm" style={{ width: "100%" }}>
                 <div className="flex flex-space-between-justified flex-center-aligned">
                     <div id="targets-infos">
                         {t("general.dueDates.selectedCount", { n: count })}{" "}
@@ -867,7 +886,7 @@ class DuePaymentList extends React.Component {
                         ) ? (
                             <button
                                 onClick={() =>
-                                    this.setState({targets: "all"})
+                                    this.setState({ targets: "all" })
                                 }
                                 className="btn btn-sm btn-info m-l-sm"
                             >
@@ -880,7 +899,8 @@ class DuePaymentList extends React.Component {
                         ) : null}
                     </div>
                     <div id="targets-actions">
-                        {this.state.targetStatus.length > 0 || this.state.targets.length === this.state.data.length ? (
+                        {this.state.targetStatus.length > 0 ||
+                        this.state.targets.length === this.state.data.length ? (
                             <button
                                 className="btn btn-sm btn-primary m-r animated"
                                 disabled={this.state.targets === "all"}
@@ -889,7 +909,9 @@ class DuePaymentList extends React.Component {
                             >
                                 {t("general.dueDates.sendUnpaidMail")}
                             </button>
-                        ) : ""}
+                        ) : (
+                            ""
+                        )}
                         <button
                             className="btn btn-sm btn-primary m-r"
                             data-toggle="modal"
@@ -912,12 +934,12 @@ class DuePaymentList extends React.Component {
     bulkDelete() {
         const { t } = this.props;
 
-        swal({
+        swal.fire({
             title: t("general.bulkDeleteTitle"),
             text: t("general.dueDates.bulkDeleteText"),
-            type: "question",
+            icon: "question",
             showCancelButton: true,
-        }).then(r => {
+        }).then((r) => {
             if (r.value) {
                 fetch("/due_payments/bulkdelete", {
                     method: "DELETE",
@@ -929,11 +951,11 @@ class DuePaymentList extends React.Component {
                         targets: this.state.targets,
                     }),
                 })
-                    .catch(res => console.error(res))
-                    .then(res => {
+                    .catch((res) => console.error(res))
+                    .then((res) => {
                         this.setState({
                             data: this.state.data.filter(
-                                d => !this.state.targets.includes(d.id)
+                                (d) => !this.state.targets.includes(d.id)
                             ),
                             targets: [],
                         });
@@ -943,20 +965,19 @@ class DuePaymentList extends React.Component {
     }
 
     render() {
-        const {data, pages, loading} = this.state;
+        const { data, pages, loading } = this.state;
         const { t } = this.props;
-
 
         const totalRecipients = _.chain(this.state.data)
             .filter(
-                d =>
+                (d) =>
                     this.state.validityMap[d.id] === "N" &&
                     (this.state.targets === "all" ||
                         this.state.targets.includes(d.id))
             )
-            .map(d => _.get(d, "payment_schedule.user"))
+            .map((d) => _.get(d, "payment_schedule.user"))
             .compact()
-            .uniqBy(u => u.id)
+            .uniqBy((u) => u.id)
             .value();
 
         let recipientsToDisplay = totalRecipients.slice(
@@ -965,7 +986,7 @@ class DuePaymentList extends React.Component {
         );
 
         let recipients = recipientsToDisplay
-            .map(u => `${u.first_name} ${u.last_name}`)
+            .map((u) => `${u.first_name} ${u.last_name}`)
             .join(", ");
 
         const restCount = Math.max(
@@ -980,31 +1001,37 @@ class DuePaymentList extends React.Component {
         const filteredSeasonId =
             findAndGet(
                 this.state.filter.filtered,
-                f => f.id === "season_id",
+                (f) => f.id === "season_id",
                 "value"
             ) || "";
 
-        const events = []
+        const events = [];
 
         return (
             <div>
                 <div
                     className="flex flex-space-between-justified flex-start-aligned reglement-table-header m-b-sm"
-                    style={{width: "100%"}}
+                    style={{ width: "100%" }}
                 >
                     <div className="flex flex-center-aligned">
                         <h2 className="m-r">
-                            {t("general.dueDates.rowCount", { n: this.state.rowsCount })}
+                            {t("general.dueDates.rowCount", {
+                                n: this.state.rowsCount,
+                            })}
                         </h2>
                         <button
                             className="btn btn-primary m-r-sm"
-                            data-tippy-content={t("general.tableControls.reload")}
+                            data-tippy-content={t(
+                                "general.tableControls.reload"
+                            )}
                             onClick={() => this.fetchData(this.state.filter)}
                         >
-                            <i className="fas fa-sync"/>
+                            <i className="fas fa-sync" />
                         </button>
                         <button
-                            data-tippy-content={t("general.tableControls.resetFilters")}
+                            data-tippy-content={t(
+                                "general.tableControls.resetFilters"
+                            )}
                             className="btn btn-primary m-r-sm"
                             onClick={() => this.resetFilters()}
                         >
@@ -1012,7 +1039,9 @@ class DuePaymentList extends React.Component {
                         </button>
 
                         <button
-                            data-tippy-content={t("general.tableControls.fullscreen")}
+                            data-tippy-content={t(
+                                "general.tableControls.fullscreen"
+                            )}
                             className="btn btn-primary m-r"
                             onClick={() => events[0]()}
                         >
@@ -1020,24 +1049,42 @@ class DuePaymentList extends React.Component {
                         </button>
 
                         <select
-                            style={{width: "auto"}}
-                            onChange={e =>
+                            style={{ width: "auto" }}
+                            onChange={(e) =>
                                 this.handleChangeSeason(e.target.value)
                             }
                             value={filteredSeasonId}
                             className="form-control m-r"
                         >
-                            <option value="">{t("general.seasonFilter")}</option>
+                            <option value="">
+                                {t("general.seasonFilter")}
+                            </option>
                             {this.props.seasons.map(optionMapper())}
                         </select>
 
                         <button
                             className="btn btn-primary"
-                            data-tippy-content={t("general.csvExport.prefix") + (this.state.targets.length > 0 ? t("general.csvExport.scopeSelected", { n: this.state.targets === "all" ? this.state.rowsCount : this.state.targets.length }) : t("general.csvExport.scopeAll"))}
-                            onClick={() => {this.onCsvExport()}}
+                            data-tippy-content={
+                                t("general.csvExport.prefix") +
+                                (this.state.targets.length > 0
+                                    ? t("general.csvExport.scopeSelected", {
+                                          n:
+                                              this.state.targets === "all"
+                                                  ? this.state.rowsCount
+                                                  : this.state.targets.length,
+                                      })
+                                    : t("general.csvExport.scopeAll"))
+                            }
+                            onClick={() => {
+                                this.onCsvExport();
+                            }}
                             disabled={this.state.csv_export_loading}
                         >
-                            {this.state.csv_export_loading ? <i className="fas fa-circle-notch fa-spin"/> : <i className="fas fa-upload"/>}
+                            {this.state.csv_export_loading ? (
+                                <i className="fas fa-circle-notch fa-spin" />
+                            ) : (
+                                <i className="fas fa-upload" />
+                            )}
                         </button>
                     </div>
 
@@ -1080,8 +1127,8 @@ class DuePaymentList extends React.Component {
                         pageSize={this.state.filter.pageSize}
                         sorted={this.state.filter.sorted}
                         filtered={this.state.filter.filtered}
-                        onPageChange={page =>
-                            this.fetchData({...this.state.filter, page})
+                        onPageChange={(page) =>
+                            this.fetchData({ ...this.state.filter, page })
                         }
                         onPageSizeChange={(pageSize, page) =>
                             this.fetchData({
@@ -1090,10 +1137,10 @@ class DuePaymentList extends React.Component {
                                 pageSize,
                             })
                         }
-                        onSortedChange={sorted =>
-                            this.fetchData({...this.state.filter, sorted})
+                        onSortedChange={(sorted) =>
+                            this.fetchData({ ...this.state.filter, sorted })
                         }
-                        onFilteredChange={filtered =>
+                        onFilteredChange={(filtered) =>
                             this.fetchData({
                                 ...this.state.filter,
                                 filtered,
@@ -1109,7 +1156,7 @@ class DuePaymentList extends React.Component {
                         ofText={t("common:reactTable.ofText")}
                         rowsText={t("common:reactTable.rowsText")}
                         minRows={10}
-                        SubComponent={row => {
+                        SubComponent={(row) => {
                             if (row.original.payments.length > 0) {
                                 return (
                                     <SubPaymentList
@@ -1134,7 +1181,7 @@ class DuePaymentList extends React.Component {
                     id={MESSAGE_MODAL_ID}
                     recipients={recipients}
                     message={this.state.message}
-                    onChange={e =>
+                    onChange={(e) =>
                         this.setState({
                             message: {
                                 ...this.state.message,

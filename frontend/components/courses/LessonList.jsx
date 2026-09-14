@@ -47,8 +47,7 @@ const defaultTableProps = () => ({
 const NB_DISPLAYED_RECIPIENTS = 3;
 const MESSAGE_MODAL_ID = "messagesModal";
 
-
-const filterUserWithDate = date => u => filterUser(u, date);
+const filterUserWithDate = (date) => (u) => filterUser(u, date);
 
 const filterUser = (u, date) => {
     if (!u.stopped_at && !u.begin_at) {
@@ -95,7 +94,7 @@ function fetchInstancesList(filter, format = "json") {
             page_size: filter.pageSize,
         }),
     })
-        .then(res => {
+        .then((res) => {
             if (!res.ok) throw new Error();
 
             switch (format) {
@@ -149,7 +148,8 @@ class LessonList extends React.Component {
                 : defaultTableProps();
 
         const localStoragePrefs = localStorage.getItem(PREFERENCES_STORAGE_KEY);
-        const listPreferences = localStoragePrefs && JSON.parse(localStoragePrefs);
+        const listPreferences =
+            localStoragePrefs && JSON.parse(localStoragePrefs);
 
         this.state = {
             data: [],
@@ -175,21 +175,17 @@ class LessonList extends React.Component {
         this.onSubmit = this.onSubmit.bind(this);
     }
 
-
     componentDidMount() {
-        const currentSeason = this.props.seasons?.find(s => s.is_current);
+        const currentSeason = this.props.seasons?.find((s) => s.is_current);
 
         if (currentSeason) {
-            this.setState(
-                { currentAppsSeason: currentSeason },
-                () => {
-                    const newFilter = {
-                        ...this.state.filter,
-                        season_id: currentSeason.id || ""
-                    };
-                    this.fetchData(newFilter);
-                }
-            );
+            this.setState({ currentAppsSeason: currentSeason }, () => {
+                const newFilter = {
+                    ...this.state.filter,
+                    season_id: currentSeason.id || "",
+                };
+                this.fetchData(newFilter);
+            });
         } else {
             this.fetchData(this.state.filter);
         }
@@ -198,7 +194,7 @@ class LessonList extends React.Component {
     componentDidUpdate() {
         localStorage.setItem(
             FILTER_STORAGE_KEY,
-            JSON.stringify(this.state.filter),
+            JSON.stringify(this.state.filter)
         );
     }
 
@@ -213,23 +209,23 @@ class LessonList extends React.Component {
         if (values.repetition === "all") {
             api.set()
                 .success(() => {
-                    swal({
+                    swal.fire({
                         title: t("lessonList.successTitle"),
-                        type: "success",
+                        icon: "success",
                         allowOutsideClick: false,
                         text: t("lessonList.courseDeleted"),
                         width: "400px",
                         confirmButtonText: t("lessonList.ok"),
-                    }).then(res => {
+                    }).then((res) => {
                         if (res.value) {
                             window.location.href = `/activities?auth_token=${csrfToken}`;
                         }
                     });
                 })
-                .error(errorMsg => {
+                .error((errorMsg) => {
                     console.log("error deleting course : ", errorMsg);
-                    swal({
-                        type: "error",
+                    swal.fire({
+                        icon: "error",
                         title: t("lessonList.genericError"),
                     });
                 })
@@ -237,39 +233,41 @@ class LessonList extends React.Component {
         } else {
             api.set()
                 .success(() => {
-                    swal({
+                    swal.fire({
                         title: t("lessonList.successTitle"),
-                        type: "success",
+                        icon: "success",
                         allowOutsideClick: false,
                         text: t("lessonList.selectedInstancesDeleted"),
                         width: "400px",
                         confirmButtonText: t("lessonList.ok"),
-                    }).then(res => {
+                    }).then((res) => {
                         if (res.value) {
                             window.location.href = `/activities?auth_token=${csrfToken}`;
                         }
                     });
                 })
-                .error(errorMsg => {
+                .error((errorMsg) => {
                     console.log("error deleting course : ", errorMsg);
-                    swal({
-                        type: "error",
+                    swal.fire({
+                        icon: "error",
                         title: t("lessonList.genericError"),
                     });
                 })
-                .del(`/activity_instances?instance_ids=${values.instanceIds}&time_interval_ids=${values.timeIntervalIds}&activity_id=${activity.id}`);
+                .del(
+                    `/activity_instances?instance_ids=${values.instanceIds}&time_interval_ids=${values.timeIntervalIds}&activity_id=${activity.id}`
+                );
         }
     }
     bulkDelete() {
         const { t } = this.props;
-        swal({
+        swal.fire({
             title: t("lessonList.confirmationTitle"),
             text: t("lessonList.bulkDeleteConfirm"),
-            type: "warning",
+            icon: "warning",
             showCancelButton: true,
             confirmButtonText: t("lessonList.yesDelete"),
             cancelButtonText: t("common:actions.cancel"),
-        }).then(r => {
+        }).then((r) => {
             if (r.value) {
                 fetch("/lessons/bulkdelete", {
                     method: "DELETE",
@@ -281,32 +279,32 @@ class LessonList extends React.Component {
                         targets: this.state.targets,
                     }),
                 })
-                    .then(response => response.json())
+                    .then((response) => response.json())
                     .then((data) => {
                         if (data.success) {
                             this.setState({
                                 data: this.state.data.filter(
-                                    d => !this.state.targets.includes(d.id)
+                                    (d) => !this.state.targets.includes(d.id)
                                 ),
                                 targets: [],
                             });
-                            swal({
+                            swal.fire({
                                 title: t("lessonList.successTitle"),
                                 text: t("lessonList.selectedCoursesDeleted"),
-                                type: "success",
+                                icon: "success",
                             });
                         } else {
-                            swal({
-                                type: "error",
+                            swal.fire({
+                                icon: "error",
                                 title: t("lessonList.deleteFailedTitle"),
                                 text: t("lessonList.serverError"),
                             });
                         }
                     })
-                    .catch(err => {
+                    .catch((err) => {
                         console.error("Erreur lors de la suppression :", err);
-                        swal({
-                            type: "error",
+                        swal.fire({
+                            icon: "error",
                             title: t("lessonList.errorTitle"),
                             text: t("lessonList.deleteFailedRetry"),
                         });
@@ -315,27 +313,26 @@ class LessonList extends React.Component {
         });
     }
 
-
     fetchData(filter) {
         const hasSeasonChanged =
             findAndGet(
                 this.state.filter.filtered,
-                f => f.id === "season_id",
-                "value",
+                (f) => f.id === "season_id",
+                "value"
             ) !=
-            findAndGet(filter.filtered, f => f.id === "season_id", "value");
+            findAndGet(filter.filtered, (f) => f.id === "season_id", "value");
 
         if (hasSeasonChanged) {
             const seasonId = findAndGet(
                 filter.filtered,
-                f => f.id === "season_id",
-                "value",
+                (f) => f.id === "season_id",
+                "value"
             );
             const season =
-                seasonId && this.props.seasons?.find(s => s.id == seasonId);
+                seasonId && this.props.seasons?.find((s) => s.id == seasonId);
             const refDateFilter = _.find(
                 filter.filtered,
-                f => f.id === "reference_date",
+                (f) => f.id === "reference_date"
             );
 
             if (refDateFilter && _.get(season, "is_next"))
@@ -352,18 +349,21 @@ class LessonList extends React.Component {
 
         debounce(() =>
             fetchInstancesList(filter).then(({ data, pages, total }) => {
-                const processedData = data.map(activity => {
+                const processedData = data.map((activity) => {
                     const referenceDate = findAndGet(
                         filter.filtered,
-                        f => f.id === "reference_date",
+                        (f) => f.id === "reference_date",
                         "value"
                     );
 
-                    const isOnlyOneOption = isActivityWithOnlyOneOption(activity, referenceDate);
+                    const isOnlyOneOption = isActivityWithOnlyOneOption(
+                        activity,
+                        referenceDate
+                    );
 
                     return {
                         ...activity,
-                        isOnlyOneOption
+                        isOnlyOneOption,
                     };
                 });
 
@@ -373,10 +373,11 @@ class LessonList extends React.Component {
                     pages,
                     total,
                 });
-            }),
+            })
         );
-    }downloadExport() {
-        fetchInstancesList(this.state.filter, "csv").then(file => {
+    }
+    downloadExport() {
+        fetchInstancesList(this.state.filter, "csv").then((file) => {
             const download = document.createElement("a");
             download.download = `${moment().format("DD_MM_YYYY-HH_mm_ss")}.csv`;
             download.href = URL.createObjectURL(file);
@@ -396,21 +397,23 @@ class LessonList extends React.Component {
             delete filter.pageSize;
 
             const res = await fetchInstancesList(filter, "json");
-            activityIds = res.data.map(item => item.id);
+            activityIds = res.data.map((item) => item.id);
         } else {
             activityIds = this.state.targets;
         }
 
         if (activityIds.length === 0) {
-            swal({
-                type: "error",
+            swal.fire({
+                icon: "error",
                 title: t("lessonList.noCourseSelectedTitle"),
                 text: t("lessonList.noCourseSelectedText"),
             });
         } else {
             const download = document.createElement("a");
             //download.download = `liste_élèves`;
-            let activityIdsString = activityIds.map(id => `activity_ids[]=${id}`).join("&");
+            let activityIdsString = activityIds
+                .map((id) => `activity_ids[]=${id}`)
+                .join("&");
             download.href = `/students.pdf?${activityIdsString}`;
             document.body.appendChild(download);
             download.click();
@@ -440,12 +443,12 @@ class LessonList extends React.Component {
             if (this.state.targets === "all")
                 this.setState({
                     targets: this.state.data
-                        .map(d => d.id)
-                        .filter(d => d !== id),
+                        .map((d) => d.id)
+                        .filter((d) => d !== id),
                 });
             else
                 this.setState({
-                    targets: this.state.targets.filter(r => r !== id),
+                    targets: this.state.targets.filter((r) => r !== id),
                 });
         }
     }
@@ -453,7 +456,7 @@ class LessonList extends React.Component {
     resetFilters() {
         localStorage.setItem(
             FILTER_STORAGE_KEY,
-            JSON.stringify(defaultTableProps()),
+            JSON.stringify(defaultTableProps())
         );
         this.setState({ filter: defaultTableProps() }, () => {
             this.fetchData(this.state.filter);
@@ -474,7 +477,7 @@ class LessonList extends React.Component {
                         {this.state.targets.length === this.state.data.length &&
                         Math.max(
                             this.state.total - this.state.targets.length,
-                            0,
+                            0
                         ) ? (
                             <button
                                 onClick={() =>
@@ -483,7 +486,9 @@ class LessonList extends React.Component {
                                 className="btn btn-sm btn-info m-l-sm"
                             >
                                 {t("lessonList.selectRemaining", {
-                                    count: this.state.total - this.state.targets.length,
+                                    count:
+                                        this.state.total -
+                                        this.state.targets.length,
                                 })}
                             </button>
                         ) : null}
@@ -503,7 +508,7 @@ class LessonList extends React.Component {
                         >
                             {t("lessonList.sendMessage")}
                         </button>
-                       {/* <button
+                        {/* <button
                             className="btn btn-sm btn-danger m-r"
                             onClick={() => this.bulkDelete()}
                         >
@@ -515,32 +520,31 @@ class LessonList extends React.Component {
         );
     }
 
-
     sendReminderMail(referenceDate = undefined) {
         const { t } = this.props;
         const to = _.chain(this.state.data)
             .filter(({ id }) => this.state.targets.includes(id))
-            .map(d => d.users)
+            .map((d) => d.users)
             .flatten()
             .filter(
-                u =>
+                (u) =>
                     referenceDate == undefined ||
                     (dateOnly(u.begin_at) <= referenceDate &&
                         (dateOnly(u.stopped_at) == undefined ||
-                            dateOnly(u.stopped_at) > referenceDate)),
+                            dateOnly(u.stopped_at) > referenceDate))
             )
             .compact()
-            .map(u => u.id)
+            .map((u) => u.id)
             .uniq()
             .value();
 
-        swal({
+        swal.fire({
             title: t("lessonList.sendConfirmTitle"),
             text: t("common:confirm.sure"),
-            type: "question",
+            icon: "question",
             showCancelButton: true,
         })
-            .then(v => {
+            .then((v) => {
                 if (v.value) {
                     return fetch("/messages/create", {
                         method: "POST",
@@ -555,29 +559,29 @@ class LessonList extends React.Component {
                     });
                 }
             })
-            .then(res => {
+            .then((res) => {
                 if (res) {
                     if (res.ok)
-                        swal({
+                        swal.fire({
                             title: t("lessonList.successTitle"),
                             text: t("lessonList.messageSent"),
-                            type: "success",
+                            icon: "success",
                         });
                     else
                         throw new Error(
                             t("lessonList.httpError", {
                                 status: res.status,
                                 statusText: res.statusText,
-                            }),
+                            })
                         );
                 }
             })
-            .catch(reason =>
-                swal({
+            .catch((reason) =>
+                swal.fire({
                     title: t("lessonList.errorTitle"),
                     text: reason,
-                    type: "error",
-                }),
+                    icon: "error",
+                })
             );
     }
 
@@ -586,10 +590,11 @@ class LessonList extends React.Component {
             {
                 listPreferences: prefs,
             },
-            () => localStorage.setItem(
-                PREFERENCES_STORAGE_KEY,
-                JSON.stringify(prefs),
-            ),
+            () =>
+                localStorage.setItem(
+                    PREFERENCES_STORAGE_KEY,
+                    JSON.stringify(prefs)
+                )
         );
     }
 
@@ -598,31 +603,38 @@ class LessonList extends React.Component {
 
         const activity = this.state.activity;
 
-        const refsOptions = _.sortBy(this.props.activityRefs, r => r.label).map(
-            optionMapper(),
-        );
+        const refsOptions = _.sortBy(
+            this.props.activityRefs,
+            (r) => r.label
+        ).map(optionMapper());
 
         const teachersOptions = _.sortBy(
             this.props.teachers,
-            teacher => teacher.last_name,
-        ).map(optionMapper({ label: teacher => `${teacher.last_name} ${teacher.first_name}` }));
-
-        const seasonsOptions = _.sortBy(this.props.seasons || [], s => s.label).map(
-            optionMapper(),
+            (teacher) => teacher.last_name
+        ).map(
+            optionMapper({
+                label: (teacher) =>
+                    `${teacher.last_name} ${teacher.first_name}`,
+            })
         );
 
-        const roomsOptions = _.sortBy(this.props.rooms, r => r.label).map(
-            optionMapper(),
+        const seasonsOptions = _.sortBy(
+            this.props.seasons || [],
+            (s) => s.label
+        ).map(optionMapper());
+
+        const roomsOptions = _.sortBy(this.props.rooms, (r) => r.label).map(
+            optionMapper()
         );
 
         const locationsOptions = _.sortBy(
             this.props.locations,
-            l => l.label,
+            (l) => l.label
         ).map(optionMapper());
 
         const now = moment();
 
-        const daysOptions = [1, 2, 3, 4, 5, 6, 0].map(i => {
+        const daysOptions = [1, 2, 3, 4, 5, 6, 0].map((i) => {
             const day = now.day(i);
             return (
                 <option key={i} value={i}>
@@ -634,45 +646,46 @@ class LessonList extends React.Component {
         const referenceDate =
             findAndGet(
                 this.state.filter.filtered,
-                f => f.id === "reference_date",
-                "value",
+                (f) => f.id === "reference_date",
+                "value"
             ) || moment().format(ISO_DATE_FORMAT);
 
         const totalRecipients = _.chain(this.state.data)
             .filter(
-                d =>
+                (d) =>
                     this.state.targets === "all" ||
-                    this.state.targets.includes(d.id),
+                    this.state.targets.includes(d.id)
             )
-            .map(d => _.get(d, "users"))
+            .map((d) => _.get(d, "users"))
             .flatten()
             .filter(
-                u =>
+                (u) =>
                     referenceDate == undefined ||
                     (dateOnly(u.begin_at) <= referenceDate &&
                         (dateOnly(u.stopped_at) == undefined ||
-                            dateOnly(u.stopped_at) > referenceDate)),
+                            dateOnly(u.stopped_at) > referenceDate))
             )
             .compact()
-            .uniqBy(u => u.id)
+            .uniqBy((u) => u.id)
             .value();
 
         let recipientsToDisplay = totalRecipients.slice(
             0,
-            NB_DISPLAYED_RECIPIENTS,
+            NB_DISPLAYED_RECIPIENTS
         );
 
         let recipients = recipientsToDisplay
-            .map(u => `${u.first_name} ${u.last_name}`)
+            .map((u) => `${u.first_name} ${u.last_name}`)
             .join(", ");
 
         const restCount = Math.max(
             0,
             this.state.targets === "all"
                 ? this.state.total - NB_DISPLAYED_RECIPIENTS
-                : totalRecipients.length - NB_DISPLAYED_RECIPIENTS,
+                : totalRecipients.length - NB_DISPLAYED_RECIPIENTS
         );
-        if (restCount) recipients += t("lessonList.andNOthers", { count: restCount });
+        if (restCount)
+            recipients += t("lessonList.andNOthers", { count: restCount });
 
         const tableColumns = [
             {
@@ -680,7 +693,7 @@ class LessonList extends React.Component {
                 id: "selection",
                 width: 25,
                 sortable: false,
-                accessor: r => this.state.targets.includes(r.id),
+                accessor: (r) => this.state.targets.includes(r.id),
                 Filter: () => (
                     <input
                         type="checkbox"
@@ -688,20 +701,20 @@ class LessonList extends React.Component {
                             this.state.targets === "all" ||
                             this.state.targets.length === this.state.data.length
                         }
-                        onChange={e =>
+                        onChange={(e) =>
                             e.target.checked
                                 ? this.setState({
-                                    targets: this.state.data.map(r => r.id),
-                                })
+                                      targets: this.state.data.map((r) => r.id),
+                                  })
                                 : this.setState({ targets: [] })
                         }
                     />
                 ),
-                Cell: d => (
+                Cell: (d) => (
                     <input
                         type="checkbox"
                         checked={this.state.targets === "all" || d.value}
-                        onChange={e =>
+                        onChange={(e) =>
                             this.updateTarget(d.original.id, e.target.checked)
                         }
                     />
@@ -711,13 +724,13 @@ class LessonList extends React.Component {
                 Header: t("lessonList.columns.day"),
                 id: "day",
                 maxWidth: 110,
-                accessor: d => d.time_interval,
-                Cell: c =>
+                accessor: (d) => d.time_interval,
+                Cell: (c) =>
                     c.value ? moment(c.value.start).format("dddd") : "?",
                 Filter: ({ filter, onChange }) => (
                     <select
                         value={(filter && filter.value) || ""}
-                        onChange={e => onChange(e.target.value)}
+                        onChange={(e) => onChange(e.target.value)}
                     >
                         <option value="" />
                         {daysOptions}
@@ -729,7 +742,7 @@ class LessonList extends React.Component {
                 id: "time_interval",
                 sortable: false,
                 minWidth: 140,
-                accessor: d => d.time_interval,
+                accessor: (d) => d.time_interval,
                 Filter: ({ filter, onChange }) => {
                     filter = (filter && filter.value) || {};
                     const start = filter.start || "";
@@ -740,7 +753,7 @@ class LessonList extends React.Component {
                             <input
                                 type="time"
                                 defaultValue={start}
-                                onChange={e =>
+                                onChange={(e) =>
                                     onChange({
                                         ...filter,
                                         start: e.target.value,
@@ -750,7 +763,7 @@ class LessonList extends React.Component {
                             <input
                                 type="time"
                                 defaultValue={end}
-                                onChange={e =>
+                                onChange={(e) =>
                                     onChange({
                                         ...filter,
                                         end: e.target.value,
@@ -760,7 +773,7 @@ class LessonList extends React.Component {
                         </div>
                     );
                 },
-                Cell: c => {
+                Cell: (c) => {
                     if (c.value) {
                         return `${moment(c.value.start).format(
                             "HH:mm"
@@ -774,20 +787,20 @@ class LessonList extends React.Component {
                 Header: t("lessonList.columns.group"),
                 id: "group_name",
                 maxWidth: 60,
-                accessor: d => d.group_name,
-                Cell: c => <strong>{c.value}</strong>,
+                accessor: (d) => d.group_name,
+                Cell: (c) => <strong>{c.value}</strong>,
             },
             {
                 Header: t("lessonList.columns.activity"),
                 id: "activity_ref_id",
                 maxWidth: 250,
-                accessor: d => d.activity_ref_id,
-                Cell: c => {
+                accessor: (d) => d.activity_ref_id,
+                Cell: (c) => {
                     return (
                         <span>
                             {
                                 this.props.activityRefs.find(
-                                    r => r.id === c.value
+                                    (r) => r.id === c.value
                                 ).label
                             }
                         </span>
@@ -795,7 +808,7 @@ class LessonList extends React.Component {
                 },
                 Filter: ({ filter, onChange }) => (
                     <select
-                        onChange={e => onChange(e.target.value)}
+                        onChange={(e) => onChange(e.target.value)}
                         value={filter ? filter.value : ""}
                     >
                         <option value="" />
@@ -803,30 +816,35 @@ class LessonList extends React.Component {
                     </select>
                 ),
             },
-            ...(!this.props.isTeacherView ? [{
-                Header: t("lessonList.columns.teacher"),
-                id: "teacher_id",
-                maxWidth: 200,
-                accessor: d => d.teacher,
-                Cell: c => `${c.value.first_name} ${c.value.last_name}`,
-                Filter: ({ filter, onChange }) => (
-                    <select
-                        onChange={e => onChange(e.target.value)}
-                        value={filter ? filter.value : ""}
-                    >
-                        <option value="" />
-                        {teachersOptions}
-                    </select>
-                ),
-            }] : []),
+            ...(!this.props.isTeacherView
+                ? [
+                      {
+                          Header: t("lessonList.columns.teacher"),
+                          id: "teacher_id",
+                          maxWidth: 200,
+                          accessor: (d) => d.teacher,
+                          Cell: (c) =>
+                              `${c.value.first_name} ${c.value.last_name}`,
+                          Filter: ({ filter, onChange }) => (
+                              <select
+                                  onChange={(e) => onChange(e.target.value)}
+                                  value={filter ? filter.value : ""}
+                              >
+                                  <option value="" />
+                                  {teachersOptions}
+                              </select>
+                          ),
+                      },
+                  ]
+                : []),
             {
                 Header: t("lessonList.columns.room"),
                 id: "room",
                 maxWidth: 125,
-                accessor: a => {
+                accessor: (a) => {
                     // filtre les salles en fonction de celle de la premiere instance trouvée. Ne devrais pas contenir plus d'une salle
                     const rooms = this.props.rooms.filter(
-                        r => r.id === (a.activity_instance || {}).room_id
+                        (r) => r.id === (a.activity_instance || {}).room_id
                     );
 
                     // affiche le nom de la salle de la première instance ou le nom de la salle enregistré dans l'activité sinon. (pas la bonne dans certains cas)
@@ -836,7 +854,7 @@ class LessonList extends React.Component {
                 Filter: ({ filter, onChange }) => (
                     <select
                         style={{ maxWidth: "115px" }}
-                        onChange={e => onChange(e.target.value)}
+                        onChange={(e) => onChange(e.target.value)}
                         value={filter ? filter.value : ""}
                     >
                         <option value="" />
@@ -848,11 +866,11 @@ class LessonList extends React.Component {
                 Header: t("lessonList.columns.location"),
                 id: "location",
                 maxWidth: 125,
-                accessor: a => a.location.label,
+                accessor: (a) => a.location.label,
                 Filter: ({ filter, onChange }) => (
                     <select
                         style={{ maxWidth: "115px" }}
-                        onChange={e => onChange(e.target.value)}
+                        onChange={(e) => onChange(e.target.value)}
                         value={filter ? filter.value : ""}
                     >
                         <option value="" />
@@ -864,10 +882,14 @@ class LessonList extends React.Component {
                 Header: t("lessonList.columns.occupation"),
                 id: "occupation",
                 maxWidth: 110,
-                Cell: c => formatActivityHeadcount(c.original, referenceDate),
+                Cell: (c) => formatActivityHeadcount(c.original, referenceDate),
                 Filter: ({ filter, onChange }) => {
                     const options = [
-                        { value: null, text: t("lessonList.occupation.all"), icon: "Ω" },
+                        {
+                            value: null,
+                            text: t("lessonList.occupation.all"),
+                            icon: "Ω",
+                        },
                         {
                             value: "EMPTY",
                             text: t("lessonList.occupation.empty"),
@@ -892,11 +914,11 @@ class LessonList extends React.Component {
                             icon: "fas fa-circle",
                             faIcon: true,
                             color: "#d63031",
-                        }
+                        },
                     ];
 
                     const value = options.find(
-                        o => o.value == (filter && filter.value)
+                        (o) => o.value == (filter && filter.value)
                     );
 
                     return (
@@ -904,7 +926,7 @@ class LessonList extends React.Component {
                             options={options}
                             defaultValue={options[0]}
                             value={value}
-                            onChange={v => onChange(v.value)}
+                            onChange={(v) => onChange(v.value)}
                             isSearchable={false}
                             isMulti={false}
                             getOptionLabel={({ text, icon, faIcon }) => (
@@ -930,11 +952,11 @@ class LessonList extends React.Component {
                                     ...styles,
                                     color: data.color || "inherit",
                                 }),
-                                dropdownIndicator: styles => ({
+                                dropdownIndicator: (styles) => ({
                                     ...styles,
                                     display: "none",
                                 }),
-                                indicatorSeparator: styles => ({
+                                indicatorSeparator: (styles) => ({
                                     ...styles,
                                     display: "none",
                                 }),
@@ -947,44 +969,46 @@ class LessonList extends React.Component {
                 Header: t("lessonList.columns.age"),
                 id: "average_age",
                 maxWidth: 50,
-                accessor: d => {
+                accessor: (d) => {
                     return TimeIntervalHelpers.averageAge(d.users);
                 },
-                Cell: c => TimeIntervalHelpers.averageAgeDisplay(c.value),
+                Cell: (c) => TimeIntervalHelpers.averageAgeDisplay(c.value),
             },
             {
                 Header: t("lessonList.columns.level"),
                 id: "level",
                 maxWidth: 125,
-                accessor: d => d,
+                accessor: (d) => d,
                 Filter: ({ filter, onChange }) => (
                     <select
-                        onChange={e => onChange(e.target.value)}
+                        onChange={(e) => onChange(e.target.value)}
                         defaultValue={filter ? filter.value : ""}
                     >
                         <option value="" />
-                        <option value="TBD">{t("lessonList.toBeSpecified")}</option>
-                        {this.props.evaluationLevelRefs.map(r => (
+                        <option value="TBD">
+                            {t("lessonList.toBeSpecified")}
+                        </option>
+                        {this.props.evaluationLevelRefs.map((r) => (
                             <option key={r.id} value={r.id}>
                                 {r.label}
                             </option>
                         ))}
                     </select>
                 ),
-                Cell: c =>
+                Cell: (c) =>
                     TimeIntervalHelpers.levelDisplayLabel(
                         TimeIntervalHelpers.levelDisplayForActivity(
                             c.value,
-                            this.props.seasons || [],
-                        ),
+                            this.props.seasons || []
+                        )
                     ),
             },
             {
                 Header: t("lessonList.columns.season"),
                 maxWidth: 150,
                 id: "season_id",
-                accessor: d => d.time_interval,
-                Cell: c => {
+                accessor: (d) => d.time_interval,
+                Cell: (c) => {
                     const season = TimeIntervalHelpers.getSeasonFromDate(
                         c.value && c.value.start,
                         this.props.seasons || []
@@ -1001,7 +1025,7 @@ class LessonList extends React.Component {
 
                     return (
                         <select
-                            onChange={e => onChange(e.target.value)}
+                            onChange={(e) => onChange(e.target.value)}
                             value={filter?.value ?? ""}
                         >
                             <option value="" />
@@ -1015,7 +1039,7 @@ class LessonList extends React.Component {
                 id: "action",
                 filterable: false,
                 sortable: false,
-                Cell: c => (
+                Cell: (c) => (
                     <div className="btn-toolbar">
                         <a
                             className="btn btn-sm btn-primary"
@@ -1024,10 +1048,10 @@ class LessonList extends React.Component {
                             href={
                                 c.original.time_interval
                                     ? `/planning/${
-                                        c.original.teacher.planning.id
-                                    }/${moment(
-                                        c.original.time_interval.start
-                                    ).format(ISO_DATE_FORMAT)}`
+                                          c.original.teacher.planning.id
+                                      }/${moment(
+                                          c.original.time_interval.start
+                                      ).format(ISO_DATE_FORMAT)}`
                                     : "/activities"
                             }
                         >
@@ -1035,7 +1059,9 @@ class LessonList extends React.Component {
                         </a>
                         <DownloadButton
                             url={`/activity/${c.original.id}/users.csv`}
-                            data-tippy-content={t("lessonList.actions.exportContacts")}
+                            data-tippy-content={t(
+                                "lessonList.actions.exportContacts"
+                            )}
                         >
                             <i className="fas fa-table" />
                         </DownloadButton>
@@ -1060,8 +1086,15 @@ class LessonList extends React.Component {
             filteredColumns = [
                 tableColumns[0],
                 ..._(tableColumns.slice(1))
-                    .filter(c => _.find(this.state.listPreferences, {id: c.id, disabled: false}))
-                    .sortBy(c => _.findIndex(this.state.listPreferences, {id: c.id}))
+                    .filter((c) =>
+                        _.find(this.state.listPreferences, {
+                            id: c.id,
+                            disabled: false,
+                        })
+                    )
+                    .sortBy((c) =>
+                        _.findIndex(this.state.listPreferences, { id: c.id })
+                    )
                     .value(),
             ];
         }
@@ -1070,12 +1103,18 @@ class LessonList extends React.Component {
             <div className="ibox">
                 <div className="ibox-title">
                     <div className="flex flex-center-aligned">
-                        <h2 className="m-r">{t("lessonList.courseCount", { count: this.state.total })}</h2>
+                        <h2 className="m-r">
+                            {t("lessonList.courseCount", {
+                                count: this.state.total,
+                            })}
+                        </h2>
                         <ListPreferences
                             preferences={this.state.listPreferences}
                             columns={tableColumns.slice(1)}
                             className="m-r"
-                            onSubmit={prefs => this.handleUpdateListPreferences(prefs)}
+                            onSubmit={(prefs) =>
+                                this.handleUpdateListPreferences(prefs)
+                            }
                         />
                         <button
                             className="btn btn-primary m-r"
@@ -1097,7 +1136,9 @@ class LessonList extends React.Component {
                         >
                             <div
                                 className="input-group"
-                                data-tippy-content={t("lessonList.referenceDateTooltip")}
+                                data-tippy-content={t(
+                                    "lessonList.referenceDateTooltip"
+                                )}
                                 style={{ maxWidth: "250px" }}
                             >
                                 <div className="input-group-addon">
@@ -1108,9 +1149,9 @@ class LessonList extends React.Component {
                                     type="date"
                                     className="form-control"
                                     value={referenceDate}
-                                    onChange={e =>
+                                    onChange={(e) =>
                                         this.handleChangeReferenceDate(
-                                            e.target.value,
+                                            e.target.value
                                         )
                                     }
                                 />
@@ -1118,8 +1159,8 @@ class LessonList extends React.Component {
                                     className="input-group-addon ui-pg-button"
                                     onClick={() => {
                                         //todo imprive UI
-                                        swal({
-                                            type: "info",
+                                        swal.fire({
+                                            icon: "info",
                                             customClass: "bigSwal",
                                             title: t("lessonList.help.title"),
                                             html: t("lessonList.help.body"),
@@ -1133,9 +1174,13 @@ class LessonList extends React.Component {
                     </div>
                 </div>
                 <div className="ibox-content">
-                    {this.state.targets.length > 0 ? this.renderTargetsAlert() : null}
+                    {this.state.targets.length > 0
+                        ? this.renderTargetsAlert()
+                        : null}
                     <ReactTable
-                        key={this.state.filter.filtered.map(f => f.id).join('-')}
+                        key={this.state.filter.filtered
+                            .map((f) => f.id)
+                            .join("-")}
                         style={{ backgroundColor: "white" }}
                         data={this.state.data}
                         manual
@@ -1151,7 +1196,7 @@ class LessonList extends React.Component {
                         pageSize={this.state.filter.pageSize}
                         sorted={this.state.filter.sorted}
                         filtered={this.state.filter.filtered}
-                        onPageChange={page =>
+                        onPageChange={(page) =>
                             this.fetchData({ ...this.state.filter, page })
                         }
                         onPageSizeChange={(pageSize, page) =>
@@ -1161,10 +1206,10 @@ class LessonList extends React.Component {
                                 pageSize,
                             })
                         }
-                        onSortedChange={sorted =>
+                        onSortedChange={(sorted) =>
                             this.fetchData({ ...this.state.filter, sorted })
                         }
-                        onFilteredChange={filtered =>
+                        onFilteredChange={(filtered) =>
                             this.fetchData({
                                 ...this.state.filter,
                                 filtered,
@@ -1187,8 +1232,8 @@ class LessonList extends React.Component {
                                 if (rowInfo.original.isOnlyOneOption) {
                                     return {
                                         style: {
-                                            color: "#9575CD"
-                                        }
+                                            color: "#9575CD",
+                                        },
                                     };
                                 }
                                 if (rowInfo.original.options.length != 0) {
@@ -1196,14 +1241,17 @@ class LessonList extends React.Component {
                             }
                             return {};
                         }}
-                        SubComponent={row => {
+                        SubComponent={(row) => {
                             let hasUser =
                                 row.original.users.filter(
-                                    u =>
+                                    (u) =>
                                         referenceDate == undefined ||
-                                        (dateOnly(u.begin_at) <= referenceDate &&
-                                            (dateOnly(u.stopped_at) == undefined ||
-                                                dateOnly(u.stopped_at) > referenceDate)),
+                                        (dateOnly(u.begin_at) <=
+                                            referenceDate &&
+                                            (dateOnly(u.stopped_at) ==
+                                                undefined ||
+                                                dateOnly(u.stopped_at) >
+                                                    referenceDate))
                                 ).length > 0;
 
                             if (hasUser || row.original.options.length > 0) {
@@ -1223,7 +1271,7 @@ class LessonList extends React.Component {
                         id={MESSAGE_MODAL_ID}
                         recipients={recipients}
                         message={this.state.message}
-                        onChange={e =>
+                        onChange={(e) =>
                             this.setState({
                                 message: {
                                     ...this.state.message,
@@ -1277,69 +1325,74 @@ export default withTranslation("courses")(LessonList);
 const UserList = ({ activity, seasons, referenceDate = undefined }) => {
     const { t } = useTranslation("courses");
     return (
-    <div className="flex-column">
-        <div className="flex" style={{ padding: "15px" }}>
-            <h3 className="m-r">
-                {t("lessonList.userList.evaluationsFilled", {
-                    done: activity.student_evaluations.length,
-                    total: activity.users.length,
-                })}
-            </h3>
-            <a
-                className="btn btn-primary"
-                href={`/users/${activity.teacher.id}/activity/${activity.id}/evaluate`}
-            >
-                {t("lessonList.userList.viewEvaluations")}
-            </a>
+        <div className="flex-column">
+            <div className="flex" style={{ padding: "15px" }}>
+                <h3 className="m-r">
+                    {t("lessonList.userList.evaluationsFilled", {
+                        done: activity.student_evaluations.length,
+                        total: activity.users.length,
+                    })}
+                </h3>
+                <a
+                    className="btn btn-primary"
+                    href={`/users/${activity.teacher.id}/activity/${activity.id}/evaluate`}
+                >
+                    {t("lessonList.userList.viewEvaluations")}
+                </a>
+            </div>
+            <table className="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>{t("lessonList.userList.name")}</th>
+                        <th>{t("lessonList.columns.age")}</th>
+                        <th>{t("lessonList.columns.level")}</th>
+                        {activity.activity_ref.is_work_group && (
+                            <th>{t("lessonList.userList.instrument")}</th>
+                        )}
+                        <th>{t("lessonList.userList.startedOn")}</th>
+                        <th>{t("lessonList.userList.stoppedOn")}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {_.orderBy(activity.users, (u) => u.last_name).map((u) => (
+                        <UserRow
+                            key={u.id}
+                            user={u}
+                            seasons={seasons}
+                            activity={activity}
+                            referenceDate={referenceDate}
+                        />
+                    ))}
+                    {_.orderBy(activity.options, (o) => o.user.last_name).map(
+                        (o) => (
+                            <UserRow
+                                key={o.user.id}
+                                isOption={true}
+                                user={o.user}
+                                seasons={seasons}
+                                activity={activity}
+                            />
+                        )
+                    )}
+                </tbody>
+            </table>
         </div>
-        <table className="table table-bordered">
-            <thead>
-            <tr>
-                <th>{t("lessonList.userList.name")}</th>
-                <th>{t("lessonList.columns.age")}</th>
-                <th>{t("lessonList.columns.level")}</th>
-                {activity.activity_ref.is_work_group && <th>{t("lessonList.userList.instrument")}</th>}
-                <th>{t("lessonList.userList.startedOn")}</th>
-                <th>{t("lessonList.userList.stoppedOn")}</th>
-            </tr>
-            </thead>
-            <tbody>
-            {_.orderBy(activity.users, u => u.last_name).map(u => (
-                <UserRow
-                    key={u.id}
-                    user={u}
-                    seasons={seasons}
-                    activity={activity}
-                    referenceDate={referenceDate}
-                />
-            ))}
-            {_.orderBy(activity.options, o => o.user.last_name).map(o => (
-                <UserRow
-                    key={o.user.id}
-                    isOption={true}
-                    user={o.user}
-                    seasons={seasons}
-                    activity={activity}
-                />
-            ))}
-            </tbody>
-        </table>
-    </div>
     );
 };
 
 const UserRow = ({
-                     user,
-                     seasons,
-                     activity,
-                     isOption = false,
-                     referenceDate = undefined,
-                 }) => {
+    user,
+    seasons,
+    activity,
+    isOption = false,
+    referenceDate = undefined,
+}) => {
     const { t } = useTranslation("courses");
     const customStyle = isOption ? { color: "#9575CD" } : {};
 
     if (referenceDate !== undefined) {
-        if (dateOnly(user.begin_at) > referenceDate) customStyle.color = "#fca000";
+        if (dateOnly(user.begin_at) > referenceDate)
+            customStyle.color = "#fca000";
         if (
             dateOnly(user.stopped_at) !== undefined &&
             dateOnly(user.stopped_at) <= referenceDate
@@ -1365,15 +1418,18 @@ const UserRow = ({
 
     const [desiredActivityId, setDesiredActivityId] = React.useState(null);
     const [studentLevel, setStudentLevel] = React.useState(null);
-    const [activityApplicationId, setActivityApplicationId] = React.useState(null);
+    const [activityApplicationId, setActivityApplicationId] =
+        React.useState(null);
 
     React.useEffect(() => {
         let isMounted = true;
-        api
-            .set()
+        api.set()
             .error((error) => {
                 if (!isMounted) return;
-                console.error("Erreur lors de la récupération de la demande d'inscription:", error);
+                console.error(
+                    "Erreur lors de la récupération de la demande d'inscription:",
+                    error
+                );
             })
             .success((data) => {
                 if (!isMounted || !data) return;
@@ -1393,11 +1449,22 @@ const UserRow = ({
 
                 setActivityApplicationId(data.activity_application_id);
             })
-            .get(`/desired_activities/user/${user.id}/activity/${activity.id}/ref/${activity.activity_ref_id}/time/${activity.time_interval_id}`);
-        return () => { isMounted = false; };
-    }, [user.id, activity.id, activity.activity_ref_id, activity.time_interval_id]);
+            .get(
+                `/desired_activities/user/${user.id}/activity/${activity.id}/ref/${activity.activity_ref_id}/time/${activity.time_interval_id}`
+            );
+        return () => {
+            isMounted = false;
+        };
+    }, [
+        user.id,
+        activity.id,
+        activity.activity_ref_id,
+        activity.time_interval_id,
+    ]);
 
-    const inscriptionUrl = activityApplicationId ? `/inscriptions/${activityApplicationId}` : "#";
+    const inscriptionUrl = activityApplicationId
+        ? `/inscriptions/${activityApplicationId}`
+        : "#";
 
     // Modification principale : priorité à studentLevel, puis vérification explicite
     const displayLevel = () => {
@@ -1435,17 +1502,27 @@ const UserRow = ({
                     {user.first_name} {user.last_name}
                 </a>
             </td>
-            <td>{t("lessonList.userRow.ageYears", { age: TimeIntervalHelpers.age(user.birthday) })}</td>
+            <td>
+                {t("lessonList.userRow.ageYears", {
+                    age: TimeIntervalHelpers.age(user.birthday),
+                })}
+            </td>
             <td>{displayLevel()}</td>
             {isWorkGroup && <td>{userInstrument}</td>}
             <td>
                 {(user.begin_at &&
-                        Intl.DateTimeFormat(i18n.language, SCHOOL_DATE_FORMAT_OPTIONS).format(new Date(user.begin_at))) ||
+                    Intl.DateTimeFormat(
+                        i18n.language,
+                        SCHOOL_DATE_FORMAT_OPTIONS
+                    ).format(new Date(user.begin_at))) ||
                     ""}
             </td>
             <td>
                 {(user.stopped_at &&
-                        Intl.DateTimeFormat(i18n.language, SCHOOL_DATE_FORMAT_OPTIONS).format(new Date(user.stopped_at))) ||
+                    Intl.DateTimeFormat(
+                        i18n.language,
+                        SCHOOL_DATE_FORMAT_OPTIONS
+                    ).format(new Date(user.stopped_at))) ||
                     ""}
             </td>
         </tr>

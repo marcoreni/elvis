@@ -81,41 +81,42 @@ class RenewActivityItem extends React.Component {
                     application: application,
                     id: this.props.pre_application_activity
                         .activity_application_id,
-                    activity_application: this.props.pre_application_activity
-                        .activity_application,
+                    activity_application:
+                        this.props.pre_application_activity
+                            .activity_application,
                     reason_of_refusal: this.state.reasonOfRefusal,
                 }),
             }
         )
-            .then(response => {
+            .then((response) => {
                 if (!response.ok)
-                    swal(
-                        t(
+                    swal.fire({
+                        title: t(
                             "activityApplications:activityItems.toasts.errorTitle"
                         ),
-                        t(
+                        text: t(
                             "activityApplications:activityItems.toasts.routingError"
                         ),
-                        "error"
-                    );
+                        icon: "error",
+                    });
 
                 return response.json();
             })
-            .then(json => {
+            .then((json) => {
                 this.setState({
                     proposalAnswered:
                         json.activity_application_status_id ===
                         ActivityApplicationStatus.PROPOSAL_REFUSED_ID,
                 });
-                swal(
-                    t(
+                swal.fire({
+                    title: t(
                         "activityApplications:activityItems.toasts.proposalRefusedTitle"
                     ),
-                    t(
+                    text: t(
                         "activityApplications:activityItems.toasts.reasonsCommunicated"
                     ),
-                    "info"
-                );
+                    icon: "info",
+                });
             });
     }
 
@@ -143,38 +144,41 @@ class RenewActivityItem extends React.Component {
                     application: application,
                     id: this.props.pre_application_activity
                         .activity_application_id,
-                    activity_application: this.props.pre_application_activity
-                        .activity_application,
+                    activity_application:
+                        this.props.pre_application_activity
+                            .activity_application,
                 }),
             }
         )
-            .then(response => {
+            .then((response) => {
                 if (!response.ok)
-                    swal(
-                        t(
+                    swal.fire({
+                        title: t(
                             "activityApplications:activityItems.toasts.errorTitle"
                         ),
-                        t(
+                        text: t(
                             "activityApplications:activityItems.toasts.routingError"
                         ),
-                        "error"
-                    );
+                        icon: "error",
+                    });
 
                 return response.json();
             })
-            .then(json => {
+            .then((json) => {
                 this.setState({
                     proposalAnswered:
                         json.activity_application_status_id ===
                         ActivityApplicationStatus.PROPOSAL_ACCEPTED_ID,
                 });
-                swal(
-                    t("activityApplications:activityItems.toasts.successTitle"),
-                    t(
+                swal.fire({
+                    title: t(
+                        "activityApplications:activityItems.toasts.successTitle"
+                    ),
+                    text: t(
                         "activityApplications:activityItems.toasts.proposalAccepted"
                     ),
-                    "success"
-                );
+                    icon: "success",
+                });
             });
     }
 
@@ -182,18 +186,19 @@ class RenewActivityItem extends React.Component {
         const { t } = this.props;
         api.set()
             .error(() => {
-                swal({
+                swal.fire({
                     title: t(
                         "activityApplications:activityItems.toasts.commentSendError"
                     ),
-                    type: "error",
+                    icon: "error",
                 });
             })
             .post(
                 "/comments",
                 {
-                    commentable_id: this.state.preApplicationActivity
-                        .activity_application_id,
+                    commentable_id:
+                        this.state.preApplicationActivity
+                            .activity_application_id,
                     commentable_type: "ActivityApplication",
                     user_id: this.props.current_user.id,
                     content: content,
@@ -300,7 +305,8 @@ class RenewActivityItem extends React.Component {
             "preApplicationActivity.activity_application.activity_application_status_id"
         );
 
-        let activityApplicationId = this.state.preApplicationActivity.activity_application.id.toString();
+        let activityApplicationId =
+            this.state.preApplicationActivity.activity_application.id.toString();
         let paddedActivityApplicationId = activityApplicationId.padStart(
             3,
             "0"
@@ -320,7 +326,7 @@ class RenewActivityItem extends React.Component {
 
         if (activityState && activityState.activity_ref_id) {
             const desiredActivity = desired_activities.find(
-                d => d.activity_ref_id === activityState.activity_ref_id
+                (d) => d.activity_ref_id === activityState.activity_ref_id
             );
             activityDisplayName = desiredActivity
                 ? desiredActivity.activity_ref.display_name

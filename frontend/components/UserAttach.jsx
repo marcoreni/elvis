@@ -52,11 +52,11 @@ class UserAttach extends React.Component {
     }
 
     async swalShowLoading() {
-        swal({
+        swal.fire({
             showConfirmButton: false,
             allowOutsideClick: false,
             allowEscapeKey: false,
-            onOpen: () => swal.showLoading(),
+            didOpen: () => swal.showLoading(),
         });
     }
 
@@ -84,8 +84,8 @@ class UserAttach extends React.Component {
                 );
                 swal.hideLoading();
 
-                swal({
-                    type: "warning",
+                swal.fire({
+                    icon: "warning",
                     html: t("users:userAttach.alreadyAttachedHtml", {
                         name: userName,
                         referent: `${referent_user.first_name} ${referent_user.last_name}`,
@@ -102,8 +102,8 @@ class UserAttach extends React.Component {
             } else {
                 swal.hideLoading();
 
-                swal({
-                    type: "info",
+                swal.fire({
+                    icon: "info",
                     html: t("users:userAttach.confirmAttachHtml", {
                         name: userName,
                         target: targetName,
@@ -132,8 +132,8 @@ class UserAttach extends React.Component {
 
             swal.hideLoading();
 
-            swal({
-                type: "warning",
+            swal.fire({
+                icon: "warning",
                 title: t("users:userAttach.hasAttachedTitle"),
                 html: t("users:userAttach.confirmAttachWithListHtml", {
                     name: userName,
@@ -166,13 +166,15 @@ class UserAttach extends React.Component {
         });
 
         if (res.ok) {
-            return swal({
-                type: "success",
-                title: t("users:userAttach.attachSuccess"),
-            }).then(() => this.loadAttachedUsers());
+            return swal
+                .fire({
+                    icon: "success",
+                    title: t("users:userAttach.attachSuccess"),
+                })
+                .then(() => this.loadAttachedUsers());
         } else {
-            return swal({
-                type: "error",
+            return swal.fire({
+                icon: "error",
                 title: t("users:userAttach.attachError"),
                 html: `${res.status}<br>${res.statusText}<br>`,
             });
@@ -209,8 +211,8 @@ class UserAttach extends React.Component {
                 state.sorted,
                 state.filtered
             )
-                .then(response => response.json())
-                .then(data => {
+                .then((response) => response.json())
+                .then((data) => {
                     const res = {
                         data: data.users,
                         pages: data.pages,
@@ -219,7 +221,7 @@ class UserAttach extends React.Component {
 
                     return res;
                 })
-                .then(res => {
+                .then((res) => {
                     if (state.filtered.length < 1) {
                         this.setState({
                             loading: false,
@@ -249,7 +251,7 @@ class UserAttach extends React.Component {
             {
                 Header: "ID",
                 id: "id",
-                accessor: d => (
+                accessor: (d) => (
                     <span className="w-100 d-flex text-dark">{d.id}</span>
                 ),
                 width: 75,
@@ -259,7 +261,7 @@ class UserAttach extends React.Component {
                 id: "last_name",
                 Header: t("users:list.table.headers.lastName"),
                 sortable: false,
-                accessor: d => (
+                accessor: (d) => (
                     <a
                         href={`/users/${d.id}`}
                         className="w-100 d-flex font-underlined"
@@ -272,7 +274,7 @@ class UserAttach extends React.Component {
                 id: "first_name",
                 Header: t("users:list.table.headers.firstName"),
                 sortable: false,
-                accessor: d => (
+                accessor: (d) => (
                     <a
                         href={`/users/${d.id}`}
                         className="w-100 d-flex font-underlined"
@@ -287,7 +289,7 @@ class UserAttach extends React.Component {
                 accessor: "birthday",
                 sortable: false,
                 width: 150,
-                Cell: props => {
+                Cell: (props) => {
                     if (props.original.birthday) {
                         return (
                             <div className="w-100 d-flex text-dark">
@@ -308,7 +310,7 @@ class UserAttach extends React.Component {
                 Header: t("users:list.table.headers.accountType"),
                 sortable: false,
                 filterable: false,
-                accessor: d =>
+                accessor: (d) =>
                     d.attached_to_id
                         ? t("users:list.table.accountType.attached")
                         : t("users:list.table.accountType.main"),
@@ -316,10 +318,10 @@ class UserAttach extends React.Component {
             {
                 id: "actions",
                 Header: t("users:list.table.headers.actions"),
-                Cell: props => {
+                Cell: (props) => {
                     let is_user = props.original.id == this.props.user.id; // si c'est l'utilisateur de la page actuelle
                     let is_attached_to_user = this.state.attached_users.find(
-                        user => user.id == props.original.id
+                        (user) => user.id == props.original.id
                     ); // si c'est un utilisateur déjà rattaché à celui de la page actuelle
                     return (
                         <div className="btn-wrapper">
@@ -375,7 +377,7 @@ class UserAttach extends React.Component {
                     <div className="ibox-content no-padding">
                         {this.state.attached_users.length > 0 ? (
                             <ul className="list-group">
-                                {this.state.attached_users.map(user => (
+                                {this.state.attached_users.map((user) => (
                                     <li
                                         className="list-group-item row"
                                         key={user.id}

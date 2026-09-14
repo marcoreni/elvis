@@ -28,9 +28,9 @@ const requestData = (pageSize, page, sorted, filtered) => {
             filtered,
         }),
     })
-        .catch(reason => alert(reason))
-        .then(response => response.json())
-        .then(data => ({
+        .catch((reason) => alert(reason))
+        .then((response) => response.json())
+        .then((data) => ({
             data: data.users,
             pages: data.pages,
             total: data.total,
@@ -77,7 +77,7 @@ class DuePaymentList extends React.Component {
             filter.page,
             filter.sorted,
             filter.filtered
-        ).then(res => {
+        ).then((res) => {
             if (!this.mounted) return;
             this.setState({
                 ...res,
@@ -89,13 +89,13 @@ class DuePaymentList extends React.Component {
     sendReminderMail() {
         const { t } = this.props;
 
-        swal({
+        swal.fire({
             title: t("general.reminder.confirmSendTitle"),
             text: t("common:confirm.sure"),
-            type: "question",
+            icon: "question",
             showCancelButton: true,
         })
-            .then(v => {
+            .then((v) => {
                 if (v.value) {
                     return fetch("/messages/create", {
                         method: "POST",
@@ -111,13 +111,13 @@ class DuePaymentList extends React.Component {
                     });
                 }
             })
-            .then(res => {
+            .then((res) => {
                 if (res) {
                     if (res.ok)
-                        swal({
+                        swal.fire({
                             title: t("general.reminder.successTitle"),
                             text: t("general.reminder.successText"),
-                            type: "success",
+                            icon: "success",
                         });
                     else
                         throw new Error(
@@ -128,11 +128,11 @@ class DuePaymentList extends React.Component {
                         );
                 }
             })
-            .catch(reason =>
-                swal({
+            .catch((reason) =>
+                swal.fire({
                     title: t("general.reminder.errorTitle"),
                     text: reason,
-                    type: "error",
+                    icon: "error",
                 })
             );
     }
@@ -147,12 +147,12 @@ class DuePaymentList extends React.Component {
             if (this.state.targets === "all")
                 this.setState({
                     targets: this.state.data
-                        .map(d => d.id)
-                        .filter(d => d !== id),
+                        .map((d) => d.id)
+                        .filter((d) => d !== id),
                 });
             else
                 this.setState({
-                    targets: this.state.targets.filter(r => r !== id),
+                    targets: this.state.targets.filter((r) => r !== id),
                 });
         }
     }
@@ -172,7 +172,9 @@ class DuePaymentList extends React.Component {
             >
                 <div className="flex flex-space-between-justified flex-center-aligned">
                     <div id="targets-infos">
-                        {t("general.schedulesWithoutPayer.selectedCount", { n: count })}{" "}
+                        {t("general.schedulesWithoutPayer.selectedCount", {
+                            n: count,
+                        })}{" "}
                         {this.state.targets.length === this.state.data.length &&
                         Math.max(
                             this.state.total - this.state.targets.length,
@@ -184,11 +186,14 @@ class DuePaymentList extends React.Component {
                                 }
                                 className="btn btn-sm btn-info m-l-sm"
                             >
-                                {t("general.schedulesWithoutPayer.selectRemaining", {
-                                    n:
-                                        this.state.total -
-                                        this.state.targets.length,
-                                })}
+                                {t(
+                                    "general.schedulesWithoutPayer.selectRemaining",
+                                    {
+                                        n:
+                                            this.state.total -
+                                            this.state.targets.length,
+                                    }
+                                )}
                             </button>
                         ) : null}
                     </div>
@@ -210,8 +215,8 @@ class DuePaymentList extends React.Component {
     render() {
         const { t } = this.props;
 
-        const seasonsOptions = _.sortBy(this.props.seasons, s => s.label).map(
-            s => (
+        const seasonsOptions = _.sortBy(this.props.seasons, (s) => s.label).map(
+            (s) => (
                 <option key={s.id} value={s.id}>
                     {s.label}
                 </option>
@@ -228,7 +233,7 @@ class DuePaymentList extends React.Component {
         //Otherwise compare against all seasons.
         const seasonsToCheck = season
             ? [parseInt(season.value)]
-            : this.props.seasons.map(s => s.id);
+            : this.props.seasons.map((s) => s.id);
 
         //This map takes all users and for each of them
         //determines their "validity", which is if they have the desired
@@ -247,7 +252,7 @@ class DuePaymentList extends React.Component {
                 let result = "N";
 
                 const schedulesSeasons = payment_schedules.map(
-                    s => s.season_id
+                    (s) => s.season_id
                 );
 
                 //Checks if there is a schedule for each season to check
@@ -281,7 +286,7 @@ class DuePaymentList extends React.Component {
                 id: "selection",
                 width: 25,
                 sortable: false,
-                accessor: r => this.state.targets.includes(r.id),
+                accessor: (r) => this.state.targets.includes(r.id),
                 Filter: () => (
                     <input
                         type="checkbox"
@@ -289,20 +294,20 @@ class DuePaymentList extends React.Component {
                             this.state.targets === "all" ||
                             this.state.targets.length === this.state.data.length
                         }
-                        onChange={e =>
+                        onChange={(e) =>
                             e.target.checked
                                 ? this.setState({
-                                      targets: this.state.data.map(r => r.id),
+                                      targets: this.state.data.map((r) => r.id),
                                   })
                                 : this.setState({ targets: [] })
                         }
                     />
                 ),
-                Cell: d => (
+                Cell: (d) => (
                     <input
                         type="checkbox"
                         checked={this.state.targets === "all" || d.value}
-                        onChange={e =>
+                        onChange={(e) =>
                             this.updateTarget(d.original.id, e.target.checked)
                         }
                     />
@@ -311,8 +316,8 @@ class DuePaymentList extends React.Component {
             {
                 Header: t("general.schedulesWithoutPayer.columns.name"),
                 id: "name",
-                accessor: d => `${d.first_name} ${d.last_name}`,
-                Cell: c => (
+                accessor: (d) => `${d.first_name} ${d.last_name}`,
+                Cell: (c) => (
                     <a
                         href={`/users/${c.original.id}`}
                         style={{ fontSize: "1.2em" }}
@@ -327,11 +332,11 @@ class DuePaymentList extends React.Component {
                 filterable: false,
                 sortable: false,
                 id: "actions",
-                accessor: u => ({
+                accessor: (u) => ({
                     userId: u.id,
                     mail: validityMap[u.id] !== "E",
                 }),
-                Cell: d => (
+                Cell: (d) => (
                     <div className="flex">
                         {d.value.mail ? (
                             <button
@@ -340,7 +345,9 @@ class DuePaymentList extends React.Component {
                                     this.setState({ targets: [d.original.id] })
                                 }
                                 className="btn btn-xs btn-primary"
-                                title={t("general.schedulesWithoutPayer.sendReminderTitle")}
+                                title={t(
+                                    "general.schedulesWithoutPayer.sendReminderTitle"
+                                )}
                                 data-toggle="modal"
                                 data-target={`#${MESSAGE_MODAL_ID}`}
                             >
@@ -352,7 +359,7 @@ class DuePaymentList extends React.Component {
             },
         ];
 
-        const currentSeason = this.props.seasons.find(s => s.is_current);
+        const currentSeason = this.props.seasons.find((s) => s.is_current);
         const seasonFilterId = _.chain(this.state.filter)
             .get("filtered")
             .find(({ id }) => id === "season")
@@ -361,7 +368,7 @@ class DuePaymentList extends React.Component {
 
         const filteredSeason =
             seasonFilterId &&
-            _.find(this.props.seasons, s => s.id == seasonFilterId);
+            _.find(this.props.seasons, (s) => s.id == seasonFilterId);
 
         let recipientsToDisplay = [];
 
@@ -373,14 +380,14 @@ class DuePaymentList extends React.Component {
         else if (this.state.targets.length)
             recipientsToDisplay =
                 this.state.targets.length &&
-                this.state.data.filter(d =>
+                this.state.data.filter((d) =>
                     this.state.targets
                         .slice(0, NB_DISPLAYED_RECIPIENTS)
                         .includes(d.id)
                 );
 
         let recipients = recipientsToDisplay
-            .map(u => `${u.first_name} ${u.last_name}`)
+            .map((u) => `${u.first_name} ${u.last_name}`)
             .join(", ");
 
         const restCount = Math.max(
@@ -401,8 +408,9 @@ class DuePaymentList extends React.Component {
                         {t("general.schedulesWithoutPayer.heading", {
                             n: this.state.total,
                         })}
-                        <select className="transparentSelector"
-                            onChange={e => {
+                        <select
+                            className="transparentSelector"
+                            onChange={(e) => {
                                 const newFilter = {
                                     ...this.state.filter,
                                     filtered: [...this.state.filter.filtered],
@@ -434,7 +442,7 @@ class DuePaymentList extends React.Component {
                         manual
                         pages={this.state.pages}
                         loading={this.state.loading}
-                        onFetchData={filter => this.fetchData(filter)}
+                        onFetchData={(filter) => this.fetchData(filter)}
                         columns={columns}
                         pageSizeOptions={[10, 14, 20, 30, 50]}
                         defaultPageSize={14}
@@ -460,7 +468,7 @@ class DuePaymentList extends React.Component {
                     id={MESSAGE_MODAL_ID}
                     recipients={recipients}
                     message={this.state.message}
-                    onChange={e =>
+                    onChange={(e) =>
                         this.setState({
                             message: {
                                 ...this.state.message,

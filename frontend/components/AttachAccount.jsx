@@ -24,7 +24,7 @@ const UserListItem = ({ t, user, onEmailChange, onRemove }) => (
                 className="form-control"
                 placeholder={t("users:attachAccount.emailPlaceholder")}
                 value={user.email}
-                onChange={e => onEmailChange(user.id, e.target.value)}
+                onChange={(e) => onEmailChange(user.id, e.target.value)}
             />
         </div>
 
@@ -45,8 +45,10 @@ export default function AttachAccount({ onSuccess }) {
 
     useEffect(() => {
         api.set()
-            .success(seasons => {
-                setSeason(seasons.find(season => season.current) || seasons[0]);
+            .success((seasons) => {
+                setSeason(
+                    seasons.find((season) => season.current) || seasons[0]
+                );
             })
             .error(() => setSeason(null))
             .get("/seasons");
@@ -58,7 +60,7 @@ export default function AttachAccount({ onSuccess }) {
                 <h3>{t("users:attachAccount.selectParentAccount")}</h3>
                 <UserSearch
                     saveFirstSelect={true}
-                    onSelect={user => setParentAccount(user)}
+                    onSelect={(user) => setParentAccount(user)}
                     resetSelection={() => setParentAccount(null)}
                     season={season}
                     hideAttachedAccounts={true}
@@ -68,19 +70,19 @@ export default function AttachAccount({ onSuccess }) {
     }
 
     function onValidate() {
-        swal({
-            type: "warning",
+        swal.fire({
+            icon: "warning",
             title: t("common:confirm.sure"),
             text: t("users:attachAccount.confirmText"),
             showCancelButton: true,
             confirmButtonText: t("activityApplications:activityItems.yes"),
             cancelButtonText: t("activityApplications:activityItems.no"),
-        }).then(result => {
+        }).then((result) => {
             if (result.value) {
                 api.set()
                     .success(() => {
-                        swal({
-                            type: "success",
+                        swal.fire({
+                            icon: "success",
                             title: t("users:attachAccount.successTitle"),
                             text: t("users:attachAccount.successText"),
                         }).then(() => {
@@ -93,8 +95,8 @@ export default function AttachAccount({ onSuccess }) {
                         });
                     })
                     .error(() => {
-                        swal({
-                            type: "error",
+                        swal.fire({
+                            icon: "error",
                             title: t("users:attachAccount.errorTitle"),
                             text: t("users:attachAccount.errorText"),
                         });
@@ -131,7 +133,7 @@ export default function AttachAccount({ onSuccess }) {
                                         _.uniqBy(
                                             [
                                                 ...accountToAttach.filter(
-                                                    u => u.id != m.id
+                                                    (u) => u.id != m.id
                                                 ),
                                                 {
                                                     id: m.id,
@@ -142,14 +144,14 @@ export default function AttachAccount({ onSuccess }) {
                                                     email: email,
                                                 },
                                             ],
-                                            u => u.id
+                                            (u) => u.id
                                         )
                                     )
                                 }
-                                onRemove={_ =>
+                                onRemove={(_) =>
                                     setAccountToAttach(
                                         accountToAttach.filter(
-                                            u => u.id != m.id
+                                            (u) => u.id != m.id
                                         )
                                     )
                                 }
@@ -163,7 +165,7 @@ export default function AttachAccount({ onSuccess }) {
 
             <UserSearch
                 saveFirstSelect={false}
-                onSelect={user =>
+                onSelect={(user) =>
                     setAccountToAttach(
                         _.uniqBy(
                             [
@@ -176,7 +178,7 @@ export default function AttachAccount({ onSuccess }) {
                                     email: user.email,
                                 },
                             ],
-                            u => u.id
+                            (u) => u.id
                         )
                     )
                 }

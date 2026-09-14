@@ -48,16 +48,16 @@ export default function MailSettings(props: {
             }),
         }).then((response) => {
             if (response.ok) {
-                swal({
+                swal.fire({
                     title: t("shared.saveSuccessTitle"),
                     text: t("editParameters.settingsApplied"),
-                    type: "success",
+                    icon: "success",
                 });
             } else {
-                swal({
+                swal.fire({
                     title: t("editParameters.mail.errorTitle"),
                     text: t("shared.genericError"),
-                    type: "error",
+                    icon: "error",
                 });
             }
         });

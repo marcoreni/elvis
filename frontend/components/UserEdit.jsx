@@ -1,14 +1,14 @@
 import React from "react";
 import _ from "lodash";
-import {withTranslation} from "react-i18next";
+import { withTranslation } from "react-i18next";
 
 import LevelInfos from "./personalInfos/LevelInfos";
 import UserForm from "./userForm/UserForm";
 import TabbedComponent from "./utils/ui/tabs";
 import * as api from "../tools/api";
-import {redirectTo} from "../tools/url";
-import {infosFromUser} from "../tools/obj";
-import {fullname} from "../tools/format";
+import { redirectTo } from "../tools/url";
+import { infosFromUser } from "../tools/obj";
+import { fullname } from "../tools/format";
 import swal from "sweetalert2";
 import Roles from "./personalInfos/Roles";
 
@@ -24,11 +24,11 @@ class UserEdit extends React.Component {
     handleChangeEvaluationLevel(evt) {
         let infos = this.state.infos;
         infos["evaluation_level_ref_id"] = evt.target.value;
-        this.setState({infos});
+        this.setState({ infos });
     }
 
     handleSubmit(values) {
-        const {t} = this.props;
+        const { t } = this.props;
 
         this.setState({
             infos: {
@@ -38,17 +38,17 @@ class UserEdit extends React.Component {
         });
 
         api.set()
-            .before(() => this.setState({isFetching: true}))
+            .before(() => this.setState({ isFetching: true }))
             .success(() => {
                 redirectTo(`/users/${this.props.user.id}`);
             })
             .error((res) => {
-                swal({
+                swal.fire({
                     title: t("edit.errorTitle"),
-                    type: "error",
-                    text: res
+                    icon: "error",
+                    text: res,
                 });
-                this.setState({isFetching: false});
+                this.setState({ isFetching: false });
             })
             .patch(
                 `/users/${this.props.user.id}${
@@ -56,12 +56,12 @@ class UserEdit extends React.Component {
                         ? ""
                         : `?auth_token=${this.props.user.authentication_token}`
                 }`,
-                {user: {...this.state.infos, ...values}}
+                { user: { ...this.state.infos, ...values } }
             );
     }
 
     handleUpdateLevel(id, field, value) {
-        const updatedLevels = this.state.infos.levels.map(l => ({
+        const updatedLevels = this.state.infos.levels.map((l) => ({
             ...l,
             [field]: l.id == id ? value : l[field],
             isUpdated: true,
@@ -94,7 +94,7 @@ class UserEdit extends React.Component {
     }
 
     render() {
-        const {t} = this.props;
+        const { t } = this.props;
 
         return (
             <React.Fragment>
@@ -120,56 +120,77 @@ class UserEdit extends React.Component {
                                     }
                                     initialValues={this.state.infos}
                                     schoolName={this.props.schoolName}
-                                    displayIdentificationNumber={this.props.countryCode==="BE"}
+                                    displayIdentificationNumber={
+                                        this.props.countryCode === "BE"
+                                    }
                                     displaySubmit
                                     submitting={this.state.isFetching}
                                     onSubmit={this.handleSubmit.bind(this)}
                                     consent_docs={this.props.consent_docs}
-                                    organizationOptions={this.props.organizationOptions}
+                                    organizationOptions={
+                                        this.props.organizationOptions
+                                    }
                                 />
                             ),
                             active: true,
                         },
-                        (this.props.current_user || {}).is_admin || (this.props.current_user || {}).is_teacher ? {
-                            id: "levels",
-                            header: t("edit.tabs.evaluations"),
-                            body: (
-                                <LevelInfos
-                                    infos={this.state.infos}
-                                    seasons={this.props.seasons}
-                                    activityRefs={this.props.activity_refs}
-                                    handleNewLevel={l => this.handleNewLevel(l)}
-                                    handleRemoveLevel={id =>
-                                        this.setState({
-                                            infos: {
-                                                ...this.state.infos,
-                                                levels: this.state.infos.levels.filter(
-                                                    l => l.id != id
-                                                ),
-                                            },
-                                        })
-                                    }
-                                    evaluationLevels={
-                                        this.props.evaluation_levels
-                                    }
-                                    handleUpdateLevel={(id, f, v) =>
-                                        this.handleUpdateLevel(id, f, v)
-                                    }
-                                    handleSaveInfos={() => this.handleSubmit()}
-                                />
-                            ),
-                        } : undefined,
-                        (this.props.current_user || {}).is_admin ? {
-                            id: "roles",
-                            header: t("edit.tabs.roles"),
-                            body: <Roles
-                                    user={this.props.user}
-                                    lessonsPlanned={this.props.lessonsPlanned}
-                                    onSubmit={this.handleSubmit.bind(this)} />
-                    } : undefined
-                        ]}>
-                </TabbedComponent>
-
+                        (this.props.current_user || {}).is_admin ||
+                        (this.props.current_user || {}).is_teacher
+                            ? {
+                                  id: "levels",
+                                  header: t("edit.tabs.evaluations"),
+                                  body: (
+                                      <LevelInfos
+                                          infos={this.state.infos}
+                                          seasons={this.props.seasons}
+                                          activityRefs={
+                                              this.props.activity_refs
+                                          }
+                                          handleNewLevel={(l) =>
+                                              this.handleNewLevel(l)
+                                          }
+                                          handleRemoveLevel={(id) =>
+                                              this.setState({
+                                                  infos: {
+                                                      ...this.state.infos,
+                                                      levels: this.state.infos.levels.filter(
+                                                          (l) => l.id != id
+                                                      ),
+                                                  },
+                                              })
+                                          }
+                                          evaluationLevels={
+                                              this.props.evaluation_levels
+                                          }
+                                          handleUpdateLevel={(id, f, v) =>
+                                              this.handleUpdateLevel(id, f, v)
+                                          }
+                                          handleSaveInfos={() =>
+                                              this.handleSubmit()
+                                          }
+                                      />
+                                  ),
+                              }
+                            : undefined,
+                        (this.props.current_user || {}).is_admin
+                            ? {
+                                  id: "roles",
+                                  header: t("edit.tabs.roles"),
+                                  body: (
+                                      <Roles
+                                          user={this.props.user}
+                                          lessonsPlanned={
+                                              this.props.lessonsPlanned
+                                          }
+                                          onSubmit={this.handleSubmit.bind(
+                                              this
+                                          )}
+                                      />
+                                  ),
+                              }
+                            : undefined,
+                    ]}
+                ></TabbedComponent>
             </React.Fragment>
         );
     }

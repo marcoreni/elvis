@@ -7,7 +7,7 @@
   <% end %>
 </h2>
   <% unless flash[:error].nil? %>
-    <%= react_component("utils/SwalBackEndModal", { swal_props: { title: 'Erreur', type: 'error', text: flash[:error] } }) %>
+    <%= react_component("utils/SwalBackEndModal", { swal_props: { title: 'Erreur', icon: 'error', text: flash[:error] } }) %>
   <% end %>
 </div>
 

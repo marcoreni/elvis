@@ -65,5 +65,5 @@
 <% end %>
 
 <% unless flash[:destroy_error].nil? %>
-  <%= react_component("utils/SwalBackEndModal", { swal_props: { title: t("views.activity_ref.index.destroy_error_title"), type: 'error', text: t("views.activity_ref.index.destroy_error") } }) %>
+  <%= react_component("utils/SwalBackEndModal", { swal_props: { title: t("views.activity_ref.index.destroy_error_title"), icon: 'error', text: t("views.activity_ref.index.destroy_error") } }) %>
 <% end %>

@@ -29,15 +29,15 @@ export default function RemoveComponent({
 }) {
     const { t } = useTranslation("common");
 
-    const localOnSuccess = data => {
+    const localOnSuccess = (data) => {
         if (typeof onSuccess === "function") {
             onSuccess(data);
         } else {
-            swal({
+            swal.fire({
                 title: t("common:removeComponent.successTitle"),
                 html:
                     data.message || t("common:removeComponent.successMessage"),
-                type: "success",
+                icon: "success",
             }).then(() => {
                 // redirect to index of model or to root
                 let tabParams = window.location.href.split("/");
@@ -55,37 +55,37 @@ export default function RemoveComponent({
         }
     };
 
-    const localOnFailed = data => {
+    const localOnFailed = (data) => {
         if (typeof onFailed === "function") {
             onFailed(data);
         } else {
-            swal({
+            swal.fire({
                 title: t("common:removeComponent.errorTitle"),
                 html: data.message || t("common:removeComponent.errorMessage"),
-                type: "error",
+                icon: "error",
             });
         }
     };
 
     const onSubmit = () => {
-        swal({
-            type: "warning",
+        swal.fire({
+            icon: "warning",
             title: validationText || t("common:removeComponent.confirmTitle"),
             text: additionalMessage,
             showCancelButton: true,
             confirmButtonText: t("common:yesNo.yes"),
             cancelButtonText: t("common:yesNo.no"),
-        }).then(result => {
+        }).then((result) => {
             if (result.value) {
                 api.set()
-                    .success(data => {
+                    .success((data) => {
                         if (data.success) {
                             localOnSuccess(data);
                         } else {
                             localOnFailed(data);
                         }
                     })
-                    .error(data => {
+                    .error((data) => {
                         localOnFailed(data);
                     })
                     .del(`/destroy/${classname}/${id}`, undefined);

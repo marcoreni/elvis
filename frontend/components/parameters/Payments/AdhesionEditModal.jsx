@@ -1,17 +1,24 @@
-import React, {Fragment, useState} from "react";
-import {useTranslation} from "react-i18next";
+import React, { Fragment, useState } from "react";
+import { useTranslation } from "react-i18next";
 import Modal from "react-modal";
-import {Form, Field} from 'react-final-form';
+import { Form, Field } from "react-final-form";
 import * as api from "../../../tools/api";
 import swal from "sweetalert2";
 
-export default function AdhesionEditModal({children, adhesion, seasons, onAdd, onEdit}) {
-    const {t} = useTranslation("parameters");
+export default function AdhesionEditModal({
+    children,
+    adhesion,
+    seasons,
+    onAdd,
+    onEdit,
+}) {
+    const { t } = useTranslation("parameters");
     const [showModal, setShowModal] = useState(false);
 
     function onSubmit(formData) {
-        const action = api.set()
-            .success(data => {
+        const action = api
+            .set()
+            .success((data) => {
                 if ((adhesion || {}).id) {
                     onEdit(data);
                 } else {
@@ -19,119 +26,152 @@ export default function AdhesionEditModal({children, adhesion, seasons, onAdd, o
                     setShowModal(false);
                 }
             })
-            .error(data => {
+            .error((data) => {
                 console.error(data);
 
-                const message = Array.isArray(data) ? data.join(" - ") : t("shared.genericError");
+                const message = Array.isArray(data)
+                    ? data.join(" - ")
+                    : t("shared.genericError");
 
-                swal({
+                swal.fire({
                     title: t("shared.errorTitle"),
                     text: message,
-                    type: 'error'
+                    icon: "error",
                 });
             });
 
         if ((adhesion || {}).id)
             action.put(`/adhesion-prices/${adhesion.id}`, formData);
-        else
-            action.post('/adhesion-prices', formData);
+        else action.post("/adhesion-prices", formData);
     }
 
-    return <Fragment>
-        <button className="btn btn-primary m-r-sm" onClick={e => setShowModal(true)}>
-            {children}
-        </button>
+    return (
+        <Fragment>
+            <button
+                className="btn btn-primary m-r-sm"
+                onClick={(e) => setShowModal(true)}
+            >
+                {children}
+            </button>
 
-        <Modal
-            isOpen={showModal}
-            className="modal-dialog modal-md"
-            appElement={document.getElementById('wrapper')}
-            onRequestClose={() => setShowModal(false)}
-        >
-
-
-            <div className="row">
-                <div className="col-sm-12">
-                    <h2>
-                        {(adhesion || {}).label ? t("payments.adhesion.modal.editTitle") : t("payments.adhesion.modal.newTitle")}
-                    </h2>
+            <Modal
+                isOpen={showModal}
+                className="modal-dialog modal-md"
+                appElement={document.getElementById("wrapper")}
+                onRequestClose={() => setShowModal(false)}
+            >
+                <div className="row">
+                    <div className="col-sm-12">
+                        <h2>
+                            {(adhesion || {}).label
+                                ? t("payments.adhesion.modal.editTitle")
+                                : t("payments.adhesion.modal.newTitle")}
+                        </h2>
+                    </div>
                 </div>
-            </div>
 
-
-            <Form
-
-                initialValues={{
-                    label: (adhesion || {}).label || t("payments.adhesion.modal.defaultLabel"),
-                    price: (adhesion || {}).price,
-                    season_id: (adhesion || {}).season_id
-                }}
-                onSubmit={onSubmit}
-                render={({handleSubmit, form, submitting, pristine, values}) => (
-
-                    <form onSubmit={handleSubmit}>
-                        <div className="row">
-                            <div className="col-sm-6">
-                                <label>{t("payments.adhesion.modal.nameLabel")} <span className={"text-danger"}>*</span></label>
-                                <Field name="label"
-                                       component="input"
-                                       type="text"
-                                       className="form-control"
-                                       disabled={(adhesion || {}).built_in}/>
-
+                <Form
+                    initialValues={{
+                        label:
+                            (adhesion || {}).label ||
+                            t("payments.adhesion.modal.defaultLabel"),
+                        price: (adhesion || {}).price,
+                        season_id: (adhesion || {}).season_id,
+                    }}
+                    onSubmit={onSubmit}
+                    render={({
+                        handleSubmit,
+                        form,
+                        submitting,
+                        pristine,
+                        values,
+                    }) => (
+                        <form onSubmit={handleSubmit}>
+                            <div className="row">
+                                <div className="col-sm-6">
+                                    <label>
+                                        {t("payments.adhesion.modal.nameLabel")}{" "}
+                                        <span className={"text-danger"}>*</span>
+                                    </label>
+                                    <Field
+                                        name="label"
+                                        component="input"
+                                        type="text"
+                                        className="form-control"
+                                        disabled={(adhesion || {}).built_in}
+                                    />
+                                </div>
                             </div>
-                        </div>
 
-                        <div className="row mt-5">
-                            <div className="col-sm-6">
-                                <label>{t("payments.adhesion.modal.priceLabel")} <span className={"text-danger"}>*</span></label>
-                                <Field
-                                    name="price"
-                                    component="input"
-                                    type="number"
-                                    step="0.1"
-                                    className="form-control"/>
+                            <div className="row mt-5">
+                                <div className="col-sm-6">
+                                    <label>
+                                        {t(
+                                            "payments.adhesion.modal.priceLabel"
+                                        )}{" "}
+                                        <span className={"text-danger"}>*</span>
+                                    </label>
+                                    <Field
+                                        name="price"
+                                        component="input"
+                                        type="number"
+                                        step="0.1"
+                                        className="form-control"
+                                    />
+                                </div>
                             </div>
-                        </div>
 
-                        <div className="row mt-5">
-                            <div className="col-sm-6">
-                                <label>{t("payments.adhesion.modal.seasonLabel")}</label>
-                                <Field
-                                    name="season_id"
-                                    component="select"
-                                    className="form-control"
-                                    disabled={(adhesion || {}).built_in}>
-                                    <option></option>
-                                    {(seasons || []).map(season => <option key={season.id}
-                                                                           value={season.id}>{season.label}</option>)}
-                                </Field>
+                            <div className="row mt-5">
+                                <div className="col-sm-6">
+                                    <label>
+                                        {t(
+                                            "payments.adhesion.modal.seasonLabel"
+                                        )}
+                                    </label>
+                                    <Field
+                                        name="season_id"
+                                        component="select"
+                                        className="form-control"
+                                        disabled={(adhesion || {}).built_in}
+                                    >
+                                        <option></option>
+                                        {(seasons || []).map((season) => (
+                                            <option
+                                                key={season.id}
+                                                value={season.id}
+                                            >
+                                                {season.label}
+                                            </option>
+                                        ))}
+                                    </Field>
+                                </div>
                             </div>
-                        </div>
 
-                        <div className="row mt-5">
-                            <div className="col-sm-6">
-                                <button type="button"
+                            <div className="row mt-5">
+                                <div className="col-sm-6">
+                                    <button
+                                        type="button"
                                         className="btn btn-secondary"
-                                        onClick={() => setShowModal(false)}>
+                                        onClick={() => setShowModal(false)}
+                                    >
+                                        {t("common:actions.cancel")}
+                                    </button>
+                                </div>
 
-                                    {t("common:actions.cancel")}
-                                </button>
+                                <div className="col-sm-6 text-right">
+                                    <button
+                                        type="submit"
+                                        className="btn btn-primary"
+                                        disabled={submitting || pristine}
+                                    >
+                                        {t("common:actions.save")}
+                                    </button>
+                                </div>
                             </div>
-
-                            <div className="col-sm-6 text-right">
-                                <button
-                                    type="submit"
-                                    className="btn btn-primary"
-                                    disabled={submitting || pristine}>
-
-                                    {t("common:actions.save")}
-                                </button>
-                            </div>
-                        </div>
-                    </form>
-                )}
-            />
-        </Modal>
-    </Fragment>
+                        </form>
+                    )}
+                />
+            </Modal>
+        </Fragment>
+    );
 }

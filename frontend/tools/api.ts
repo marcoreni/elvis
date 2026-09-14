@@ -123,8 +123,8 @@ const request =
                 if (callbacks.error) return callbacks.error(error);
 
                 if (error.code) {
-                    swal({
-                        type: "error",
+                    swal.fire({
+                        icon: "error",
                         title: "Oops... une erreur est survenue",
                         text: error.message
                             ? `${error.message} (${error.code})`

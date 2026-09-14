@@ -11,9 +11,9 @@ export default function TemplateCreator() {
     const { t } = useTranslation("parameters");
     const emailEditorRef = useRef();
 
-    const onSubmit = values => {
+    const onSubmit = (values) => {
         try {
-            emailEditorRef.current.editor.exportHtml(data => {
+            emailEditorRef.current.editor.exportHtml((data) => {
                 fetch(`/notification_templates/`, {
                     method: "POST",
                     credentials: "same-origin",
@@ -29,34 +29,38 @@ export default function TemplateCreator() {
                         json: data.design,
                     }),
                 })
-                    .then(response => {
+                    .then((response) => {
                         if (!response.ok)
-                            swal(
-                                t("parameters:mailTemplates.toasts.errorTitle"),
-                                t(
+                            swal.fire({
+                                title: t(
+                                    "parameters:mailTemplates.toasts.errorTitle"
+                                ),
+                                text: t(
                                     "parameters:mailTemplates.toasts.routingError"
                                 ),
-                                "error"
-                            );
+                                icon: "error",
+                            });
 
                         return response.json();
                     })
-                    .then(json => {
-                        swal(
-                            t("parameters:mailTemplates.toasts.successTitle"),
-                            t("parameters:mailTemplates.toasts.created"),
-                            "success"
-                        ).then(() => {
+                    .then((json) => {
+                        swal.fire({
+                            title: t(
+                                "parameters:mailTemplates.toasts.successTitle"
+                            ),
+                            text: t("parameters:mailTemplates.toasts.created"),
+                            icon: "success",
+                        }).then(() => {
                             window.location.href = "/notification_templates";
                         });
                     });
             });
         } catch (error) {
-            swal(
-                t("parameters:mailTemplates.toasts.errorTitle"),
-                error.message,
-                "error"
-            );
+            swal.fire({
+                title: t("parameters:mailTemplates.toasts.errorTitle"),
+                text: error.message,
+                icon: "error",
+            });
         }
     };
 

@@ -8,9 +8,8 @@ import swal from "sweetalert2";
 export default function EditApplication(props) {
     const { t } = useTranslation("activityApplications");
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-    const [isConfirmationModalOpen, setIsConfirmationModalOpen] = useState(
-        false
-    );
+    const [isConfirmationModalOpen, setIsConfirmationModalOpen] =
+        useState(false);
     const [editInput, setEditInput] = useState("");
 
     function handleCloseEditModal() {
@@ -66,7 +65,7 @@ export default function EditApplication(props) {
                             name="editInput"
                             style={{ width: "100%", height: "100%" }}
                             wrap="soft"
-                            onChange={e => setEditInput(e.target.value)}
+                            onChange={(e) => setEditInput(e.target.value)}
                             placeholder={t(
                                 "activityApplications:activityItems.editApplication.placeholder"
                             )}
@@ -77,11 +76,11 @@ export default function EditApplication(props) {
                             className="btn btn-primary text-white"
                             onClick={() => {
                                 if (editInput === "") {
-                                    swal({
+                                    swal.fire({
                                         title: t(
                                             "activityApplications:activityItems.editApplication.emptyError"
                                         ),
-                                        type: "info",
+                                        icon: "info",
                                         confirmButtonColor: "#00334A",
                                         confirmButtonText: t(
                                             "activityApplications:activityItems.editApplication.ok"

@@ -109,10 +109,10 @@ class DeleteCourseModal extends React.Component {
                         );
 
                         if (instanceIds.length === 0) {
-                            swal({
+                            swal.fire({
                                 title: t("deleteCourse.warningTitle"),
                                 text: t("deleteCourse.noneDeletable"),
-                                type: "error",
+                                icon: "error",
                             });
 
                             return;
@@ -121,10 +121,10 @@ class DeleteCourseModal extends React.Component {
                         tmpValues.repetition = "custom_all";
                     } else {
                         if (instanceIds.length === 0) {
-                            swal({
+                            swal.fire({
                                 title: t("deleteCourse.warningTitle"),
                                 text: t("deleteCourse.noneSelected"),
-                                type: "error",
+                                icon: "error",
                             });
 
                             return;
@@ -143,10 +143,10 @@ class DeleteCourseModal extends React.Component {
                                             today && ai.student_count >= 0
                                 ).length > 0
                         ) {
-                            swal({
+                            swal.fire({
                                 title: t("deleteCourse.warningTitle"),
                                 text: t("deleteCourse.pastWithStudents"),
-                                type: "warning",
+                                icon: "warning",
                             });
 
                             return;

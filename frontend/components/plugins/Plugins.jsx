@@ -1,13 +1,17 @@
-import React, {useEffect} from "react";
-import {useState} from "react";
+import React, { useEffect } from "react";
+import { useState } from "react";
 import * as api from "../../tools/api";
 import swal from "sweetalert2";
-import {EditorState, convertToRaw, convertFromRaw, ContentState} from 'draft-js';
+import {
+    EditorState,
+    convertToRaw,
+    convertFromRaw,
+    ContentState,
+} from "draft-js";
 import PluginsList from "./PluginsList";
 import RestartingMessage from "./RestartingMessage";
 import PluginActivationModal from "./PluginActivationModal";
 import Modal from "react-modal";
-
 
 export default function Plugins(props) {
     const [plugins, setPlugins] = useState([]);
@@ -20,7 +24,7 @@ export default function Plugins(props) {
     let interval;
 
     useEffect(() => {
-        getPlugins()
+        getPlugins();
     }, []);
 
     useEffect(() => {
@@ -42,17 +46,16 @@ export default function Plugins(props) {
 
     useEffect(() => {
         if (is_restarting) {
-            startTimer()
+            startTimer();
         }
         return () => {
             clearInterval(interval); // Nettoyer l'intervalle lors du démontage du composant
         };
     }, [is_restarting]);
 
-
     function getPlugins() {
         api.set()
-            .success(res => {
+            .success((res) => {
                 setPlugins(res.plugins);
                 setIsRestarting(res.is_restarting);
 
@@ -64,14 +67,22 @@ export default function Plugins(props) {
                         savedContentRaw = JSON.parse(res.display_text);
                         savedContentState = convertFromRaw(savedContentRaw);
                     } catch (e) {
-                        savedContentState = ContentState.createFromText(res.display_text);
+                        savedContentState = ContentState.createFromText(
+                            res.display_text
+                        );
                     }
-                    setEditorState(EditorState.createWithContent(savedContentState));
+                    setEditorState(
+                        EditorState.createWithContent(savedContentState)
+                    );
                 }
             })
-            .error(res => {
-                swal("Une erreur est survenue lors de la récupération des plugins", res.error, "error");
-                setIsRestarting(false)
+            .error((res) => {
+                swal.fire({
+                    title: "Une erreur est survenue lors de la récupération des plugins",
+                    text: res.error,
+                    icon: "error",
+                });
+                setIsRestarting(false);
             })
             .get("./plugins", {});
     }
@@ -86,18 +97,18 @@ export default function Plugins(props) {
     function checkRestartStatus() {
         try {
             api.set()
-                .success(res => {
+                .success((res) => {
                     setIsRestarting(res.is_restarting);
                     if (!res.is_restarting) {
                         clearInterval(interval); // Stop checking once restart is completed
                         getPlugins(); // Refresh plugin data after restart
                     }
                 })
-                .error(err => {
+                .error((err) => {
                     setIsRestarting(false);
                     clearInterval(interval); // In case of error, stop checking
                 })
-                .get('/plugins', {})
+                .get("/plugins", {});
         } catch (error) {
             console.error("Exception while checking restart status:", error);
         }
@@ -106,19 +117,28 @@ export default function Plugins(props) {
     function handleSaveAndRestart() {
         api.set()
             .useLoading()
-            .success(res => {
-                if(res.restart)
-                    setIsRestarting(true);
+            .success((res) => {
+                if (res.restart) setIsRestarting(true);
                 closeModal();
-                swal(`Les plugins ont été enregistrés avec succès`, res.message, "success");
+                swal.fire({
+                    title: `Les plugins ont été enregistrés avec succès`,
+                    text: res.message,
+                    icon: "success",
+                });
             })
-            .error(res => {
+            .error((res) => {
                 closeModal();
-                swal("Une erreur est survenue lors de l'enregistrement des plugins", res.error, "error");
+                swal.fire({
+                    title: "Une erreur est survenue lors de l'enregistrement des plugins",
+                    text: res.error,
+                    icon: "error",
+                });
             })
-            .post('/plugins', {
+            .post("/plugins", {
                 data: selectedPlugins,
-                rollback: document.getElementById('rollback').checked ? 'on' : 'off'
+                rollback: document.getElementById("rollback").checked
+                    ? "on"
+                    : "off",
             });
     }
 
@@ -133,7 +153,7 @@ export default function Plugins(props) {
         setPluginID(pluginID);
 
         setTimeout(() => {
-            Modal.setAppElement('body');
+            Modal.setAppElement("body");
             setIsModalOpen(true);
         }, 500);
     }
@@ -149,34 +169,32 @@ export default function Plugins(props) {
         setIsModalOpen(false);
     }
 
-
     if (is_restarting) {
-        return <RestartingMessage/>;
+        return <RestartingMessage />;
     } else if (plugins) {
-        return <div>
-            <PluginsList
-                plugins={plugins}
-                selectedPlugins={selectedPlugins}
-                handleStatus={handlePluginStatusChange}
-                handleSave={handleSaveAndRestart}
-                toggle={toggleActivation}
-                activatedPlugins={activatedPlugins}
-                firstActivatedState={firstActivatedState}
-            />
-
-            <PluginActivationModal
-                isOpen={isModalOpen}
-                plugins={selectedPlugins}
-                activatedPlugins={activatedPlugins}
-                onCancel={closeModal}
-                onClose={() => setIsModalOpen(false)}
-                handleSaveAndRestart={handleSaveAndRestart}
-            />
-        </div>
-
-    } else {
         return (
-            <p className="nodata">Aucun plugin</p>
-        )
+            <div>
+                <PluginsList
+                    plugins={plugins}
+                    selectedPlugins={selectedPlugins}
+                    handleStatus={handlePluginStatusChange}
+                    handleSave={handleSaveAndRestart}
+                    toggle={toggleActivation}
+                    activatedPlugins={activatedPlugins}
+                    firstActivatedState={firstActivatedState}
+                />
+
+                <PluginActivationModal
+                    isOpen={isModalOpen}
+                    plugins={selectedPlugins}
+                    activatedPlugins={activatedPlugins}
+                    onCancel={closeModal}
+                    onClose={() => setIsModalOpen(false)}
+                    handleSaveAndRestart={handleSaveAndRestart}
+                />
+            </div>
+        );
+    } else {
+        return <p className="nodata">Aucun plugin</p>;
     }
 }

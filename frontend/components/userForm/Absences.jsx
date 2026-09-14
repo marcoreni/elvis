@@ -25,7 +25,7 @@ const COLORS = {
 export default function Absences({ user_id, seasons = [] }) {
     const { t } = useTranslation("users");
     const currentSeason = useMemo(
-        () => seasons.find(s => s.is_current) || seasons[0],
+        () => seasons.find((s) => s.is_current) || seasons[0],
         [seasons]
     );
 
@@ -59,9 +59,9 @@ export default function Absences({ user_id, seasons = [] }) {
 
     const kpis = useMemo(() => {
         const total = absences.length;
-        const justified = absences.filter(a => a.justified).length;
+        const justified = absences.filter((a) => a.justified).length;
         const unjustified = total - justified;
-        const pct = n => (total ? Math.round((n / total) * 100) : 0);
+        const pct = (n) => (total ? Math.round((n / total) * 100) : 0);
         return {
             total,
             justified,
@@ -73,7 +73,7 @@ export default function Absences({ user_id, seasons = [] }) {
 
     const filtered = useMemo(() => {
         const q = search.trim().toLowerCase();
-        const rows = absences.filter(a => {
+        const rows = absences.filter((a) => {
             if (type === "justified" && !a.justified) return false;
             if (type === "unjustified" && a.justified) return false;
             if (
@@ -90,8 +90,8 @@ export default function Absences({ user_id, seasons = [] }) {
                     ? 1
                     : -1
                 : a.date_iso > b.date_iso
-                ? 1
-                : -1
+                  ? 1
+                  : -1
         );
     }, [absences, type, courseId, search, sortDesc]);
 
@@ -105,18 +105,20 @@ export default function Absences({ user_id, seasons = [] }) {
     useEffect(() => setPage(0), [type, courseId, search, pageSize]);
 
     const updateRemarks = (id, value) => {
-        const current = absences.find(a => a.id === id);
+        const current = absences.find((a) => a.id === id);
         if (current && (current.remarks || "") === value) return;
 
         api.set()
             .success(() => {
-                setAbsences(prev =>
-                    prev.map(a => (a.id === id ? { ...a, remarks: value } : a))
+                setAbsences((prev) =>
+                    prev.map((a) =>
+                        a.id === id ? { ...a, remarks: value } : a
+                    )
                 );
                 Swal.fire({
                     title: t("users:absences.toast.savedTitle"),
                     text: t("users:absences.toast.savedText"),
-                    type: "success",
+                    icon: "success",
                     timer: 2000,
                     showConfirmButton: false,
                     toast: true,
@@ -127,7 +129,7 @@ export default function Absences({ user_id, seasons = [] }) {
                 Swal.fire({
                     title: t("users:absences.toast.errorTitle"),
                     text: t("users:absences.toast.errorText"),
-                    type: "error",
+                    icon: "error",
                 });
             })
             .patch(`/student_attendances/${id}/update_remarks`, {
@@ -143,7 +145,7 @@ export default function Absences({ user_id, seasons = [] }) {
             t("users:absences.columns.type"),
             t("users:absences.columns.remark"),
         ];
-        const lines = filtered.map(a => [
+        const lines = filtered.map((a) => [
             a.date,
             a.activity,
             a.teacher,
@@ -222,11 +224,11 @@ export default function Absences({ user_id, seasons = [] }) {
                     <select
                         style={S.input}
                         value={seasonId || ""}
-                        onChange={e =>
+                        onChange={(e) =>
                             setSeasonId(parseInt(e.target.value, 10))
                         }
                     >
-                        {seasons.map(s => (
+                        {seasons.map((s) => (
                             <option key={s.id} value={s.id}>
                                 {s.label}
                             </option>
@@ -237,7 +239,7 @@ export default function Absences({ user_id, seasons = [] }) {
                     <select
                         style={S.input}
                         value={type}
-                        onChange={e => setType(e.target.value)}
+                        onChange={(e) => setType(e.target.value)}
                     >
                         <option value="all">
                             {t("users:absences.typeOptions.all")}
@@ -254,12 +256,12 @@ export default function Absences({ user_id, seasons = [] }) {
                     <select
                         style={S.input}
                         value={courseId}
-                        onChange={e => setCourseId(e.target.value)}
+                        onChange={(e) => setCourseId(e.target.value)}
                     >
                         <option value="all">
                             {t("users:absences.typeOptions.all")}
                         </option>
-                        {courses.map(c => (
+                        {courses.map((c) => (
                             <option key={c.id} value={c.id}>
                                 {c.label}
                             </option>
@@ -276,7 +278,7 @@ export default function Absences({ user_id, seasons = [] }) {
                                 "users:absences.filters.searchPlaceholder"
                             )}
                             value={search}
-                            onChange={e => setSearch(e.target.value)}
+                            onChange={(e) => setSearch(e.target.value)}
                         />
                     </div>
                 </Field>
@@ -296,7 +298,7 @@ export default function Absences({ user_id, seasons = [] }) {
                         <tr style={S.theadRow}>
                             <th
                                 style={{ ...S.th, cursor: "pointer" }}
-                                onClick={() => setSortDesc(d => !d)}
+                                onClick={() => setSortDesc((d) => !d)}
                             >
                                 {t("users:absences.columns.date")}{" "}
                                 <i
@@ -336,7 +338,7 @@ export default function Absences({ user_id, seasons = [] }) {
                             </tr>
                         )}
                         {!loading &&
-                            pageRows.map(a => (
+                            pageRows.map((a) => (
                                 <tr key={a.id} style={S.tr}>
                                     <td style={S.td}>{a.date}</td>
                                     <td style={S.td}>{a.activity || "—"}</td>
@@ -351,7 +353,9 @@ export default function Absences({ user_id, seasons = [] }) {
                                         <RemarkInput
                                             t={t}
                                             value={a.remarks}
-                                            onSave={v => updateRemarks(a.id, v)}
+                                            onSave={(v) =>
+                                                updateRemarks(a.id, v)
+                                            }
                                         />
                                     </td>
                                 </tr>
@@ -378,11 +382,11 @@ export default function Absences({ user_id, seasons = [] }) {
                                     height: "34px",
                                 }}
                                 value={pageSize}
-                                onChange={e =>
+                                onChange={(e) =>
                                     setPageSize(parseInt(e.target.value, 10))
                                 }
                             >
-                                {[10, 25, 50].map(n => (
+                                {[10, 25, 50].map((n) => (
                                     <option key={n} value={n}>
                                         {n}
                                     </option>
@@ -518,9 +522,9 @@ function RemarkInput({ t, value, onSave }) {
             className="abs-remark"
             value={val}
             placeholder={t("users:absences.remarkPlaceholder")}
-            onChange={e => setVal(e.target.value)}
+            onChange={(e) => setVal(e.target.value)}
             onBlur={() => onSave(val)}
-            onKeyDown={e => {
+            onKeyDown={(e) => {
                 if (e.key === "Enter") e.target.blur();
             }}
             style={S.remarkInput}
@@ -531,12 +535,12 @@ function RemarkInput({ t, value, onSave }) {
 /* -------------------------------- Helpers -------------------------------- */
 
 function downloadCsv(header, lines, filename) {
-    const escape = v => {
+    const escape = (v) => {
         const s = v == null ? "" : String(v);
         return /[";\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
     };
     const csv = [header, ...lines]
-        .map(row => row.map(escape).join(";"))
+        .map((row) => row.map(escape).join(";"))
         .join("\n");
     const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);

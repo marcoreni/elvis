@@ -11,7 +11,7 @@ export default function ElvisEditor(props) {
     const emailEditorRef = useRef();
 
     const handleProcess = () => {
-        emailEditorRef.current.editor.exportHtml(data => {
+        emailEditorRef.current.editor.exportHtml((data) => {
             setJson(data.design);
             setHtml(data.html);
 
@@ -32,36 +32,42 @@ export default function ElvisEditor(props) {
                     }),
                 }
             )
-                .then(response => {
+                .then((response) => {
                     if (!response.ok) {
-                        swal(
-                            t("parameters:mailTemplates.toasts.errorTitle"),
-                            t("parameters:mailTemplates.toasts.routingError"),
-                            "error"
-                        );
+                        swal.fire({
+                            title: t(
+                                "parameters:mailTemplates.toasts.errorTitle"
+                            ),
+                            text: t(
+                                "parameters:mailTemplates.toasts.routingError"
+                            ),
+                            icon: "error",
+                        });
                     }
 
                     return response.json();
                 })
-                .then(json => {
-                    swal(
-                        t("parameters:mailTemplates.toasts.successTitle"),
-                        t("parameters:mailTemplates.toasts.modified"),
-                        "success"
-                    );
+                .then((json) => {
+                    swal.fire({
+                        title: t(
+                            "parameters:mailTemplates.toasts.successTitle"
+                        ),
+                        text: t("parameters:mailTemplates.toasts.modified"),
+                        icon: "success",
+                    });
                 });
         });
     };
 
-    const handleDeleteProcess = e => {
+    const handleDeleteProcess = (e) => {
         e.preventDefault();
-        swal({
+        swal.fire({
             title: t("parameters:mailTemplates.deleteConfirm"),
-            type: "warning",
+            icon: "warning",
             confirmButtonText: t("parameters:mailTemplates.deleteYes"),
             cancelButtonText: t("common:actions.cancel"),
             showCancelButton: true,
-        }).then(a => {
+        }).then((a) => {
             if (a.value) {
                 fetch(
                     `/notification_templates/${encodeURIComponent(
@@ -78,20 +84,26 @@ export default function ElvisEditor(props) {
                             id: props.templateId,
                         }),
                     }
-                ).then(response => {
+                ).then((response) => {
                     if (!response.ok) {
-                        swal(
-                            t("parameters:mailTemplates.toasts.errorTitle"),
-                            t("parameters:mailTemplates.toasts.routingError"),
-                            "error"
-                        );
+                        swal.fire({
+                            title: t(
+                                "parameters:mailTemplates.toasts.errorTitle"
+                            ),
+                            text: t(
+                                "parameters:mailTemplates.toasts.routingError"
+                            ),
+                            icon: "error",
+                        });
                     }
 
-                    swal(
-                        t("parameters:mailTemplates.toasts.successTitle"),
-                        t("parameters:mailTemplates.toasts.deleted"),
-                        "success"
-                    ).then(() => {
+                    swal.fire({
+                        title: t(
+                            "parameters:mailTemplates.toasts.successTitle"
+                        ),
+                        text: t("parameters:mailTemplates.toasts.deleted"),
+                        icon: "success",
+                    }).then(() => {
                         window.location.href = "/notification_templates";
                     });
                 });
@@ -110,8 +122,7 @@ export default function ElvisEditor(props) {
                 },
             },
             loader: {
-                url:
-                    "https://custom-images.strikinglycdn.com/res/hrscywv4p/image/upload/c_limit,fl_lossy,h_300,w_300,f_auto,q_auto/1632721/882276_138965.png",
+                url: "https://custom-images.strikinglycdn.com/res/hrscywv4p/image/upload/c_limit,fl_lossy,h_300,w_300,f_auto,q_auto/1632721/882276_138965.png",
             },
         });
 

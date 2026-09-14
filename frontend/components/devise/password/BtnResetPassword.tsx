@@ -36,18 +36,18 @@ export default function BtnResetPassword({
             if (user?.is_admin || user?.is_teacher) {
                 api.set()
                     .success(() =>
-                        swal(
-                            t("users:passwordReset.btn.emailSent"),
-                            "",
-                            "success"
-                        )
+                        swal.fire({
+                            title: t("users:passwordReset.btn.emailSent"),
+                            text: "",
+                            icon: "success",
+                        })
                     )
                     .error(() =>
-                        swal(
-                            t("users:passwordReset.btn.emailSendError"),
-                            "",
-                            "error"
-                        )
+                        swal.fire({
+                            title: t("users:passwordReset.btn.emailSendError"),
+                            text: "",
+                            icon: "error",
+                        })
                     )
                     .post(
                         sendRequest.url,
@@ -58,22 +58,22 @@ export default function BtnResetPassword({
                 api.set()
                     .success((data) => {
                         if (!data?.reset_link) {
-                            swal(
-                                t("users:passwordReset.btn.errorTitle"),
-                                t("users:passwordReset.btn.linkGenError"),
-                                "error"
-                            );
+                            swal.fire({
+                                title: t("users:passwordReset.btn.errorTitle"),
+                                text: t("users:passwordReset.btn.linkGenError"),
+                                icon: "error",
+                            });
                             return;
                         }
                         setResetLink(data.reset_link);
                         showResetLinkPopup(data.reset_link);
                     })
                     .error(() => {
-                        swal(
-                            t("users:passwordReset.btn.errorTitle"),
-                            t("users:passwordReset.btn.userInfoError"),
-                            "error"
-                        );
+                        swal.fire({
+                            title: t("users:passwordReset.btn.errorTitle"),
+                            text: t("users:passwordReset.btn.userInfoError"),
+                            icon: "error",
+                        });
                     })
                     .post(
                         sendRequest.url,
@@ -85,25 +85,27 @@ export default function BtnResetPassword({
             api.set()
                 .success((data) => {
                     if ((!data || data.length === 0) && textNoData) {
-                        swal(
-                            t("users:passwordReset.btn.errorTitle"),
-                            textNoData,
-                            "error"
-                        );
+                        swal.fire({
+                            title: t("users:passwordReset.btn.errorTitle"),
+                            text: textNoData,
+                            icon: "error",
+                        });
                         return;
                     }
-                    swal(
-                        t("users:passwordReset.btn.successTitle"),
-                        textSuccess,
-                        "success"
-                    );
+                    swal.fire({
+                        title: t("users:passwordReset.btn.successTitle"),
+                        text: textSuccess,
+                        icon: "success",
+                    });
                 })
                 .error(() => {
-                    swal(
-                        t("users:passwordReset.btn.errorTitle"),
-                        textError || t("users:passwordReset.btn.genericError"),
-                        "error"
-                    );
+                    swal.fire({
+                        title: t("users:passwordReset.btn.errorTitle"),
+                        text:
+                            textError ||
+                            t("users:passwordReset.btn.genericError"),
+                        icon: "error",
+                    });
                 })
                 [sendRequest.type](
                     sendRequest.url,
@@ -114,7 +116,7 @@ export default function BtnResetPassword({
     }
 
     function showResetLinkPopup(link: string) {
-        swal({
+        swal.fire({
             title: t("users:passwordReset.btn.resetLinkTitle"),
             html: `
                 <input id="reset-link" class="swal2-input" value="${link}" readonly>
@@ -126,36 +128,36 @@ export default function BtnResetPassword({
                 navigator.clipboard
                     .writeText(link)
                     .then(() =>
-                        swal(
-                            t("users:passwordReset.btn.linkCopied"),
-                            "",
-                            "success"
-                        )
+                        swal.fire({
+                            title: t("users:passwordReset.btn.linkCopied"),
+                            text: "",
+                            icon: "success",
+                        })
                     )
                     .catch(() =>
-                        swal(
-                            t("users:passwordReset.btn.copyError"),
-                            "",
-                            "error"
-                        )
+                        swal.fire({
+                            title: t("users:passwordReset.btn.copyError"),
+                            text: "",
+                            icon: "error",
+                        })
                     );
             },
         }).then((result) => {
             if (result.dismiss === swal.DismissReason.cancel) {
                 api.set()
                     .success(() =>
-                        swal(
-                            t("users:passwordReset.btn.emailSent"),
-                            "",
-                            "success"
-                        )
+                        swal.fire({
+                            title: t("users:passwordReset.btn.emailSent"),
+                            text: "",
+                            icon: "success",
+                        })
                     )
                     .error(() =>
-                        swal(
-                            t("users:passwordReset.btn.emailSendError"),
-                            "",
-                            "error"
-                        )
+                        swal.fire({
+                            title: t("users:passwordReset.btn.emailSendError"),
+                            text: "",
+                            icon: "error",
+                        })
                     )
                     .post(
                         sendRequest.url,

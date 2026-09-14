@@ -24,9 +24,9 @@ export default function RulesSettings(props: {
     function onSubmit(data: Form) {
         let formData = new FormData();
 
-        swal({
+        swal.fire({
             title: t("common:loading"),
-            onOpen: () => swal.showLoading(),
+            didOpen: () => swal.showLoading(),
         });
 
         formData.append("selected", data.select);
@@ -50,14 +50,14 @@ export default function RulesSettings(props: {
         }).then((res) => {
             if (res.ok) {
                 res.json().then((json) => {
-                    swal({
-                        type: "success",
+                    swal.fire({
+                        icon: "success",
                         title: t("shared.saveCompleted"),
                     });
                 });
             } else {
-                swal({
-                    type: "error",
+                swal.fire({
+                    icon: "error",
                     title: t("shared.genericErrorShort"),
                 });
             }

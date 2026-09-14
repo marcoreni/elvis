@@ -20,8 +20,8 @@ export default function upcomingActivityInstancesList(props) {
     const fetchData = () => {
         api.set()
             .useLoading()
-            .success(res => {
-                let futureActivity = res.filter(activity =>
+            .success((res) => {
+                let futureActivity = res.filter((activity) =>
                     moment(activity.time_interval.start).isAfter(
                         moment(),
                         "minute"
@@ -35,12 +35,12 @@ export default function upcomingActivityInstancesList(props) {
 
                 setLoading(false);
             })
-            .error(res => {
-                swal(
-                    t("activityApplications:packs.fetchError"),
-                    res.error,
-                    "error"
-                );
+            .error((res) => {
+                swal.fire({
+                    title: t("activityApplications:packs.fetchError"),
+                    text: res.error,
+                    icon: "error",
+                });
             })
             .get(url, {});
     };
@@ -65,7 +65,7 @@ export default function upcomingActivityInstancesList(props) {
         const currentDate = moment();
         let sortedActivities = {};
 
-        data.forEach(activity => {
+        data.forEach((activity) => {
             const startMoment = moment(activity.time_interval.start);
             const currentMonth = startMoment.format("MMMM");
 
@@ -77,18 +77,19 @@ export default function upcomingActivityInstancesList(props) {
             }
         });
 
-        Object.keys(sortedActivities).forEach(month => {
+        Object.keys(sortedActivities).forEach((month) => {
             sortedActivities[month] = sortActivitiesByDate(
                 sortedActivities[month]
             );
         });
 
-        Object.keys(sortedActivities).forEach(month => {
+        Object.keys(sortedActivities).forEach((month) => {
             sortedActivities[month] = sortedActivities[month].filter(
                 (thing, index, self) =>
                     index ===
                     self.findIndex(
-                        t => t.time_interval.start === thing.time_interval.start
+                        (t) =>
+                            t.time_interval.start === thing.time_interval.start
                     )
             );
         });

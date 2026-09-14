@@ -57,7 +57,7 @@ const CSV_TEMPLATE_ROWS = [
 const CSV_TEMPLATE_URI =
     "data:text/csv;charset=utf-8,\uFEFF" +
     encodeURIComponent(
-        CSV_TEMPLATE_ROWS.map(row => row.join(";")).join("\r\n")
+        CSV_TEMPLATE_ROWS.map((row) => row.join(";")).join("\r\n")
     );
 
 class ImportCsv extends React.Component {
@@ -84,11 +84,11 @@ class ImportCsv extends React.Component {
                 },
                 body: formData,
             })
-                .then(res => {
+                .then((res) => {
                     this.setState({ submitting: false });
 
                     if (res.ok) {
-                        res.json().then(json => {
+                        res.json().then((json) => {
                             const import_report = json.import_report;
                             console.log(import_report);
                             if (Object.keys(import_report.errors).length > 0) {
@@ -96,10 +96,10 @@ class ImportCsv extends React.Component {
                                     import_report: json.import_report,
                                 });
                             } else {
-                                swal({
+                                swal.fire({
                                     title: t("users:importCsv.successTitle"),
                                     html: t("users:importCsv.successBody"),
-                                    type: "success",
+                                    icon: "success",
                                     timer: 10000,
                                     allowOutsideClick: false,
                                 }).then(
@@ -110,13 +110,13 @@ class ImportCsv extends React.Component {
                         });
                     }
                 })
-                .catch(error => {
+                .catch((error) => {
                     this.setState({ submitting: false });
                     console.error(error);
-                    swal({
+                    swal.fire({
                         title: t("users:importCsv.errorTitle"),
                         html: t("users:importCsv.errorBody"),
-                        type: "error",
+                        icon: "error",
                         timer: 10000,
                     });
                 });
@@ -126,7 +126,7 @@ class ImportCsv extends React.Component {
     formatData(report) {
         let format = [];
         if (report) {
-            Object.keys(report).map(key =>
+            Object.keys(report).map((key) =>
                 format.push({
                     type: key,
                     message: report[key]["message"],
@@ -316,7 +316,7 @@ class ImportCsv extends React.Component {
                     <div className="row">
                         <div className="alert alert-danger">
                             <h4>{t("users:importCsv.warning")}</h4>
-                            {data.map(row => {
+                            {data.map((row) => {
                                 return (
                                     <p key={row.lines}>
                                         {`${this.display_row_numbers(

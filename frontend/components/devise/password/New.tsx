@@ -96,7 +96,7 @@ const New: React.FC = () => {
 
         const confirmtext = t("users:passwordReset.redirection");
 
-        swal({
+        swal.fire({
             title: title,
             html: htmltext,
             timer: 10000,
