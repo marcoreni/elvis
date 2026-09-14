@@ -190,6 +190,34 @@ restructuring ad hoc across already-merged domains.
   migration to keep that PR's blast radius to the calendar-engine swap only; fix is to pass a plain
   id through instead of the wrapper, whenever a real trigger for it is added.
 
+## Found while smoke-testing the tui-calendar -> FullCalendar migration (2026-09-14)
+
+None of these are caused by or related to that migration (confirmed: none of the affected files are
+in its diff) — logged here as found, not investigated further.
+
+- `planning/ActivityDetailsModal.jsx`'s group-name editor: `toggleGroupNameEdit()` (`:278-280`) only
+  flips `isEditingGroup`, never seeds `state.groupName` from `state.activity.group_name`.
+  `state.groupName` stays its initial `null` (`:168`) until `handleGroupNameChange` fires from the
+  input's `onChange`. Clicking edit then immediately Save (no typing) sends `group_name: null` to
+  the server (`:601`), **deleting the group name**. Real data-loss bug, one-line fix (seed
+  `groupName` in `toggleGroupNameEdit`), not fixed here to keep the calendar-migration PR scoped.
+- `/activities` (`ActivityController#list`, `POST /activities.json`) returns HTML instead of JSON —
+  reproduces even after a fresh incognito login, so not a stale-session issue as first suspected.
+  Needs its own investigation.
+- `parameters/planning_parameters#tab-0`: "Error while fetching the availabilities" on load; creating
+  an availability 500s (`PATCH /plannings/availabilities/:id`).
+- `/payments`: table doesn't fill, `/due_payments/list.json` 500s —
+  `PG::UndefinedFunction: function adjusted_amount(character varying, numeric) does not exist`. A
+  DB function is missing or has the wrong signature relative to what the query now passes.
+- `/addCourse`: the "+" buttons (Activity Family, Activity, and the one under Seasons on step 2)
+  link to `http://127.0.0.1:3000/...` — hardcoded dev port, wrong for any other environment/port.
+- `/evaluation_level_ref/new`: sidebar highlights "Registrations" instead of the Evaluations section.
+- Still-French UI strings outside the i18n rollout: "Lieu"/"Fermer" labels somewhere in the app, and
+  `/scripts/replicate_week_activities` is entirely un-extracted.
+- Active locale intermittently reverts to `fr` mid-session even with `en` selected, then recovers on
+  a later navigation — seen between "Registration - New Registration" and "Registration - settings",
+  not yet reproduced systematically enough to isolate.
+
 ## `Activity#teacher` is N+1-prone independent of `.includes()`
 
 `Activity#teacher` (`app/models/activity.rb`) is a plain Ruby method

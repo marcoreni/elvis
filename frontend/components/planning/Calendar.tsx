@@ -437,7 +437,7 @@ function CustomCalendar(props: CalendarProps) {
             const renderDate = moment(arg.date).format("YYYY-MM-DD");
 
             return {
-                html: `<div class="flex">
+                html: `<div class="flex" style="align-items: center; height: 100%;">
                     <div class="m-r-md">
                         ${
                             props.generic
@@ -672,6 +672,13 @@ function CustomCalendar(props: CalendarProps) {
                         eventStartEditable={!isReadOnly}
                         eventDurationEditable={!isReadOnly}
                         dayMaxEvents={true}
+                        // FullCalendar's default eventDisplay is "auto", which renders month-view
+                        // (dayGridMonth) events as a small dot + plain-colored text instead of a
+                        // colored block -- unlike timeGrid week/day views, which are "block" by
+                        // default. That's what caused month-view events to show a different
+                        // (unconfigured) color and near-invisible text until hover. Force "block"
+                        // everywhere so events render consistently across all three views.
+                        eventDisplay="block"
                         events={events}
                         eventContent={eventContent}
                         dayHeaderContent={dayHeaderContent}
