@@ -97,7 +97,7 @@ vi.mock("../common/baseDataTable/DefaultCreateButton", () => ({
 }));
 vi.mock("./ActivityRefPricingModal", () => ({ default: () => null }));
 const { swalMock } = vi.hoisted(() => ({
-    swalMock: Object.assign(vi.fn(), { fire: vi.fn() }),
+    swalMock: { fire: vi.fn() },
 }));
 vi.mock("sweetalert2", () => ({ default: swalMock }));
 

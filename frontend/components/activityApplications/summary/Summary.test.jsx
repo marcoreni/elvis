@@ -39,10 +39,7 @@ vi.mock("react-modal", () => ({
 // swal / toast are only reached from the handler methods (section E). Mocking them here is inert
 // for the render-path sections B/C, which never call them.
 vi.mock("sweetalert2", () => ({
-    default: Object.assign(
-        vi.fn(() => Promise.resolve({})),
-        { fire: vi.fn(() => Promise.resolve({})) }
-    ),
+    default: { fire: vi.fn(() => Promise.resolve({})) },
 }));
 vi.mock("react-toastify", () => ({ toast: vi.fn() }));
 

@@ -1424,7 +1424,7 @@ class PaymentsManagement extends React.Component {
                 this.props.paymentStatuses.map((status) => status.id),
                 this.props.paymentStatuses.map((status) => status.label)
             ),
-            inputClass: "form-control",
+            customClass: { input: "form-control" },
             inputValue: newStatusId,
             showCancelButton: true,
             cancelButtonText: t("common:actions.cancel"),

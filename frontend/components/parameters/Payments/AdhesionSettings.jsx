@@ -92,8 +92,10 @@ export default function AdhesionSettings() {
             showCancelButton: true,
             cancelButtonText: t("common:actions.cancel"),
             confirmButtonText: t("common:actions.delete"),
-            cancelButtonClass: "order-1",
-            confirmButtonClass: "order-2",
+            customClass: {
+                cancelButton: "order-1",
+                confirmButton: "order-2",
+            },
         }).then((result) => {
             if (result.value) {
                 api.set()

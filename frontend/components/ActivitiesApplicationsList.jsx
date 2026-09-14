@@ -28,7 +28,6 @@ import {
     PROPOSAL_ACCEPTED_ID,
     CANCELED_ID,
 } from "./utils/ActivityApplicationsStatuses";
-import Swal from "sweetalert2";
 
 import moment from "moment";
 
@@ -111,17 +110,17 @@ class ActivitiesApplicationsList extends React.Component {
             <JobProgress
                 jobId={jobId}
                 onError={(res) =>
-                    swal({
+                    swal.fire({
                         title: t("common:jobProgress.errorTitle"),
                         text: res,
-                        type: "error",
+                        icon: "error",
                     })
                 }
             />,
             container
         );
 
-        swal({
+        swal.fire({
             title: t("activityApplications:list.jobProgressTitle"),
             html: container,
             showCloseButton: true,
@@ -203,12 +202,12 @@ class ActivitiesApplicationsList extends React.Component {
             })
             .then((data) => {
                 if (data.error) {
-                    swal({
+                    swal.fire({
                         title: this.props.t(
                             "activityApplications:list.importErrorTitle"
                         ),
                         text: data.error,
-                        type: "error",
+                        icon: "error",
                     });
                 } else {
                     this.setState({
@@ -244,10 +243,10 @@ class ActivitiesApplicationsList extends React.Component {
                 { count: selectedCount }
             );
 
-            swal({
+            swal.fire({
                 title: t("activityApplications:list.cancelWarningTitle"),
                 text: confirmationText,
-                type: "warning",
+                icon: "warning",
                 showCancelButton: true,
                 confirmButtonText: t(
                     "activityApplications:list.cancelWarningConfirm"
@@ -311,7 +310,7 @@ class ActivitiesApplicationsList extends React.Component {
             { count: selectedCount }
         );
 
-        Swal.fire({
+        swal.fire({
             title: t("activityApplications:list.deleteConfirmTitle"),
             text: confirmationText,
             icon: "warning",
@@ -543,10 +542,10 @@ class ActivitiesApplicationsList extends React.Component {
 
     sendGroupConfirmationMail() {
         const { t } = this.props;
-        swal({
+        swal.fire({
             title: t("activityApplications:list.notifyStudentTitle"),
             html: t("activityApplications:list.notifyStudentBody"),
-            type: "question",
+            icon: "question",
             showCancelButton: true,
             cancelButtonText: t("common:actions.cancel"),
             reverseButtons: true,
@@ -576,14 +575,19 @@ class ActivitiesApplicationsList extends React.Component {
                     .then((response) => response.json())
                     .then((res) => {
                         if (res.success)
-                            swal(
-                                "",
-                                t(
+                            swal.fire({
+                                title: "",
+                                text: t(
                                     "activityApplications:list.notifyStudentQueued"
                                 ),
-                                "success"
-                            );
-                        else swal("", res.message, "error");
+                                icon: "success",
+                            });
+                        else
+                            swal.fire({
+                                title: "",
+                                text: res.message,
+                                icon: "error",
+                            });
                     });
             }
         });

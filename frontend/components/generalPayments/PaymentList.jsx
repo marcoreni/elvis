@@ -833,7 +833,7 @@ class PaymentList extends React.Component {
                 this.props.statuses.map((status) => status.id),
                 this.props.statuses.map((status) => status.label)
             ),
-            inputClass: "form-control",
+            customClass: { input: "form-control" },
             inputValue: statusId,
             showCancelButton: true,
             cancelButtonText: t("common:actions.cancel"),

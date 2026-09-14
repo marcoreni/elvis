@@ -12,19 +12,19 @@
 // search, so the assertions never touch `handleChange` / the bare `debounce` global.
 
 import React from "react";
-import {render, screen, act} from "@testing-library/react";
-import {toast} from "react-toastify";
+import { render, screen, act } from "@testing-library/react";
+import { toast } from "react-toastify";
 import i18n from "../../i18n";
 import UserSearch from "./UserSearch";
 
 vi.mock("../common/Input", () => ({
-    default: ({label}) => <div data-testid="input-stub">{label}</div>,
+    default: ({ label }) => <div data-testid="input-stub">{label}</div>,
 }));
-vi.mock("../userForm/NewStudentForm", () => ({default: () => null}));
-vi.mock("react-modal", () => ({default: () => null}));
-vi.mock("sweetalert2", () => ({default: vi.fn()}));
+vi.mock("../userForm/NewStudentForm", () => ({ default: () => null }));
+vi.mock("react-modal", () => ({ default: () => null }));
+vi.mock("sweetalert2", () => ({ default: { fire: vi.fn() } }));
 vi.mock("react-toastify", () => ({
-    toast: Object.assign(vi.fn(), {error: vi.fn()}),
+    toast: Object.assign(vi.fn(), { error: vi.fn() }),
 }));
 vi.mock("../../tools/api", () => {
     const chain = {
@@ -34,12 +34,12 @@ vi.mock("../../tools/api", () => {
         error: () => chain,
         post: vi.fn(() => Promise.resolve()),
     };
-    return {set: () => chain};
+    return { set: () => chain };
 });
 
 const props = {
-    user: {is_admin: true},
-    season: {id: 1},
+    user: { is_admin: true },
+    season: { id: 1 },
     onSelect: () => {},
 };
 
@@ -80,12 +80,19 @@ describe("UserSearch — 'no profile found' block (driven via setState)", () => 
     test("French: heading, coordinates hint, <Trans> line and create button", async () => {
         await i18n.changeLanguage("fr");
         const ref = React.createRef();
-        const {container} = render(<UserSearch ref={ref} {...props} />);
+        const { container } = render(<UserSearch ref={ref} {...props} />);
 
-        act(() => ref.current.setState({usernotSearched: false, possibleMatches: []}));
+        act(() =>
+            ref.current.setState({
+                usernotSearched: false,
+                possibleMatches: [],
+            })
+        );
 
         expect(
-            screen.getByText("Aucun profil existant retrouvé selon ces coordonnées.")
+            screen.getByText(
+                "Aucun profil existant retrouvé selon ces coordonnées."
+            )
         ).toBeInTheDocument();
         expect(container).toHaveTextContent(
             "Si l'utilisateur est déjà enregistré, vérifiez que les bonnes coordonnées soient saisies."
@@ -101,16 +108,21 @@ describe("UserSearch — 'no profile found' block (driven via setState)", () => 
         expect(container.innerHTML).not.toContain("&lt;1&gt;");
 
         expect(
-            screen.getByRole("button", {name: "Créer un nouveau profil"})
+            screen.getByRole("button", { name: "Créer un nouveau profil" })
         ).toBeInTheDocument();
     });
 
     test("English: same block resolves to the English copy", async () => {
         await i18n.changeLanguage("en");
         const ref = React.createRef();
-        const {container} = render(<UserSearch ref={ref} {...props} />);
+        const { container } = render(<UserSearch ref={ref} {...props} />);
 
-        act(() => ref.current.setState({usernotSearched: false, possibleMatches: []}));
+        act(() =>
+            ref.current.setState({
+                usernotSearched: false,
+                possibleMatches: [],
+            })
+        );
 
         expect(
             screen.getByText("No existing profile found for these details.")
@@ -124,7 +136,7 @@ describe("UserSearch — 'no profile found' block (driven via setState)", () => 
         );
         expect(container.innerHTML).not.toContain("<1>");
         expect(
-            screen.getByRole("button", {name: "Create a new profile"})
+            screen.getByRole("button", { name: "Create a new profile" })
         ).toBeInTheDocument();
     });
 });
@@ -143,7 +155,7 @@ describe("UserSearch — isValidated() toasts the localized MESSAGES.err_must_se
         expect(result).toBe(false);
         expect(toast.error).toHaveBeenCalledWith(
             "Veuillez sélectionner un utilisateur avant de continuer.",
-            {autoClose: 3000}
+            { autoClose: 3000 }
         );
     });
 
@@ -157,7 +169,7 @@ describe("UserSearch — isValidated() toasts the localized MESSAGES.err_must_se
         expect(result).toBe(false);
         expect(toast.error).toHaveBeenCalledWith(
             "Please select a user before continuing.",
-            {autoClose: 3000}
+            { autoClose: 3000 }
         );
     });
 });
@@ -165,11 +177,14 @@ describe("UserSearch — isValidated() toasts the localized MESSAGES.err_must_se
 describe("UserSearch — i18n layer", () => {
     test.each(["fr", "en"])(
         "userSearch.bornOn substitutes {date}/{number}, keeps its leading space (%s)",
-        lng => {
-            const v = i18n.getFixedT(lng, "activityApplications")("userSearch.bornOn", {
-                date: "01/09/2020",
-                number: 42,
-            });
+        (lng) => {
+            const v = i18n.getFixedT(lng, "activityApplications")(
+                "userSearch.bornOn",
+                {
+                    date: "01/09/2020",
+                    number: 42,
+                }
+            );
             expect(v).toContain("01/09/2020");
             expect(v).toContain("42");
             expect(v.startsWith(" ")).toBe(true);

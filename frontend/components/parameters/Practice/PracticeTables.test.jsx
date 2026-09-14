@@ -40,10 +40,7 @@ vi.mock("react-table", () => ({
 // --- sweetalert2 stub: `swal(opts)` resolves to `{}` so `.then(res => res.value)` is falsy and
 //     no DELETE `fetch` fires from `deleteStatus`.
 vi.mock("sweetalert2", () => ({
-    default: Object.assign(
-        vi.fn(() => Promise.resolve({})),
-        { fire: vi.fn(() => Promise.resolve({})) }
-    ),
+    default: { fire: vi.fn(() => Promise.resolve({})) },
 }));
 
 import swal from "sweetalert2";

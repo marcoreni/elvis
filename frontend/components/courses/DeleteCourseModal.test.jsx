@@ -22,10 +22,7 @@ vi.mock("../planning/YearlyCalendar", () => ({
 }));
 
 vi.mock("sweetalert2", () => ({
-    default: Object.assign(
-        vi.fn(() => Promise.resolve({})),
-        { fire: vi.fn(() => Promise.resolve({})) }
-    ),
+    default: { fire: vi.fn(() => Promise.resolve({})) },
 }));
 
 const okJson = (body) =>

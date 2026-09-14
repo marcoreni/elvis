@@ -37,7 +37,7 @@ vi.mock("../../tools/api", () => {
 });
 
 vi.mock("sweetalert2", () => ({
-    default: Object.assign(vi.fn(), { fire: vi.fn() }),
+    default: { fire: vi.fn() },
 }));
 vi.mock("react-modal", () => ({ default: () => null }));
 vi.mock("../ToggleButtonGroup", () => ({ default: () => null }));

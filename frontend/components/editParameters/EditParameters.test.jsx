@@ -45,12 +45,9 @@ import i18n from "../../i18n";
 
 // --- sweetalert2: plain spy with a `.showLoading` no-op (RulesSettings + TeachersParameters
 //     call `swal.showLoading()` on the default export). --------------------------------------
-vi.mock("sweetalert2", () => {
-    const swal = vi.fn(() => Promise.resolve({}));
-    swal.showLoading = vi.fn();
-    swal.fire = vi.fn(() => Promise.resolve({}));
-    return { default: swal };
-});
+vi.mock("sweetalert2", () => ({
+    default: { showLoading: vi.fn(), fire: vi.fn(() => Promise.resolve({})) },
+}));
 
 // --- tools/api: chainable no-op stub; last success/error callbacks captured for hand-firing. --
 const apiState = vi.hoisted(() => ({
@@ -443,12 +440,10 @@ describe("RulesSettings", () => {
         "onSubmit fires swal(genericError) on fetch !ok in %s",
         async (lng) => {
             await i18n.changeLanguage(lng);
-            global.fetch = vi
-                .fn()
-                .mockResolvedValue({
-                    ok: false,
-                    json: () => Promise.resolve({}),
-                });
+            global.fetch = vi.fn().mockResolvedValue({
+                ok: false,
+                json: () => Promise.resolve({}),
+            });
             const { container } = render(<RulesSettings {...props} />);
 
             fireEvent.submit(container.querySelector("form"));

@@ -83,10 +83,7 @@ vi.mock("react-table", () => ({
 
 // --- sweetalert2 stub -----------------------------------------------------------------------
 vi.mock("sweetalert2", () => ({
-    default: Object.assign(
-        vi.fn(() => Promise.resolve({})),
-        { fire: vi.fn(() => Promise.resolve({})) }
-    ),
+    default: { fire: vi.fn(() => Promise.resolve({})) },
 }));
 
 // --- Coupons' functional BaseDataTable: render headers / Cells / resource-type-names /
@@ -570,12 +567,10 @@ describe("AdhesionSettings", () => {
         "checkbox label is translated in %s",
         async (lng) => {
             await i18n.changeLanguage(lng);
-            global.fetch = vi
-                .fn()
-                .mockResolvedValue({
-                    ok: true,
-                    json: () => Promise.resolve({}),
-                });
+            global.fetch = vi.fn().mockResolvedValue({
+                ok: true,
+                json: () => Promise.resolve({}),
+            });
             render(<AdhesionSettings />);
             expect(
                 await screen.findByText(

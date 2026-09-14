@@ -37,14 +37,11 @@ import i18n from "../../i18n";
 import fr from "../../locales/fr/parameters.json";
 import en from "../../locales/en/parameters.json";
 
-// --- sweetalert2: plain spy with a `.showLoading` no-op (onSubmit passes `onOpen: () =>
+// --- sweetalert2: plain spy with a `.showLoading` no-op (onSubmit passes `didOpen: () =>
 //     swal.showLoading()`). ------------------------------------------------------------------
-vi.mock("sweetalert2", () => {
-    const swal = vi.fn(() => Promise.resolve({}));
-    swal.showLoading = vi.fn();
-    swal.fire = vi.fn(() => Promise.resolve({}));
-    return { default: swal };
-});
+vi.mock("sweetalert2", () => ({
+    default: { showLoading: vi.fn(), fire: vi.fn(() => Promise.resolve({})) },
+}));
 
 // --- tools/api: chainable no-op stub (used by `onAddressChange`, not under test here). -------
 vi.mock("../../tools/api", () => ({

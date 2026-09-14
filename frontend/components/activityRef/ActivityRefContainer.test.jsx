@@ -16,16 +16,16 @@
 // i18n.changeLanguage(...), no <I18nextProvider> needed for a withTranslation() class.
 
 import React from "react";
-import {act, fireEvent, render, screen} from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import i18n from "../../i18n";
 import ActivityRefContainer from "./ActivityRefContainer";
 
 // Mock ALL FOUR tab bodies — they each pull in react-final-form fields, selects, upload widgets
 // and mount-time fetches that are irrelevant to the header/button copy under test.
-vi.mock("./ActivityRefBasics", () => ({default: () => null}));
-vi.mock("./ActivityRefApplication", () => ({default: () => null}));
-vi.mock("./WorkGroupTemplateEditor", () => ({default: () => null}));
-vi.mock("sweetalert2", () => ({default: vi.fn()}));
+vi.mock("./ActivityRefBasics", () => ({ default: () => null }));
+vi.mock("./ActivityRefApplication", () => ({ default: () => null }));
+vi.mock("./WorkGroupTemplateEditor", () => ({ default: () => null }));
+vi.mock("sweetalert2", () => ({ default: { fire: vi.fn() } }));
 
 // ActivityRefTeachers itself is mocked (it pulls in its own selects/fields, irrelevant to what's
 // under test), but its props are stashed so a test can reach `mutators` -- react-final-form's
@@ -36,7 +36,7 @@ vi.mock("sweetalert2", () => ({default: vi.fn()}));
 // its header first.
 let lastTeachersProps = null;
 vi.mock("./ActivityRefTeachers", () => ({
-    default: props => {
+    default: (props) => {
         lastTeachersProps = props;
         return null;
     },
@@ -84,8 +84,12 @@ describe("ActivityRefContainer", () => {
         expect(screen.getByText("Atelier")).toBeInTheDocument();
         expect(screen.getByText("Professeurs")).toBeInTheDocument();
 
-        expect(screen.getByRole("button", {name: "Annuler"})).toBeInTheDocument();
-        expect(screen.getByRole("button", {name: "Valider"})).toBeInTheDocument();
+        expect(
+            screen.getByRole("button", { name: "Annuler" })
+        ).toBeInTheDocument();
+        expect(
+            screen.getByRole("button", { name: "Valider" })
+        ).toBeInTheDocument();
     });
 
     test("renders the four English tab headers and footer buttons when language is en", async () => {
@@ -97,9 +101,13 @@ describe("ActivityRefContainer", () => {
         expect(screen.getByText("Workshop")).toBeInTheDocument();
         expect(screen.getByText("Teachers")).toBeInTheDocument();
 
-        expect(screen.getByRole("button", {name: "Cancel"})).toBeInTheDocument();
+        expect(
+            screen.getByRole("button", { name: "Cancel" })
+        ).toBeInTheDocument();
         // The real en value of common:actions.validate in frontend/locales/en/common.json.
-        expect(screen.getByRole("button", {name: "Submit"})).toBeInTheDocument();
+        expect(
+            screen.getByRole("button", { name: "Submit" })
+        ).toBeInTheDocument();
     });
 });
 
@@ -140,14 +148,18 @@ describe("ActivityRefContainer — Teachers tab isInError follows values.teacher
     // teacher via ActivityRefTeachers takes, not a manually-invoked onValidate(). ActivityRefTeachers
     // only mounts once its tab is made active (TabbedComponent renders only the active tab's
     // body), so each test clicks the "Professeurs" header first.
-    const activateTeachersTab = () => fireEvent.click(screen.getByText("Professeurs"));
+    const activateTeachersTab = () =>
+        fireEvent.click(screen.getByText("Professeurs"));
     const teachersTabItem = () => screen.getByText("Professeurs").closest("li");
 
     test("tab starts in error when the fixture has no teachers, and clears once one is added", async () => {
         await i18n.changeLanguage("fr");
         render(<ActivityRefContainer {...props} />);
 
-        expect(teachersTabItem()).toHaveAttribute("title", "Cet onglet n'est pas complètement rempli");
+        expect(teachersTabItem()).toHaveAttribute(
+            "title",
+            "Cet onglet n'est pas complètement rempli"
+        );
 
         act(() => activateTeachersTab());
         expect(lastTeachersProps).not.toBeNull();
@@ -161,6 +173,9 @@ describe("ActivityRefContainer — Teachers tab isInError follows values.teacher
         act(() => {
             lastTeachersProps.mutators.remove("teachers", 0);
         });
-        expect(teachersTabItem()).toHaveAttribute("title", "Cet onglet n'est pas complètement rempli");
+        expect(teachersTabItem()).toHaveAttribute(
+            "title",
+            "Cet onglet n'est pas complètement rempli"
+        );
     });
 });

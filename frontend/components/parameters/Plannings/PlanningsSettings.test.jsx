@@ -87,13 +87,10 @@ vi.mock("../../../tools/api", () => ({
 
 // --- sweetalert2 stub -------------------------------------------------------------------------
 vi.mock("sweetalert2", () => ({
-    default: Object.assign(
-        vi.fn(() => Promise.resolve({})),
-        {
-            showLoading: vi.fn(),
-            fire: vi.fn(() => Promise.resolve({})),
-        }
-    ),
+    default: {
+        showLoading: vi.fn(),
+        fire: vi.fn(() => Promise.resolve({})),
+    },
 }));
 
 // --- react-table stub: surface every column's string `Header` in order, render every `Cell`
@@ -765,12 +762,10 @@ describe("EvaluationSlot", () => {
         "onSubmit fires swal(loadingTitle) then swal(saveSuccess) on a 2xx fetch in %s",
         async (lng) => {
             await i18n.changeLanguage(lng);
-            global.fetch = vi
-                .fn()
-                .mockResolvedValue({
-                    ok: true,
-                    json: () => Promise.resolve({}),
-                });
+            global.fetch = vi.fn().mockResolvedValue({
+                ok: true,
+                json: () => Promise.resolve({}),
+            });
 
             const { container } = await renderSlot();
             fireEvent.input(

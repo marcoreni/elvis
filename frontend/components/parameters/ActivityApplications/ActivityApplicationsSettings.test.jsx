@@ -68,10 +68,7 @@ vi.mock("../../../tools/api", () => ({
 
 // --- sweetalert2 stub ---------------------------------------------------------------------------
 vi.mock("sweetalert2", () => ({
-    default: Object.assign(
-        vi.fn(() => Promise.resolve({})),
-        { fire: vi.fn(() => Promise.resolve({})) }
-    ),
+    default: { fire: vi.fn(() => Promise.resolve({})) },
 }));
 
 // --- react-table stub: surface every column's string `Header` in order, and render every
