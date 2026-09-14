@@ -215,9 +215,15 @@ describe("CustomCalendar — FullCalendar adapter", () => {
         expect(fakeApi.unselect).toHaveBeenCalled();
     });
 
-    test("eventClick reconstructs the full schedule (including .raw) for clickSchedule", () => {
+    // Regression for a bug caught in review: the events mapping needs a *string* id for
+    // FullCalendar's own bookkeeping, but reconstructSchedule must not let that stringified id
+    // leak back into the schedule handed to Planning.jsx -- Planning.jsx does strict-equality
+    // lookups (`i.id === interval.id`) against the original, often-numeric id. Fixtures here
+    // deliberately use a numeric schedule id (7), not a pre-stringified one, so this is actually
+    // exercised -- FullCalendar's own event.id is always a string ("7"), mirroring the real API.
+    test("eventClick reconstructs the full schedule (including .raw), preserving the original numeric id", () => {
         const schedule = {
-            id: "7",
+            id: 7,
             title: "Cours",
             kind: "c",
             raw: { comment: "hi" },
@@ -232,13 +238,13 @@ describe("CustomCalendar — FullCalendar adapter", () => {
                 start: new Date("2026-09-08T10:00:00"),
                 end: new Date("2026-09-08T11:00:00"),
                 allDay: false,
-                extendedProps: schedule,
+                extendedProps: lastFullCalendarProps.events[0].extendedProps,
             },
         });
 
         expect(baseProps.clickSchedule).toHaveBeenCalledWith({
             schedule: expect.objectContaining({
-                id: "7",
+                id: 7,
                 kind: "c",
                 raw: { comment: "hi" },
             }),
@@ -249,7 +255,7 @@ describe("CustomCalendar — FullCalendar adapter", () => {
     // the shared code path both drag-move and resize go through.
     test("eventDrop reconstructs the schedule plus the new start/end for beforeUpdateSchedule", () => {
         const schedule = {
-            id: "9",
+            id: 9,
             title: "Dispo",
             kind: "o",
             isAllDay: false,
@@ -265,15 +271,88 @@ describe("CustomCalendar — FullCalendar adapter", () => {
                 start: newStart,
                 end: newEnd,
                 allDay: false,
-                extendedProps: schedule,
+                extendedProps: lastFullCalendarProps.events[0].extendedProps,
             },
+            revert: vi.fn(),
         });
 
         expect(baseProps.beforeUpdateSchedule).toHaveBeenCalledWith(
             expect.objectContaining({
-                schedule: expect.objectContaining({ id: "9", kind: "o" }),
+                schedule: expect.objectContaining({ id: 9, kind: "o" }),
             })
         );
+    });
+
+    // Planning.jsx's beforeUpdateSchedule returns literal `null` (not just a falsy value) when
+    // the drag/resize isn't allowed -- e.g. a teacher without edit rights. Unlike tui-calendar
+    // (which rebuilt every schedule from props.intervals on every render, self-correcting), this
+    // FullCalendar adapter renders `events` reactively and must revert explicitly, or the drag
+    // visually sticks with nothing persisted.
+    test("a rejected update (beforeUpdateSchedule returning null) reverts the drag/resize", () => {
+        const schedule = { id: 5, title: "Dispo", kind: "o", isAllDay: false };
+        const revert = vi.fn();
+        render(
+            <CustomCalendar
+                {...baseProps}
+                intervals={[schedule]}
+                beforeUpdateSchedule={() => null}
+            />
+        );
+
+        lastFullCalendarProps.eventDrop({
+            event: {
+                id: "5",
+                title: "Dispo",
+                start: new Date("2026-09-08T14:00:00"),
+                end: new Date("2026-09-08T15:00:00"),
+                allDay: false,
+                extendedProps: lastFullCalendarProps.events[0].extendedProps,
+            },
+            revert,
+        });
+
+        expect(revert).toHaveBeenCalled();
+    });
+
+    // Regression: formatIntervalsForSchedule sets activity_instance (snake_case) and
+    // color/bgColor/borderColor per event -- the tui-calendar fork's Schedule model renamed
+    // activity_instance -> activityInstance and rendered the colors inline; both need replicating
+    // by hand since FullCalendar doesn't do either automatically.
+    test("events carry FullCalendar's color fields and the activityInstance rename", () => {
+        const schedule = {
+            id: 3,
+            title: "Cours",
+            kind: "c",
+            isAllDay: false,
+            bgColor: "#123456",
+            borderColor: "#abcdef",
+            color: "#ffffff",
+            activity_instance: { id: 42 },
+        };
+        render(<CustomCalendar {...baseProps} intervals={[schedule]} />);
+
+        expect(lastFullCalendarProps.events[0]).toMatchObject({
+            backgroundColor: "#123456",
+            borderColor: "#abcdef",
+            textColor: "#ffffff",
+        });
+        expect(
+            lastFullCalendarProps.events[0].extendedProps.activityInstance
+        ).toEqual({ id: 42 });
+    });
+
+    // Regression: dayGridMonth's header row has no real per-cell date (FullCalendar synthesizes
+    // an arbitrary Jan-1970 date for it) -- the custom per-day content (date number, presence
+    // link) must only apply in week/day views, or month headers show nonsense dates/links.
+    test("dayHeaderContent falls back to FullCalendar's default rendering in month view", () => {
+        render(<CustomCalendar {...baseProps} view="month" />);
+
+        const result = lastFullCalendarProps.dayHeaderContent({
+            date: new Date("1970-01-05"),
+            view: { type: "dayGridMonth" },
+        });
+
+        expect(result).toBe(true);
     });
 
     test("multi-planning mode disables select/editable (matching tui-calendar's isReadOnly for that mode)", () => {

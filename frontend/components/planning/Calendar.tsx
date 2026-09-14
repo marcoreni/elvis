@@ -3,6 +3,7 @@ import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
+import frLocale from "@fullcalendar/core/locales/fr";
 import type {
     DateSelectArg,
     DayHeaderContentArg,
@@ -16,6 +17,7 @@ import { withTranslation, WithTranslation } from "react-i18next";
 
 import * as TimeIntervalHelpers from "./TimeIntervalHelpers";
 import { getHoursString } from "../utils/DateUtils";
+import i18n from "../../i18n";
 
 import moment from "moment";
 
@@ -258,20 +260,26 @@ export function getTimeTemplate(
 // reflected, wrapped in moment() so callers can keep calling .toDate() the way tui-calendar's
 // TZDate always let them.
 function reconstructSchedule(event: {
-    id: string;
     title: string;
     start: Date | null;
     end: Date | null;
     allDay: boolean;
     extendedProps: Record<string, any>;
 }): Schedule {
+    // event.id is intentionally not used here -- FullCalendar requires string event ids, but
+    // extendedProps.id already carries the schedule's real id (often numeric) exactly as
+    // Planning.jsx's own strict-equality lookups (e.g. `i.id === interval.id`) expect.
+    //
+    // event.end is null whenever FullCalendar considers the event zero-duration (start >= end) --
+    // real data here (e.g. unscheduled "pause" markers, see calculateTotalHours' `i.start !==
+    // i.end` check below) does include start === end intervals. Falling back to `start` keeps
+    // `.toDate()`/moment usage elsewhere from silently receiving an Invalid Date.
     return {
         ...event.extendedProps,
-        id: event.id,
         title: event.title,
         isAllDay: event.allDay,
         start: moment(event.start),
-        end: moment(event.end),
+        end: moment(event.end ?? event.start),
     };
 }
 
@@ -299,7 +307,11 @@ interface CalendarProps extends WithTranslation {
         schedule: Schedule;
         start: any;
         end: any;
-    }) => void;
+    }) => any;
+    // Accepted for interface parity with what Planning.jsx passes, but currently unwired below --
+    // tui-calendar only fired this from its own built-in delete popup, which the app always kept
+    // disabled (useDetailPopup: false), and FullCalendar has no equivalent built-in gesture to
+    // wire it to. Pre-existing dead/broken path, see docs/KnownIssues.md.
     beforeDeleteSchedule?: (event: { schedule: Schedule }) => void;
     clickSchedule?: (event: { schedule: Schedule }) => void;
 }
@@ -332,23 +344,49 @@ function CustomCalendar(props: CalendarProps) {
 
     const events = useMemo(
         () =>
-            props.intervals.map((schedule) => ({
-                id: String(schedule.id),
-                title: schedule.title,
-                start: schedule.start,
-                end: schedule.end,
-                allDay: !!schedule.isAllDay,
-                editable: !isReadOnly && !schedule.isReadOnly,
-                extendedProps: schedule,
-            })),
+            props.intervals.map((schedule) => {
+                // The tui-calendar fork's Schedule model renamed activity_instance ->
+                // activityInstance when it built its internal model (node_modules/tui-calendar/
+                // src/js/model/schedule.js) -- formatIntervalsForSchedule only ever set the
+                // snake_case key, so callers reading the camelCase field (Planning.jsx,
+                // MultiViewModal.jsx, this file's own getTimeTemplate) need that rename replicated
+                // here, or activityInstance is silently undefined everywhere downstream.
+                const normalizedSchedule = {
+                    ...schedule,
+                    activityInstance:
+                        schedule.activityInstance ??
+                        schedule.activity_instance ??
+                        null,
+                };
+
+                return {
+                    id: String(schedule.id),
+                    title: schedule.title,
+                    start: schedule.start,
+                    end: schedule.end,
+                    allDay: !!schedule.isAllDay,
+                    editable: !isReadOnly && !schedule.isReadOnly,
+                    // formatIntervalsForSchedule computes per-event color/bgColor/borderColor
+                    // (activity/kind coding, conflict greying, cover-teacher highlighting) --
+                    // FullCalendar's field names differ from tui-calendar's.
+                    backgroundColor: schedule.bgColor,
+                    borderColor: schedule.borderColor,
+                    textColor: schedule.color,
+                    extendedProps: normalizedSchedule,
+                };
+            }),
         [props.intervals, isReadOnly]
     );
 
     const eventContent = useCallback(
         (arg: EventContentArg) => {
             if (arg.event.allDay) {
+                // fa-refresh doesn't exist in this app's Font Awesome 5 install (it's a v4 name)
+                // and rendered nothing even before this migration -- fa-sync is the FA5 icon this
+                // was presumably meant to be, and matches the icon already used for
+                // schedule.recurrenceRule below.
                 return {
-                    html: arg.event.title + ' <i class="fas fa-refresh"></i>',
+                    html: arg.event.title + ' <i class="fas fa-sync"></i>',
                 };
             }
 
@@ -382,6 +420,16 @@ function CustomCalendar(props: CalendarProps) {
 
     const dayHeaderContent = useCallback(
         (arg: DayHeaderContentArg) => {
+            // dayGridMonth's header row is a plain "one column per weekday" strip with no real
+            // per-cell date (FullCalendar synthesizes an arbitrary Jan 1970 date for it) -- this
+            // custom content (per-day date, presence-sheet link) only makes sense in week/day
+            // views, which tui-calendar's own weekDayname template (the one this replaces) was
+            // exclusively used for too. `true` tells FullCalendar to fall back to its own default
+            // day-name rendering for month view.
+            if (arg.view.type === "dayGridMonth") {
+                return true;
+            }
+
             const dayName = daynames[arg.date.getDay()];
             const renderDate = moment(arg.date).format("YYYY-MM-DD");
 
@@ -449,11 +497,23 @@ function CustomCalendar(props: CalendarProps) {
     const handleEventChange = useCallback(
         (info: EventDropArg | EventResizeDoneArg) => {
             const schedule = reconstructSchedule(info.event);
-            props.beforeUpdateSchedule?.({
+            const result = props.beforeUpdateSchedule?.({
                 schedule,
                 start: moment(info.event.start),
                 end: moment(info.event.end),
             });
+
+            // Planning.jsx's beforeUpdateSchedule ternary explicitly returns `null` when the
+            // update isn't allowed (e.g. a non-admin teacher without edit rights), and its
+            // allowed branch (handleUpdateTimeInterval) has no return statement at all --
+            // `undefined` -- so `=== null` is the precise "explicitly rejected" signal, not a
+            // general falsy check (which would also revert every successful update).
+            // FullCalendar has already optimistically applied the drag/resize by this point,
+            // unlike tui-calendar's rebuild-every-render approach that self-corrected on the next
+            // unrelated re-render -- reverting explicitly here is both correct and more immediate.
+            if (result === null) {
+                info.revert();
+            }
         },
         [props.beforeUpdateSchedule]
     );
@@ -585,13 +645,21 @@ function CustomCalendar(props: CalendarProps) {
                             interactionPlugin,
                         ]}
                         headerToolbar={false}
+                        height="100%"
+                        expandRows={true}
+                        locales={[frLocale]}
+                        locale={i18n.language}
                         initialView={VIEW_MAP[props.view]}
                         initialDate={initialDateRef.current}
                         firstDay={1}
                         allDaySlot={!props.generic}
                         slotMinTime="08:00:00"
                         slotMaxTime="22:00:00"
-                        slotLabelFormat={{ hour: "numeric", minute: "2-digit" }}
+                        slotLabelFormat={{
+                            hour: "numeric",
+                            minute: "2-digit",
+                            hour12: false,
+                        }}
                         snapDuration="00:15:00"
                         selectable={!isReadOnly}
                         editable={!isReadOnly}
