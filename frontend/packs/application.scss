@@ -16,9 +16,7 @@
 @import 'react-toastify/dist/ReactToastify.css';
 @import '../components/yearly-calendar-style.css';
 
-@import '../../node_modules/@fullcalendar/common/main.css';
-@import '../../node_modules/@fullcalendar/daygrid/main.css';
-@import '../../node_modules/@fullcalendar/timegrid/main.css';
+// FullCalendar v6 injects its own CSS at runtime (CSS-in-JS) -- no more manual .css imports.
 //@import 'timeline.css';
 @import '../../frontend/components/planning/practice_planning/styles.css';
 @import '../../frontend/packs/timeline.scss';

@@ -80,15 +80,16 @@ it out — that only covered one caller of the same shared thread pool; Rails' o
 was the wider, actual source. Confirmed via 19 consecutive clean full-suite runs (previously
 reproduced within 1-3 runs).
 
-## 6. Replace `tui-calendar` — planning done 2026-09-14, migration not started
+## 6. Replace `tui-calendar` — Step A (FullCalendar v5→v6 bump) done; Step B (actual tui-calendar
+replacement) not started
 
 **Recommendation: FullCalendar, bumped to v6 first** (standalone step, before migrating) — every
 feature this app actually uses maps to a native, free, stable FullCalendar v6 API; nothing lost.
 
 - Real consumer: only `planning/Calendar.jsx` (587 lines, one caller: `Planning.jsx`). A second
-  `import ti from "tui-calendar"` in `evaluationAppointments/EvaluationAppointmentsManager.jsx` is
-  dead (unused import, `ti` elsewhere in that file is an unrelated loop variable) — delete
-  separately, zero risk. tui-calendar pinned at `1.8.2` (not `1.8.0`).
+  `import ti from "tui-calendar"` in `evaluationAppointments/EvaluationAppointmentsManager.jsx` was
+  dead (unused import, `ti` elsewhere in that file is an unrelated loop variable) — already deleted
+  in an earlier pass, confirmed gone. tui-calendar pinned at `1.8.2` (not `1.8.0`).
 - Feature surface: month/week/day views, drag-to-create/move/resize, a large custom per-event HTML
   template (teacher/room labels, icons, roster/occupation/level), custom day-header content
   (teacher presence-sheet link), read-only/multi-select overlay mode. Built-in tui-calendar popups
@@ -103,14 +104,18 @@ feature this app actually uses maps to a native, free, stable FullCalendar v6 AP
 - FullCalendar v5→v6: import path changes, `eventContent` semantics, no bundler CSS loader needed
   — manageable, no functional loss. v6→v7 is a much bigger jump (ESM-only, CSS theming rework,
   `temporal-polyfill` dep) — land on v6 for this pass, defer v7's rework to its own.
-  `@fullcalendar/resource-timeline` (already used by `YearlyCalendar.jsx`) is confirmed a
-  **premium plugin**, tri-licensed: paid commercial license, CC BY-NC-ND (non-commercial only,
-  no source modifications), or free under **GPLv3** for open-source projects — verified against
-  the `LICENSE.md` shipped in the installed `^5.5.1` package and against v6.1.19 on unpkg (the v6
-  this item targets). Pre-existing, not new, but worth knowing. Note: FullCalendar's *upcoming*
-  v7 (still `7.0.0-rc.0` on npm, not stable) switches this tier to AGPLv3 per fullcalendar.io's
-  licensing page — irrelevant to the v5→v6 move this item scopes, but re-check if a future v7
-  upgrade is ever considered.
+  `@fullcalendar/resource-timeline` is confirmed a **premium plugin**, tri-licensed: paid
+  commercial license, CC BY-NC-ND (non-commercial only, no source modifications), or free under
+  **GPLv3** for open-source projects — verified against the `LICENSE.md` shipped in the installed
+  `^5.5.1` package and against v6.1.19 on unpkg (the v6 this item targets). Pre-existing, not new,
+  but worth knowing. Note: FullCalendar's *upcoming* v7 (still `7.0.0-rc.0` on npm at the time of
+  this check, since released stable) switches this tier to AGPLv3 per fullcalendar.io's licensing
+  page — irrelevant to the v5→v6 move this item scopes, but re-check if a future v7 upgrade is
+  ever considered. Its real consumer turned out to be `planning/practice_planning/PracticePlanning.jsx`
+  (not `YearlyCalendar.jsx`/`.tsx` as first thought while planning this item — that component was
+  rewritten into a fully custom implementation, `frontend/components/yearlyCalendar/`, with no
+  FullCalendar dependency at all; `PlanningModals.test.jsx` still had stale mocks/comments
+  referencing the old FullCalendar-based version, cleaned up in Step A).
 - Real decision point (not silently assumed): the app's "compare multiple plannings" mode has
   always been one overlaid view, never true side-by-side columns. If that's ever wanted, it needs
   FullCalendar's paid resource-timeline tier or a switch to react-big-calendar (free, native
@@ -119,6 +124,27 @@ feature this app actually uses maps to a native, free, stable FullCalendar v6 AP
   the calendar-engine integration code is being written fresh against the new library regardless,
   so there's no extra "convert working code" risk. Add real interaction tests (view switching, at
   minimum) as part of this, since none exist today.
+
+**Step A shipped** (`chore/fullcalendar-v6-bump`): bumped `@fullcalendar/{core,react,interaction,
+resource-timeline}` to `^6.1.21`, added `@fullcalendar/resource` (a new separate peer dependency
+in v6 that `resource-timeline` didn't need in v5), and dropped `@fullcalendar/daygrid`/`timegrid`
+(unused — nothing in the app actually imports them; their v5-era global `.css` imports in
+`application.scss` were also dead and removed, since v6 injects its own CSS at runtime). Two files
+(`Summary.jsx`, `DuePaymentsList.jsx`) turned out to import `Fragment`/`isValidDate` from
+`@fullcalendar/react` instead of their real sources (`react` / a plain `Number.isNaN` check) — an
+undocumented re-export that a major bump could easily have dropped; fixed before bumping. Verified
+via a real `yarn build` (not just `tsc`/mocked tests, since `PracticePlanning.jsx`'s FullCalendar
+usage is mocked out in its own test suite) — full rspec/vitest/tsc all clean after.
+
+**Step B (the actual tui-calendar → FullCalendar replacement) is a much larger, separate
+undertaking**: the "schedule" object shape `Calendar.jsx` builds (kind/teacher/activity/raw/
+isPrivate/isValidated/isReadOnly/recurrenceRule/attendees/location/etc.) is a contract consumed
+directly by `Planning.jsx` (1794 lines) and by ~8 other modal components downstream of its
+`beforeCreateSchedule`/`beforeUpdateSchedule`/`beforeDeleteSchedule`/`clickSchedule` callback
+props — not something contained inside `Calendar.jsx` alone. The safe approach is an adapter: keep
+building/consuming schedule objects in that same shape internally, translate only at the
+FullCalendar boundary (event ↔ schedule), so `Planning.jsx` and its modals need no changes. Needs
+its own planning/alignment pass before writing it, given the blast radius.
 
 ## 7. Migrate `sweetalert2` off the legacy API — done, `chore/sweetalert2-v11-bump` (PR #99, merged)
 

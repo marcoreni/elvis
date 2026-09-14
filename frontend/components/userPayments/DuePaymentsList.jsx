@@ -1,4 +1,4 @@
-import React from "react";
+import React, { Fragment } from "react";
 import PropTypes from "prop-types";
 import _ from "lodash";
 
@@ -10,7 +10,6 @@ import BulkEditModalAlert from "../utils/alerts/BulkEditModalAlert";
 // import { ADHESION_PRICE } from "./PaymentsManagement";
 import swal from "sweetalert2";
 import { withTranslation } from "react-i18next";
-import { Fragment } from "@fullcalendar/react";
 
 class DuePaymentsList extends React.Component {
     constructor(props) {
