@@ -16,6 +16,7 @@ RSpec.describe "P6 date/currency format locale parity" do
   include ActionView::Helpers::NumberHelper
 
   let(:date) { Date.new(2026, 9, 5) }
+  let(:time) { Time.utc(2026, 9, 5, 10, 30) }
 
   describe "date.formats.long_date" do
     it "renders day-before-month order in French" do
@@ -24,6 +25,16 @@ RSpec.describe "P6 date/currency format locale parity" do
 
     it "renders month-before-day order in English" do
       expect(I18n.l(date, format: :long_date, locale: :en)).to eq("September 5, 2026")
+    end
+  end
+
+  describe "time.formats.long_date" do
+    it "renders day-before-month order in French" do
+      expect(I18n.l(time, format: :long_date, locale: :fr)).to eq("5 septembre 2026")
+    end
+
+    it "renders month-before-day order in English" do
+      expect(I18n.l(time, format: :long_date, locale: :en)).to eq("September 5, 2026")
     end
   end
 

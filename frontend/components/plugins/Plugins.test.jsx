@@ -6,6 +6,7 @@
 
 import React from "react";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import i18n from "../../i18n";
 import RestartingMessage from "./RestartingMessage";
 import PluginCard from "./PluginCard";
@@ -200,5 +201,54 @@ describe("Plugins — Cancel reverts the accumulated selectedPlugins entry (regr
         expect(apiState.lastPostUrl).toBe("/plugins");
         expect(apiState.lastPostBody.data).toEqual({ 2: true });
         expect(apiState.lastPostBody.data).not.toHaveProperty("1");
+    });
+});
+
+describe("Plugins — confirmation modal reflects the plugin actually being toggled (integration)", () => {
+    // Exercises the real wiring, not just PluginActivationModal's internal logic: if Plugins.jsx
+    // ever again forgot to pass pluginID down to <PluginActivationModal>, this test -- unlike the
+    // unit test above, which supplies pluginID directly -- would catch it. Reuses the module-level
+    // api.set() mock (MOCK_PLUGINS, both inactive) rather than a separate fetch mock.
+    test("toggling plugin 1 then cancelling, then toggling plugin 2, describes plugin 2", async () => {
+        await i18n.changeLanguage("fr");
+        render(<Plugins />);
+
+        const switches = await screen.findAllByRole("switch");
+        expect(switches).toHaveLength(2);
+
+        // Toggle plugin 1 (inactive -> activating), then cancel -- this reverts plugin 1's
+        // tentative state but (a pre-existing, separately-logged bug) leaves it in
+        // selectedPlugins, which is exactly what used to poison the modal for whichever plugin
+        // has the lowest id.
+        await userEvent.click(switches[0]);
+        await screen.findByText(
+            "Êtes-vous sûr(e) de vouloir activer ce plugin ?",
+            {},
+            { timeout: 2000 }
+        );
+        await userEvent.click(screen.getByText("Annuler"));
+        await waitFor(
+            () =>
+                expect(
+                    screen.queryByText(
+                        "Êtes-vous sûr(e) de vouloir activer ce plugin ?"
+                    )
+                ).not.toBeInTheDocument(),
+            { timeout: 2000 }
+        );
+
+        // Toggle plugin 2 (also inactive -> activating). The modal must describe plugin 2. With
+        // the old Object.keys(selectedPlugins)[0] logic this would instead read plugin 1's
+        // (reverted, now-inactive) state and render "désactiver" -- the wrong verb.
+        await userEvent.click(switches[1]);
+        await waitFor(
+            () =>
+                expect(
+                    screen.getByText(
+                        "Êtes-vous sûr(e) de vouloir activer ce plugin ?"
+                    )
+                ).toBeInTheDocument(),
+            { timeout: 2000 }
+        );
     });
 });
