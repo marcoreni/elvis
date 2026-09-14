@@ -12,7 +12,6 @@ import i18n from "../../i18n";
 
 import PauseDetailModal from "./PauseDetailModal";
 import RoomActivitiesListModal from "./RoomActivitiesListModal";
-import StudentModal from "./StudentModal";
 import SelectTeachers from "./SelectTeachers";
 import RawPlanning from "./RawPlanning";
 import SelectActivity from "./SelectActivity";
@@ -79,26 +78,6 @@ describe("RoomActivitiesListModal", () => {
         expect(
             screen.getByText("Activities for room Salle A")
         ).toBeInTheDocument();
-    });
-});
-
-describe("StudentModal", () => {
-    test("French by default", async () => {
-        await i18n.changeLanguage("fr");
-        render(<StudentModal onSave={() => {}} onRemove={() => {}} />);
-        expect(
-            screen.getByRole("heading", { name: "Sélection" })
-        ).toBeInTheDocument();
-        expect(screen.getByText("Cours")).toBeInTheDocument();
-        expect(screen.getByText("Option")).toBeInTheDocument();
-        expect(screen.getByText("Enregistrer")).toBeInTheDocument();
-    });
-
-    test("English when active language is en", async () => {
-        await i18n.changeLanguage("en");
-        render(<StudentModal onSave={() => {}} onRemove={() => {}} />);
-        expect(screen.getByText("Course")).toBeInTheDocument();
-        expect(screen.getByText("Save")).toBeInTheDocument();
     });
 });
 

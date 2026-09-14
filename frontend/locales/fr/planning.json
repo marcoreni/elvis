@@ -86,9 +86,6 @@
         "comment": "Commentaire",
         "deletePause": "Supprimer la pause"
     },
-    "studentModal": {
-        "title": "Sélection"
-    },
     "simplePlanning": {
         "evalBadge": "EVAL"
     },
