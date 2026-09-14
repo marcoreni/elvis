@@ -29,12 +29,6 @@ vi.mock("@fullcalendar/react", () => ({
         return <div data-testid="fullcalendar-stub" />;
     }),
 }));
-// The plugin packages import @fullcalendar/common directly at module scope, which throws
-// ("Please import the top-level fullcalendar lib before attempting to import a plugin") unless
-// something has already registered the real @fullcalendar/core -- mocking @fullcalendar/react
-// above skips that registration entirely, so the plugins need mocking too.
-vi.mock("@fullcalendar/interaction", () => ({default: {}}));
-vi.mock("@fullcalendar/resource-timeline", () => ({default: {}}));
 
 import PracticeHandleSessions from "./PracticeHandleSessions";
 import PracticeMultiViewModal from "./PracticeMultiViewModel";

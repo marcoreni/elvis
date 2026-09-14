@@ -43,10 +43,6 @@ vi.mock("sweetalert2", () => ({
 }));
 vi.mock("react-toastify", () => ({ toast: vi.fn() }));
 
-vi.mock("@fullcalendar/react", () => ({
-    isValidDate: (d) => !Number.isNaN(new Date(d).getTime()),
-}));
-
 vi.mock("./Activity", () => ({
     default: () => <div data-testid="activity-stub" />,
 }));

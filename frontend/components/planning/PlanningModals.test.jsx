@@ -4,21 +4,11 @@
 // singleton + useTranslation() / withTranslation("planning").
 //
 // Each component is rendered with the minimum props needed to reach the extracted strings;
-// assertions cover only strings owned by the component under test. YearlyCalendar now renders
-// one @fullcalendar/react instance per season month; mounting ~10 real FullCalendars pushes this
-// test past the 5s default timeout under full-suite load, so @fullcalendar/react is stubbed here
-// (the assertions only cover YearlyCalendar's own translated headings, not the grid).
+// assertions cover only strings owned by the component under test.
 
 import React from "react";
-import {render, screen} from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import i18n from "../../i18n";
-
-// YearlyCalendar imports @fullcalendar/react + the daygrid/interaction plugins at module scope;
-// the plugin packages throw "import the top-level fullcalendar lib first" unless the real
-// @fullcalendar/core is registered, so stub all three.
-vi.mock("@fullcalendar/react", () => ({default: () => null}));
-vi.mock("@fullcalendar/daygrid", () => ({default: {}}));
-vi.mock("@fullcalendar/interaction", () => ({default: {}}));
 
 import PauseDetailModal from "./PauseDetailModal";
 import RoomActivitiesListModal from "./RoomActivitiesListModal";
@@ -33,20 +23,40 @@ afterEach(async () => {
 });
 
 describe("PauseDetailModal", () => {
-    const pauseInterval = {start: "2026-09-01T10:00:00", end: "2026-09-01T10:15:00", id: 7};
+    const pauseInterval = {
+        start: "2026-09-01T10:00:00",
+        end: "2026-09-01T10:15:00",
+        id: 7,
+    };
 
     test("French by default", async () => {
         await i18n.changeLanguage("fr");
-        render(<PauseDetailModal pauseInterval={pauseInterval} closeModal={() => {}} onDelete={() => {}} />);
-        expect(screen.getByRole("heading", {name: "Détail de la pause"})).toBeInTheDocument();
+        render(
+            <PauseDetailModal
+                pauseInterval={pauseInterval}
+                closeModal={() => {}}
+                onDelete={() => {}}
+            />
+        );
+        expect(
+            screen.getByRole("heading", { name: "Détail de la pause" })
+        ).toBeInTheDocument();
         expect(screen.getByText("Fermer")).toBeInTheDocument();
         expect(screen.getByText("Supprimer la pause")).toBeInTheDocument();
     });
 
     test("English when active language is en", async () => {
         await i18n.changeLanguage("en");
-        render(<PauseDetailModal pauseInterval={pauseInterval} closeModal={() => {}} onDelete={() => {}} />);
-        expect(screen.getByRole("heading", {name: "Break details"})).toBeInTheDocument();
+        render(
+            <PauseDetailModal
+                pauseInterval={pauseInterval}
+                closeModal={() => {}}
+                onDelete={() => {}}
+            />
+        );
+        expect(
+            screen.getByRole("heading", { name: "Break details" })
+        ).toBeInTheDocument();
         expect(screen.getByText("Close")).toBeInTheDocument();
         expect(screen.getByText("Delete the break")).toBeInTheDocument();
     });
@@ -55,12 +65,20 @@ describe("PauseDetailModal", () => {
 describe("RoomActivitiesListModal", () => {
     test("interpolates the room label, both locales", async () => {
         await i18n.changeLanguage("fr");
-        const {rerender} = render(<RoomActivitiesListModal room={{label: "Salle A"}} refs={[]} />);
-        expect(screen.getByText("Activités de la salle Salle A")).toBeInTheDocument();
+        const { rerender } = render(
+            <RoomActivitiesListModal room={{ label: "Salle A" }} refs={[]} />
+        );
+        expect(
+            screen.getByText("Activités de la salle Salle A")
+        ).toBeInTheDocument();
 
         await i18n.changeLanguage("en");
-        rerender(<RoomActivitiesListModal room={{label: "Salle A"}} refs={[]} />);
-        expect(screen.getByText("Activities for room Salle A")).toBeInTheDocument();
+        rerender(
+            <RoomActivitiesListModal room={{ label: "Salle A" }} refs={[]} />
+        );
+        expect(
+            screen.getByText("Activities for room Salle A")
+        ).toBeInTheDocument();
     });
 });
 
@@ -68,7 +86,9 @@ describe("StudentModal", () => {
     test("French by default", async () => {
         await i18n.changeLanguage("fr");
         render(<StudentModal onSave={() => {}} onRemove={() => {}} />);
-        expect(screen.getByRole("heading", {name: "Sélection"})).toBeInTheDocument();
+        expect(
+            screen.getByRole("heading", { name: "Sélection" })
+        ).toBeInTheDocument();
         expect(screen.getByText("Cours")).toBeInTheDocument();
         expect(screen.getByText("Option")).toBeInTheDocument();
         expect(screen.getByText("Enregistrer")).toBeInTheDocument();
@@ -86,12 +106,12 @@ describe("SelectTeachers", () => {
     test("renders the dropdown label in both locales", async () => {
         const props = {
             listTeacher: [],
-            selectedName: {first_name: "Ada", last_name: "Lovelace"},
+            selectedName: { first_name: "Ada", last_name: "Lovelace" },
             currentUser: 1,
             date: "2026-09-01",
         };
         await i18n.changeLanguage("fr");
-        const {rerender} = render(<SelectTeachers {...props} />);
+        const { rerender } = render(<SelectTeachers {...props} />);
         expect(screen.getByText("Planning de")).toBeInTheDocument();
 
         await i18n.changeLanguage("en");
@@ -103,8 +123,12 @@ describe("SelectTeachers", () => {
 describe("RawPlanning", () => {
     test("renders the empty-week message in both locales", async () => {
         await i18n.changeLanguage("fr");
-        const {rerender} = render(<RawPlanning data={{}} seasons={[]} isTeacher={false} />);
-        expect(screen.getByText("Aucune activité cette semaine.")).toBeInTheDocument();
+        const { rerender } = render(
+            <RawPlanning data={{}} seasons={[]} isTeacher={false} />
+        );
+        expect(
+            screen.getByText("Aucune activité cette semaine.")
+        ).toBeInTheDocument();
 
         await i18n.changeLanguage("en");
         rerender(<RawPlanning data={{}} seasons={[]} isTeacher={false} />);
@@ -113,40 +137,57 @@ describe("RawPlanning", () => {
 });
 
 describe("YearlyCalendar", () => {
-    // Regression guard: YearlyCalendar is a withTranslation("planning")-wrapped class; a missing
-    // wrapper would surface here as "t is not a function" rather than a silent prod crash.
+    // Regression guard: YearlyCalendar uses useTranslation("planning"); a missing/broken call
+    // would surface here as "t is not a function" rather than a silent prod crash.
     const props = {
         label: "Cours de guitare",
-        season: {start: "2026-09-01", end: "2027-06-30", holidays: []},
+        season: { start: "2026-09-01", end: "2027-06-30", holidays: [] },
         activityInstances: [],
         handlePickDate: () => {},
     };
 
     test("renders its translated headings in both locales", async () => {
         await i18n.changeLanguage("fr");
-        const {rerender} = render(<YearlyCalendar {...props} />);
-        expect(screen.getByText("0 cours prévus sur la saison")).toBeInTheDocument();
+        const { rerender } = render(<YearlyCalendar {...props} />);
+        expect(
+            screen.getByText("0 cours prévus sur la saison")
+        ).toBeInTheDocument();
         expect(screen.getByText("Cours")).toBeInTheDocument();
         expect(screen.getByText("Existant")).toBeInTheDocument();
 
         await i18n.changeLanguage("en");
         rerender(<YearlyCalendar {...props} />);
-        expect(screen.getByText("0 courses scheduled this season")).toBeInTheDocument();
+        expect(
+            screen.getByText("0 courses scheduled this season")
+        ).toBeInTheDocument();
         expect(screen.getByText("Existing")).toBeInTheDocument();
     });
 });
 
 describe("SelectActivity", () => {
     test("renders the title and placeholders in both locales", async () => {
-        const props = {mode: "teacher", teachers: [], rooms: [], activities: [], locations: [], onChange: () => {}};
+        const props = {
+            mode: "teacher",
+            teachers: [],
+            rooms: [],
+            activities: [],
+            locations: [],
+            onChange: () => {},
+        };
         await i18n.changeLanguage("fr");
-        const {rerender} = render(<SelectActivity {...props} />);
-        expect(screen.getByRole("heading", {name: "Autres Activités à afficher"})).toBeInTheDocument();
-        expect(screen.getByText("Sélectionner d'autres activités")).toBeInTheDocument();
+        const { rerender } = render(<SelectActivity {...props} />);
+        expect(
+            screen.getByRole("heading", { name: "Autres Activités à afficher" })
+        ).toBeInTheDocument();
+        expect(
+            screen.getByText("Sélectionner d'autres activités")
+        ).toBeInTheDocument();
 
         await i18n.changeLanguage("en");
         rerender(<SelectActivity {...props} />);
-        expect(screen.getByRole("heading", {name: "Other activities to display"})).toBeInTheDocument();
+        expect(
+            screen.getByRole("heading", { name: "Other activities to display" })
+        ).toBeInTheDocument();
         expect(screen.getByText("Select other activities")).toBeInTheDocument();
     });
 });

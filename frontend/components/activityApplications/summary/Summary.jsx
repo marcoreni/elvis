@@ -18,7 +18,6 @@ import EvaluationChoice from "../EvaluationChoice";
 import ButtonModal from "../../common/ButtonModal";
 import UserWithInfos from "../../common/UserWithInfos";
 import * as ActivityApplicationStatus from "../../utils/ActivityApplicationsStatuses";
-import { isValidDate } from "@fullcalendar/react";
 import TimePreferencesStep from "../TimePreferencesStep";
 import { PLANNING_MODE } from "../TimePreferencesStep";
 import * as api from "../../../tools/api";
@@ -26,6 +25,8 @@ import * as api from "../../../tools/api";
 import moment from "moment";
 import { withTranslation } from "react-i18next";
 import i18n from "../../../i18n";
+
+const isValidDate = (date) => !Number.isNaN(date.getTime());
 
 class Summary extends React.Component {
     constructor(props) {
