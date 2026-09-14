@@ -52,20 +52,12 @@
 require "csv"
 
 class User < ApplicationRecord
-  update_index("users") { self } #  specifying index, type and back-reference for updating
-
   before_validation -> { @ignore_attached_email = true }
   before_save -> { @ignore_attached_email = true }
   before_create -> { @ignore_attached_email = true }
   before_update -> { @ignore_attached_email = true }
 
   before_save :strip_names
-
-  def run_chewy_callbacks
-    base_chewy_callbacks
-  end
-
-  #  after user save or destroy
 
   # Include default devise modules. Others available are:
   # :lockable, :timeoutable and :omniauthable

@@ -158,8 +158,6 @@ percent_off_values.each do |percent|
 end
 # =============================================================================
 
-Chewy.strategy(:bypass)
-
 Parameter.create!(label: "bank_holidays_zone", value: "metropole", value_type: "string")
 
 # add emails templates

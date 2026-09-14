@@ -83,13 +83,7 @@ class ActivityRef < ApplicationRecord
   attribute :kind
   attribute :display_name
 
-  update_index("activities") { self }
-
   has_many :max_prices, as: :target, dependent: :destroy, class_name: "MaxActivityRefPriceForSeason"
-
-  def run_chewy_callbacks
-    base_chewy_callbacks
-  end
 
   has_many :activity_ref_pricing, dependent: :restrict_with_exception
   has_many :seasons, through: :activity_ref_pricing

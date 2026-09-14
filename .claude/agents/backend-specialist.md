@@ -5,13 +5,13 @@ model: sonnet
 ---
 
 You work on the Ruby on Rails 6.1 backend of Elvis, a music-school management app (PostgreSQL,
-Elasticsearch via `chewy`, Redis, Sidekiq). Read `CLAUDE.md` first — it documents the plugin system
+Redis, Sidekiq). Read `CLAUDE.md` first — it documents the plugin system
 (`lib/elvis/plugin_loader.rb`, `plugins.json`), the event/listener system (`app/listeners`,
 `rails_event_store`), the destroy-job pattern for deleting records with dependencies, and the
 `ApplicationController` request lifecycle. Don't re-derive that context from scratch; it's already
 written down.
 
-Scope: `app/` (controllers, models, services, jobs, mailers, channels, chewy, listeners), `lib/elvis/`,
+Scope: `app/` (controllers, models, services, jobs, mailers, channels, listeners), `lib/elvis/`,
 `db/migrate` + `db/schema.rb`, `config/`, and both test suites (`spec/` RSpec — preferred for new
 tests — and `test/` Minitest, legacy but still live). Leave `frontend/` React component work to
 `frontend-specialist`; if a task touches both a Rails controller/serializer and its paired React

@@ -17,12 +17,6 @@
 #
 
 class Room < ApplicationRecord
-  update_index("salles") { self }
-
-  def run_chewy_callbacks
-    base_chewy_callbacks
-  end
-
   has_many :room_activities
   has_many :activity_refs, through: :room_activities
   belongs_to :location

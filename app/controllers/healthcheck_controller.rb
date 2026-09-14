@@ -59,26 +59,6 @@ class HealthcheckController < ActionController::Base
       end
     end
 
-    # test elsticsearch connection
-    start = Time.now
-    begin
-      Chewy.client.cluster.health
-      stop = Time.now
-
-      components_status[:elasticsearch] = {
-        status: 1,
-        message: "",
-        duration: (stop - start) * 1000
-      }
-    rescue StandardError => e
-      stop = Time.now
-      components_status[:elasticsearch] = {
-        status: 0,
-        message: e.message,
-        duration: (stop - start) * 1000
-      }
-    end
-
     final_status = {}
 
     all_system_up = components_status.values.all? { |status| status[:status] == 1 }

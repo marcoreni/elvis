@@ -18,12 +18,6 @@
 #
 
 class Adhesion < ApplicationRecord
-  update_index("adhesions") { self }
-
-  def run_chewy_callbacks
-    base_chewy_callbacks
-  end
-
   acts_as_paranoid
 
   belongs_to :user

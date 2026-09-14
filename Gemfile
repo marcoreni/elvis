@@ -59,7 +59,6 @@ gem "sentry-rails"
 gem "sentry-ruby"
 
 gem "acts_as_paranoid"
-gem "chewy", "< 7.4"
 gem "sidekiq"
 
 # patch for "wrong number of arguments" error

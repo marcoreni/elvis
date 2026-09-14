@@ -6,13 +6,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Elvis (formerly "Ziggy") is a Rails 6.1 web application for managing a music school: member/student
 management, activity registration, scheduling, evaluations, and payments. Backend is Ruby on Rails with
-PostgreSQL, Elasticsearch (via `chewy`), Redis, and Sidekiq for background jobs. Frontend is React
+PostgreSQL, Redis, and Sidekiq for background jobs. Frontend is React
 rendered into ERB views via `react-rails`/`shakapacker` (Rspack, via `assets_bundler: "rspack"` in
 `config/shakapacker.yml` — not webpack), not a separate SPA.
 
 ## Running the app
 
-Full stack (Postgres, Elasticsearch, Redis, Sidekiq) via Docker:
+Full stack (Postgres, Redis, Sidekiq) via Docker:
 ```bash
 docker-compose build
 docker-compose up
@@ -21,7 +21,7 @@ App is served at `http://localhost:7212`. `GITHUB_TOKEN` env var is required (us
 gems) — remove the `GITHUB_TOKEN is required` requirement in `docker-compose.yml` if not needed.
 
 For local (non-Docker) development, see the "Install manually" section of `README.md` — ruby 3.3.2, node 20,
-postgresql 14, and optionally a local redis and elasticsearch. Then:
+postgresql 14, and optionally a local redis. Then:
 ```bash
 bundle install
 yarn
@@ -116,8 +116,8 @@ Read `docs/RemoveController.md` before adding destroy behavior to a new model.
 
 Standard Rails layout under `app/`: `controllers`, `models`, `serializers` (active_model_serializers /
 fast_jsonapi), `services` (business logic, organized by domain e.g. `services/activities`,
-`services/payments`, `services/plannings`), `jobs` (Sidekiq/ActiveJob), `mailers`, `channels`
-(ActionCable), `chewy` (Elasticsearch index definitions), `listeners` (event subscribers). Routes are a
+`services/payments`, `services/plannings`, `services/search`), `jobs` (Sidekiq/ActiveJob), `mailers`,
+`channels` (ActionCable), `listeners` (event subscribers). Routes are a
 single large `config/routes.rb` — plugin routes are deliberately prepended before the app's own routes so
 plugins can override core behavior. Authorization uses `cancancan`; auth uses `devise` plus custom
 OAuth/OIDC endpoints (`lib/token_endpoint.rb`, `lib/authorization_endpoint.rb`, `config/routes.rb`

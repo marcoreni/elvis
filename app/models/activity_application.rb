@@ -20,13 +20,6 @@
 #
 
 class ActivityApplication < ApplicationRecord
-  update_index("activity_applications") { self } #  specifying index, type and back-reference for updating
-  #  after user save or destroy
-
-  def run_chewy_callbacks
-    base_chewy_callbacks
-  end
-
   acts_as_paranoid
   before_update :refresh_status_updated_at
 
