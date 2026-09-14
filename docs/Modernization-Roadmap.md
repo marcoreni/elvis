@@ -191,16 +191,39 @@ the highest-traffic confirm/cancel flows (none exist today).
 
 Implementation: `chore/sweetalert2-v11-bump`.
 
-## 8. Do we need Elasticsearch at all? — status: not started, deep dive requested
+## 8. Do we need Elasticsearch at all? — analysis done 2026-09-14, migration not started
 
-CI dropped ES entirely (item 1) since tests never touch it, but dev/prod still run it for 5 real
-chewy indices (`app/chewy/`: activities, activity_applications, adhesions, salles, users) backing
-`advancedSearch` and admin search UIs — not vestigial today. Open question: is ES actually earning
-its infra cost (a whole extra service to run/deploy/upgrade) vs. e.g. Postgres full-text search
-(`pg_trgm`/`tsvector`) for this app's actual query patterns (mostly autocomplete/name lookups per
-the index definitions, not complex aggregations). Needs: inventory what each index's search
-UI actually requires (fuzzy/prefix matching, faceting, ranking), whether Postgres could cover it,
-and a real migration-cost estimate — not a snap decision.
+**Footprint is small**: only 13 files in the whole app touch Chewy at all — the 5 index
+definitions (`app/chewy/*_index.rb`), the 5 models' `update_index` macros, `search_controller.rb`,
+and `healthcheck_controller.rb`'s cluster-health ping. All 5 indices are structurally identical and
+simple: one shared analyzer (edge_ngram autocomplete filter, standard tokenizer, lowercase +
+asciifolding), flat fields only — no nesting, no geo, no completion suggester, no synonyms, no
+custom scoring/boosting. Nothing here is exotic ES usage.
+
+**Exactly one consumer** (`app/controllers/search_controller.rb`) queries these indices anywhere:
+- `#index` (routed `POST /omnisearch`, the global search box) — the only *reachable* live feature.
+  One `multi_match` (`cross_fields`, `operator: and`) across all 5 indices and ~13 fields at once —
+  "these words must all appear somewhere," no custom relevance tuning. Squarely in
+  `tsvector`/`tsquery` (or `pg_trgm` for typo tolerance) territory; the only real wrinkle is merging
+  results across what would become 5 separate Postgres tables (a `UNION ALL` + manual rank sort).
+- `#advanced_search_query` (`POST /advanced_query`) — takes a raw Elasticsearch query DSL body
+  built client-side by `frontend/components/advancedSearch/utils.js` (`jQuery-QueryBuilder`'s ES
+  plugin: arbitrary bool/wildcard/terms/range queries against `UsersIndex` only) and passes it
+  straight to `UsersIndex.query(query)`. This is the one piece that would genuinely resist a
+  Postgres rewrite (an ad-hoc query-builder UI generating arbitrary filter combinations) —
+  **but its page's GET route is commented out** (`config/routes.rb:165`,
+  `search#advanced_search` / `app/views/search/advanced_search.html.erb`) and nothing else links
+  to it. Same orphaned-code pattern as item 2: it isn't reachable through the app's UI today.
+- `#indexation` only rebuilds 2 of the 5 indices (Users, ActivityApplications) — inconsistent,
+  likely stale itself; a separate small finding, not central here.
+
+**Recommendation**: migrate the one reachable feature (omnisearch) to Postgres full-text search —
+small, contained surface, no exotic ES features in active use, and it lets dev/docker-compose drop
+Elasticsearch as a service entirely. Treat `/advanced_query` + `AdvancedSearch.jsx` as a separate
+decision, independent of the migration: either delete it as orphaned (it's unroutable today,
+matching item 2's precedent) or, if someone wants the ad-hoc query-builder UI back, that's the one
+piece that would still benefit from staying on ES (or from a real SQL query-builder redesign) — it
+shouldn't block or complicate migrating the feature that's actually in use.
 
 ## 9. `run_chewy_callbacks` override — NOT dead, live bug found — analysis done 2026-09-14
 
