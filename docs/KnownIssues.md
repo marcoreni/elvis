@@ -185,13 +185,6 @@ restructuring ad hoc across already-merged domains.
   `await` resolves immediately, before the actual save completes. Its `.success`/`.error`
   callbacks (not the `await`) drive `closeModal()`, so this is harmless today, but the `await`
   reads as if it's waiting for the save to finish and doesn't.
-- `config/locales/{en,fr}.yml`'s `long_date` format (`"%B %e, %Y"` / `"%e %B %Y"`) uses `%e`
-  (space-padded day), producing a double space in EN ("September  4, 2026") or a leading space in
-  FR (" 4 septembre 2026") for single-digit days. Invisible in HTML (whitespace collapses) but would
-  show in plaintext contexts. Pre-existing in both locales; only became reachable in EN via the
-  item-10 fix to `devise/registrations/new.html.erb`. `long_date` is used elsewhere too, so fixing
-  it (`%-d`) deserves its own small pass with a broader grep, not a one-line change buried in an
-  unrelated PR.
 
 ## `Activity#teacher` is N+1-prone independent of `.includes()`
 

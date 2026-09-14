@@ -548,7 +548,7 @@ en:
   date:
     formats:
       date_month_concise: "%B %d, %Y"
-      long_date: "%B %e, %Y"
+      long_date: "%B %-d, %Y"
   jobs:
     csv_importer:
       completed: "%{count} rows processed - %{created} registrations created and %{ignored}
@@ -665,7 +665,7 @@ en:
     formats:
       date_month_concise: "%B %d, %Y"
       day: "%A"
-      long_date: "%B %e, %Y"
+      long_date: "%B %-d, %Y"
       short_time: "%H:%M"
   upcoming_payment_mailer:
     upcoming_payment:

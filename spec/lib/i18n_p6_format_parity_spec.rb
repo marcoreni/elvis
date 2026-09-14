@@ -19,11 +19,11 @@ RSpec.describe "P6 date/currency format locale parity" do
 
   describe "date.formats.long_date" do
     it "renders day-before-month order in French" do
-      expect(I18n.l(date, format: :long_date, locale: :fr)).to eq(" 5 septembre 2026")
+      expect(I18n.l(date, format: :long_date, locale: :fr)).to eq("5 septembre 2026")
     end
 
     it "renders month-before-day order in English" do
-      expect(I18n.l(date, format: :long_date, locale: :en)).to eq("September  5, 2026")
+      expect(I18n.l(date, format: :long_date, locale: :en)).to eq("September 5, 2026")
     end
   end
 
