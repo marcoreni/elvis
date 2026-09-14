@@ -9,6 +9,7 @@ import { render, screen } from "@testing-library/react";
 import i18n from "../../i18n";
 import RestartingMessage from "./RestartingMessage";
 import PluginCard from "./PluginCard";
+import PluginActivationModal from "./PluginActivationModal";
 
 afterEach(async () => {
     await i18n.changeLanguage("fr");
@@ -58,6 +59,39 @@ describe("PluginCard — card.* strings resolve in both locales", () => {
             expect(
                 screen.getByText(lng === "fr" ? "Configurer" : "Configure")
             ).toBeInTheDocument();
+        }
+    );
+});
+
+describe("PluginActivationModal — confirmToggle resolves the right verb in both locales", () => {
+    // Pins the nested t() call (confirmToggle interpolating a separate activate/deactivate key) --
+    // the one place this extraction went wrong once already (a caught-before-ship inverted
+    // ternary). Asserts the full sentence, not just the verb: "activer" is a substring of
+    // "désactiver" (same for activate/deactivate), so a regex/substring match on the verb alone
+    // would pass even if the wrong branch rendered. Note the "1" plugin id below plays the role of
+    // Object.keys(plugins)[0], the actual (pre-existing, tracked in docs/KnownIssues.md) source of
+    // which plugin the modal describes -- not something this test is meant to cover.
+    test.each([
+        ["fr", true, "Êtes-vous sûr(e) de vouloir activer ce plugin ?"],
+        ["fr", false, "Êtes-vous sûr(e) de vouloir désactiver ce plugin ?"],
+        ["en", true, "Are you sure you want to activate this plugin?"],
+        ["en", false, "Are you sure you want to deactivate this plugin?"],
+    ])(
+        "%s: isActivated=%s renders '%s'",
+        async (lng, isActivated, expectedSentence) => {
+            await i18n.changeLanguage(lng);
+            render(
+                <PluginActivationModal
+                    isOpen={true}
+                    plugins={{ 1: true }}
+                    activatedPlugins={{ 1: isActivated }}
+                    onCancel={() => {}}
+                    onClose={() => {}}
+                    handleSaveAndRestart={() => {}}
+                />
+            );
+
+            expect(screen.getByText(expectedSentence)).toBeInTheDocument();
         }
     );
 });

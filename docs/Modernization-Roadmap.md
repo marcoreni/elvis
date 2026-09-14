@@ -387,8 +387,11 @@ code (zero importers, no ERB `react_component` mount anywhere) — deleted rathe
 logged in `docs/OrphanedCode.md`. The plugin-management UI (`Plugins.jsx`,
 `PluginActivationModal.jsx`, `PluginsList.jsx`, `RestartingMessage.jsx`, `PluginCard.jsx`) got a
 full extraction pass into a new `plugins` i18n namespace (`frontend/locales/{fr,en}/plugins.json`);
-caught and fixed one bug of its own along the way — the activate/deactivate confirmation ternary
-was initially transcribed inverted, caught by re-deriving the original logic before it shipped.
+the activate/deactivate confirmation ternary was initially transcribed inverted during extraction,
+caught by re-deriving the original logic before it shipped — code review then found the *value*
+feeding that ternary (`isActivated`, derived from `Object.keys(selectedPlugins)[0]` rather than the
+plugin actually being confirmed) was already wrong before this PR; logged in `docs/KnownIssues.md`
+rather than fixed here, since it's an unrelated pre-existing logic bug, not an i18n one.
 
 ## Context this roadmap assumes (don't re-derive, just re-read if needed)
 
