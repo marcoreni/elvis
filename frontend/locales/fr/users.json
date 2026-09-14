@@ -303,13 +303,6 @@
         "deleteThem": "Les supprimer",
         "cancelAndView": "Annuler et voir les séances"
     },
-    "advancedSearch": {
-        "age": "Âge",
-        "handicap": "Situation de handicap",
-        "yes": "oui",
-        "no": "non",
-        "title": "Recherche avancée"
-    },
     "passwordReset": {
         "emailFallback": "pas@dadresse.détectée",
         "greeting": "<h5>Bonjour <b>{{name}}</b></h5>",

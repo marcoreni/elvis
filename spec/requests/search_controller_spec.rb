@@ -55,6 +55,27 @@ RSpec.describe "SearchController", type: :request do
       match = body["results"].find { |r| r["attributes"]["kind"] == "user" && r["attributes"]["user_id"] == user.id }
       expect(match).to be_nil
     end
+
+    it "matches on the email field" do
+      body = search("ecole-piano@example.com")
+
+      match = body["results"].find { |r| r["attributes"]["kind"] == "user" && r["attributes"]["user_id"] == user.id }
+      expect(match).to be_present
+    end
+  end
+
+  describe "matching a user with punctuation in their name" do
+    # The tokenizer splits ON punctuation rather than deleting it: a naive strip-then-search would
+    # turn "Jean-Pierre" into "jeanpierre" and never match the stored "Jean-Pierre" -- same trap for
+    # apostrophes and, via the email field above, dotted addresses.
+    let!(:user) { FactoryBot.create(:user, first_name: "Jean-Pierre", last_name: "O'Brien") }
+
+    it "matches searching the hyphenated first name and the apostrophe last name together" do
+      body = search("Jean-Pierre O'Brien")
+
+      match = body["results"].find { |r| r["attributes"]["kind"] == "user" && r["attributes"]["user_id"] == user.id }
+      expect(match).to be_present
+    end
   end
 
   describe "matching an activity ref" do
@@ -146,6 +167,35 @@ RSpec.describe "SearchController", type: :request do
         "application_last_name" => "Postulant",
         "application_status" => "En attente de traitement"
       )
+    end
+  end
+
+  describe "results mix across kinds instead of one source starving the rest" do
+    let!(:many_users) do
+      (1..25).map do |i|
+        FactoryBot.create(:user, first_name: "Melodie#{i}", last_name: "Commune", email: "melodie#{i}@example.com")
+      end
+    end
+    let(:activity_ref_kind) { FactoryBot.create(:activity_ref_kind) }
+    let!(:activity_ref) do
+      FactoryBot.create(:activity_ref, activity_ref_kind: activity_ref_kind, label: "Commune Guitare")
+    end
+
+    it "still surfaces a match from a smaller source in the top RESULT_LIMIT results" do
+      body = search("commune")
+
+      # 25 users all match "commune" -- more than one source's own PER_SOURCE_LIMIT. Concatenating
+      # sources one after another would let those 25 fill every one of the (smaller) 15 returned
+      # slots before the activity ref is even considered; round-robin interleaving must not.
+      kinds = body["results"].map { |r| r["attributes"]["kind"] }
+      expect(kinds).to include("activityref")
+      expect(body["results"].size).to eq(Search::OmnisearchService::RESULT_LIMIT)
+    end
+
+    it "reports the true combined match count, not just the returned page size" do
+      body = search("commune")
+
+      expect(body["total"]).to eq(many_users.size + 1) # + the activity ref
     end
   end
 
