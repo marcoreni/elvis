@@ -120,7 +120,7 @@ feature this app actually uses maps to a native, free, stable FullCalendar v6 AP
   so there's no extra "convert working code" risk. Add real interaction tests (view switching, at
   minimum) as part of this, since none exist today.
 
-## 7. Migrate `sweetalert2` off the legacy API — feasibility check done 2026-09-14, migration not started
+## 7. Migrate `sweetalert2` off the legacy API — done, `chore/sweetalert2-v11-bump` (PR #99, merged)
 
 **Version facts**: `package.json`'s `^7.26.11` and the resolved `7.33.1` (in both `yarn.lock` and
 `node_modules`) are not a stale-lockfile mismatch — **7.33.1 is the actual final 7.x release**
@@ -189,7 +189,16 @@ is the `.value`→`.isConfirmed`/`.isDenied`/`.isDismissed` modernization (non-b
 as its own later PR/PRs, domain-grouped, whenever convenient) plus adding interaction tests for
 the highest-traffic confirm/cancel flows (none exist today).
 
-Implementation: `chore/sweetalert2-v11-bump`.
+**Shipped** (PR #99, merged): the full mechanical migration in one PR as planned — bare
+calls→`.fire()`, `type:`→`icon:`, `on*`→`did*`/`will*`, positional-arg calls converted to object
+form, across all ~107 files, via a small AST-driven codemod (not committed — built on
+`@babel/parser`+`traverse`, per-file default-import-binding tracking so it wouldn't touch unrelated
+`type:` keys elsewhere in the same file). Code review caught a real miss the codemod's single-
+binding-per-file assumption couldn't handle (`ActivitiesApplicationsList.jsx` had two separate
+`sweetalert2` default imports, `swal` and `Swal` — the codemod only rewrote the `Swal` one's call
+site, leaving 6 `swal(...)` calls that would have hard-crashed under v11) plus 3 v9-removed
+`*Class`/`inputClass` keys silently dropped elsewhere — both fixed before merge. `.value` was left
+untouched as planned (still valid in v11, non-breaking, a safe future follow-up).
 
 ## 8. Elasticsearch removed entirely — done, `chore/remove-elasticsearch`
 
