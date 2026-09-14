@@ -253,7 +253,7 @@ describe("CustomCalendar — FullCalendar adapter", () => {
 
     // eventDrop and eventResize share the same adapter (handleEventChange) -- one test exercises
     // the shared code path both drag-move and resize go through.
-    test("eventDrop reconstructs the schedule plus the new start/end for beforeUpdateSchedule", () => {
+    test("eventDrop reconstructs the schedule plus the new start/end for beforeUpdateSchedule, and does not revert a successful update", () => {
         const schedule = {
             id: 9,
             title: "Dispo",
@@ -264,6 +264,11 @@ describe("CustomCalendar — FullCalendar adapter", () => {
 
         const newStart = new Date("2026-09-08T14:00:00");
         const newEnd = new Date("2026-09-08T15:00:00");
+        const revert = vi.fn();
+        // baseProps.beforeUpdateSchedule is a plain vi.fn(), returning undefined -- the exact
+        // shape Planning.jsx's own allowed branch returns (handleUpdateTimeInterval has no return
+        // statement). Asserting revert stays uncalled here is what actually pins the `=== null`
+        // (not a general falsy check) distinction handleEventChange relies on.
         lastFullCalendarProps.eventDrop({
             event: {
                 id: "9",
@@ -273,7 +278,7 @@ describe("CustomCalendar — FullCalendar adapter", () => {
                 allDay: false,
                 extendedProps: lastFullCalendarProps.events[0].extendedProps,
             },
-            revert: vi.fn(),
+            revert,
         });
 
         expect(baseProps.beforeUpdateSchedule).toHaveBeenCalledWith(
@@ -281,6 +286,7 @@ describe("CustomCalendar — FullCalendar adapter", () => {
                 schedule: expect.objectContaining({ id: 9, kind: "o" }),
             })
         );
+        expect(revert).not.toHaveBeenCalled();
     });
 
     // Planning.jsx's beforeUpdateSchedule returns literal `null` (not just a falsy value) when
@@ -353,6 +359,26 @@ describe("CustomCalendar — FullCalendar adapter", () => {
         });
 
         expect(result).toBe(true);
+    });
+
+    test("dayHeaderContent renders the day number and a presence-sheet link for admins/teachers in week view", () => {
+        render(
+            <CustomCalendar
+                {...baseProps}
+                view="week"
+                user={{ id: 42 }}
+                isAdmin={true}
+            />
+        );
+
+        const result = lastFullCalendarProps.dayHeaderContent({
+            date: new Date("2026-09-08"),
+            view: { type: "timeGridWeek" },
+        });
+
+        expect(result).not.toBe(true);
+        expect(result.html).toMatch(/>\s*8\s*</);
+        expect(result.html).toContain("/users/42/presence_sheet/2026-09-08");
     });
 
     test("multi-planning mode disables select/editable (matching tui-calendar's isReadOnly for that mode)", () => {

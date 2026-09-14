@@ -273,7 +273,10 @@ function reconstructSchedule(event: {
     // event.end is null whenever FullCalendar considers the event zero-duration (start >= end) --
     // real data here (e.g. unscheduled "pause" markers, see calculateTotalHours' `i.start !==
     // i.end` check below) does include start === end intervals. Falling back to `start` keeps
-    // `.toDate()`/moment usage elsewhere from silently receiving an Invalid Date.
+    // `.toDate()`/moment usage elsewhere from silently receiving an Invalid Date. Not correct for
+    // an all-day event (whose real end would be start + 1 day), but every current all-day
+    // consumer (this file's own eventContent, Planning.jsx's clickSchedule) short-circuits on
+    // isAllDay before reading .end at all -- revisit this fallback if that ever changes.
     return {
         ...event.extendedProps,
         title: event.title,
@@ -496,11 +499,14 @@ function CustomCalendar(props: CalendarProps) {
 
     const handleEventChange = useCallback(
         (info: EventDropArg | EventResizeDoneArg) => {
+            // Reuses schedule.start/.end (not separate moment(info.event.start/.end) calls) so
+            // the null-end guard in reconstructSchedule actually applies here too -- Planning.jsx
+            // reads this `end` argument directly (Planning.jsx:699-700), not schedule.end.
             const schedule = reconstructSchedule(info.event);
             const result = props.beforeUpdateSchedule?.({
                 schedule,
-                start: moment(info.event.start),
-                end: moment(info.event.end),
+                start: schedule.start,
+                end: schedule.end,
             });
 
             // Planning.jsx's beforeUpdateSchedule ternary explicitly returns `null` when the

@@ -139,28 +139,36 @@ usage is mocked out in its own test suite) — full rspec/vitest/tsc all clean a
 a functional component wrapping FullCalendar v6 (`dayGridMonth`/`timeGridWeek`/`timeGridDay`)
 instead of tui-calendar, as an **adapter** — `Planning.jsx` (1794 lines) and every modal it opens
 from a calendar callback (`MultiViewModal`, `EvaluationModal`, `PauseDetailModal`,
-`ActivityDetailsModal`, `CreateActivityModal`) needed zero changes, because the adapter reconstructs
-the exact same tui-calendar-shaped "schedule" object (`id`/`title`/`start`/`end`/`kind`/
+`ActivityDetailsModal`, `CreateActivityModal`) needed almost no changes, because the adapter
+reconstructs the exact same tui-calendar-shaped "schedule" object (`id`/`title`/`start`/`end`/`kind`/
 `isValidated`/`teacher`/`activity`/`activityInstance`/`raw`, with moment-wrapped `start`/`end` so
-`.toDate()` still works) from FullCalendar's `extendedProps` on every callback. The 15-minute snap,
-previously hardcoded inside the tui-calendar fork's `handler/time/*.js` (not a `Calendar.jsx` option
-at all), is now FullCalendar's native `snapDuration: "00:15:00"`. Re-added
-`@fullcalendar/daygrid`/`timegrid` (dropped in Step A when nothing used them yet). One real
-visual-regression risk caught before shipping: the custom event template's icon spans
-(`ic-lock-b`/`ic-readonly-b`/etc.) relied on tui-calendar's own bundled icon-font CSS, removed along
-with the library — swapped for this app's existing Font Awesome icons
-(`fa-lock`/`fa-eye`/`fa-sync`/`fa-user`/`fa-map-marker-alt`). Added 6 interaction tests (view
-switching, create/click/drag-update adapters, snap config, multi-planning read-only gating) — the
-"none exist today" gap this item originally flagged. Found two pre-existing issues while mapping the
+`.toDate()` still works) from FullCalendar's `extendedProps` on every callback. The one exception:
+`MultiViewModal.jsx` read `schedule.start._date` — a private tui-calendar `TZDate` internal, not the
+public `.toDate()` API — fixed to use `.toDate()` instead, since the old code was already relying on
+an undocumented field rather than the API tui-calendar itself exposed. The 15-minute snap, previously
+hardcoded inside the tui-calendar fork's `handler/time/*.js` (not a `Calendar.jsx` option at all), is
+now FullCalendar's native `snapDuration: "00:15:00"`. Re-added `@fullcalendar/daygrid`/`timegrid`
+(dropped in Step A when nothing used them yet).
+
+Two review passes (code-reviewer subagent) caught real bugs before merge: icon spans relying on
+tui-calendar's own removed bundled icon-font CSS (swapped for Font Awesome), a missing
+`activityInstance` field rename the tui-calendar fork used to do internally, a private `._date`
+dependency (see above), dropped per-event colors, a declined drag/resize left visually applied with
+nothing persisted, bogus Jan-1970 dates in month-view day headers, a stringified id breaking
+`Planning.jsx`'s strict-equality interval lookups, and no locale wired (English 12-hour time labels).
+All fixed; see the PR history for detail. One deliberate, user-visible behavior change from fix #5:
+month view now uses FullCalendar's own default day-of-week header instead of the custom one (which
+carried a day-number and presence-sheet link) — that header row has no real per-cell date in month
+view, so the custom content was rendering nonsense dates there even before the fix. Added 10
+interaction tests (view switching, create/click/drag-update adapters incl. revert-on-reject, snap
+config, multi-planning read-only gating, day-header content in both month and week view) — the "none
+exist today" gap this item originally flagged. Found two pre-existing issues while mapping the
 schedule-shape contract (`beforeDeleteSchedule` passing the wrong shape, `StudentModal.jsx` being
-dead code, since deleted) — logged in `docs/KnownIssues.md`, not fixed here, since neither was
-caused by or blocked this migration. Bundled with the rewrite per the item's own recommendation:
+dead code, since deleted) — logged in `docs/KnownIssues.md`, not fixed here, since neither was caused
+by or blocked this migration. Bundled with the rewrite per the item's own recommendation:
 `useTranslation` (not `withTranslation`), real types reusing `entities.ts` in place of `any`, lodash
-dropped entirely. Extensively live-tested (`/planning`, all views, teacher/room plannings) with
-several rounds of bug fixes from real usage: all-day event rendering, a holiday/lesson id collision
-in dedup, a room-planning click crash on a missing `user`, month-view event colors, header
-alignment. See `docs/Jsx-To-Tsx-Migration-Playbook.md` (written alongside this, PR #107) for the
-general lifecycle/typing/lodash conventions this established for future `.jsx`→`.tsx` work.
+dropped entirely. See `docs/Jsx-To-Tsx-Migration-Playbook.md` (written alongside this, PR #107) for
+the general lifecycle/typing/lodash conventions this established for future `.jsx`→`.tsx` work.
 
 ## 7. Migrate `sweetalert2` off the legacy API — done, `chore/sweetalert2-v11-bump` (PR #99, merged)
 
