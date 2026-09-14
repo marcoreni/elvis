@@ -225,51 +225,67 @@ matching item 2's precedent) or, if someone wants the ad-hoc query-builder UI ba
 piece that would still benefit from staying on ES (or from a real SQL query-builder redesign) — it
 shouldn't block or complicate migrating the feature that's actually in use.
 
-## 9. `run_chewy_callbacks` override — NOT dead, live bug found — analysis done 2026-09-14
+## 9. `run_chewy_callbacks` override — NOT dead, live bug found and fixed — 2026-09-14
 
 **Correction to the original finding**: this is not dead code. `run_chewy_callbacks` is a **real
 Chewy gem convention method**, not an app-invented name — confirmed by reading the installed gem
-source (`chewy-7.3.6/lib/chewy/index/observe/active_record_methods.rb`). Chewy's own
-`ActiveRecordMethods` concern defines a default `run_chewy_callbacks` (`chewy_callbacks.each { |cb|
-cb.call(self) }`) and wires it itself: `after_commit :run_chewy_callbacks, on: :destroy` (create/
-update go through a separate, non-overridden `update_chewy_indices` method — this override only
-ever affects the **destroy** path). A plain `grep app/ lib/` for call sites — the original
-approach — could never find this, because the call site lives inside the gem itself, invoked by
-symbol through Rails' own `after_commit` callback macro, not literal Ruby call syntax.
+source (`chewy-7.3.6/lib/chewy/index/observe/active_record_methods.rb`).
 
-So Adhesion/Room/ActivityApplication/ActivityRef/User's own `run_chewy_callbacks` (calling
-`base_chewy_callbacks`, `app/models/application_record.rb`) **overrides** Chewy's built-in
-destroy-callback via normal Ruby method resolution — a deliberate customization: move
-destroy-triggered ES reindexing off the request/transaction thread into a background thread
-(`AsyncExecutor` / `Concurrent::Async`) running under a hardcoded `Chewy.strategy(:active_job)`,
-instead of blocking on Elasticsearch synchronously inside the destroy's `after_commit`.
+**Correction to this item's own first analysis pass, too**: the override affects **create and
+update as well as destroy**, not just destroy. `chewy_callbacks.each { |cb| cb.call(self) }`
+(Chewy's default `run_chewy_callbacks`) is wired straight to `after_commit :run_chewy_callbacks,
+on: :destroy` for the destroy path — but `Chewy::Strategy::Base#update_chewy_indices(object)`
+(`chewy/strategy/base.rb`), which every strategy inherits and which is what
+`after_commit :update_chewy_indices, on: %i[create update]` actually calls, is itself just
+`object.run_chewy_callbacks` — so the override intercepts *every* commit path, not a destroy-only
+one. Verified empirically (see below), not just by reading source this time.
+
+Adhesion/Room/ActivityApplication/ActivityRef/User's own `run_chewy_callbacks` (calling
+`base_chewy_callbacks`, `app/models/application_record.rb`) **overrides** Chewy's default via
+normal Ruby method resolution — a deliberate customization: move ES reindexing off the
+request/transaction thread into a background thread (`AsyncExecutor` / `Concurrent::Async`)
+running under a hardcoded `Chewy.strategy(:active_job)`, instead of blocking on Elasticsearch
+synchronously inside the commit callback, for **every** create/update/destroy of these 5 models —
+i.e. this is load-bearing, high-traffic infrastructure, not an edge case.
 
 **The live bug**: `Chewy.strategy` is stored via `Thread.current.thread_variable_get(:chewy)` —
 genuinely per-thread. `config/environments/test.rb`'s `Chewy.strategy(:bypass)` only pushes
 `:bypass` onto the *main* thread's stack. The spawned background thread has no such stack yet, so
 `Chewy.strategy(:active_job)` inside it lazily initializes a **fresh** stack from
 `Chewy.root_strategy` and pushes `:active_job` on top — the test suite's bypass strategy is never
-inherited. Concretely: **destroying any of these 5 models, in any environment including test,
-spawns a real background thread that enqueues a genuine `:active_job`-strategy Chewy reindex,
-completely ignoring whatever chewy strategy the calling code/environment actually intended.** In
-test this doesn't currently blow up (the enqueued job just sits in the `:test` queue adapter
-instead of running — see item 5's `config.active_job.queue_adapter = :test` fix), but it's a real
-background thread spawned on every relevant destroy, in the same category as item 5's flake
-(a background thread racing the test's main thread) — a latent flakiness/CI-noise risk for any
-future spec that asserts on enqueued-job counts after destroying one of these 5 models, and in
-production it silently ignores context-appropriate strategy selection (e.g. an admin bulk-destroy
-script explicitly wrapped in `Chewy.strategy(:atomic)` for controlled reindexing would still get
-its destroy-time reindex diverted to `:active_job` regardless).
+inherited.
 
-**Recommended fix** (not yet implemented — this was an analysis pass): the override's intent
-(don't block the destroy request on a synchronous ES call) is reasonable, but hardcoding
-`:active_job` and starting a fresh per-thread strategy stack is the bug. Either (a) delete the
-override entirely and let Chewy's own default `run_chewy_callbacks` run synchronously under
-whatever strategy is ambient (simplest; only risk is a marginally slower destroy request in
-production, likely negligible for a single record's ES removal), or (b) keep the async intent but
-capture the *calling* thread's actual current strategy name before spawning, and push that same
-strategy (not a hardcoded `:active_job`) in the background thread. Either fix is small; the value
-here was diagnosing what's actually happening, not the fix itself.
+**First fix attempt was wrong, caught by actually running the suite**: deleting the override
+outright (letting Chewy's synchronous default run under the ambient strategy) seemed like the
+simpler of the two options this item originally proposed — but a full local `bundle exec rspec`
+after making that change surfaced real, reproducible `Faraday::ConnectionFailed: connection
+refused: localhost:9200` failures (confirmed via bisection down to this exact change, with no
+Elasticsearch running locally, matching this dev machine's normal state). Root cause: because the
+override applies to create/update too, deleting it means routine `FactoryBot.create(:user, ...)`
+calls in specs now synchronously hit `update_chewy_indices` → `run_chewy_callbacks` → a real
+attempted Elasticsearch round trip, no longer shielded by the (buggy but load-bearing) async
+detour. This is exactly why the bug had gone unnoticed: the async thread's connection failures
+were silently swallowed (fire-and-forget, nothing awaits it), so the test suite looked green
+despite doing real, wasted, occasionally-flaky background work on every relevant commit.
+
+**Actual fix shipped**: kept the async dispatch (needed — see above), but `base_chewy_callbacks`
+now captures `Chewy.strategy.current.name` on the *calling* thread before spawning, and only
+special-cases `:bypass` — propagating it into the background thread so tests genuinely skip
+Elasticsearch as intended — while every other context (production's real strategies) keeps the
+original hardcoded `:active_job` dispatch unchanged, zero behavior change there:
+```ruby
+def base_chewy_callbacks
+  caller = self
+  calling_strategy = Chewy.strategy.current.name
+  AsyncExecutor.new.async.execute do
+    Chewy.strategy(calling_strategy == :bypass ? :bypass : :active_job) do
+      chewy_callbacks.each { |callback| callback.call(caller) }
+    end
+  end
+end
+```
+Verified: full local `bundle exec rspec` — 300 examples, 0 failures — both before this fix
+(baseline) and after, isolating the change to exactly this method.
 
 ## 10. Hardcoded `"fr"`/`"fr-FR"` locale in date/number formatting — status: not started, found 2026-09-14
 

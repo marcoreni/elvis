@@ -120,10 +120,20 @@ class ApplicationRecord < ActiveRecord::Base
   end
 
   # async call of chewy callbacks
+  #
+  # Chewy.strategy is per-thread (Thread.current-backed), so the background thread below never
+  # sees whatever strategy the calling thread was actually running under - it starts a fresh stack
+  # from Chewy.root_strategy regardless. Hardcoding :active_job here used to silently defeat
+  # config/environments/test.rb's Chewy.strategy(:bypass): every create/update/destroy of a
+  # chewy-indexed model spawned a real thread that tried to reach Elasticsearch no matter what the
+  # caller intended. Capturing the caller's actual current strategy and only special-casing
+  # :bypass (propagate it, so tests genuinely skip Elasticsearch like they're supposed to) keeps
+  # production's deferred-via-ActiveJob behavior unchanged while fixing that isolation break.
   def base_chewy_callbacks
     caller = self
+    calling_strategy = Chewy.strategy.current.name
     AsyncExecutor.new.async.execute do
-      Chewy.strategy(:active_job) do
+      Chewy.strategy(calling_strategy == :bypass ? :bypass : :active_job) do
         chewy_callbacks.each { |callback| callback.call(caller) }
       end
     end
