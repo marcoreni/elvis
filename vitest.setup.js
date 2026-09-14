@@ -22,3 +22,17 @@ window.matchMedia =
             dispatchEvent: () => false,
         };
     };
+
+// A real (unmocked) swal.fire() -- several component tests let one render for real rather than
+// mocking sweetalert2 -- schedules an internal `setTimeout(..., 10)` on popup-open
+// (SHOW_CLASS_TIMEOUT in sweetalert2's source) that it never exposes a handle for, so nothing
+// (including Swal.close()) can cancel it. If that popup opens near the end of a test file, the
+// 10ms timer can still be pending when Vitest tears down that file's jsdom environment, and fires
+// into a dead `window` ("ReferenceError: window is not defined" from sweetalert2's
+// hasCssAnimation/setScrollingVisibility) -- an unhandled error that doesn't fail the individual
+// test but does fail the run's exit code. Give any such timer a moment to fire while the
+// environment is still alive, once per file, rather than mocking sweetalert2 in every test that
+// happens to render one for real.
+afterAll(async () => {
+    await new Promise((resolve) => setTimeout(resolve, 20));
+});
