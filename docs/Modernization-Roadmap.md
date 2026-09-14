@@ -80,8 +80,7 @@ it out — that only covered one caller of the same shared thread pool; Rails' o
 was the wider, actual source. Confirmed via 19 consecutive clean full-suite runs (previously
 reproduced within 1-3 runs).
 
-## 6. Replace `tui-calendar` — Step A (FullCalendar v5→v6 bump) done; Step B (actual tui-calendar
-replacement) shipped, PR #104 open for review
+## 6. Replace `tui-calendar` — done, `feat/replace-tui-calendar` (PR #104, Step A: `chore/fullcalendar-v6-bump`)
 
 **Recommendation: FullCalendar, bumped to v6 first** (standalone step, before migrating) — every
 feature this app actually uses maps to a native, free, stable FullCalendar v6 API; nothing lost.
@@ -136,16 +135,30 @@ undocumented re-export that a major bump could easily have dropped; fixed before
 via a real `yarn build` (not just `tsc`/mocked tests, since `PracticePlanning.jsx`'s FullCalendar
 usage is mocked out in its own test suite) — full rspec/vitest/tsc all clean after.
 
-**Step B shipped** (`feat/replace-tui-calendar`, PR #104, open for review): built the adapter this
-item anticipated — `Calendar.tsx` (rewritten as a typed functional component) reconstructs a
-tui-calendar-shaped `Schedule` object from FullCalendar's native event model on every callback
-(`reconstructSchedule()`, called from `select`/`eventClick`/`eventDrop`/`eventResize`), so
-`Planning.jsx` (1794 lines, untouched) and its ~8 downstream modals never needed to change. Bundled
-with the rewrite per the item's own recommendation: functional component + `useTranslation` (not
-`withTranslation`), real types reusing `entities.ts` in place of `any`, lodash dropped entirely.
-Extensively live-tested (`/planning`, all views, teacher/room plannings) with several rounds of bug
-fixes from real usage: all-day event rendering, group-name-deletion regression, a holiday/lesson id
-collision in dedup, a room-planning click crash on a missing `user`, month-view event colors, header
+**Step B shipped** (`feat/replace-tui-calendar`, PR #104): `Calendar.jsx` rewritten as `Calendar.tsx`,
+a functional component wrapping FullCalendar v6 (`dayGridMonth`/`timeGridWeek`/`timeGridDay`)
+instead of tui-calendar, as an **adapter** — `Planning.jsx` (1794 lines) and every modal it opens
+from a calendar callback (`MultiViewModal`, `EvaluationModal`, `PauseDetailModal`,
+`ActivityDetailsModal`, `CreateActivityModal`) needed zero changes, because the adapter reconstructs
+the exact same tui-calendar-shaped "schedule" object (`id`/`title`/`start`/`end`/`kind`/
+`isValidated`/`teacher`/`activity`/`activityInstance`/`raw`, with moment-wrapped `start`/`end` so
+`.toDate()` still works) from FullCalendar's `extendedProps` on every callback. The 15-minute snap,
+previously hardcoded inside the tui-calendar fork's `handler/time/*.js` (not a `Calendar.jsx` option
+at all), is now FullCalendar's native `snapDuration: "00:15:00"`. Re-added
+`@fullcalendar/daygrid`/`timegrid` (dropped in Step A when nothing used them yet). One real
+visual-regression risk caught before shipping: the custom event template's icon spans
+(`ic-lock-b`/`ic-readonly-b`/etc.) relied on tui-calendar's own bundled icon-font CSS, removed along
+with the library — swapped for this app's existing Font Awesome icons
+(`fa-lock`/`fa-eye`/`fa-sync`/`fa-user`/`fa-map-marker-alt`). Added 6 interaction tests (view
+switching, create/click/drag-update adapters, snap config, multi-planning read-only gating) — the
+"none exist today" gap this item originally flagged. Found two pre-existing issues while mapping the
+schedule-shape contract (`beforeDeleteSchedule` passing the wrong shape, `StudentModal.jsx` being
+dead code, since deleted) — logged in `docs/KnownIssues.md`, not fixed here, since neither was
+caused by or blocked this migration. Bundled with the rewrite per the item's own recommendation:
+`useTranslation` (not `withTranslation`), real types reusing `entities.ts` in place of `any`, lodash
+dropped entirely. Extensively live-tested (`/planning`, all views, teacher/room plannings) with
+several rounds of bug fixes from real usage: all-day event rendering, a holiday/lesson id collision
+in dedup, a room-planning click crash on a missing `user`, month-view event colors, header
 alignment. See `docs/Jsx-To-Tsx-Migration-Playbook.md` (written alongside this, PR #107) for the
 general lifecycle/typing/lodash conventions this established for future `.jsx`→`.tsx` work.
 

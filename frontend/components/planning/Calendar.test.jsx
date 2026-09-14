@@ -1,14 +1,18 @@
-// Tests for the i18n extraction on Calendar.jsx (branch
-// feature/i18n-06-extract-planning-calendar — planning lot 3b).
+// Tests for Calendar.tsx (tui-calendar -> FullCalendar v6 rewrite, roadmap item 6 step B).
 //
-// CustomCalendar mounts tui-calendar in componentDidMount (DOM measurement that doesn't run
-// cleanly in jsdom), so the two pieces that carry the extracted copy are exported and exercised
-// directly: the pure `getTimeTemplate` HTML-string builder and the `CalendarControls` toolbar.
+// The pure `getTimeTemplate` HTML-string builder and the `CalendarControls` toolbar are exercised
+// directly (unchanged from the original i18n-extraction tests below). The default export
+// (CustomCalendar, the FullCalendar adapter itself) mounts a real FullCalendar, which performs DOM
+// measurement that doesn't run cleanly in jsdom -- same reason practice_planning/PracticePlanning
+// mocks it out (see that file's test for the established pattern this reuses). The stub here
+// additionally exposes a fake imperative getApi() and captures the callback props FullCalendar
+// receives, so the create/update/click adapters and toolbar navigation can be exercised by
+// invoking those captured callbacks directly, as synthetic FullCalendar event objects.
 
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import i18n from "../../i18n";
-import { getTimeTemplate, CalendarControls } from "./Calendar";
+import CustomCalendar, { getTimeTemplate, CalendarControls } from "./Calendar";
 
 const planningT = () => i18n.getFixedT(null, "planning");
 
@@ -135,5 +139,152 @@ describe("CalendarControls", () => {
         expect(screen.getByText("Day")).toBeInTheDocument();
         expect(document.querySelector('[data-tippy-content="Today"]')).toBeTruthy();
         expect(screen.getByText(/Teaching hours/)).toBeInTheDocument();
+    });
+});
+
+// componentDidMount immediately calls calendarRef.current.getApi(), so the stub must answer a ref
+// the same way the real FullCalendar does (an imperative handle), not just render -- same
+// constraint documented in practice_planning/PracticePlanning.test.jsx.
+let lastFullCalendarProps = null;
+const fakeApi = {
+    changeView: vi.fn(),
+    gotoDate: vi.fn(),
+    prev: vi.fn(),
+    next: vi.fn(),
+    unselect: vi.fn(),
+    getDate: vi.fn(() => new Date("2026-09-08")),
+};
+vi.mock("@fullcalendar/react", () => ({
+    default: React.forwardRef((props, ref) => {
+        lastFullCalendarProps = props;
+        React.useImperativeHandle(ref, () => ({ getApi: () => fakeApi }));
+        return <div data-testid="fullcalendar-stub" />;
+    }),
+}));
+vi.mock("@fullcalendar/daygrid", () => ({ default: {} }));
+vi.mock("@fullcalendar/timegrid", () => ({ default: {} }));
+vi.mock("@fullcalendar/interaction", () => ({ default: {} }));
+
+describe("CustomCalendar — FullCalendar adapter", () => {
+    // withTranslation("planning") reads from the frontend/i18n singleton directly -- no
+    // <I18nextProvider> needed, same pattern already established elsewhere in this repo.
+    const baseProps = {
+        intervals: [],
+        selectedPlannings: [{ id: 1 }],
+        day: new Date("2026-09-08"),
+        view: "week",
+        updateIntervals: vi.fn(),
+        beforeCreateSchedule: vi.fn(),
+        beforeUpdateSchedule: vi.fn(),
+        clickSchedule: vi.fn(),
+    };
+
+    beforeEach(() => {
+        vi.clearAllMocks();
+        lastFullCalendarProps = null;
+    });
+
+    test("configures a 15-minute snap, replacing the tui-calendar fork's hardcoded getNearestHour behavior", () => {
+        render(<CustomCalendar {...baseProps} />);
+        expect(lastFullCalendarProps.snapDuration).toBe("00:15:00");
+    });
+
+    test("view switching calls FullCalendar's changeView and updateIntervals when the view changes", () => {
+        render(<CustomCalendar {...baseProps} />);
+        fireEvent.click(screen.getByText("Mois"));
+
+        expect(fakeApi.changeView).toHaveBeenCalledWith("dayGridMonth");
+        expect(baseProps.updateIntervals).toHaveBeenCalledWith(
+            baseProps.day,
+            "month"
+        );
+    });
+
+    test("select (create) hands beforeCreateSchedule an interval-shaped object and clears the selection", () => {
+        render(<CustomCalendar {...baseProps} />);
+
+        lastFullCalendarProps.select({
+            start: new Date("2026-09-08T10:00:00"),
+            end: new Date("2026-09-08T11:00:00"),
+            allDay: false,
+        });
+
+        expect(baseProps.beforeCreateSchedule).toHaveBeenCalledWith(
+            expect.objectContaining({ isAllDay: false })
+        );
+        expect(fakeApi.unselect).toHaveBeenCalled();
+    });
+
+    test("eventClick reconstructs the full schedule (including .raw) for clickSchedule", () => {
+        const schedule = {
+            id: "7",
+            title: "Cours",
+            kind: "c",
+            raw: { comment: "hi" },
+            isAllDay: false,
+        };
+        render(<CustomCalendar {...baseProps} intervals={[schedule]} />);
+
+        lastFullCalendarProps.eventClick({
+            event: {
+                id: "7",
+                title: "Cours",
+                start: new Date("2026-09-08T10:00:00"),
+                end: new Date("2026-09-08T11:00:00"),
+                allDay: false,
+                extendedProps: schedule,
+            },
+        });
+
+        expect(baseProps.clickSchedule).toHaveBeenCalledWith({
+            schedule: expect.objectContaining({
+                id: "7",
+                kind: "c",
+                raw: { comment: "hi" },
+            }),
+        });
+    });
+
+    // eventDrop and eventResize share the same adapter (handleEventChange) -- one test exercises
+    // the shared code path both drag-move and resize go through.
+    test("eventDrop reconstructs the schedule plus the new start/end for beforeUpdateSchedule", () => {
+        const schedule = {
+            id: "9",
+            title: "Dispo",
+            kind: "o",
+            isAllDay: false,
+        };
+        render(<CustomCalendar {...baseProps} intervals={[schedule]} />);
+
+        const newStart = new Date("2026-09-08T14:00:00");
+        const newEnd = new Date("2026-09-08T15:00:00");
+        lastFullCalendarProps.eventDrop({
+            event: {
+                id: "9",
+                title: "Dispo",
+                start: newStart,
+                end: newEnd,
+                allDay: false,
+                extendedProps: schedule,
+            },
+        });
+
+        expect(baseProps.beforeUpdateSchedule).toHaveBeenCalledWith(
+            expect.objectContaining({
+                schedule: expect.objectContaining({ id: "9", kind: "o" }),
+            })
+        );
+    });
+
+    test("multi-planning mode disables select/editable (matching tui-calendar's isReadOnly for that mode)", () => {
+        render(
+            <CustomCalendar
+                {...baseProps}
+                selectedPlannings={[{ id: 1 }, { id: 2 }]}
+            />
+        );
+
+        expect(lastFullCalendarProps.selectable).toBe(false);
+        expect(lastFullCalendarProps.editable).toBe(false);
     });
 });

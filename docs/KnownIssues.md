@@ -47,21 +47,16 @@ left:
 
 ## Exotic (git-pinned) dependencies need a per-package decision, not a version bump
 
-2 dependencies resolve to a git ref rather than a registry version (no real "how far behind"
-comparison from `yarn outdated`): `react-stepzilla`, `tui-calendar`. (`jQuery-QueryBuilder` and
-`jQuery-QueryBuilder-Elasticsearch` were removed entirely along with Elasticsearch/chewy — their
-only consumer, the advanced-search UI, is gone.) Neither remaining one is pinned to a commit SHA,
-so each can change underneath the app with zero lockfile signal. For each, the real question is
-un-fork vs. patch-and-pin vs. replace — researched via `gh api` fork/compare metadata 2026-08-27:
-
-- **`tui-calendar`** — moot once PR #104 (`feat/replace-tui-calendar`, roadmap item 6 Step B) merges;
-  that PR drops the dependency entirely in favor of FullCalendar v6, so this bullet goes away rather
-  than getting "fixed." Left in place until it actually merges.
-- **`react-stepzilla`** — smallest gap (2 commits behind, 3 ahead with legitimate-looking upstreamable
-  bug fixes). Reasonable candidate to upstream the fix and drop the fork.
-
-Whatever the per-package decision, pin to an exact commit SHA (or npm release) in the meantime —
-that alone removes the "can silently change under us" risk before the fork-vs-replace call is made.
+1 dependency resolves to a git ref rather than a registry version (no real "how far behind"
+comparison from `yarn outdated`): `react-stepzilla`. (`jQuery-QueryBuilder`/
+`jQuery-QueryBuilder-Elasticsearch` were removed with Elasticsearch/chewy; `tui-calendar` was
+removed by roadmap item 6 Step B, PR #104.) Not pinned to a commit SHA, so it can change underneath
+the app with zero lockfile signal. Real question is un-fork vs. patch-and-pin vs. replace —
+researched via `gh api` fork/compare metadata 2026-08-27: smallest gap of the two originally
+surveyed here (2 commits behind, 3 ahead with legitimate-looking upstreamable bug fixes) — reasonable
+candidate to upstream the fix and drop the fork. Pin to an exact commit SHA (or npm release) in the
+meantime — that alone removes the "can silently change under us" risk before the fork-vs-replace
+call is made.
 
 ## Devise passwords/edit — reachable but unlinked, not dead
 
@@ -182,6 +177,18 @@ restructuring ad hoc across already-merged domains.
   `await` resolves immediately, before the actual save completes. Its `.success`/`.error`
   callbacks (not the `await`) drive `closeModal()`, so this is harmless today, but the `await`
   reads as if it's waiting for the save to finish and doesn't.
+- `planning/Planning.jsx`'s `beforeDeleteSchedule` prop (`:1535-1537`) passes the whole
+  `{schedule}` event wrapper into `handleDeleteInterval(id)`, which does `intervalStore[id]` — since
+  `id` is actually an object, this coerces to the string `"[object Object]"` and never matches a
+  real interval. Confirmed during the tui-calendar -> FullCalendar v6 migration (roadmap item 6)
+  while mapping every consumer of the calendar's schedule/interval shape: every *working* delete
+  path in the app (`PauseDetailModal`, `ActivityDetailsModal`, the detail-modal delete buttons)
+  calls `handleDeleteInterval` directly with a plain id instead. `beforeDeleteSchedule` also has no
+  real trigger in the app today — nothing in the UI fires it (tui-calendar only fired it from its
+  own built-in delete-popup button, which the app explicitly disabled via `useDetailPopup: false`)
+  — so this is dead *and* broken, with zero test coverage. Preserved as-is (not fixed) during the
+  migration to keep that PR's blast radius to the calendar-engine swap only; fix is to pass a plain
+  id through instead of the wrapper, whenever a real trigger for it is added.
 
 ## `Activity#teacher` is N+1-prone independent of `.includes()`
 

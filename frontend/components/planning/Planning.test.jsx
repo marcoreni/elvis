@@ -3,7 +3,7 @@
 // withTranslation("planning") container; all extracted copy lives in its own methods / render
 // (toasts, the holidays alert, the filter bar, modal contentLabels), so no prop-threading.
 //
-// CustomCalendar (mounts tui-calendar — DOM measurement that doesn't run in jsdom) and the
+// CustomCalendar (mounts FullCalendar — DOM measurement that doesn't run in jsdom) and the
 // 2000-line ActivityDetailsModal (a later lot) are stubbed. `generic` is passed so
 // componentDidMount skips its network fetch.
 
