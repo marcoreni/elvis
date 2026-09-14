@@ -65,7 +65,7 @@
             %>
               <p class="m-t-sm lead">
                 <%= t("views.devise.registrations.new.new_applications_notice_html",
-                      date: content_tag(:strong, I18n.with_locale("fr") { I18n.l(@next_season.opening_date_for_new_applications, format: :long_date) })) %>
+                      date: content_tag(:strong, I18n.l(@next_season.opening_date_for_new_applications, format: :long_date))) %>
               </p>
             <%
               end

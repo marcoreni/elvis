@@ -1,0 +1,30 @@
+{
+    "activationModal": {
+        "ariaLabel": "Fenêtre de confirmation d'activation/désactivation",
+        "confirmToggle": "Êtes-vous sûr(e) de vouloir {{action}} ce plugin ?",
+        "activate": "activer",
+        "deactivate": "désactiver",
+        "restartNotice": "Le redémarrage de la page va prendre un instant.",
+        "deleteData": "Supprimer les données du plugin",
+        "unexpectedErrorTitle": "Erreur inattendue",
+        "unexpectedErrorText": "Une erreur inattendue s'est produite lors de la confirmation."
+    },
+    "list": {
+        "intro": "Découvrez et activez les plugins dont vous avez besoin.",
+        "empty": "Aucun plugin",
+        "fetchErrorTitle": "Une erreur est survenue lors de la récupération des plugins",
+        "saveSuccessTitle": "Les plugins ont été enregistrés avec succès",
+        "saveErrorTitle": "Une erreur est survenue lors de l'enregistrement des plugins"
+    },
+    "restarting": {
+        "title": "Redémarrage en cours...",
+        "duration": "Le redémarrage peut prendre quelques minutes.",
+        "autoReload": "La page se rechargera automatiquement."
+    },
+    "card": {
+        "learnMore": "En savoir plus",
+        "paid": "PAYANT",
+        "free": "GRATUIT",
+        "configure": "Configurer"
+    }
+}

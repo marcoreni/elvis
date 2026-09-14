@@ -307,7 +307,7 @@ end
 Verified: full local `bundle exec rspec` — 300 examples, 0 failures — both before this fix
 (baseline) and after, isolating the change to exactly this method.
 
-## 10. Hardcoded `"fr"`/`"fr-FR"` locale in date/number formatting — status: not started, found 2026-09-14
+## 10. Hardcoded `"fr"`/`"fr-FR"` locale in date/number formatting — done except `bill.html.erb`, `fix/locale-and-untranslated-strings`
 
 Same category of bug as item 3 (a hardcoded constant that should follow a runtime setting) but for
 *language*, not timezone — these format dates/numbers in French regardless of the viewer's actual
@@ -341,7 +341,16 @@ Same category of bug as item 3 (a hardcoded constant that should follow a runtim
   a one-line locale swap — track as its own follow-up rather than bundling with the two fixes
   above.
 
-## 11. Hardcoded French UI strings outside the i18n rollout — status: not started, found 2026-09-14
+**Shipped**: all of the above except `bill.html.erb` (still deliberately deferred, same reasoning
+as when found). Fixed `EvaluationIntervalChoice.jsx` (module-level constants moved into
+`useMemo(() => ..., [i18n.language])`), the 3 `NumberFormat` class components (swapped `"fr-FR"`
+for `this.props.i18n.language`), and `devise/registrations/new.html.erb` (dropped the
+`with_locale("fr")` wrapper). A final repo-wide sweep also caught a 6th site not in the original
+finding — `userPayments/PaymentsSummary.jsx` (5 more hardcoded `"fr-FR"` `.toLocaleString()`
+calls) — fixed the same way. Regression test added in `PaymentsSummary.test.jsx` asserting the
+footer total's currency formatting actually differs between `fr`/`en`, not just "doesn't throw".
+
+## 11. Hardcoded French UI strings outside the i18n rollout — done, `fix/locale-and-untranslated-strings`
 
 Found while auditing sweetalert2 call sites for item 7 — not a locale-follows-setting bug like
 item 10, just plain un-extracted French text that never went through `t()` at all, so it shows in
@@ -370,6 +379,19 @@ French for every user regardless of `i18n.language`.
   500. Not a locale issue (Rails' static crash pages are deliberately English/dependency-free,
   served when Rails itself may be down — not worth translating), just a plain mislabeled title,
   trivial one-line fix whenever someone's in that file.
+
+**Shipped**: `api.ts`'s generic fetch-error fallback now uses `i18n.t("common:apiErrors...")`
+(also fixed the "cod suivant" typo along the way). `public/500.html`'s title fixed to match this
+repo's existing 422-page naming convention. `BtnApiElement.jsx` turned out to be genuinely dead
+code (zero importers, no ERB `react_component` mount anywhere) — deleted rather than extracted,
+logged in `docs/OrphanedCode.md`. The plugin-management UI (`Plugins.jsx`,
+`PluginActivationModal.jsx`, `PluginsList.jsx`, `RestartingMessage.jsx`, `PluginCard.jsx`) got a
+full extraction pass into a new `plugins` i18n namespace (`frontend/locales/{fr,en}/plugins.json`);
+the activate/deactivate confirmation ternary was initially transcribed inverted during extraction,
+caught by re-deriving the original logic before it shipped — code review then found the *value*
+feeding that ternary (`isActivated`, derived from `Object.keys(selectedPlugins)[0]` rather than the
+plugin actually being confirmed) was already wrong before this PR; logged in `docs/KnownIssues.md`
+rather than fixed here, since it's an unrelated pre-existing logic bug, not an i18n one.
 
 ## Context this roadmap assumes (don't re-derive, just re-read if needed)
 

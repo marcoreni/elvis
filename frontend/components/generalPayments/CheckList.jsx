@@ -12,7 +12,6 @@ import {
     reactOptionMapper,
 } from "../utils";
 
-
 const FILTER_STORAGE_KEY = "general_checks_list_filters";
 
 const defaultTableProps = () => ({
@@ -43,14 +42,14 @@ const requestData = (pageSize, page, sorted, filtered, format) => {
             filtered,
         }),
     })
-        .catch(reason => alert(reason))
-        .then(response => {
+        .catch((reason) => alert(reason))
+        .then((response) => {
             if (!format || format === "json") return response.json();
             else {
                 return response.blob();
             }
         })
-        .then(data => {
+        .then((data) => {
             if (!format || format === "json") {
                 return {
                     data: data.payments,
@@ -133,7 +132,7 @@ class CheckList extends React.Component {
                 filter.sorted,
                 filter.filtered,
                 "json"
-            ).then(res => {
+            ).then((res) => {
                 if (!this.mounted) return;
                 this.setState({
                     ...res,
@@ -156,7 +155,7 @@ class CheckList extends React.Component {
     handleChangeSwitch(checked, check) {
         putCheckStatus(check.id, checked).then(() =>
             this.setState({
-                data: this.state.data.map(p => ({
+                data: this.state.data.map((p) => ({
                     ...p,
                     check_status: p.id === check.id ? checked : p.check_status,
                 })),
@@ -185,15 +184,15 @@ class CheckList extends React.Component {
 
     render() {
         const { data, pages, loading } = this.state;
-        const { t } = this.props;
+        const { t, i18n } = this.props;
 
         let referenceDate = this.state.filter.filtered.find(
-            obj => obj.id === "reference_date"
+            (obj) => obj.id === "reference_date"
         );
         referenceDate = referenceDate == undefined ? "" : referenceDate.value;
 
         let radioCheckValue = this.state.filter.filtered.find(
-            obj => obj.id === "check_status"
+            (obj) => obj.id === "check_status"
         );
         radioCheckValue =
             radioCheckValue == undefined ? "" : radioCheckValue.value;
@@ -203,7 +202,7 @@ class CheckList extends React.Component {
                 Header: t("general.checks.columns.payer"),
                 // maxWidth: 175,
                 id: "users.last_name",
-                Cell: props => {
+                Cell: (props) => {
                     const user = _.get(
                         props.original,
                         "due_payment.payment_schedule.user"
@@ -222,7 +221,7 @@ class CheckList extends React.Component {
                 Header: t("general.checks.columns.memberNumbers"),
                 // maxWidth: 100,
                 id: "users.adherent_number",
-                Cell: props => {
+                Cell: (props) => {
                     const user = _.get(
                         props.original,
                         "due_payment.payment_schedule.user"
@@ -241,7 +240,7 @@ class CheckList extends React.Component {
                         }
                     }
                     // build the list
-                    let numbersList = familyList.map(function(member, index) {
+                    let numbersList = familyList.map(function (member, index) {
                         return (
                             <li key={index}>
                                 {member.adherent_number} - {member.last_name}{" "}
@@ -262,7 +261,7 @@ class CheckList extends React.Component {
                     display: "block",
                     textAlign: "right",
                 },
-                accessor: d => `${d.amount || "?"} €`,
+                accessor: (d) => `${d.amount || "?"} €`,
                 filterable: true,
                 sortable: true,
             },
@@ -274,7 +273,7 @@ class CheckList extends React.Component {
                     display: "block",
                     textAlign: "right",
                 },
-                accessor: d => `${d.check_number || ""}`,
+                accessor: (d) => `${d.check_number || ""}`,
                 filterable: true,
                 sortable: true,
             },
@@ -283,7 +282,7 @@ class CheckList extends React.Component {
                 // maxWidth: 100,
                 id: "check_status",
                 accessor: "check_status",
-                Cell: d => {
+                Cell: (d) => {
                     return (
                         <label>
                             <Switch
@@ -312,10 +311,14 @@ class CheckList extends React.Component {
                     style={{ width: "100%" }}
                 >
                     <div className="flex flex-center-aligned">
-                        <h2 className="m-r">{t("general.checks.paymentDateLabel")}</h2>
+                        <h2 className="m-r">
+                            {t("general.checks.paymentDateLabel")}
+                        </h2>
                         <div
                             className="input-group"
-                            data-tippy-content={t("general.checks.paymentDateTooltip")}
+                            data-tippy-content={t(
+                                "general.checks.paymentDateTooltip"
+                            )}
                             style={{ maxWidth: "200px" }}
                         >
                             <div className="input-group-addon">
@@ -326,7 +329,7 @@ class CheckList extends React.Component {
                                 type="date"
                                 className="form-control"
                                 value={referenceDate}
-                                onChange={e =>
+                                onChange={(e) =>
                                     this.handleChangeReferenceDate(
                                         e.target.value
                                     )
@@ -335,7 +338,7 @@ class CheckList extends React.Component {
                         </div>
                         <div
                             className="m-md"
-                            onChange={e => this.handleChangeRadio(e)}
+                            onChange={(e) => this.handleChangeRadio(e)}
                         >
                             <label className="radio-inline">
                                 <input
@@ -370,20 +373,26 @@ class CheckList extends React.Component {
                         </div>
                         <button
                             className="btn btn-primary m-r"
-                            data-tippy-content={t("general.tableControls.reload")}
+                            data-tippy-content={t(
+                                "general.tableControls.reload"
+                            )}
                             onClick={() => this.fetchData(this.state.filter)}
                         >
                             <i className="fas fa-sync" />
                         </button>
                         <button
-                            data-tippy-content={t("general.tableControls.resetFilters")}
+                            data-tippy-content={t(
+                                "general.tableControls.resetFilters"
+                            )}
                             className="btn btn-primary m-r"
                             onClick={() => this.resetFilters()}
                         >
                             <i className="fas fa-times"></i>
                         </button>
                         <button
-                            data-tippy-content={t("general.tableControls.fullscreen")}
+                            data-tippy-content={t(
+                                "general.tableControls.fullscreen"
+                            )}
                             className="btn btn-primary m-r"
                             onClick={() => events[0]()}
                         >
@@ -400,7 +409,7 @@ class CheckList extends React.Component {
                     <div className="ibox-title-right">
                         <span>
                             {t("general.checks.totalAmount", {
-                                amount: new Intl.NumberFormat("fr-FR", {
+                                amount: new Intl.NumberFormat(i18n.language, {
                                     style: "currency",
                                     currency: "EUR",
                                 }).format(this.state.totalAmount),
@@ -426,7 +435,7 @@ class CheckList extends React.Component {
                         pageSize={this.state.filter.pageSize}
                         sorted={this.state.filter.sorted}
                         filtered={this.state.filter.filtered}
-                        onPageChange={page =>
+                        onPageChange={(page) =>
                             this.fetchData({ ...this.state.filter, page })
                         }
                         onPageSizeChange={(pageSize, page) =>
@@ -436,7 +445,7 @@ class CheckList extends React.Component {
                                 pageSize,
                             })
                         }
-                        onSortedChange={sorted => {
+                        onSortedChange={(sorted) => {
                             console.log(sorted);
                             if (sorted[0].id === "payments.amount") {
                                 this.setState({
@@ -454,7 +463,7 @@ class CheckList extends React.Component {
                                 });
                             }
                         }}
-                        onFilteredChange={filtered =>
+                        onFilteredChange={(filtered) =>
                             this.fetchData({
                                 ...this.state.filter,
                                 filtered,

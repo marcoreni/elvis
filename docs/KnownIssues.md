@@ -173,6 +173,20 @@ restructuring ad hoc across already-merged domains.
   `RangedSelect`, which throws if either arrives as a non-integer. Not currently reachable
   (`users_controller.rb`'s `@min_year`/`@max_year` are always Ruby `Integer`s), but a fragile
   implicit contract — harden with a `Number(...)` coercion if that ever changes.
+- `plugins/PluginActivationModal.jsx` derives the activate/deactivate confirmation text from
+  `Object.keys(selectedPlugins)[0]`, not the plugin actually being confirmed (`Plugins.jsx` tracks
+  that separately as `pluginID` but never passes it down). `selectedPlugins` accumulates every
+  plugin toggled in the session, so after toggling plugin A then plugin B, the modal can ask
+  "activer" while B is actually being deactivated. Pre-existing, found (not introduced) during the
+  item-11 i18n extraction — the confirmToggle ternary itself is a faithful copy of the original
+  logic. Fix: pass `pluginID` down and key off `activatedPlugins[pluginID]` instead.
+- `config/locales/{en,fr}.yml`'s `long_date` format (`"%B %e, %Y"` / `"%e %B %Y"`) uses `%e`
+  (space-padded day), producing a double space in EN ("September  4, 2026") or a leading space in
+  FR (" 4 septembre 2026") for single-digit days. Invisible in HTML (whitespace collapses) but would
+  show in plaintext contexts. Pre-existing in both locales; only became reachable in EN via the
+  item-10 fix to `devise/registrations/new.html.erb`. `long_date` is used elsewhere too, so fixing
+  it (`%-d`) deserves its own small pass with a broader grep, not a one-line change buried in an
+  unrelated PR.
 
 ## `Activity#teacher` is N+1-prone independent of `.includes()`
 

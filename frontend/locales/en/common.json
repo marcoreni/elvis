@@ -128,7 +128,10 @@
         "errIntervalNotFound": "This slot cannot be deleted. It has already been validated or deleted by a staff member.",
         "errGroupNameExists": "The group already exists for this season and this teacher.",
         "errGroupNameEmpty": "The group name cannot be empty.",
-        "errEvaluationIntervalAlreadyTaken": "This evaluation slot is already taken, please choose another one."
+        "errEvaluationIntervalAlreadyTaken": "This evaluation slot is already taken, please choose another one.",
+        "unexpectedTitle": "Oops... an error occurred",
+        "unexpectedWithMessage": "{{message}} ({{code}})",
+        "unexpectedWithCode": "Please contact the site administrator for more information and give them the following code: {{code}}"
     },
     "kindsLabel": {
         "availability": "Availability",

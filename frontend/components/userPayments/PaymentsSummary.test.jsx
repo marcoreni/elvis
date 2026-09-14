@@ -43,13 +43,37 @@ describe("userPayments/PaymentsSummary", () => {
     test.each([
         ["fr", "Créer un taux de remise", "Annuler", "Enregistrer"],
         ["en", "Create a discount rate", "Cancel", "Save"],
-    ])("%s: opening the create-coupon modal resolves ItemFormModal's translated Cancel/Save buttons", async (lng, openButtonText, cancel, save) => {
-        await i18n.changeLanguage(lng);
-        render(<PaymentsSummary {...props} />);
+    ])(
+        "%s: opening the create-coupon modal resolves ItemFormModal's translated Cancel/Save buttons",
+        async (lng, openButtonText, cancel, save) => {
+            await i18n.changeLanguage(lng);
+            render(<PaymentsSummary {...props} />);
 
-        fireEvent.click(await screen.findByText(openButtonText));
+            fireEvent.click(await screen.findByText(openButtonText));
 
-        expect(await screen.findByText(cancel)).toBeInTheDocument();
-        expect(screen.getByText(save)).toBeInTheDocument();
-    });
+            expect(await screen.findByText(cancel)).toBeInTheDocument();
+            expect(screen.getByText(save)).toBeInTheDocument();
+        }
+    );
+
+    // Regression for the item-10 fix: the footer totals used to format currency with a hardcoded
+    // "fr-FR" locale regardless of i18n.language -- en rendered French-style grouping/symbol
+    // placement too. fr and en EUR formatting differ enough (symbol position, decimal separator)
+    // that this also catches a regression back to a hardcoded locale, not just "doesn't throw".
+    // A plain space here, not the U+00A0 Intl actually renders before "€" -- getByText's
+    // whitespace normalizer (\s matches NBSP too) collapses it to a regular space either way.
+    test.each([
+        ["fr", "42,50 €"],
+        ["en", "€42.50"],
+    ])(
+        "%s: footer total currency follows the active UI language",
+        async (lng, expectedFormat) => {
+            await i18n.changeLanguage(lng);
+            render(<PaymentsSummary {...props} totalDue={42.5} />);
+
+            expect(
+                screen.getByText(expectedFormat, { exact: false })
+            ).toBeInTheDocument();
+        }
+    );
 });

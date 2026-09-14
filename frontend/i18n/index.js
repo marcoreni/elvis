@@ -1,5 +1,5 @@
 import i18n from "i18next";
-import {initReactI18next} from "react-i18next";
+import { initReactI18next } from "react-i18next";
 import LanguageDetector from "i18next-browser-languagedetector";
 import moment from "moment";
 import "moment/locale/fr";
@@ -24,10 +24,36 @@ import activityApplications_fr from "../locales/fr/activityApplications.json";
 import activityApplications_en from "../locales/en/activityApplications.json";
 import parameters_fr from "../locales/fr/parameters.json";
 import parameters_en from "../locales/en/parameters.json";
+import plugins_fr from "../locales/fr/plugins.json";
+import plugins_en from "../locales/en/plugins.json";
 
 const resources = {
-    fr: {common: common_fr, users: users_fr, evaluation: evaluation_fr, payments: payments_fr, formules: formules_fr, planning: planning_fr, activities: activities_fr, courses: courses_fr, activityApplications: activityApplications_fr, parameters: parameters_fr},
-    en: {common: common_en, users: users_en, evaluation: evaluation_en, payments: payments_en, formules: formules_en, planning: planning_en, activities: activities_en, courses: courses_en, activityApplications: activityApplications_en, parameters: parameters_en},
+    fr: {
+        common: common_fr,
+        users: users_fr,
+        evaluation: evaluation_fr,
+        payments: payments_fr,
+        formules: formules_fr,
+        planning: planning_fr,
+        activities: activities_fr,
+        courses: courses_fr,
+        activityApplications: activityApplications_fr,
+        parameters: parameters_fr,
+        plugins: plugins_fr,
+    },
+    en: {
+        common: common_en,
+        users: users_en,
+        evaluation: evaluation_en,
+        payments: payments_en,
+        formules: formules_en,
+        planning: planning_en,
+        activities: activities_en,
+        courses: courses_en,
+        activityApplications: activityApplications_en,
+        parameters: parameters_en,
+        plugins: plugins_en,
+    },
 };
 
 // Derived from `resources` so it can't drift from what's actually loaded here. Still needs to
@@ -41,7 +67,8 @@ const SUPPORTED_LOCALES = Object.keys(resources);
 // screen) already used for ERB-rendered pages. Read it directly instead of hardcoding a fallback
 // locale here, so the JS-side fallback can't diverge from the backend's actual configured
 // default.
-const initialLocale = (typeof document !== "undefined" && document.documentElement.lang) || "fr";
+const initialLocale =
+    (typeof document !== "undefined" && document.documentElement.lang) || "fr";
 
 // Keep moment's locale tracking the active UI language. Registered *before* init() so an
 // init-time `languageChanged` emit (inline resources + the synchronous htmlTag detector resolve
@@ -52,19 +79,32 @@ i18n.on("languageChanged", (lng) => {
     const target = lng || initialLocale;
     if (moment.locale(target) !== target && target !== "en") {
         // eslint-disable-next-line no-console
-        console.warn(`[i18n] no moment locale data for "${target}"; dates will render in "${moment.locale()}"`);
+        console.warn(
+            `[i18n] no moment locale data for "${target}"; dates will render in "${moment.locale()}"`
+        );
     }
 });
 
-i18n
-    .use(LanguageDetector)
+i18n.use(LanguageDetector)
     .use(initReactI18next)
     .init({
         resources,
         supportedLngs: SUPPORTED_LOCALES,
         fallbackLng: initialLocale,
         defaultNS: "common",
-        ns: ["common", "users", "evaluation", "payments", "formules", "planning", "activities", "courses", "activityApplications", "parameters"],
+        ns: [
+            "common",
+            "users",
+            "evaluation",
+            "payments",
+            "formules",
+            "planning",
+            "activities",
+            "courses",
+            "activityApplications",
+            "parameters",
+            "plugins",
+        ],
         detection: {
             // Only fall back to localStorage/navigator if <html lang> is somehow missing.
             order: ["htmlTag", "localStorage", "navigator"],

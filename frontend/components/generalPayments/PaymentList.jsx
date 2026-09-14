@@ -875,7 +875,7 @@ class PaymentList extends React.Component {
 
     render() {
         const { data, pages, loading } = this.state;
-        const { t } = this.props;
+        const { t, i18n } = this.props;
 
         const duePaymentMethodsOptions = [
             {
@@ -1021,7 +1021,7 @@ class PaymentList extends React.Component {
                     <div className="ibox-title-right">
                         <span>
                             {t("general.payments.totalPayments", {
-                                amount: new Intl.NumberFormat("fr-FR", {
+                                amount: new Intl.NumberFormat(i18n.language, {
                                     style: "currency",
                                     currency: "EUR",
                                 }).format(this.state.totalAmount),

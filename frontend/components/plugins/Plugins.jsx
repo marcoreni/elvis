@@ -12,8 +12,10 @@ import PluginsList from "./PluginsList";
 import RestartingMessage from "./RestartingMessage";
 import PluginActivationModal from "./PluginActivationModal";
 import Modal from "react-modal";
+import { useTranslation } from "react-i18next";
 
 export default function Plugins(props) {
+    const { t } = useTranslation("plugins");
     const [plugins, setPlugins] = useState([]);
     const [selectedPlugins, setSelectedPlugins] = useState({});
     const [activatedPlugins, setActivatedPlugins] = useState({});
@@ -78,7 +80,7 @@ export default function Plugins(props) {
             })
             .error((res) => {
                 swal.fire({
-                    title: "Une erreur est survenue lors de la récupération des plugins",
+                    title: t("list.fetchErrorTitle"),
                     text: res.error,
                     icon: "error",
                 });
@@ -121,7 +123,7 @@ export default function Plugins(props) {
                 if (res.restart) setIsRestarting(true);
                 closeModal();
                 swal.fire({
-                    title: `Les plugins ont été enregistrés avec succès`,
+                    title: t("list.saveSuccessTitle"),
                     text: res.message,
                     icon: "success",
                 });
@@ -129,7 +131,7 @@ export default function Plugins(props) {
             .error((res) => {
                 closeModal();
                 swal.fire({
-                    title: "Une erreur est survenue lors de l'enregistrement des plugins",
+                    title: t("list.saveErrorTitle"),
                     text: res.error,
                     icon: "error",
                 });
@@ -195,6 +197,6 @@ export default function Plugins(props) {
             </div>
         );
     } else {
-        return <p className="nodata">Aucun plugin</p>;
+        return <p className="nodata">{t("list.empty")}</p>;
     }
 }

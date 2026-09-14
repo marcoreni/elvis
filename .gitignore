@@ -56,7 +56,7 @@ db/seeds.old.rb
 /frontend/components/plugins/*/
 /public/plugin_assets/
 /app/assets/builds/
-plugins.json
+/plugins.json
 /public/packs
 /public/packs-test
 /node_modules
