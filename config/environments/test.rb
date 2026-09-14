@@ -47,9 +47,6 @@ Rails.application.configure do
   # Raises error for missing translations
   # config.action_view.raise_on_missing_translations = true
 
-  # Disable chewy for this environement
-  Chewy.strategy(:bypass)
-
   # Was defaulting to Rails' global :async adapter - real background threads for the whole
   # suite, racing the main thread on I18n's shared translation cache. Root cause of the
   # long-standing locale flake, see docs/KnownIssues.md.

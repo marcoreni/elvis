@@ -39,7 +39,7 @@ if defined?(RailsPerformance)
     # config home button link
     config.home_link = "/"
     config.skipable_rake_tasks = %w[shakapacker:compile assets:precompile db:prepare elvis:plugins:discover
-                                    elvis:plugins:migrate chewy:upgrade]
+                                    elvis:plugins:migrate]
     config.include_rake_tasks = false
     config.include_custom_events = true
   end

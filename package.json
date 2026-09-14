@@ -30,8 +30,6 @@
         "i18next": "^26.4.0",
         "i18next-browser-languagedetector": "^8.2.1",
         "isomorphic-dompurify": "3.19.0",
-        "jQuery-QueryBuilder": "https://github.com/SIXMON/jQuery-QueryBuilder#master",
-        "jQuery-QueryBuilder-Elasticsearch": "https://github.com/piotch/jQuery-QueryBuilder-Elasticsearch",
         "jquery": "^3.7.1",
         "lodash": "^4.17.15",
         "moment": "^2.21.0",

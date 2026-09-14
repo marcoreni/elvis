@@ -191,39 +191,50 @@ the highest-traffic confirm/cancel flows (none exist today).
 
 Implementation: `chore/sweetalert2-v11-bump`.
 
-## 8. Do we need Elasticsearch at all? — analysis done 2026-09-14, migration not started
+## 8. Elasticsearch removed entirely — done, `chore/remove-elasticsearch`
 
-**Footprint is small**: only 13 files in the whole app touch Chewy at all — the 5 index
-definitions (`app/chewy/*_index.rb`), the 5 models' `update_index` macros, `search_controller.rb`,
-and `healthcheck_controller.rb`'s cluster-health ping. All 5 indices are structurally identical and
-simple: one shared analyzer (edge_ngram autocomplete filter, standard tokenizer, lowercase +
-asciifolding), flat fields only — no nesting, no geo, no completion suggester, no synonyms, no
-custom scoring/boosting. Nothing here is exotic ES usage.
+Analysis (2026-09-14) found: only 13 files touched Chewy app-wide, all 5 indices were structurally
+simple (one shared edge_ngram analyzer, flat fields, no nesting/geo/synonyms/custom scoring), and
+there was exactly one *reachable* consumer — `#index` (`POST /omnisearch`, the global search box),
+one `multi_match`/`cross_fields`/`operator: and` query across all 5 indices and ~13 fields, "these
+words must all appear somewhere," no relevance tuning. `#advanced_search_query`
+(`POST /advanced_query`, the ad-hoc `jQuery-QueryBuilder`-driven ES query UI) was the one piece
+that would have genuinely resisted a Postgres rewrite — but its page's GET route was already
+commented out (same orphaned-code pattern as item 2), unreachable through the app's UI. Given
+that, removed Elasticsearch/chewy entirely rather than partially, per explicit instruction to ship
+it as "one single PR to get rid of all elasticsearch world":
 
-**Exactly one consumer** (`app/controllers/search_controller.rb`) queries these indices anywhere:
-- `#index` (routed `POST /omnisearch`, the global search box) — the only *reachable* live feature.
-  One `multi_match` (`cross_fields`, `operator: and`) across all 5 indices and ~13 fields at once —
-  "these words must all appear somewhere," no custom relevance tuning. Squarely in
-  `tsvector`/`tsquery` (or `pg_trgm` for typo tolerance) territory; the only real wrinkle is merging
-  results across what would become 5 separate Postgres tables (a `UNION ALL` + manual rank sort).
-- `#advanced_search_query` (`POST /advanced_query`) — takes a raw Elasticsearch query DSL body
-  built client-side by `frontend/components/advancedSearch/utils.js` (`jQuery-QueryBuilder`'s ES
-  plugin: arbitrary bool/wildcard/terms/range queries against `UsersIndex` only) and passes it
-  straight to `UsersIndex.query(query)`. This is the one piece that would genuinely resist a
-  Postgres rewrite (an ad-hoc query-builder UI generating arbitrary filter combinations) —
-  **but its page's GET route is commented out** (`config/routes.rb:165`,
-  `search#advanced_search` / `app/views/search/advanced_search.html.erb`) and nothing else links
-  to it. Same orphaned-code pattern as item 2: it isn't reachable through the app's UI today.
-- `#indexation` only rebuilds 2 of the 5 indices (Users, ActivityApplications) — inconsistent,
-  likely stale itself; a separate small finding, not central here.
-
-**Recommendation**: migrate the one reachable feature (omnisearch) to Postgres full-text search —
-small, contained surface, no exotic ES features in active use, and it lets dev/docker-compose drop
-Elasticsearch as a service entirely. Treat `/advanced_query` + `AdvancedSearch.jsx` as a separate
-decision, independent of the migration: either delete it as orphaned (it's unroutable today,
-matching item 2's precedent) or, if someone wants the ad-hoc query-builder UI back, that's the one
-piece that would still benefit from staying on ES (or from a real SQL query-builder redesign) — it
-shouldn't block or complicate migrating the feature that's actually in use.
+- **Backend**: deleted `app/chewy/` (5 index definitions), the `chewy` gem, `config/chewy.yml` +
+  `config/initializers/chewy.rb`, every `Chewy.strategy(:bypass)`/`update_index`/
+  `run_chewy_callbacks` call site (5 models + `application_record.rb`'s `AsyncExecutor`/
+  `base_chewy_callbacks`, both only ever used for chewy — see item 9), `healthcheck_controller.rb`'s
+  cluster-health check, `entrypoints/init.sh`'s `chewy:upgrade`, and the ES service from both
+  `docker-compose.yml` and `docker-compose-dev.yml`.
+- **`#index` (omnisearch) rewritten**, not deleted: new `Search::OmnisearchService`
+  (`app/services/search/omnisearch_service.rb`) replicates the same "every query word must match
+  somewhere across these fields" semantics per source (users/activity_applications/adhesions/
+  activity_refs/rooms) via Postgres `ILIKE` + the `unaccent` extension (new migration
+  `20260914120000_enable_unaccent_extension.rb`) instead of `tsvector`/`tsquery` — matches this
+  codebase's existing `ci_ilike_find`-style convention (`app/models/user.rb`) rather than
+  introducing full-text-search infrastructure the app had never used anywhere else. Same
+  `{ results: [{ attributes: {...} }], total }` response shape `frontend/components/Omnisearch.jsx`
+  already expects — zero frontend changes needed for the live feature.
+- **`#advanced_search`/`#advanced_search_query`/`#indexation` deleted** (unroutable/inconsistent
+  dead code, not ported), along with `frontend/components/advancedSearch/` (`AdvancedSearch.jsx`,
+  `utils.js`, its test), `app/views/search/advanced_search.html.erb`, and the
+  `jQuery-QueryBuilder`/`jQuery-QueryBuilder-Elasticsearch` npm packages + their SCSS import.
+  `advancedSearch/utils.js`'s one unrelated export (`PAYMENT_SCHEDULE_OPTIONS_PAYMENTS_NUMBERS`,
+  colocated but never search-related) moved to `frontend/tools/constants.ts` alongside its sibling
+  `export let`/`languageChanged` live-bindings; its test coverage moved to `constants.test.js`.
+- **New test coverage**: `spec/requests/search_controller_spec.rb` (9 examples covering all 5
+  result kinds, accent/case-insensitive + substring matching, the AND-across-words requirement,
+  and the empty/no-match cases) — there was no existing test for this endpoint at all, confirmed
+  via a repo-wide grep before starting.
+- Verified: full local `bundle exec rspec` (309 examples incl. the new spec, 0 failures — also
+  confirmed the new spec doesn't introduce cross-file flakiness via `ActivityApplicationStatus`'s
+  class-load-time-memoized `find_or_create_by!` constants and DatabaseCleaner's transaction
+  rollback, a real trap the new spec's design tripped into once), `tsc --noEmit` and full
+  `vitest run` (1273/1273) both clean, `rubocop` clean on every new/touched file.
 
 ## 9. `run_chewy_callbacks` override — NOT dead, live bug found and fixed — 2026-09-14
 

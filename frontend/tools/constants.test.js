@@ -29,6 +29,7 @@ import {
     INTERVAL_KINDS,
     RECURRENCE_TYPES,
     TIME_STEPS,
+    PAYMENT_SCHEDULE_OPTIONS_PAYMENTS_NUMBERS,
 } from "./constants";
 
 afterEach(async () => {
@@ -468,5 +469,58 @@ describe("TIME_STEPS follows the active UI language", () => {
         await i18n.changeLanguage("en");
         expect(constants.TIME_STEPS.map((ts) => ts.value)).toEqual(valuesFr);
         expect(valuesFr).toEqual([1, 0.75, 0.5, 0.25]);
+    });
+});
+
+// Moved from the now-deleted frontend/components/advancedSearch/utils.test.js as part of the
+// Elasticsearch/chewy removal -- PAYMENT_SCHEDULE_OPTIONS_PAYMENTS_NUMBERS itself moved to this
+// module (it was never search-related, just colocated). Same `export let` + `languageChanged`
+// pattern as TIME_STEPS above: `nb` is data (compared against `payments_number` in
+// PaymentScheduleOptionForm.jsx) and stays unchanged; only `label` is display text.
+describe("PAYMENT_SCHEDULE_OPTIONS_PAYMENTS_NUMBERS follows the active UI language, nb unchanged", () => {
+    test("default language (fr) exposes the French labels", async () => {
+        await i18n.changeLanguage("fr");
+
+        expect(PAYMENT_SCHEDULE_OPTIONS_PAYMENTS_NUMBERS).toEqual([
+            { nb: 1, label: "Annuel (1)" },
+            { nb: 2, label: "Semestriel (2)" },
+            { nb: 3, label: "Trimestriel (3)" },
+            { nb: 9, label: "Mensuel (9)" },
+        ]);
+    });
+
+    test("after changeLanguage('en') labels are re-read as English, nb unchanged", async () => {
+        await i18n.changeLanguage("en");
+
+        expect(constants.PAYMENT_SCHEDULE_OPTIONS_PAYMENTS_NUMBERS).toEqual([
+            { nb: 1, label: "Annual (1)" },
+            { nb: 2, label: "Biannual (2)" },
+            { nb: 3, label: "Quarterly (3)" },
+            { nb: 9, label: "Monthly (9)" },
+        ]);
+    });
+
+    test("switching back to fr restores the French labels", async () => {
+        await i18n.changeLanguage("en");
+        await i18n.changeLanguage("fr");
+
+        expect(
+            constants.PAYMENT_SCHEDULE_OPTIONS_PAYMENTS_NUMBERS.find(
+                (o) => o.nb === 9
+            ).label
+        ).toBe("Mensuel (9)");
+    });
+
+    test("nb values (compared against payments_number) never change across a locale switch", async () => {
+        await i18n.changeLanguage("fr");
+        const nbsFr = constants.PAYMENT_SCHEDULE_OPTIONS_PAYMENTS_NUMBERS.map(
+            (o) => o.nb
+        );
+
+        await i18n.changeLanguage("en");
+        expect(
+            constants.PAYMENT_SCHEDULE_OPTIONS_PAYMENTS_NUMBERS.map((o) => o.nb)
+        ).toEqual(nbsFr);
+        expect(nbsFr).toEqual([1, 2, 3, 9]);
     });
 });

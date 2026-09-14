@@ -162,9 +162,6 @@ Rails.application.routes.draw do
   # SEARCH
   #  =====================
   post "omnisearch", to: "search#index"
-  # get "/recherche_avancee", to: "search#advanced_search", as: "advanced_search"
-  post "/advanced_query", to: "search#advanced_search_query"
-  get "/indexation", to: "search#indexation"
 
   #  =====================
   # ACTIVITY APPLICATIONS

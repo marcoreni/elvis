@@ -200,6 +200,24 @@ i18n.on("languageChanged", () => {
     TIME_STEPS = _loadTimeSteps();
 });
 
+// PAYMENT_SCHEDULE_OPTIONS_PAYMENTS_NUMBERS: `nb` is data (compared against
+// `paymentScheduleOption.payments_number` in PaymentScheduleOptionForm.jsx) and stays unchanged;
+// only `label` is display text, localized via `payments:terms.optionForm.paymentsNumbers.*` with
+// the same `export let` + `languageChanged` pattern as TIME_STEPS above.
+const _loadPaymentScheduleOptionsPaymentsNumbers = () => [
+    { nb: 1, label: i18n.t("payments:terms.optionForm.paymentsNumbers.annual") },
+    { nb: 2, label: i18n.t("payments:terms.optionForm.paymentsNumbers.biannual") },
+    { nb: 3, label: i18n.t("payments:terms.optionForm.paymentsNumbers.quarterly") },
+    { nb: 9, label: i18n.t("payments:terms.optionForm.paymentsNumbers.monthly") },
+];
+
+export let PAYMENT_SCHEDULE_OPTIONS_PAYMENTS_NUMBERS =
+    _loadPaymentScheduleOptionsPaymentsNumbers();
+
+i18n.on("languageChanged", () => {
+    PAYMENT_SCHEDULE_OPTIONS_PAYMENTS_NUMBERS = _loadPaymentScheduleOptionsPaymentsNumbers();
+});
+
 // RECURRENCE_TYPES: unlike the exports above, this doesn't need an `export let` + `languageChanged`
 // pair — `toString` is a method, so every call already reads `i18n.t()` fresh; there is no
 // stand-alone value to go stale between locale switches. The DAILY/WEEKLY/etc. enum values

@@ -1,10 +1,9 @@
 import React, { Fragment, useState } from "react";
 import ToggleButtonGroup from "../ToggleButtonGroup";
-import { MONTHS } from "../../tools/constants";
+import { MONTHS, PAYMENT_SCHEDULE_OPTIONS_PAYMENTS_NUMBERS } from "../../tools/constants";
 import swal from "sweetalert2";
 import { toast } from "react-toastify";
 import * as api from "../../tools/api";
-import { PAYMENT_SCHEDULE_OPTIONS_PAYMENTS_NUMBERS } from "../advancedSearch/utils";
 import { useTranslation } from "react-i18next";
 
 export default function PaymentScheduleOptionForm({

@@ -47,11 +47,12 @@ left:
 
 ## Exotic (git-pinned) dependencies need a per-package decision, not a version bump
 
-4 dependencies resolve to a git ref rather than a registry version (no real "how far behind"
-comparison from `yarn outdated`): `jQuery-QueryBuilder`, `jQuery-QueryBuilder-Elasticsearch`,
-`react-stepzilla`, `tui-calendar`. None pinned to a commit SHA, so each can change underneath the app
-with zero lockfile signal. For each, the real question is un-fork vs. patch-and-pin vs. replace —
-researched via `gh api` fork/compare metadata 2026-08-27:
+2 dependencies resolve to a git ref rather than a registry version (no real "how far behind"
+comparison from `yarn outdated`): `react-stepzilla`, `tui-calendar`. (`jQuery-QueryBuilder` and
+`jQuery-QueryBuilder-Elasticsearch` were removed entirely along with Elasticsearch/chewy — their
+only consumer, the advanced-search UI, is gone.) Neither remaining one is pinned to a commit SHA,
+so each can change underneath the app with zero lockfile signal. For each, the real question is
+un-fork vs. patch-and-pin vs. replace — researched via `gh api` fork/compare metadata 2026-08-27:
 
 - **`tui-calendar`** — highest effort. Upstream (`nhn/tui.calendar`) is healthy and active, but the
   fork (`SIXMON/tui.calendar`) is 1426 commits behind with 14 commits of real app-specific behavior
@@ -59,10 +60,6 @@ researched via `gh api` fork/compare metadata 2026-08-27:
   commits against a version 1426 commits newer — scope carefully before starting.
 - **`react-stepzilla`** — smallest gap (2 commits behind, 3 ahead with legitimate-looking upstreamable
   bug fixes). Reasonable candidate to upstream the fix and drop the fork.
-- **`jQuery-QueryBuilder`** — trivial fork (1 commit ahead, 48 behind, active upstream). Lowest-risk
-  candidate to drop the fork and pin an upstream release.
-- **`jQuery-QueryBuilder-Elasticsearch`** — not a fork of anything, abandoned since 2016, no drop-in
-  replacement found. May need vendoring/reimplementing rather than un-forking or swapping.
 
 Whatever the per-package decision, pin to an exact commit SHA (or npm release) in the meantime —
 that alone removes the "can silently change under us" risk before the fork-vs-replace call is made.

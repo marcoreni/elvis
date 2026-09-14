@@ -122,7 +122,7 @@ brew install shared-mime-info
 ```
 
 Then skip ahead to [Set up optional dependencies](#set-up-optional-dependencies) below — you
-still need Postgres/Redis/Elasticsearch, just not ruby/node themselves.
+still need Postgres/Redis, just not ruby/node themselves.
 
 ### Using rvm / nvm
 - install rvm
@@ -179,13 +179,13 @@ still need Postgres/Redis/Elasticsearch, just not ruby/node themselves.
 
 #### Set up optional dependencies
 If you're running ruby/node natively (e.g. via asdf above) rather than through the full
-`docker-compose.yml` stack, you still need Postgres, Redis, and Elasticsearch. The simplest way is
-[docker-compose-dev.yml](./docker-compose-dev.yml), which starts all three with credentials/ports
-already matching [config/database.yml](./config/database.yml)'s `development` block and
-[config/chewy.yml](./config/chewy.yml)'s `development` host, so no extra configuration is needed:
+`docker-compose.yml` stack, you still need Postgres and Redis. The simplest way is
+[docker-compose-dev.yml](./docker-compose-dev.yml), which starts both with credentials/ports
+already matching [config/database.yml](./config/database.yml)'s `development` block, so no extra
+configuration is needed:
 
 ```shell
-docker-compose -f docker-compose-dev.yml up -d database redis elasticsearch
+docker-compose -f docker-compose-dev.yml up -d database redis
 ```
 
 This uses named volumes, so data persists across restarts (`docker-compose -f
@@ -199,9 +199,6 @@ Alternatively, run each service by hand:
 - Local redis server
   -  `docker pull redis:6.2.6`
   -  `docker run -p 127.0.0.1:6379:6379 redis:6.2.6`
-- Local elastic-search server
-  - `docker pull elasticsearch:7.17.28`
-  - `docker run -p 127.0.0.1:9200:9200 -p 127.0.0.1:9300:9300 -e "discovery.type=single-node" elasticsearch:7.17.28`
 
 ### Compile
 at the root of the repository :

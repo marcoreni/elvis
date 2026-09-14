@@ -55,7 +55,6 @@ Rails.application.configure do
   #  ActiveStorage
   config.active_storage.service = :local
 
-  Chewy.request_strategy = :bypass
   config.log_level = :debug
 
   config.session_store :cookie_store, same_site: :lax
