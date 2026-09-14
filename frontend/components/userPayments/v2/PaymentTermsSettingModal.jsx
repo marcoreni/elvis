@@ -1,238 +1,303 @@
-import React, {Fragment, useEffect, useState} from "react";
+import React, { Fragment, useEffect, useState } from "react";
 import Modal from "react-modal";
 import * as api from "../../../tools/api";
 import swal from "sweetalert2";
 import { MONTHS } from "../../../tools/constants";
 import ToggleButtonGroup from "../../ToggleButtonGroup";
-import {useTranslation} from "react-i18next";
+import { useTranslation } from "react-i18next";
 
-export default function PaymentTermsSettingModal({season, user, children, onSaved, isForNew = false})
-{
-    const {t} = useTranslation("payments");
+export default function PaymentTermsSettingModal({
+    season,
+    user,
+    children,
+    onSaved,
+    isForNew = false,
+}) {
+    const { t } = useTranslation("payments");
     const [modalIsOpen, setModalIsOpen] = useState(false);
-    const [paymentTerm, setPaymentTerm] = useState({paymentScheduleOptionId: null, onDay: null, paymentMethodIndex: null});
+    const [paymentTerm, setPaymentTerm] = useState({
+        paymentScheduleOptionId: null,
+        onDay: null,
+        paymentMethodIndex: null,
+    });
 
     const [allPaymentTerms, setAllPaymentTerms] = useState([]);
     const [paymentMethods, setPaymentMethods] = useState([]);
 
-    function majUserPaymentTerm(payment_methods = null)
-    {
+    function majUserPaymentTerm(payment_methods = null) {
         // get user datas
         api.set()
-            .success(data =>
-            {
-                if(data)
-                {
+            .success((data) => {
+                if (data) {
                     setPaymentTerm({
-                        paymentScheduleOptionId: data.payment_schedule_options_id,
+                        paymentScheduleOptionId:
+                            data.payment_schedule_options_id,
                         onDay: data.day_for_collection,
-                        paymentMethodIndex: (payment_methods ? payment_methods : paymentMethods).findIndex(p => p.id === data.payment_method_id),
+                        paymentMethodIndex: (payment_methods
+                            ? payment_methods
+                            : paymentMethods
+                        ).findIndex((p) => p.id === data.payment_method_id),
+                    });
+                } else {
+                    setPaymentTerm({
+                        paymentScheduleOptionId: null,
+                        onDay: null,
+                        paymentMethodIndex: null,
                     });
                 }
-                else
-                {
-                    setPaymentTerm({paymentScheduleOptionId: null, onDay: null, paymentMethodIndex: null});
-                }
             })
-            .error(data =>
-            {
+            .error((data) => {
                 console.error(data);
 
-                swal({
+                swal.fire({
                     title: t("general.reminder.errorTitle"),
                     text: t("terms.v2.fetchTermsError"),
-                    type: "error",
+                    icon: "error",
                 });
             })
-            .get(`/users/${user.id}/paymentTerms`, {season_id: season.id});
+            .get(`/users/${user.id}/paymentTerms`, { season_id: season.id });
     }
 
-    useEffect(() =>
-    {
-        if(!paymentTerm.paymentScheduleOptionId)
-        {
+    useEffect(() => {
+        if (!paymentTerm.paymentScheduleOptionId) {
             const promises = [];
 
             // get base datas
-            promises.push(api.set()
-                .success(data =>
-                {
-                    setAllPaymentTerms(data.data);
+            promises.push(
+                api
+                    .set()
+                    .success((data) => {
+                        setAllPaymentTerms(data.data);
 
-                    return data.data;
-                })
-                .error(data =>
-                {
-                    console.error(data);
+                        return data.data;
+                    })
+                    .error((data) => {
+                        console.error(data);
 
-                    swal({
-                        title: t("general.reminder.errorTitle"),
-                        text: t("terms.v2.fetchDataError"),
-                        type: "error",
-                    });
-                })
-                .get(`/payment_schedule_options`, {season_id: season.id}));
+                        swal.fire({
+                            title: t("general.reminder.errorTitle"),
+                            text: t("terms.v2.fetchDataError"),
+                            icon: "error",
+                        });
+                    })
+                    .get(`/payment_schedule_options`, { season_id: season.id })
+            );
 
             // get payments methods
-            promises.push(api.set()
-                .success(data =>
-                {
-                    setPaymentMethods(data.data);
+            promises.push(
+                api
+                    .set()
+                    .success((data) => {
+                        setPaymentMethods(data.data);
 
-                    return data.data;
-                })
-                .error(data =>
-                {
-                    console.error(data);
+                        return data.data;
+                    })
+                    .error((data) => {
+                        console.error(data);
 
-                    swal({
-                        title: t("general.reminder.errorTitle"),
-                        text: t("terms.v2.fetchMethodsError"),
-                        type: "error",
-                    });
-                })
-                .get(`/payment_method`, {season_id: season.id}));
+                        swal.fire({
+                            title: t("general.reminder.errorTitle"),
+                            text: t("terms.v2.fetchMethodsError"),
+                            icon: "error",
+                        });
+                    })
+                    .get(`/payment_method`, { season_id: season.id })
+            );
 
             Promise.all(promises).then((d) => majUserPaymentTerm(d[1]));
         }
     }, []);
 
-    useEffect(() =>
-    {
+    useEffect(() => {
         majUserPaymentTerm();
     }, [season]);
 
-    function onSave()
-    {
+    function onSave() {
         api.set()
-            .success(data =>
-            {
+            .success((data) => {
                 setModalIsOpen(false);
 
-                swal({
+                swal.fire({
                     title: t("general.reminder.successTitle"),
                     text: t("terms.v2.savedText"),
-                    type: "success",
+                    icon: "success",
                 });
 
-                if(onSaved && typeof onSaved === "function")
+                if (onSaved && typeof onSaved === "function")
                     onSaved({
-                        term_name: allPaymentTerms.find(p => p.id === paymentTerm.paymentScheduleOptionId).label,
-                        payment_method: paymentMethods[paymentTerm.paymentMethodIndex].label,
+                        term_name: allPaymentTerms.find(
+                            (p) => p.id === paymentTerm.paymentScheduleOptionId
+                        ).label,
+                        payment_method:
+                            paymentMethods[paymentTerm.paymentMethodIndex]
+                                .label,
                     });
             })
-            .error(data =>
-            {
+            .error((data) => {
                 console.error(data);
 
-                swal({
+                swal.fire({
                     title: t("general.reminder.errorTitle"),
                     text: t("terms.v2.saveError"),
-                    type: "error",
+                    icon: "error",
                 });
             })
             .post(`/users/${user.id}/paymentTerms`, {
                 season_id: season.id,
-                payment_schedule_options_id: paymentTerm.paymentScheduleOptionId,
+                payment_schedule_options_id:
+                    paymentTerm.paymentScheduleOptionId,
                 day_for_collection: paymentTerm.onDay,
-                payment_method_id: paymentMethods[paymentTerm.paymentMethodIndex].id,
+                payment_method_id:
+                    paymentMethods[paymentTerm.paymentMethodIndex].id,
             });
     }
 
-    const payTermObject = allPaymentTerms.find(p => p.id === paymentTerm.paymentScheduleOptionId);
+    const payTermObject = allPaymentTerms.find(
+        (p) => p.id === paymentTerm.paymentScheduleOptionId
+    );
 
-    return <Fragment>
-        <button className="btn btn-primary px-sm-5" onClick={() => setModalIsOpen(true)}>
-            {children}
-        </button>
+    return (
+        <Fragment>
+            <button
+                className="btn btn-primary px-sm-5"
+                onClick={() => setModalIsOpen(true)}
+            >
+                {children}
+            </button>
 
-        <Modal
-            isOpen={modalIsOpen}
-            onRequestClose={() => setModalIsOpen(false)}
-            contentLabel="Modal"
-            className="modal-dialog modal-lg"
-            ariaHideApp={false}
-        >
-            <div className="row">
-                <div className="m-t-md alert alert-warning px-sm-3 py-sm-4">
-                    {t("terms.v2.modalWarning")}<br/>
-                    {t("terms.v2.modalWarning2")}
-                </div>
-            </div>
-
-            <div className="row">
-                <div className="col-sm-6">
-                    <p>{t("terms.v2.selectOption")} </p>
-                    <select className="form-control"
-                            disabled={!isForNew}
-                            value={paymentTerm.paymentScheduleOptionId || ""}
-                            onChange={(e) => setPaymentTerm({...paymentTerm, paymentScheduleOptionId: parseInt(e.target.value)})}>
-                        <option value={""}></option>
-                        {allPaymentTerms.map(pt => <option key={pt.id} value={pt.id}>{pt.label}</option>)}
-                    </select>
-                </div>
-                <div className="col-sm-12">
-                    {paymentTerm.paymentScheduleOptionId && <div className="m-t-md alert alert-info px-sm-3 py-sm-4">
-                        {t("terms.v2.monthsInfo", { months: payTermObject.payments_months.map(m => MONTHS[m]).join(", ") })}
-                    </div>}
-                </div>
-            </div>
-
-            <div className="m-t-md row">
-                <div className="col-sm-12">
-                    <p>{t("terms.v2.selectDay")}</p>
-
-                    <div className="row">
-                        {payTermObject && <ToggleButtonGroup
-                            selected={[paymentTerm.onDay]}
-                            childrenContent={payTermObject.available_payments_days.map(d => <span>{d}</span>)}
-                            onChange={(selected) => setPaymentTerm({...paymentTerm, onDay: selected[0]})}
-                        />}
+            <Modal
+                isOpen={modalIsOpen}
+                onRequestClose={() => setModalIsOpen(false)}
+                contentLabel="Modal"
+                className="modal-dialog modal-lg"
+                ariaHideApp={false}
+            >
+                <div className="row">
+                    <div className="m-t-md alert alert-warning px-sm-3 py-sm-4">
+                        {t("terms.v2.modalWarning")}
+                        <br />
+                        {t("terms.v2.modalWarning2")}
                     </div>
                 </div>
-            </div>
 
-            <div className="row m-t-md">
-                <div className="col-sm-12">
-                    <p>{t("terms.v2.selectMethod")}</p>
+                <div className="row">
+                    <div className="col-sm-6">
+                        <p>{t("terms.v2.selectOption")} </p>
+                        <select
+                            className="form-control"
+                            disabled={!isForNew}
+                            value={paymentTerm.paymentScheduleOptionId || ""}
+                            onChange={(e) =>
+                                setPaymentTerm({
+                                    ...paymentTerm,
+                                    paymentScheduleOptionId: parseInt(
+                                        e.target.value
+                                    ),
+                                })
+                            }
+                        >
+                            <option value={""}></option>
+                            {allPaymentTerms.map((pt) => (
+                                <option key={pt.id} value={pt.id}>
+                                    {pt.label}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                    <div className="col-sm-12">
+                        {paymentTerm.paymentScheduleOptionId && (
+                            <div className="m-t-md alert alert-info px-sm-3 py-sm-4">
+                                {t("terms.v2.monthsInfo", {
+                                    months: payTermObject.payments_months
+                                        .map((m) => MONTHS[m])
+                                        .join(", "),
+                                })}
+                            </div>
+                        )}
+                    </div>
                 </div>
 
-                <ToggleButtonGroup
-                    selected={[paymentTerm.paymentMethodIndex]}
-                    onChange={(selected) => setPaymentTerm({...paymentTerm, paymentMethodIndex: selected[0]})}
-                    childrenContent={paymentMethods.map(m => <div>
-                        {getIconForPaymentMethod(m)}
-                        <p>{m.label}</p>
-                    </div>)}
-                    buttonStyles={{
-                        width: "100%",
-                        height: "75px",
-                    }}
-                    buttonClasses={"col-sm-3"}
-                />
-            </div>
+                <div className="m-t-md row">
+                    <div className="col-sm-12">
+                        <p>{t("terms.v2.selectDay")}</p>
 
-            <div className="row m-t-md">
-                <div className="col-sm-12 text-right">
-                    <button className="btn btn-primary px-sm-5" onClick={onSave}>
-                        {t("common:actions.save")}
-                    </button>
+                        <div className="row">
+                            {payTermObject && (
+                                <ToggleButtonGroup
+                                    selected={[paymentTerm.onDay]}
+                                    childrenContent={payTermObject.available_payments_days.map(
+                                        (d) => (
+                                            <span>{d}</span>
+                                        )
+                                    )}
+                                    onChange={(selected) =>
+                                        setPaymentTerm({
+                                            ...paymentTerm,
+                                            onDay: selected[0],
+                                        })
+                                    }
+                                />
+                            )}
+                        </div>
+                    </div>
                 </div>
-            </div>
-        </Modal>
-    </Fragment>
+
+                <div className="row m-t-md">
+                    <div className="col-sm-12">
+                        <p>{t("terms.v2.selectMethod")}</p>
+                    </div>
+
+                    <ToggleButtonGroup
+                        selected={[paymentTerm.paymentMethodIndex]}
+                        onChange={(selected) =>
+                            setPaymentTerm({
+                                ...paymentTerm,
+                                paymentMethodIndex: selected[0],
+                            })
+                        }
+                        childrenContent={paymentMethods.map((m) => (
+                            <div>
+                                {getIconForPaymentMethod(m)}
+                                <p>{m.label}</p>
+                            </div>
+                        ))}
+                        buttonStyles={{
+                            width: "100%",
+                            height: "75px",
+                        }}
+                        buttonClasses={"col-sm-3"}
+                    />
+                </div>
+
+                <div className="row m-t-md">
+                    <div className="col-sm-12 text-right">
+                        <button
+                            className="btn btn-primary px-sm-5"
+                            onClick={onSave}
+                        >
+                            {t("common:actions.save")}
+                        </button>
+                    </div>
+                </div>
+            </Modal>
+        </Fragment>
+    );
 }
 
-export const getIconForPaymentMethod = (method) =>
-{
+export const getIconForPaymentMethod = (method) => {
     // based on built-in payment methods ids
     // default for others => customization later ?
-    switch (method.id)
-    {
-        case 1: return <i className="fa fa-money-bill" />;
-        case 2: return <i className="fa fa-money-check" />;
-        case 6: case 12: return <i className="fas fa-university" />;
-        case 8: return <i className="fa fa-credit-card" />;
-        default: return <i className="fa fa-euro-sign" />;
+    switch (method.id) {
+        case 1:
+            return <i className="fa fa-money-bill" />;
+        case 2:
+            return <i className="fa fa-money-check" />;
+        case 6:
+        case 12:
+            return <i className="fas fa-university" />;
+        case 8:
+            return <i className="fa fa-credit-card" />;
+        default:
+            return <i className="fa fa-euro-sign" />;
     }
-}
+};

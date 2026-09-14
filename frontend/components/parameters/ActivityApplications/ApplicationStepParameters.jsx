@@ -1,22 +1,29 @@
-import React, {Fragment, useEffect, useState} from "react";
+import React, { Fragment, useEffect, useState } from "react";
 import * as api from "../../../tools/api";
 import swal from "sweetalert2";
-import {toast} from "react-toastify";
-import {EditorState, convertToRaw, convertFromRaw, ContentState} from 'draft-js';
-import {Editor} from 'react-draft-wysiwyg';
-import {useTranslation} from "react-i18next";
+import { toast } from "react-toastify";
+import {
+    EditorState,
+    convertToRaw,
+    convertFromRaw,
+    ContentState,
+} from "draft-js";
+import { Editor } from "react-draft-wysiwyg";
+import { useTranslation } from "react-i18next";
 
-export default function ApplicationStepParameters({parameter_label, desc}) {
-    const {t} = useTranslation("parameters");
-    const [editorState, setEditorState] = useState(() => EditorState.createEmpty());
+export default function ApplicationStepParameters({ parameter_label, desc }) {
+    const { t } = useTranslation("parameters");
+    const [editorState, setEditorState] = useState(() =>
+        EditorState.createEmpty()
+    );
     const [visibilityActivated, setVisibilityActivated] = useState(false);
     const [init, setInit] = useState(true);
 
     useEffect(() => {
         api.set()
-            .success(res => {
+            .success((res) => {
                 setVisibilityActivated(res.activated);
-                setInit(false)
+                setInit(false);
 
                 let savedContentRaw = null;
                 let savedContentState = null;
@@ -25,82 +32,149 @@ export default function ApplicationStepParameters({parameter_label, desc}) {
                         savedContentRaw = JSON.parse(res.display_text);
                         savedContentState = convertFromRaw(savedContentRaw);
                     } catch (e) {
-                        savedContentState = ContentState.createFromText(res.display_text);
+                        savedContentState = ContentState.createFromText(
+                            res.display_text
+                        );
                     }
-                    setEditorState(EditorState.createWithContent(savedContentState));
+                    setEditorState(
+                        EditorState.createWithContent(savedContentState)
+                    );
                 }
             })
-            .error(err => {
-                swal(t("activityApplications.stepParams.loadError"), err.error, "error");
+            .error((err) => {
+                swal.fire({
+                    title: t("activityApplications.stepParams.loadError"),
+                    text: err.error,
+                    icon: "error",
+                });
             })
-            .get(`activity_application_parameters/get_application_step_parameters/${parameter_label}`, {});
+            .get(
+                `activity_application_parameters/get_application_step_parameters/${parameter_label}`,
+                {}
+            );
     }, []);
 
     useEffect(() => {
         if (!init) {
             api.set()
-                .error(res => {
-                    swal(t("activityApplications.stepParams.saveError"), res.error, "error");
+                .error((res) => {
+                    swal.fire({
+                        title: t("activityApplications.stepParams.saveError"),
+                        text: res.error,
+                        icon: "error",
+                    });
                 })
-                .post("activity_application_parameters/change_activated_param", {parameter_label: parameter_label, activated: visibilityActivated});
+                .post(
+                    "activity_application_parameters/change_activated_param",
+                    {
+                        parameter_label: parameter_label,
+                        activated: visibilityActivated,
+                    }
+                );
         }
     }, [visibilityActivated]);
 
     const onSaveDisplayText = () => {
         api.set()
-            .success(res => {
+            .success((res) => {
                 toast.success(t("activityApplications.stepParams.saveSuccess"));
             })
-            .error(res => {
-                swal(t("activityApplications.stepParams.saveError"), res.error, "error");
+            .error((res) => {
+                swal.fire({
+                    title: t("activityApplications.stepParams.saveError"),
+                    text: res.error,
+                    icon: "error",
+                });
             })
-            .post("activity_application_parameters/change_display_text_param", {parameter_label: parameter_label, display_text: JSON.stringify(convertToRaw(editorState.getCurrentContent()))});
-    }
+            .post("activity_application_parameters/change_display_text_param", {
+                parameter_label: parameter_label,
+                display_text: JSON.stringify(
+                    convertToRaw(editorState.getCurrentContent())
+                ),
+            });
+    };
 
+    return (
+        <div className="m-3">
+            <div className="mb-5">
+                <h3>{desc}</h3>
+                <div className="checkbox checkbox-primary">
+                    <input
+                        type="checkbox"
+                        id={`${parameter_label}.paymentScheduleOptionsActivated`}
+                        className=""
+                        checked={visibilityActivated}
+                        onChange={(e) =>
+                            setVisibilityActivated(e.target.checked)
+                        }
+                    />
+                    <label
+                        htmlFor={`${parameter_label}.paymentScheduleOptionsActivated`}
+                    >
+                        {t("activityApplications.stepParams.showTextLabel")}
+                    </label>
+                </div>
+            </div>
 
-    return <div className="m-3">
-        <div className="mb-5">
-            <h3>{desc}</h3>
-            <div className="checkbox checkbox-primary">
-                <input
-                    type="checkbox"
-                    id={`${parameter_label}.paymentScheduleOptionsActivated`}
-                    className=""
-                    checked={visibilityActivated}
-                    onChange={(e) => setVisibilityActivated(e.target.checked)}
-                />
-                <label htmlFor={`${parameter_label}.paymentScheduleOptionsActivated`}>{t("activityApplications.stepParams.showTextLabel")}</label>
+            <div>
+                <form
+                    onSubmit={(e) => {
+                        e.preventDefault();
+                        onSaveDisplayText();
+                    }}
+                >
+                    <div className="form-group mb-5">
+                        <Editor
+                            wrapperStyle={{
+                                border: "1px solid #e7eaec",
+                                padding: "5px",
+                                borderRadius: "5px",
+                            }}
+                            editorState={editorState}
+                            onEditorStateChange={setEditorState}
+                            toolbarClassName="toolbarClassName"
+                            wrapperClassName="wrapperClassName"
+                            editorClassName="editorClassName"
+                            toolbar={{
+                                options: [
+                                    "inline",
+                                    "blockType",
+                                    "emoji",
+                                    "list",
+                                    "link",
+                                ],
+                                inline: {
+                                    options: [
+                                        "bold",
+                                        "italic",
+                                        "underline",
+                                        "strikethrough",
+                                    ],
+                                },
+                                blockType: {
+                                    inDropdown: true,
+                                    options: [
+                                        "Normal",
+                                        "H1",
+                                        "H2",
+                                        "H3",
+                                        "H4",
+                                        "H5",
+                                        "H6",
+                                        "Blockquote",
+                                    ],
+                                },
+                            }}
+                        />
+                    </div>
+
+                    <div className="text-right">
+                        <button className="btn btn-primary" type="submit">
+                            {t("common:actions.save")}
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
-
-        <div>
-            <form onSubmit={e => {e.preventDefault();onSaveDisplayText()}}>
-                <div className="form-group mb-5">
-                    <Editor
-                        wrapperStyle={{border: "1px solid #e7eaec", padding: "5px", borderRadius: "5px"}}
-                        editorState={editorState}
-                        onEditorStateChange={setEditorState}
-                        toolbarClassName="toolbarClassName"
-                        wrapperClassName="wrapperClassName"
-                        editorClassName="editorClassName"
-                        toolbar={{
-                            options: ['inline', 'blockType', 'emoji', 'list', 'link'],
-                            inline: {
-                                options: ['bold', 'italic', 'underline', 'strikethrough'],
-                            },
-                            blockType: {
-                                inDropdown: true,
-                                options: ['Normal', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'Blockquote'],
-                            },
-                        }}
-                    />
-                </div>
-
-                <div className="text-right">
-                    <button className="btn btn-primary" type="submit">{t("common:actions.save")}</button>
-                </div>
-            </form>
-        </div>
-
-    </div>
+    );
 }

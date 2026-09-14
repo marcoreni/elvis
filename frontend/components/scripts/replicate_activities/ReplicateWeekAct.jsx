@@ -30,18 +30,18 @@ class ReplicateWeekAct extends React.Component {
         ReactDOM.render(
             <JobProgress
                 jobId={jobId}
-                onError={res =>
-                    swal({
+                onError={(res) =>
+                    swal.fire({
                         title: t("courses:replicateActivities.errorTitle"),
                         text: res,
-                        type: "error",
+                        icon: "error",
                     })
                 }
             />,
             container
         );
 
-        swal({
+        swal.fire({
             title: t("courses:replicateActivities.jobProgressTitle"),
             html: container,
             showCloseButton: true,
@@ -53,13 +53,8 @@ class ReplicateWeekAct extends React.Component {
     render() {
         const { t } = this.props;
         const { replicationMaxDelay = 14 } = this.props;
-        const {
-            refWeekDate,
-            startDate,
-            endDate,
-            jobSubmitted,
-            jobId,
-        } = this.state;
+        const { refWeekDate, startDate, endDate, jobSubmitted, jobId } =
+            this.state;
         const maxEndDate = startDate
             ? new Date(
                   new Date(startDate).getTime() +
@@ -188,7 +183,7 @@ class ReplicateWeekAct extends React.Component {
         this.setState({ jobSubmitted: true });
 
         api.set()
-            .success(res => {
+            .success((res) => {
                 this.setState({
                     refWeekDate: [],
                     startDate: undefined,
@@ -199,11 +194,11 @@ class ReplicateWeekAct extends React.Component {
 
                 this.showJobProgressModal(res.jobId);
             })
-            .error(res =>
-                swal({
+            .error((res) =>
+                swal.fire({
                     title: t("courses:replicateActivities.errorTitle"),
                     text: res,
-                    type: "error",
+                    icon: "error",
                 })
             )
             .post("/scripts/replicate_week_activities/execute", {

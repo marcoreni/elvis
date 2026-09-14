@@ -3,13 +3,12 @@ import swal from "sweetalert2";
 import { csrfToken } from "../../utils";
 import _ from "lodash";
 import ReactTable from "react-table";
-import {withTranslation} from "react-i18next";
-
+import { withTranslation } from "react-i18next";
 
 class Localisations extends React.Component {
     constructor(props) {
         super(props);
-        const {t} = props;
+        const { t } = props;
 
         this.state = {
             data: [],
@@ -29,14 +28,14 @@ class Localisations extends React.Component {
             {
                 id: "label",
                 Header: t("rooms.localisations.colSite"),
-                accessor: props => (
+                accessor: (props) => (
                     <a href={"/rooms?location=" + props.id}>{props.label}</a>
                 ),
             },
             {
                 id: "actions",
                 Header: t("shared.actions"),
-                Cell: props => {
+                Cell: (props) => {
                     return (
                         <div className="btn-wrapper">
                             <a
@@ -65,9 +64,9 @@ class Localisations extends React.Component {
         ];
         const LocationList = ({ rooms, location }) => (
             <ul>
-                {_.orderBy(rooms, room => room.label)
-                    .filter(room => room.location_id === location)
-                    .map(room => (
+                {_.orderBy(rooms, (room) => room.label)
+                    .filter((room) => room.location_id === location)
+                    .map((room) => (
                         <li key={room.id}>
                             <a href={"/rooms?location=" + location}>
                                 {room.label}
@@ -77,10 +76,10 @@ class Localisations extends React.Component {
             </ul>
         );
 
-        this.state.subComponent = row => {
+        this.state.subComponent = (row) => {
             if (
                 this.props.rooms.filter(
-                    room => room.location_id === row.original.id
+                    (room) => room.location_id === row.original.id
                 ).length > 0
             ) {
                 return (
@@ -96,26 +95,27 @@ class Localisations extends React.Component {
 
         this.deleteStatus = this.deleteStatus.bind(this);
     }
-    
-    fetchData(state, instance)
-    {
+
+    fetchData(state, instance) {
         this.setState({ loading: true, filter: state, tableState: state });
 
-        this.requestData.call(this,
-            state.pageSize,
-            state.page,
-            state.sorted,
-            state.filtered,
-        )
-            .then(response => response.json())
-            .then(data => {
+        this.requestData
+            .call(
+                this,
+                state.pageSize,
+                state.page,
+                state.sorted,
+                state.filtered
+            )
+            .then((response) => response.json())
+            .then((data) => {
                 return {
                     data: data.status,
                     pages: data.pages,
                     total: data.total,
                 };
             })
-            .then(res => {
+            .then((res) => {
                 this.setState({
                     ...res,
                     loading: false,
@@ -123,9 +123,9 @@ class Localisations extends React.Component {
             });
     }
 
-    requestData(pageSize, page, sorted, filtered, format)
-    {
-        return fetch(`/parameters/rooms_parameters/list${format ? "." + format : ""}`,
+    requestData(pageSize, page, sorted, filtered, format) {
+        return fetch(
+            `/parameters/rooms_parameters/list${format ? "." + format : ""}`,
             {
                 method: "POST",
                 credentials: "same-origin",
@@ -140,18 +140,21 @@ class Localisations extends React.Component {
                     sorted: sorted[0],
                     filtered,
                 }),
-            });
+            }
+        );
     }
 
     deleteStatus(status) {
-        const {t} = this.props;
-        swal({
-            title: t("rooms.localisations.deleteConfirm", {name: status.label}),
-            type: "warning",
+        const { t } = this.props;
+        swal.fire({
+            title: t("rooms.localisations.deleteConfirm", {
+                name: status.label,
+            }),
+            icon: "warning",
             showCancelButton: true,
             cancelButtonText: t("shared.deleteConfirmNo"),
             confirmButtonText: t("shared.deleteConfirmYes"),
-        }).then(res => {
+        }).then((res) => {
             if (res.value) {
                 fetch(`/locations/${status.id}`, {
                     method: "DELETE",
@@ -161,14 +164,14 @@ class Localisations extends React.Component {
                         "Content-Type": "application/json",
                         Accept: "application/json",
                     },
-                }).then(result => {
+                }).then((result) => {
                     if (result.status === 200) {
                         this.fetchData(this.state.tableState);
                     } else {
-                        result.text().then(text => {
-                            swal({
+                        result.text().then((text) => {
+                            swal.fire({
                                 title: t("shared.errorTitle"),
-                                type: "error",
+                                icon: "error",
                                 text: text,
                             });
                         });
@@ -179,7 +182,7 @@ class Localisations extends React.Component {
     }
 
     render() {
-        const {t} = this.props;
+        const { t } = this.props;
         const { data, pages, loading } = this.state;
 
         return (

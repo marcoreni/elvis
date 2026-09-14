@@ -101,8 +101,8 @@ class MergeUsers extends React.Component {
                                     value="test"
                                     onChange={() =>
                                         this.setState({
-                                            deleteOldUser: !this.state
-                                                .deleteOldUser,
+                                            deleteOldUser:
+                                                !this.state.deleteOldUser,
                                         })
                                     }
                                 />
@@ -169,7 +169,9 @@ class MergeUsers extends React.Component {
                                     }
                                 />{" "}
                                 <label htmlFor="othersData">
-                                    {t("users:mergeUsers.selectOldUserData")}{" "}
+                                    {t(
+                                        "users:mergeUsers.selectOldUserData"
+                                    )}{" "}
                                 </label>
                                 {this.state.selectedDataToSave === -3 ||
                                 this.state.selectedDataToSave >= 0 ? (
@@ -275,32 +277,32 @@ class MergeUsers extends React.Component {
 
         if (oldU === undefined || newU === undefined) return;
 
-        swal({
+        swal.fire({
             title: t("users:mergeUsers.confirmTitle"),
             text: this.state.deleteOldUser
                 ? t("users:mergeUsers.confirmDeleteText")
                 : undefined,
-            type: "question",
+            icon: "question",
             confirmButtonText: t("users:mergeUsers.yes"),
             showCancelButton: true,
             cancelButtonText: t("users:mergeUsers.no"),
-        }).then(willMerge => {
+        }).then((willMerge) => {
             if (willMerge.value) {
                 api.set()
                     .success(() => {
-                        swal({
+                        swal.fire({
                             title: t("users:mergeUsers.successTitle"),
-                            type: "success",
+                            icon: "success",
                             confirmButtonText: t("users:mergeUsers.ok"),
-                        }).then(res => {
+                        }).then((res) => {
                             if (this.state.deleteOldUser)
                                 window.location.reload();
                         });
                     })
                     .error(() => {
-                        swal({
+                        swal.fire({
                             title: t("users:mergeUsers.errorTitle"),
-                            type: "error",
+                            icon: "error",
                             confirmButtonText: t("users:mergeUsers.ok"),
                         });
                     })

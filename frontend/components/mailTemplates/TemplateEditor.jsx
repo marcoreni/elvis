@@ -17,26 +17,26 @@ export default function TemplateEditor() {
         try {
             await api
                 .set()
-                .success(res => {
+                .success((res) => {
                     setTemplate(res.template);
                     setEvent(res.event);
                     setLoading(false);
                     setTemplateName(res.template.name);
                 })
-                .error(res => {
-                    swal(
-                        t("parameters:mailTemplates.toasts.fetchError"),
-                        res.error,
-                        "error"
-                    );
+                .error((res) => {
+                    swal.fire({
+                        title: t("parameters:mailTemplates.toasts.fetchError"),
+                        text: res.error,
+                        icon: "error",
+                    });
                 })
                 .get(window.location.pathname + "", {});
         } catch (error) {
-            swal(
-                t("parameters:mailTemplates.toasts.errorTitle"),
-                t("parameters:mailTemplates.toasts.fetchErrorText"),
-                "error"
-            );
+            swal.fire({
+                title: t("parameters:mailTemplates.toasts.errorTitle"),
+                text: t("parameters:mailTemplates.toasts.fetchErrorText"),
+                icon: "error",
+            });
         }
     };
 

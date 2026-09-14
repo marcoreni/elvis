@@ -46,11 +46,11 @@ class JobProgress extends React.Component {
                     );
                 }
             })
-            .error(res => {
-                swal({
+            .error((res) => {
+                swal.fire({
                     title: t("common:jobProgress.errorTitle"),
                     text: res,
-                    type: "error",
+                    icon: "error",
                 });
                 if (this.props.onError) {
                     this.props.onError(res);
@@ -66,8 +66,8 @@ class JobProgress extends React.Component {
             status === "working"
                 ? t("common:jobProgress.inProgress")
                 : status === "completed"
-                ? t("common:jobProgress.completed")
-                : t("common:jobProgress.failed");
+                  ? t("common:jobProgress.completed")
+                  : t("common:jobProgress.failed");
 
         return (
             <div>

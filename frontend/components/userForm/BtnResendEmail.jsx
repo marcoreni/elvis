@@ -8,26 +8,26 @@ const BtnResendEmail = ({ user_id }) => {
 
     const resendEmail = () => {
         api.set()
-            .success(data => {
+            .success((data) => {
                 if (!data || data.length === 0) {
-                    swal({
+                    swal.fire({
                         title: t("users:resendEmail.errorTitle"),
-                        type: "error",
+                        icon: "error",
                         text: t("users:resendEmail.alreadyConfigured"),
                     });
                     return;
                 }
 
-                swal({
+                swal.fire({
                     title: t("users:resendEmail.sentTitle"),
-                    type: "success",
+                    icon: "success",
                     text: t("users:resendEmail.sentText"),
                 });
             })
-            .error(res => {
-                swal({
+            .error((res) => {
+                swal.fire({
                     title: t("users:resendEmail.errorTitle"),
-                    type: "error",
+                    icon: "error",
                     text: t("users:resendEmail.errorText"),
                 });
             })

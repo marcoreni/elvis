@@ -1,15 +1,13 @@
 import BaseDataTable from "../BaseDataTable";
 import React from "react";
-import {withTranslation} from "react-i18next";
+import { withTranslation } from "react-i18next";
 import swal from "sweetalert2";
-import {csrfToken} from "../../utils";
+import { csrfToken } from "../../utils";
 
-class Instruments extends BaseDataTable
-{
-    constructor(props)
-    {
+class Instruments extends BaseDataTable {
+    constructor(props) {
         super(props);
-        const {t} = props;
+        const { t } = props;
 
         this.state.columns = [
             {
@@ -20,26 +18,44 @@ class Instruments extends BaseDataTable
             {
                 id: "name",
                 Header: t("shared.colName"),
-                accessor: d => d.label,
+                accessor: (d) => d.label,
             },
             {
                 id: "active",
                 Header: t("practice.cols.active"),
-                accessor: d => d.active,
-                Cell: props => <p>{props.original.active ? t("shared.yes") : t("shared.no")}</p>
+                accessor: (d) => d.active,
+                Cell: (props) => (
+                    <p>
+                        {props.original.active
+                            ? t("shared.yes")
+                            : t("shared.no")}
+                    </p>
+                ),
             },
             {
                 id: "actions",
                 Header: t("shared.actions"),
-                Cell: props => {
+                Cell: (props) => {
                     return (
                         <div className="btn-wrapper">
-                            <a className="btn-sm btn-primary m-r-sm" href={'/instruments/' + props.original.id + "/edit"}>
-                                <i className="fas fa-edit"/>
+                            <a
+                                className="btn-sm btn-primary m-r-sm"
+                                href={
+                                    "/instruments/" +
+                                    props.original.id +
+                                    "/edit"
+                                }
+                            >
+                                <i className="fas fa-edit" />
                             </a>
 
-                            <a className="btn-sm btn-warning" onClick={() => this.deleteStatus(props.original)}>
-                                <i className="fas fa-trash"/>
+                            <a
+                                className="btn-sm btn-warning"
+                                onClick={() =>
+                                    this.deleteStatus(props.original)
+                                }
+                            >
+                                <i className="fas fa-trash" />
                             </a>
                         </div>
                     );
@@ -52,47 +68,37 @@ class Instruments extends BaseDataTable
         this.deleteStatus = this.deleteStatus.bind(this);
     }
 
-    deleteStatus(status)
-    {
-        const {t} = this.props;
-        swal({
-            title: t("practice.delete.instrument", {name: status.label}),
-            type: "warning",
+    deleteStatus(status) {
+        const { t } = this.props;
+        swal.fire({
+            title: t("practice.delete.instrument", { name: status.label }),
+            icon: "warning",
             showCancelButton: true,
             cancelButtonText: t("shared.deleteConfirmNo"),
-            confirmButtonText: t("shared.deleteConfirmYes")
-        }).then(res =>
-        {
-            if(res.value)
-            {
-                fetch(`/instruments/${status.id}`,
-                    {
-                        method: "DELETE",
-                        credentials: "same-origin",
-                        headers: {
-                            "X-CSRF-Token": csrfToken,
-                            "Content-Type": "application/json",
-                            Accept: "application/json",
-                        }
-                    })
-                    .then(result =>
-                    {
-                        if(result.status === 200)
-                        {
-                            this.fetchData(this.state.tableState)
-                        }
-                        else
-                        {
-                            result.text().then(text =>
-                            {
-                                swal({
-                                    title: t("shared.errorTitle"),
-                                    type: "error",
-                                    text: text
-                                })
-                            })
-                        }
-                    })
+            confirmButtonText: t("shared.deleteConfirmYes"),
+        }).then((res) => {
+            if (res.value) {
+                fetch(`/instruments/${status.id}`, {
+                    method: "DELETE",
+                    credentials: "same-origin",
+                    headers: {
+                        "X-CSRF-Token": csrfToken,
+                        "Content-Type": "application/json",
+                        Accept: "application/json",
+                    },
+                }).then((result) => {
+                    if (result.status === 200) {
+                        this.fetchData(this.state.tableState);
+                    } else {
+                        result.text().then((text) => {
+                            swal.fire({
+                                title: t("shared.errorTitle"),
+                                icon: "error",
+                                text: text,
+                            });
+                        });
+                    }
+                });
             }
         });
     }

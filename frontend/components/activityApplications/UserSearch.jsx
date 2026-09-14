@@ -71,28 +71,25 @@ class UserSearch extends React.PureComponent {
         this.setState({ [evt.target.name]: evt.target.value });
 
         let first_name, last_name;
-        if(evt.target.name=="first_name") {
-            first_name = evt.target.value || '';
-            last_name = this.state.last_name || '';
+        if (evt.target.name == "first_name") {
+            first_name = evt.target.value || "";
+            last_name = this.state.last_name || "";
         } else {
-            first_name = this.state.first_name || '';
-            last_name = evt.target.value || '';
+            first_name = this.state.first_name || "";
+            last_name = evt.target.value || "";
         }
-
 
         if (debounce) {
             clearTimeout(debounce);
         }
 
-        if ( first_name.length >= 3 ||
-             last_name.length >= 3
-        ) {
+        if (first_name.length >= 3 || last_name.length >= 3) {
             debounce = setTimeout(() => {
                 api.set()
                     .before(() =>
                         this.setState({ selectedUser: null, idx: -1 })
                     )
-                    .success(data =>
+                    .success((data) =>
                         this.setState({
                             possibleMatches: data,
                             usernotSearched: false,
@@ -125,23 +122,23 @@ class UserSearch extends React.PureComponent {
             last_name: values.last_name,
             email: values.email,
             birthday: values.birthday,
-            sex: values.sex
+            sex: values.sex,
         };
 
         api.set()
-            .success(res => {
-                swal({
-                    type: "success",
+            .success((res) => {
+                swal.fire({
+                    icon: "success",
                     title: T("userSearch.saved"),
                 }).then(() => {
                     this.toggleModal();
                     api.set()
-                        .success(data => {
+                        .success((data) => {
                             this.setState({
                                 possibleMatches: data,
                                 usernotSearched: false,
                             });
-                            this.handleUserSelect(0)
+                            this.handleUserSelect(0);
                         })
                         .error(() => this.setState({ possibleMatches: [] }))
                         .post(
@@ -153,21 +150,25 @@ class UserSearch extends React.PureComponent {
                                 last_name: this.state.last_name,
                                 season_id: this.props.season.id,
                             }
-                        )
+                        );
                 });
             })
-            .error(msg => {
+            .error((msg) => {
                 console.log("error creating user : ", msg);
-                let errorMessage = msg.errors && msg.errors.base && msg.errors.base.length > 0 ? msg.errors.base[0] : msg;
-                swal({
-                    type: "error",
+                let errorMessage =
+                    msg.errors && msg.errors.base && msg.errors.base.length > 0
+                        ? msg.errors.base[0]
+                        : msg;
+                swal.fire({
+                    icon: "error",
                     title: errorMessage,
                 });
             })
-            .post("/users/createStudent", { user: newUser, confirm: values.confirm });
+            .post("/users/createStudent", {
+                user: newUser,
+                confirm: values.confirm,
+            });
     }
-
-    
 
     render() {
         const {
@@ -184,9 +185,11 @@ class UserSearch extends React.PureComponent {
         // }
 
         return (
-            <div className="application-form" style={{margin: 0}}>
+            <div className="application-form" style={{ margin: 0 }}>
                 <div>
-                    <h3 style={{color: "#8AA4B1"}}>{T("userSearch.title")}</h3>
+                    <h3 style={{ color: "#8AA4B1" }}>
+                        {T("userSearch.title")}
+                    </h3>
                 </div>
 
                 <div>
@@ -235,7 +238,12 @@ class UserSearch extends React.PureComponent {
                                             }
                                         >
                                             <b>{fullname(m)}</b>
-                                            {T("userSearch.bornOn", { date: toLocaleDate(toDate(m.birthday)), number: m.adherent_number })}
+                                            {T("userSearch.bornOn", {
+                                                date: toLocaleDate(
+                                                    toDate(m.birthday)
+                                                ),
+                                                number: m.adherent_number,
+                                            })}
                                         </button>
                                     );
                                 })}
@@ -245,11 +253,18 @@ class UserSearch extends React.PureComponent {
                         !usernotSearched && (
                             <div className="row">
                                 <div className="alert alert-warning m-b-sm">
-                                    <strong>{T("userSearch.noProfileFound")}</strong>
+                                    <strong>
+                                        {T("userSearch.noProfileFound")}
+                                    </strong>
                                     <br />
                                     {T("userSearch.checkCoordinates")}
                                     <br />
-                                    <Trans ns="activityApplications" i18nKey="userSearch.otherwiseCreate">Sinon <em>créez un nouveau profil</em>.</Trans>
+                                    <Trans
+                                        ns="activityApplications"
+                                        i18nKey="userSearch.otherwiseCreate"
+                                    >
+                                        Sinon <em>créez un nouveau profil</em>.
+                                    </Trans>
                                 </div>
                                 <button
                                     type="button"

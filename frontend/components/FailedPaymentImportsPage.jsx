@@ -50,15 +50,15 @@ class FailedPaymentImportsPage extends React.Component {
     promptBulkDeleteByReason() {
         const { t } = this.props;
 
-        swal({
+        swal.fire({
             title: t("failedImports.confirm.title"),
             text: t("failedImports.confirm.textMany"),
-            type: "warning",
+            icon: "warning",
             confirmButtonText: t("failedImports.confirm.yes"),
             showCancelButton: true,
             cancelButtonText: t("failedImports.confirm.no"),
             focusCancel: true,
-        }).then(reason => {
+        }).then((reason) => {
             if (reason.value) {
                 fetch(
                     `/payments/failed_imports/reason/${
@@ -69,14 +69,14 @@ class FailedPaymentImportsPage extends React.Component {
                         headers: {
                             "X-CSRF-Token": csrfToken,
                         },
-                    },
-                ).then(res => {
+                    }
+                ).then((res) => {
                     if (res.ok) {
                         this.setState({
                             data: this.state.data.filter(
-                                x =>
+                                (x) =>
                                     x.failed_payment_import_reason_id !==
-                                    this.state.selectedReason.id,
+                                    this.state.selectedReason.id
                             ),
                         });
                     }
@@ -88,15 +88,15 @@ class FailedPaymentImportsPage extends React.Component {
     promptBulkDelete() {
         const { t } = this.props;
 
-        swal({
+        swal.fire({
             title: t("failedImports.confirm.title"),
             text: t("failedImports.confirm.textMany"),
-            type: "warning",
+            icon: "warning",
             confirmButtonText: t("failedImports.confirm.yes"),
             showCancelButton: true,
             cancelButtonText: t("failedImports.confirm.no"),
             focusCancel: true,
-        }).then(reason => {
+        }).then((reason) => {
             if (reason.value) {
                 fetch("/payments/failed_imports/many", {
                     method: "DELETE",
@@ -108,12 +108,12 @@ class FailedPaymentImportsPage extends React.Component {
                         targets: this.state.selectedRows,
                         all: this.state.selectAll,
                     }),
-                }).then(res => {
+                }).then((res) => {
                     if (res.ok) {
                         const newData = this.state.selectAll
                             ? []
                             : this.state.data.filter(
-                                  d => !this.state.selectedRows.includes(d.id),
+                                  (d) => !this.state.selectedRows.includes(d.id)
                               );
 
                         this.setState({
@@ -130,30 +130,30 @@ class FailedPaymentImportsPage extends React.Component {
     promptDelete(id) {
         const { t } = this.props;
 
-        swal({
+        swal.fire({
             title: t("failedImports.confirm.title"),
             text: t("failedImports.confirm.textOne"),
-            type: "warning",
+            icon: "warning",
             confirmButtonText: t("failedImports.confirm.yes"),
             showCancelButton: true,
             cancelButtonText: t("failedImports.confirm.no"),
             focusCancel: true,
-        }).then(reason => {
+        }).then((reason) => {
             if (reason.value)
                 fetch(`/payments/failed_imports/delete?id=${id}`, {
                     headers: {
                         "X-CSRF-Token": csrfToken,
                     },
                     method: "DELETE",
-                }).then(res => {
+                }).then((res) => {
                     if (res.ok)
                         this.setState({
-                            data: this.state.data.filter(d => d.id !== id),
+                            data: this.state.data.filter((d) => d.id !== id),
                         });
                     else
-                        swal({
+                        swal.fire({
                             title: t("failedImports.failureTitle"),
-                            type: "error",
+                            icon: "error",
                             text: t("failedImports.importNotFound"),
                         });
                 });
@@ -167,15 +167,15 @@ class FailedPaymentImportsPage extends React.Component {
         data.due_date = moment(data.due_date).format("DD/MM/YYYY");
         data.cashing_date = moment(data.cashing_date).format("DD/MM/YYYY");
 
-        swal({
+        swal.fire({
             title: t("failedImports.importTitle"),
             text: t("failedImports.importConfirmText"),
-            type: "question",
+            icon: "question",
             confirmButtonText: t("failedImports.confirm.yes"),
             showCancelButton: true,
             cancelButtonText: t("failedImports.confirm.no"),
             focusCancel: true,
-        }).then(reason => {
+        }).then((reason) => {
             if (reason.value)
                 fetch(`/payments/failed_imports/import_single`, {
                     headers: {
@@ -185,37 +185,37 @@ class FailedPaymentImportsPage extends React.Component {
                     method: "POST",
                     body: JSON.stringify(data),
                 })
-                    .then(res => res.json())
-                    .then(res => {
+                    .then((res) => res.json())
+                    .then((res) => {
                         if (res.success)
-                            swal({
+                            swal.fire({
                                 title: t("failedImports.successTitle"),
                                 text: res.message,
-                                type: "success",
+                                icon: "success",
                             }).then(() => {
                                 this.setState({
                                     data: this.state.data.filter(
-                                        d => d.id !== data.id,
+                                        (d) => d.id !== data.id
                                     ),
                                 });
                             });
                         else
-                            swal({
+                            swal.fire({
                                 title: t("failedImports.failureTitle"),
                                 text: res.message,
-                                type: "error",
+                                icon: "error",
                             }).then(() => {
                                 const { data } = this.state;
                                 const index = data.findIndex(
-                                    imp =>
-                                        imp.id == res.failed_payment_import.id,
+                                    (imp) =>
+                                        imp.id == res.failed_payment_import.id
                                 );
 
                                 if (index > -1) {
                                     data.splice(
                                         index,
                                         1,
-                                        res.failed_payment_import,
+                                        res.failed_payment_import
                                     );
                                     this.setState({ data });
                                 }
@@ -235,11 +235,10 @@ class FailedPaymentImportsPage extends React.Component {
                 <div
                     contentEditable={editable}
                     suppressContentEditableWarning={editable}
-                    onBlur={e => {
+                    onBlur={(e) => {
                         const data = [...this.state.data];
-                        data[cell.index][
-                            cell.column.id
-                        ] = e.target.innerText.replace(/\n/g, "");
+                        data[cell.index][cell.column.id] =
+                            e.target.innerText.replace(/\n/g, "");
                         this.setState({ data });
                     }}
                 >
@@ -265,10 +264,10 @@ class FailedPaymentImportsPage extends React.Component {
                 <input
                     type="date"
                     disabled={!editable}
-                    onChange={e => {
+                    onChange={(e) => {
                         const data = [...this.state.data];
                         data[cell.index][cell.column.id] = moment(
-                            e.target.value,
+                            e.target.value
                         );
                         this.setState({ data });
                     }}
@@ -291,10 +290,10 @@ class FailedPaymentImportsPage extends React.Component {
             return (
                 <input
                     type="number"
-                    onChange={e => {
+                    onChange={(e) => {
                         const { data } = this.state;
                         data[cell.index][cell.column.id] = parseFloat(
-                            e.target.value,
+                            e.target.value
                         );
                         this.setState({ data });
                     }}
@@ -315,7 +314,10 @@ class FailedPaymentImportsPage extends React.Component {
         if (id === NaN) {
             this.setState({ selectedReason: null });
         } else {
-            const selectedReason = _.find(this.props.reasons, r => r.id === id);
+            const selectedReason = _.find(
+                this.props.reasons,
+                (r) => r.id === id
+            );
             this.setState({ selectedReason });
         }
     }
@@ -346,13 +348,13 @@ class FailedPaymentImportsPage extends React.Component {
         const { t } = this.props;
 
         const payerNotFound = this.props.reasons.find(
-            d => d.code === "payer_not_found",
+            (d) => d.code === "payer_not_found"
         );
         const dueNotFound = this.props.reasons.find(
-            d => d.code === "due_not_found",
+            (d) => d.code === "due_not_found"
         );
         const differentAmounts = this.props.reasons.find(
-            d => d.code === "different_amounts",
+            (d) => d.code === "different_amounts"
         );
 
         const columns = [
@@ -362,7 +364,7 @@ class FailedPaymentImportsPage extends React.Component {
                     <div className="flex flex-center-aligned flex-center-justified">
                         <input
                             type="checkbox"
-                            onChange={e =>
+                            onChange={(e) =>
                                 this.switchSelectAll(e.target.checked)
                             }
                             checked={
@@ -375,7 +377,7 @@ class FailedPaymentImportsPage extends React.Component {
                 filterable: true,
                 maxWidth: 75,
                 accessor: "id",
-                Cell: c => (
+                Cell: (c) => (
                     <div className="flex flex-center-justified flex-center-aligned">
                         <input
                             type="checkbox"
@@ -384,7 +386,7 @@ class FailedPaymentImportsPage extends React.Component {
                                 this.state.selectedRows.includes(c.value)
                             }
                             value={c.value}
-                            onChange={e => this.handleRowSelected(e)}
+                            onChange={(e) => this.handleRowSelected(e)}
                         />
                     </div>
                 ),
@@ -397,101 +399,105 @@ class FailedPaymentImportsPage extends React.Component {
                 minWidth: 70,
                 Filter: ({ filter, onChange }) => (
                     <select
-                        onChange={event =>
+                        onChange={(event) =>
                             parseInt(onChange(event.target.value))
                         }
                         style={{ width: "100%" }}
                         value={(filter && filter.value) || ""}
                     >
                         <option key="" value="" />
-                        {this.props.reasons.map(r => (
+                        {this.props.reasons.map((r) => (
                             <option key={r.id} value={r.id}>
                                 {r.label}
                             </option>
                         ))}
                     </select>
                 ),
-                Cell: cell => {
+                Cell: (cell) => {
                     const reason = _.find(
                         this.props.reasons,
-                        rea => rea.id === cell.value,
+                        (rea) => rea.id === cell.value
                     );
-                    return (reason && reason.label) || t("failedImports.reasonUnspecified");
+                    return (
+                        (reason && reason.label) ||
+                        t("failedImports.reasonUnspecified")
+                    );
                 },
             },
             {
                 Header: t("failedImports.columns.firstName"),
                 id: "first_name",
                 accessor: "first_name",
-                Cell: c =>
+                Cell: (c) =>
                     this.renderNameCell(
                         c,
                         c.original.failed_payment_import_reason_id ===
-                            payerNotFound.id,
+                            payerNotFound.id
                     ),
             },
             {
                 Header: t("failedImports.columns.lastName"),
                 id: "last_name",
                 accessor: "last_name",
-                Cell: c =>
+                Cell: (c) =>
                     this.renderNameCell(
                         c,
                         c.original.failed_payment_import_reason_id ===
-                            payerNotFound.id,
+                            payerNotFound.id
                     ),
             },
             {
                 Header: t("failedImports.columns.dueDate"),
                 id: "due_date",
-                accessor: d => moment(d.due_date),
-                Cell: c =>
+                accessor: (d) => moment(d.due_date),
+                Cell: (c) =>
                     this.renderDateCell(
                         c,
                         c.original.failed_payment_import_reason_id ===
-                            dueNotFound.id,
+                            dueNotFound.id
                     ),
             },
             {
                 Header: t("failedImports.columns.cashingDate"),
                 id: "cashing_date",
-                accessor: d => moment(d.cashing_date),
-                Cell: cell => cell.value.format("DD/MM/YYYY"),
+                accessor: (d) => moment(d.cashing_date),
+                Cell: (cell) => cell.value.format("DD/MM/YYYY"),
             },
             {
                 Header: t("failedImports.columns.importDate"),
                 id: "import_date",
-                accessor: d => moment(d.created_at),
-                Cell: cell => cell.value.format(t("failedImports.importDateFormat")),
+                accessor: (d) => moment(d.created_at),
+                Cell: (cell) =>
+                    cell.value.format(t("failedImports.importDateFormat")),
             },
             {
                 Header: t("failedImports.columns.importAmount"),
                 maxWidth: 125,
                 id: "amount",
                 accessor: "amount",
-                Cell: cell =>
+                Cell: (cell) =>
                     this.renderAmountCell(
                         cell,
                         cell.original.failed_payment_import_reason_id ===
-                            differentAmounts.id,
+                            differentAmounts.id
                     ),
             },
             {
                 Header: t("failedImports.columns.actions"),
                 maxWidth: 100,
-                Cell: c => (
+                Cell: (c) => (
                     <div className="flex flex-space-around-justified">
                         <button
                             className="btn btn-sm btn-primary"
                             value={c.original.id}
-                            onClick={e => this.promptSubmit(c.original)}
+                            onClick={(e) => this.promptSubmit(c.original)}
                         >
                             <i className="fas fa-check" />
                         </button>
                         <button
                             className="btn btn-sm btn-warning"
                             value={c.original.id}
-                            onClick={e =>
+                            onClick={(e) =>
                                 this.promptDelete(parseInt(e.target.value))
                             }
                         >
@@ -531,9 +537,9 @@ class FailedPaymentImportsPage extends React.Component {
                             <div className="flex flex-center-aligned">
                                 <select
                                     className="form-control m-r-md"
-                                    onChange={e =>
+                                    onChange={(e) =>
                                         this.changeSelectedReason(
-                                            parseInt(e.target.value),
+                                            parseInt(e.target.value)
                                         )
                                     }
                                     value={
@@ -547,7 +553,7 @@ class FailedPaymentImportsPage extends React.Component {
                                     }
                                 >
                                     <option key="" value="" />
-                                    {this.props.reasons.map(r => (
+                                    {this.props.reasons.map((r) => (
                                         <option key={r.id} value={r.id}>
                                             {r.label}
                                         </option>

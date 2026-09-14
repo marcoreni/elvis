@@ -41,10 +41,10 @@ export default class WizardUserSelectMember extends React.Component {
             .error((error) => {
                 console.error(error);
 
-                swal({
+                swal.fire({
                     title: T("wizardUserSelectMember.errorTitle"),
                     text: T("wizardUserSelectMember.fetchMembersError"),
-                    type: "error",
+                    icon: "error",
                     confirmButtonText: T("wizardUserSelectMember.close"),
                 });
             })

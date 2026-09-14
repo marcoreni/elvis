@@ -442,5 +442,5 @@
 </div>
 
 <% unless flash[:destroy_error].nil? %>
-  <%= react_component("utils/SwalBackEndModal", {swal_props: { title: t("views.users.show.error_title"), type: 'error', html: flash[:destroy_error] }})  %>
+  <%= react_component("utils/SwalBackEndModal", {swal_props: { title: t("views.users.show.error_title"), icon: 'error', html: flash[:destroy_error] }})  %>
 <% end %>

@@ -4,7 +4,12 @@ import CommentSection from "./../../CommentSection";
 import Activity from "./Activity";
 import { toast } from "react-toastify";
 import swal from "sweetalert2";
-import { csrfToken, findAndGet, ISO_DATE_FORMAT, optionMapper } from "../../utils";
+import {
+    csrfToken,
+    findAndGet,
+    ISO_DATE_FORMAT,
+    optionMapper,
+} from "../../utils";
 import { getAnswersObject } from "../../evaluation/Evaluation";
 import EvaluationForm from "../../evaluation/EvaluationForm";
 import { patch } from "../../../tools/api";
@@ -22,30 +27,37 @@ import moment from "moment";
 import { withTranslation } from "react-i18next";
 import i18n from "../../../i18n";
 
-class Summary extends React.Component
-{
-    constructor(props)
-    {
+class Summary extends React.Component {
+    constructor(props) {
         super(props);
 
         this.stopDateInput = React.createRef();
 
-        const defaultEvaluationId = _.get(
-            this.props.student_evaluations
-                .forms
-                .map(e => e.form)
-                .find(e => e.season_id === this.props.application.season_id),
-            "id",
-        ) || "";
+        const defaultEvaluationId =
+            _.get(
+                this.props.student_evaluations.forms
+                    .map((e) => e.form)
+                    .find(
+                        (e) => e.season_id === this.props.application.season_id
+                    ),
+                "id"
+            ) || "";
 
-        const defaultAppChangeQuestionnaireId = _.get(
-            this.props.application_change_questionnaires
-                .forms
-                .map(e => e.form)
-                .find(e => e.season_id === this.props.application.season_id &&
-                    this.props.application.desired_activities.find(d => d.activity_ref_id === e.activity.activity_ref_id)),
-            "id",
-        ) || "";
+        const defaultAppChangeQuestionnaireId =
+            _.get(
+                this.props.application_change_questionnaires.forms
+                    .map((e) => e.form)
+                    .find(
+                        (e) =>
+                            e.season_id === this.props.application.season_id &&
+                            this.props.application.desired_activities.find(
+                                (d) =>
+                                    d.activity_ref_id ===
+                                    e.activity.activity_ref_id
+                            )
+                    ),
+                "id"
+            ) || "";
 
         this.state = {
             application: this.props.application,
@@ -54,10 +66,17 @@ class Summary extends React.Component
             begin_at: this.props.application.begin_at,
             status_updated_at: this.props.application.status_updated_at,
             referent_id: this.props.application.referent_id,
-            referent: this.props.application.referent_id && _.find(this.props.admins, u => u.id == this.props.application.referent_id),
+            referent:
+                this.props.application.referent_id &&
+                _.find(
+                    this.props.admins,
+                    (u) => u.id == this.props.application.referent_id
+                ),
             suggestions: {},
             mail_sent: this.props.application.mail_sent,
-            mail_sent_at: this.props.application.mail_sent_at ? new Date(this.props.application.mail_sent_at) : null,
+            mail_sent_at: this.props.application.mail_sent_at
+                ? new Date(this.props.application.mail_sent_at)
+                : null,
             sendingMail: false,
             desiredActivities: this.props.application.desired_activities,
             addedSelectedActivities: [],
@@ -73,92 +92,90 @@ class Summary extends React.Component
         };
     }
 
-    componentDidMount()
-    {
+    componentDidMount() {
         this.loadData();
     }
 
-    loadData()
-    {
+    loadData() {
         this.handleAlertProposal();
     }
 
-    isAlreadyBusy(timeInterval)
-    {
+    isAlreadyBusy(timeInterval) {
         return _.chain(this.state.suggestions)
             .reduce((result, value, key) => _.concat(result, value), [])
-            .filter(act =>
+            .filter((act) =>
                 _.includes(
-                    _.map(act.users, u => u.id),
-                    this.state.application.user_id,
-                ),
+                    _.map(act.users, (u) => u.id),
+                    this.state.application.user_id
+                )
             )
-            .map(act => act.time_interval)
+            .map((act) => act.time_interval)
             .filter(
-                ti =>
-                    ti.start == timeInterval.start || ti.end == timeInterval.end,
+                (ti) =>
+                    ti.start == timeInterval.start || ti.end == timeInterval.end
             )
             .some()
             .value();
     }
 
-    handleChangeStatus(evt)
-    {
+    handleChangeStatus(evt) {
         const statusId = evt.target.value;
 
         this.setState({ status_id: statusId });
     }
 
-    handleSaveStatus()
-    {
+    handleSaveStatus() {
         const { t } = this.props;
         const isStopping = findAndGet(
             this.props.statuses,
             (s) => parseInt(s.id, 10) === parseInt(this.state.status_id, 10),
-            "is_stopping",
+            "is_stopping"
         );
 
-        const stoppedAt = isStopping && this.stopDateInput
-            ? this.stopDateInput.current.value
-            : null;
+        const stoppedAt =
+            isStopping && this.stopDateInput
+                ? this.stopDateInput.current.value
+                : null;
 
         // Make the stop date required is is stopping status selected
-        if (isStopping && !stoppedAt)
-        {
-            toast(
-                t("summary.stopDateRequired"),
-                {
-                    autoClose: 3000,
-                    type: "error",
-                },
-            );
+        if (isStopping && !stoppedAt) {
+            toast(t("summary.stopDateRequired"), {
+                autoClose: 3000,
+                type: "error",
+            });
             return Promise.resolve(false);
         }
 
         let status_id = parseInt(this.state.status_id, 10);
 
-        let adhesion_delete_ids = [ActivityApplicationStatus.CANCELED_ID, ActivityApplicationStatus.TREATMENT_IMPOSSIBLE_ID]
+        let adhesion_delete_ids = [
+            ActivityApplicationStatus.CANCELED_ID,
+            ActivityApplicationStatus.TREATMENT_IMPOSSIBLE_ID,
+        ];
 
-        if (adhesion_delete_ids.includes(status_id))
-        {
+        if (adhesion_delete_ids.includes(status_id)) {
             return new Promise((resolve) => {
-                swal({
+                swal.fire({
                     title: t("summary.adhesionDeleteConfirm.title"),
                     text: t("summary.adhesionDeleteConfirm.text"),
-                    type: 'warning',
+                    icon: "warning",
                     showCancelButton: true,
-                    confirmButtonText: t("summary.adhesionDeleteConfirm.confirm"),
+                    confirmButtonText: t(
+                        "summary.adhesionDeleteConfirm.confirm"
+                    ),
                     cancelButtonText: t("common:actions.cancel"),
-                    confirmButtonColor: '#d33',
-                    reverseButtons: true
+                    confirmButtonColor: "#d33",
+                    reverseButtons: true,
                 }).then((result) => {
                     if (result.value) {
                         this.updateApplication({
-                            activity_application_status_id: this.state.status_id,
+                            activity_application_status_id:
+                                this.state.status_id,
                             referent_id: this.state.referent_id,
                             stopped_at: stoppedAt,
-                        }).then(() => resolve(true))
-                          .catch(() => resolve(false));
+                        })
+                            .then(() => resolve(true))
+                            .catch(() => resolve(false));
                     } else {
                         resolve(false);
                     }
@@ -174,48 +191,47 @@ class Summary extends React.Component
         });
     }
 
-    handleUpdateBeginAt(begin_at)
-    {
+    handleUpdateBeginAt(begin_at) {
         const { t } = this.props;
         // Avertissement si l'inscription est validée
-        if (this.state.desiredActivities[0].is_validated && isValidDate(new Date(begin_at)))
-        {
+        if (
+            this.state.desiredActivities[0].is_validated &&
+            isValidDate(new Date(begin_at))
+        ) {
             const title = t("summary.confirmBeginAtChange.title");
             const htmltext = t("summary.confirmBeginAtChange.body");
             const confirmtext = t("summary.confirmBeginAtChange.confirm");
 
-            swal({
+            swal.fire({
                 title: title,
                 html: htmltext,
                 allowOutsideClick: true,
                 showCancelButton: true,
                 confirmButtonText: confirmtext,
                 cancelButtonText: t("summary.cancelHtml"),
-            }).then((res) =>
-            {
-                if (res.value)
-                {
+            }).then((res) => {
+                if (res.value) {
                     this.updateApplication({ begin_at });
-                }
-                else
-                {
-                    this.setState({ begin_at: this.state.old_begin_at || this.state.begin_at });
+                } else {
+                    this.setState({
+                        begin_at:
+                            this.state.old_begin_at || this.state.begin_at,
+                    });
                 }
             });
 
             // Si l'inscription n'est pas validée, on peut librement modifier la date de début
-        }
-        else
-        {
+        } else {
             this.updateApplication({ begin_at });
         }
     }
 
-    updateApplication(updateObject)
-    {
+    updateApplication(updateObject) {
         this.handleAlertProposal();
-        patch(`/inscriptions/${this.state.application.id}`, { application: updateObject })
-            .then(({ data: app }) => this.setState({
+        patch(`/inscriptions/${this.state.application.id}`, {
+            application: updateObject,
+        }).then(({ data: app }) =>
+            this.setState({
                 begin_at: app.begin_at,
                 status: app.activity_application_status,
                 status_updated_at: app.status_updated_at,
@@ -223,34 +239,30 @@ class Summary extends React.Component
                 referent_id: app.referent_id,
                 stopped_at: app.stopped_at,
                 old_begin_at: undefined,
-            }));
+            })
+        );
     }
 
-    handleSelectEvaluation(id)
-    {
+    handleSelectEvaluation(id) {
         this.setState({
             studentEvaluationId: parseInt(id) || "",
         });
     }
 
-    handleSelectApplicationChangeQuestionnaire(id)
-    {
+    handleSelectApplicationChangeQuestionnaire(id) {
         this.setState({
             applicationChangeQuestionnaireId: parseInt(id) || "",
         });
     }
 
-    handleSelectNewStudentLevelQuestionnaire(id)
-    {
+    handleSelectNewStudentLevelQuestionnaire(id) {
         this.setState({
             newStudentLevelQuestionnaireId: parseInt(id) || "",
         });
     }
 
-    handleAddSuggestions(id, suggestions)
-    {
-        return new Promise(res =>
-        {
+    handleAddSuggestions(id, suggestions) {
+        return new Promise((res) => {
             const suggs = this.state.suggestions;
             suggs[id] = suggestions;
             this.setState({ suggestions: suggs }, res);
@@ -263,24 +275,30 @@ class Summary extends React.Component
         const desiredActivities = this.state.desiredActivities;
 
         const desiredActivity = {
-            ..._.find(desiredActivities, da => da.id == desiredActivityId),
+            ..._.find(desiredActivities, (da) => da.id == desiredActivityId),
         };
 
-        const response = await fetch(`/activity/${activityId}/desired/${desiredActivityId}`, {
-            method: "POST",
-            credentials: "same-origin",
-            headers: {
-                "X-CSRF-Token": csrfToken,
-                "Content-Type": "application/json",
-                Accept: "application/json",
-            },
-        });
+        const response = await fetch(
+            `/activity/${activityId}/desired/${desiredActivityId}`,
+            {
+                method: "POST",
+                credentials: "same-origin",
+                headers: {
+                    "X-CSRF-Token": csrfToken,
+                    "Content-Type": "application/json",
+                    Accept: "application/json",
+                },
+            }
+        );
 
-        const { activity, error, status, status_updated_at, referent } = await response.json();
+        const { activity, error, status, status_updated_at, referent } =
+            await response.json();
 
-
-        const index = _.findIndex(suggestions, s => s.id == activity.id);
-        const indexDesired = _.findKey(desiredActivities, da => da.id == desiredActivity.id);
+        const index = _.findIndex(suggestions, (s) => s.id == activity.id);
+        const indexDesired = _.findKey(
+            desiredActivities,
+            (da) => da.id == desiredActivity.id
+        );
 
         suggestions[index] = activity;
 
@@ -290,17 +308,16 @@ class Summary extends React.Component
             desiredActivity.status = status;
             desiredActivity.status_updated_at = status_updated_at;
             desiredActivity.referent = referent;
-
         } else {
-            swal({
+            swal.fire({
                 title: t("summary.errorTitle"),
                 text: error,
-                type: "error",
+                icon: "error",
             });
         }
 
         desiredActivity.options = [];
-        suggestions.forEach(s => {
+        suggestions.forEach((s) => {
             s.options = [];
         });
 
@@ -316,7 +333,9 @@ class Summary extends React.Component
         };
 
         if (!error && status) {
-            const statusObj = this.props.statuses.find(s => s.label === status);
+            const statusObj = this.props.statuses.find(
+                (s) => s.label === status
+            );
             newState.status = { label: status };
             newState.status_id = statusObj ? statusObj.id : null;
             newState.status_updated_at = status_updated_at;
@@ -333,33 +352,40 @@ class Summary extends React.Component
     handleSelectSuggestionOption(activityId, desiredActivityId) {
         const desiredActivities = this.state.desiredActivities;
 
-        return fetch(`/activity/${activityId}/desired_option/${desiredActivityId}`, {
-            method: "POST",
-            credentials: "same-origin",
-            headers: {
-                "X-CSRF-Token": csrfToken,
-                "Content-Type": "application/json",
-                Accept: "application/json",
-            },
-        })
-            .then(response => response.json())
-            .then(desiredActivity => {
+        return fetch(
+            `/activity/${activityId}/desired_option/${desiredActivityId}`,
+            {
+                method: "POST",
+                credentials: "same-origin",
+                headers: {
+                    "X-CSRF-Token": csrfToken,
+                    "Content-Type": "application/json",
+                    Accept: "application/json",
+                },
+            }
+        )
+            .then((response) => response.json())
+            .then((desiredActivity) => {
                 const indexDesired = _.findKey(
                     desiredActivities,
-                    da => da.id == desiredActivity.id,
+                    (da) => da.id == desiredActivity.id
                 );
 
-                const suggestions = this.state.suggestions[
-                    desiredActivity.activity_ref_id
-                    ];
+                const suggestions =
+                    this.state.suggestions[desiredActivity.activity_ref_id];
 
-                _.forEach(desiredActivity.options, o => {
+                _.forEach(desiredActivity.options, (o) => {
                     const index = _.findIndex(
                         suggestions,
-                        s => s.id == o.activity_id,
+                        (s) => s.id == o.activity_id
                     );
 
-                    if (!_.find(suggestions[index].options, o => o.desired_activity_id === desiredActivity.id))
+                    if (
+                        !_.find(
+                            suggestions[index].options,
+                            (o) => o.desired_activity_id === desiredActivity.id
+                        )
+                    )
                         suggestions[index].options = [
                             ...suggestions[index].options,
                             o,
@@ -381,12 +407,11 @@ class Summary extends React.Component
             });
     }
 
-
     handleRemoveSuggestionOption(suggestionId, desiredActivity) {
         const desiredActivities = this.state.desiredActivities;
         const suggestion = _.find(
             this.state.suggestions[desiredActivity.activity_ref_id],
-            s => s.id == suggestionId,
+            (s) => s.id == suggestionId
         );
 
         return fetch(
@@ -399,26 +424,27 @@ class Summary extends React.Component
                     "Content-Type": "application/json",
                     Accept: "application/json",
                 },
-            },
+            }
         )
-            .then(response => response.json())
-            .then(desiredActivity => {
+            .then((response) => response.json())
+            .then((desiredActivity) => {
                 const indexDesired = _.findKey(
                     desiredActivities,
-                    da => da.id == desiredActivity.id,
+                    (da) => da.id == desiredActivity.id
                 );
 
-                const actSuggestions = this.state.suggestions[
-                    desiredActivity.activity_ref_id
-                    ];
+                const actSuggestions =
+                    this.state.suggestions[desiredActivity.activity_ref_id];
                 const suggIndex = _.findIndex(
                     actSuggestions,
-                    s => s.id == suggestion.id,
+                    (s) => s.id == suggestion.id
                 );
 
-                actSuggestions[suggIndex].options = actSuggestions[suggIndex]
-                    .options
-                    .filter(o => o.desired_activity_id !== desiredActivity.id);
+                actSuggestions[suggIndex].options = actSuggestions[
+                    suggIndex
+                ].options.filter(
+                    (o) => o.desired_activity_id !== desiredActivity.id
+                );
 
                 this.setState({
                     suggestions: {
@@ -441,27 +467,28 @@ class Summary extends React.Component
 
         const desiredActivity = _.find(
             desiredActivities,
-            da => da.id == desiredActivityId,
+            (da) => da.id == desiredActivityId
         );
-        const response = await fetch(`/activity/${activityId}/desired/${desiredActivityId}`, {
-            method: "DELETE",
-            credentials: "same-origin",
-            headers: {
-                "X-CSRF-Token": csrfToken,
-                "Content-Type": "application/json",
-                Accept: "application/json",
-            },
-        });
-
-        const { activity, status, status_updated_at, referent } = await response.json();
-
-        const index = _.findIndex(
-            suggestions,
-            s => s.id == activity.id,
+        const response = await fetch(
+            `/activity/${activityId}/desired/${desiredActivityId}`,
+            {
+                method: "DELETE",
+                credentials: "same-origin",
+                headers: {
+                    "X-CSRF-Token": csrfToken,
+                    "Content-Type": "application/json",
+                    Accept: "application/json",
+                },
+            }
         );
+
+        const { activity, status, status_updated_at, referent } =
+            await response.json();
+
+        const index = _.findIndex(suggestions, (s) => s.id == activity.id);
         const indexDesired = _.findKey(
             desiredActivities,
-            da => da.id == desiredActivity.id,
+            (da) => da.id == desiredActivity.id
         );
 
         suggestions[index] = activity;
@@ -487,7 +514,9 @@ class Summary extends React.Component
         };
 
         if (status) {
-            const statusObj = this.props.statuses.find(s => s.label === status);
+            const statusObj = this.props.statuses.find(
+                (s) => s.label === status
+            );
 
             newState.status = { label: status };
             newState.status_id = statusObj ? statusObj.id : null;
@@ -502,8 +531,7 @@ class Summary extends React.Component
 
         this.setState(newState);
     }
-    handleRemoveDesiredActivity(id)
-    {
+    handleRemoveDesiredActivity(id) {
         fetch(`/inscriptions/${this.state.application.id}/add_activity/${id}`, {
             method: "DELETE",
             credentials: "same-origin",
@@ -513,94 +541,80 @@ class Summary extends React.Component
                 accept: "application/json",
             },
         })
-            .then(response => response.json())
-            .then(desired_activities =>
-            {
+            .then((response) => response.json())
+            .then((desired_activities) => {
                 this.setState({ desiredActivities: desired_activities });
             });
     }
 
-    handleRemoveActivityApplication(e)
-    {
+    handleRemoveActivityApplication(e) {
         const { t } = this.props;
         const isOneDesiredActivityValidated = Object.values(
-            this.state.desiredActivities,
+            this.state.desiredActivities
         ).reduce((acc, d) => acc || d.is_validated, false);
 
-        if (isOneDesiredActivityValidated)
-        {
-            toast(
-                t("summary.mustRemoveActivities"),
-                {
-                    autoClose: 3000,
-                    type: "warning",
-                },
-            );
-        }
-        else
-        {
-
+        if (isOneDesiredActivityValidated) {
+            toast(t("summary.mustRemoveActivities"), {
+                autoClose: 3000,
+                type: "warning",
+            });
+        } else {
             let title = t("summary.confirmDeleteApplication.title");
-            let htmltext = t("summary.confirmDeleteApplication.body", { name: `${this.props.application.user.first_name} ${this.props.application.user.last_name}` });
+            let htmltext = t("summary.confirmDeleteApplication.body", {
+                name: `${this.props.application.user.first_name} ${this.props.application.user.last_name}`,
+            });
             let confirmtext = t("summary.confirmDeleteApplication.confirm");
-            swal({
+            swal.fire({
                 title: title,
                 html: htmltext,
                 allowOutsideClick: true,
                 showCancelButton: true,
                 confirmButtonText: confirmtext,
                 cancelButtonText: t("summary.cancelHtml"),
-            }).then((res) =>
-            {
-                if (res.value)
-                {
+            }).then((res) => {
+                if (res.value) {
                     api.set()
-                        .success(data =>
-                        {
-                            if (data.success)
-                            {
+                        .success((data) => {
+                            if (data.success) {
                                 window.location.href = "/inscriptions";
-                            }
-                            else
-                            {
-                                swal({
+                            } else {
+                                swal.fire({
                                     title: t("summary.errorTitle"),
                                     html: data.message,
-                                    type: "error",
+                                    icon: "error",
                                 });
                             }
                         })
-                        .error(error =>
-                        {
-                            swal({
+                        .error((error) => {
+                            swal.fire({
                                 title: t("summary.errorTitle"),
                                 html: error.message,
-                                type: "error",
+                                icon: "error",
                             });
                         })
-                        .del(`/destroy/activity_application/${this.state.application.id}`, {});
+                        .del(
+                            `/destroy/activity_application/${this.state.application.id}`,
+                            {}
+                        );
                 }
             });
-
         }
     }
 
-    sendConfirmationMail()
-    {
+    sendConfirmationMail() {
         const { t } = this.props;
-        swal({
+        swal.fire({
             title: t("summary.confirmMailTitle"),
             text: t("common:confirm.sure"),
-            type: "question",
+            icon: "question",
             showCancelButton: true,
-        }).then(v =>
-        {
-            if (v.value)
-            {
+        }).then((v) => {
+            if (v.value) {
                 this.setState({ sendingMail: true });
 
                 fetch(
-                    `/inscriptions/${this.state.application.id
+                    `/inscriptions/${
+                        this.state.application.id
                     }/send_confirmation_mail`,
                     {
                         method: "POST",
@@ -613,29 +627,29 @@ class Summary extends React.Component
                         body: JSON.stringify({
                             application_status: parseInt(this.state.status_id),
                         }),
-                    },
-                ).then(() =>
-                {
-                    this.setState({ mail_sent: true, mail_sent_at: new Date(), sendingMail: false });
+                    }
+                ).then(() => {
+                    this.setState({
+                        mail_sent: true,
+                        mail_sent_at: new Date(),
+                        sendingMail: false,
+                    });
                 });
             }
         });
     }
 
     // COMMENT HANDLERS
-    handleCommentEdition(comment_id)
-    {
-        const comment = _.find(this.state.comments, c => c.id == comment_id);
+    handleCommentEdition(comment_id) {
+        const comment = _.find(this.state.comments, (c) => c.id == comment_id);
         this.setState({ editedComment: comment });
     }
 
-    handleUpdateNewCommentContent(e)
-    {
+    handleUpdateNewCommentContent(e) {
         this.setState({ newComment: e.target.value });
     }
 
-    handleUpdateEditedCommentContent(e)
-    {
+    handleUpdateEditedCommentContent(e) {
         this.setState({
             editedComment: {
                 ...this.state.editedComment,
@@ -644,8 +658,7 @@ class Summary extends React.Component
         });
     }
 
-    handleSaveComment()
-    {
+    handleSaveComment() {
         fetch("/comments", {
             method: "POST",
             credentials: "same-origin",
@@ -664,17 +677,16 @@ class Summary extends React.Component
                 },
             }),
         })
-            .then(response => response.json())
-            .then(comments =>
+            .then((response) => response.json())
+            .then((comments) =>
                 this.setState({
                     comments,
                     newComment: "",
-                }),
+                })
             );
     }
 
-    handleSaveCommentEdition()
-    {
+    handleSaveCommentEdition() {
         fetch(`/comments/${this.state.editedComment.id}`, {
             method: "PATCH",
             credentials: "same-origin",
@@ -688,145 +700,156 @@ class Summary extends React.Component
                 comment: this.state.editedComment,
             }),
         })
-            .then(response => response.json())
-            .then(comments =>
-            {
+            .then((response) => response.json())
+            .then((comments) => {
                 this.setState({ comments, editedComment: null });
             });
     }
 
-    handleChangeDesiredActivity(desiredId, activity_ref_id)
-    {
+    handleChangeDesiredActivity(desiredId, activity_ref_id) {
         const { t } = this.props;
-        const oldDesiredIndex = Object.values(this.state.desiredActivities).findIndex(d => d.id === desiredId);
+        const oldDesiredIndex = Object.values(
+            this.state.desiredActivities
+        ).findIndex((d) => d.id === desiredId);
 
-        swal({
+        swal.fire({
             title: t("summary.confirmationTitle"),
             text: t("summary.genericConfirm"),
-            type: "warning",
+            icon: "warning",
             showConfirmButton: true,
             showCancelButton: true,
-        })
-            .then(res =>
-            {
-                if (oldDesiredIndex !== -1 && res.value)
-                {
-                    const newDesired = {
-                        ...this.state.desiredActivities[oldDesiredIndex],
-                        activity_ref_id,
-                    };
+        }).then((res) => {
+            if (oldDesiredIndex !== -1 && res.value) {
+                const newDesired = {
+                    ...this.state.desiredActivities[oldDesiredIndex],
+                    activity_ref_id,
+                };
 
-                    fetch(`/desired_activities/${newDesired.id}`, {
-                        method: "POST",
-                        headers: {
-                            "X-Csrf-Token": csrfToken,
-                            "Content-Type": "application/json",
-                        },
-                        body: JSON.stringify({
-                            desired_activity: newDesired,
-                        }),
-                    })
-                        .then(res => res.json())
-                        .then(desired =>
-                        {
-                            const newDesiredActivities = Array.isArray(this.state.desiredActivities)
-                                ? [...this.state.desiredActivities] : [...Object.values(this.state.desiredActivities)];
+                fetch(`/desired_activities/${newDesired.id}`, {
+                    method: "POST",
+                    headers: {
+                        "X-Csrf-Token": csrfToken,
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        desired_activity: newDesired,
+                    }),
+                })
+                    .then((res) => res.json())
+                    .then((desired) => {
+                        const newDesiredActivities = Array.isArray(
+                            this.state.desiredActivities
+                        )
+                            ? [...this.state.desiredActivities]
+                            : [...Object.values(this.state.desiredActivities)];
 
-                            newDesiredActivities.splice(oldDesiredIndex, 1, desired);
+                        newDesiredActivities.splice(
+                            oldDesiredIndex,
+                            1,
+                            desired
+                        );
 
-                            this.setState({
-                                desiredActivities: newDesiredActivities,
-                            });
+                        this.setState({
+                            desiredActivities: newDesiredActivities,
                         });
-                }
-            });
-
+                    });
+            }
+        });
     }
 
-    handleUpdateStudentLevel(level)
-    {
+    handleUpdateStudentLevel(level) {
         const newApplication = {
             ...this.state.application,
             user: {
                 ...this.state.application.user,
-                levels: [
-                    ...this.state.application.user.levels,
-                ],
+                levels: [...this.state.application.user.levels],
             },
         };
-        const { user: { levels } } = newApplication;
+        const {
+            user: { levels },
+        } = newApplication;
 
-        const levelIndex = levels.findIndex(l => l.activity_ref_id === level.activity_ref_id && l.season_id === level.season_id);
+        const levelIndex = levels.findIndex(
+            (l) =>
+                l.activity_ref_id === level.activity_ref_id &&
+                l.season_id === level.season_id
+        );
 
-        if (levelIndex === -1)
-            levels.push(level);
-        else
-            levels.splice(levelIndex, 1, level);
+        if (levelIndex === -1) levels.push(level);
+        else levels.splice(levelIndex, 1, level);
 
         newApplication.user.levels = levels;
 
         this.setState({ application: newApplication });
     }
 
-    handleDeleteStudentLevel(seasonId, activityRefId)
-    {
+    handleDeleteStudentLevel(seasonId, activityRefId) {
         const application = {
             ...this.state.application,
             user: {
                 ...this.state.application.user,
-                levels: this
-                    .state
-                    .application
-                    .user
-                    .levels
-                    .filter(l =>
+                levels: this.state.application.user.levels.filter(
+                    (l) =>
                         l.season_id !== seasonId &&
-                        l.activity_ref_id !== activityRefId,
-                    ),
+                        l.activity_ref_id !== activityRefId
+                ),
             },
         };
 
         this.setState({ application });
     }
 
-    handleUpdateSuggestion(suggestion)
-    {
+    handleUpdateSuggestion(suggestion) {
         const desiredActivities = [...this.state.desiredActivities];
 
-        const desiredIdx = desiredActivities.findIndex(da => da.activity_ref.activity_ref_kind_id === suggestion.activity_ref.activity_ref_kind_id);
+        const desiredIdx = desiredActivities.findIndex(
+            (da) =>
+                da.activity_ref.activity_ref_kind_id ===
+                suggestion.activity_ref.activity_ref_kind_id
+        );
         const desiredActivity = { ...desiredActivities[desiredIdx] };
 
         this.setState({ desiredActivity });
-        const suggestions = _.mapValues(
-            this.state.suggestions,
-            s => s.map(a => a.id === suggestion.id ? suggestion : a),
+        const suggestions = _.mapValues(this.state.suggestions, (s) =>
+            s.map((a) => (a.id === suggestion.id ? suggestion : a))
         );
 
-        const isUserInSuggestion = _.some(suggestion.users, u => u.id === this.state.application.user_id);
-        const isUserAssignedToSuggestion = desiredActivity.activity_id === suggestion.id;
+        const isUserInSuggestion = _.some(
+            suggestion.users,
+            (u) => u.id === this.state.application.user_id
+        );
+        const isUserAssignedToSuggestion =
+            desiredActivity.activity_id === suggestion.id;
 
         // Validate desired_activity if current user is in activity
-        if (isUserInSuggestion)
-        {
+        if (isUserInSuggestion) {
             desiredActivity.activity_id = suggestion.id;
             desiredActivity.is_validated = true;
         }
         // Else invalidate if was previously validated
-        else if (isUserAssignedToSuggestion)
-            desiredActivity.activity_id = null;
+        else if (isUserAssignedToSuggestion) desiredActivity.activity_id = null;
 
-        const isUserInSuggestionOptions = _.some(suggestion.options, o => o.desired_activity_id === desiredActivity.id);
-        const optionAlreadyRegistered = _.some(desiredActivity.options, o => o.activity_id === suggestion.id);
+        const isUserInSuggestionOptions = _.some(
+            suggestion.options,
+            (o) => o.desired_activity_id === desiredActivity.id
+        );
+        const optionAlreadyRegistered = _.some(
+            desiredActivity.options,
+            (o) => o.activity_id === suggestion.id
+        );
 
         // Add an option to desired_activity if current user is in activity's options
         if (isUserInSuggestionOptions)
-            !optionAlreadyRegistered && desiredActivity.options.push({
-                desired_activity_id: desiredActivity.id,
-                activity_id: suggestion.id,
-            });
+            !optionAlreadyRegistered &&
+                desiredActivity.options.push({
+                    desired_activity_id: desiredActivity.id,
+                    activity_id: suggestion.id,
+                });
         // Remove it otherwise
         else
-            desiredActivity.options = desiredActivity.options.filter(o => o.activity_id !== suggestion.id);
+            desiredActivity.options = desiredActivity.options.filter(
+                (o) => o.activity_id !== suggestion.id
+            );
 
         desiredActivities.splice(desiredIdx, 1, desiredActivity);
 
@@ -840,98 +863,111 @@ class Summary extends React.Component
         return newState;
     }
 
-    handleAlertProposal()
-    {
+    handleAlertProposal() {
         const { t } = this.props;
-        if (this.state.status_id == ActivityApplicationStatus.PROPOSAL_REFUSED_ID)
-        {
-            this.state.alertProposal = <div className={"alert alert-danger"}>
-                <h4><i className="fa fa-exclamation-triangle" aria-hidden="true" /><strong className={"ml-2"}>{t("summary.proposalRefused")}</strong></h4>
-                <strong>{t("summary.reasonForRefusal")}</strong><span>{this.props.application.reason_of_refusal}</span>
-            </div>;
-        }
-        else if (this.state.status_id == ActivityApplicationStatus.PROPOSAL_ACCEPTED_ID)
-        {
-            this.state.alertProposal = <div className={"alert alert-success"}>
-                <p><i className="fa fa-check" aria-hidden="true" /><strong className={"ml-2"}>{t("summary.proposalAccepted")}</strong></p>
-            </div>;
-        }
-        else
-        {
+        if (
+            this.state.status_id ==
+            ActivityApplicationStatus.PROPOSAL_REFUSED_ID
+        ) {
+            this.state.alertProposal = (
+                <div className={"alert alert-danger"}>
+                    <h4>
+                        <i
+                            className="fa fa-exclamation-triangle"
+                            aria-hidden="true"
+                        />
+                        <strong className={"ml-2"}>
+                            {t("summary.proposalRefused")}
+                        </strong>
+                    </h4>
+                    <strong>{t("summary.reasonForRefusal")}</strong>
+                    <span>{this.props.application.reason_of_refusal}</span>
+                </div>
+            );
+        } else if (
+            this.state.status_id ==
+            ActivityApplicationStatus.PROPOSAL_ACCEPTED_ID
+        ) {
+            this.state.alertProposal = (
+                <div className={"alert alert-success"}>
+                    <p>
+                        <i className="fa fa-check" aria-hidden="true" />
+                        <strong className={"ml-2"}>
+                            {t("summary.proposalAccepted")}
+                        </strong>
+                    </p>
+                </div>
+            );
+        } else {
             this.state.alertProposal = "";
         }
     }
 
-    render()
-    {
+    render() {
         const { t } = this.props;
-        const {
-            activityRefs,
-            isAdmin,
-            statuses,
-            levels,
-        } = this.props;
+        const { activityRefs, isAdmin, statuses, levels } = this.props;
 
         const { application } = this.state;
 
         // Pourquoi je fais ça comme ça ?
         let activity_refs_idx = {};
-        _.map(this.props.activityRefs, ar => (activity_refs_idx[ar.id] = ar));
+        _.map(this.props.activityRefs, (ar) => (activity_refs_idx[ar.id] = ar));
 
         const self = this;
 
         const getNonValidatedSuggestions = (daId, suggestions) =>
-            _.filter(suggestions, s =>
-                _.filter(
-                    this.state.desiredActivities,
-                    da =>
-                        da.id !== daId &&
-                        da.is_validated &&
-                        s.activity_ref_id === da.activity_ref_id &&
-                        s.id === da.activity_id,
-                ).length === 0,
+            _.filter(
+                suggestions,
+                (s) =>
+                    _.filter(
+                        this.state.desiredActivities,
+                        (da) =>
+                            da.id !== daId &&
+                            da.is_validated &&
+                            s.activity_ref_id === da.activity_ref_id &&
+                            s.id === da.activity_id
+                    ).length === 0
             );
 
         const suggestions = _.reduce(
             this.state.desiredActivities,
-            (acc, da) =>
-            {
+            (acc, da) => {
                 const val =
                     _.uniq(
                         _.map(
                             self.state.desiredActivities,
-                            da => da.activity_ref_id,
-                        ),
+                            (da) => da.activity_ref_id
+                        )
                     ).length !== _.size(self.state.desiredActivities)
                         ? getNonValidatedSuggestions(
-                            da.id,
-                            self.state.suggestions[da.activity_ref_id],
-                        )
+                              da.id,
+                              self.state.suggestions[da.activity_ref_id]
+                          )
                         : self.state.suggestions[da.activity_ref_id];
 
                 return { ...acc, [da.id]: val };
             },
-            {},
+            {}
         );
 
-        const evaluationAppointments = application
-            .evaluation_appointments
-            .map(app => ({
+        const evaluationAppointments = application.evaluation_appointments.map(
+            (app) => ({
                 refId: app.activity_ref_id,
                 teacher: app.teacher,
                 timeInterval: app.time_interval,
-            }));
+            })
+        );
 
         const activitiesDisplay = _.chain(this.state.desiredActivities)
-            .sortBy(da => da.activity_ref_id)
-            .map(da =>
-            {
-                const detectedEvaluation = this.props
-                    .student_evaluations
-                    .forms
-                    .map(e => e.form)
-                    .find(e => e.season_id === this.state.application.season_id &&
-                        e.activity.activity_ref_id === da.activity_ref_id);
+            .sortBy((da) => da.activity_ref_id)
+            .map((da) => {
+                const detectedEvaluation = this.props.student_evaluations.forms
+                    .map((e) => e.form)
+                    .find(
+                        (e) =>
+                            e.season_id === this.state.application.season_id &&
+                            e.activity.activity_ref_id === da.activity_ref_id
+                    );
 
                 return (
                     <Activity
@@ -953,64 +989,80 @@ class Summary extends React.Component
                         isAdmin={isAdmin}
                         userId={this.props.application.user.id}
                         levels={self.props.levels}
-                        studentEvaluationQuestions={this.props.student_evaluation_questions}
-                        instruments={this.props.application.user.instruments ? this.props.application.user.instruments : null}
+                        studentEvaluationQuestions={
+                            this.props.student_evaluation_questions
+                        }
+                        instruments={
+                            this.props.application.user.instruments
+                                ? this.props.application.user.instruments
+                                : null
+                        }
                         detectedEvaluation={detectedEvaluation}
                         handleAddSuggestions={(id, s) =>
                             this.handleAddSuggestions(id, s)
                         }
-                        handleUpdateSuggestion={s => this.handleUpdateSuggestion(s)}
+                        handleUpdateSuggestion={(s) =>
+                            this.handleUpdateSuggestion(s)
+                        }
                         handleSelectSuggestion={(
                             activityId,
                             desiredActivityId,
-                            activityRefId,
+                            activityRefId
                         ) =>
                             this.handleSelectSuggestion(
                                 activityId,
                                 desiredActivityId,
-                                activityRefId,
+                                activityRefId
                             )
                         }
-                        handleUpdateStudentLevel={l => this.handleUpdateStudentLevel(l)}
-                        handleDeleteStudentLevel={(s, a) => this.handleDeleteStudentLevel(s, a)}
+                        handleUpdateStudentLevel={(l) =>
+                            this.handleUpdateStudentLevel(l)
+                        }
+                        handleDeleteStudentLevel={(s, a) =>
+                            this.handleDeleteStudentLevel(s, a)
+                        }
                         handleRemoveStudent={(
                             activity_id,
                             desired_activity_id,
-                            activityRefId,
+                            activityRefId
                         ) =>
                             this.handleRemoveStudent(
                                 activity_id,
                                 desired_activity_id,
-                                activityRefId,
+                                activityRefId
                             )
                         }
-                        handleRemoveDesiredActivity={id =>
+                        handleRemoveDesiredActivity={(id) =>
                             this.handleRemoveDesiredActivity(id)
                         }
-                        isAlreadyBusy={ti => this.isAlreadyBusy(ti)}
+                        isAlreadyBusy={(ti) => this.isAlreadyBusy(ti)}
                         handleSelectSuggestionOption={(
                             activityId,
-                            desiredActivityId,
+                            desiredActivityId
                         ) =>
                             this.handleSelectSuggestionOption(
                                 activityId,
-                                desiredActivityId,
+                                desiredActivityId
                             )
                         }
                         handleRemoveSuggestionOption={(
                             activityId,
-                            desiredActivityId,
+                            desiredActivityId
                         ) =>
                             this.handleRemoveSuggestionOption(
                                 activityId,
-                                desiredActivityId,
+                                desiredActivityId
                             )
                         }
-                        handleChangeDesiredActivity={
-                            (desiredId, refId) => this.handleChangeDesiredActivity(desiredId, refId)
+                        handleChangeDesiredActivity={(desiredId, refId) =>
+                            this.handleChangeDesiredActivity(desiredId, refId)
                         }
                         onStatusChange={(status, status_updated_at, referent) =>
-                            this.setState({ status, status_updated_at, referent })
+                            this.setState({
+                                status,
+                                status_updated_at,
+                                referent,
+                            })
                         }
                     />
                 );
@@ -1019,22 +1071,27 @@ class Summary extends React.Component
 
         // Status handling
         const generateStatusSelection = _(statuses)
-            .filter(s => s.is_active)
-            .map((s, i) =>
-            {
+            .filter((s) => s.is_active)
+            .map((s, i) => {
                 return (
                     <div key={i} className="radio radio-primary">
                         <input
                             type="radio"
                             name="status"
                             value={s.id}
-                            disabled={(s.id === ActivityApplicationStatus.ACTIVITY_PROPOSED_ID ||
-                                    s.id === ActivityApplicationStatus.ACTIVITY_ATTRIBUTED_ID) &&
-                                !_.reduce(this.state.desiredActivities, (acc, d) => acc && d.is_validated, true,
-                                )}
+                            disabled={
+                                (s.id ===
+                                    ActivityApplicationStatus.ACTIVITY_PROPOSED_ID ||
+                                    s.id ===
+                                        ActivityApplicationStatus.ACTIVITY_ATTRIBUTED_ID) &&
+                                !_.reduce(
+                                    this.state.desiredActivities,
+                                    (acc, d) => acc && d.is_validated,
+                                    true
+                                )
+                            }
                             checked={this.state.status_id == s.id}
-                            onChange={e =>
-                            {
+                            onChange={(e) => {
                                 this.handleChangeStatus(e);
                             }}
                             id={s.id}
@@ -1050,15 +1107,14 @@ class Summary extends React.Component
         const isStopping = findAndGet(
             this.props.statuses,
             (s) => parseInt(s.id, 10) === parseInt(this.state.status_id, 10),
-            "is_stopping",
+            "is_stopping"
         );
-
 
         //-- end status handling
 
         const desiredActivitiesValidatedCount = _.filter(
             this.state.desiredActivities,
-            da => da.is_validated,
+            (da) => da.is_validated
         ).length;
 
         const paymentLink = this.props.payer
@@ -1070,18 +1126,20 @@ class Summary extends React.Component
                 ? application.user.adherent_number
                 : "";
 
-        const availabilities =
-            Summary.filterTimeIntervals(application.user.planning.time_intervals, application.season)
-                .orderBy(ti => ti.start)
-                .map(
-                    int =>
-                        `${moment(int.start).format("dddd")} : ${moment(
-                            int.start,
-                        ).format("HH:mm")} - ${moment(int.end).format("HH:mm")}`,
-                )
-                .uniq()
-                .map((tag, i) => <p key={i}>{tag}</p>)
-                .value();
+        const availabilities = Summary.filterTimeIntervals(
+            application.user.planning.time_intervals,
+            application.season
+        )
+            .orderBy((ti) => ti.start)
+            .map(
+                (int) =>
+                    `${moment(int.start).format("dddd")} : ${moment(
+                        int.start
+                    ).format("HH:mm")} - ${moment(int.end).format("HH:mm")}`
+            )
+            .uniq()
+            .map((tag, i) => <p key={i}>{tag}</p>)
+            .value();
 
         let otherApplications = (
             <p className="m-b-xl">
@@ -1089,50 +1147,58 @@ class Summary extends React.Component
             </p>
         );
 
-        if (this.state.application.user.activity_applications)
-        {
+        if (this.state.application.user.activity_applications) {
             let applications = _.filter(
                 this.state.application.user.activity_applications,
-                aa =>
+                (aa) =>
                     aa.season_id === this.state.application.season_id &&
-                    aa.id !== this.state.application.id,
+                    aa.id !== this.state.application.id
             );
 
-            otherApplications = _.map(applications, (a, i) =>
-            {
+            otherApplications = _.map(applications, (a, i) => {
                 const firstDesired = _.head(a.desired_activities);
-                const activityRef = firstDesired ? firstDesired.activity_ref : {};
+                const activityRef = firstDesired
+                    ? firstDesired.activity_ref
+                    : {};
 
                 let actionLabel = t("summary.newRequest");
-                if (a.pre_application_activity)
-                {
-                    actionLabel = PRE_APPLICATION_ACTION_LABELS[a.pre_application_activity.action];
-                }
-                else if (a.pre_application_desired_activity)
-                {
-                    actionLabel = PRE_APPLICATION_ACTION_LABELS[a.pre_application_desired_activity.action];
+                if (a.pre_application_activity) {
+                    actionLabel =
+                        PRE_APPLICATION_ACTION_LABELS[
+                            a.pre_application_activity.action
+                        ];
+                } else if (a.pre_application_desired_activity) {
+                    actionLabel =
+                        PRE_APPLICATION_ACTION_LABELS[
+                            a.pre_application_desired_activity.action
+                        ];
                 }
 
-                return <a
-                    href={`/inscriptions/${a.id}`}
-                    key={i}
-                    className="ibox-title">
-                    <h5>
-                        {activityRef.activity_type == "child"
-                            ? activityRef.label
-                            : activityRef.kind}
-                        <span className="badge badge-warning m-l-sm">
-                            {actionLabel}
-                        </span>
-                    </h5>
+                return (
+                    <a
+                        href={`/inscriptions/${a.id}`}
+                        key={i}
+                        className="ibox-title"
+                    >
+                        <h5>
+                            {activityRef.activity_type == "child"
+                                ? activityRef.label
+                                : activityRef.kind}
+                            <span className="badge badge-warning m-l-sm">
+                                {actionLabel}
+                            </span>
+                        </h5>
 
-                    <div className="ibox-tools">
-                        <label className="m-r-sm">{t("summary.status")}</label>
-                        <span className="custom-select">
-                            {a.activity_application_status.label}
-                        </span>
-                    </div>
-                </a>;
+                        <div className="ibox-tools">
+                            <label className="m-r-sm">
+                                {t("summary.status")}
+                            </label>
+                            <span className="custom-select">
+                                {a.activity_application_status.label}
+                            </span>
+                        </div>
+                    </a>
+                );
             });
         }
 
@@ -1148,61 +1214,115 @@ class Summary extends React.Component
                                     <b>{application.user.last_name}</b>
                                     <i className="fas fa-info-circle m-l-sm" />
                                 </UserWithInfos>
-                                , {t("summary.ageYears", { age: moment().diff(application.user.birthday, "years") })}
-                                <small>{t("summary.memberNumber", { number: adhesionNumber })}</small>
+                                ,{" "}
+                                {t("summary.ageYears", {
+                                    age: moment().diff(
+                                        application.user.birthday,
+                                        "years"
+                                    ),
+                                })}
+                                <small>
+                                    {t("summary.memberNumber", {
+                                        number: adhesionNumber,
+                                    })}
+                                </small>
                             </h2>
 
                             <div className="vertical-hr md" />
 
-                            {otherApplications.length > 0 && <ButtonModal
-                                modalProps={{ style: { content: { position: "static" } } }}
-                                count={otherApplications.length}
-                                label={t("summary.otherApplications")}
-                                className="btn btn-primary count-button">
-                                <h2 className="m-t-md m-b-sm">{t("summary.otherApplications")}</h2>
+                            {otherApplications.length > 0 && (
+                                <ButtonModal
+                                    modalProps={{
+                                        style: {
+                                            content: { position: "static" },
+                                        },
+                                    }}
+                                    count={otherApplications.length}
+                                    label={t("summary.otherApplications")}
+                                    className="btn btn-primary count-button"
+                                >
+                                    <h2 className="m-t-md m-b-sm">
+                                        {t("summary.otherApplications")}
+                                    </h2>
 
-                                <div className="ibox activity-application">
-                                    {otherApplications.length > 0 ?
-                                        otherApplications :
-                                        <h4>{t("summary.noOtherApplicationsShort")}</h4>}
-                                </div>
-                            </ButtonModal>}
+                                    <div className="ibox activity-application">
+                                        {otherApplications.length > 0 ? (
+                                            otherApplications
+                                        ) : (
+                                            <h4>
+                                                {t(
+                                                    "summary.noOtherApplicationsShort"
+                                                )}
+                                            </h4>
+                                        )}
+                                    </div>
+                                </ButtonModal>
+                            )}
                         </div>
 
                         <div className="flex flex-center-aligned">
                             <div className="flex m-r-sm flex-center-aligned">
-                                <label className="m-r-xs" style={{ flex: "1" }}>{t("summary.referent")}</label>
+                                <label className="m-r-xs" style={{ flex: "1" }}>
+                                    {t("summary.referent")}
+                                </label>
                                 <select
                                     style={{ flex: "3" }}
                                     className="custom-select"
                                     value={this.state.referent_id || ""}
-                                    onChange={e => this.updateApplication({ referent_id: parseInt(e.target.value) })}>
-                                    <option value="">{t("summary.selectReferent")}</option>
-                                    {_.sortBy(this.props.admins, "first_name").map(optionMapper({
-                                        label: u => `${u.first_name} ${u.last_name}`,
-                                    }))}
+                                    onChange={(e) =>
+                                        this.updateApplication({
+                                            referent_id: parseInt(
+                                                e.target.value
+                                            ),
+                                        })
+                                    }
+                                >
+                                    <option value="">
+                                        {t("summary.selectReferent")}
+                                    </option>
+                                    {_.sortBy(
+                                        this.props.admins,
+                                        "first_name"
+                                    ).map(
+                                        optionMapper({
+                                            label: (u) =>
+                                                `${u.first_name} ${u.last_name}`,
+                                        })
+                                    )}
                                 </select>
                             </div>
                             <div className="flex flex-column">
                                 <div className="flex flex-center-aligned">
-                                    <label className="m-r-xs">{t("summary.status")}</label>
+                                    <label className="m-r-xs">
+                                        {t("summary.status")}
+                                    </label>
                                     <button
                                         style={{ flex: "none" }}
                                         className="custom-select flex flex-space-between-justified"
                                         data-toggle="modal"
-                                        data-target="#statusModal">
+                                        data-target="#statusModal"
+                                    >
                                         <div>{this.state.status.label}</div>
 
-                                        <span className="custom-select-arrow">›</span>
+                                        <span className="custom-select-arrow">
+                                            ›
+                                        </span>
                                     </button>
                                 </div>
-                                {application.status_updated_at ?
+                                {application.status_updated_at ? (
                                     <small>
                                         <i>
-                                            {t("summary.modifiedAt", { when: moment(this.state.status_updated_at).fromNow() })}
-                                            {this.state.referent && ` - ${this.state.referent.first_name && this.state.referent.first_name.charAt(0)}. ${this.state.referent.last_name}` || ""}
+                                            {t("summary.modifiedAt", {
+                                                when: moment(
+                                                    this.state.status_updated_at
+                                                ).fromNow(),
+                                            })}
+                                            {(this.state.referent &&
+                                                ` - ${this.state.referent.first_name && this.state.referent.first_name.charAt(0)}. ${this.state.referent.last_name}`) ||
+                                                ""}
                                         </i>
-                                    </small> : null}
+                                    </small>
+                                ) : null}
                             </div>
                         </div>
                     </div>
@@ -1214,36 +1334,63 @@ class Summary extends React.Component
                         <div className="flex flex-center-aligned">
                             <a
                                 href={"/users/" + application.user.id}
-                                data-tippy-content={t("summary.tooltips.viewProfile")}
-                                className="btn btn-primary m-r-sm">
+                                data-tippy-content={t(
+                                    "summary.tooltips.viewProfile"
+                                )}
+                                className="btn btn-primary m-r-sm"
+                            >
                                 <i className="fas fa-user" />
                             </a>
-                            {Boolean(this.props.payer) && this.props.isAdmin &&
-                                <a
-                                    href={paymentLink}
-                                    data-tippy-content={t("summary.tooltips.payments")}
-                                    className="btn btn-primary m-r-sm">
-                                    <i className="fas fa-euro-sign" />{" "}
-                                </a>}
+                            {Boolean(this.props.payer) &&
+                                this.props.isAdmin && (
+                                    <a
+                                        href={paymentLink}
+                                        data-tippy-content={t(
+                                            "summary.tooltips.payments"
+                                        )}
+                                        className="btn btn-primary m-r-sm"
+                                    >
+                                        <i className="fas fa-euro-sign" />{" "}
+                                    </a>
+                                )}
                             <button
                                 onClick={() => this.sendConfirmationMail()}
                                 className="btn btn-primary"
-                                data-tippy-content={t("summary.tooltips.sendConfirmMail")}
-                                disabled={this.state.sendingMail || !_.reduce(this.state.desiredActivities, (acc, des) => acc || des.is_validated, false)}>
+                                data-tippy-content={t(
+                                    "summary.tooltips.sendConfirmMail"
+                                )}
+                                disabled={
+                                    this.state.sendingMail ||
+                                    !_.reduce(
+                                        this.state.desiredActivities,
+                                        (acc, des) => acc || des.is_validated,
+                                        false
+                                    )
+                                }
+                            >
                                 <i className="fas fa-envelope" />
-
                             </button>
                             <small className="m-l-sm m-r">
                                 <i>
                                     {this.state.mail_sent
                                         ? t("summary.mailSent")
                                         : t("summary.mailNotSent")}
-                                    {
-                                        this.state.mail_sent_at && this.state.mail_sent_at.getFullYear() > 1970 && <Fragment><br/>{t("summary.sentOn", { date: this.state.mail_sent_at.toLocaleDateString() })}</Fragment>
-                                    }
+                                    {this.state.mail_sent_at &&
+                                        this.state.mail_sent_at.getFullYear() >
+                                            1970 && (
+                                            <Fragment>
+                                                <br />
+                                                {t("summary.sentOn", {
+                                                    date: this.state.mail_sent_at.toLocaleDateString(),
+                                                })}
+                                            </Fragment>
+                                        )}
                                 </i>
                             </small>
-                            <div style={{ minWidth: "175px" }} className="flex-column m-r-md">
+                            <div
+                                style={{ minWidth: "175px" }}
+                                className="flex-column m-r-md"
+                            >
                                 <div className="form-group">
                                     <label htmlFor="begin_at">
                                         {t("summary.beginDate")}
@@ -1252,133 +1399,244 @@ class Summary extends React.Component
                                         type="date"
                                         className="form-control"
                                         name="begin_at"
-                                        value={moment(this.state.begin_at).format(ISO_DATE_FORMAT)}
-                                        onKeyDown={(e) =>
-                                        {
+                                        value={moment(
+                                            this.state.begin_at
+                                        ).format(ISO_DATE_FORMAT)}
+                                        onKeyDown={(e) => {
                                             this.useDateChangedTimeout = true;
                                         }}
-                                        onChange={(e) =>
-                                        {
-                                            if (this.changeDateTimeout)
-                                            {
-                                                clearTimeout(this.changeDateTimeout);
+                                        onChange={(e) => {
+                                            if (this.changeDateTimeout) {
+                                                clearTimeout(
+                                                    this.changeDateTimeout
+                                                );
                                             }
 
                                             const value = e.target.value;
 
-                                            this.changeDateTimeout = setTimeout(() =>
-                                            {
-                                                this.handleUpdateBeginAt(value);
-                                            }, this.useDateChangedTimeout ? 1000 : 100);
+                                            this.changeDateTimeout = setTimeout(
+                                                () => {
+                                                    this.handleUpdateBeginAt(
+                                                        value
+                                                    );
+                                                },
+                                                this.useDateChangedTimeout
+                                                    ? 1000
+                                                    : 100
+                                            );
 
                                             this.setState({
                                                 begin_at: value,
-                                                old_begin_at: (this.state.old_begin_at || this.state.begin_at),
+                                                old_begin_at:
+                                                    this.state.old_begin_at ||
+                                                    this.state.begin_at,
                                             });
                                         }}
-                                        min={moment(this.state.application.season.start).format(ISO_DATE_FORMAT)}
-                                        max={moment(this.state.stopped_at || this.state.application.season.end).format(ISO_DATE_FORMAT)} />
+                                        min={moment(
+                                            this.state.application.season.start
+                                        ).format(ISO_DATE_FORMAT)}
+                                        max={moment(
+                                            this.state.stopped_at ||
+                                                this.state.application.season
+                                                    .end
+                                        ).format(ISO_DATE_FORMAT)}
+                                    />
                                 </div>
                             </div>
 
-                            {this.state.stopped_at && this.stopped_at !== "" ?
-                                <div style={{ minWidth: "175px" }} className="flex-column">
+                            {this.state.stopped_at && this.stopped_at !== "" ? (
+                                <div
+                                    style={{ minWidth: "175px" }}
+                                    className="flex-column"
+                                >
                                     <div className="form-group">
-                                        <label htmlFor="stop_date">{t("summary.stopDate")}</label>
+                                        <label htmlFor="stop_date">
+                                            {t("summary.stopDate")}
+                                        </label>
                                         <input
                                             className="form-control"
                                             disabled
                                             type="date"
-                                            value={this.state.stopped_at && moment(this.state.stopped_at).format("YYYY-MM-DD") || ""}
+                                            value={
+                                                (this.state.stopped_at &&
+                                                    moment(
+                                                        this.state.stopped_at
+                                                    ).format("YYYY-MM-DD")) ||
+                                                ""
+                                            }
                                         />
                                     </div>
                                 </div>
-                                : null}
+                            ) : null}
                         </div>
 
                         <div className="flex flex-center-aligned">
                             {/* CHANGE QUESTIONNAIRE */}
                             <ButtonModal
-                                modalProps={{ style: { content: { position: "static" } } }}
+                                modalProps={{
+                                    style: { content: { position: "static" } },
+                                }}
                                 className="btn btn-primary m-r-sm count-button"
-                                tooltip={t("summary.tooltips.changeQuestionnaire")}
+                                tooltip={t(
+                                    "summary.tooltips.changeQuestionnaire"
+                                )}
                                 label={<i className="fas fa-question-circle" />}
-                                count={this.props.application_change_questionnaires.forms.length}
-                                disabled={this.props.application_change_questionnaires.forms.length === 0}>
+                                count={
+                                    this.props.application_change_questionnaires
+                                        .forms.length
+                                }
+                                disabled={
+                                    this.props.application_change_questionnaires
+                                        .forms.length === 0
+                                }
+                            >
                                 <div className="ibox">
                                     <div className="ibox-title">
-                                        <h4>{t("summary.changeQuestionnaireTitle")}</h4>
+                                        <h4>
+                                            {t(
+                                                "summary.changeQuestionnaireTitle"
+                                            )}
+                                        </h4>
                                         <select
                                             className="form-control"
-                                            onChange={e => this.handleSelectApplicationChangeQuestionnaire(e.target.value)}
-                                            defaultValue={this.state.applicationChangeQuestionnaireId}>
-                                            <option value="">{t("summary.selectQuestionnaire")}</option>
-                                            {
-                                                this.props
-                                                    .application_change_questionnaires
-                                                    .forms
-                                                    .map(e => e.form)
-                                                    .map(optionMapper({
-                                                        label: e => t("summary.courseOption", { course: findAndGet(this.props.activityRefs, r => r.id === e.activity.activity_ref_id, "label"), group: e.activity.group_name, teacher: `${e.activity.teacher?.first_name ?? ""} ${e.activity.teacher?.last_name ?? ""}`.trim() }),
-                                                    }))
+                                            onChange={(e) =>
+                                                this.handleSelectApplicationChangeQuestionnaire(
+                                                    e.target.value
+                                                )
                                             }
+                                            defaultValue={
+                                                this.state
+                                                    .applicationChangeQuestionnaireId
+                                            }
+                                        >
+                                            <option value="">
+                                                {t(
+                                                    "summary.selectQuestionnaire"
+                                                )}
+                                            </option>
+                                            {this.props.application_change_questionnaires.forms
+                                                .map((e) => e.form)
+                                                .map(
+                                                    optionMapper({
+                                                        label: (e) =>
+                                                            t(
+                                                                "summary.courseOption",
+                                                                {
+                                                                    course: findAndGet(
+                                                                        this
+                                                                            .props
+                                                                            .activityRefs,
+                                                                        (r) =>
+                                                                            r.id ===
+                                                                            e
+                                                                                .activity
+                                                                                .activity_ref_id,
+                                                                        "label"
+                                                                    ),
+                                                                    group: e
+                                                                        .activity
+                                                                        .group_name,
+                                                                    teacher:
+                                                                        `${e.activity.teacher?.first_name ?? ""} ${e.activity.teacher?.last_name ?? ""}`.trim(),
+                                                                }
+                                                            ),
+                                                    })
+                                                )}
                                         </select>
                                     </div>
-                                    {
-                                        !!this.state.applicationChangeQuestionnaireId &&
+                                    {!!this.state
+                                        .applicationChangeQuestionnaireId && (
                                         <div className="ibox-content">
                                             {renderEvaluationForm(
-                                                this.props.application_change_questionnaires,
-                                                this.props.application_change_questions,
-                                                this.state.applicationChangeQuestionnaireId,
+                                                this.props
+                                                    .application_change_questionnaires,
+                                                this.props
+                                                    .application_change_questions,
+                                                this.state
+                                                    .applicationChangeQuestionnaireId
                                             )}
                                         </div>
-                                    }
+                                    )}
                                 </div>
                             </ButtonModal>
 
                             {/* AUTO-EVALUATIONS */}
                             <ButtonModal
-                                modalProps={{ style: { content: { position: "static" } } }}
-                                disabled={this.props.new_student_level_questionnaires.length === 0}
-                                count={this.props.new_student_level_questionnaires.length}
+                                modalProps={{
+                                    style: { content: { position: "static" } },
+                                }}
+                                disabled={
+                                    this.props.new_student_level_questionnaires
+                                        .length === 0
+                                }
+                                count={
+                                    this.props.new_student_level_questionnaires
+                                        .length
+                                }
                                 className="btn btn-primary count-button m-r-sm"
                                 tooltip={t("summary.tooltips.selfEvaluation")}
-                                label={<i className="fas fa-user-check" />}>
+                                label={<i className="fas fa-user-check" />}
+                            >
                                 <div className="ibox">
                                     <div className="ibox-title">
-                                        <h4>{t("summary.selfEvaluationTitle")}</h4>
+                                        <h4>
+                                            {t("summary.selfEvaluationTitle")}
+                                        </h4>
                                         <select
                                             className="form-control"
-                                            onChange={e => this.handleSelectNewStudentLevelQuestionnaire(e.target.value)}
-                                            defaultValue={this.state.applicationChangeQuestionnaireId}>
-                                            <option value="">{t("summary.selectQuestionnaire")}</option>
-                                            {
-                                                this.props
-                                                    .new_student_level_questionnaires
-                                                    .map(optionMapper({
-                                                        label: e => t("summary.activityOption", { kind: e.activity_ref.kind }),
-                                                    }))
+                                            onChange={(e) =>
+                                                this.handleSelectNewStudentLevelQuestionnaire(
+                                                    e.target.value
+                                                )
                                             }
+                                            defaultValue={
+                                                this.state
+                                                    .applicationChangeQuestionnaireId
+                                            }
+                                        >
+                                            <option value="">
+                                                {t(
+                                                    "summary.selectQuestionnaire"
+                                                )}
+                                            </option>
+                                            {this.props.new_student_level_questionnaires.map(
+                                                optionMapper({
+                                                    label: (e) =>
+                                                        t(
+                                                            "summary.activityOption",
+                                                            {
+                                                                kind: e
+                                                                    .activity_ref
+                                                                    .kind,
+                                                            }
+                                                        ),
+                                                })
+                                            )}
                                         </select>
                                     </div>
-                                    {
-                                        !!this.state.newStudentLevelQuestionnaireId &&
+                                    {!!this.state
+                                        .newStudentLevelQuestionnaireId && (
                                         <div className="ibox-content">
                                             <EvaluationForm
-                                                questions={this.props.new_student_level_questions}
-                                                answers={
-                                                    getAnswersObject(
-                                                        findAndGet(
-                                                            this.props.new_student_level_questionnaires,
-                                                            { id: this.state.newStudentLevelQuestionnaireId },
-                                                            "answers",
-                                                        ),
-                                                    )
+                                                questions={
+                                                    this.props
+                                                        .new_student_level_questions
                                                 }
-                                                readOnly />
+                                                answers={getAnswersObject(
+                                                    findAndGet(
+                                                        this.props
+                                                            .new_student_level_questionnaires,
+                                                        {
+                                                            id: this.state
+                                                                .newStudentLevelQuestionnaireId,
+                                                        },
+                                                        "answers"
+                                                    )
+                                                )}
+                                                readOnly
+                                            />
                                         </div>
-                                    }
+                                    )}
                                 </div>
                             </ButtonModal>
 
@@ -1386,42 +1644,89 @@ class Summary extends React.Component
                             <ButtonModal
                                 tooltip={t("summary.tooltips.evaluation")}
                                 className="btn count-button btn-primary"
-                                count={this.props.student_evaluations.forms.length}
-                                disabled={this.props.student_evaluations.forms.length === 0}
-                                modalProps={{ style: { content: { position: "static" } } }}
-                                label={<span className="fa-layers">
-                                    <i className="fas fa-chalkboard-teacher" />
-                                    <i className="fas fa-check" data-fa-transform="shrink-9 right-4.5 up-2.5" />
-                                </span>}>
+                                count={
+                                    this.props.student_evaluations.forms.length
+                                }
+                                disabled={
+                                    this.props.student_evaluations.forms
+                                        .length === 0
+                                }
+                                modalProps={{
+                                    style: { content: { position: "static" } },
+                                }}
+                                label={
+                                    <span className="fa-layers">
+                                        <i className="fas fa-chalkboard-teacher" />
+                                        <i
+                                            className="fas fa-check"
+                                            data-fa-transform="shrink-9 right-4.5 up-2.5"
+                                        />
+                                    </span>
+                                }
+                            >
                                 <div className="ibox">
                                     <div className="ibox-title">
-                                        <h4>{t("summary.studentEvaluationsTitle")}</h4>
+                                        <h4>
+                                            {t(
+                                                "summary.studentEvaluationsTitle"
+                                            )}
+                                        </h4>
                                         <select
                                             className="form-control"
-                                            onChange={e => this.handleSelectEvaluation(e.target.value)}
-                                            defaultValue={this.state.studentEvaluationId}>
-                                            <option value="">{t("summary.selectEvaluation")}</option>
-                                            {
-                                                this.props
-                                                    .student_evaluations
-                                                    .forms
-                                                    .map(e => e.form)
-                                                    .map(optionMapper({
-                                                        label: e => t("summary.evaluationOption", { season: e.season.label, course: findAndGet(this.props.activityRefs, r => r.id === e.activity.activity_ref_id, "label"), group: e.activity.group_name, teacher: `${e.teacher.first_name} ${e.teacher.last_name}` }),
-                                                    }))
+                                            onChange={(e) =>
+                                                this.handleSelectEvaluation(
+                                                    e.target.value
+                                                )
                                             }
+                                            defaultValue={
+                                                this.state.studentEvaluationId
+                                            }
+                                        >
+                                            <option value="">
+                                                {t("summary.selectEvaluation")}
+                                            </option>
+                                            {this.props.student_evaluations.forms
+                                                .map((e) => e.form)
+                                                .map(
+                                                    optionMapper({
+                                                        label: (e) =>
+                                                            t(
+                                                                "summary.evaluationOption",
+                                                                {
+                                                                    season: e
+                                                                        .season
+                                                                        .label,
+                                                                    course: findAndGet(
+                                                                        this
+                                                                            .props
+                                                                            .activityRefs,
+                                                                        (r) =>
+                                                                            r.id ===
+                                                                            e
+                                                                                .activity
+                                                                                .activity_ref_id,
+                                                                        "label"
+                                                                    ),
+                                                                    group: e
+                                                                        .activity
+                                                                        .group_name,
+                                                                    teacher: `${e.teacher.first_name} ${e.teacher.last_name}`,
+                                                                }
+                                                            ),
+                                                    })
+                                                )}
                                         </select>
                                     </div>
-                                    {
-                                        !!this.state.studentEvaluationId &&
+                                    {!!this.state.studentEvaluationId && (
                                         <div className="ibox-content">
                                             {renderEvaluationForm(
                                                 this.props.student_evaluations,
-                                                this.props.student_evaluation_questions,
-                                                this.state.studentEvaluationId,
+                                                this.props
+                                                    .student_evaluation_questions,
+                                                this.state.studentEvaluationId
                                             )}
                                         </div>
-                                    }
+                                    )}
                                 </div>
                             </ButtonModal>
 
@@ -1429,82 +1734,141 @@ class Summary extends React.Component
 
                             {/* CRENEAUX EVAL */}
                             <ButtonModal
-                                modalProps={{ style: { content: { position: "static" } } }}
+                                modalProps={{
+                                    style: { content: { position: "static" } },
+                                }}
                                 label={<i className="fas fa-calendar-check" />}
                                 className="btn btn-primary count-button m-r-sm"
                                 tooltip={t("summary.tooltips.evaluationSlot")}
-                                disabled={_.size(application.evaluation_appointments) === 0}>
+                                disabled={
+                                    _.size(
+                                        application.evaluation_appointments
+                                    ) === 0
+                                }
+                            >
                                 <EvaluationChoice
-                                    noIntervalMessage={t("summary.noEvaluationSlot")}
+                                    noIntervalMessage={t(
+                                        "summary.noEvaluationSlot"
+                                    )}
                                     showChoiceNumber={false}
                                     activityRefs={this.props.activityRefs}
-                                    data={evaluationAppointments} />
+                                    data={evaluationAppointments}
+                                />
                             </ButtonModal>
 
                             {/* DISPOS. */}
                             <ButtonModal
-                                modalProps={{ style: { content: { position: "static" } } }}
+                                modalProps={{
+                                    style: { content: { position: "static" } },
+                                }}
                                 count={availabilities.length}
                                 label={<i className="fas fa-clock" />}
                                 className="btn btn-primary count-button m-r-sm"
-                                tooltip={t("summary.tooltips.availabilities")}>
+                                tooltip={t("summary.tooltips.availabilities")}
+                            >
                                 <div className="ibox">
                                     <div className="ibox-title">
-                                        <h4>{t("summary.availabilitiesTitle")}</h4>
+                                        <h4>
+                                            {t("summary.availabilitiesTitle")}
+                                        </h4>
                                     </div>
                                     <div className="ibox-content">
-                                        {this.props.canEditAvailabilities ?
+                                        {this.props.canEditAvailabilities ? (
                                             <TimePreferencesStep
-                                                selectionLabels={[_.head(this.state.application.activity_refs).display_name]}
+                                                selectionLabels={[
+                                                    _.head(
+                                                        this.state.application
+                                                            .activity_refs
+                                                    ).display_name,
+                                                ]}
                                                 mode={PLANNING_MODE}
-                                                planningId={this.props.application.user.planning.id}
-                                                intervals={Summary.filterTimeIntervals(application.user.planning.time_intervals, application.season).value()}
-                                                season={this.state.application.season}
+                                                planningId={
+                                                    this.props.application.user
+                                                        .planning.id
+                                                }
+                                                intervals={Summary.filterTimeIntervals(
+                                                    application.user.planning
+                                                        .time_intervals,
+                                                    application.season
+                                                ).value()}
+                                                season={
+                                                    this.state.application
+                                                        .season
+                                                }
                                                 seasons={this.props.seasons}
                                                 childhoodPreferences={null}
-                                                activityRefs={this.state.application.activity_refs}
+                                                activityRefs={
+                                                    this.state.application
+                                                        .activity_refs
+                                                }
                                                 authToken={null}
-                                                handleUpdateChildhoodPreferences={null}
+                                                handleUpdateChildhoodPreferences={
+                                                    null
+                                                }
                                                 disableLiveReload={false}
                                             />
-                                            :
+                                        ) : (
                                             availabilities
-                                        }
+                                        )}
                                     </div>
                                 </div>
                             </ButtonModal>
 
                             {/* INFOS SUPP. */}
                             <ButtonModal
-                                modalProps={{ style: { content: { position: "static" } } }}
+                                modalProps={{
+                                    style: { content: { position: "static" } },
+                                }}
                                 label={<i className="fas fa-info-circle" />}
-                                count={application.user
-                                    .handicap_description ? 1 : 0}
+                                count={
+                                    application.user.handicap_description
+                                        ? 1
+                                        : 0
+                                }
                                 className="btn btn-primary count-button m-r-sm"
-                                tooltip={t("summary.tooltips.additionalInfo")}>
+                                tooltip={t("summary.tooltips.additionalInfo")}
+                            >
                                 <div className="ibox">
                                     <div className="ibox-title">
-                                        <h4>{t("summary.additionalInfoTitle")}</h4>
+                                        <h4>
+                                            {t("summary.additionalInfoTitle")}
+                                        </h4>
                                     </div>
                                     <div className="ibox-content">
-                                        {application.user.handicap_description != undefined && application.user
-                                            .handicap_description.length > 0
-                                            ? <div><p><b>{t("summary.infoLabel")}</b> {application.user
-                                                .handicap_description}</p>
+                                        {application.user
+                                            .handicap_description !=
+                                            undefined &&
+                                        application.user.handicap_description
+                                            .length > 0 ? (
+                                            <div>
+                                                <p>
+                                                    <b>
+                                                        {t("summary.infoLabel")}
+                                                    </b>{" "}
+                                                    {
+                                                        application.user
+                                                            .handicap_description
+                                                    }
+                                                </p>
                                                 <hr />
                                             </div>
-                                            : ""}
+                                        ) : (
+                                            ""
+                                        )}
                                     </div>
                                 </div>
                             </ButtonModal>
 
                             {/* COMMENTAIRES */}
                             <ButtonModal
-                                modalProps={{ style: { content: { position: "static" } } }}
+                                modalProps={{
+                                    style: { content: { position: "static" } },
+                                }}
                                 count={this.state.comments.length}
                                 label={<i className="fas fa-comment" />}
                                 className="btn btn-primary count-button m-r-sm"
-                                tooltip={t("summary.tooltips.comments")}>
+                                tooltip={t("summary.tooltips.comments")}
+                            >
                                 <CommentSection
                                     comments={this.state.comments}
                                     userId={this.props.user_id}
@@ -1512,21 +1876,35 @@ class Summary extends React.Component
                                     contextId={this.state.application.id}
                                     newComment={this.state.newComment}
                                     editedComment={this.state.editedComment}
-                                    handleUpdateNewCommentContent={e => this.handleUpdateNewCommentContent(e)}
-                                    handleSaveComment={() => this.handleSaveComment()}
-                                    handleUpdateEditedCommentContent={e => this.handleUpdateEditedCommentContent(e)}
-                                    handleSaveCommentEdition={() => this.handleSaveCommentEdition()}
-                                    handleCommentEdition={id => this.handleCommentEdition(id)} />
+                                    handleUpdateNewCommentContent={(e) =>
+                                        this.handleUpdateNewCommentContent(e)
+                                    }
+                                    handleSaveComment={() =>
+                                        this.handleSaveComment()
+                                    }
+                                    handleUpdateEditedCommentContent={(e) =>
+                                        this.handleUpdateEditedCommentContent(e)
+                                    }
+                                    handleSaveCommentEdition={() =>
+                                        this.handleSaveCommentEdition()
+                                    }
+                                    handleCommentEdition={(id) =>
+                                        this.handleCommentEdition(id)
+                                    }
+                                />
                             </ButtonModal>
 
                             {/* SUPPRESSION */}
                             <button
                                 type="button"
                                 className="btn btn-md btn-warning"
-                                data-tippy-content={t("summary.tooltips.deletePermanently")}
-                                onClick={e =>
+                                data-tippy-content={t(
+                                    "summary.tooltips.deletePermanently"
+                                )}
+                                onClick={(e) =>
                                     this.handleRemoveActivityApplication(e)
-                                }>
+                                }
+                            >
                                 <i className="fas fa-trash" />
                             </button>
                         </div>
@@ -1546,26 +1924,47 @@ class Summary extends React.Component
                                     <div className="modal-body">
                                         {generateStatusSelection}
 
-                                        {isStopping ?
-                                            (
-                                                <div className="form-group">
-                                                    <label>{t("summary.activityStopDate")}</label>
-                                                    <input
-                                                        className={`form-control ${!this.state.stoppedAt ? "invalid" : ""}`}
-                                                        type="date"
-                                                        name="stop_date"
-                                                        ref={this.stopDateInput}
-                                                        defaultValue={this.state.stopped_at && moment(this.state.stopped_at).format("YYYY-MM-DD") || ""}
-                                                        min={moment(this.state.begin_at).format(ISO_DATE_FORMAT)}
-                                                        max={moment(this.state.application.season.end).format(ISO_DATE_FORMAT)}
-                                                    />
-                                                </div>
-                                            )
-                                            : null}
+                                        {isStopping ? (
+                                            <div className="form-group">
+                                                <label>
+                                                    {t(
+                                                        "summary.activityStopDate"
+                                                    )}
+                                                </label>
+                                                <input
+                                                    className={`form-control ${!this.state.stoppedAt ? "invalid" : ""}`}
+                                                    type="date"
+                                                    name="stop_date"
+                                                    ref={this.stopDateInput}
+                                                    defaultValue={
+                                                        (this.state
+                                                            .stopped_at &&
+                                                            moment(
+                                                                this.state
+                                                                    .stopped_at
+                                                            ).format(
+                                                                "YYYY-MM-DD"
+                                                            )) ||
+                                                        ""
+                                                    }
+                                                    min={moment(
+                                                        this.state.begin_at
+                                                    ).format(ISO_DATE_FORMAT)}
+                                                    max={moment(
+                                                        this.state.application
+                                                            .season.end
+                                                    ).format(ISO_DATE_FORMAT)}
+                                                />
+                                            </div>
+                                        ) : null}
                                     </div>
                                     <div className="modal-footer flex flex-space-between-justified">
-                                        <button className="btn" style={{ marginRight: "auto" }} type="button"
-                                                data-dismiss="modal">
+                                        <button
+                                            className="btn"
+                                            style={{ marginRight: "auto" }}
+                                            type="button"
+                                            data-dismiss="modal"
+                                        >
                                             <i className="fas fa-times m-r-sm" />
                                             {t("common:actions.cancel")}
                                         </button>
@@ -1575,7 +1974,8 @@ class Summary extends React.Component
                                             data-dismiss="modal"
                                             onClick={() =>
                                                 this.handleSaveStatus()
-                                            }>
+                                            }
+                                        >
                                             <i className="fas fa-check m-r-sm" />
                                             {t("common:actions.validate")}
                                         </button>
@@ -1591,42 +1991,42 @@ class Summary extends React.Component
         );
     }
 
-    static filterTimeIntervals(time_intervals, season)
-    {
-        return _.chain(time_intervals)
-            .filter(ti =>
-                {
-                    return ti.kind === "p" &&
-                        moment(ti.start).isBetween(
-                            moment(season.start).startOf("week"),
-                            moment(season.end),
-                        );
-                },
+    static filterTimeIntervals(time_intervals, season) {
+        return _.chain(time_intervals).filter((ti) => {
+            return (
+                ti.kind === "p" &&
+                moment(ti.start).isBetween(
+                    moment(season.start).startOf("week"),
+                    moment(season.end)
+                )
             );
+        });
     }
 }
 
-function renderEvaluationForm(forms, questions, formId)
-{
-    const form = forms
-        .forms
-        .find(e => e.form.id === formId);
+function renderEvaluationForm(forms, questions, formId) {
+    const form = forms.forms.find((e) => e.form.id === formId);
 
-    if (form)
-    {
+    if (form) {
         const answers = getAnswersObject(form.form.answers);
 
-        return <EvaluationForm
-            readOnly
-            questions={questions}
-            referenceData={{
-                ...forms.common_reference_data,
-                ...form.contextual_reference_data,
-            }}
-            answers={answers} />;
-    }
-    else
-        return <h4>{i18n.t("activityApplications:summary.evaluationRenderError")}</h4>;
+        return (
+            <EvaluationForm
+                readOnly
+                questions={questions}
+                referenceData={{
+                    ...forms.common_reference_data,
+                    ...form.contextual_reference_data,
+                }}
+                answers={answers}
+            />
+        );
+    } else
+        return (
+            <h4>
+                {i18n.t("activityApplications:summary.evaluationRenderError")}
+            </h4>
+        );
 }
 
 export default withTranslation("activityApplications")(Summary);

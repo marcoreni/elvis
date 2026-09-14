@@ -164,17 +164,11 @@ class ReplicateAct extends React.Component {
     handleChange({ target }) {
         let date = new Date(target.value);
 
-        if (
-            date
-                .toString()
-                .toLowerCase()
-                .includes("invalid")
-        )
-            date = undefined;
+        if (date.toString().toLowerCase().includes("invalid")) date = undefined;
 
         if (
             this.state.selectedDate
-                .map(d => d.valueOf())
+                .map((d) => d.valueOf())
                 .includes(date.valueOf())
         )
             date = undefined;
@@ -186,18 +180,18 @@ class ReplicateAct extends React.Component {
         const { t } = this.props;
 
         api.set()
-            .success(res => {
-                swal({
+            .success((res) => {
+                swal.fire({
                     title: t("courses:replicateActivities.doneTitle"),
-                    type: "success",
+                    icon: "success",
                     confirmButtonText: t("courses:replicateActivities.ok"),
-                }).then(r => this.setState({ dates: [] }));
+                }).then((r) => this.setState({ dates: [] }));
             })
-            .error(res =>
-                swal({
+            .error((res) =>
+                swal.fire({
                     title: t("courses:replicateActivities.errorTitle"),
                     text: res,
-                    type: "error",
+                    icon: "error",
                 })
             )
             .post("/scripts/replicate_activities/execute", {

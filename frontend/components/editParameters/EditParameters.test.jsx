@@ -40,28 +40,39 @@
 // + `common:actions.save`.
 
 import React from "react";
-import {render, screen, fireEvent, waitFor} from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import i18n from "../../i18n";
 
 // --- sweetalert2: plain spy with a `.showLoading` no-op (RulesSettings + TeachersParameters
 //     call `swal.showLoading()` on the default export). --------------------------------------
-vi.mock("sweetalert2", () => {
-    const swal = vi.fn(() => Promise.resolve({}));
-    swal.showLoading = vi.fn();
-    return {default: swal};
-});
+vi.mock("sweetalert2", () => ({
+    default: { showLoading: vi.fn(), fire: vi.fn(() => Promise.resolve({})) },
+}));
 
 // --- tools/api: chainable no-op stub; last success/error callbacks captured for hand-firing. --
-const apiState = vi.hoisted(() => ({lastSuccess: null, lastError: null, lastPost: null}));
+const apiState = vi.hoisted(() => ({
+    lastSuccess: null,
+    lastError: null,
+    lastPost: null,
+}));
 vi.mock("../../tools/api", () => ({
     set: () => {
         const c = {};
-        c.success = (fn) => { apiState.lastSuccess = fn; return c; };
-        c.error = (fn) => { apiState.lastError = fn; return c; };
+        c.success = (fn) => {
+            apiState.lastSuccess = fn;
+            return c;
+        };
+        c.error = (fn) => {
+            apiState.lastError = fn;
+            return c;
+        };
         c.before = () => c;
         c.useLoading = () => c;
         c.get = () => c;
-        c.post = (url, data) => { apiState.lastPost = {url, data}; return c; };
+        c.post = (url, data) => {
+            apiState.lastPost = { url, data };
+            return c;
+        };
         c.put = () => c;
         c.del = () => c;
         return c;
@@ -71,7 +82,7 @@ vi.mock("../../tools/api", () => ({
 // --- react-dropzone: render the render-prop children with inert prop-getters so DragAndDrop's
 //     Dropzone branch renders in jsdom (the real lib does DOM measurement that doesn't run). ---
 vi.mock("react-dropzone", () => ({
-    default: ({children}) =>
+    default: ({ children }) =>
         children({
             getRootProps: () => ({}),
             getInputProps: () => ({}),
@@ -103,11 +114,13 @@ const reload = vi.fn();
 Object.defineProperty(window, "location", {
     configurable: true,
     writable: true,
-    value: {reload, href: "http://localhost/", assign: vi.fn()},
+    value: { reload, href: "http://localhost/", assign: vi.fn() },
 });
 
 beforeEach(() => {
-    global.fetch = vi.fn().mockResolvedValue({ok: true, json: () => Promise.resolve({})});
+    global.fetch = vi
+        .fn()
+        .mockResolvedValue({ ok: true, json: () => Promise.resolve({}) });
 });
 
 afterEach(async () => {
@@ -140,8 +153,12 @@ describe("editParameters.* — i18n layer", () => {
 
     test("editParameters.mail.genericError is now consolidated with shared.genericError (fr + en)", () => {
         // The callsite now points straight at shared.genericError in both locales.
-        expect(tP("fr")("shared.genericError")).toBe("Une erreur est survenue. Contactez un administrateur");
-        expect(tP("en")("shared.genericError")).toBe("An error occurred. Contact an administrator");
+        expect(tP("fr")("shared.genericError")).toBe(
+            "Une erreur est survenue. Contactez un administrateur"
+        );
+        expect(tP("en")("shared.genericError")).toBe(
+            "An error occurred. Contact an administrator"
+        );
     });
 
     // --- CsvSettings dead-gate: `{errors.col_sep && t("editParameters.csv.sepRequired")}` is
@@ -150,86 +167,134 @@ describe("editParameters.* — i18n layer", () => {
     //     swapped the French literal for the key. `encodingRequired` is gated on `errors.encoding`
     //     which DOES match the registered name, but the <select> always has a value so RHF's
     //     `required` never trips in practice either. Assert both keys resolve. -------------------
-    test.each(["fr", "en"])("csv.{sepRequired,encodingRequired} keys resolve in %s (cannot render — see note)", (lng) => {
-        expect(tP(lng)("editParameters.csv.sepRequired").length).toBeGreaterThan(0);
-        expect(tP(lng)("editParameters.csv.sepRequired")).not.toBe("editParameters.csv.sepRequired");
-        expect(tP(lng)("editParameters.csv.encodingRequired")).not.toBe("editParameters.csv.encodingRequired");
-    });
+    test.each(["fr", "en"])(
+        "csv.{sepRequired,encodingRequired} keys resolve in %s (cannot render — see note)",
+        (lng) => {
+            expect(
+                tP(lng)("editParameters.csv.sepRequired").length
+            ).toBeGreaterThan(0);
+            expect(tP(lng)("editParameters.csv.sepRequired")).not.toBe(
+                "editParameters.csv.sepRequired"
+            );
+            expect(tP(lng)("editParameters.csv.encodingRequired")).not.toBe(
+                "editParameters.csv.encodingRequired"
+            );
+        }
+    );
 
     // --- DragAndDrop.handleDropRejected writes t(...) into `div.textContent`; reaching it needs
     //     react-dropzone's own reject path. Assert those two keys resolve. --------------------
-    test.each(["fr", "en"])("dragAndDrop.{invalidType,tooManyFiles,imageAlt} keys resolve in %s", (lng) => {
-        for (const k of ["invalidType", "tooManyFiles", "imageAlt"]) {
-            const v = tC(lng)(`dragAndDrop.${k}`);
-            expect(v.length).toBeGreaterThan(0);
-            expect(v).not.toBe(`dragAndDrop.${k}`);
+    test.each(["fr", "en"])(
+        "dragAndDrop.{invalidType,tooManyFiles,imageAlt} keys resolve in %s",
+        (lng) => {
+            for (const k of ["invalidType", "tooManyFiles", "imageAlt"]) {
+                const v = tC(lng)(`dragAndDrop.${k}`);
+                expect(v.length).toBeGreaterThan(0);
+                expect(v).not.toBe(`dragAndDrop.${k}`);
+            }
         }
-    });
+    );
 
     // Dropzone branch (no file / no url yet) — the "Select" button.
-    test.each(["fr", "en"])("Dropzone branch renders the translated select button in %s", async (lng) => {
-        await i18n.changeLanguage(lng);
-        render(<DragAndDrop acceptedTypes="application/pdf" setFile={() => {}} textDisplayed="drop here" />);
-        expect(
-            screen.getByRole("button", {name: tC(lng)("dragAndDrop.selectButton")}),
-        ).toBeInTheDocument();
-    });
+    test.each(["fr", "en"])(
+        "Dropzone branch renders the translated select button in %s",
+        async (lng) => {
+            await i18n.changeLanguage(lng);
+            render(
+                <DragAndDrop
+                    acceptedTypes="application/pdf"
+                    setFile={() => {}}
+                    textDisplayed="drop here"
+                />
+            );
+            expect(
+                screen.getByRole("button", {
+                    name: tC(lng)("dragAndDrop.selectButton"),
+                })
+            ).toBeInTheDocument();
+        }
+    );
 
     // else branch with an empty (falsy but defined) url — the "Document actuel : aucun" fallback,
     // both keys plus the JSX-boundary space, verified against the real render.
     test.each([
         ["fr", "Document actuel : aucun"],
         ["en", "Current document: none"],
-    ])("no-file fallback renders currentDocument + none in %s", async (lng, expected) => {
-        await i18n.changeLanguage(lng);
-        const {container} = render(
-            <DragAndDrop acceptedTypes="application/pdf" setFile={() => {}} textDisplayed="x" file_url="" />,
-        );
-        expect(container.querySelector("p.ml-5").textContent).toBe(expected);
-    });
+    ])(
+        "no-file fallback renders currentDocument + none in %s",
+        async (lng, expected) => {
+            await i18n.changeLanguage(lng);
+            const { container } = render(
+                <DragAndDrop
+                    acceptedTypes="application/pdf"
+                    setFile={() => {}}
+                    textDisplayed="x"
+                    file_url=""
+                />
+            );
+            expect(container.querySelector("p.ml-5").textContent).toBe(
+                expected
+            );
+        }
+    );
 });
 
 // ============================================================================================
 // 2. CsvSettings
 // ============================================================================================
 describe("CsvSettings", () => {
-    const props = {csv_settings: {col_sep: ";", encoding: "UTF-8"}};
+    const props = { csv_settings: { col_sep: ";", encoding: "UTF-8" } };
 
-    test.each(["fr", "en"])("labels + submit value are translated in %s", async (lng) => {
-        await i18n.changeLanguage(lng);
-        render(<CsvSettings {...props} />);
+    test.each(["fr", "en"])(
+        "labels + submit value are translated in %s",
+        async (lng) => {
+            await i18n.changeLanguage(lng);
+            render(<CsvSettings {...props} />);
 
-        expect(byText(tP(lng)("editParameters.csv.sepLabel"))).toBeInTheDocument();
-        expect(byText(tP(lng)("editParameters.csv.encodingLabel"))).toBeInTheDocument();
-        expect(screen.getByDisplayValue(tC(lng)("actions.save"))).toBeInTheDocument();
-    });
+            expect(
+                byText(tP(lng)("editParameters.csv.sepLabel"))
+            ).toBeInTheDocument();
+            expect(
+                byText(tP(lng)("editParameters.csv.encodingLabel"))
+            ).toBeInTheDocument();
+            expect(
+                screen.getByDisplayValue(tC(lng)("actions.save"))
+            ).toBeInTheDocument();
+        }
+    );
 
-    test.each(["fr", "en"])("onSubmit -> fetch .ok -> success swal in %s", async (lng) => {
-        await i18n.changeLanguage(lng);
-        const {container} = render(<CsvSettings {...props} />);
+    test.each(["fr", "en"])(
+        "onSubmit -> fetch .ok -> success swal in %s",
+        async (lng) => {
+            await i18n.changeLanguage(lng);
+            const { container } = render(<CsvSettings {...props} />);
 
-        fireEvent.submit(container.querySelector("form"));
+            fireEvent.submit(container.querySelector("form"));
 
-        await waitFor(() => expect(swal).toHaveBeenCalled());
-        expect(swal.mock.calls[0][0]).toMatchObject({
-            title: tP(lng)("shared.saveSuccessTitle"),
-            text: tP(lng)("editParameters.settingsApplied"),
-        });
-    });
+            await waitFor(() => expect(swal.fire).toHaveBeenCalled());
+            expect(swal.fire.mock.calls[0][0]).toMatchObject({
+                title: tP(lng)("shared.saveSuccessTitle"),
+                text: tP(lng)("editParameters.settingsApplied"),
+            });
+        }
+    );
 
-    test.each(["fr", "en"])("onSubmit -> fetch !ok -> error swal in %s", async (lng) => {
-        await i18n.changeLanguage(lng);
-        global.fetch = vi.fn().mockResolvedValue({ok: false});
-        const {container} = render(<CsvSettings {...props} />);
+    test.each(["fr", "en"])(
+        "onSubmit -> fetch !ok -> error swal in %s",
+        async (lng) => {
+            await i18n.changeLanguage(lng);
+            global.fetch = vi.fn().mockResolvedValue({ ok: false });
+            const { container } = render(<CsvSettings {...props} />);
 
-        fireEvent.submit(container.querySelector("form"));
+            fireEvent.submit(container.querySelector("form"));
 
-        await waitFor(() => expect(swal).toHaveBeenCalled());
-        expect(swal.mock.calls[0][0]).toMatchObject({
-            title: tP(lng)("shared.errorTitle"),
-            text: tP(lng)("shared.genericError"),
-        });
-    });
+            await waitFor(() => expect(swal.fire).toHaveBeenCalled());
+            expect(swal.fire.mock.calls[0][0]).toMatchObject({
+                title: tP(lng)("shared.errorTitle"),
+                text: tP(lng)("shared.genericError"),
+            });
+        }
+    );
 });
 
 // ============================================================================================
@@ -250,88 +315,145 @@ describe("MailSettings", () => {
         },
     };
 
-    test.each(["fr", "en"])("all labels + hint + submit value are translated in %s", async (lng) => {
-        await i18n.changeLanguage(lng);
-        render(<MailSettings {...props} />);
+    test.each(["fr", "en"])(
+        "all labels + hint + submit value are translated in %s",
+        async (lng) => {
+            await i18n.changeLanguage(lng);
+            render(<MailSettings {...props} />);
 
-        for (const key of [
-            "smtpAddressLabel", "smtpPortLabel", "domainLabel", "sslTlsLabel", "authLabel",
-            "usernameLabel", "passwordLabel", "redirectLabel", "fromLabel",
-        ]) {
-            expect(byText(tP(lng)(`editParameters.mail.${key}`))).toBeInTheDocument();
+            for (const key of [
+                "smtpAddressLabel",
+                "smtpPortLabel",
+                "domainLabel",
+                "sslTlsLabel",
+                "authLabel",
+                "usernameLabel",
+                "passwordLabel",
+                "redirectLabel",
+                "fromLabel",
+            ]) {
+                expect(
+                    byText(tP(lng)(`editParameters.mail.${key}`))
+                ).toBeInTheDocument();
+            }
+            expect(
+                byText(tP(lng)("editParameters.mail.redirectHint"))
+            ).toBeInTheDocument();
+            expect(
+                screen.getByDisplayValue(tC(lng)("actions.save"))
+            ).toBeInTheDocument();
         }
-        expect(byText(tP(lng)("editParameters.mail.redirectHint"))).toBeInTheDocument();
-        expect(screen.getByDisplayValue(tC(lng)("actions.save"))).toBeInTheDocument();
-    });
+    );
 
-    test.each(["fr", "en"])("onSubmit -> fetch .ok -> success swal in %s", async (lng) => {
-        await i18n.changeLanguage(lng);
-        const {container} = render(<MailSettings {...props} />);
+    test.each(["fr", "en"])(
+        "onSubmit -> fetch .ok -> success swal in %s",
+        async (lng) => {
+            await i18n.changeLanguage(lng);
+            const { container } = render(<MailSettings {...props} />);
 
-        fireEvent.submit(container.querySelector("form"));
+            fireEvent.submit(container.querySelector("form"));
 
-        await waitFor(() => expect(swal).toHaveBeenCalled());
-        expect(swal.mock.calls[0][0]).toMatchObject({
-            title: tP(lng)("shared.saveSuccessTitle"),
-            text: tP(lng)("editParameters.settingsApplied"),
-        });
-    });
+            await waitFor(() => expect(swal.fire).toHaveBeenCalled());
+            expect(swal.fire.mock.calls[0][0]).toMatchObject({
+                title: tP(lng)("shared.saveSuccessTitle"),
+                text: tP(lng)("editParameters.settingsApplied"),
+            });
+        }
+    );
 
-    test.each(["fr", "en"])("onSubmit -> fetch !ok -> error swal in %s", async (lng) => {
-        await i18n.changeLanguage(lng);
-        global.fetch = vi.fn().mockResolvedValue({ok: false});
-        const {container} = render(<MailSettings {...props} />);
+    test.each(["fr", "en"])(
+        "onSubmit -> fetch !ok -> error swal in %s",
+        async (lng) => {
+            await i18n.changeLanguage(lng);
+            global.fetch = vi.fn().mockResolvedValue({ ok: false });
+            const { container } = render(<MailSettings {...props} />);
 
-        fireEvent.submit(container.querySelector("form"));
+            fireEvent.submit(container.querySelector("form"));
 
-        await waitFor(() => expect(swal).toHaveBeenCalled());
-        expect(swal.mock.calls[0][0]).toMatchObject({
-            title: tP(lng)("editParameters.mail.errorTitle"),
-            text: tP(lng)("shared.genericError"),
-        });
-    });
+            await waitFor(() => expect(swal.fire).toHaveBeenCalled());
+            expect(swal.fire.mock.calls[0][0]).toMatchObject({
+                title: tP(lng)("editParameters.mail.errorTitle"),
+                text: tP(lng)("shared.genericError"),
+            });
+        }
+    );
 });
 
 // ============================================================================================
 // 4. RulesSettings (mounts the real DragAndDrop child; react-dropzone is stubbed)
 // ============================================================================================
 describe("RulesSettings", () => {
-    const props = {method: "PDF", rulesUrl: "", rulesPdf: undefined, file_url: undefined};
+    const props = {
+        method: "PDF",
+        rulesUrl: "",
+        rulesPdf: undefined,
+        file_url: undefined,
+    };
 
-    test.each(["fr", "en"])("labels + formatNone option + threaded dropPdfText + submit value in %s", async (lng) => {
-        await i18n.changeLanguage(lng);
-        render(<RulesSettings {...props} />);
+    test.each(["fr", "en"])(
+        "labels + formatNone option + threaded dropPdfText + submit value in %s",
+        async (lng) => {
+            await i18n.changeLanguage(lng);
+            render(<RulesSettings {...props} />);
 
-        expect(byText(tP(lng)("editParameters.rules.formatLabel"))).toBeInTheDocument();
-        expect(byText(tP(lng)("editParameters.rules.urlLabel"))).toBeInTheDocument();
-        expect(byText(tP(lng)("editParameters.rules.pdfLabel"))).toBeInTheDocument();
-        expect(screen.getByRole("option", {name: tP(lng)("editParameters.rules.formatNone")})).toBeInTheDocument();
-        // textDisplayed={t("editParameters.rules.dropPdfText")} rendered by the mounted DragAndDrop
-        expect(byText(tP(lng)("editParameters.rules.dropPdfText"))).toBeInTheDocument();
-        expect(screen.getByDisplayValue(tC(lng)("actions.save"))).toBeInTheDocument();
-    });
+            expect(
+                byText(tP(lng)("editParameters.rules.formatLabel"))
+            ).toBeInTheDocument();
+            expect(
+                byText(tP(lng)("editParameters.rules.urlLabel"))
+            ).toBeInTheDocument();
+            expect(
+                byText(tP(lng)("editParameters.rules.pdfLabel"))
+            ).toBeInTheDocument();
+            expect(
+                screen.getByRole("option", {
+                    name: tP(lng)("editParameters.rules.formatNone"),
+                })
+            ).toBeInTheDocument();
+            // textDisplayed={t("editParameters.rules.dropPdfText")} rendered by the mounted DragAndDrop
+            expect(
+                byText(tP(lng)("editParameters.rules.dropPdfText"))
+            ).toBeInTheDocument();
+            expect(
+                screen.getByDisplayValue(tC(lng)("actions.save"))
+            ).toBeInTheDocument();
+        }
+    );
 
-    test.each(["fr", "en"])("onSubmit fires swal(loadingTitle) then swal(saveSuccess) on fetch .ok in %s", async (lng) => {
-        await i18n.changeLanguage(lng);
-        const {container} = render(<RulesSettings {...props} />);
+    test.each(["fr", "en"])(
+        "onSubmit fires swal(loadingTitle) then swal(saveSuccess) on fetch .ok in %s",
+        async (lng) => {
+            await i18n.changeLanguage(lng);
+            const { container } = render(<RulesSettings {...props} />);
 
-        fireEvent.submit(container.querySelector("form"));
+            fireEvent.submit(container.querySelector("form"));
 
-        await waitFor(() => expect(swal).toHaveBeenCalledTimes(2));
-        expect(swal.mock.calls[0][0].title).toBe(tC(lng)("loading"));
-        expect(swal.mock.calls[1][0].title).toBe(tP(lng)("shared.saveCompleted"));
-    });
+            await waitFor(() => expect(swal.fire).toHaveBeenCalledTimes(2));
+            expect(swal.fire.mock.calls[0][0].title).toBe(tC(lng)("loading"));
+            expect(swal.fire.mock.calls[1][0].title).toBe(
+                tP(lng)("shared.saveCompleted")
+            );
+        }
+    );
 
-    test.each(["fr", "en"])("onSubmit fires swal(genericError) on fetch !ok in %s", async (lng) => {
-        await i18n.changeLanguage(lng);
-        global.fetch = vi.fn().mockResolvedValue({ok: false, json: () => Promise.resolve({})});
-        const {container} = render(<RulesSettings {...props} />);
+    test.each(["fr", "en"])(
+        "onSubmit fires swal(genericError) on fetch !ok in %s",
+        async (lng) => {
+            await i18n.changeLanguage(lng);
+            global.fetch = vi.fn().mockResolvedValue({
+                ok: false,
+                json: () => Promise.resolve({}),
+            });
+            const { container } = render(<RulesSettings {...props} />);
 
-        fireEvent.submit(container.querySelector("form"));
+            fireEvent.submit(container.querySelector("form"));
 
-        await waitFor(() => expect(swal).toHaveBeenCalledTimes(2));
-        expect(swal.mock.calls[1][0].title).toBe(tP(lng)("shared.genericErrorShort"));
-    });
+            await waitFor(() => expect(swal.fire).toHaveBeenCalledTimes(2));
+            expect(swal.fire.mock.calls[1][0].title).toBe(
+                tP(lng)("shared.genericErrorShort")
+            );
+        }
+    );
 });
 
 // ============================================================================================
@@ -345,80 +467,135 @@ describe("TeachersParameters", () => {
         teacher_can_manage_courses: false,
     };
 
-    test.each(["fr", "en"])("4 headings + 4 checkbox labels + submit button are translated in %s", async (lng) => {
-        await i18n.changeLanguage(lng);
-        render(<TeachersParameters {...props} />);
+    test.each(["fr", "en"])(
+        "4 headings + 4 checkbox labels + submit button are translated in %s",
+        async (lng) => {
+            await i18n.changeLanguage(lng);
+            render(<TeachersParameters {...props} />);
 
-        for (const key of ["planningHeading", "applicationsHeading", "contactsHeading", "coursesHeading"]) {
-            expect(screen.getByRole("heading", {name: tP(lng)(`editParameters.teachers.${key}`)})).toBeInTheDocument();
+            for (const key of [
+                "planningHeading",
+                "applicationsHeading",
+                "contactsHeading",
+                "coursesHeading",
+            ]) {
+                expect(
+                    screen.getByRole("heading", {
+                        name: tP(lng)(`editParameters.teachers.${key}`),
+                    })
+                ).toBeInTheDocument();
+            }
+            for (const key of [
+                "planningLabel",
+                "applicationsLabel",
+                "contactsLabel",
+                "coursesLabel",
+            ]) {
+                expect(
+                    byText(tP(lng)(`editParameters.teachers.${key}`))
+                ).toBeInTheDocument();
+            }
+            expect(
+                screen.getByRole("button", {
+                    name: tP(lng)("shared.saveButton"),
+                })
+            ).toBeInTheDocument();
         }
-        for (const key of ["planningLabel", "applicationsLabel", "contactsLabel", "coursesLabel"]) {
-            expect(byText(tP(lng)(`editParameters.teachers.${key}`))).toBeInTheDocument();
+    );
+
+    test.each(["fr", "en"])(
+        "api success (data.success) -> success swal + location.reload in %s",
+        async (lng) => {
+            await i18n.changeLanguage(lng);
+            render(<TeachersParameters {...props} />);
+
+            fireEvent.click(
+                screen.getByRole("button", {
+                    name: tP(lng)("shared.saveButton"),
+                })
+            );
+            expect(apiState.lastSuccess).toBeTypeOf("function");
+
+            apiState.lastSuccess({ success: true });
+
+            expect(swal.fire).toHaveBeenLastCalledWith(
+                expect.objectContaining({
+                    title: tP(lng)("shared.saveSuccessTitle"),
+                    text: tP(lng)("editParameters.teachers.saveSuccessText"),
+                })
+            );
+            expect(reload).toHaveBeenCalled();
         }
-        expect(screen.getByRole("button", {name: tP(lng)("shared.saveButton")})).toBeInTheDocument();
-    });
+    );
 
-    test.each(["fr", "en"])("api success (data.success) -> success swal + location.reload in %s", async (lng) => {
-        await i18n.changeLanguage(lng);
-        render(<TeachersParameters {...props} />);
+    test.each(["fr", "en"])(
+        "api success with data.success=false -> error swal in %s",
+        async (lng) => {
+            await i18n.changeLanguage(lng);
+            render(<TeachersParameters {...props} />);
 
-        fireEvent.click(screen.getByRole("button", {name: tP(lng)("shared.saveButton")}));
-        expect(apiState.lastSuccess).toBeTypeOf("function");
+            fireEvent.click(
+                screen.getByRole("button", {
+                    name: tP(lng)("shared.saveButton"),
+                })
+            );
+            apiState.lastSuccess({ success: false });
 
-        apiState.lastSuccess({success: true});
+            expect(swal.fire).toHaveBeenLastCalledWith(
+                expect.objectContaining({
+                    title: tP(lng)("shared.errorTitle"),
+                    text: tP(lng)("editParameters.teachers.saveErrorText"),
+                })
+            );
+        }
+    );
 
-        expect(swal).toHaveBeenLastCalledWith(expect.objectContaining({
-            title: tP(lng)("shared.saveSuccessTitle"),
-            text: tP(lng)("editParameters.teachers.saveSuccessText"),
-        }));
-        expect(reload).toHaveBeenCalled();
-    });
+    test.each(["fr", "en"])(
+        "api .error callback -> error swal in %s",
+        async (lng) => {
+            await i18n.changeLanguage(lng);
+            render(<TeachersParameters {...props} />);
 
-    test.each(["fr", "en"])("api success with data.success=false -> error swal in %s", async (lng) => {
-        await i18n.changeLanguage(lng);
-        render(<TeachersParameters {...props} />);
+            fireEvent.click(
+                screen.getByRole("button", {
+                    name: tP(lng)("shared.saveButton"),
+                })
+            );
+            expect(apiState.lastError).toBeTypeOf("function");
+            apiState.lastError();
 
-        fireEvent.click(screen.getByRole("button", {name: tP(lng)("shared.saveButton")}));
-        apiState.lastSuccess({success: false});
-
-        expect(swal).toHaveBeenLastCalledWith(expect.objectContaining({
-            title: tP(lng)("shared.errorTitle"),
-            text: tP(lng)("editParameters.teachers.saveErrorText"),
-        }));
-    });
-
-    test.each(["fr", "en"])("api .error callback -> error swal in %s", async (lng) => {
-        await i18n.changeLanguage(lng);
-        render(<TeachersParameters {...props} />);
-
-        fireEvent.click(screen.getByRole("button", {name: tP(lng)("shared.saveButton")}));
-        expect(apiState.lastError).toBeTypeOf("function");
-        apiState.lastError();
-
-        expect(swal).toHaveBeenLastCalledWith(expect.objectContaining({
-            title: tP(lng)("shared.errorTitle"),
-            text: tP(lng)("editParameters.teachers.saveErrorText"),
-        }));
-    });
+            expect(swal.fire).toHaveBeenLastCalledWith(
+                expect.objectContaining({
+                    title: tP(lng)("shared.errorTitle"),
+                    text: tP(lng)("editParameters.teachers.saveErrorText"),
+                })
+            );
+        }
+    );
 });
 
 // ============================================================================================
 // 6. DragAndDrop (rendered directly; react-dropzone stubbed -> Dropzone branch)
 // ============================================================================================
 describe("DragAndDrop", () => {
-    test.each(["fr", "en"])("Dropzone branch: select button + textDisplayed render in %s", async (lng) => {
-        await i18n.changeLanguage(lng);
-        render(
-            <DragAndDrop
-                acceptedTypes="application/pdf"
-                setFile={vi.fn()}
-                textDisplayed="drop a file here"
-            />,
-        );
+    test.each(["fr", "en"])(
+        "Dropzone branch: select button + textDisplayed render in %s",
+        async (lng) => {
+            await i18n.changeLanguage(lng);
+            render(
+                <DragAndDrop
+                    acceptedTypes="application/pdf"
+                    setFile={vi.fn()}
+                    textDisplayed="drop a file here"
+                />
+            );
 
-        expect(
-            screen.getByRole("button", {name: tC(lng)("dragAndDrop.selectButton")}),
-        ).toBeInTheDocument();
-        expect(screen.getByText("drop a file here")).toBeInTheDocument();
-    });
+            expect(
+                screen.getByRole("button", {
+                    name: tC(lng)("dragAndDrop.selectButton"),
+                })
+            ).toBeInTheDocument();
+            expect(screen.getByText("drop a file here")).toBeInTheDocument();
+        }
+    );
 });

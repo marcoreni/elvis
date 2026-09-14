@@ -57,7 +57,7 @@
         "react-table": "^6.8.0",
         "react-toastify": "^4.5.2",
         "react_ujs": "^2.4.3",
-        "sweetalert2": "^7.26.11",
+        "sweetalert2": "^11.26.25",
         "tui-calendar": "https://github.com/SIXMON/tui.calendar.git"
     },
     "devDependencies": {

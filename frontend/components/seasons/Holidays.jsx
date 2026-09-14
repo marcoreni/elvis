@@ -36,7 +36,7 @@ class Holidays extends React.Component {
                 Header: t("planning:holidays.columns.start"),
                 accessor: "start",
                 sortable: true,
-                Cell: props => (
+                Cell: (props) => (
                     <div
                         className="text-center"
                         title={t("planning:holidays.dateHint")}
@@ -49,7 +49,7 @@ class Holidays extends React.Component {
                 Header: t("planning:holidays.columns.end"),
                 accessor: "end",
                 sortable: true,
-                Cell: props => (
+                Cell: (props) => (
                     <div
                         className="text-center"
                         title={t("planning:holidays.dateHint")}
@@ -62,7 +62,7 @@ class Holidays extends React.Component {
                 Header: t("planning:holidays.columns.action"),
                 sortable: false,
                 width: 75,
-                Cell: props => {
+                Cell: (props) => {
                     return (
                         <div className="btn-wrapper text-center">
                             <button
@@ -108,7 +108,7 @@ class Holidays extends React.Component {
     addModal() {
         const { t } = this.props;
 
-        swal({
+        swal.fire({
             title: t("planning:holidays.addModal.title"),
             confirmButtonText: t("common:actions.confirm"),
             cancelButtonText: t("common:actions.cancel"),
@@ -128,7 +128,7 @@ class Holidays extends React.Component {
                 '<div class="text-left">' +
                 `<label>${t("planning:holidays.addModal.labelLabel")}</label>` +
                 "</div>",
-            preConfirm: data => {
+            preConfirm: (data) => {
                 const er = $("#er");
                 er.text("");
 
@@ -174,11 +174,11 @@ class Holidays extends React.Component {
                         start: dateStart,
                         end: dateEnd,
                     }),
-                }).then(response => {
+                }).then((response) => {
                     return response.json();
                 });
             },
-        }).then(result => {
+        }).then((result) => {
             if (result.value) {
                 const sauv = this.state.sauv.slice();
                 const datas = this.state.datas;
@@ -200,14 +200,14 @@ class Holidays extends React.Component {
     fetchModal() {
         const { t } = this.props;
 
-        swal({
+        swal.fire({
             title: t("planning:holidays.fetchModal.title"),
             confirmButtonText: t("common:actions.confirm"),
             cancelButtonText: t("common:actions.cancel"),
             showCancelButton: true,
             showLoaderOnConfirm: true,
 
-            preConfirm: data => {
+            preConfirm: (data) => {
                 return fetch(`/season/${this.props.sid}/fetch_holidays`, {
                     method: "POST",
                     credentials: "same-origin",
@@ -217,11 +217,11 @@ class Holidays extends React.Component {
                         Accept: "application/json",
                     },
                     body: null,
-                }).then(response => {
+                }).then((response) => {
                     return response.json();
                 });
             },
-        }).then(result => {
+        }).then((result) => {
             if (result.value) {
                 // on réinitialise complètement les données du tableau
                 const sauv = [];
@@ -246,7 +246,7 @@ class Holidays extends React.Component {
     deleteModal(props) {
         const { t } = this.props;
 
-        swal({
+        swal.fire({
             title: t("planning:holidays.deleteModal.title", {
                 label: props.original.label,
             }),
@@ -254,7 +254,7 @@ class Holidays extends React.Component {
             cancelButtonText: t("common:actions.cancel"),
             showCancelButton: true,
             showLoaderOnConfirm: true,
-            type: "question",
+            icon: "question",
             preConfirm: () => {
                 return fetch(`/season/${this.props.sid}/holidays`, {
                     method: "DELETE",
@@ -269,18 +269,18 @@ class Holidays extends React.Component {
                         start: props.original.start,
                         end: props.original.end,
                     }),
-                }).then(response => response.json());
+                }).then((response) => response.json());
             },
-        }).then(data => {
+        }).then((data) => {
             if (data.value) {
                 const sauv = this.state.sauv.filter(
-                    s =>
+                    (s) =>
                         s["label"] !== props.original.label &&
                         s["start"] !== props.original.start &&
                         s["end"] !== props.original.end
                 );
                 const datas = this.state.datas.filter(
-                    s =>
+                    (s) =>
                         s["label"] !== props.original.label &&
                         s["start"] !== props.original.start &&
                         s["end"] !== props.original.end

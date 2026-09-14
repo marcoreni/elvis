@@ -1,23 +1,24 @@
 import React from "react";
 import _ from "lodash";
-import {withTranslation} from "react-i18next";
-import {csrfToken} from "../utils";
+import { withTranslation } from "react-i18next";
+import { csrfToken } from "../utils";
 import swal from "sweetalert2";
 import ActivityRefBasics from "./ActivityRefBasics";
 import ActivityRefApplication from "./ActivityRefApplication";
 import TabbedComponent from "../utils/ui/tabs";
 import WorkGroupTemplateEditor from "./WorkGroupTemplateEditor";
-import {Form} from "react-final-form";
+import { Form } from "react-final-form";
 import * as api from "../../tools/api";
-import {redirectTo} from "../../tools/url";
+import { redirectTo } from "../../tools/url";
 import ActivityRefTeachers from "./ActivityRefTeachers";
 import arrayMutators from "final-form-arrays";
-
 
 class ActivityRefContainer extends React.Component {
     constructor(props) {
         super(props);
-        const applicationOptions = this.buildApplicationOptions(this.props.activityRef);
+        const applicationOptions = this.buildApplicationOptions(
+            this.props.activityRef
+        );
 
         this.initialValues = {
             activityRef: {
@@ -27,11 +28,11 @@ class ActivityRefContainer extends React.Component {
             applicationOptions,
             substitutable: this.props.activityRef.substitutable.toString(),
             allowsTimeslotSelection:
-                this.props.activityRef.allows_timeslot_selection === null ?
-                    "false" :
-                    this.props.activityRef.allows_timeslot_selection.toString(),
+                this.props.activityRef.allows_timeslot_selection === null
+                    ? "false"
+                    : this.props.activityRef.allows_timeslot_selection.toString(),
             nextCycles: this.props.nextCycles,
-            teachers: this.props.teachers.map(teacher => teacher.id),
+            teachers: this.props.teachers.map((teacher) => teacher.id),
         };
 
         this.instruments = _(props.activityInstruments)
@@ -42,8 +43,8 @@ class ActivityRefContainer extends React.Component {
         this.teachers = this.props.teachers;
         this.imageChanged = false;
         this.route =
-            this.props.postTo === "update" ?
-                `/activity_ref/${this.props.activityRef.id}/update`
+            this.props.postTo === "update"
+                ? `/activity_ref/${this.props.activityRef.id}/update`
                 : `/activity_ref`;
 
         this.state = {
@@ -54,7 +55,8 @@ class ActivityRefContainer extends React.Component {
     buildApplicationOptions(activityRef) {
         const options = [];
 
-        activityRef.has_additional_student && options.push("has_additional_student");
+        activityRef.has_additional_student &&
+            options.push("has_additional_student");
         activityRef.is_lesson && options.push("is_lesson");
         activityRef.is_visible_to_admin && options.push("is_visible_to_admin");
         activityRef.is_unpopular && options.push("is_unpopular");
@@ -66,33 +68,39 @@ class ActivityRefContainer extends React.Component {
     addPricingCategoriesToSave(pricing) {
         // on ajoute le pricing à la liste des pricings à sauvegarder
         this.setState({
-            pricingCategoriesToSave: [...this.state.pricingCategoriesToSave, pricing],
+            pricingCategoriesToSave: [
+                ...this.state.pricingCategoriesToSave,
+                pricing,
+            ],
         });
     }
 
     updatePricingCategoriesToSave(updatedPricing) {
         // on met à jour le pricing dans la liste des pricings à sauvegarder
         this.setState({
-            pricingCategoriesToSave: this.state.pricingCategoriesToSave.map(pricing => {
-                if (pricing.id === updatedPricing.id) {
-                    return updatedPricing;
+            pricingCategoriesToSave: this.state.pricingCategoriesToSave.map(
+                (pricing) => {
+                    if (pricing.id === updatedPricing.id) {
+                        return updatedPricing;
+                    }
+                    return pricing;
                 }
-                return pricing;
-            }),
+            ),
         });
     }
 
     deletePricingCategoriesToSave(pricing) {
         // on supprime le pricing de la liste des pricings à sauvegarder
         this.setState({
-            pricingCategoriesToSave: this.state.pricingCategoriesToSave.filter(p => p.id !== pricing.id),
+            pricingCategoriesToSave: this.state.pricingCategoriesToSave.filter(
+                (p) => p.id !== pricing.id
+            ),
         });
     }
 
-    onWorkgroupChange({values}) {
+    onWorkgroupChange({ values }) {
         this.instruments = values;
     }
-
 
     /**
      * @param {[]} teachers
@@ -102,7 +110,7 @@ class ActivityRefContainer extends React.Component {
     }
 
     sendImage(activityRefId) {
-        const {t} = this.props;
+        const { t } = this.props;
         let formData = new FormData();
         formData.append("picture", this.image);
 
@@ -113,27 +121,26 @@ class ActivityRefContainer extends React.Component {
                 "X-CSRF-Token": csrfToken,
             },
             body: formData,
-        }).then(res => {
+        }).then((res) => {
             if (res.ok) {
-                res.json().then(json => {
+                res.json().then((json) => {
                     redirectTo("/activity_ref");
-                    swal({
-                        type: "success",
+                    swal.fire({
+                        icon: "success",
                         title: t("activityRef.container.saved"),
                     });
                 });
             } else {
-                swal({
-                    type: "error",
+                swal.fire({
+                    icon: "error",
                     title: t("activityRef.container.genericError"),
                 });
             }
         });
-
     }
 
     onSubmit(values) {
-        const {t} = this.props;
+        const { t } = this.props;
 
         // on prépare les valeurs pour envoi à l'API
         var activityRef = {
@@ -147,12 +154,17 @@ class ActivityRefContainer extends React.Component {
             activity_type: values.activityRef.activity_type || "",
             nb_lessons: values.activityRef.nb_lessons || null,
             next_cycles: values.nextCycles,
-            has_additional_student: values.applicationOptions.includes("has_additional_student"),
+            has_additional_student: values.applicationOptions.includes(
+                "has_additional_student"
+            ),
             is_lesson: values.applicationOptions.includes("is_lesson"),
-            is_visible_to_admin: values.applicationOptions.includes("is_visible_to_admin"),
+            is_visible_to_admin: values.applicationOptions.includes(
+                "is_visible_to_admin"
+            ),
             is_unpopular: values.applicationOptions.includes("is_unpopular"),
             is_evaluable: values.applicationOptions.includes("is_evaluable"),
-            allows_timeslot_selection: values.allowsTimeslotSelection === "true",
+            allows_timeslot_selection:
+                values.allowsTimeslotSelection === "true",
             substitutable: values.substitutable === "true",
             is_work_group: values.activityRef.is_work_group,
             instruments: this.instruments,
@@ -162,51 +174,57 @@ class ActivityRefContainer extends React.Component {
             color_code: values.activityRef.color_code,
         };
 
-        api
-            .set()
+        api.set()
             .success((res) => {
                 if (this.imageChanged) {
                     const activityRefId =
-                        this.props.postTo == "create" ?
-                            res.activityRefId
+                        this.props.postTo == "create"
+                            ? res.activityRefId
                             : activityRef.id;
 
                     this.sendImage(activityRefId);
-
                 } else {
                     redirectTo("/activity_ref");
-                    swal({
-                        type: "success",
+                    swal.fire({
+                        icon: "success",
                         title: t("activityRef.container.saved"),
                     });
                 }
-
             })
             .error((msg) => {
                 console.log("error updating activity ref : ", msg);
-                swal({
-                    type: "error",
+                swal.fire({
+                    icon: "error",
                     title: t("activityRef.container.genericError"),
                 });
-
             })
-            .post(this.route, {activity_ref: activityRef});
-
+            .post(this.route, { activity_ref: activityRef });
     }
 
     onValidate(values) {
-        const {t} = this.props;
+        const { t } = this.props;
 
         const errors = {};
 
-        if (isIntStrInf(values.activityRef.occupation_hard_limit, values.activityRef.occupation_limit)) {
+        if (
+            isIntStrInf(
+                values.activityRef.occupation_hard_limit,
+                values.activityRef.occupation_limit
+            )
+        ) {
             errors.activityRef = errors.activityRef || {};
-            errors.activityRef.occupation_hard_limit = t("activityRef.container.errors.hardLimitTooLow");
+            errors.activityRef.occupation_hard_limit = t(
+                "activityRef.container.errors.hardLimitTooLow"
+            );
         }
 
-        if (isIntStrInf(values.activityRef.to_age, values.activityRef.from_age)) {
+        if (
+            isIntStrInf(values.activityRef.to_age, values.activityRef.from_age)
+        ) {
             errors.activityRef = errors.activityRef || {};
-            errors.activityRef.to_age = t("activityRef.container.errors.toAgeTooLow");
+            errors.activityRef.to_age = t(
+                "activityRef.container.errors.toAgeTooLow"
+            );
         }
 
         // errors.teachers = "doit être renseigné";
@@ -228,7 +246,7 @@ class ActivityRefContainer extends React.Component {
     }
 
     render() {
-        const {t} = this.props;
+        const { t } = this.props;
         return (
             <div className="col-lg-12 page-reglement">
                 <Form
@@ -237,78 +255,137 @@ class ActivityRefContainer extends React.Component {
                     mutators={{ ...arrayMutators }}
                     initialValues={this.initialValues}
 
-
-                    render={({handleSubmit, errors, form, values}) => (
+                    render={({ handleSubmit, errors, form, values }) => (
                         <form onSubmit={handleSubmit}>
+                            <TabbedComponent
+                                tabs={[
+                                    // les caractéristiques principales de l'activité
+                                    {
+                                        id: "activity_ref_basics",
+                                        header: t(
+                                            "activityRef.container.tabs.basics"
+                                        ),
+                                        isInError: !!errors.activityRef,
+                                        body: (
+                                            <ActivityRefBasics
+                                                activityRef={
+                                                    this.props.activityRef
+                                                }
+                                                activityTypes={
+                                                    this.props.activityTypes
+                                                }
+                                                activityRefImage={
+                                                    this.props.activityRefImage
+                                                }
+                                                activityRefKinds={
+                                                    this.props.activityRefKinds
+                                                }
+                                                onImageChange={this.onImageChange.bind(
+                                                    this
+                                                )}
+                                                seasons={this.props.seasons}
+                                                addPricingCategoriesToSave={this.addPricingCategoriesToSave.bind(
+                                                    this
+                                                )}
+                                                updatePricingCategoriesToSave={this.updatePricingCategoriesToSave.bind(
+                                                    this
+                                                )}
+                                                deletePricingCategoriesToSave={this.deletePricingCategoriesToSave.bind(
+                                                    this
+                                                )}
+                                            />
+                                        ),
+                                    },
 
-                            <TabbedComponent tabs={[
+                                    // ce qui est en rapport avec l'inscription
+                                    {
+                                        id: "activity_ref_application",
+                                        header: t(
+                                            "activityRef.container.tabs.application"
+                                        ),
+                                        body: (
+                                            <ActivityRefApplication
+                                                activityRefs={
+                                                    this.props.activityRefs
+                                                }
+                                                substitutable={
+                                                    this.initialValues
+                                                        .substitutable
+                                                }
+                                            />
+                                        ),
+                                    },
 
-                                // les caractéristiques principales de l'activité
-                                {
-                                    id: "activity_ref_basics",
-                                    header: t("activityRef.container.tabs.basics"),
-                                    isInError: !!errors.activityRef,
-                                    body: <ActivityRefBasics
-                                        activityRef={this.props.activityRef}
-                                        activityTypes={this.props.activityTypes}
-                                        activityRefImage={this.props.activityRefImage}
-                                        activityRefKinds={this.props.activityRefKinds}
-                                        onImageChange={this.onImageChange.bind(this)}
-                                        seasons={this.props.seasons}
-                                        addPricingCategoriesToSave={this.addPricingCategoriesToSave.bind(this)}
-                                        updatePricingCategoriesToSave={this.updatePricingCategoriesToSave.bind(this)}
-                                        deletePricingCategoriesToSave={this.deletePricingCategoriesToSave.bind(this)}
-                                    />,
-                                },
+                                    // les instruments éventuellement liés à l'atelier
+                                    {
+                                        id: "activity_ref_workgroup",
+                                        header: t(
+                                            "activityRef.container.tabs.workgroup"
+                                        ),
+                                        body: (
+                                            <WorkGroupTemplateEditor
+                                                activityRefId={
+                                                    this.props.activityRef.id
+                                                }
+                                                activityInstruments={
+                                                    this.props
+                                                        .activityInstruments
+                                                }
+                                                instruments={
+                                                    this.props.instruments
+                                                }
+                                                onChange={this.onWorkgroupChange.bind(
+                                                    this
+                                                )}
+                                            />
+                                        ),
+                                    },
+                                    {
+                                        id: "activity_ref_teachers",
+                                        header: t(
+                                            "activityRef.container.tabs.teachers"
+                                        ),
+                                        isInError:
+                                            !values.teachers ||
+                                            values.teachers.length === 0,
+                                        body: (
+                                            <ActivityRefTeachers
+                                                teachers={values.teachers}
+                                                mutators={form.mutators}
+                                            />
+                                        ),
+                                    },
+                                ]}
+                            ></TabbedComponent>
 
-                                // ce qui est en rapport avec l'inscription
-                                {
-                                    id: "activity_ref_application",
-                                    header: t("activityRef.container.tabs.application"),
-                                    body: <ActivityRefApplication
-                                        activityRefs={this.props.activityRefs}
-                                        substitutable={this.initialValues.substitutable}
-                                    />,
-                                },
-
-                                // les instruments éventuellement liés à l'atelier
-                                {
-                                    id: "activity_ref_workgroup",
-                                    header: t("activityRef.container.tabs.workgroup"),
-                                    body: <WorkGroupTemplateEditor
-                                        activityRefId={this.props.activityRef.id}
-                                        activityInstruments={this.props.activityInstruments}
-                                        instruments={this.props.instruments}
-                                        onChange={this.onWorkgroupChange.bind(this)}
-                                    />,
-                                },
-                                {
-                                    id: "activity_ref_teachers",
-                                    header: t("activityRef.container.tabs.teachers"),
-                                    isInError: !values.teachers || values.teachers.length === 0,
-                                    body: <ActivityRefTeachers
-                                        teachers={values.teachers}
-                                        mutators={form.mutators}
-                                    />,
-                                },
-
-                            ]}>
-
-                            </TabbedComponent>
-
-
-                            <div style={{padding: 20, display: "flex", justifyContent: "flex-end", gap: "20px"}}>
+                            <div
+                                style={{
+                                    padding: 20,
+                                    display: "flex",
+                                    justifyContent: "flex-end",
+                                    gap: "20px",
+                                }}
+                            >
                                 <div>
-                                    <button type="reset" className="btn btn-block">{t("common:actions.cancel")}</button>
+                                    <button
+                                        type="reset"
+                                        className="btn btn-block"
+                                    >
+                                        {t("common:actions.cancel")}
+                                    </button>
                                 </div>
                                 <div>
-                                    <button type="submit" className="btn btn-primary btn-block">{t("common:actions.validate")}</button>
+                                    <button
+                                        type="submit"
+                                        className="btn btn-primary btn-block"
+                                    >
+                                        {t("common:actions.validate")}
+                                    </button>
                                 </div>
                             </div>
                         </form>
                     )}
                 />
-
             </div>
         );
     }

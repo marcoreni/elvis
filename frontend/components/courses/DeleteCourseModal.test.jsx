@@ -22,10 +22,7 @@ vi.mock("../planning/YearlyCalendar", () => ({
 }));
 
 vi.mock("sweetalert2", () => ({
-    default: Object.assign(
-        vi.fn(() => Promise.resolve({})),
-        { fire: vi.fn(() => Promise.resolve({})) }
-    ),
+    default: { fire: vi.fn(() => Promise.resolve({})) },
 }));
 
 const okJson = (body) =>
@@ -129,8 +126,8 @@ describe("DeleteCourseModal — i18n", () => {
         );
         fireEvent.click(screen.getByRole("button", { name: "Valider" }));
 
-        await waitFor(() => expect(swal).toHaveBeenCalled());
-        expect(swal).toHaveBeenCalledWith(
+        await waitFor(() => expect(swal.fire).toHaveBeenCalled());
+        expect(swal.fire).toHaveBeenCalledWith(
             expect.objectContaining({
                 title: "Attention",
                 text: "Aucun cours ne peut être supprimé.",

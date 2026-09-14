@@ -29,7 +29,7 @@ export default function myActivities() {
         const now = new Date();
 
         // Vérifier si les inscriptions sont ouvertes pour la saison en cours
-        const ss = season_list.find(season => season.id == selectedSeason);
+        const ss = season_list.find((season) => season.id == selectedSeason);
         if (!ss) return false;
 
         const opening_date_for_new_applications = new Date(
@@ -46,7 +46,7 @@ export default function myActivities() {
         }
 
         // Vérifier si les inscriptions sont ouvertes pour la saison suivante
-        const ns = season_list.find(season => season.id == ss.next_season_id);
+        const ns = season_list.find((season) => season.id == ss.next_season_id);
         if (!ns) return false;
 
         const next_opening_date_for_new_applications = new Date(
@@ -64,11 +64,11 @@ export default function myActivities() {
 
     const isReRegistrationPeriodOpen = () => {
         const now = new Date();
-        const ss = season_list.find(season => season.id == selectedSeason);
+        const ss = season_list.find((season) => season.id == selectedSeason);
         if (!ss || !ss.next_season_id) return false;
 
         const nextSeason = season_list.find(
-            season => season.id == ss.next_season_id
+            (season) => season.id == ss.next_season_id
         );
         if (!nextSeason) return false;
 
@@ -120,29 +120,29 @@ export default function myActivities() {
         return await api
             .set()
             .useLoading()
-            .success(res => {
+            .success((res) => {
                 const currentSeason =
-                    res.seasons.find(season => season.is_current) ||
+                    res.seasons.find((season) => season.is_current) ||
                     res.seasons[0];
                 setSelectedSeason(currentSeason.id);
                 setSeasonList(_.sortBy(res.seasons || [], "start").reverse());
                 return res.current_season;
             })
-            .error(res => {
-                swal(
-                    t("activityApplications:packs.fetchError"),
-                    res.error,
-                    "error"
-                );
+            .error((res) => {
+                swal.fire({
+                    title: t("activityApplications:packs.fetchError"),
+                    text: res.error,
+                    icon: "error",
+                });
             })
             .get(``, {});
     };
 
-    const fetchData = async season_id => {
+    const fetchData = async (season_id) => {
         await api
             .set()
             .useLoading()
-            .success(res => {
+            .success((res) => {
                 setUser(res.user);
                 setUserActivities(res.userActivities);
                 setRegularActivities(res.regular_user_activities);
@@ -152,24 +152,24 @@ export default function myActivities() {
                 setFamilyUsers(res.family_users || []);
                 setLoading(false);
             })
-            .error(res => {
-                swal(
-                    t("activityApplications:packs.fetchError"),
-                    res.error,
-                    "error"
-                );
+            .error((res) => {
+                swal.fire({
+                    title: t("activityApplications:packs.fetchError"),
+                    text: res.error,
+                    icon: "error",
+                });
             })
             .get(`/get_user_activities_data` + window.location.pathname, {
                 season_id,
             });
     };
 
-    const handleSeasonChange = event => {
+    const handleSeasonChange = (event) => {
         setSelectedSeason(event.target.value);
     };
 
     useEffect(() => {
-        fetchSeason().then(r => {
+        fetchSeason().then((r) => {
             fetchData(r.id);
         });
     }, []);
@@ -217,7 +217,7 @@ export default function myActivities() {
                                                     "activityApplications:packs.myActivities.selectSeason"
                                                 )}
                                             </option>
-                                            {season_list.map(season => (
+                                            {season_list.map((season) => (
                                                 <option
                                                     key={season.id}
                                                     value={season.id}

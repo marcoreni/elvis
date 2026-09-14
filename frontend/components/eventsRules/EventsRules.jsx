@@ -64,8 +64,8 @@ class EventsRules extends Component {
         this.setState({ loading: true, filter: state });
 
         requestData(state.pageSize, state.page, state.sorted, state.filtered)
-            .then(response => response.json())
-            .then(data => {
+            .then((response) => response.json())
+            .then((data) => {
                 const res = {
                     data: data.rules,
                     pages: data.pages,
@@ -74,7 +74,7 @@ class EventsRules extends Component {
 
                 return res;
             })
-            .then(res => {
+            .then((res) => {
                 this.setState({
                     ...res,
                     loading: false,
@@ -162,40 +162,48 @@ class EventsRules extends Component {
                         action: e.action,
                     }),
                 })
-                    .then(response => {
+                    .then((response) => {
                         if (!response.ok)
-                            swal(
-                                t("parameters:eventsRules.toasts.errorTitle"),
-                                t("parameters:eventsRules.toasts.routingError"),
-                                "error"
-                            );
+                            swal.fire({
+                                title: t(
+                                    "parameters:eventsRules.toasts.errorTitle"
+                                ),
+                                text: t(
+                                    "parameters:eventsRules.toasts.routingError"
+                                ),
+                                icon: "error",
+                            });
 
                         return response.json();
                     })
-                    .then(json => {
-                        swal(
-                            t("parameters:eventsRules.toasts.successTitle"),
-                            t("parameters:eventsRules.toasts.ruleCreated"),
-                            "success"
-                        );
+                    .then((json) => {
+                        swal.fire({
+                            title: t(
+                                "parameters:eventsRules.toasts.successTitle"
+                            ),
+                            text: t(
+                                "parameters:eventsRules.toasts.ruleCreated"
+                            ),
+                            icon: "success",
+                        });
                         this.fetchData(this.state.filter);
                         this.closeRuleModal();
                     });
             } else {
-                swal(
-                    t("parameters:eventsRules.toasts.errorTitle"),
-                    t("parameters:eventsRules.toasts.ruleAlreadyExists", {
+                swal.fire({
+                    title: t("parameters:eventsRules.toasts.errorTitle"),
+                    text: t("parameters:eventsRules.toasts.ruleAlreadyExists", {
                         event: e.event.label,
                     }),
-                    "error"
-                );
+                    icon: "error",
+                });
             }
         } else {
-            swal(
-                t("parameters:eventsRules.toasts.errorTitle"),
-                t("parameters:eventsRules.toasts.missingFields"),
-                "error"
-            );
+            swal.fire({
+                title: t("parameters:eventsRules.toasts.errorTitle"),
+                text: t("parameters:eventsRules.toasts.missingFields"),
+                icon: "error",
+            });
         }
     }
 
@@ -220,22 +228,22 @@ class EventsRules extends Component {
                 sendTo: e.sendTo,
             }),
         })
-            .then(response => {
+            .then((response) => {
                 if (!response.ok)
-                    swal(
-                        t("parameters:eventsRules.toasts.errorTitle"),
-                        t("parameters:eventsRules.toasts.routingError"),
-                        "error"
-                    );
+                    swal.fire({
+                        title: t("parameters:eventsRules.toasts.errorTitle"),
+                        text: t("parameters:eventsRules.toasts.routingError"),
+                        icon: "error",
+                    });
 
                 return response.json();
             })
-            .then(json => {
-                swal(
-                    t("parameters:eventsRules.toasts.successTitle"),
-                    t("parameters:eventsRules.toasts.ruleUpdated"),
-                    "success"
-                );
+            .then((json) => {
+                swal.fire({
+                    title: t("parameters:eventsRules.toasts.successTitle"),
+                    text: t("parameters:eventsRules.toasts.ruleUpdated"),
+                    icon: "success",
+                });
                 this.fetchData(this.state.filter);
                 this.closeModifyRuleModal();
             });
@@ -244,13 +252,13 @@ class EventsRules extends Component {
     DeleteRulesProcess(e, id) {
         const { t } = this.props;
         e.preventDefault();
-        swal({
+        swal.fire({
             title: t("parameters:eventsRules.deleteConfirm"),
-            type: "warning",
+            icon: "warning",
             confirmButtonText: t("parameters:eventsRules.deleteYes"),
             cancelButtonText: t("common:actions.cancel"),
             showCancelButton: true,
-        }).then(a => {
+        }).then((a) => {
             if (a.value) {
                 fetch(`/events_rules/` + id, {
                     method: "DELETE",
@@ -263,20 +271,24 @@ class EventsRules extends Component {
                     body: JSON.stringify({
                         id: id,
                     }),
-                }).then(response => {
+                }).then((response) => {
                     if (!response.ok)
-                        swal(
-                            t("parameters:eventsRules.toasts.errorTitle"),
-                            t("parameters:eventsRules.toasts.routingError"),
-                            "error"
-                        );
+                        swal.fire({
+                            title: t(
+                                "parameters:eventsRules.toasts.errorTitle"
+                            ),
+                            text: t(
+                                "parameters:eventsRules.toasts.routingError"
+                            ),
+                            icon: "error",
+                        });
 
                     this.fetchData(this.state.filter);
-                    swal(
-                        t("parameters:eventsRules.toasts.successTitle"),
-                        t("parameters:eventsRules.toasts.ruleDeleted"),
-                        "success"
-                    );
+                    swal.fire({
+                        title: t("parameters:eventsRules.toasts.successTitle"),
+                        text: t("parameters:eventsRules.toasts.ruleDeleted"),
+                        icon: "success",
+                    });
                 });
             }
         });
@@ -296,7 +308,7 @@ class EventsRules extends Component {
             {
                 id: "eventName",
                 Header: t("parameters:eventsRules.columns.event"),
-                accessor: event => {
+                accessor: (event) => {
                     return (
                         <a onClick={() => this.openModifyRuleModal(event)}>
                             {JSON.parse(event.event).label}
@@ -307,7 +319,7 @@ class EventsRules extends Component {
             {
                 id: "actions",
                 Header: t("parameters:eventsRules.columns.actions"),
-                Cell: props => {
+                Cell: (props) => {
                     return (
                         <div className="btn-wrapper text-center">
                             {props.original.sendMail ? (
@@ -358,7 +370,7 @@ class EventsRules extends Component {
 
                             <a
                                 className="btn btn-sm btn-danger mb-3"
-                                onClick={e =>
+                                onClick={(e) =>
                                     this.DeleteRulesProcess(
                                         e,
                                         props.original.id

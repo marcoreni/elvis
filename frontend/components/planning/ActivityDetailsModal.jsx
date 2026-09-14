@@ -1,26 +1,32 @@
-import React, {Fragment} from "react";
-import _, {toInteger} from "lodash";
+import React, { Fragment } from "react";
+import _, { toInteger } from "lodash";
 import Select from "react-select";
 import { withTranslation, useTranslation } from "react-i18next";
 import ErrorList from "../common/ErrorList";
 import * as TimeIntervalHelpers from "./TimeIntervalHelpers";
-import {csrfToken, findAndGet, ISO_DATE_FORMAT, optionMapper, USER_OPTIONS} from "../utils";
+import {
+    csrfToken,
+    findAndGet,
+    ISO_DATE_FORMAT,
+    optionMapper,
+    USER_OPTIONS,
+} from "../utils";
 import YearlyCalendar from "./YearlyCalendar";
 import TabbedComponent from "../utils/ui/tabs";
 import * as api from "../../tools/api";
-import {AttendanceControl} from '../PresenceSheet'
-import {withSave} from './withSave'
+import { AttendanceControl } from "../PresenceSheet";
+import { withSave } from "./withSave";
 import swal from "sweetalert2";
 
 import moment from "moment";
 
-const getRoom = (rooms, id) => _.find(rooms, r => r.id == id);
+const getRoom = (rooms, id) => _.find(rooms, (r) => r.id == id);
 
-const isEveil = activity => {
+const isEveil = (activity) => {
     return activity.activity_ref.has_additional_student;
 };
 
-const getTime = momentObj => {
+const getTime = (momentObj) => {
     return momentObj.format("HH:mm");
 };
 
@@ -48,16 +54,26 @@ class ActivityDetailsModal extends React.Component {
 
         let activity = undefined;
 
-        if (props.interval.activity_instance) activity = props.interval.activity_instance.activity;
+        if (props.interval.activity_instance)
+            activity = props.interval.activity_instance.activity;
         else if (props.interval.activity) activity = props.interval.activity;
 
-        const activityId = activity ? activity.activity_ref_id : props.activityId;
+        const activityId = activity
+            ? activity.activity_ref_id
+            : props.activityId;
 
-        const room_id = props.interval.activity_instance ? props.interval.activity_instance.room.id : activity ? activity.room.id : props.room_id;
+        const room_id = props.interval.activity_instance
+            ? props.interval.activity_instance.room.id
+            : activity
+              ? activity.room.id
+              : props.room_id;
 
         let location_id;
         if (activity) {
-            location_id = _.filter(props.room_refs, room => room.id == room_id)[0].location_id;
+            location_id = _.filter(
+                props.room_refs,
+                (room) => room.id == room_id
+            )[0].location_id;
         } else if (props.locations && props.locations.length === 1) {
             location_id = props.locations[0].id;
         } else {
@@ -66,9 +82,9 @@ class ActivityDetailsModal extends React.Component {
 
         const rooms_constrained = activity
             ? _.chain(props.rooms)
-                .filter(room_ref => room_ref.location_id === location_id)
-                .sortBy(["location_id", "label"])
-                .value()
+                  .filter((room_ref) => room_ref.location_id === location_id)
+                  .sortBy(["location_id", "label"])
+                  .value()
             : props.rooms;
 
         const teacher_id =
@@ -78,12 +94,12 @@ class ActivityDetailsModal extends React.Component {
 
         let mainTeacherId =
             activity &&
-            _.filter(activity.teachers_activities, ta => ta.is_main)[0];
+            _.filter(activity.teachers_activities, (ta) => ta.is_main)[0];
         mainTeacherId = mainTeacherId && mainTeacherId.user_id;
 
         let assistantTeacherId =
             activity &&
-            _.filter(activity.teachers_activities, ta => !ta.is_main)[0];
+            _.filter(activity.teachers_activities, (ta) => !ta.is_main)[0];
         assistantTeacherId = assistantTeacherId && assistantTeacherId.user_id;
 
         let recurrences = [
@@ -100,10 +116,21 @@ class ActivityDetailsModal extends React.Component {
             );
 
         const instance = {
-            teacher_id: _.get(this.props.interval, "activity_instance.teachers_activity_instances[0].user_id"),
-            evaluation_level_ref_id: _.get(this.props.interval, "activity_instance.activity.evaluation_level_ref_id"),
+            teacher_id: _.get(
+                this.props.interval,
+                "activity_instance.teachers_activity_instances[0].user_id"
+            ),
+            evaluation_level_ref_id: _.get(
+                this.props.interval,
+                "activity_instance.activity.evaluation_level_ref_id"
+            ),
             instances_update_scope: InstancesUpdateScope.SINGULAR,
-            ..._.pick(_.get(this.props.interval, "activity_instance"), ["room_id", "location_id", "are_hours_counted", "cover_teacher_id"]),
+            ..._.pick(_.get(this.props.interval, "activity_instance"), [
+                "room_id",
+                "location_id",
+                "are_hours_counted",
+                "cover_teacher_id",
+            ]),
         };
 
         this.state = {
@@ -143,42 +170,60 @@ class ActivityDetailsModal extends React.Component {
             errors: [],
             attendances: [],
             options: [],
-            submitting: this.props.savingActivityInstances
+            submitting: this.props.savingActivityInstances,
         };
 
-        this.state.attendances = (_.get(this.props.interval, "activity_instance.student_attendances") || []).map(sa => {
-            const attended = _.find(this.state.changes.attendances, (v, k) => sa.id == k);
-            return attended !== undefined && attended != null && {
-                ...sa,
-                attended,
-            } || {...sa};
+        this.state.attendances = (
+            _.get(
+                this.props.interval,
+                "activity_instance.student_attendances"
+            ) || []
+        ).map((sa) => {
+            const attended = _.find(
+                this.state.changes.attendances,
+                (v, k) => sa.id == k
+            );
+            return (
+                (attended !== undefined &&
+                    attended != null && {
+                        ...sa,
+                        attended,
+                    }) || { ...sa }
+            );
         });
 
-        viewAttendances = []
-        listUser = []
+        viewAttendances = [];
+        listUser = [];
 
-        this.state.attendances.forEach(a => {
-            listUser.push(a.user)
-            viewAttendances.push({...a})
+        this.state.attendances.forEach((a) => {
+            listUser.push(a.user);
+            viewAttendances.push({ ...a });
         });
 
-        viewOptions = []
+        viewOptions = [];
 
-        this.state.options = (_.get(this.props.interval, "activity_instance.activity.options") || []).map(sa => {
-
-            if (listUser.find(user => user.id === sa.desired_activity.activity_application.user.id) === undefined)
-                return {...sa.desired_activity.activity_application.user};
+        this.state.options = (
+            _.get(this.props.interval, "activity_instance.activity.options") ||
+            []
+        ).map((sa) => {
+            if (
+                listUser.find(
+                    (user) =>
+                        user.id ===
+                        sa.desired_activity.activity_application.user.id
+                ) === undefined
+            )
+                return { ...sa.desired_activity.activity_application.user };
         });
 
         // copy complète du tableau pour bien différencier métier et vue
 
-        this.state.options = this.state.options.filter(element => {
+        this.state.options = this.state.options.filter((element) => {
             return element !== undefined;
         });
-        this.state.options.forEach(o => {
-            viewOptions.push(o)
-        })
-
+        this.state.options.forEach((o) => {
+            viewOptions.push(o);
+        });
     }
 
     componentDidMount() {
@@ -186,10 +231,12 @@ class ActivityDetailsModal extends React.Component {
     }
 
     componentDidUpdate(prevProps) {
-        if (prevProps.savingActivityInstances !== this.props.savingActivityInstances) {
-            this.setState({submitting: this.props.savingActivityInstances})
+        if (
+            prevProps.savingActivityInstances !==
+            this.props.savingActivityInstances
+        ) {
+            this.setState({ submitting: this.props.savingActivityInstances });
         }
-
     }
 
     // ===========================================
@@ -199,10 +246,10 @@ class ActivityDetailsModal extends React.Component {
         const location_id = e.target.value;
         if (this.state.location_id != location_id) {
             const rooms = _.chain(this.props.rooms)
-                .filter(room => room.location_id == location_id)
-                .filter(room =>
+                .filter((room) => room.location_id == location_id)
+                .filter((room) =>
                     _.chain(room.activity_refs)
-                        .map(a => a.id)
+                        .map((a) => a.id)
                         .includes(this.state.activityId)
                         .value()
                 )
@@ -225,19 +272,19 @@ class ActivityDetailsModal extends React.Component {
     }
 
     handleGroupNameChange(value) {
-        this.setState({groupName: value});
+        this.setState({ groupName: value });
     }
 
     toggleGroupNameEdit() {
-        this.setState({isEditingGroup: !this.state.isEditingGroup});
+        this.setState({ isEditingGroup: !this.state.isEditingGroup });
     }
 
     handleSelectActivity(e) {
         const activityId = parseInt(e.target.value);
         const rooms_constrained = _.chain(this.props.rooms)
-            .filter(room =>
+            .filter((room) =>
                 _.chain(room.activity_refs)
-                    .map(a => a.id)
+                    .map((a) => a.id)
                     .includes(activityId)
                     .value()
             )
@@ -255,7 +302,7 @@ class ActivityDetailsModal extends React.Component {
         if (this.state.initial_room_id != room_id) {
             const room_ref = _.find(
                 this.props.room_refs,
-                room_ref => room_ref.id == room_id
+                (room_ref) => room_ref.id == room_id
             );
             const location_id =
                 room_ref && room_ref.location ? room_ref.location.id : null;
@@ -276,8 +323,8 @@ class ActivityDetailsModal extends React.Component {
                     end,
                 }),
             })
-                .then(response => response.json())
-                .then(conflicting_interval => {
+                .then((response) => response.json())
+                .then((conflicting_interval) => {
                     this.setState({
                         isValidated: !!conflicting_interval,
                         room_id,
@@ -354,7 +401,8 @@ class ActivityDetailsModal extends React.Component {
     handleChangeTeacher(teacherId, value) {
         const newTeacherId = parseInt(value);
 
-        fetch(`/activity_instance/${this.props.interval.activity_instance.id}/teacher/${teacherId}`,
+        fetch(
+            `/activity_instance/${this.props.interval.activity_instance.id}/teacher/${teacherId}`,
             {
                 method: "POST",
                 headers: {
@@ -367,17 +415,14 @@ class ActivityDetailsModal extends React.Component {
                     },
                 }),
             }
-        ).then(res => {
+        ).then((res) => {
             if (res.ok) {
                 //Feed teacher change back to user in UI
-
             }
         });
     }
 
     handleToggleIsMainTeacher(teacherId, isMain) {
-
-
         fetch(`/activity/${this.state.activity_id}/teacher/${teacherId}`, {
             method: "POST",
             headers: {
@@ -389,11 +434,11 @@ class ActivityDetailsModal extends React.Component {
                     is_main: isMain,
                 },
             }),
-        }).then(res => {
+        }).then((res) => {
             if (res.ok) {
                 const newTeachersActivities = [
                     ...this.state.activity.teachers_activities,
-                ].map(ta => {
+                ].map((ta) => {
                     if (ta.user_id === teacherId)
                         return {
                             ...ta,
@@ -413,8 +458,6 @@ class ActivityDetailsModal extends React.Component {
     }
 
     handleAddTeacher(teacherId) {
-
-
         fetch(`/activity/${this.state.activity_id}/teacher/${teacherId}`, {
             method: "PUT",
             headers: {
@@ -422,8 +465,8 @@ class ActivityDetailsModal extends React.Component {
                 "Content-Type": "application/json",
             },
         })
-            .then(res => res.json())
-            .then(ta => {
+            .then((res) => res.json())
+            .then((ta) => {
                 const newTeachersActivities = [
                     ...this.state.activity.teachers_activities,
                     ta,
@@ -439,18 +482,17 @@ class ActivityDetailsModal extends React.Component {
     }
 
     handleRemoveTeacher(teacherId) {
-
-
         fetch(`/activity/${this.state.activity_id}/teacher/${teacherId}`, {
             method: "DELETE",
             headers: {
                 "X-Csrf-Token": csrfToken,
                 "Content-Type": "application/json",
             },
-        }).then(res => {
-            const newTeachersActivities = this.state.activity.teacher_activities.filter(
-                ta => ta.user_id !== teacherId
-            );
+        }).then((res) => {
+            const newTeachersActivities =
+                this.state.activity.teacher_activities.filter(
+                    (ta) => ta.user_id !== teacherId
+                );
 
             this.setState({
                 activity: {
@@ -463,7 +505,7 @@ class ActivityDetailsModal extends React.Component {
 
     handleSelectTime(e, point) {
         this.setState(
-            {[`${point}Time`]: this.getMoment(e.target.value)},
+            { [`${point}Time`]: this.getMoment(e.target.value) },
             () => this.verifyTimeOverlap()
         );
     }
@@ -474,7 +516,7 @@ class ActivityDetailsModal extends React.Component {
 
         this.props.handleRemoveStudent(this.state.activity, s);
 
-        this.setState({activity: {...this.state.activity, users}});
+        this.setState({ activity: { ...this.state.activity, users } });
     }
 
     handleRemoveOptionalStudent(option) {
@@ -483,7 +525,7 @@ class ActivityDetailsModal extends React.Component {
 
         this.props.handleRemoveOptionalStudent(this.state.activity, option);
 
-        this.setState({activity: {...this.state.activity, options}});
+        this.setState({ activity: { ...this.state.activity, options } });
     }
 
     // ===============================================
@@ -502,7 +544,6 @@ class ActivityDetailsModal extends React.Component {
         const teacher_id = this.state.teacher_id;
         const time_interval_id = this.props.id;
 
-
         fetch(`/planning/overlap`, {
             method: "POST",
             credentials: "same-origin",
@@ -519,12 +560,13 @@ class ActivityDetailsModal extends React.Component {
                 time_interval_id,
             }),
         })
-            .then(response => response.json())
-            .then(conflicting_intervals => {
+            .then((response) => response.json())
+            .then((conflicting_intervals) => {
                 this.setState({
-                    isValidated:
-                        !(conflicting_intervals.teacher == null ||
-                            conflicting_intervals.room == null),
+                    isValidated: !(
+                        conflicting_intervals.teacher == null ||
+                        conflicting_intervals.room == null
+                    ),
                     conflicting_interval: conflicting_intervals.room,
                     conflicting_interval_teacher: conflicting_intervals.teacher,
                 });
@@ -539,7 +581,7 @@ class ActivityDetailsModal extends React.Component {
         const activityInstances = formatInstances(
             this.state.changes.recurrences,
             this.state.startTime,
-            this.state.endTime,
+            this.state.endTime
         );
 
         this.props.handleSaveActivityInstances(
@@ -551,17 +593,19 @@ class ActivityDetailsModal extends React.Component {
 
     handleUpdateActivity() {
         // Reset error on call
-        this.setState({errors: []});
+        this.setState({ errors: [] });
 
         // Get activity from state
-        const activity = {id: this.state.activity.id, group_name: this.state.groupName};
+        const activity = {
+            id: this.state.activity.id,
+            group_name: this.state.groupName,
+        };
 
         // Call api
-        api
-            .post(`/activity/${activity.id}`, {activity})
-            .then(({data, error}) => {
+        api.post(`/activity/${activity.id}`, { activity }).then(
+            ({ data, error }) => {
                 if (error) {
-                    this.setState({errors: error});
+                    this.setState({ errors: error });
                 } else if (data) {
                     //room has been updated, close modal and feed it back in UI
                     if (
@@ -573,17 +617,18 @@ class ActivityDetailsModal extends React.Component {
                             this.props.planningType
                         );
                     } else {
-                        this.setState({activity: data});
+                        this.setState({ activity: data });
                     }
 
                     this.props.handleUpdateActivityInInstances(activity);
-                    this.setState({isEditingGroup: false});
+                    this.setState({ isEditingGroup: false });
                 }
-            });
+            }
+        );
     }
 
     handleEditActivityInstance() {
-        this.setState({editionMode: false});
+        this.setState({ editionMode: false });
 
         const instance = Object.assign({}, this.state, this.props.interval);
         instance.startTime = instance.startTime.toDate();
@@ -599,7 +644,7 @@ class ActivityDetailsModal extends React.Component {
     }
 
     handleEditionMode() {
-        this.setState({editionMode: true});
+        this.setState({ editionMode: true });
     }
 
     // ========================================
@@ -608,17 +653,15 @@ class ActivityDetailsModal extends React.Component {
     handleChangeRecurrentActivity(e) {
         const acts = !this.state.isRecurrent
             ? TimeIntervalHelpers.generateInstances(
-                this.props.interval.start,
-                this.props.seasons
-            )
+                  this.props.interval.start,
+                  this.props.seasons
+              )
             : {
-                [moment(this.props.interval.start).format(
-                    ISO_DATE_FORMAT
-                )]: {
-                    date: moment(this.props.interval.start),
-                    selected: true,
-                },
-            };
+                  [moment(this.props.interval.start).format(ISO_DATE_FORMAT)]: {
+                      date: moment(this.props.interval.start),
+                      selected: true,
+                  },
+              };
 
         const newState = {
             isRecurrent: !this.state.isRecurrent,
@@ -627,26 +670,26 @@ class ActivityDetailsModal extends React.Component {
 
         if (newState.isRecurrent) {
             newState.changes = {
-                recurrences: {...acts}
-            }
+                recurrences: { ...acts },
+            };
         } else {
             newState.changes = {
                 recurrences: {
-                    0: Object.values(acts)[0]
-                }
-            }
+                    0: Object.values(acts)[0],
+                },
+            };
         }
 
         this.setState(newState);
     }
 
     handlePickDateYearlyCalendar(selectedDay) {
-        const recurrences = {...this.state.changes.recurrences};
+        const recurrences = { ...this.state.changes.recurrences };
         const key = selectedDay.format(ISO_DATE_FORMAT);
 
         if (recurrences[key]) {
             // It's already an instance, so we remove it
-            const instance = {...recurrences[key]};
+            const instance = { ...recurrences[key] };
             instance.selected = !instance.selected;
             recurrences[key] = instance;
         } else {
@@ -679,7 +722,7 @@ class ActivityDetailsModal extends React.Component {
         const start = moment.isMoment(this.state.startTime)
             ? moment(this.state.startTime).format("HH:mm")
             : moment(this.state.startTime.toDate()).format("HH:mm");
-            const end = moment.isMoment(this.state.endTime)
+        const end = moment.isMoment(this.state.endTime);
         const timeIntervalInvalid = end <= start;
 
         const detectedSeason = TimeIntervalHelpers.getSeasonFromDate(
@@ -687,54 +730,59 @@ class ActivityDetailsModal extends React.Component {
             this.props.seasons
         );
 
-        if (this.props.interval.is_validated && this.state.activity && !this.state.editionMode) {
-            const room = getRoom(
-                this.props.room_refs,
-                this.state.room_id
-            );
+        if (
+            this.props.interval.is_validated &&
+            this.state.activity &&
+            !this.state.editionMode
+        ) {
+            const room = getRoom(this.props.room_refs, this.state.room_id);
 
             let activities = [];
             if (this.props.planning) {
                 if (this.props.planning.time_intervals) {
                     activities = _.map(
                         this.props.planning.time_intervals,
-                        ti => ti.activity
+                        (ti) => ti.activity
                     );
                 } else {
                     activities = _.map(
                         this.props.planning,
-                        ti => ti.activity
+                        (ti) => ti.activity
                     );
                 }
             }
 
-            if (this.props.user && !this.props.user.is_teacher && !this.props.user.is_admin) {
+            if (
+                this.props.user &&
+                !this.props.user.is_teacher &&
+                !this.props.user.is_admin
+            ) {
                 activities = _.map(
                     this.props.user.activities,
-                    a => a.time_interval.activity
+                    (a) => a.time_interval.activity
                 );
             }
 
             const mainTeacher = this.props.teachers.find(
-                tt => tt.id == this.state.mainTeacherId
+                (tt) => tt.id == this.state.mainTeacherId
             );
 
             const assistantTeacher = this.props.teachers.find(
-                tt => tt.id == this.state.assistantTeacherId
+                (tt) => tt.id == this.state.assistantTeacherId
             );
 
-            let styleOptionalStudents = {color: "#9575CD"};
+            let styleOptionalStudents = { color: "#9575CD" };
 
             const students = TimeIntervalHelpers.omitInactiveStudents(
                 this.state.activity.users,
                 this.props.interval.activity_instance.inactive_students
             );
 
-            const studentIds = _.map(students, s => s.id);
+            const studentIds = _.map(students, (s) => s.id);
 
             const optionalStudents = _.filter(
                 this.state.activity.options,
-                o =>
+                (o) =>
                     o.desired_activity &&
                     o.desired_activity.activity_application &&
                     !_.includes(
@@ -745,29 +793,31 @@ class ActivityDetailsModal extends React.Component {
 
             const attendancesPanelContent =
                 (this.props.isAdmin || this.props.isTeacher) &&
-                ((students.length > 0 || optionalStudents.length > 0) &&
-                    this.props.interval.activity_instance &&
-                    this.props.interval.activity_instance
-                        .student_attendances) ? (
+                (students.length > 0 || optionalStudents.length > 0) &&
+                this.props.interval.activity_instance &&
+                this.props.interval.activity_instance.student_attendances ? (
                     <AttendanceTable
                         t={t}
                         handleUpdateAll={(aids, attended) => {
                             const attendances = [];
 
-                            this.state.attendances.forEach(a => attendances.push({...a}))
+                            this.state.attendances.forEach((a) =>
+                                attendances.push({ ...a })
+                            );
 
                             // maj des composant pour la vue
-                            viewAttendances.forEach(a => {
-                                if (aids.includes(a.id))
-                                    a.attended = attended
+                            viewAttendances.forEach((a) => {
+                                if (aids.includes(a.id)) a.attended = attended;
                             });
 
                             const changesUpdate = aids.reduce((acc, id) => {
-                                attendances.filter(a => a.id == id)[0].attended = toInteger(attended)
-                                return ({
+                                attendances.filter(
+                                    (a) => a.id == id
+                                )[0].attended = toInteger(attended);
+                                return {
                                     ...acc,
                                     [id]: attended,
-                                });
+                                };
                             }, {});
 
                             const newState = {
@@ -780,12 +830,17 @@ class ActivityDetailsModal extends React.Component {
 
                             this.setState(newState);
 
-                            this.props.handleUpdateAllAttendances(this.props.interval.id, newState.changes.attendances || {});
+                            this.props.handleUpdateAllAttendances(
+                                this.props.interval.id,
+                                newState.changes.attendances || {}
+                            );
                         }}
                         handleUpdate={(aid, attended) => {
                             const attendances = [...this.state.attendances];
 
-                            const resIdx = attendances.findIndex(a => a.id == aid);
+                            const resIdx = attendances.findIndex(
+                                (a) => a.id == aid
+                            );
 
                             if (resIdx !== -1)
                                 attendances[resIdx] = {
@@ -794,86 +849,124 @@ class ActivityDetailsModal extends React.Component {
                                 };
 
                             // maj du composant pour la vue
-                            viewAttendances.forEach(a => {
-                                if (a.id == aid)
-                                    a.attended = attended;
+                            viewAttendances.forEach((a) => {
+                                if (a.id == aid) a.attended = attended;
                             });
 
                             const newState = {
                                 changes: {
                                     ...this.state.changes,
-                                    attendances: {...this.state.changes.attendances, [aid]: attended}
+                                    attendances: {
+                                        ...this.state.changes.attendances,
+                                        [aid]: attended,
+                                    },
                                 },
-                                attendances: attendances
+                                attendances: attendances,
                             };
 
                             this.setState(newState);
 
-                            this.props.handleUpdateAllAttendances(this.props.interval.id, newState.changes.attendances || {})
-                        }
-                        }
+                            this.props.handleUpdateAllAttendances(
+                                this.props.interval.id,
+                                newState.changes.attendances || {}
+                            );
+                        }}
                     />
                 ) : (
-                    <h2 className="m-lg">
-                        {t("activityModal.noStudents")}
-                    </h2>
+                    <h2 className="m-lg">{t("activityModal.noStudents")}</h2>
                 );
 
-            const editionPanelContent = this.props.isAdmin || (this.props.isTeacher && this.props.teacher_can_edit && _.get(this.props.planning, "user.id") === this.props.currentUserId) ? (
-                <ActivityEdition
-                    t={t}
-                    selection={this.state.changes.instance}
-                    rooms={this.props.room_refs}
-                    evaluationLevelRefs={this.props.evaluation_level_refs}
-                    locations={this.props.locations}
-                    teachers={this.props.teachers}
-                    startTime={this.state.startTime}
-                    endTime={this.state.endTime}
-                    onChange={(name, value) => this.setState({
-                        changes: {
-                            ...this.state.changes,
-                            instance: {
-                                ...this.state.changes.instance,
-                                [name]: value,
-                            },
-                        },
-                    })}/>
-            ) : null;
-
-            const recurrencesPanelContent = this.props.isAdmin || (this.props.isTeacher && this.props.teacher_can_edit && _.get(this.props.planning, "user.id") === this.props.currentUserId) ? (
-                <div>
-                    <YearlyCalendar
-                        season={detectedSeason}
-                        activityInstances={() => this.state.changes.recurrences}
-                        existingDates={_.get(
-                            this.props.interval,
-                            "activity_instance.activity.activity_instances"
-                        )}
-                        handlePickDate={(date, classes) => this.handlePickDateYearlyCalendar(date, classes)}
-                    />
-                </div>
-            ) : null;
-
-            const instancePanelContent = this.props.isAdmin || (this.props.isTeacher && this.props.teacher_can_edit && _.get(this.props.planning, "user.id") === this.props.currentUserId) ? (
-                <TeacherCoveringEditor
-                    teacher={_.get(this.props.interval, "activity_instance.activity.teacher")}
-                    coverTeacherId={_.get(this.state.changes, "instance.cover_teacher_id")}
-                    areHoursCounted={_.get(this.state.changes, "instance.are_hours_counted")}
-                    potentialCoveringTeachers={_.get(this.props.interval, "activity_instance.potential_covering_teachers")}
-                    locations={this.props.locations}
-                    rooms={this.props.rooms}
-                    teachers={this.props.teachers}
-                    onChange={(name, value) =>
-                        this.setState({
-                            changes: {
-                                ...this.state.changes,
-                                instance: {
-                                    ...this.state.changes.instance,
-                                    [name]: value,
+            const editionPanelContent =
+                this.props.isAdmin ||
+                (this.props.isTeacher &&
+                    this.props.teacher_can_edit &&
+                    _.get(this.props.planning, "user.id") ===
+                        this.props.currentUserId) ? (
+                    <ActivityEdition
+                        t={t}
+                        selection={this.state.changes.instance}
+                        rooms={this.props.room_refs}
+                        evaluationLevelRefs={this.props.evaluation_level_refs}
+                        locations={this.props.locations}
+                        teachers={this.props.teachers}
+                        startTime={this.state.startTime}
+                        endTime={this.state.endTime}
+                        onChange={(name, value) =>
+                            this.setState({
+                                changes: {
+                                    ...this.state.changes,
+                                    instance: {
+                                        ...this.state.changes.instance,
+                                        [name]: value,
+                                    },
                                 },
-                            },
-                        })}/>
-            ) : null;
+                            })
+                        }
+                    />
+                ) : null;
+
+            const recurrencesPanelContent =
+                this.props.isAdmin ||
+                (this.props.isTeacher &&
+                    this.props.teacher_can_edit &&
+                    _.get(this.props.planning, "user.id") ===
+                        this.props.currentUserId) ? (
+                    <div>
+                        <YearlyCalendar
+                            season={detectedSeason}
+                            activityInstances={() =>
+                                this.state.changes.recurrences
+                            }
+                            existingDates={_.get(
+                                this.props.interval,
+                                "activity_instance.activity.activity_instances"
+                            )}
+                            handlePickDate={(date, classes) =>
+                                this.handlePickDateYearlyCalendar(date, classes)
+                            }
+                        />
+                    </div>
+                ) : null;
+
+            const instancePanelContent =
+                this.props.isAdmin ||
+                (this.props.isTeacher &&
+                    this.props.teacher_can_edit &&
+                    _.get(this.props.planning, "user.id") ===
+                        this.props.currentUserId) ? (
+                    <TeacherCoveringEditor
+                        teacher={_.get(
+                            this.props.interval,
+                            "activity_instance.activity.teacher"
+                        )}
+                        coverTeacherId={_.get(
+                            this.state.changes,
+                            "instance.cover_teacher_id"
+                        )}
+                        areHoursCounted={_.get(
+                            this.state.changes,
+                            "instance.are_hours_counted"
+                        )}
+                        potentialCoveringTeachers={_.get(
+                            this.props.interval,
+                            "activity_instance.potential_covering_teachers"
+                        )}
+                        locations={this.props.locations}
+                        rooms={this.props.rooms}
+                        teachers={this.props.teachers}
+                        onChange={(name, value) =>
+                            this.setState({
+                                changes: {
+                                    ...this.state.changes,
+                                    instance: {
+                                        ...this.state.changes.instance,
+                                        [name]: value,
+                                    },
+                                },
+                            })
+                        }
+                    />
+                ) : null;
 
             const tabs = [
                 {
@@ -891,7 +984,7 @@ class ActivityDetailsModal extends React.Component {
                             this.setState({ isEditing: true });
 
                             let popupTimer = setTimeout(() => {
-                                swal({
+                                swal.fire({
                                     title: t("activityModal.savingTitle"),
                                     text: t("activityModal.pleaseWait"),
                                     allowOutsideClick: false,
@@ -902,7 +995,9 @@ class ActivityDetailsModal extends React.Component {
                             }, 500);
 
                             try {
-                                await this.props.handleEditActivityInstance(this.state.changes.instance);
+                                await this.props.handleEditActivityInstance(
+                                    this.state.changes.instance
+                                );
                                 clearTimeout(popupTimer);
                                 if (swal.isVisible()) {
                                     swal.close();
@@ -912,10 +1007,10 @@ class ActivityDetailsModal extends React.Component {
                                 if (swal.isVisible()) {
                                     swal.close();
                                 }
-                                swal({
+                                swal.fire({
                                     title: t("activityModal.errorTitle"),
                                     text: t("activityModal.editError"),
-                                    type: "error"
+                                    icon: "error",
                                 });
                             } finally {
                                 this.setState({ isEditing: false });
@@ -923,7 +1018,8 @@ class ActivityDetailsModal extends React.Component {
                         },
                         label: this.state.isEditing ? (
                             <>
-                                {t("activityModal.editButton")} <i className="fas fa-circle-notch fa-spin"></i>
+                                {t("activityModal.editButton")}{" "}
+                                <i className="fas fa-circle-notch fa-spin"></i>
                             </>
                         ) : (
                             t("activityModal.editButton")
@@ -935,7 +1031,10 @@ class ActivityDetailsModal extends React.Component {
                     header: t("activityModal.tabs.replacement"),
                     active: false,
                     body: withSave(instancePanelContent, {
-                        onSave: () => this.props.handleEditActivityInstance(this.state.changes.instance),
+                        onSave: () =>
+                            this.props.handleEditActivityInstance(
+                                this.state.changes.instance
+                            ),
                         label: t("common:actions.save"),
                     }),
                 },
@@ -948,11 +1047,12 @@ class ActivityDetailsModal extends React.Component {
 
                         return withSave(recurrencesPanelContent, {
                             onSave: async () => {
-                                if (disabled)
-                                    return;
+                                if (disabled) return;
 
-                                swal({
-                                    title: t("activityModal.updatingRecurrencesTitle"),
+                                swal.fire({
+                                    title: t(
+                                        "activityModal.updatingRecurrencesTitle"
+                                    ),
                                     text: t("activityModal.pleaseWait"),
                                     allowOutsideClick: false,
                                     allowEscapeKey: false,
@@ -965,34 +1065,38 @@ class ActivityDetailsModal extends React.Component {
                                     formatInstances(
                                         this.state.changes.recurrences,
                                         this.state.startTime,
-                                        this.state.endTime,
+                                        this.state.endTime
                                     )
-                                )
+                                );
 
                                 swal.close();
                                 disabled = false;
                             },
                             label: t("activityModal.updateRecurrencesButton"),
-                        })
+                        });
                     })(),
                 },
             ];
 
             let deleteActivity =
-                (this.props.isAdmin || (this.props.isTeacher && this.props.teacher_can_edit && _.get(this.props.planning, "user.id") === this.props.currentUserId)) && this.state.activity.users.length == 0 ? (
+                (this.props.isAdmin ||
+                    (this.props.isTeacher &&
+                        this.props.teacher_can_edit &&
+                        _.get(this.props.planning, "user.id") ===
+                            this.props.currentUserId)) &&
+                this.state.activity.users.length == 0 ? (
                     <React.Fragment>
-                        <hr/>
+                        <hr />
                         <button
                             className="btn btn-warning"
                             onClick={() =>
                                 this.props.handleDeleteActivityInstance(
-                                    this.props.interval.activity_instance
-                                        .id,
+                                    this.props.interval.activity_instance.id,
                                     this.state.activity.id
                                 )
                             }
                         >
-                            <i className="fas fa-trash m-r-sm"/>
+                            <i className="fas fa-trash m-r-sm" />
                             {t("activityModal.deleteCourse")}
                         </button>
                     </React.Fragment>
@@ -1002,58 +1106,86 @@ class ActivityDetailsModal extends React.Component {
                 <div>
                     <div className="ibox">
                         <div className="ibox-title">
-                            <ErrorList errors={errors}/>
+                            <ErrorList errors={errors} />
 
-                            {!this.state.isEditingGroup ?
+                            {!this.state.isEditingGroup ? (
                                 <h2>
-                                    {this.state.activity.group_name ? this.state.activity.group_name : t("activityModal.groupToDefine")}
+                                    {this.state.activity.group_name
+                                        ? this.state.activity.group_name
+                                        : t("activityModal.groupToDefine")}
                                     <button
-                                        title={t("activityModal.editGroupNameTitle")}
+                                        title={t(
+                                            "activityModal.editGroupNameTitle"
+                                        )}
                                         className="btn btn-primary btn-sm pull-right"
-                                        onClick={() => this.toggleGroupNameEdit()}
+                                        onClick={() =>
+                                            this.toggleGroupNameEdit()
+                                        }
                                     >
-                                        <i className="fas fa-edit"/>
+                                        <i className="fas fa-edit" />
                                     </button>
                                 </h2>
-                                :
+                            ) : (
                                 <EditGroupNameInput
                                     t={t}
-                                    onChange={(value) => this.handleGroupNameChange(value)}
-                                    value={this.state.groupName || this.state.activity.group_name}
+                                    onChange={(value) =>
+                                        this.handleGroupNameChange(value)
+                                    }
+                                    value={
+                                        this.state.groupName ||
+                                        this.state.activity.group_name
+                                    }
                                     onSave={() => this.handleUpdateActivity()}
                                 />
-                            }
+                            )}
                             <h3>
                                 {this.state.activity.activity_ref.label} -{" "}
                                 {room.label} -{" "}
-                                {moment(this.props.interval.start).format("HH:mm")}{" "}
-                                - {moment(this.props.interval.end).format("HH:mm")}
+                                {moment(this.props.interval.start).format(
+                                    "HH:mm"
+                                )}{" "}
+                                -{" "}
+                                {moment(this.props.interval.end).format(
+                                    "HH:mm"
+                                )}
                             </h3>
                             <h4>
-                                <i className="fas fa-users"/>{" "}
+                                <i className="fas fa-users" />{" "}
                                 <span
                                     style={
                                         optionalStudents.length != 0
                                             ? styleOptionalStudents
-                                            : null}>
+                                            : null
+                                    }
+                                >
                                     {students.length + optionalStudents.length}
                                 </span>{" "}
-                                /{this.state.activity.activity_ref.occupation_limit}
+                                /
+                                {
+                                    this.state.activity.activity_ref
+                                        .occupation_limit
+                                }
                             </h4>
 
-                            {
-                                this.props.interval.comment &&
+                            {this.props.interval.comment && (
                                 <div className="alert alert-info">
-                                    <strong>{t("activityModal.teacherComment")}</strong><br/>
+                                    <strong>
+                                        {t("activityModal.teacherComment")}
+                                    </strong>
+                                    <br />
                                     {this.props.interval.comment.content}
                                 </div>
-                            }
+                            )}
                         </div>
                         <div className="ibox-content no-padding">
-                            <TabbedComponent tabs={tabs}/>
+                            <TabbedComponent tabs={tabs} />
                         </div>
-                        <button className="btn m-t" onClick={this.props.closeModal} type="button">
-                            <i className="fas fa-times m-r-sm"/>
+                        <button
+                            className="btn m-t"
+                            onClick={this.props.closeModal}
+                            type="button"
+                        >
+                            <i className="fas fa-times m-r-sm" />
                             Fermer
                         </button>
                     </div>
@@ -1066,17 +1198,32 @@ class ActivityDetailsModal extends React.Component {
 
         return (
             <div>
-                {!this.props.generic && (this.props.isAdmin || this.props.isTeacher) ? (
+                {!this.props.generic &&
+                (this.props.isAdmin || this.props.isTeacher) ? (
                     <React.Fragment>
                         <h3>{t("activityModal.createActivityTitle")}</h3>
-                        <hr/>
+                        <hr />
                         {this.state.conflicting_interval ? (
                             <div className="alert alert-danger">
                                 <p>
                                     {t("activityModal.roomBusy", {
-                                        room: findAndGet(this.props.rooms, {id: parseInt(this.state.room_id)}, "label", "??"),
-                                        from: moment(this.state.conflicting_interval.start).format("HH[h]mm"),
-                                        to: moment(this.state.conflicting_interval.end).format("HH[h]mm"),
+                                        room: findAndGet(
+                                            this.props.rooms,
+                                            {
+                                                id: parseInt(
+                                                    this.state.room_id
+                                                ),
+                                            },
+                                            "label",
+                                            "??"
+                                        ),
+                                        from: moment(
+                                            this.state.conflicting_interval
+                                                .start
+                                        ).format("HH[h]mm"),
+                                        to: moment(
+                                            this.state.conflicting_interval.end
+                                        ).format("HH[h]mm"),
                                     })}
                                 </p>
                             </div>
@@ -1086,8 +1233,16 @@ class ActivityDetailsModal extends React.Component {
                                 <p>
                                     {t("activityModal.teacherBusy", {
                                         name: `${this.props.planning.user.first_name} ${this.props.planning.user.last_name}`,
-                                        from: moment(this.state.conflicting_interval_teacher.start).format("HH:mm"),
-                                        to: moment(this.state.conflicting_interval_teacher.end).format("HH:mm"),
+                                        from: moment(
+                                            this.state
+                                                .conflicting_interval_teacher
+                                                .start
+                                        ).format("HH:mm"),
+                                        to: moment(
+                                            this.state
+                                                .conflicting_interval_teacher
+                                                .end
+                                        ).format("HH:mm"),
                                     })}
                                 </p>
                             </div>
@@ -1097,7 +1252,6 @@ class ActivityDetailsModal extends React.Component {
                                 <p>{t("activityModal.slotInvalid")}</p>
                             </div>
                         ) : null}
-
 
                         <TimeSelection
                             startTime={this.state.startTime}
@@ -1110,7 +1264,7 @@ class ActivityDetailsModal extends React.Component {
                         <ActivitySelection
                             activities={this.props.userActivities}
                             activityId={this.state.activityId}
-                            handleSelectActivity={e =>
+                            handleSelectActivity={(e) =>
                                 this.handleSelectActivity(e)
                             }
                         />
@@ -1118,7 +1272,7 @@ class ActivityDetailsModal extends React.Component {
                         <LocationSelection
                             locations={this.props.locations}
                             locationId={this.state.location_id}
-                            handleSelectLocation={e =>
+                            handleSelectLocation={(e) =>
                                 this.handleSelectLocation(e)
                             }
                         />
@@ -1127,7 +1281,7 @@ class ActivityDetailsModal extends React.Component {
                             roomsConstrained={this.state.rooms_constrained}
                             roomId={this.state.room_id}
                             roomRefs={this.props.room_refs}
-                            handleSelectRoom={e => this.handleSelectRoom(e)}
+                            handleSelectRoom={(e) => this.handleSelectRoom(e)}
                         />
 
                         <div className="form-group">
@@ -1136,7 +1290,7 @@ class ActivityDetailsModal extends React.Component {
                                     className="form-control"
                                     type="checkbox"
                                     value={this.state.isRecurrent}
-                                    onChange={e =>
+                                    onChange={(e) =>
                                         this.handleChangeRecurrentActivity(e)
                                     }
                                 />
@@ -1151,7 +1305,9 @@ class ActivityDetailsModal extends React.Component {
                                     label={_.get(detectedSeason, "label")}
                                     season={detectedSeason}
                                     holidays={_.get(detectedSeason, "holidays")}
-                                    activityInstances={() => this.state.changes.recurrences}
+                                    activityInstances={() =>
+                                        this.state.changes.recurrences
+                                    }
                                     handlePickDate={(date, classes) =>
                                         this.handlePickDateYearlyCalendar(
                                             date,
@@ -1161,45 +1317,55 @@ class ActivityDetailsModal extends React.Component {
                                 />
                             ) : null}
                         </div>
-                        {
-                            this.props.interval.comment &&
+                        {this.props.interval.comment && (
                             <div className="alert alert-info">
-                                <strong>{t("activityModal.teacherComment")}</strong><br/>
+                                <strong>
+                                    {t("activityModal.teacherComment")}
+                                </strong>
+                                <br />
                                 {this.props.interval.comment.content}
                             </div>
-                        }
-                        <ErrorList errors={errors}/>
+                        )}
+                        <ErrorList errors={errors} />
                         <button
                             className="btn btn-primary"
                             onClick={() => this.handleSaveActivityInstances()}
                             disabled={
                                 this.state.conflicting_interval ||
                                 moment(this.state.startTime, "HH:mm") >
-                                moment(this.state.endTime, "HH:mm")
-                            }>
+                                    moment(this.state.endTime, "HH:mm")
+                            }
+                        >
                             {this.state.isRecurrent
                                 ? t("activityModal.createCoursesButton")
                                 : t("activityModal.createCourseButton")}
-                            {this.state.submitting ?
+                            {this.state.submitting ? (
                                 <i className="fas fa-circle-notch fa-spin"></i>
-                                :
-                                ""}
+                            ) : (
+                                ""
+                            )}
                         </button>
-                        <hr/>
+                        <hr />
                     </React.Fragment>
                 ) : null}
                 <div className="flex flex-space-between-justified">
-                    <button className="btn" onClick={this.props.closeModal} type="button">
-                        <i className="fas fa-times m-r-sm"/>
+                    <button
+                        className="btn"
+                        onClick={this.props.closeModal}
+                        type="button"
+                    >
+                        <i className="fas fa-times m-r-sm" />
                         Fermer
                     </button>
                     <button
                         className="btn btn-warning"
-                        onClick={id => {
-                            this.props.handleDeleteInterval(this.props.interval.id);
+                        onClick={(id) => {
+                            this.props.handleDeleteInterval(
+                                this.props.interval.id
+                            );
                         }}
                     >
-                        <i className="fas fa-trash m-r-sm"/>
+                        <i className="fas fa-trash m-r-sm" />
                         {t("activityModal.deleteSlot")}
                     </button>
                 </div>
@@ -1212,70 +1378,102 @@ class AttendanceTable extends React.Component {
     constructor(props) {
         super(props);
 
-        this.state =
-            {
-                attendances: viewAttendances,
-                options: viewOptions
-            }
+        this.state = {
+            attendances: viewAttendances,
+            options: viewOptions,
+        };
     }
 
     render() {
         const { t } = this.props;
-        const {handleUpdate, handleUpdateAll} = this.props;
+        const { handleUpdate, handleUpdateAll } = this.props;
 
         let bulkValue = null;
 
-        if (this.state.attendances.reduce((acc, sa) => acc && sa.attended === 1, true))
+        if (
+            this.state.attendances.reduce(
+                (acc, sa) => acc && sa.attended === 1,
+                true
+            )
+        )
             bulkValue = 1;
-        else if (this.state.attendances.reduce((acc, sa) => acc && sa.attended === 0, true))
+        else if (
+            this.state.attendances.reduce(
+                (acc, sa) => acc && sa.attended === 0,
+                true
+            )
+        )
             bulkValue = 0;
-        else if (this.state.attendances.reduce((acc, sa) => acc && sa.attended === 2, true))
+        else if (
+            this.state.attendances.reduce(
+                (acc, sa) => acc && sa.attended === 2,
+                true
+            )
+        )
             bulkValue = 2;
-        else if (this.state.attendances.reduce((acc, sa) => acc && sa.attended === 3, true))
+        else if (
+            this.state.attendances.reduce(
+                (acc, sa) => acc && sa.attended === 3,
+                true
+            )
+        )
             bulkValue = 3;
 
-        let styleOptionalStudents = {color: "#9575CD"};
+        let styleOptionalStudents = { color: "#9575CD" };
 
-        return <table className="table">
-            <thead>
-            <tr>
-                <th>{t("activityModal.attendanceTable.adherentNumber")}</th>
-                <th>{t("activityModal.attendanceTable.student")}</th>
-                <th>
-                    {t("activityModal.attendanceTable.present")}
-                    <AttendanceControl
-                        value={bulkValue}
-                        handleUpdate={v => {
-                            handleUpdateAll(this.state.attendances.map(a => a.id), v);
-                            this.forceUpdate();
-                        }
-                        }/>
-                </th>
-            </tr>
-            </thead>
+        return (
+            <table className="table">
+                <thead>
+                    <tr>
+                        <th>
+                            {t("activityModal.attendanceTable.adherentNumber")}
+                        </th>
+                        <th>{t("activityModal.attendanceTable.student")}</th>
+                        <th>
+                            {t("activityModal.attendanceTable.present")}
+                            <AttendanceControl
+                                value={bulkValue}
+                                handleUpdate={(v) => {
+                                    handleUpdateAll(
+                                        this.state.attendances.map((a) => a.id),
+                                        v
+                                    );
+                                    this.forceUpdate();
+                                }}
+                            />
+                        </th>
+                    </tr>
+                </thead>
 
-            <tbody>
-            {this.state.attendances
-                .sort((a, b) => a.user.last_name.toLowerCase().localeCompare(b.user.last_name.toLowerCase()))
-                .map((a, i) => (
-                    <tr
-                        key={i}
-                        style={a.is_option ? styleOptionalStudents : {}}
-                    >
-                        <td>{a.user.adherent_number}</td>
-                        <td>
-                            <a
-                                href={`/users/${a.user.id}`}
-                                style={
-                                    a.is_option ? styleOptionalStudents : {}
-                                }>
-                                {a.user.last_name}
-                                &nbsp;
-                                {`${a.user.first_name}, ${moment().diff(
-                                    a.user.birthday,
-                                    "years"
-                                )} ans `}
-                                {/* isEveil(
+                <tbody>
+                    {this.state.attendances
+                        .sort((a, b) =>
+                            a.user.last_name
+                                .toLowerCase()
+                                .localeCompare(b.user.last_name.toLowerCase())
+                        )
+                        .map((a, i) => (
+                            <tr
+                                key={i}
+                                style={a.is_option ? styleOptionalStudents : {}}
+                            >
+                                <td>{a.user.adherent_number}</td>
+                                <td>
+                                    <a
+                                        href={`/users/${a.user.id}`}
+                                        style={
+                                            a.is_option
+                                                ? styleOptionalStudents
+                                                : {}
+                                        }
+                                    >
+                                        {a.user.last_name}
+                                        &nbsp;
+                                        {`${a.user.first_name}, ${moment().diff(
+                                            a.user.birthday,
+                                            "years"
+                                        )} ans `}
+                                        {/* isEveil(
                             this.props.interval
                                 .activity
                         )
@@ -1303,17 +1501,18 @@ class AttendanceTable extends React.Component {
                                 ).user.last_name
                             }) `
                             : null */}
-                            </a>
-                        </td>
-                        <td>
-                            <AttendanceControl
-                                value={a.attended}
-                                handleUpdate={v => {
-                                    handleUpdate(a.id, v);
-                                    this.forceUpdate();
-                                }}/>
-                        </td>
-                        {/*<td>
+                                    </a>
+                                </td>
+                                <td>
+                                    <AttendanceControl
+                                        value={a.attended}
+                                        handleUpdate={(v) => {
+                                            handleUpdate(a.id, v);
+                                            this.forceUpdate();
+                                        }}
+                                    />
+                                </td>
+                                {/*<td>
                     <div className="flex flex-center-aligned flex-space-around-justified">
                         {this.props.isTeacher ? null : (
                             <i
@@ -1330,31 +1529,30 @@ class AttendanceTable extends React.Component {
                         )}
                     </div>
                 </td>*/}
-                    </tr>
-                ))}
-            {this.state.options
-                .map((a, i) => (
-                    <tr
-                        key={i}
-                        style={styleOptionalStudents}
-                    >
-                        <td>{a.adherent_number}</td>
-                        <td>
-                            <a href={`/users/${a.id}`}
-                               style={styleOptionalStudents}
-                            >
-                                {a.last_name}
-                                &nbsp;
-                                {`${a.first_name}, ${moment().diff(
-                                    a.birthday,
-                                    "years"
-                                )} ans `} (option)
-                            </a>
-                        </td>
-                    </tr>
-                ))}
-            </tbody>
-        </table>
+                            </tr>
+                        ))}
+                    {this.state.options.map((a, i) => (
+                        <tr key={i} style={styleOptionalStudents}>
+                            <td>{a.adherent_number}</td>
+                            <td>
+                                <a
+                                    href={`/users/${a.id}`}
+                                    style={styleOptionalStudents}
+                                >
+                                    {a.last_name}
+                                    &nbsp;
+                                    {`${a.first_name}, ${moment().diff(
+                                        a.birthday,
+                                        "years"
+                                    )} ans `}{" "}
+                                    (option)
+                                </a>
+                            </td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        );
     }
 }
 
@@ -1364,7 +1562,7 @@ export class EditGroupNameInput extends React.PureComponent {
 
         this.debounce = null;
 
-        this.state = {value: this.props.value || ""};
+        this.state = { value: this.props.value || "" };
     }
 
     handleInputChange(value) {
@@ -1377,7 +1575,7 @@ export class EditGroupNameInput extends React.PureComponent {
             this.debounce = null;
         }, 400);
 
-        this.setState({value});
+        this.setState({ value });
     }
 
     render() {
@@ -1396,7 +1594,10 @@ export class EditGroupNameInput extends React.PureComponent {
                         name="groupName"
                     />
                     <span className="input-group-btn">
-                        <button className="btn btn-primary" onClick={this.props.onSave}>
+                        <button
+                            className="btn btn-primary"
+                            onClick={this.props.onSave}
+                        >
                             {t("common:actions.save")}
                         </button>
                     </span>
@@ -1410,10 +1611,7 @@ export class EditGroupNameInput extends React.PureComponent {
     }
 }
 
-export const GroupNameInput = ({
-                            value,
-                            onChange,
-                        }) => {
+export const GroupNameInput = ({ value, onChange }) => {
     const { t } = useTranslation("planning");
     return (
         <div className="form-group">
@@ -1427,13 +1625,13 @@ export const GroupNameInput = ({
                 maxLength={12}
                 value={!value ? "" : value}
                 name="groupName"
-                onChange={e => onChange(e.target.value)}
+                onChange={(e) => onChange(e.target.value)}
             />
         </div>
     );
 };
 
-export const TimeSelection = ({startTime, endTime, handleSelectTime}) => {
+export const TimeSelection = ({ startTime, endTime, handleSelectTime }) => {
     const { t } = useTranslation("planning");
     const start = moment(startTime.toDate());
     const end = moment(endTime.toDate());
@@ -1449,7 +1647,7 @@ export const TimeSelection = ({startTime, endTime, handleSelectTime}) => {
                     <input
                         className="form-control"
                         type="time"
-                        onChange={e => handleSelectTime(e, "start")}
+                        onChange={(e) => handleSelectTime(e, "start")}
                         value={start.format("HH:mm")}
                     />
                 </div>
@@ -1462,7 +1660,7 @@ export const TimeSelection = ({startTime, endTime, handleSelectTime}) => {
                     <input
                         className="form-control"
                         type="time"
-                        onChange={e => handleSelectTime(e, "end")}
+                        onChange={(e) => handleSelectTime(e, "end")}
                         value={end.format("HH:mm")}
                     />
                 </div>
@@ -1472,10 +1670,10 @@ export const TimeSelection = ({startTime, endTime, handleSelectTime}) => {
 };
 
 export const ActivitySelection = ({
-                               activities,
-                               activityId,
-                               handleSelectActivity,
-                           }) => {
+    activities,
+    activityId,
+    handleSelectActivity,
+}) => {
     const { t } = useTranslation("planning");
     return (
         <form>
@@ -1484,37 +1682,42 @@ export const ActivitySelection = ({
             </label>
             <select
                 className="form-control m-b"
-                onChange={e => handleSelectActivity(e)}
+                onChange={(e) => handleSelectActivity(e)}
                 value={activityId || 0}
             >
                 <option value={0} disabled>
                     {t("activityModal.chooseActivity")}
                 </option>
-                {_.map(activities.sort((a, b) => a.label.localeCompare(b.label)), (activity, i) => {
-                    return (
-                        <option key={i} value={activity.id}>
-                            {activity.label} ({activity.kind}) {activity.duration ? `- ${activity.duration} min` : ''}
-                        </option>
-                    );
-                })}
-
+                {_.map(
+                    activities.sort((a, b) => a.label.localeCompare(b.label)),
+                    (activity, i) => {
+                        return (
+                            <option key={i} value={activity.id}>
+                                {activity.label} ({activity.kind}){" "}
+                                {activity.duration
+                                    ? `- ${activity.duration} min`
+                                    : ""}
+                            </option>
+                        );
+                    }
+                )}
             </select>
         </form>
     );
 };
 
-export const LocationSelection = ({locations, locationId, handleSelectLocation}) => {
+export const LocationSelection = ({
+    locations,
+    locationId,
+    handleSelectLocation,
+}) => {
     const { t } = useTranslation("planning");
 
     if (locations.length === 1) {
         return (
             <div>
-                <label className="control-label">
-                    Lieu
-                </label>
-                <p className="form-control-static">
-                    {locations[0].label}
-                </p>
+                <label className="control-label">Lieu</label>
+                <p className="form-control-static">{locations[0].label}</p>
             </div>
         );
     }
@@ -1526,7 +1729,7 @@ export const LocationSelection = ({locations, locationId, handleSelectLocation})
             </label>
             <select
                 className="form-control m-b"
-                onChange={e => handleSelectLocation(e)}
+                onChange={(e) => handleSelectLocation(e)}
                 value={locationId || 0}
             >
                 <option value={0} disabled>
@@ -1545,11 +1748,11 @@ export const LocationSelection = ({locations, locationId, handleSelectLocation})
 };
 
 export const RoomSelection = ({
-                           roomsConstrained,
-                           roomId,
-                           roomRefs,
-                           handleSelectRoom,
-                       }) => {
+    roomsConstrained,
+    roomId,
+    roomRefs,
+    handleSelectRoom,
+}) => {
     const { t } = useTranslation("planning");
     const renderRoomOptions = _.map(roomsConstrained, (room, i) => {
         return (
@@ -1575,7 +1778,7 @@ export const RoomSelection = ({
             {roomsConstrained.length > 0 ? (
                 <select
                     className="form-control m-b"
-                    onChange={e => handleSelectRoom(e)}
+                    onChange={(e) => handleSelectRoom(e)}
                     value={roomId || 0}
                 >
                     <option value={0} disabled>
@@ -1585,10 +1788,12 @@ export const RoomSelection = ({
                 </select>
             ) : (
                 <React.Fragment>
-                    <p>
-                        {t("activityModal.noSuitableRooms")}
-                    </p>
-                    <select className="form-control m-b" onChange={e => handleSelectRoom(e)} value={roomId || 0}>
+                    <p>{t("activityModal.noSuitableRooms")}</p>
+                    <select
+                        className="form-control m-b"
+                        onChange={(e) => handleSelectRoom(e)}
+                        value={roomId || 0}
+                    >
                         <option value={0} disabled>
                             {t("activityModal.chooseRoom")}
                         </option>
@@ -1605,12 +1810,10 @@ class ActivityEdition extends React.Component {
         super(props);
         this.state = {
             ...props.selection,
-            startDate: moment(props.startTime).format('YYYY-MM-DD'),
-            endTime: moment(props.endTime).format('HH:mm'),
-            startTime: moment(props.startTime).format('HH:mm')
+            startDate: moment(props.startTime).format("YYYY-MM-DD"),
+            endTime: moment(props.endTime).format("HH:mm"),
+            startTime: moment(props.startTime).format("HH:mm"),
         };
-
-
     }
 
     render() {
@@ -1629,14 +1832,15 @@ class ActivityEdition extends React.Component {
             teacher_id: selectedTeacherId,
             location_id: selectedLocationId,
             room_id: selectedRoomId,
-            instances_update_scope: selectedInstancesUpdateScope = InstancesUpdateScope.SINGULAR,
+            instances_update_scope:
+                selectedInstancesUpdateScope = InstancesUpdateScope.SINGULAR,
             evaluation_level_ref_id: selectedEvaluationLevelRefId,
         } = this.state;
 
         const _onChange = (name, value) => {
             onChange(name, value);
 
-            const newState = {...this.state};
+            const newState = { ...this.state };
             newState[name] = value;
 
             this.setState(newState);
@@ -1651,7 +1855,9 @@ class ActivityEdition extends React.Component {
                         type="date"
                         className="form-control"
                         value={this.state.startDate}
-                        onChange={({target: {name, value}}) => _onChange(name, value)}
+                        onChange={({ target: { name, value } }) =>
+                            _onChange(name, value)
+                        }
                     />
                 </div>
                 <div className="flex flex-end-aligned m-b-sm w-100 mb-4">
@@ -1662,7 +1868,9 @@ class ActivityEdition extends React.Component {
                             type="time"
                             className="form-control"
                             value={this.state.startTime}
-                            onChange={({target: {name, value}}) => _onChange(name, value)}
+                            onChange={({ target: { name, value } }) =>
+                                _onChange(name, value)
+                            }
                         />
                     </div>
                     <div className="imput-group ml-2 w-100">
@@ -1672,7 +1880,9 @@ class ActivityEdition extends React.Component {
                             type="time"
                             className="form-control"
                             value={this.state.endTime}
-                            onChange={({target: {name, value}}) => _onChange(name, value)}
+                            onChange={({ target: { name, value } }) =>
+                                _onChange(name, value)
+                            }
                         />
                     </div>
                 </div>
@@ -1682,7 +1892,10 @@ class ActivityEdition extends React.Component {
                         name="location_id"
                         className="form-control"
                         value={selectedLocationId}
-                        onChange={({target: {name, value}}) => _onChange(name, value)}>
+                        onChange={({ target: { name, value } }) =>
+                            _onChange(name, value)
+                        }
+                    >
                         {locations.map(optionMapper())}
                     </select>
                 </div>
@@ -1692,8 +1905,13 @@ class ActivityEdition extends React.Component {
                         name="evaluation_level_ref_id"
                         className="form-control"
                         value={selectedEvaluationLevelRefId || ""}
-                        onChange={({target: {name, value}}) => _onChange(name, value)}>
-                        <option value="">{t("activityModal.toBeSpecified")}</option>
+                        onChange={({ target: { name, value } }) =>
+                            _onChange(name, value)
+                        }
+                    >
+                        <option value="">
+                            {t("activityModal.toBeSpecified")}
+                        </option>
                         {evaluationLevelRefs.map(optionMapper())}
                     </select>
                 </div>
@@ -1704,28 +1922,41 @@ class ActivityEdition extends React.Component {
                             name="room_id"
                             className="form-control"
                             value={selectedRoomId}
-                            onChange={({target: {name, value}}) => {
+                            onChange={({ target: { name, value } }) => {
                                 _onChange(name, parseInt(value));
-                            }}>
+                            }}
+                        >
                             {rooms
-                                .filter(r => r.location.id == selectedLocationId)
+                                .filter(
+                                    (r) => r.location.id == selectedLocationId
+                                )
                                 .map(optionMapper())}
                         </select>
                     </div>
                     <select
-                        onChange={({target: {name, value}}) => _onChange(name, parseInt(value))}
+                        onChange={({ target: { name, value } }) =>
+                            _onChange(name, parseInt(value))
+                        }
                         value={selectedInstancesUpdateScope}
                         className="form-control mb-4"
                         name="instances_update_scope"
-                        style={{flex: "1 1"}}>
-                        <option value={InstancesUpdateScope.SINGULAR}>{t("activityModal.scope.single")}</option>
-                        <option value={InstancesUpdateScope.FOLLOWING}>{t("activityModal.scope.following")}</option>
-                        <option value={InstancesUpdateScope.ALL}>{t("activityModal.scope.all")}</option>
+                        style={{ flex: "1 1" }}
+                    >
+                        <option value={InstancesUpdateScope.SINGULAR}>
+                            {t("activityModal.scope.single")}
+                        </option>
+                        <option value={InstancesUpdateScope.FOLLOWING}>
+                            {t("activityModal.scope.following")}
+                        </option>
+                        <option value={InstancesUpdateScope.ALL}>
+                            {t("activityModal.scope.all")}
+                        </option>
                     </select>
                 </div>
 
-                <div className="alert alert-warning" style={{width: "500px"}}>
-                    <b>{t("activityModal.teacherChangeWarningLabel")}</b>{t("activityModal.teacherChangeWarning")}
+                <div className="alert alert-warning" style={{ width: "500px" }}>
+                    <b>{t("activityModal.teacherChangeWarningLabel")}</b>
+                    {t("activityModal.teacherChangeWarning")}
                 </div>
 
                 {selectedTeacherId ? (
@@ -1734,8 +1965,11 @@ class ActivityEdition extends React.Component {
                         <select
                             className="form-control"
                             name="teacher_id"
-                            onChange={({target: {name, value}}) => _onChange(name, value)}
-                            value={selectedTeacherId}>
+                            onChange={({ target: { name, value } }) =>
+                                _onChange(name, value)
+                            }
+                            value={selectedTeacherId}
+                        >
                             {_.map(teachers, optionMapper(USER_OPTIONS))}
                         </select>
                     </div>
@@ -1744,11 +1978,11 @@ class ActivityEdition extends React.Component {
                 )}
             </div>
         );
-    };
+    }
 }
 
 const coveringEditorSelectStyles = {
-    option: (styles, {data}) => {
+    option: (styles, { data }) => {
         return {
             ...styles,
             color: data.canCover ? "forestgreen" : "#c2c2c2",
@@ -1757,13 +1991,13 @@ const coveringEditorSelectStyles = {
 };
 
 export const TeacherCoveringEditor = ({
-                                   teacher,
-                                   coverTeacherId,
-                                   areHoursCounted,
-                                   potentialCoveringTeachers,
-                                   teachers,
-                                   onChange,
-                               }) => {
+    teacher,
+    coverTeacherId,
+    areHoursCounted,
+    potentialCoveringTeachers,
+    teachers,
+    onChange,
+}) => {
     const { t } = useTranslation("planning");
     const teachersOptions = [
         {
@@ -1772,9 +2006,12 @@ export const TeacherCoveringEditor = ({
             canCover: true,
         },
         ..._(teachers)
-            .filter(tt => tt.id !== _.get(teacher, "id"))
-            .map(tt => {
-                const canCover = coverTeacherId == tt.id || potentialCoveringTeachers && potentialCoveringTeachers.includes(tt.id);
+            .filter((tt) => tt.id !== _.get(teacher, "id"))
+            .map((tt) => {
+                const canCover =
+                    coverTeacherId == tt.id ||
+                    (potentialCoveringTeachers &&
+                        potentialCoveringTeachers.includes(tt.id));
 
                 return {
                     label: `${tt.last_name} ${tt.first_name} ${canCover ? "✓" : "❌"}`,
@@ -1784,13 +2021,15 @@ export const TeacherCoveringEditor = ({
                 };
             })
             .sortBy([
-                ({canCover}) => canCover ? 0 : 1, // place available teachers first
+                ({ canCover }) => (canCover ? 0 : 1), // place available teachers first
                 "label", // and subsort by names
             ])
             .value(),
-    ]
+    ];
 
-    const selectedOption = teachersOptions.find(({value}) => value == coverTeacherId);
+    const selectedOption = teachersOptions.find(
+        ({ value }) => value == coverTeacherId
+    );
 
     return (
         <div>
@@ -1804,8 +2043,10 @@ export const TeacherCoveringEditor = ({
                     options={teachersOptions}
                     placeholder={t("activityModal.noSubstitute")}
                     styles={coveringEditorSelectStyles}
-                    onChange={v => onChange("cover_teacher_id", v.value || null)}>
-                </Select>
+                    onChange={(v) =>
+                        onChange("cover_teacher_id", v.value || null)
+                    }
+                ></Select>
             </div>
 
             {coverTeacherId ? (
@@ -1819,9 +2060,10 @@ export const TeacherCoveringEditor = ({
                                 type="radio"
                                 name="are_hours_counted"
                                 checked={areHoursCounted}
-                                onChange={({target: {checked, name}}) =>
+                                onChange={({ target: { checked, name } }) =>
                                     onChange(name, true)
-                                }/>
+                                }
+                            />
                             Oui
                         </div>
                         <div className="flex flex-end-aligned">
@@ -1829,9 +2071,10 @@ export const TeacherCoveringEditor = ({
                                 type="radio"
                                 name="are_hours_counted"
                                 checked={!areHoursCounted}
-                                onChange={({target: {checked, name}}) =>
+                                onChange={({ target: { checked, name } }) =>
                                     onChange(name, false)
-                                }/>
+                                }
+                            />
                             Non
                         </div>
                     </div>
@@ -1841,18 +2084,19 @@ export const TeacherCoveringEditor = ({
     );
 };
 
-const formatInstances = (instances, startTime, endTime) => _(instances)
-    .filter(instance => instance.selected)
-    .map(ai => ({
-        start: moment(ai.start)
-            .hour(startTime.hour())
-            .minute(startTime.minute())
-            .format(),
-        end: moment(ai.start)
-            .hour(endTime.hour())
-            .minute(endTime.minute())
-            .format(),
-    }))
-    .value();
+const formatInstances = (instances, startTime, endTime) =>
+    _(instances)
+        .filter((instance) => instance.selected)
+        .map((ai) => ({
+            start: moment(ai.start)
+                .hour(startTime.hour())
+                .minute(startTime.minute())
+                .format(),
+            end: moment(ai.start)
+                .hour(endTime.hour())
+                .minute(endTime.minute())
+                .format(),
+        }))
+        .value();
 
 export default withTranslation("planning")(ActivityDetailsModal);

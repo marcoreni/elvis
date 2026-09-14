@@ -37,26 +37,26 @@ export default function TeachersParameters({
         api.set()
             .success((data) => {
                 if (data.success) {
-                    swal({
+                    swal.fire({
                         title: t("shared.saveSuccessTitle"),
                         text: t("editParameters.teachers.saveSuccessText"),
-                        type: "success",
+                        icon: "success",
                     });
 
                     window.location.reload();
                 } else {
-                    swal({
+                    swal.fire({
                         title: t("shared.errorTitle"),
                         text: t("editParameters.teachers.saveErrorText"),
-                        type: "error",
+                        icon: "error",
                     });
                 }
             })
             .error(() => {
-                swal({
+                swal.fire({
                     title: t("shared.errorTitle"),
                     text: t("editParameters.teachers.saveErrorText"),
-                    type: "error",
+                    icon: "error",
                 });
             })
             .post(

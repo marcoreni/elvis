@@ -24,8 +24,8 @@
 // <I18nextProvider> needed for a withTranslation() class); `afterEach` restores "fr".
 
 import React from "react";
-import {render, screen, act} from "@testing-library/react";
-import {Form} from "react-final-form";
+import { render, screen, act } from "@testing-library/react";
+import { Form } from "react-final-form";
 import i18n from "../../i18n";
 import ActivityRefBasics from "./ActivityRefBasics";
 
@@ -35,11 +35,11 @@ let mockLastApiError = null;
 vi.mock("../../tools/api", () => ({
     set: () => {
         const c = {};
-        c.success = fn => {
+        c.success = (fn) => {
             mockLastApiSuccess = fn;
             return c;
         };
-        c.error = fn => {
+        c.error = (fn) => {
             mockLastApiError = fn;
             return c;
         };
@@ -55,25 +55,27 @@ vi.mock("../../tools/api", () => ({
 // `componentAdd` (the "+ add a family" icon) so the addKind path is reachable; BaseDataTable
 // renders `createButton` so `activityRefBasics.createPricing` gets exercised through the real
 // `this.CreateButton.bind(this)` path, not just as a locale key.
-vi.mock("../common/Input", () => ({default: props => <div>{props.label}</div>}));
+vi.mock("../common/Input", () => ({
+    default: (props) => <div>{props.label}</div>,
+}));
 vi.mock("../common/InputSelect", () => ({
-    default: props => (
+    default: (props) => (
         <div>
             {props.label}
             {props.componentAdd || null}
         </div>
     ),
 }));
-vi.mock("../common/InputColor", () => ({default: () => null}));
+vi.mock("../common/InputColor", () => ({ default: () => null }));
 vi.mock("../editParameters/DragAndDrop", () => ({
-    default: props => <div>{props.textDisplayed}</div>,
+    default: (props) => <div>{props.textDisplayed}</div>,
 }));
 // Captured so a test can pull out the `selectedSeasons` column's `Cell` and call it directly with
 // a fabricated row, exercising the seasonEnd null/undefined branch without needing BaseDataTable's
 // real (unmockable-in-jsdom) rendering.
 let mockLastColumns = null;
 vi.mock("../common/baseDataTable/BaseDataTable", () => ({
-    default: props => {
+    default: (props) => {
         mockLastColumns = props.columns;
         const CreateButton = props.createButton;
         return (
@@ -91,14 +93,16 @@ vi.mock("../common/baseDataTable/BaseDataTable", () => ({
     },
 }));
 vi.mock("../common/baseDataTable/DefaultCreateButton", () => ({
-    default: props => <button>{props.label}</button>,
+    default: (props) => <button>{props.label}</button>,
 }));
-vi.mock("./ActivityRefPricingModal", () => ({default: () => null}));
-const {swalMock} = vi.hoisted(() => ({swalMock: vi.fn()}));
-vi.mock("sweetalert2", () => ({default: swalMock}));
+vi.mock("./ActivityRefPricingModal", () => ({ default: () => null }));
+const { swalMock } = vi.hoisted(() => ({
+    swalMock: { fire: vi.fn() },
+}));
+vi.mock("sweetalert2", () => ({ default: swalMock }));
 
 const props = {
-    activityRef: {id: 1},
+    activityRef: { id: 1 },
     activityTypes: [],
     activityRefImage: null,
     activityRefKinds: [["Piano", 3]],
@@ -110,7 +114,7 @@ const props = {
 };
 
 const seasonsPayload = {
-    seasons: [{id: 1, label: "2025-26"}],
+    seasons: [{ id: 1, label: "2025-26" }],
     pricing_categories: [],
     activity_ref_pricings: [],
     packs: [],
@@ -118,7 +122,10 @@ const seasonsPayload = {
 
 function renderBasics() {
     return render(
-        <Form onSubmit={() => {}} render={() => <ActivityRefBasics {...props} />} />,
+        <Form
+            onSubmit={() => {}}
+            render={() => <ActivityRefBasics {...props} />}
+        />
     );
 }
 
@@ -126,7 +133,7 @@ beforeEach(() => {
     mockLastApiSuccess = null;
     mockLastApiError = null;
     mockLastColumns = null;
-    swalMock.mockClear();
+    swalMock.fire.mockClear();
 });
 
 afterEach(async () => {
@@ -165,20 +172,28 @@ describe("ActivityRefBasics", () => {
             expect(screen.getAllByText("Nom").length).toBeGreaterThanOrEqual(2);
             expect(screen.getByText("Famille")).toBeInTheDocument();
             expect(screen.getByText("Nombre de places")).toBeInTheDocument();
-            expect(screen.getByText("Places (avec surréservation)")).toBeInTheDocument();
-            expect(screen.getByText("Âge minimum (inclus)")).toBeInTheDocument();
+            expect(
+                screen.getByText("Places (avec surréservation)")
+            ).toBeInTheDocument();
+            expect(
+                screen.getByText("Âge minimum (inclus)")
+            ).toBeInTheDocument();
             expect(screen.getByText("Durée (en minutes)")).toBeInTheDocument();
             expect(
-                screen.getByText("Couleur du créneau dans le planning"),
+                screen.getByText("Couleur du créneau dans le planning")
             ).toBeInTheDocument();
 
             // DragAndDrop textDisplayed.
             expect(
-                screen.getByText("Pour ajouter une image, déposez un fichier ici ou"),
+                screen.getByText(
+                    "Pour ajouter une image, déposez un fichier ici ou"
+                )
             ).toBeInTheDocument();
 
             // Pricing section label.
-            expect(screen.getByText("Nombre de cours et tarifs")).toBeInTheDocument();
+            expect(
+                screen.getByText("Nombre de cours et tarifs")
+            ).toBeInTheDocument();
 
             // BaseDataTable pricing column headers.
             expect(screen.getByText("Nombre de cours")).toBeInTheDocument();
@@ -194,20 +209,30 @@ describe("ActivityRefBasics", () => {
             act(() => mockLastApiSuccess(seasonsPayload));
 
             // "Name" is used by both the name field and the pricing "name" column.
-            expect(screen.getAllByText("Name").length).toBeGreaterThanOrEqual(2);
+            expect(screen.getAllByText("Name").length).toBeGreaterThanOrEqual(
+                2
+            );
             expect(screen.getByText("Family")).toBeInTheDocument();
             expect(screen.getByText("Number of spots")).toBeInTheDocument();
-            expect(screen.getByText("Spots (with overbooking)")).toBeInTheDocument();
-            expect(screen.getByText("Minimum age (included)")).toBeInTheDocument();
-            expect(screen.getByText("Duration (in minutes)")).toBeInTheDocument();
-            expect(screen.getByText("Slot color in the schedule")).toBeInTheDocument();
-
             expect(
-                screen.getByText("To add an image, drop a file here or"),
+                screen.getByText("Spots (with overbooking)")
+            ).toBeInTheDocument();
+            expect(
+                screen.getByText("Minimum age (included)")
+            ).toBeInTheDocument();
+            expect(
+                screen.getByText("Duration (in minutes)")
+            ).toBeInTheDocument();
+            expect(
+                screen.getByText("Slot color in the schedule")
             ).toBeInTheDocument();
 
             expect(
-                screen.getByText("Number of courses and pricing"),
+                screen.getByText("To add an image, drop a file here or")
+            ).toBeInTheDocument();
+
+            expect(
+                screen.getByText("Number of courses and pricing")
             ).toBeInTheDocument();
 
             expect(screen.getByText("Number of courses")).toBeInTheDocument();
@@ -235,8 +260,8 @@ describe("ActivityRefBasics", () => {
     describe("selectedSeasons pricing column (Cell) — seasonEnd null/undefined regression", () => {
         const twoSeasonsPayload = {
             seasons: [
-                {id: 1, label: "2025-26"},
-                {id: 2, label: "2026-27"},
+                { id: 1, label: "2025-26" },
+                { id: 2, label: "2026-27" },
             ],
             pricing_categories: [],
             activity_ref_pricings: [],
@@ -244,7 +269,9 @@ describe("ActivityRefBasics", () => {
         };
 
         function getSelectedSeasonsCell() {
-            const col = (mockLastColumns || []).find(c => c.id === "selectedSeasons");
+            const col = (mockLastColumns || []).find(
+                (c) => c.id === "selectedSeasons"
+            );
             expect(col).toBeDefined();
             return col.Cell;
         }
@@ -258,7 +285,9 @@ describe("ActivityRefBasics", () => {
             act(() => mockLastApiSuccess(twoSeasonsPayload));
 
             const Cell = getSelectedSeasonsCell();
-            const result = Cell({original: {from_season_id: 1, to_season_id: null}});
+            const result = Cell({
+                original: { from_season_id: 1, to_season_id: null },
+            });
             expect(result).toBe("2025-26 > ...");
         });
 
@@ -273,7 +302,9 @@ describe("ActivityRefBasics", () => {
             const Cell = getSelectedSeasonsCell();
             let result;
             expect(() => {
-                result = Cell({original: {from_season_id: 1, to_season_id: undefined}});
+                result = Cell({
+                    original: { from_season_id: 1, to_season_id: undefined },
+                });
             }).not.toThrow();
             expect(result).toBe("2025-26 > ...");
         });
@@ -286,7 +317,9 @@ describe("ActivityRefBasics", () => {
             const Cell = getSelectedSeasonsCell();
             let result;
             expect(() => {
-                result = Cell({original: {from_season_id: 1, to_season_id: 999}});
+                result = Cell({
+                    original: { from_season_id: 1, to_season_id: 999 },
+                });
             }).not.toThrow();
             expect(result).toBe("2025-26 > ...");
         });
@@ -297,7 +330,9 @@ describe("ActivityRefBasics", () => {
             act(() => mockLastApiSuccess(twoSeasonsPayload));
 
             const Cell = getSelectedSeasonsCell();
-            const result = Cell({original: {from_season_id: 1, to_season_id: 2}});
+            const result = Cell({
+                original: { from_season_id: 1, to_season_id: 2 },
+            });
             expect(result).toBe("2025-26 > 2026-27");
         });
 
@@ -312,7 +347,9 @@ describe("ActivityRefBasics", () => {
             const Cell = getSelectedSeasonsCell();
             let result;
             expect(() => {
-                result = Cell({original: {from_season_id: 999, to_season_id: 2}});
+                result = Cell({
+                    original: { from_season_id: 999, to_season_id: 2 },
+                });
             }).not.toThrow();
             expect(result).toBe("... > 2026-27");
         });
@@ -324,13 +361,13 @@ describe("ActivityRefBasics", () => {
             renderBasics();
             expect(mockLastApiError).toBeInstanceOf(Function);
 
-            act(() => mockLastApiError({error: "boom"}));
+            act(() => mockLastApiError({ error: "boom" }));
 
-            expect(swalMock).toHaveBeenCalledWith(
-                "Une erreur est survenue lors de la récupération des saisons ou des catégories de prix",
-                "boom",
-                "error",
-            );
+            expect(swalMock.fire).toHaveBeenCalledWith({
+                title: "Une erreur est survenue lors de la récupération des saisons ou des catégories de prix",
+                text: "boom",
+                icon: "error",
+            });
         });
     });
 });
@@ -359,7 +396,10 @@ describe("activities:activityRefBasics.{validators,fetchError,addKind} resolutio
 
         test(`${lng}: activityRefBasics.validators.minValue interpolates {min}`, async () => {
             await i18n.changeLanguage(lng);
-            const value = i18n.t("activities:activityRefBasics.validators.minValue", {min: 3});
+            const value = i18n.t(
+                "activities:activityRefBasics.validators.minValue",
+                { min: 3 }
+            );
             expect(value).toBeTruthy();
             expect(value).toContain("3");
             expect(value).not.toMatch(/\{\{/);

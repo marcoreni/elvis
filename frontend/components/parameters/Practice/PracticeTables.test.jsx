@@ -20,13 +20,13 @@
 // (mirrors the "getting an instance of a withTranslation-wrapped class" note in the qa brief).
 
 import React from "react";
-import {render, screen} from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import i18n from "../../../i18n";
 
 // --- react-table stub: echo every column's (string) Header into the DOM, in column order.
 //     Also short-circuits the real ReactTable's mount-time `onFetchData` -> no `fetch`.
 vi.mock("react-table", () => ({
-    default: ({columns = []}) => (
+    default: ({ columns = [] }) => (
         <div data-testid="react-table">
             {columns.map((col, idx) => (
                 <span key={idx} data-testid="col-header">
@@ -40,7 +40,7 @@ vi.mock("react-table", () => ({
 // --- sweetalert2 stub: `swal(opts)` resolves to `{}` so `.then(res => res.value)` is falsy and
 //     no DELETE `fetch` fires from `deleteStatus`.
 vi.mock("sweetalert2", () => ({
-    default: Object.assign(vi.fn(() => Promise.resolve({})), {fire: vi.fn()}),
+    default: { fire: vi.fn(() => Promise.resolve({})) },
 }));
 
 import swal from "sweetalert2";
@@ -83,8 +83,22 @@ const TABLES = [
         deleteKey: "practice.delete.flatRate",
         nameField: "name",
         headers: {
-            fr: ["Nom", "Actif ?", "Nombre d'heures", "Tarif solo/duo", "Tarif de groupe", "Actions"],
-            en: ["Name", "Active?", "Number of hours", "Solo/duo rate", "Group rate", "Actions"],
+            fr: [
+                "Nom",
+                "Actif ?",
+                "Nombre d'heures",
+                "Tarif solo/duo",
+                "Tarif de groupe",
+                "Actions",
+            ],
+            en: [
+                "Name",
+                "Active?",
+                "Number of hours",
+                "Solo/duo rate",
+                "Group rate",
+                "Actions",
+            ],
         },
     },
     {
@@ -155,20 +169,27 @@ describe("parameters practice.* — i18n layer", () => {
         ["practice.delete.musicGenre", "genre"],
     ];
 
-    test.each(DELETE_ENTITY)("fr %s interpolates {{name}} and mentions the entity", (key, word) => {
-        const v = i18n.getFixedT("fr", "parameters")(key, {name: "Zephyr"});
-        expect(v).toContain("Zephyr");
-        expect(v).not.toMatch(/\{\{/);
-        expect(v.toLowerCase()).toContain(word);
-    });
+    test.each(DELETE_ENTITY)(
+        "fr %s interpolates {{name}} and mentions the entity",
+        (key, word) => {
+            const v = i18n.getFixedT("fr", "parameters")(key, {
+                name: "Zephyr",
+            });
+            expect(v).toContain("Zephyr");
+            expect(v).not.toMatch(/\{\{/);
+            expect(v.toLowerCase()).toContain(word);
+        }
+    );
 
     test.each(DELETE_ENTITY.map(([key]) => key))(
         "en %s interpolates {{name}} (brace-free, contains the value)",
         (key) => {
-            const v = i18n.getFixedT("en", "parameters")(key, {name: "Zephyr"});
+            const v = i18n.getFixedT("en", "parameters")(key, {
+                name: "Zephyr",
+            });
             expect(v).toContain("Zephyr");
             expect(v).not.toMatch(/\{\{/);
-        },
+        }
     );
 
     // "shared delete-confirm + yes/no + errorTitle atoms resolve" removed (Phase 07 P0) —
@@ -180,19 +201,22 @@ describe("parameters practice.* — i18n layer", () => {
 //    into the constructor), react-table stubbed to surface the Header strings.
 // ============================================================================================
 describe("Practice tables — translated column headers", () => {
-    for (const {name, Component, headers} of TABLES) {
+    for (const { name, Component, headers } of TABLES) {
         describe(name, () => {
-            test.each(["fr", "en"])("renders the expected column headers in %s", async (lng) => {
-                await i18n.changeLanguage(lng);
-                render(<Component urlListData="/x" urlNew="/x/new" />);
+            test.each(["fr", "en"])(
+                "renders the expected column headers in %s",
+                async (lng) => {
+                    await i18n.changeLanguage(lng);
+                    render(<Component urlListData="/x" urlNew="/x/new" />);
 
-                const got = screen
-                    .getAllByTestId("col-header")
-                    .map((el) => el.textContent)
-                    .filter(Boolean);
+                    const got = screen
+                        .getAllByTestId("col-header")
+                        .map((el) => el.textContent)
+                        .filter(Boolean);
 
-                expect(got).toEqual(["#", ...headers[lng]]);
-            });
+                    expect(got).toEqual(["#", ...headers[lng]]);
+                }
+            );
         });
     }
 
@@ -203,7 +227,9 @@ describe("Practice tables — translated column headers", () => {
     ])("shared headers in %s (BandsType)", async (lng, nameCol, actionsCol) => {
         await i18n.changeLanguage(lng);
         render(<BandsType urlListData="/x" urlNew="/x/new" />);
-        const got = screen.getAllByTestId("col-header").map((el) => el.textContent);
+        const got = screen
+            .getAllByTestId("col-header")
+            .map((el) => el.textContent);
         expect(got).toContain(nameCol);
         expect(got).toContain(actionsCol);
     });
@@ -214,7 +240,9 @@ describe("Practice tables — translated column headers", () => {
     ])("boolean 'active' header in %s (Features)", async (lng, activeCol) => {
         await i18n.changeLanguage(lng);
         render(<Features urlListData="/x" urlNew="/x/new" />);
-        expect(screen.getAllByTestId("col-header").map((el) => el.textContent)).toContain(activeCol);
+        expect(
+            screen.getAllByTestId("col-header").map((el) => el.textContent)
+        ).toContain(activeCol);
     });
 
     test.each([
@@ -223,7 +251,9 @@ describe("Practice tables — translated column headers", () => {
     ])("Groups table-specific headers in %s", async (lng, cols) => {
         await i18n.changeLanguage(lng);
         render(<Groups urlListData="/x" urlNew="/x/new" />);
-        const got = screen.getAllByTestId("col-header").map((el) => el.textContent);
+        const got = screen
+            .getAllByTestId("col-header")
+            .map((el) => el.textContent);
         for (const c of cols) expect(got).toContain(c);
     });
 
@@ -233,7 +263,9 @@ describe("Practice tables — translated column headers", () => {
     ])("FlatRate table-specific headers in %s", async (lng, cols) => {
         await i18n.changeLanguage(lng);
         render(<FlatRate urlListData="/x" urlNew="/x/new" />);
-        const got = screen.getAllByTestId("col-header").map((el) => el.textContent);
+        const got = screen
+            .getAllByTestId("col-header")
+            .map((el) => el.textContent);
         for (const c of cols) expect(got).toContain(c);
     });
 
@@ -243,7 +275,9 @@ describe("Practice tables — translated column headers", () => {
     ])("Materials table-specific headers in %s", async (lng, cols) => {
         await i18n.changeLanguage(lng);
         render(<Materials urlListData="/x" urlNew="/x/new" />);
-        const got = screen.getAllByTestId("col-header").map((el) => el.textContent);
+        const got = screen
+            .getAllByTestId("col-header")
+            .map((el) => el.textContent);
         for (const c of cols) expect(got).toContain(c);
     });
 });
@@ -268,7 +302,7 @@ describe("Practice tables — deleteStatus swal i18n", () => {
                 ref={(r) => {
                     inst = r;
                 }}
-            />,
+            />
         );
         return inst;
     }
@@ -278,7 +312,7 @@ describe("Practice tables — deleteStatus swal i18n", () => {
     // covered here and in the `Cell` onClick test below.
     const DELETE_CASES = TABLES;
 
-    for (const {name, Component, deleteKey, nameField} of DELETE_CASES) {
+    for (const { name, Component, deleteKey, nameField } of DELETE_CASES) {
         describe(name, () => {
             test.each(["fr", "en"])(
                 "deleteStatus builds a %s-translated swal (title + cancel + confirm)",
@@ -287,46 +321,61 @@ describe("Practice tables — deleteStatus swal i18n", () => {
                     const t = i18n.getFixedT(lng, "parameters");
                     const inst = mountInstance(Component, lng);
 
-                    inst.deleteStatus({id: 1, name: "Jazz", label: "Piano"});
+                    inst.deleteStatus({ id: 1, name: "Jazz", label: "Piano" });
 
-                    expect(swal).toHaveBeenCalledTimes(1);
-                    const opts = swal.mock.calls[0][0];
+                    expect(swal.fire).toHaveBeenCalledTimes(1);
+                    const opts = swal.fire.mock.calls[0][0];
 
-                    const expectedName = nameField === "label" ? "Piano" : "Jazz";
-                    expect(opts.title).toBe(t(deleteKey, {name: expectedName}));
+                    const expectedName =
+                        nameField === "label" ? "Piano" : "Jazz";
+                    expect(opts.title).toBe(
+                        t(deleteKey, { name: expectedName })
+                    );
                     expect(opts.title).toContain(expectedName);
                     expect(opts.title).not.toBe(deleteKey);
                     expect(opts.title).not.toMatch(/\{\{/);
 
-                    expect(opts.cancelButtonText).toBe(t("shared.deleteConfirmNo"));
-                    expect(opts.confirmButtonText).toBe(t("shared.deleteConfirmYes"));
-                },
+                    expect(opts.cancelButtonText).toBe(
+                        t("shared.deleteConfirmNo")
+                    );
+                    expect(opts.confirmButtonText).toBe(
+                        t("shared.deleteConfirmYes")
+                    );
+                }
             );
         });
     }
 
     test("explicit fr / en strings (BandsType)", async () => {
         await i18n.changeLanguage("fr");
-        mountInstance(BandsType, "fr").deleteStatus({id: 1, name: "Rock"});
-        let opts = swal.mock.calls[0][0];
-        expect(opts.title).toBe("Voulez-vous vraiment supprimer le type de groupe 'Rock' ?");
+        mountInstance(BandsType, "fr").deleteStatus({ id: 1, name: "Rock" });
+        let opts = swal.fire.mock.calls[0][0];
+        expect(opts.title).toBe(
+            "Voulez-vous vraiment supprimer le type de groupe 'Rock' ?"
+        );
         expect(opts.cancelButtonText).toBe("non");
         expect(opts.confirmButtonText).toBe("oui");
 
-        swal.mockClear();
+        swal.fire.mockClear();
 
         await i18n.changeLanguage("en");
-        mountInstance(BandsType, "en").deleteStatus({id: 1, name: "Rock"});
-        opts = swal.mock.calls[0][0];
-        expect(opts.title).toBe("Do you really want to delete the band type 'Rock'?");
+        mountInstance(BandsType, "en").deleteStatus({ id: 1, name: "Rock" });
+        opts = swal.fire.mock.calls[0][0];
+        expect(opts.title).toBe(
+            "Do you really want to delete the band type 'Rock'?"
+        );
         expect(opts.cancelButtonText).toBe("no");
         expect(opts.confirmButtonText).toBe("yes");
     });
 
     test("Instruments interpolates status.label, not status.name", async () => {
         await i18n.changeLanguage("fr");
-        mountInstance(Instruments, "fr").deleteStatus({id: 1, name: "WRONG", label: "Guitare"});
-        const opts = swal.mock.calls[0][0];
+        mountInstance(Instruments, "fr").deleteStatus({
+            id: 1,
+            name: "WRONG",
+            label: "Guitare",
+        });
+        const opts = swal.fire.mock.calls[0][0];
         expect(opts.title).toContain("Guitare");
         expect(opts.title).not.toContain("WRONG");
     });
@@ -334,45 +383,58 @@ describe("Practice tables — deleteStatus swal i18n", () => {
     // The actions-column `Cell` wires `onClick={() => this.deleteStatus(props.original)}`.
     // MusicGenres relies on that arrow for `this` (no `.bind` in its constructor), so drive the
     // real Cell for every table and confirm the click reaches a translated swal.
-    for (const {name, Component, deleteKey, nameField} of TABLES) {
+    for (const { name, Component, deleteKey, nameField } of TABLES) {
         test(`${name}: actions-column Cell onClick reaches deleteStatus (this bound)`, async () => {
             await i18n.changeLanguage("fr");
             const t = i18n.getFixedT("fr", "parameters");
             const inst = mountInstance(Component, "fr");
 
-            const actionsCol = inst.state.columns.find((c) => c.id === "actions");
-            const original = {id: 7, name: "Jazz", label: "Piano"};
-            const {container} = render(<div>{actionsCol.Cell({original})}</div>);
+            const actionsCol = inst.state.columns.find(
+                (c) => c.id === "actions"
+            );
+            const original = { id: 7, name: "Jazz", label: "Piano" };
+            const { container } = render(
+                <div>{actionsCol.Cell({ original })}</div>
+            );
             container.querySelector("a.btn-warning").click();
 
-            expect(swal).toHaveBeenCalledTimes(1);
+            expect(swal.fire).toHaveBeenCalledTimes(1);
             const expectedName = nameField === "label" ? "Piano" : "Jazz";
-            expect(swal.mock.calls[0][0].title).toBe(t(deleteKey, {name: expectedName}));
+            expect(swal.fire.mock.calls[0][0].title).toBe(
+                t(deleteKey, { name: expectedName })
+            );
         });
     }
 
     // Error branch: user confirms, the DELETE comes back non-200 -> a second swal titled
     // `shared.errorTitle`. `t` must still be in scope inside the nested `.then` closures.
-    test.each(["fr", "en"])("deleteStatus error branch titles the swal with errorTitle (%s)", async (lng) => {
-        await i18n.changeLanguage(lng);
-        const t = i18n.getFixedT(lng, "parameters");
-        swal.mockImplementation(() => Promise.resolve({value: true}));
-        global.fetch = vi.fn().mockResolvedValue({
-            status: 422,
-            text: () => Promise.resolve("boom"),
-        });
+    test.each(["fr", "en"])(
+        "deleteStatus error branch titles the swal with errorTitle (%s)",
+        async (lng) => {
+            await i18n.changeLanguage(lng);
+            const t = i18n.getFixedT(lng, "parameters");
+            swal.fire.mockImplementation(() =>
+                Promise.resolve({ value: true })
+            );
+            global.fetch = vi.fn().mockResolvedValue({
+                status: 422,
+                text: () => Promise.resolve("boom"),
+            });
 
-        const inst = mountInstance(Materials, lng);
-        await inst.deleteStatus({id: 1, name: "Amp"});
-        await new Promise((r) => setTimeout(r, 0));
+            const inst = mountInstance(Materials, lng);
+            await inst.deleteStatus({ id: 1, name: "Amp" });
+            await new Promise((r) => setTimeout(r, 0));
 
-        const errCall = swal.mock.calls.find((c) => c[0].type === "error");
-        expect(errCall).toBeTruthy();
-        expect(errCall[0].title).toBe(t("shared.errorTitle"));
-        expect(errCall[0].text).toBe("boom");
+            const errCall = swal.fire.mock.calls.find(
+                (c) => c[0].icon === "error"
+            );
+            expect(errCall).toBeTruthy();
+            expect(errCall[0].title).toBe(t("shared.errorTitle"));
+            expect(errCall[0].text).toBe("boom");
 
-        delete global.fetch;
-    });
+            delete global.fetch;
+        }
+    );
 });
 
 // ============================================================================================
@@ -398,25 +460,31 @@ describe("Materials — 'active' column accessor operates on the `active` field"
                 ref={(r) => {
                     inst = r;
                 }}
-            />,
+            />
         );
         return inst;
     }
 
     test("accessor returns the row's `active` boolean, not its name", async () => {
         await i18n.changeLanguage("fr");
-        const activeCol = mountMaterials("fr").state.columns.find((c) => c.id === "active");
+        const activeCol = mountMaterials("fr").state.columns.find(
+            (c) => c.id === "active"
+        );
 
-        expect(activeCol.accessor({name: "Amp", active: true})).toBe(true);
-        expect(activeCol.accessor({name: "Amp", active: false})).toBe(false);
+        expect(activeCol.accessor({ name: "Amp", active: true })).toBe(true);
+        expect(activeCol.accessor({ name: "Amp", active: false })).toBe(false);
         // guard against a silent regression back to `d => d.name`
-        expect(activeCol.accessor({name: "Amp", active: true})).not.toBe("Amp");
+        expect(activeCol.accessor({ name: "Amp", active: true })).not.toBe(
+            "Amp"
+        );
     });
 
     test("the 'name' column still accesses `name` (unchanged by the fix)", async () => {
         await i18n.changeLanguage("fr");
-        const nameCol = mountMaterials("fr").state.columns.find((c) => c.id === "name");
-        expect(nameCol.accessor({name: "Amp", active: true})).toBe("Amp");
+        const nameCol = mountMaterials("fr").state.columns.find(
+            (c) => c.id === "name"
+        );
+        expect(nameCol.accessor({ name: "Amp", active: true })).toBe("Amp");
     });
 });
 
@@ -424,15 +492,19 @@ describe("Materials — 'active' column accessor operates on the `active` field"
 // 4. HOC shape — `withTranslation("parameters")(X)` kept the `extends BaseDataTable` chain.
 // ============================================================================================
 describe("Practice tables — withTranslation wrap preserves BaseDataTable inheritance", () => {
-    test.each(TABLES.map(({name, Component}) => [name, Component]))(
+    test.each(TABLES.map(({ name, Component }) => [name, Component]))(
         "%s.WrappedComponent still extends BaseDataTable",
         (_name, Component) => {
             expect(Component.WrappedComponent).toBeDefined();
-            expect(Component.WrappedComponent.prototype instanceof React.Component).toBe(true);
-            expect(Component.WrappedComponent.prototype instanceof BaseDataTable).toBe(true);
-            expect(Object.getPrototypeOf(Component.WrappedComponent.prototype)).toBe(
-                BaseDataTable.prototype,
-            );
-        },
+            expect(
+                Component.WrappedComponent.prototype instanceof React.Component
+            ).toBe(true);
+            expect(
+                Component.WrappedComponent.prototype instanceof BaseDataTable
+            ).toBe(true);
+            expect(
+                Object.getPrototypeOf(Component.WrappedComponent.prototype)
+            ).toBe(BaseDataTable.prototype);
+        }
     );
 });

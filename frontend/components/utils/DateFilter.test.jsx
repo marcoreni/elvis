@@ -18,8 +18,23 @@ describe("RangedSelect — _.range builds the option list without throwing", () 
     });
 
     test("throws its own explicit guard (not a lodash ReferenceError) when min/max are not numbers", () => {
-        expect(() =>
-            render(<RangedSelect min="1" max={4} name="d" onChange={() => {}} />)
-        ).toThrow("the arguments need to be integers");
+        // React's dev-mode error path re-dispatches a render throw through a real DOM event
+        // (invokeGuardedCallbackDev) purely so devtools can capture a native stack trace -- it
+        // does this in addition to, not instead of, letting the error propagate to this test's own
+        // `toThrow()`. Left unhandled, jsdom surfaces that second copy as console noise (and, under
+        // some schedulings, as a suite-level "Uncaught Exception"). Both are silenced for the
+        // duration of this one intentional-throw test only.
+        const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+        const onWindowError = (event) => event.preventDefault();
+        window.addEventListener("error", onWindowError);
+
+        try {
+            expect(() =>
+                render(<RangedSelect min="1" max={4} name="d" onChange={() => {}} />)
+            ).toThrow("the arguments need to be integers");
+        } finally {
+            window.removeEventListener("error", onWindowError);
+            consoleError.mockRestore();
+        }
     });
 });

@@ -27,7 +27,7 @@ class SeasonActivationModal extends React.Component {
         };
     }
 
-    openModal = seasonId => {
+    openModal = (seasonId) => {
         this.setState({
             isOpen: true,
             step: 1,
@@ -49,7 +49,7 @@ class SeasonActivationModal extends React.Component {
         this.fetchExistingHolidays(seasonId);
     };
 
-    fetchExistingHolidays = async seasonId => {
+    fetchExistingHolidays = async (seasonId) => {
         try {
             const response = await fetch(`/seasons/${seasonId}.json`, {
                 method: "GET",
@@ -71,7 +71,7 @@ class SeasonActivationModal extends React.Component {
                 // Les transformer en plages par label
                 const holidaysByLabel = {};
 
-                data.holidays.forEach(h => {
+                data.holidays.forEach((h) => {
                     const label = h.label || h.name || "Sans nom";
                     const date = h.date ? h.date.split("T")[0] : "";
 
@@ -106,7 +106,7 @@ class SeasonActivationModal extends React.Component {
         }
     };
 
-    fetchSeasonData = async seasonId => {
+    fetchSeasonData = async (seasonId) => {
         const { t } = this.props;
         this.setState({ seasonDataLoading: true });
 
@@ -126,7 +126,7 @@ class SeasonActivationModal extends React.Component {
             const data = await response.json();
 
             // Fonction pour formater une date au format YYYY-MM-DD
-            const formatDate = date => {
+            const formatDate = (date) => {
                 if (!date) return "";
                 // Gère les formats ISO 8601 (avec T) et autres formats
                 const dateString =
@@ -163,8 +163,8 @@ class SeasonActivationModal extends React.Component {
             console.error("Error fetching season data:", error);
             this.setState({ seasonDataLoading: false });
 
-            swal({
-                type: "error",
+            swal.fire({
+                icon: "error",
                 title: t("planning:seasonActivation.toast.errorTitle"),
                 text: t("planning:seasonActivation.errors.loadSeasonFailed"),
             });
@@ -201,8 +201,8 @@ class SeasonActivationModal extends React.Component {
                 holidaysLoading: false,
             });
 
-            swal({
-                type: "success",
+            swal.fire({
+                icon: "success",
                 title: t("planning:seasonActivation.toast.successTitle"),
                 text: t("planning:seasonActivation.toast.holidaysImported"),
             });
@@ -212,22 +212,22 @@ class SeasonActivationModal extends React.Component {
                 holidaysLoading: false,
             });
 
-            swal({
-                type: "error",
+            swal.fire({
+                icon: "error",
                 title: t("planning:seasonActivation.toast.errorTitle"),
                 text: error.message,
             });
         }
     };
 
-    goToStep = step => {
+    goToStep = (step) => {
         const { t } = this.props;
         const { holidays } = this.state;
 
         // Si on essaie d'aller à l'étape 2 sans vacances configurées, demander une confirmation
         if (step === 2 && (!holidays || holidays.length === 0)) {
-            swal({
-                type: "warning",
+            swal.fire({
+                icon: "warning",
                 title: t("planning:seasonActivation.confirmNoHolidays.title"),
                 text: t("planning:seasonActivation.confirmNoHolidays.text"),
                 showCancelButton: true,
@@ -237,7 +237,7 @@ class SeasonActivationModal extends React.Component {
                 cancelButtonText: t(
                     "planning:seasonActivation.confirmNoHolidays.cancel"
                 ),
-            }).then(result => {
+            }).then((result) => {
                 if (result.value) {
                     this.setState({ step });
                 }
@@ -294,7 +294,7 @@ class SeasonActivationModal extends React.Component {
             const data = await response.json();
 
             if (data) {
-                this.setState(prevState => ({
+                this.setState((prevState) => ({
                     holidays: [
                         ...prevState.holidays,
                         {
@@ -310,8 +310,8 @@ class SeasonActivationModal extends React.Component {
                     manualError: "",
                 }));
 
-                swal({
-                    type: "success",
+                swal.fire({
+                    icon: "success",
                     title: t("planning:seasonActivation.toast.successTitle"),
                     text: t("planning:seasonActivation.toast.holidaysAdded"),
                 });
@@ -322,8 +322,8 @@ class SeasonActivationModal extends React.Component {
                 holidaysLoading: false,
             });
 
-            swal({
-                type: "error",
+            swal.fire({
+                icon: "error",
                 title: t("planning:seasonActivation.toast.errorTitle"),
                 text: error.message,
             });
@@ -398,15 +398,15 @@ class SeasonActivationModal extends React.Component {
                 this.props.onSuccess(data);
             }
 
-            swal({
-                type: "success",
+            swal.fire({
+                icon: "success",
                 title: t("planning:seasonActivation.toast.successTitle"),
                 text: t("planning:seasonActivation.toast.seasonActivated"),
             });
 
             if (data && data.new_next_season) {
-                swal({
-                    type: "success",
+                swal.fire({
+                    icon: "success",
                     title: t("planning:seasonActivation.toast.infoTitle"),
                     text: t(
                         "planning:seasonActivation.toast.nextSeasonCreated"
@@ -416,8 +416,8 @@ class SeasonActivationModal extends React.Component {
         } catch (error) {
             this.setState({ loading: false });
 
-            swal({
-                type: "error",
+            swal.fire({
+                icon: "error",
                 title: t("planning:seasonActivation.toast.errorTitle"),
                 text:
                     error.message ||
@@ -519,7 +519,7 @@ class SeasonActivationModal extends React.Component {
                                     "planning:seasonActivation.step1.namePlaceholder"
                                 )}
                                 value={manualLabel}
-                                onChange={e =>
+                                onChange={(e) =>
                                     this.setState({
                                         manualLabel: e.target.value,
                                     })
@@ -543,7 +543,7 @@ class SeasonActivationModal extends React.Component {
                                 type="date"
                                 className="form-control"
                                 value={manualStart}
-                                onChange={e =>
+                                onChange={(e) =>
                                     this.setState({
                                         manualStart: e.target.value,
                                     })
@@ -565,7 +565,7 @@ class SeasonActivationModal extends React.Component {
                                 type="date"
                                 className="form-control"
                                 value={manualEnd}
-                                onChange={e =>
+                                onChange={(e) =>
                                     this.setState({ manualEnd: e.target.value })
                                 }
                             />
@@ -705,7 +705,7 @@ class SeasonActivationModal extends React.Component {
         );
     };
 
-    consolidateHolidays = holidays => {
+    consolidateHolidays = (holidays) => {
         if (!holidays || holidays.length === 0) return [];
 
         // Trier les vacances par date de début
@@ -772,9 +772,9 @@ class SeasonActivationModal extends React.Component {
                 );
             }
 
-            this.setState(prevState => ({
+            this.setState((prevState) => ({
                 holidays: prevState.holidays.filter(
-                    h =>
+                    (h) =>
                         !(
                             h.label === label &&
                             h.start === start &&
@@ -784,16 +784,16 @@ class SeasonActivationModal extends React.Component {
                 holidaysLoading: false,
             }));
 
-            swal({
-                type: "success",
+            swal.fire({
+                icon: "success",
                 title: t("planning:seasonActivation.toast.successTitle"),
                 text: t("planning:seasonActivation.toast.holidaysDeleted"),
             });
         } catch (error) {
             this.setState({ holidaysLoading: false });
 
-            swal({
-                type: "error",
+            swal.fire({
+                icon: "error",
                 title: t("planning:seasonActivation.toast.errorTitle"),
                 text: error.message,
             });
@@ -813,7 +813,7 @@ class SeasonActivationModal extends React.Component {
         let weekCount = 0;
         let currentDate = new Date(start);
 
-        const holidayRanges = holidays.map(h => ({
+        const holidayRanges = holidays.map((h) => ({
             start: new Date(h.start),
             end: new Date(h.end),
         }));
@@ -825,7 +825,7 @@ class SeasonActivationModal extends React.Component {
             if (dayOfWeek >= 1 && dayOfWeek <= 5) {
                 // Vérifie si le jour est en vacances
                 const isHoliday = holidayRanges.some(
-                    range =>
+                    (range) =>
                         currentDate >= range.start && currentDate <= range.end
                 );
 
@@ -906,9 +906,9 @@ class SeasonActivationModal extends React.Component {
                                     className="form-control"
                                     value={seasonData.start || ""}
                                     disabled={!editingDates}
-                                    onChange={e => {
+                                    onChange={(e) => {
                                         const value = e.target.value;
-                                        this.setState(prev => ({
+                                        this.setState((prev) => ({
                                             seasonData: {
                                                 ...prev.seasonData,
                                                 start: value,
@@ -935,9 +935,9 @@ class SeasonActivationModal extends React.Component {
                                 className="form-control"
                                 value={seasonData.end || ""}
                                 disabled={!editingDates}
-                                onChange={e => {
+                                onChange={(e) => {
                                     const value = e.target.value;
-                                    this.setState(prev => ({
+                                    this.setState((prev) => ({
                                         seasonData: {
                                             ...prev.seasonData,
                                             end: value,
@@ -965,9 +965,9 @@ class SeasonActivationModal extends React.Component {
                                 className="form-control"
                                 value={seasonData.reopen_at || ""}
                                 disabled={!editingDates}
-                                onChange={e => {
+                                onChange={(e) => {
                                     const value = e.target.value;
-                                    this.setState(prev => ({
+                                    this.setState((prev) => ({
                                         seasonData: {
                                             ...prev.seasonData,
                                             reopen_at: value,
@@ -995,9 +995,9 @@ class SeasonActivationModal extends React.Component {
                                 className="form-control"
                                 value={seasonData.open_at || ""}
                                 disabled={!editingDates}
-                                onChange={e => {
+                                onChange={(e) => {
                                     const value = e.target.value;
-                                    this.setState(prev => ({
+                                    this.setState((prev) => ({
                                         seasonData: {
                                             ...prev.seasonData,
                                             open_at: value,
@@ -1025,9 +1025,9 @@ class SeasonActivationModal extends React.Component {
                                 className="form-control"
                                 value={seasonData.close_at || ""}
                                 disabled={!editingDates}
-                                onChange={e => {
+                                onChange={(e) => {
                                     const value = e.target.value;
-                                    this.setState(prev => ({
+                                    this.setState((prev) => ({
                                         seasonData: {
                                             ...prev.seasonData,
                                             close_at: value,
@@ -1116,8 +1116,8 @@ class SeasonActivationModal extends React.Component {
                                 className="btn btn-default btn-sm"
                                 onClick={() =>
                                     this.setState({
-                                        showManualForm: !this.state
-                                            .showManualForm,
+                                        showManualForm:
+                                            !this.state.showManualForm,
                                     })
                                 }
                             >
@@ -1166,7 +1166,7 @@ class SeasonActivationModal extends React.Component {
                                         "planning:seasonActivation.step2.namePlaceholder"
                                     )}
                                     value={this.state.manualLabel}
-                                    onChange={e =>
+                                    onChange={(e) =>
                                         this.setState({
                                             manualLabel: e.target.value,
                                         })
@@ -1177,7 +1177,7 @@ class SeasonActivationModal extends React.Component {
                                     type="date"
                                     className="form-control"
                                     value={this.state.manualStart}
-                                    onChange={e =>
+                                    onChange={(e) =>
                                         this.setState({
                                             manualStart: e.target.value,
                                         })
@@ -1188,7 +1188,7 @@ class SeasonActivationModal extends React.Component {
                                     type="date"
                                     className="form-control"
                                     value={this.state.manualEnd}
-                                    onChange={e =>
+                                    onChange={(e) =>
                                         this.setState({
                                             manualEnd: e.target.value,
                                         })
@@ -1379,7 +1379,7 @@ class SeasonActivationModal extends React.Component {
                                     marginBottom: "20px",
                                 }}
                             >
-                                {[1, 2].map(stepNum => (
+                                {[1, 2].map((stepNum) => (
                                     <div
                                         key={stepNum}
                                         style={{

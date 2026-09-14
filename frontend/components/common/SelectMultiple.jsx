@@ -43,7 +43,7 @@ class SelectMultiple extends React.Component {
 
         this.state = {
             selectedFeatures: [],
-            features: this.props.all_features.map(f => ({
+            features: this.props.all_features.map((f) => ({
                 label: f[0],
                 value: f[1],
             })),
@@ -53,7 +53,7 @@ class SelectMultiple extends React.Component {
             this.props.features !== undefined &&
             this.props.features.length > 0
         ) {
-            this.state.selectedFeatures = this.state.features.filter(f =>
+            this.state.selectedFeatures = this.state.features.filter((f) =>
                 this.props.features.includes(f.value)
             );
             _.remove(this.state.features, this.state.selectedFeatures);
@@ -112,7 +112,7 @@ class SelectMultiple extends React.Component {
             const clear = () => {
                 this.state.features.push(
                     ...this.state.selectedFeatures.filter(
-                        f => !this.state.features.includes(f)
+                        (f) => !this.state.features.includes(f)
                     )
                 );
 
@@ -132,15 +132,15 @@ class SelectMultiple extends React.Component {
                     : this.props.confirmBeforeClear;
 
             if (confirm) {
-                swal({
+                swal.fire({
                     title: t("common:selectMultiple.confirmClearAll", {
                         title: this.props.title,
                     }),
-                    type: "warning",
+                    icon: "warning",
                     confirmButtonText: t("common:yesNo.yes"),
                     cancelButtonText: t("common:yesNo.no"),
                     showCancelButton: true,
-                }).then(willDelete => {
+                }).then((willDelete) => {
                     if (willDelete.value) clear();
                 });
             } else {
@@ -196,7 +196,7 @@ class SelectMultiple extends React.Component {
                     name={this.props.name}
                     value={
                         this.props.isMulti
-                            ? this.state.selectedFeatures.map(f => f.value)
+                            ? this.state.selectedFeatures.map((f) => f.value)
                             : (this.state.selectedFeatures[0] || {}).value || ""
                     }
                     style={{ display: "none" }}

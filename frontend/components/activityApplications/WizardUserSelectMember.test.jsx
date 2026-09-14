@@ -36,7 +36,9 @@ vi.mock("../../tools/api", () => {
     return { set: () => chain };
 });
 
-vi.mock("sweetalert2", () => ({ default: vi.fn() }));
+vi.mock("sweetalert2", () => ({
+    default: { fire: vi.fn() },
+}));
 vi.mock("react-modal", () => ({ default: () => null }));
 vi.mock("../ToggleButtonGroup", () => ({ default: () => null }));
 vi.mock("../userForm/WizardContactForm", () => ({ default: () => null }));
@@ -95,18 +97,18 @@ describe("WizardUserSelectMember — rendered copy", () => {
 });
 
 describe("WizardUserSelectMember — fetch-error branch fires swal with resolved fr copy", () => {
-    test("captured .error callback -> swal({ title, text, confirmButtonText, type })", async () => {
+    test("captured .error callback -> swal.fire({ title, text, confirmButtonText, icon })", async () => {
         await i18n.changeLanguage("fr");
         render(<WizardUserSelectMember {...props} />);
 
         expect(typeof apiState.error).toBe("function");
         act(() => apiState.error({ message: "boom" }));
 
-        expect(swal).toHaveBeenCalledWith({
+        expect(swal.fire).toHaveBeenCalledWith({
             title: "Erreur",
             text: "Une erreur est survenue lors de la récupération des membres",
             confirmButtonText: "Fermer",
-            type: "error",
+            icon: "error",
         });
     });
 });

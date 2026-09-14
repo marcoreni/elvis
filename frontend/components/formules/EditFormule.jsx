@@ -96,11 +96,19 @@ export default function EditFormule({ formule }) {
                     setKinds(res);
                 })
                 .error((res) => {
-                    swal(t("form.fetchError"), res.error, "error");
+                    swal.fire({
+                        title: t("form.fetchError"),
+                        text: res.error,
+                        icon: "error",
+                    });
                 })
                 .get("/activity_ref_kind", {});
         } catch (e) {
-            await swal(t("form.fetchError"), e.message, "error");
+            await swal.fire({
+                title: t("form.fetchError"),
+                text: e.message,
+                icon: "error",
+            });
         }
     }
 
@@ -112,11 +120,19 @@ export default function EditFormule({ formule }) {
                     setAllActivities(res);
                 })
                 .error((res) => {
-                    swal(t("form.fetchError"), res.error, "error");
+                    swal.fire({
+                        title: t("form.fetchError"),
+                        text: res.error,
+                        icon: "error",
+                    });
                 })
                 .get("/activity_ref", {});
         } catch (e) {
-            await swal(t("form.fetchError"), e.message, "error");
+            await swal.fire({
+                title: t("form.fetchError"),
+                text: e.message,
+                icon: "error",
+            });
         }
     }
 
@@ -129,14 +145,22 @@ export default function EditFormule({ formule }) {
                     setAllPricingCategories(res.pricing_categories);
                 })
                 .error((res) => {
-                    swal(t("form.fetchSeasonsError"), res.error, "error");
+                    swal.fire({
+                        title: t("form.fetchSeasonsError"),
+                        text: res.error,
+                        icon: "error",
+                    });
                 })
                 .get(
                     "/activity_ref_pricings/get_seasons_and_pricing_categories",
                     {}
                 );
         } catch (e) {
-            await swal(t("form.fetchSeasonsError"), e.message, "error");
+            await swal.fire({
+                title: t("form.fetchSeasonsError"),
+                text: e.message,
+                icon: "error",
+            });
         }
     }
 
@@ -245,7 +269,11 @@ export default function EditFormule({ formule }) {
                 priceCategory: t("form.validation.atLeastOnePricing"),
             }));
 
-            swal(errorTitle, t("form.validation.atLeastOnePricing"), "error");
+            swal.fire({
+                title: errorTitle,
+                text: t("form.validation.atLeastOnePricing"),
+                icon: "error",
+            });
             return;
         }
 
@@ -255,18 +283,22 @@ export default function EditFormule({ formule }) {
                 price: t("form.validation.priceNotZero"),
             }));
 
-            swal(errorTitle, t("form.validation.priceNotZero"), "error");
+            swal.fire({
+                title: errorTitle,
+                text: t("form.validation.priceNotZero"),
+                icon: "error",
+            });
             return;
         }
 
         const request = api
             .set()
             .success((res) => {
-                swal({
+                swal.fire({
                     title: isCreating
                         ? t("form.submit.successCreate")
                         : t("form.submit.successEdit"),
-                    type: "success",
+                    icon: "success",
                     timer: 1500,
                 });
 
@@ -279,8 +311,18 @@ export default function EditFormule({ formule }) {
                 }
             })
             .error((res) => {
-                if (res.errors) swal(requestErrorTitle, res.error, "error");
-                else swal(requestErrorTitle, "", "error");
+                if (res.errors)
+                    swal.fire({
+                        title: requestErrorTitle,
+                        text: res.error,
+                        icon: "error",
+                    });
+                else
+                    swal.fire({
+                        title: requestErrorTitle,
+                        text: "",
+                        icon: "error",
+                    });
             });
 
         if (formule.id) {

@@ -12,25 +12,25 @@ const CreateOrganizationModal = ({ urlRedirect }) => {
     const { t } = useTranslation("users");
     const [isOpen, setIsOpen] = useState(false);
 
-    const onSubmit = e => {
+    const onSubmit = (e) => {
         api.set()
             .success(() => {
                 redirectTo(urlRedirect);
-                swal({
-                    type: "success",
+                swal.fire({
+                    icon: "success",
                     title: t("users:organizationModal.created"),
                 });
             })
-            .error(msg => {
-                swal({
-                    type: "error",
+            .error((msg) => {
+                swal.fire({
+                    icon: "error",
                     title: t("users:organizationModal.errorTitle"),
                     text: msg.message,
                 });
             })
             .post("/organizations/", { organization: e });
     };
-    const validate = e => {
+    const validate = (e) => {
         const errors = {};
         if (
             e.organization_name === undefined ||

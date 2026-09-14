@@ -2,10 +2,10 @@ import React, { Fragment, useEffect } from "react";
 import { useState } from "react";
 import * as api from "../../../tools/api";
 import swal from "sweetalert2";
-import {useTranslation} from "react-i18next";
+import { useTranslation } from "react-i18next";
 
 export default function ApplicationParameters() {
-    const {t} = useTranslation("parameters");
+    const { t } = useTranslation("parameters");
     const [isLoading, setIsLoading] = useState(true);
     const [parameters, setParameters] = useState([]);
     const [selectedParameter, setSelectedParameter] = useState(0);
@@ -14,15 +14,17 @@ export default function ApplicationParameters() {
     useEffect(() => {
         api.set()
             .success((data) => {
-                setSelectedParameter((data.defaultActivityApplicationStatus || {}).id || 0);
+                setSelectedParameter(
+                    (data.defaultActivityApplicationStatus || {}).id || 0
+                );
                 setParameters(data.activityApplicationStatusList);
                 setAutoAssignEnabled(data.autoAssignEnabled || false);
                 setIsLoading(false);
             })
             .error(() => {
-                swal({
+                swal.fire({
                     title: t("shared.loadParamsError"),
-                    type: "error",
+                    icon: "error",
                 });
             })
             .get("/get_activity_application_parameters", {});
@@ -32,10 +34,10 @@ export default function ApplicationParameters() {
         api.set()
             .useLoading()
             .success(() => {
-                swal({ title: t("shared.saveSuccess"), type: "success" });
+                swal.fire({ title: t("shared.saveSuccess"), icon: "success" });
             })
             .error(() => {
-                swal({ title: t("shared.saveError"), type: "error" });
+                swal.fire({ title: t("shared.saveError"), icon: "error" });
             })
             .post(
                 "/set_activity_application_parameters",
@@ -63,7 +65,11 @@ export default function ApplicationParameters() {
         <Fragment>
             <div className="row">
                 <div className="col-md-5">
-                    <h3>{t("activityApplications.settings.defaultStatusHeading")}</h3>
+                    <h3>
+                        {t(
+                            "activityApplications.settings.defaultStatusHeading"
+                        )}
+                    </h3>
                     <div className="form-group mb-3">
                         <select
                             className="form-control"
@@ -77,7 +83,9 @@ export default function ApplicationParameters() {
                             ))}
                         </select>
                         <p className="mt-3">
-                            {t("activityApplications.settings.defaultStatusHint")}
+                            {t(
+                                "activityApplications.settings.defaultStatusHint"
+                            )}
                         </p>
                     </div>
                 </div>
@@ -86,7 +94,9 @@ export default function ApplicationParameters() {
             {/* Section auto attribution placée au-dessus du bouton */}
             <div className="row mt-3">
                 <div className="col-md-5">
-                    <h3>{t("activityApplications.settings.autoAssignHeading")}</h3>
+                    <h3>
+                        {t("activityApplications.settings.autoAssignHeading")}
+                    </h3>
                     <div className="form-group form-check mb-3">
                         <input
                             type="checkbox"
@@ -96,7 +106,10 @@ export default function ApplicationParameters() {
                             onChange={handleAutoAssignToggle}
                             style={{ marginRight: "1rem" }}
                         />
-                        <label className="form-check-label" htmlFor="autoAssignCheck">
+                        <label
+                            className="form-check-label"
+                            htmlFor="autoAssignCheck"
+                        >
                             {t("activityApplications.settings.enableLabel")}
                         </label>
                     </div>

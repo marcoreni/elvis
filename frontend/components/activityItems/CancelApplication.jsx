@@ -26,11 +26,11 @@ export default function CancelApplication({ activityApplicationId }) {
                 handleModal("success");
             })
             .error(() => {
-                swal({
+                swal.fire({
                     title: t(
                         "activityApplications:activityItems.cancelApplication.error"
                     ),
-                    type: "error",
+                    icon: "error",
                 }).then(() => handleModal("confirm"));
             })
             .del(`/destroy/activity_application/${activityApplicationId}`, {});

@@ -39,9 +39,9 @@ class AddCourse extends React.Component {
 
         let current_season = undefined;
         api.set()
-            .success( data => {
+            .success((data) => {
                 current_season = data
-                    ? data.find(season => season.is_current)
+                    ? data.find((season) => season.is_current)
                     : undefined;
 
                 if (current_season) {
@@ -51,11 +51,13 @@ class AddCourse extends React.Component {
                             label: current_season.label,
                         },
                         startTime: moment(current_season.start).set({
-                            hour: 8
+                            hour: 8,
                         }),
-                        endTime:moment(current_season.start).set({ hour: 9 }),
+                        endTime: moment(current_season.start).set({ hour: 9 }),
 
-                        fromDate: moment(current_season.start).format("YYYY-MM-DD"),
+                        fromDate: moment(current_season.start).format(
+                            "YYYY-MM-DD"
+                        ),
                         toDate: moment(current_season.end).format("YYYY-MM-DD"),
                         dayOfWeek: "1",
                         holidays: current_season.holidays,
@@ -72,7 +74,17 @@ class AddCourse extends React.Component {
     handleSubmit() {
         const { t } = this.props;
 
-        const {season, teacher, activityRef, room, dayOfWeek, fromDate, toDate, firstDayStartTime, firstDayEndTime} = this.state
+        const {
+            season,
+            teacher,
+            activityRef,
+            room,
+            dayOfWeek,
+            fromDate,
+            toDate,
+            firstDayStartTime,
+            firstDayEndTime,
+        } = this.state;
         if (
             !season ||
             !teacher ||
@@ -86,25 +98,25 @@ class AddCourse extends React.Component {
         ) {
             toast.error(MESSAGES.err_data_missing, { autoClose: 3000 });
         } else {
-            swal({
+            swal.fire({
                 title: t("addCourse.loading"),
-                onOpen: () => swal.showLoading(),
+                didOpen: () => swal.showLoading(),
             });
             const authToken = _.get(this.state, "infos.authentication_token");
             api.set()
-                .success(res => {
+                .success((res) => {
                     let htmltext = `<p>${t("addCourse.created")}</p>`;
 
-                    swal({
+                    swal.fire({
                         title: t("addCourse.successTitle"),
                         html: htmltext,
-                        type: "success",
+                        icon: "success",
                         allowOutsideClick: false,
                         showCancelButton: true,
                         width: "400px",
                         cancelButtonText: t("addCourse.seeCourseList"),
                         confirmButtonText: t("addCourse.createAnother"),
-                    }).then(res => {
+                    }).then((res) => {
                         if (res.value) {
                             window.location.href = `/addCourse?auth_token=${csrfToken}`;
                         } else {
@@ -112,10 +124,10 @@ class AddCourse extends React.Component {
                         }
                     });
                 })
-                .error(errorMsg => {
+                .error((errorMsg) => {
                     console.log("error adding course : ", errorMsg);
-                    swal({
-                        type: "error",
+                    swal.fire({
+                        icon: "error",
                         title: t("addCourse.genericError"),
                     });
                 })
@@ -167,7 +179,7 @@ class AddCourse extends React.Component {
             toDate,
             dayOfWeek,
             firstDayStartTime,
-            firstDayEndTime
+            firstDayEndTime,
         } = this.state;
 
         const href_path = this.props.href_path;
@@ -184,8 +196,7 @@ class AddCourse extends React.Component {
             location: location ? location.label : undefined,
             firstDayStartTime: firstDayStartTime,
             firstDayEndTime: firstDayEndTime,
-            dayOfWeek: dayOfWeek
-
+            dayOfWeek: dayOfWeek,
         };
 
         const steps = [
@@ -236,7 +247,7 @@ class AddCourse extends React.Component {
                                 ? moment.utc(firstDayEndTime).format()
                                 : undefined,
                             fromDate: fromDate,
-                            toDate: toDate
+                            toDate: toDate,
                         }}
                         summary={summary}
                         href_path={href_path}
@@ -277,24 +288,40 @@ class AddCourse extends React.Component {
                     render={({ handleSubmit }) => (
                         <form onSubmit={handleSubmit} className="p-lg">
                             <div className="padding-page application-form">
-                                {this.state.holidays.length === 0 && this.state.showAlert && (
-                                    <div className="alert alert-danger mb-5" role="alert">
-                                        {t("planning:container.holidaysAlert")}&nbsp;
-                                        <a href={`/seasons/${this.state.season.id}/edit`}>
-                                            {t("planning:container.manageHolidaysLink")}
-                                        </a>
-
-                                        <button
-                                            type="button"
-                                            className="close"
-                                            aria-label={t("planning:common.close")}
-                                            onClick={this.closeAlert}
+                                {this.state.holidays.length === 0 &&
+                                    this.state.showAlert && (
+                                        <div
+                                            className="alert alert-danger mb-5"
+                                            role="alert"
                                         >
-                                            <span aria-hidden="true">&times;</span>
-                                        </button>
-                                    </div>
-                                )}
-                                <h1 className="text-center">{t("addCourse.title")}</h1>
+                                            {t(
+                                                "planning:container.holidaysAlert"
+                                            )}
+                                            &nbsp;
+                                            <a
+                                                href={`/seasons/${this.state.season.id}/edit`}
+                                            >
+                                                {t(
+                                                    "planning:container.manageHolidaysLink"
+                                                )}
+                                            </a>
+                                            <button
+                                                type="button"
+                                                className="close"
+                                                aria-label={t(
+                                                    "planning:common.close"
+                                                )}
+                                                onClick={this.closeAlert}
+                                            >
+                                                <span aria-hidden="true">
+                                                    &times;
+                                                </span>
+                                            </button>
+                                        </div>
+                                    )}
+                                <h1 className="text-center">
+                                    {t("addCourse.title")}
+                                </h1>
                                 <div className="step-progress">
                                     <StepZilla
                                         steps={steps}
@@ -315,8 +342,9 @@ class AddCourse extends React.Component {
                     )}
                 />
             );
-        } else { return <div>{t("common:loading")}</div> }
-
+        } else {
+            return <div>{t("common:loading")}</div>;
+        }
     }
 }
 

@@ -19,35 +19,35 @@ class SeasonsList extends React.Component {
 
     deleteSeason(id) {
         const { t } = this.props;
-        const selectedSeason = this.state.seasons.find(s => s.id == id);
+        const selectedSeason = this.state.seasons.find((s) => s.id == id);
 
         if (selectedSeason.is_current) {
-            swal({
-                type: "error",
+            swal.fire({
+                icon: "error",
                 title: t("planning:seasonsList.cannotDeleteCurrentTitle"),
                 text: t("planning:seasonsList.cannotDeleteCurrentText"),
             });
             return;
         }
 
-        swal({
+        swal.fire({
             title: t("planning:seasonsList.deleteTitle"),
             text: t("common:confirm.sure"),
-            type: "warning",
+            icon: "warning",
             showCancelButton: true,
             cancelButtonText: t("common:actions.cancel"),
             confirmButtonText: t("common:actions.confirm"),
-        }).then(a => {
+        }).then((a) => {
             if (a.value) {
                 fetch(`/seasons/${id}`, {
                     method: "DELETE",
                     headers: {
                         "X-CSRF-Token": csrfToken,
                     },
-                }).then(res => {
+                }).then((res) => {
                     if (res.ok) {
                         const previous = this.state.seasons.find(
-                            s => s.next_season_id == id
+                            (s) => s.next_season_id == id
                         );
 
                         if (previous) {
@@ -57,15 +57,15 @@ class SeasonsList extends React.Component {
 
                         this.setState({
                             seasons: this.state.seasons.filter(
-                                c => c.id !== id
+                                (c) => c.id !== id
                             ),
                         });
 
-                        swal(
-                            t("planning:seasonsList.deleteSuccessTitle"),
-                            t("planning:seasonsList.deleteSuccessText"),
-                            "success"
-                        );
+                        swal.fire({
+                            title: t("planning:seasonsList.deleteSuccessTitle"),
+                            text: t("planning:seasonsList.deleteSuccessText"),
+                            icon: "success",
+                        });
                     }
                 });
             }
@@ -78,15 +78,15 @@ class SeasonsList extends React.Component {
         }
     }
 
-    onActivationSuccess = data => {
-        this.setState(function(previousState) {
+    onActivationSuccess = (data) => {
+        this.setState(function (previousState) {
             const state = Object.assign({}, previousState);
-            const currentSeason = state.seasons.find(s => s.is_current);
+            const currentSeason = state.seasons.find((s) => s.is_current);
             if (currentSeason) {
                 currentSeason.is_current = false;
             }
 
-            const newCurrent = state.seasons.find(s => s.id === data.id);
+            const newCurrent = state.seasons.find((s) => s.id === data.id);
             if (newCurrent) {
                 newCurrent.is_current = true;
             }
@@ -116,29 +116,29 @@ class SeasonsList extends React.Component {
             {
                 id: "label",
                 Header: t("planning:seasonsList.columns.label"),
-                accessor: d => d.label,
+                accessor: (d) => d.label,
             },
             {
                 id: "start",
                 Header: t("planning:seasonsList.columns.start"),
-                accessor: d => d.start,
-                Cell: props => {
+                accessor: (d) => d.start,
+                Cell: (props) => {
                     return props.original.start_formatted;
                 },
             },
             {
                 id: "end",
                 Header: t("planning:seasonsList.columns.end"),
-                accessor: d => d.end,
-                Cell: props => {
+                accessor: (d) => d.end,
+                Cell: (props) => {
                     return props.original.end_formatted;
                 },
             },
             {
                 id: "is_current",
                 Header: t("planning:seasonsList.columns.status"),
-                accessor: d => d.is_current,
-                Cell: props => {
+                accessor: (d) => d.is_current,
+                Cell: (props) => {
                     if (props.original.is_current) {
                         return (
                             <div style={{ textAlign: "center" }}>
@@ -180,7 +180,7 @@ class SeasonsList extends React.Component {
             {
                 id: "next",
                 Header: t("planning:seasonsList.columns.next"),
-                accessor: d => (d.next_season_id ? d.next_season.label : "-"),
+                accessor: (d) => (d.next_season_id ? d.next_season.label : "-"),
             },
             // {
             //     id: "is_off",
@@ -192,7 +192,7 @@ class SeasonsList extends React.Component {
             {
                 id: "actions",
                 Header: t("planning:seasonsList.columns.actions"),
-                Cell: props => {
+                Cell: (props) => {
                     return (
                         <div>
                             <a
@@ -219,9 +219,9 @@ class SeasonsList extends React.Component {
                                 btnProps={{
                                     className: "btn btn-xs btn-warning",
                                 }}
-                                onSuccess={data => {
+                                onSuccess={(data) => {
                                     const previous = this.state.seasons.find(
-                                        s =>
+                                        (s) =>
                                             s.next_season_id ==
                                             props.original.id
                                     );
@@ -233,19 +233,19 @@ class SeasonsList extends React.Component {
 
                                     this.setState({
                                         seasons: this.state.seasons.filter(
-                                            c => c.id !== props.original.id
+                                            (c) => c.id !== props.original.id
                                         ),
                                     });
 
-                                    swal(
-                                        t(
+                                    swal.fire({
+                                        title: t(
                                             "planning:seasonsList.deleteSuccessTitle"
                                         ),
-                                        t(
+                                        text: t(
                                             "planning:seasonsList.deleteSuccessText"
                                         ),
-                                        "success"
-                                    );
+                                        icon: "success",
+                                    });
                                 }}
                             >
                                 <i className="fas fa-trash" />

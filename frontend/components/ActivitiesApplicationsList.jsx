@@ -28,14 +28,13 @@ import {
     PROPOSAL_ACCEPTED_ID,
     CANCELED_ID,
 } from "./utils/ActivityApplicationsStatuses";
-import Swal from "sweetalert2";
 
 import moment from "moment";
 
 const FILTER_STORAGE_KEY = "activities_application_list_filters";
 const PREFERENCES_STORAGE_KEY = "activities_applications_list_preferences";
 
-const displayActivityName = a =>
+const displayActivityName = (a) =>
     a.activity_type === "child" || a.activity_type === "cham"
         ? a.label
         : a.kind;
@@ -100,9 +99,8 @@ class ActivitiesApplicationsList extends React.Component {
 
         this.fileInput = React.createRef();
 
-        this.statusFilterContainsTerminalStatus = this.statusFilterContainsTerminalStatus.bind(
-            this
-        );
+        this.statusFilterContainsTerminalStatus =
+            this.statusFilterContainsTerminalStatus.bind(this);
     }
 
     showJobProgressModal(jobId) {
@@ -111,18 +109,18 @@ class ActivitiesApplicationsList extends React.Component {
         ReactDOM.render(
             <JobProgress
                 jobId={jobId}
-                onError={res =>
-                    swal({
+                onError={(res) =>
+                    swal.fire({
                         title: t("common:jobProgress.errorTitle"),
                         text: res,
-                        type: "error",
+                        icon: "error",
                     })
                 }
             />,
             container
         );
 
-        swal({
+        swal.fire({
             title: t("activityApplications:list.jobProgressTitle"),
             html: container,
             showCloseButton: true,
@@ -165,8 +163,8 @@ class ActivitiesApplicationsList extends React.Component {
             this.state.filter.filtered,
             "csv"
         )
-            .then(res => res.blob())
-            .then(file => {
+            .then((res) => res.blob())
+            .then((file) => {
                 this.setState({ exportOngoing: false });
 
                 const download = document.createElement("a");
@@ -195,21 +193,21 @@ class ActivitiesApplicationsList extends React.Component {
             },
             body: formData,
         })
-            .then(res => {
+            .then((res) => {
                 this.setState({
                     importOngoing: false,
                 });
 
                 return res.json();
             })
-            .then(data => {
+            .then((data) => {
                 if (data.error) {
-                    swal({
+                    swal.fire({
                         title: this.props.t(
                             "activityApplications:list.importErrorTitle"
                         ),
                         text: data.error,
-                        type: "error",
+                        icon: "error",
                     });
                 } else {
                     this.setState({
@@ -245,10 +243,10 @@ class ActivitiesApplicationsList extends React.Component {
                 { count: selectedCount }
             );
 
-            swal({
+            swal.fire({
                 title: t("activityApplications:list.cancelWarningTitle"),
                 text: confirmationText,
-                type: "warning",
+                icon: "warning",
                 showCancelButton: true,
                 confirmButtonText: t(
                     "activityApplications:list.cancelWarningConfirm"
@@ -256,7 +254,7 @@ class ActivitiesApplicationsList extends React.Component {
                 cancelButtonText: t("common:actions.cancel"),
                 confirmButtonColor: "#d33",
                 reverseButtons: true,
-            }).then(result => {
+            }).then((result) => {
                 if (result.value) {
                     this.performBulkEdit();
                 }
@@ -282,13 +280,13 @@ class ActivitiesApplicationsList extends React.Component {
                 application: this.state.bulkEdit,
             }),
         })
-            .then(res => res.json())
-            .then(data => ({
+            .then((res) => res.json())
+            .then((data) => ({
                 data: data.applications,
                 pages: data.pages,
                 total: data.total,
             }))
-            .then(res => {
+            .then((res) => {
                 this.setState({
                     ...res,
                     bulkTargets: [],
@@ -312,10 +310,10 @@ class ActivitiesApplicationsList extends React.Component {
             { count: selectedCount }
         );
 
-        Swal.fire({
+        swal.fire({
             title: t("activityApplications:list.deleteConfirmTitle"),
             text: confirmationText,
-            type: "warning",
+            icon: "warning",
             showCancelButton: true,
             cancelButtonText: t("common:actions.cancel"),
             confirmButtonText: `<i class="fas fa-trash mr-2"></i>  ${t(
@@ -323,7 +321,7 @@ class ActivitiesApplicationsList extends React.Component {
             )}`,
             confirmButtonColor: "#ec4758",
             reverseButtons: true,
-        }).then(r => {
+        }).then((r) => {
             if (r.value) {
                 fetch("/inscriptions", {
                     method: "DELETE",
@@ -335,8 +333,8 @@ class ActivitiesApplicationsList extends React.Component {
                         targets: this.state.bulkTargets,
                     }),
                 })
-                    .catch(res => console.error(res))
-                    .then(res => {
+                    .catch((res) => console.error(res))
+                    .then((res) => {
                         const remainingItems = this.state.total - selectedCount;
                         const newTotalPages = Math.ceil(
                             remainingItems / this.state.filter.pageSize
@@ -353,7 +351,7 @@ class ActivitiesApplicationsList extends React.Component {
                                     this.state.bulkTargets === "all"
                                         ? []
                                         : this.state.data.filter(
-                                              d =>
+                                              (d) =>
                                                   !this.state.bulkTargets.includes(
                                                       d.id
                                                   )
@@ -398,12 +396,12 @@ class ActivitiesApplicationsList extends React.Component {
             if (this.state.bulkTargets === "all")
                 this.setState({
                     bulkTargets: this.state.data
-                        .map(d => d.id)
-                        .filter(d => d !== id),
+                        .map((d) => d.id)
+                        .filter((d) => d !== id),
                 });
             else
                 this.setState({
-                    bulkTargets: this.state.bulkTargets.filter(r => r !== id),
+                    bulkTargets: this.state.bulkTargets.filter((r) => r !== id),
                 });
         }
     }
@@ -500,8 +498,8 @@ class ActivitiesApplicationsList extends React.Component {
                 filter.filtered,
                 "json"
             )
-                .then(response => response.json())
-                .then(data => {
+                .then((response) => response.json())
+                .then((data) => {
                     const res = {
                         data: data.applications,
                         pages: data.pages,
@@ -511,7 +509,7 @@ class ActivitiesApplicationsList extends React.Component {
 
                     return res;
                 })
-                .then(res => {
+                .then((res) => {
                     this.setState({
                         ...res,
                         loading: false,
@@ -524,7 +522,7 @@ class ActivitiesApplicationsList extends React.Component {
     handleToggleNoAvailabilityFilter() {
         const newFilter = [...this.state.filter.filtered];
         const indexOfFilter = newFilter.findIndex(
-            f => f.id === "nb_availabilities"
+            (f) => f.id === "nb_availabilities"
         );
 
         if (indexOfFilter === -1) {
@@ -544,10 +542,10 @@ class ActivitiesApplicationsList extends React.Component {
 
     sendGroupConfirmationMail() {
         const { t } = this.props;
-        swal({
+        swal.fire({
             title: t("activityApplications:list.notifyStudentTitle"),
             html: t("activityApplications:list.notifyStudentBody"),
-            type: "question",
+            icon: "question",
             showCancelButton: true,
             cancelButtonText: t("common:actions.cancel"),
             reverseButtons: true,
@@ -556,7 +554,7 @@ class ActivitiesApplicationsList extends React.Component {
             inputPlaceholder: t(
                 "activityApplications:list.notifyStudentResendPlaceholder"
             ),
-        }).then(v => {
+        }).then((v) => {
             if (v.value !== undefined) {
                 fetch(`/inscriptions/send_all_confirmation_mail`, {
                     method: "POST",
@@ -574,17 +572,22 @@ class ActivitiesApplicationsList extends React.Component {
                         forceResend: v.value,
                     }),
                 })
-                    .then(response => response.json())
-                    .then(res => {
+                    .then((response) => response.json())
+                    .then((res) => {
                         if (res.success)
-                            swal(
-                                "",
-                                t(
+                            swal.fire({
+                                title: "",
+                                text: t(
                                     "activityApplications:list.notifyStudentQueued"
                                 ),
-                                "success"
-                            );
-                        else swal("", res.message, "error");
+                                icon: "success",
+                            });
+                        else
+                            swal.fire({
+                                title: "",
+                                text: res.message,
+                                icon: "error",
+                            });
                     });
             }
         });
@@ -598,13 +601,13 @@ class ActivitiesApplicationsList extends React.Component {
         }
 
         const selectedStatuses = this.state.bulkTargets
-            .map(id => {
-                const demande = this.state.data.find(d => d.id === id);
+            .map((id) => {
+                const demande = this.state.data.find((d) => d.id === id);
                 return demande ? demande.activity_application_status_id : null;
             })
-            .filter(status => status !== null);
+            .filter((status) => status !== null);
 
-        const containsTerminalStatus = selectedStatuses.some(s =>
+        const containsTerminalStatus = selectedStatuses.some((s) =>
             [
                 ACTIVITY_ATTRIBUTED_ID,
                 ACTIVITY_PROPOSED_ID,
@@ -619,7 +622,7 @@ class ActivitiesApplicationsList extends React.Component {
         const { t } = this.props;
         const activitiesFilterOptions = _.chain(this.props.activities)
             .uniq()
-            .map(a => ({
+            .map((a) => ({
                 label: a.label,
                 value: a.label,
             }))
@@ -627,8 +630,8 @@ class ActivitiesApplicationsList extends React.Component {
             .value();
 
         const activitiesKindsFilterOptions = _.chain(this.props.activities)
-            .filter(a => a.kind != undefined)
-            .map(a => ({
+            .filter((a) => a.kind != undefined)
+            .map((a) => ({
                 label: a.kind,
                 value: a.kind,
             }))
@@ -637,8 +640,8 @@ class ActivitiesApplicationsList extends React.Component {
             .value();
 
         const applicationStatusesFilterOptions = _(this.props.statuses)
-            .orderBy(s => s.label)
-            .map(s => ({
+            .orderBy((s) => s.label)
+            .map((s) => ({
                 value: s.id,
                 label: s.label,
             }))
@@ -646,7 +649,7 @@ class ActivitiesApplicationsList extends React.Component {
 
         const applicationActionsFilterOptions = Object.keys(
             PRE_APPLICATION_ACTION_LABELS
-        ).map(l => ({
+        ).map((l) => ({
             label: PRE_APPLICATION_ACTION_LABELS[l],
             value: l,
         }));
@@ -656,7 +659,7 @@ class ActivitiesApplicationsList extends React.Component {
                 Header: "",
                 id: "selection",
                 width: 25,
-                accessor: r => this.state.bulkTargets.includes(r.id),
+                accessor: (r) => this.state.bulkTargets.includes(r.id),
                 Filter: () => (
                     <input
                         type="checkbox"
@@ -665,10 +668,12 @@ class ActivitiesApplicationsList extends React.Component {
                             this.state.bulkTargets.length ===
                             this.state.data.length
                         }
-                        onChange={e => {
+                        onChange={(e) => {
                             if (e.target.checked) {
                                 this.setState({
-                                    bulkTargets: this.state.data.map(r => r.id),
+                                    bulkTargets: this.state.data.map(
+                                        (r) => r.id
+                                    ),
                                 });
                             } else {
                                 this.setState({ bulkTargets: [] });
@@ -676,13 +681,13 @@ class ActivitiesApplicationsList extends React.Component {
                         }}
                     />
                 ),
-                Cell: d => (
+                Cell: (d) => (
                     <input
                         type="checkbox"
                         defaultChecked={
                             this.state.bulkTargets === "all" || d.value
                         }
-                        onClick={e =>
+                        onClick={(e) =>
                             this.updateBulkTarget(
                                 d.original.id,
                                 e.target.checked
@@ -696,7 +701,7 @@ class ActivitiesApplicationsList extends React.Component {
                 id: "adherent_number",
                 width: 70,
                 filterable: true,
-                accessor: r => (
+                accessor: (r) => (
                     <a href={`/users/${r.user_id}`}>{r.user.adherent_number}</a>
                 ),
             },
@@ -705,21 +710,23 @@ class ActivitiesApplicationsList extends React.Component {
                 id: "id",
                 width: 70,
                 filterable: true,
-                accessor: r => <a /*href={`/inscriptions/${r.id}`}*/>{r.id}</a>,
+                accessor: (r) => (
+                    <a /*href={`/inscriptions/${r.id}`}*/>{r.id}</a>
+                ),
             },
             {
                 Header: t("activityApplications:list.columns.date"),
-                accessor: d => moment(d.created_at),
+                accessor: (d) => moment(d.created_at),
                 width: 100,
                 id: "date",
                 filterable: false,
-                Cell: d => d.value.format("DD MMM YYYY"),
+                Cell: (d) => d.value.format("DD MMM YYYY"),
             },
             {
                 id: "name",
                 Header: t("activityApplications:list.columns.name"),
                 width: 175,
-                accessor: d => (
+                accessor: (d) => (
                     <UserWithInfos userId={d.user_id}>
                         {`${d.user.first_name} ${d.user.last_name}`}
                     </UserWithInfos>
@@ -729,7 +736,8 @@ class ActivitiesApplicationsList extends React.Component {
                 id: "age",
                 Header: t("activityApplications:list.columns.age"),
                 width: 50,
-                accessor: d => (d.user.birthday && age(d.user.birthday)) || "?",
+                accessor: (d) =>
+                    (d.user.birthday && age(d.user.birthday)) || "?",
             },
             {
                 id: "level",
@@ -737,18 +745,18 @@ class ActivitiesApplicationsList extends React.Component {
                 width: 130,
                 Filter: ({ filter, onChange }) => (
                     <select
-                        onChange={e => onChange(e.target.value)}
+                        onChange={(e) => onChange(e.target.value)}
                         value={filter ? filter.value : ""}
                     >
                         <option value="" />
-                        {this.props.evaluationLevelRefs.map(r => (
+                        {this.props.evaluationLevelRefs.map((r) => (
                             <option key={r.id} value={r.id}>
                                 {r.label}
                             </option>
                         ))}
                     </select>
                 ),
-                accessor: d =>
+                accessor: (d) =>
                     (d.user &&
                         d.activity_refs[0] &&
                         levelDisplayLabel(
@@ -765,8 +773,8 @@ class ActivitiesApplicationsList extends React.Component {
                 Header: t("activityApplications:list.columns.activity"),
                 width: 200,
                 sortable: false,
-                accessor: d => {
-                    return d.activity_refs.map(a => a.label).join(", ");
+                accessor: (d) => {
+                    return d.activity_refs.map((a) => a.label).join(", ");
                 },
                 Filter: ({ filter, onChange }) => (
                     <Select
@@ -776,20 +784,20 @@ class ActivitiesApplicationsList extends React.Component {
                         value={
                             (filter &&
                                 filter.value &&
-                                activitiesFilterOptions.filter(o =>
+                                activitiesFilterOptions.filter((o) =>
                                     filter.value.includes(o.value)
                                 )) ||
                             "all"
                         }
-                        onChange={v =>
-                            onChange((v.length && v.map(v => v.value)) || "")
+                        onChange={(v) =>
+                            onChange((v.length && v.map((v) => v.value)) || "")
                         }
                         styles={{
-                            option: base => ({
+                            option: (base) => ({
                                 ...base,
                                 textAlign: "left",
                             }),
-                            dropdownIndicator: base => ({
+                            dropdownIndicator: (base) => ({
                                 ...base,
                                 display: "none",
                             }),
@@ -802,10 +810,10 @@ class ActivitiesApplicationsList extends React.Component {
                 Header: t("activityApplications:list.columns.activityFamily"),
                 width: 200,
                 sortable: false,
-                accessor: d => {
+                accessor: (d) => {
                     return d.activity_refs
-                        .map(a => a.kind)
-                        .filter(a => a != undefined)
+                        .map((a) => a.kind)
+                        .filter((a) => a != undefined)
                         .join(", ");
                 },
                 Filter: ({ filter, onChange }) => (
@@ -816,20 +824,20 @@ class ActivitiesApplicationsList extends React.Component {
                         value={
                             (filter &&
                                 filter.value &&
-                                activitiesKindsFilterOptions.filter(o =>
+                                activitiesKindsFilterOptions.filter((o) =>
                                     filter.value.includes(o.value)
                                 )) ||
                             "all"
                         }
-                        onChange={v =>
-                            onChange((v.length && v.map(v => v.value)) || "")
+                        onChange={(v) =>
+                            onChange((v.length && v.map((v) => v.value)) || "")
                         }
                         styles={{
-                            option: base => ({
+                            option: (base) => ({
                                 ...base,
                                 textAlign: "left",
                             }),
-                            dropdownIndicator: base => ({
+                            dropdownIndicator: (base) => ({
                                 ...base,
                                 display: "none",
                             }),
@@ -842,7 +850,7 @@ class ActivitiesApplicationsList extends React.Component {
                 id: "action",
                 width: 150,
                 sortable: false,
-                accessor: d => {
+                accessor: (d) => {
                     if (d.pre_application_desired_activity) {
                         return PRE_APPLICATION_ACTION_LABELS[
                             d.pre_application_desired_activity.action
@@ -863,20 +871,20 @@ class ActivitiesApplicationsList extends React.Component {
                         value={
                             (filter &&
                                 filter.value &&
-                                applicationActionsFilterOptions.filter(o =>
+                                applicationActionsFilterOptions.filter((o) =>
                                     filter.value.includes(o.value)
                                 )) ||
                             "all"
                         }
-                        onChange={v =>
-                            onChange((v.length && v.map(v => v.value)) || "")
+                        onChange={(v) =>
+                            onChange((v.length && v.map((v) => v.value)) || "")
                         }
                         styles={{
-                            option: base => ({
+                            option: (base) => ({
                                 ...base,
                                 textAlign: "left",
                             }),
-                            dropdownIndicator: base => ({
+                            dropdownIndicator: (base) => ({
                                 ...base,
                                 display: "none",
                             }),
@@ -889,11 +897,11 @@ class ActivitiesApplicationsList extends React.Component {
                       id: "season_id",
                       Header: t("activityApplications:list.columns.season"),
                       width: 150,
-                      accessor: d => (d.season ? d.season.label : "n/a"),
+                      accessor: (d) => (d.season ? d.season.label : "n/a"),
                       sortable: false,
                       Filter: ({ filter, onChange }) => (
                           <select
-                              onChange={event => onChange(event.target.value)}
+                              onChange={(event) => onChange(event.target.value)}
                               style={{ width: "100%" }}
                               value={filter ? filter.value : "all"}
                           >
@@ -913,8 +921,8 @@ class ActivitiesApplicationsList extends React.Component {
                 id: "referent_id",
                 Header: t("activityApplications:list.columns.referent"),
                 width: 125,
-                accessor: d => d.referent,
-                Cell: c =>
+                accessor: (d) => d.referent,
+                Cell: (c) =>
                     (c.value &&
                         `${c.value.first_name} ${c.value.last_name.charAt(
                             0
@@ -924,7 +932,7 @@ class ActivitiesApplicationsList extends React.Component {
                     <select
                         className="form-control"
                         defaultValue={(filter && filter.value) || ""}
-                        onChange={e => onChange(e.target.value)}
+                        onChange={(e) => onChange(e.target.value)}
                     >
                         <option value=""></option>
                         {_.sortBy(this.props.admins, "first_name").map(
@@ -938,14 +946,14 @@ class ActivitiesApplicationsList extends React.Component {
                       id: "mail_sent",
                       Header: t("activityApplications:list.columns.mailSent"),
                       width: 75,
-                      accessor: d =>
+                      accessor: (d) =>
                           d.mail_sent === true
                               ? t("activityApplications:list.yes")
                               : t("activityApplications:list.no"),
                       sortable: false,
                       Filter: ({ filter, onChange }) => (
                           <select
-                              onChange={event => onChange(event.target.value)}
+                              onChange={(event) => onChange(event.target.value)}
                               style={{ width: "100%" }}
                               value={filter ? filter.value : "all"}
                           >
@@ -965,7 +973,7 @@ class ActivitiesApplicationsList extends React.Component {
             {
                 id: "activity_application_status_id",
                 Header: t("activityApplications:list.columns.status"),
-                accessor: d => d.activity_application_status_id,
+                accessor: (d) => d.activity_application_status_id,
                 sortable: false,
                 filterMethod: (filter, row) => {
                     if (filter.value === "all") {
@@ -974,10 +982,10 @@ class ActivitiesApplicationsList extends React.Component {
 
                     return row.activity_application_status_id == filter.value;
                 },
-                Cell: row => {
+                Cell: (row) => {
                     let status = _.find(
                         this.props.statuses,
-                        status => status.id === row.value
+                        (status) => status.id === row.value
                     );
                     const referent = row.original.referent;
                     return (
@@ -1000,20 +1008,20 @@ class ActivitiesApplicationsList extends React.Component {
                         value={
                             (filter &&
                                 filter.value &&
-                                applicationStatusesFilterOptions.filter(o =>
+                                applicationStatusesFilterOptions.filter((o) =>
                                     filter.value.includes(o.value)
                                 )) ||
                             "all"
                         }
-                        onChange={v =>
-                            onChange((v.length && v.map(v => v.value)) || "")
+                        onChange={(v) =>
+                            onChange((v.length && v.map((v) => v.value)) || "")
                         }
                         styles={{
-                            option: base => ({
+                            option: (base) => ({
                                 ...base,
                                 textAlign: "left",
                             }),
-                            dropdownIndicator: base => ({
+                            dropdownIndicator: (base) => ({
                                 ...base,
                                 display: "none",
                             }),
@@ -1021,10 +1029,10 @@ class ActivitiesApplicationsList extends React.Component {
                     />
                 ),
             },
-        ].filter(c => c);
+        ].filter((c) => c);
 
         const withoutAvailabilityMode = this.state.filter.filtered.find(
-            f => f.id === "nb_availabilities"
+            (f) => f.id === "nb_availabilities"
         );
 
         let filteredColumns = [...columns];
@@ -1034,13 +1042,13 @@ class ActivitiesApplicationsList extends React.Component {
                 columns[0],
                 // Only take enabled columns, and order them according to prefs order
                 ..._(columns)
-                    .filter(c =>
+                    .filter((c) =>
                         _.find(this.state.listPreferences, {
                             id: c.id,
                             disabled: false,
                         })
                     )
-                    .sortBy(c =>
+                    .sortBy((c) =>
                         _.findIndex(this.state.listPreferences, { id: c.id })
                     )
                     .value(),
@@ -1066,7 +1074,7 @@ class ActivitiesApplicationsList extends React.Component {
                                         preferences={this.state.listPreferences}
                                         columns={columns.slice(1)}
                                         className="m-r-sm"
-                                        onSubmit={prefs =>
+                                        onSubmit={(prefs) =>
                                             this.handleUpdateListPreferences(
                                                 prefs
                                             )
@@ -1146,7 +1154,7 @@ class ActivitiesApplicationsList extends React.Component {
                                         </Fragment>
                                     )}
                                     <button
-                                        onClick={e =>
+                                        onClick={(e) =>
                                             this.handleToggleNoAvailabilityFilter()
                                         }
                                         data-tippy-content={t(
@@ -1219,7 +1227,7 @@ class ActivitiesApplicationsList extends React.Component {
                             pageSize={this.state.filter.pageSize}
                             sorted={this.state.filter.sorted}
                             filtered={this.state.filter.filtered}
-                            onPageChange={page =>
+                            onPageChange={(page) =>
                                 this.fetchData({ ...this.state.filter, page })
                             }
                             onPageSizeChange={(pageSize, page) =>
@@ -1229,10 +1237,10 @@ class ActivitiesApplicationsList extends React.Component {
                                     pageSize,
                                 })
                             }
-                            onSortedChange={sorted =>
+                            onSortedChange={(sorted) =>
                                 this.fetchData({ ...this.state.filter, sorted })
                             }
-                            onFilteredChange={filtered =>
+                            onFilteredChange={(filtered) =>
                                 this.fetchData({
                                     ...this.state.filter,
                                     filtered,
@@ -1314,7 +1322,7 @@ const BulkEditModal = ({ targets, state, statuses, onChange, onSave }) => {
                             </label>
                             <select
                                 value={state.activity_application_status_id}
-                                onChange={e =>
+                                onChange={(e) =>
                                     onChange(
                                         e.target.name,
                                         parseInt(e.target.value)
@@ -1324,7 +1332,7 @@ const BulkEditModal = ({ targets, state, statuses, onChange, onSave }) => {
                                 className="form-control"
                             >
                                 <option value=""></option>
-                                {statuses.map(s => (
+                                {statuses.map((s) => (
                                     <option key={s.id} value={s.id}>
                                         {s.label}
                                     </option>
