@@ -202,19 +202,51 @@ the index definitions, not complex aggregations). Needs: inventory what each ind
 UI actually requires (fuzzy/prefix matching, faceting, ranking), whether Postgres could cover it,
 and a real migration-cost estimate — not a snap decision.
 
-## 9. Dead `run_chewy_callbacks`/`base_chewy_callbacks` — status: not started, small
+## 9. `run_chewy_callbacks` override — NOT dead, live bug found — analysis done 2026-09-14
 
-Found while investigating item 5's flake: `run_chewy_callbacks` is defined in 5 models
-(`app/models/{adhesion,room,activity_application,activity_ref,user}.rb`) and calls
-`base_chewy_callbacks` (`app/models/application_record.rb`), which spawns a real background
-thread per call (`AsyncExecutor` includes `Concurrent::Async`) to run `chewy_callbacks` under
-`Chewy.strategy(:active_job)`. `run_chewy_callbacks` itself is called nowhere in the codebase
-(checked via plain grep across `app/`/`lib/`) — likely dead, but confirm it's not invoked via a
-naming-convention/metaprogramming hook (chewy's own callback wiring, an `EventHandler` subscriber,
-`method_missing`) before deleting. Small either way: if genuinely dead, delete the method + log in
-`docs/OrphanedCode.md` (item 2); if it turns out to be a missing wire-up (should be called
-somewhere but isn't), that's a different, possibly more interesting bug about chewy indexes not
-updating for these 5 models outside their `update_index` macro's own default hooks.
+**Correction to the original finding**: this is not dead code. `run_chewy_callbacks` is a **real
+Chewy gem convention method**, not an app-invented name — confirmed by reading the installed gem
+source (`chewy-7.3.6/lib/chewy/index/observe/active_record_methods.rb`). Chewy's own
+`ActiveRecordMethods` concern defines a default `run_chewy_callbacks` (`chewy_callbacks.each { |cb|
+cb.call(self) }`) and wires it itself: `after_commit :run_chewy_callbacks, on: :destroy` (create/
+update go through a separate, non-overridden `update_chewy_indices` method — this override only
+ever affects the **destroy** path). A plain `grep app/ lib/` for call sites — the original
+approach — could never find this, because the call site lives inside the gem itself, invoked by
+symbol through Rails' own `after_commit` callback macro, not literal Ruby call syntax.
+
+So Adhesion/Room/ActivityApplication/ActivityRef/User's own `run_chewy_callbacks` (calling
+`base_chewy_callbacks`, `app/models/application_record.rb`) **overrides** Chewy's built-in
+destroy-callback via normal Ruby method resolution — a deliberate customization: move
+destroy-triggered ES reindexing off the request/transaction thread into a background thread
+(`AsyncExecutor` / `Concurrent::Async`) running under a hardcoded `Chewy.strategy(:active_job)`,
+instead of blocking on Elasticsearch synchronously inside the destroy's `after_commit`.
+
+**The live bug**: `Chewy.strategy` is stored via `Thread.current.thread_variable_get(:chewy)` —
+genuinely per-thread. `config/environments/test.rb`'s `Chewy.strategy(:bypass)` only pushes
+`:bypass` onto the *main* thread's stack. The spawned background thread has no such stack yet, so
+`Chewy.strategy(:active_job)` inside it lazily initializes a **fresh** stack from
+`Chewy.root_strategy` and pushes `:active_job` on top — the test suite's bypass strategy is never
+inherited. Concretely: **destroying any of these 5 models, in any environment including test,
+spawns a real background thread that enqueues a genuine `:active_job`-strategy Chewy reindex,
+completely ignoring whatever chewy strategy the calling code/environment actually intended.** In
+test this doesn't currently blow up (the enqueued job just sits in the `:test` queue adapter
+instead of running — see item 5's `config.active_job.queue_adapter = :test` fix), but it's a real
+background thread spawned on every relevant destroy, in the same category as item 5's flake
+(a background thread racing the test's main thread) — a latent flakiness/CI-noise risk for any
+future spec that asserts on enqueued-job counts after destroying one of these 5 models, and in
+production it silently ignores context-appropriate strategy selection (e.g. an admin bulk-destroy
+script explicitly wrapped in `Chewy.strategy(:atomic)` for controlled reindexing would still get
+its destroy-time reindex diverted to `:active_job` regardless).
+
+**Recommended fix** (not yet implemented — this was an analysis pass): the override's intent
+(don't block the destroy request on a synchronous ES call) is reasonable, but hardcoding
+`:active_job` and starting a fresh per-thread strategy stack is the bug. Either (a) delete the
+override entirely and let Chewy's own default `run_chewy_callbacks` run synchronously under
+whatever strategy is ambient (simplest; only risk is a marginally slower destroy request in
+production, likely negligible for a single record's ES removal), or (b) keep the async intent but
+capture the *calling* thread's actual current strategy name before spawning, and push that same
+strategy (not a hardcoded `:active_job`) in the background thread. Either fix is small; the value
+here was diagnosing what's actually happening, not the fix itself.
 
 ## 10. Hardcoded `"fr"`/`"fr-FR"` locale in date/number formatting — status: not started, found 2026-09-14
 
