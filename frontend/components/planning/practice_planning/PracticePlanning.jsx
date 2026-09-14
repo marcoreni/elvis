@@ -488,7 +488,6 @@ class PracticePlanning extends React.Component {
                         locale={i18n.language}
                         // selectConstraint="businessHours"
                         selectable={true}
-                        eventLimit={true}
                         aspectRatio={1.5}
                         slotMinTime="10:00:00"
                         slotMaxTime="22:00:00"

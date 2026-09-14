@@ -137,8 +137,8 @@ describe("RawPlanning", () => {
 });
 
 describe("YearlyCalendar", () => {
-    // Regression guard: YearlyCalendar is a withTranslation("planning")-wrapped class; a missing
-    // wrapper would surface here as "t is not a function" rather than a silent prod crash.
+    // Regression guard: YearlyCalendar uses useTranslation("planning"); a missing/broken call
+    // would surface here as "t is not a function" rather than a silent prod crash.
     const props = {
         label: "Cours de guitare",
         season: { start: "2026-09-01", end: "2027-06-30", holidays: [] },
