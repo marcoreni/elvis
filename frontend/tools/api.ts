@@ -1,6 +1,7 @@
 import { csrfToken } from "../components/utils";
 import { API_ERRORS_MESSAGES } from "./constants";
 import swal from "sweetalert2";
+import i18n from "../i18n";
 
 /**
  * Handle API response
@@ -125,10 +126,15 @@ const request =
                 if (error.code) {
                     swal.fire({
                         icon: "error",
-                        title: "Oops... une erreur est survenue",
+                        title: i18n.t("common:apiErrors.unexpectedTitle"),
                         text: error.message
-                            ? `${error.message} (${error.code})`
-                            : `Veuillez contacter l'administrateur du site pour plus d'informations et lui donner le cod suivant : ${error.code}`,
+                            ? i18n.t("common:apiErrors.unexpectedWithMessage", {
+                                  message: error.message,
+                                  code: error.code,
+                              })
+                            : i18n.t("common:apiErrors.unexpectedWithCode", {
+                                  code: error.code,
+                              }),
                     });
                 }
 

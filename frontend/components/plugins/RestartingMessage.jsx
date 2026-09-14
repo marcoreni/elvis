@@ -1,14 +1,19 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 
 export default function RestartingMessage() {
+    const { t } = useTranslation("plugins");
+
     return (
         <div className="w-100">
             <h1 className="text-center">
-                Redémarrage en cours...
-                <div className="sk-spinner sk-spinner-fading-circle m-n"
-                     style={{
-                         display: 'inline-block'
-                     }}>
+                {t("restarting.title")}
+                <div
+                    className="sk-spinner sk-spinner-fading-circle m-n"
+                    style={{
+                        display: "inline-block",
+                    }}
+                >
                     <div className="sk-circle1 sk-circle"></div>
                     <div className="sk-circle3 sk-circle"></div>
                     <div className="sk-circle4 sk-circle"></div>
@@ -22,8 +27,8 @@ export default function RestartingMessage() {
                     <div className="sk-circle12 sk-circle"></div>
                 </div>
             </h1>
-            <p>Le redémarrage peut prendre quelques minutes.</p>
-            <p>La page se rechargera automatiquement.</p>
+            <p>{t("restarting.duration")}</p>
+            <p>{t("restarting.autoReload")}</p>
         </div>
-    )
+    );
 }

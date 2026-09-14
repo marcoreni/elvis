@@ -1,6 +1,7 @@
 import React from "react";
 import Modal from "react-modal";
 import swal from "sweetalert2";
+import { useTranslation } from "react-i18next";
 
 export default function PluginActivationModal({
     isOpen,
@@ -10,6 +11,7 @@ export default function PluginActivationModal({
     onClose,
     handleSaveAndRestart,
 }) {
+    const { t } = useTranslation("plugins");
     const firstPluginID = Object.keys(plugins)[0];
     const isActivated =
         firstPluginID && activatedPlugins[firstPluginID] === true;
@@ -26,8 +28,8 @@ export default function PluginActivationModal({
         } catch (error) {
             console.error("Erreur lors de la confirmation:", error);
             swal.fire({
-                title: "Erreur inattendue",
-                text: "Une erreur inattendue s'est produite lors de la confirmation.",
+                title: t("activationModal.unexpectedErrorTitle"),
+                text: t("activationModal.unexpectedErrorText"),
                 icon: "error",
             });
             onCancel();
@@ -37,14 +39,19 @@ export default function PluginActivationModal({
     return (
         <Modal
             isOpen={isOpen}
-            contentLabel="Activation/Deactivation Confirmation Modal"
+            contentLabel={t("activationModal.ariaLabel")}
             className="position-relative"
         >
             <h2>
-                Êtes-vous sûr(e) de vouloir{" "}
-                {!isActivated ? "désactiver" : "activer"} ce plugin ?
+                {t("activationModal.confirmToggle", {
+                    action: t(
+                        isActivated
+                            ? "activationModal.activate"
+                            : "activationModal.deactivate"
+                    ),
+                })}
             </h2>
-            <p>Le redémarrage de la page va prendre un instant.</p>
+            <p>{t("activationModal.restartNotice")}</p>
             <div className="mt-5" style={rollbackContainerStyle}>
                 <input
                     className="my-auto"
@@ -53,15 +60,15 @@ export default function PluginActivationModal({
                     type="checkbox"
                 />
                 <label className="my-auto ml-2" htmlFor="rollback">
-                    Supprimer les données du plugin
+                    {t("activationModal.deleteData")}
                 </label>
             </div>
             <div className="d-flex justify-content-between mt-5">
                 <button className="btn" onClick={onCancel}>
-                    Annuler
+                    {t("common:actions.cancel")}
                 </button>
                 <button className="btn btn-primary" onClick={handleConfirm}>
-                    Confirmer
+                    {t("common:actions.confirm")}
                 </button>
             </div>
         </Modal>

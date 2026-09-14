@@ -128,7 +128,10 @@
         "errIntervalNotFound": "Ce créneau ne peut être supprimé. Il a déjà été validé ou supprimé par un permanent.",
         "errGroupNameExists": "Le groupe existe déjà pour cette saison et ce professeur.",
         "errGroupNameEmpty": "Le nom du groupe ne peut être vide.",
-        "errEvaluationIntervalAlreadyTaken": "Ce créneau d'évaluation est déjà pris, veuillez en choisir un autre."
+        "errEvaluationIntervalAlreadyTaken": "Ce créneau d'évaluation est déjà pris, veuillez en choisir un autre.",
+        "unexpectedTitle": "Oops... une erreur est survenue",
+        "unexpectedWithMessage": "{{message}} ({{code}})",
+        "unexpectedWithCode": "Veuillez contacter l'administrateur du site pour plus d'informations et lui donner le code suivant : {{code}}"
     },
     "kindsLabel": {
         "availability": "Disponibilité",

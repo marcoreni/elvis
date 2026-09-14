@@ -1,8 +1,16 @@
-import React, {useState} from "react";
+import React, { useState } from "react";
 import pluginImgDefault from "./icons8-puzzle-150.svg";
 import Switch from "react-switch";
+import { useTranslation } from "react-i18next";
 
-export default function PluginCard({plugin, setting_path, handleToggleActivation, pluginActivated, initialyActivated}) {
+export default function PluginCard({
+    plugin,
+    setting_path,
+    handleToggleActivation,
+    pluginActivated,
+    initialyActivated,
+}) {
+    const { t } = useTranslation("plugins");
 
     return (
         <div
@@ -50,7 +58,11 @@ export default function PluginCard({plugin, setting_path, handleToggleActivation
                     >
                         {plugin.display_name}
                     </p>
-                    <img src={plugin.logo} className="m-0 pr-0" style={{width: "60px"}}></img>
+                    <img
+                        src={plugin.logo}
+                        className="m-0 pr-0"
+                        style={{ width: "60px" }}
+                    ></img>
                 </div>
                 <div
                     className="card-text pt-3 w-100 mb-3"
@@ -83,13 +95,17 @@ export default function PluginCard({plugin, setting_path, handleToggleActivation
                             className="btn btn-sm"
                         >
                             <i className="fa fa-external-link-alt mr-1" />
-                            En savoir plus
+                            {t("card.learnMore")}
                         </a>
                     </div>
                 </div>
 
                 <div className="card-text d-flex justify-content-between align-items-center w-100">
-                        {plugin.price ? (<div>PAYANT</div>) : (<div>GRATUIT</div>)}
+                    {plugin.price ? (
+                        <div>{t("card.paid")}</div>
+                    ) : (
+                        <div>{t("card.free")}</div>
+                    )}
                     <div className="d-flex align-items-center">
                         {pluginActivated && initialyActivated ? (
                             <a
@@ -101,7 +117,7 @@ export default function PluginCard({plugin, setting_path, handleToggleActivation
                                 }}
                             >
                                 <i className="fa fa-cog mr-1" />
-                                Configurer
+                                {t("card.configure")}
                             </a>
                         ) : null}
                         {typeof pluginActivated !== "undefined" && (

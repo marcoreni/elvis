@@ -100,6 +100,13 @@ either have no route, or have a route/action that never falls through to implici
   `bands/edit.html.erb` mount React components (`practice/BandCreator`/`practice/BandEdit`)
   directly and never reference this partial.
 
+## 2026-09-14, found while i18n-extracting (roadmap item 11)
+
+- `frontend/components/utils/BtnApiElement.jsx`: zero importers and no `react_component(...)` mount
+  anywhere in `app/views/` — confirmed via both a JS-import grep and an ERB-mount grep, same method
+  as the audit above. Was about to i18n-extract its hardcoded French swal text before checking
+  whether anything actually renders it; nothing does.
+
 **Deliberately NOT touched** (real, live issues — not dead code, don't delete):
 - `app/views/devise/passwords/edit.html.erb` — Devise's own stock route
   (`edit_user_password_url` → `PasswordsController#edit`) still renders this; the app's own

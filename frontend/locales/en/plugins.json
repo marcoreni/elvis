@@ -1,0 +1,30 @@
+{
+    "activationModal": {
+        "ariaLabel": "Plugin activation/deactivation confirmation window",
+        "confirmToggle": "Are you sure you want to {{action}} this plugin?",
+        "activate": "activate",
+        "deactivate": "deactivate",
+        "restartNotice": "The page reload will take a moment.",
+        "deleteData": "Delete the plugin's data",
+        "unexpectedErrorTitle": "Unexpected error",
+        "unexpectedErrorText": "An unexpected error occurred during confirmation."
+    },
+    "list": {
+        "intro": "Discover and activate the plugins you need.",
+        "empty": "No plugins",
+        "fetchErrorTitle": "An error occurred while retrieving the plugins",
+        "saveSuccessTitle": "The plugins were saved successfully",
+        "saveErrorTitle": "An error occurred while saving the plugins"
+    },
+    "restarting": {
+        "title": "Restarting...",
+        "duration": "The restart may take a few minutes.",
+        "autoReload": "The page will reload automatically."
+    },
+    "card": {
+        "learnMore": "Learn more",
+        "paid": "PAID",
+        "free": "FREE",
+        "configure": "Configure"
+    }
+}
