@@ -1,16 +1,10 @@
-import React from "react";
+import React, { useMemo } from "react";
 import _ from "lodash";
 import { useTranslation } from "react-i18next";
 import { get } from "../../tools/api";
 import { toast } from "react-toastify";
 import { API_ERRORS_MESSAGES } from "../../tools/constants";
 import PreferencesEditor from "./TimeIntervalPreferencesEditor";
-
-const monthNameFormat = new Intl.DateTimeFormat("fr", { month: "long" });
-const weekDayDateFormat = new Intl.DateTimeFormat("fr", {
-    weekday: "short",
-    day: "numeric",
-});
 
 export default class EvaluationIntervalChoice extends React.Component {
     constructor(props) {
@@ -27,7 +21,7 @@ export default class EvaluationIntervalChoice extends React.Component {
         this.setState({ loading: true });
 
         Promise.all(
-            Object.keys(this.state.selectedIntervals).map(refId => {
+            Object.keys(this.state.selectedIntervals).map((refId) => {
                 return get(
                     `/seasons/${this.props.season.id}/available_evaluation_intervals/${refId}`
                 ).then(({ data, err }) => {
@@ -42,7 +36,7 @@ export default class EvaluationIntervalChoice extends React.Component {
                 });
             })
         )
-            .then(objs =>
+            .then((objs) =>
                 objs.reduce(
                     (acc, { data, refId, err }) =>
                         err ? { ...acc, err } : { ...acc, [refId]: data },
@@ -92,10 +86,10 @@ export default class EvaluationIntervalChoice extends React.Component {
             (interval, refId) =>
                 interval &&
                 intervals[refId] &&
-                intervals[refId].find(i => i.id === interval.id)
+                intervals[refId].find((i) => i.id === interval.id)
         );
 
-        const groupedIntervals = _.mapValues(intervals, ints =>
+        const groupedIntervals = _.mapValues(intervals, (ints) =>
             ints.reduce((acc, i) => {
                 const month = new Date(i.start).getMonth();
 
@@ -109,7 +103,7 @@ export default class EvaluationIntervalChoice extends React.Component {
         const intervalsChoices = Object.entries(selectedIntervals).map(
             ([activityRefId, interval]) => {
                 const activityRef = activityRefs.find(
-                    r => r.id == activityRefId
+                    (r) => r.id == activityRefId
                 );
 
                 return (
@@ -140,7 +134,19 @@ function ActivityEvaluationIntervalChoice({
     selectedInterval,
     handleSelectInterval,
 }) {
-    const { t } = useTranslation("activityApplications");
+    const { t, i18n } = useTranslation("activityApplications");
+    const weekDayDateFormat = useMemo(
+        () =>
+            new Intl.DateTimeFormat(i18n.language, {
+                weekday: "short",
+                day: "numeric",
+            }),
+        [i18n.language]
+    );
+    const monthNameFormat = useMemo(
+        () => new Intl.DateTimeFormat(i18n.language, { month: "long" }),
+        [i18n.language]
+    );
 
     return (
         <div className="ibox">
@@ -162,14 +168,14 @@ function ActivityEvaluationIntervalChoice({
                             <PreferencesEditor
                                 maxIntervals={1}
                                 intervals={groupedIntervals}
-                                intervalHeader={i =>
+                                intervalHeader={(i) =>
                                     weekDayDateFormat.format(new Date(i.start))
                                 }
                                 selectedIntervals={
                                     (selectedInterval && [selectedInterval]) ||
                                     []
                                 }
-                                groupNameAccessor={k =>
+                                groupNameAccessor={(k) =>
                                     monthNameFormat.format(
                                         new Date(2000, parseInt(k))
                                     )

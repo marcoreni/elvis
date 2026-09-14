@@ -34,7 +34,9 @@ class PaymentsSummary extends React.Component {
     }
 
     insertCoupon(coupons, newCoupon) {
-        let index = coupons.findIndex(coupon => coupon.percent_off > newCoupon.percent_off);
+        let index = coupons.findIndex(
+            (coupon) => coupon.percent_off > newCoupon.percent_off
+        );
         if (index === -1) {
             coupons.push(newCoupon);
         } else {
@@ -64,15 +66,19 @@ class PaymentsSummary extends React.Component {
     }
 
     isActivityInFormula(activity) {
-        return activity.des &&
+        return (
+            activity.des &&
             activity.des.activity_application &&
-            activity.des.activity_application.formule_id;
+            activity.des.activity_application.formule_id
+        );
     }
 
     getFormulaIdFromActivity(activity) {
-        return activity.des &&
+        return (
+            activity.des &&
             activity.des.activity_application &&
-            activity.des.activity_application.formule_id;
+            activity.des.activity_application.formule_id
+        );
     }
 
     processDataWithFormulas(data) {
@@ -82,7 +88,7 @@ class PaymentsSummary extends React.Component {
         const activitiesByFormula = {};
         const formulaIds = new Set();
 
-        processedData.forEach(item => {
+        processedData.forEach((item) => {
             const formulaId = this.getFormulaIdFromActivity(item);
             if (formulaId) {
                 formulaIds.add(formulaId);
@@ -99,24 +105,38 @@ class PaymentsSummary extends React.Component {
 
         const result = [];
 
-        formulaIds.forEach(formulaId => {
+        formulaIds.forEach((formulaId) => {
             const formulaActivities = activitiesByFormula[formulaId];
             if (formulaActivities.length > 0) {
                 const firstActivity = formulaActivities[0];
                 const formulaDetails = this.props.formulas
-                    ? _.find(this.props.formulas, f => f.id == formulaId) || { id: formulaId, name: t("userPayments.summary.unknownFormula"), description: "" }
-                    : { id: formulaId, name: t("userPayments.summary.formulaNumber", { id: formulaId }), description: "" };
+                    ? _.find(this.props.formulas, (f) => f.id == formulaId) || {
+                          id: formulaId,
+                          name: t("userPayments.summary.unknownFormula"),
+                          description: "",
+                      }
+                    : {
+                          id: formulaId,
+                          name: t("userPayments.summary.formulaNumber", {
+                              id: formulaId,
+                          }),
+                          description: "",
+                      };
 
-                const formulaPrice = (formulaDetails.formule_pricings && formulaDetails.formule_pricings.length > 0)
-                    ? formulaDetails.formule_pricings[0].price
-                    : 0;
-
+                const formulaPrice =
+                    formulaDetails.formule_pricings &&
+                    formulaDetails.formule_pricings.length > 0
+                        ? formulaDetails.formule_pricings[0].price
+                        : 0;
 
                 const coupon = firstActivity.coupon || {};
 
                 let discountedTotal = formulaPrice;
                 if (coupon.percent_off) {
-                    discountedTotal = _.round(formulaPrice * (1 - coupon.percent_off / 100), 2);
+                    discountedTotal = _.round(
+                        formulaPrice * (1 - coupon.percent_off / 100),
+                        2
+                    );
                 }
 
                 const formulaHeaderRow = {
@@ -128,12 +148,12 @@ class PaymentsSummary extends React.Component {
                     discountedTotal: discountedTotal,
                     due_total: discountedTotal,
                     coupon: coupon,
-                    formula: { ...formulaDetails, price: formulaPrice }
+                    formula: { ...formulaDetails, price: formulaPrice },
                 };
 
                 result.push(formulaHeaderRow);
 
-                formulaActivities.forEach(activity => {
+                formulaActivities.forEach((activity) => {
                     activity.isFormulaItem = true;
                     activity.formulaId = formulaId;
                     result.push(activity);
@@ -141,7 +161,7 @@ class PaymentsSummary extends React.Component {
             }
         });
 
-        processedData.forEach(item => {
+        processedData.forEach((item) => {
             if (!this.isActivityInFormula(item)) {
                 result.push(item);
             }
@@ -151,7 +171,7 @@ class PaymentsSummary extends React.Component {
     }
 
     render() {
-        const { t } = this.props;
+        const { t, i18n } = this.props;
 
         const {
             payers,
@@ -168,8 +188,14 @@ class PaymentsSummary extends React.Component {
                 id: "payer",
                 maxWidth: 30,
                 sortable: false,
-                accessor: d => {
-                    if (d.user && _.includes(_.map(payers, p => p.id), d.user.id)) {
+                accessor: (d) => {
+                    if (
+                        d.user &&
+                        _.includes(
+                            _.map(payers, (p) => p.id),
+                            d.user.id
+                        )
+                    ) {
                         return <i className="fas fa-euro-sign" />;
                     } else if (d.isOption) {
                         return <i className="fas fa-hourglass" />;
@@ -181,22 +207,32 @@ class PaymentsSummary extends React.Component {
             {
                 Header: t("userPayments.summary.columns.activity"),
                 id: "activity",
-                accessor: d => {
+                accessor: (d) => {
                     return (
                         <div>
                             <div>
                                 {d.isFormula && (
-                                    <i title={t("userPayments.summary.formulaTooltip")} />
+                                    <i
+                                        title={t(
+                                            "userPayments.summary.formulaTooltip"
+                                        )}
+                                    />
                                 )}
                                 {d.isFormulaItem && (
-                                    <span className="ml-3" style={{ color: "#777" }}>
-                            ↳{" "}
-                        </span>
+                                    <span
+                                        className="ml-3"
+                                        style={{ color: "#777" }}
+                                    >
+                                        ↳{" "}
+                                    </span>
                                 )}
                                 {d.activity}
                             </div>
                             {d.isFormula && d.subActivities && (
-                                <div className="ml-4 text-sm" style={{ color: "#555" }}>
+                                <div
+                                    className="ml-4 text-sm"
+                                    style={{ color: "#555" }}
+                                >
                                     {d.subActivities.map((activity, index) => (
                                         <div key={index}>• {activity}</div>
                                     ))}
@@ -204,7 +240,11 @@ class PaymentsSummary extends React.Component {
                             )}
                             {d.stopped_at ? (
                                 <div className="text-danger">
-                                    {t("userPayments.summary.stoppedOn", { date: moment(d.stopped_at).format("DD/MM/YYYY") })}
+                                    {t("userPayments.summary.stoppedOn", {
+                                        date: moment(d.stopped_at).format(
+                                            "DD/MM/YYYY"
+                                        ),
+                                    })}
                                 </div>
                             ) : null}
                         </div>
@@ -214,17 +254,27 @@ class PaymentsSummary extends React.Component {
             {
                 Header: t("userPayments.summary.columns.formula"),
                 id: "formula",
-                accessor: d => {
+                accessor: (d) => {
                     return (
                         <div>
-                            {d.isFormula && <i title={t("userPayments.summary.formulaTooltip")} />}
+                            {d.isFormula && (
+                                <i
+                                    title={t(
+                                        "userPayments.summary.formulaTooltip"
+                                    )}
+                                />
+                            )}
                             {d.formula ? (
                                 <div>
                                     {d.formula.name}
-                                    {d.formula.description && <p>{d.formula.description}</p>}
+                                    {d.formula.description && (
+                                        <p>{d.formula.description}</p>
+                                    )}
                                 </div>
                             ) : (
-                                <span>{t("userPayments.summary.noFormula")}</span>
+                                <span>
+                                    {t("userPayments.summary.noFormula")}
+                                </span>
                             )}
                         </div>
                     );
@@ -235,7 +285,7 @@ class PaymentsSummary extends React.Component {
                 Header: t("userPayments.summary.columns.adherentNumber"),
                 id: "adherent_number",
                 width: 50,
-                accessor: d =>
+                accessor: (d) =>
                     d.user && d.user.adherent_number != null
                         ? d.user.adherent_number
                         : "",
@@ -243,7 +293,7 @@ class PaymentsSummary extends React.Component {
             {
                 Header: t("userPayments.summary.columns.student"),
                 id: "student",
-                accessor: d =>
+                accessor: (d) =>
                     d.user ? (
                         <a href={`/users/${d.user.id}`}>
                             {d.user.first_name} {d.user.last_name}
@@ -254,20 +304,26 @@ class PaymentsSummary extends React.Component {
                 Header: t("userPayments.summary.columns.price"),
                 id: "tarif",
                 maxWidth: 100,
-                Cell: props => {
+                Cell: (props) => {
                     if (props.original.isFormula) {
                         return <p>{t("userPayments.summary.formulaPrice")}</p>;
                     }
 
                     if (props.original.isFormulaItem) {
-                        return <p>{t("userPayments.summary.includedInFormula")}</p>;
+                        return (
+                            <p>{t("userPayments.summary.includedInFormula")}</p>
+                        );
                     }
 
                     if (props.original.packId) {
                         return (
                             <p>
-                                {_.get(props, ["original", "packPrice", "pricing_category", "name"]) ||
-                                    t("userPayments.summary.unknownFem")}
+                                {_.get(props, [
+                                    "original",
+                                    "packPrice",
+                                    "pricing_category",
+                                    "name",
+                                ]) || t("userPayments.summary.unknownFem")}
                             </p>
                         );
                     }
@@ -275,8 +331,15 @@ class PaymentsSummary extends React.Component {
                         if (this.props.isStudentView) {
                             return (
                                 <p>
-                                    {(this.props.adhesionPrices.find(a => props.original.adhesionPriceId) ||
-                                        {}).label}
+                                    {
+                                        (
+                                            this.props.adhesionPrices.find(
+                                                (a) =>
+                                                    props.original
+                                                        .adhesionPriceId
+                                            ) || {}
+                                        ).label
+                                    }
                                 </p>
                             );
                         }
@@ -285,7 +348,7 @@ class PaymentsSummary extends React.Component {
                                 <select
                                     className="form-control"
                                     value={props.original.adhesionPriceId || 0}
-                                    onChange={e =>
+                                    onChange={(e) =>
                                         this.props.handleChangeAdhesionPricingChoice(
                                             props.original.adhesionId,
                                             e.target.value
@@ -295,26 +358,45 @@ class PaymentsSummary extends React.Component {
                                     <option value="0" disabled>
                                         {t("userPayments.summary.selectPrice")}
                                     </option>
-                                    {(this.props.adhesionPrices || []).map(adhesionPrice => (
-                                        <option key={adhesionPrice.id} value={adhesionPrice.id}>
-                                            {adhesionPrice.label}
-                                        </option>
-                                    ))}
+                                    {(this.props.adhesionPrices || []).map(
+                                        (adhesionPrice) => (
+                                            <option
+                                                key={adhesionPrice.id}
+                                                value={adhesionPrice.id}
+                                            >
+                                                {adhesionPrice.label}
+                                            </option>
+                                        )
+                                    )}
                                 </select>
                             </Fragment>
                         );
                     }
                     if (this.props.isStudentView) {
-                        const pricingCategory = this.props.pricingCategories.find(
-                            p => p.id === props.original.pricingCategoryId
+                        const pricingCategory =
+                            this.props.pricingCategories.find(
+                                (p) => p.id === props.original.pricingCategoryId
+                            );
+                        return (
+                            <p>
+                                {pricingCategory
+                                    ? pricingCategory.label
+                                    : t("userPayments.summary.noPriceDefined")}
+                            </p>
                         );
-                        return <p>{pricingCategory ? pricingCategory.label : t("userPayments.summary.noPriceDefined")}</p>;
                     } else {
-                        let activity_ref_pricings = props.original.ref.activity_ref_pricing;
-                        let season = this.props.seasons.find(s => s.id === this.props.season);
+                        let activity_ref_pricings =
+                            props.original.ref.activity_ref_pricing;
+                        let season = this.props.seasons.find(
+                            (s) => s.id === this.props.season
+                        );
                         let pricings = [];
-                        activity_ref_pricings.forEach(asp => {
-                            if (asp.from_season.start <= season.start && (!asp.to_season || asp.to_season.end >= season.end)) {
+                        activity_ref_pricings.forEach((asp) => {
+                            if (
+                                asp.from_season.start <= season.start &&
+                                (!asp.to_season ||
+                                    asp.to_season.end >= season.end)
+                            ) {
                                 pricings.push(asp);
                             }
                         });
@@ -322,7 +404,7 @@ class PaymentsSummary extends React.Component {
                             <select
                                 className="form-control"
                                 value={props.original.pricingCategoryId || 0}
-                                onChange={evt =>
+                                onChange={(evt) =>
                                     this.props.handleChangePricingChoice(
                                         props.original.id,
                                         props.original.user.id,
@@ -333,13 +415,19 @@ class PaymentsSummary extends React.Component {
                                 <option value="0" disabled>
                                     {t("userPayments.summary.selectPrice")}
                                 </option>
-                                {pricings.map(assoc => {
-                                    const pricingCategory = this.props.pricingCategories.find(
-                                        p => p.id === assoc.pricing_category_id
-                                    );
+                                {pricings.map((assoc) => {
+                                    const pricingCategory =
+                                        this.props.pricingCategories.find(
+                                            (p) =>
+                                                p.id ===
+                                                assoc.pricing_category_id
+                                        );
                                     if (pricingCategory) {
                                         return (
-                                            <option key={pricingCategory.id} value={pricingCategory.id}>
+                                            <option
+                                                key={pricingCategory.id}
+                                                value={pricingCategory.id}
+                                            >
                                                 {pricingCategory.name}
                                             </option>
                                         );
@@ -349,14 +437,18 @@ class PaymentsSummary extends React.Component {
                         );
                     }
                 },
-                accessor: d =>
-                    (this.props.pricingCategories.find(p => p.id === d.pricingCategoryId) || {}).label,
+                accessor: (d) =>
+                    (
+                        this.props.pricingCategories.find(
+                            (p) => p.id === d.pricingCategoryId
+                        ) || {}
+                    ).label,
             },
             {
                 Header: t("userPayments.summary.columns.unitPrice"),
                 id: "unitPrice",
                 maxWidth: 75,
-                accessor: d => <p>{d.unitPrice + " €"}</p>,
+                accessor: (d) => <p>{d.unitPrice + " €"}</p>,
                 style: {
                     textAlign: "right",
                     display: "block",
@@ -366,17 +458,33 @@ class PaymentsSummary extends React.Component {
                 Header: t("userPayments.summary.columns.prorata"),
                 id: "prorata",
                 maxWidth: 100,
-                Cell: props => {
-                    if (props.original.id === 0 || props.original.isFormula) return null;
-                    const intendedNbLessons = props.original.intended_nb_lessons;
-                    const currentProrata = props.original.prorata || intendedNbLessons;
+                Cell: (props) => {
+                    if (props.original.id === 0 || props.original.isFormula)
+                        return null;
+                    const intendedNbLessons =
+                        props.original.intended_nb_lessons;
+                    const currentProrata =
+                        props.original.prorata || intendedNbLessons;
 
                     if (this.props.isStudentView) {
-                        return <p>{t("userPayments.summary.prorataOf", { current: currentProrata, total: intendedNbLessons })}</p>;
+                        return (
+                            <p>
+                                {t("userPayments.summary.prorataOf", {
+                                    current: currentProrata,
+                                    total: intendedNbLessons,
+                                })}
+                            </p>
+                        );
                     }
 
                     return (
-                        <div style={{ display: "flex", alignItems: "center", fontSize: "14px" }}>
+                        <div
+                            style={{
+                                display: "flex",
+                                alignItems: "center",
+                                fontSize: "14px",
+                            }}
+                        >
                             <input
                                 type="number"
                                 className="form-control"
@@ -387,15 +495,23 @@ class PaymentsSummary extends React.Component {
                                     fontSize: "12px",
                                     marginRight: "3px",
                                     textAlign: "center",
-                                    border: "1px solid #ccc"
+                                    border: "1px solid #ccc",
                                 }}
                                 value={currentProrata}
                                 min="0"
                                 max={intendedNbLessons}
-                                onChange={e => {
-                                    const newProrata = parseInt(e.target.value) || 0;
-                                    if (newProrata <= intendedNbLessons && this.props.handleChangeProrataForDesiredActivity) {
-                                        this.props.handleChangeProrataForDesiredActivity(props.original.id, newProrata);
+                                onChange={(e) => {
+                                    const newProrata =
+                                        parseInt(e.target.value) || 0;
+                                    if (
+                                        newProrata <= intendedNbLessons &&
+                                        this.props
+                                            .handleChangeProrataForDesiredActivity
+                                    ) {
+                                        this.props.handleChangeProrataForDesiredActivity(
+                                            props.original.id,
+                                            newProrata
+                                        );
                                     }
                                 }}
                             />
@@ -408,7 +524,7 @@ class PaymentsSummary extends React.Component {
                 Header: t("userPayments.summary.columns.totalAmount"),
                 id: "initial_total",
                 maxWidth: 150,
-                accessor: d => {
+                accessor: (d) => {
                     let prorataTotal = 0;
                     if (d.id === 0 || d.due_total >= 0) {
                         prorataTotal = d.due_total;
@@ -426,11 +542,13 @@ class PaymentsSummary extends React.Component {
                 Header: t("userPayments.summary.columns.discount"),
                 id: "coupon",
                 maxWidth: 100,
-                accessor: d => {
-                    return d.coupon?.percent_off ? `${d.coupon.percent_off} %` : '-';
+                accessor: (d) => {
+                    return d.coupon?.percent_off
+                        ? `${d.coupon.percent_off} %`
+                        : "-";
                 },
 
-                Cell: props => {
+                Cell: (props) => {
                     if (props.original.isFormulaItem) {
                         return <p>-</p>;
                     }
@@ -440,15 +558,14 @@ class PaymentsSummary extends React.Component {
                             <p>
                                 {props.original.coupon.percent_off
                                     ? `${props.original.coupon.percent_off}% (${props.original.coupon.label})`
-                                    : '-'}
+                                    : "-"}
                             </p>
                         );
                     }
                     return (
                         <SelectCoupon
                             coupons={this.state.coupons}
-                            onChange={value => {
-
+                            onChange={(value) => {
                                 if (props.original.isFormula) {
                                     this.props.handleChangePercentOffChoice(
                                         props.original.formula.id,
@@ -457,8 +574,14 @@ class PaymentsSummary extends React.Component {
                                     );
                                 } else {
                                     this.props.handleChangePercentOffChoice(
-                                        props.original.adhesionId || props.original.packId || props.original.id,
-                                        props.original.adhesionId ? "Adhesion" : props.original.packId ? "Pack" : "DesiredActivity",
+                                        props.original.adhesionId ||
+                                            props.original.packId ||
+                                            props.original.id,
+                                        props.original.adhesionId
+                                            ? "Adhesion"
+                                            : props.original.packId
+                                              ? "Pack"
+                                              : "DesiredActivity",
                                         value
                                     );
                                 }
@@ -476,10 +599,10 @@ class PaymentsSummary extends React.Component {
                 Header: t("userPayments.summary.columns.discountedTotal"),
                 id: "discounted total",
                 maxWidth: 150,
-                accessor: d => {
+                accessor: (d) => {
                     return (
                         <p>
-                            {d.discountedTotal.toLocaleString("fr-FR", {
+                            {d.discountedTotal.toLocaleString(i18n.language, {
                                 style: "currency",
                                 currency: "EUR",
                             })}
@@ -495,59 +618,72 @@ class PaymentsSummary extends React.Component {
                 Footer: (
                     <span>
                         <span style={{ fontSize: "16px" }}>
-                          {t("userPayments.summary.footerTotal")}
-                          <strong>
-                            {` ${
-                                totalDue == null
-                                    ? "--"
-                                    : totalDue.toLocaleString("fr-FR", {
-                                        style: "currency",
-                                        currency: "EUR",
-                                    })
-                            } `}
-                          </strong>
+                            {t("userPayments.summary.footerTotal")}
+                            <strong>
+                                {` ${
+                                    totalDue == null
+                                        ? "--"
+                                        : totalDue.toLocaleString(
+                                              i18n.language,
+                                              {
+                                                  style: "currency",
+                                                  currency: "EUR",
+                                              }
+                                          )
+                                } `}
+                            </strong>
                         </span>
                         <br />
                         <span style={{ fontSize: "16px" }}>
-                          {t("userPayments.summary.footerScheduleTotal")}
-                          <strong>
-                            {` ${
-                                previsionalTotal == null
-                                    ? "--"
-                                    : previsionalTotal.toLocaleString("fr-FR", {
-                                        style: "currency",
-                                        currency: "EUR",
-                                    })
-                            } `}
-                          </strong>
+                            {t("userPayments.summary.footerScheduleTotal")}
+                            <strong>
+                                {` ${
+                                    previsionalTotal == null
+                                        ? "--"
+                                        : previsionalTotal.toLocaleString(
+                                              i18n.language,
+                                              {
+                                                  style: "currency",
+                                                  currency: "EUR",
+                                              }
+                                          )
+                                } `}
+                            </strong>
                         </span>
                         <br />
                         <span style={{ fontSize: "16px" }}>
-                          {t("userPayments.summary.footerPaidToDate")}
-                          <strong>
-                            {` ${
-                                totalPaymentsToDay == 0 && previsionalTotal == null
-                                    ? "--"
-                                    : totalPaymentsToDay.toLocaleString("fr-FR", {
-                                        style: "currency",
-                                        currency: "EUR",
-                                    })
-                            } `}
-                          </strong>
+                            {t("userPayments.summary.footerPaidToDate")}
+                            <strong>
+                                {` ${
+                                    totalPaymentsToDay == 0 &&
+                                    previsionalTotal == null
+                                        ? "--"
+                                        : totalPaymentsToDay.toLocaleString(
+                                              i18n.language,
+                                              {
+                                                  style: "currency",
+                                                  currency: "EUR",
+                                              }
+                                          )
+                                } `}
+                            </strong>
                         </span>
                         <br />
                         <span style={{ fontSize: "16px" }}>
-                          {t("userPayments.summary.footerBalance")}
-                          <strong>
-                            {` ${
-                                totalPayments == 0 && previsionalTotal == null
-                                    ? "--"
-                                    : (previsionalTotal - totalPayments).toLocaleString("fr-FR", {
-                                        style: "currency",
-                                        currency: "EUR",
-                                    })
-                            } `}
-                          </strong>
+                            {t("userPayments.summary.footerBalance")}
+                            <strong>
+                                {` ${
+                                    totalPayments == 0 &&
+                                    previsionalTotal == null
+                                        ? "--"
+                                        : (
+                                              previsionalTotal - totalPayments
+                                          ).toLocaleString(i18n.language, {
+                                              style: "currency",
+                                              currency: "EUR",
+                                          })
+                                } `}
+                            </strong>
                         </span>
                     </span>
                 ),
@@ -560,7 +696,9 @@ class PaymentsSummary extends React.Component {
                     {!this.props.isStudentView &&
                     _.values(this.props.schedules).length > 0 ? (
                         <div className="form-group">
-                            <label>{t("userPayments.summary.globalLocation")}</label>
+                            <label>
+                                {t("userPayments.summary.globalLocation")}
+                            </label>
                             <div>
                                 {this.props.locations.map((l, i) => (
                                     <label key={i} className="radio-inline">
@@ -573,7 +711,7 @@ class PaymentsSummary extends React.Component {
                                                 this.props.globalLocation ==
                                                 l.id
                                             }
-                                            onChange={e =>
+                                            onChange={(e) =>
                                                 this.props.handleSwitchLocation(
                                                     null,
                                                     parseInt(l.id)
@@ -591,15 +729,15 @@ class PaymentsSummary extends React.Component {
                 <div className="ibox-title">
                     <h2>{t("userPayments.summary.generalInfo")}</h2>
                     <div className="ibox-tools">
-
-                                <button
-                                    className="btn btn-primary btn-xs mr-2"
-                                    type="button"
-                                    id="addCoupon"
-                                    onClick={() => this.showCreateCouponModal()}>
-                                    <i className="fas fa-plus m-r-xs" />
-                                    {t("userPayments.summary.createCoupon")}
-                                </button>
+                        <button
+                            className="btn btn-primary btn-xs mr-2"
+                            type="button"
+                            id="addCoupon"
+                            onClick={() => this.showCreateCouponModal()}
+                        >
+                            <i className="fas fa-plus m-r-xs" />
+                            {t("userPayments.summary.createCoupon")}
+                        </button>
                     </div>
                 </div>
 
@@ -625,7 +763,7 @@ class PaymentsSummary extends React.Component {
                     isOpen={this.state.showCreateCouponModal}
                     createTitle={t("userPayments.summary.createCoupon")}
                     onRequestClose={() => this.closeCreateCouponModal()}
-                    onSubmit={item => this.createCoupon(item)}
+                    onSubmit={(item) => this.createCoupon(item)}
                 />
             </div>
         );
