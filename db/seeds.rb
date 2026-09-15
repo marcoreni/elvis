@@ -323,18 +323,6 @@ for template in notification_template_datas
   notification_template_create_if_not_exist(template)
 end
 
-# ENSURE adjusted_amount FUNCTION IS PRESENT "
-ActiveRecord::Base.connection.execute <<-SQL
-  CREATE OR REPLACE FUNCTION adjusted_amount(op text, amount real) RETURNS REAL AS $$
-    BEGIN
-      CASE op
-        WHEN '-' THEN
-          RETURN -1 * amount;
-        WHEN '0' THEN
-          RETURN 0;
-        ELSE
-          RETURN amount;
-      END CASE;
-    END;
-  $$ LANGUAGE plpgsql;
-SQL
+# ENSURE custom PostgreSQL functions (adjusted_amount, ...) ARE PRESENT --
+# see lib/elvis/database_functions.rb for why schema.rb-only database builds need this.
+Elvis::DatabaseFunctions.ensure_all!
