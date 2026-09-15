@@ -74,7 +74,7 @@ class AddPreAppFromStopApp extends React.Component {
             showCancelButton: true,
             cancelButtonText: cancelText,
           }).then((result)=>{
-            if (result.value) {this.createPreApp()};
+            if (result.isConfirmed) {this.createPreApp()};
           })
     }
 

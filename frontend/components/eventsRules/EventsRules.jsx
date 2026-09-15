@@ -259,7 +259,7 @@ class EventsRules extends Component {
             cancelButtonText: t("common:actions.cancel"),
             showCancelButton: true,
         }).then((a) => {
-            if (a.value) {
+            if (a.isConfirmed) {
                 fetch(`/events_rules/` + id, {
                     method: "DELETE",
                     credentials: "same-origin",

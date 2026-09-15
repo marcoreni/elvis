@@ -164,7 +164,7 @@ export default function ActivityBooking() {
             cancelButtonText: t("common:actions.cancel"),
         })
             .then((willPost) => {
-                if (willPost.value) {
+                if (willPost.isConfirmed) {
                     api.set()
                         .useLoading()
                         .success((res) => {
