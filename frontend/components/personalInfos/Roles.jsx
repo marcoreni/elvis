@@ -99,7 +99,7 @@ export default function Roles({ user, lessonsPlanned, onSubmit }) {
                 cancelButtonText: t("users:roles.cancelAndView"),
                 showCancelButton: true,
             }).then((res) => {
-                if (res.value) {
+                if (res.isConfirmed) {
                     removeLessons();
                 } else {
                     getActivitiesList();

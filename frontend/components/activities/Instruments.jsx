@@ -60,7 +60,7 @@ class Instruments extends BaseDataTable {
             cancelButtonText: this.props.t("activities:common.no"),
             confirmButtonText: this.props.t("activities:common.yes"),
         }).then((res) => {
-            if (res.value) {
+            if (res.isConfirmed) {
                 fetch(`/instruments/${status.id}`, {
                     method: "DELETE",
                     credentials: "same-origin",

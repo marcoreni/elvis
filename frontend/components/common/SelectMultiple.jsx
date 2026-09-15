@@ -141,7 +141,7 @@ class SelectMultiple extends React.Component {
                     cancelButtonText: t("common:yesNo.no"),
                     showCancelButton: true,
                 }).then((willDelete) => {
-                    if (willDelete.value) clear();
+                    if (willDelete.isConfirmed) clear();
                 });
             } else {
                 clear();

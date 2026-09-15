@@ -168,7 +168,7 @@ class Summary extends React.Component {
                     confirmButtonColor: "#d33",
                     reverseButtons: true,
                 }).then((result) => {
-                    if (result.value) {
+                    if (result.isConfirmed) {
                         this.updateApplication({
                             activity_application_status_id:
                                 this.state.status_id,
@@ -211,7 +211,7 @@ class Summary extends React.Component {
                 confirmButtonText: confirmtext,
                 cancelButtonText: t("summary.cancelHtml"),
             }).then((res) => {
-                if (res.value) {
+                if (res.isConfirmed) {
                     this.updateApplication({ begin_at });
                 } else {
                     this.setState({
@@ -573,7 +573,7 @@ class Summary extends React.Component {
                 confirmButtonText: confirmtext,
                 cancelButtonText: t("summary.cancelHtml"),
             }).then((res) => {
-                if (res.value) {
+                if (res.isConfirmed) {
                     api.set()
                         .success((data) => {
                             if (data.success) {
@@ -610,7 +610,7 @@ class Summary extends React.Component {
             icon: "question",
             showCancelButton: true,
         }).then((v) => {
-            if (v.value) {
+            if (v.isConfirmed) {
                 this.setState({ sendingMail: true });
 
                 fetch(
@@ -720,7 +720,7 @@ class Summary extends React.Component {
             showConfirmButton: true,
             showCancelButton: true,
         }).then((res) => {
-            if (oldDesiredIndex !== -1 && res.value) {
+            if (oldDesiredIndex !== -1 && res.isConfirmed) {
                 const newDesired = {
                     ...this.state.desiredActivities[oldDesiredIndex],
                     activity_ref_id,

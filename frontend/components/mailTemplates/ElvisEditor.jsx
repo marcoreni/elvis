@@ -68,7 +68,7 @@ export default function ElvisEditor(props) {
             cancelButtonText: t("common:actions.cancel"),
             showCancelButton: true,
         }).then((a) => {
-            if (a.value) {
+            if (a.isConfirmed) {
                 fetch(
                     `/notification_templates/${encodeURIComponent(
                         props.templateId
