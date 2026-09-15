@@ -108,9 +108,6 @@ the same page at once. Fix (if it ever matters) is mechanical: move the string r
 `render()`/a live `useTranslation()` read.
 
 Affected, for whoever eventually does that pass:
-- `planning/Calendar.jsx` — tui-calendar's `week.daynames` and its template functions capture
-  mount-time `t` (day-name headers, "N autres", "Présences"); `CalendarControls` and the schedule
-  title are already live.
 - `DuePaymentList.jsx`, `PaymentList.jsx`, `PaymentScheduleList`, `activities/ActivityRefKind.jsx`,
   `activities/Instruments.jsx`, `parameters/BaseDataTable.jsx` (can't be `withTranslation`-wrapped,
   ~15 CRUD tables extend it), the 5 `*Parameters.jsx` tab wrappers, the 7
@@ -121,8 +118,6 @@ Affected, for whoever eventually does that pass:
   column headers are already rebuilt in `render()`.
 - `frontend/components/common/baseDataTable/BaseDataTable.jsx` — a fetch-error message is resolved
   once and stored in state, so it can show the previous language's text until the next fetch.
-- `advancedSearch/utils.js`'s `getQueryBuilderLangCode()` — read once at widget construction
-  (jQuery-QueryBuilder isn't react-i18next, has its own separate i18n mechanism).
 
 Two extra wrinkles worth flagging on top of the general pattern (not just "same as above"):
 - Several of the tables above (`parameters/Practice/*`, `parameters/Payments/*`,
@@ -195,22 +190,11 @@ restructuring ad hoc across already-merged domains.
 None of these are caused by or related to that migration (confirmed: none of the affected files are
 in its diff) — logged here as found, not investigated further.
 
-- `planning/ActivityDetailsModal.jsx`'s group-name editor: `toggleGroupNameEdit()` (`:278-280`) only
-  flips `isEditingGroup`, never seeds `state.groupName` from `state.activity.group_name`.
-  `state.groupName` stays its initial `null` (`:168`) until `handleGroupNameChange` fires from the
-  input's `onChange`. Clicking edit then immediately Save (no typing) sends `group_name: null` to
-  the server (`:601`), **deleting the group name**. Real data-loss bug, one-line fix (seed
-  `groupName` in `toggleGroupNameEdit`), not fixed here to keep the calendar-migration PR scoped.
 - `/activities` (`ActivityController#list`, `POST /activities.json`) returns HTML instead of JSON —
   reproduces even after a fresh incognito login, so not a stale-session issue as first suspected.
-  Needs its own investigation.
+  Root-caused and fixed in `fix/activities-json-redirect` (PR #108, open for review).
 - `parameters/planning_parameters#tab-0`: "Error while fetching the availabilities" on load; creating
   an availability 500s (`PATCH /plannings/availabilities/:id`).
-- `/payments`: table doesn't fill, `/due_payments/list.json` 500s —
-  `PG::UndefinedFunction: function adjusted_amount(character varying, numeric) does not exist`. A
-  DB function is missing or has the wrong signature relative to what the query now passes.
-- `/addCourse`: the "+" buttons (Activity Family, Activity, and the one under Seasons on step 2)
-  link to `http://127.0.0.1:3000/...` — hardcoded dev port, wrong for any other environment/port.
 - `/evaluation_level_ref/new`: sidebar highlights "Registrations" instead of the Evaluations section.
 - Still-French UI strings outside the i18n rollout: "Lieu"/"Fermer" labels somewhere in the app, and
   `/scripts/replicate_week_activities` is entirely un-extracted.
