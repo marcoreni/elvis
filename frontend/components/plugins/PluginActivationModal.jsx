@@ -5,16 +5,14 @@ import { useTranslation } from "react-i18next";
 
 export default function PluginActivationModal({
     isOpen,
-    plugins,
+    pluginID,
     activatedPlugins,
     onCancel,
     onClose,
     handleSaveAndRestart,
 }) {
     const { t } = useTranslation("plugins");
-    const firstPluginID = Object.keys(plugins)[0];
-    const isActivated =
-        firstPluginID && activatedPlugins[firstPluginID] === true;
+    const isActivated = pluginID && activatedPlugins[pluginID] === true;
     const rollbackContainerStyle = {
         display: isActivated ? "none" : "flex",
         justifyContent: "flex-end", // Aligner à droite

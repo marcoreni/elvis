@@ -196,7 +196,7 @@ export default function Plugins(props) {
 
                 <PluginActivationModal
                     isOpen={isModalOpen}
-                    plugins={selectedPlugins}
+                    pluginID={pluginID}
                     activatedPlugins={activatedPlugins}
                     onCancel={closeModal}
                     onClose={() => setIsModalOpen(false)}

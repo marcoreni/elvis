@@ -107,6 +107,15 @@ either have no route, or have a route/action that never falls through to implici
   as the audit above. Was about to i18n-extract its hardcoded French swal text before checking
   whether anything actually renders it; nothing does.
 
+## 2026-09-14, small-fixes batch
+
+- `frontend/components/planning/StudentModal.jsx`: zero importers outside its own test file —
+  confirmed via a repo-wide grep (`frontend/`, `app/views/**/*.erb`) for both the import path and
+  a `react_component("StudentModal"...)` mount; neither exists. Not wired into `Planning.jsx`'s
+  render tree. Test coverage (`PlanningModals.test.jsx`'s `describe("StudentModal", ...)` block)
+  removed with it. Locale key removed with it: `planning:studentModal.title` (its `kinds.*` and
+  `common:actions.save` keys are shared with other components, left alone).
+
 **Deliberately NOT touched** (real, live issues — not dead code, don't delete):
 - `app/views/devise/passwords/edit.html.erb` — Devise's own stock route
   (`edit_user_password_url` → `PasswordsController#edit`) still renders this; the app's own

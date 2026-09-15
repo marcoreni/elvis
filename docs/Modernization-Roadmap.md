@@ -417,7 +417,9 @@ the activate/deactivate confirmation ternary was initially transcribed inverted 
 caught by re-deriving the original logic before it shipped — code review then found the *value*
 feeding that ternary (`isActivated`, derived from `Object.keys(selectedPlugins)[0]` rather than the
 plugin actually being confirmed) was already wrong before this PR; logged in `docs/KnownIssues.md`
-rather than fixed here, since it's an unrelated pre-existing logic bug, not an i18n one.
+rather than fixed here, since it's an unrelated pre-existing logic bug, not an i18n one. **Fixed**
+in the small-fixes batch (2026-09-14): `Plugins.jsx` now passes `pluginID` down, and
+`PluginActivationModal.jsx` keys `isActivated` off `activatedPlugins[pluginID]`.
 
 ## Context this roadmap assumes (don't re-derive, just re-read if needed)
 
