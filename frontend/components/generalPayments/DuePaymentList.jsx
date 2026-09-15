@@ -634,7 +634,7 @@ class DuePaymentList extends React.Component {
             showCancelButton: true,
         })
             .then((v) => {
-                if (v.value) {
+                if (v.isConfirmed) {
                     return fetch("/messages/create", {
                         method: "POST",
                         headers: {
@@ -684,7 +684,7 @@ class DuePaymentList extends React.Component {
             showCancelButton: true,
             cancelButtonText: t("common:actions.cancel"),
         }).then((res) => {
-            if (res.value) {
+            if (res.isConfirmed) {
                 api.set()
                     .success((res) => {
                         if (res.status === "success")
@@ -940,7 +940,7 @@ class DuePaymentList extends React.Component {
             icon: "question",
             showCancelButton: true,
         }).then((r) => {
-            if (r.value) {
+            if (r.isConfirmed) {
                 fetch("/due_payments/bulkdelete", {
                     method: "DELETE",
                     headers: {

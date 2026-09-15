@@ -172,7 +172,7 @@ class PaymentsList extends React.Component {
                 showCancelButton: true,
                 cancelButtonText: t("common:actions.cancel"),
             }).then((v) => {
-                if (v.value)
+                if (v.isConfirmed)
                     this.props.handleBulkDelete(
                         this.props.payer.id,
                         this.state.selectedRows

@@ -531,7 +531,7 @@ class PaymentList extends React.Component {
             showCancelButton: true,
         })
             .then((v) => {
-                if (v.value) {
+                if (v.isConfirmed) {
                     return fetch("/messages/create", {
                         method: "POST",
                         headers: {
@@ -581,7 +581,7 @@ class PaymentList extends React.Component {
             showCancelButton: true,
             cancelButtonText: t("common:actions.cancel"),
         }).then((res) => {
-            if (res.value) {
+            if (res.isConfirmed) {
                 api.set()
                     .success((res) => {
                         if (res.status === "success")
@@ -765,7 +765,7 @@ class PaymentList extends React.Component {
             showCancelButton: true,
             cancelButtonText: t("common:actions.cancel"),
         }).then((r) => {
-            if (r.value) {
+            if (r.isConfirmed) {
                 fetch("/payments/bulkdelete", {
                     method: "DELETE",
                     headers: {

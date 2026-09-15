@@ -96,7 +96,7 @@ class DuePaymentList extends React.Component {
             showCancelButton: true,
         })
             .then((v) => {
-                if (v.value) {
+                if (v.isConfirmed) {
                     return fetch("/messages/create", {
                         method: "POST",
 
