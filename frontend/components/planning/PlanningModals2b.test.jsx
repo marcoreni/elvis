@@ -97,9 +97,13 @@ describe("EvaluationModal", () => {
 });
 
 describe("MultiViewModal", () => {
+    // schedule.start/.end are moment objects in production (Calendar.tsx's FullCalendar adapter
+    // wraps them so callers can call .toDate()) -- real moment() instances here, not a stub,
+    // since MultiViewModal previously (and wrongly) reached into `._date`, a private tui-calendar
+    // TZDate internal that moment doesn't share.
     const availabilitySchedule = {
-        start: {_date: new Date("2026-09-01T10:00:00")},
-        end: {_date: new Date("2026-09-01T11:00:00")},
+        start: moment("2026-09-01T10:00:00"),
+        end: moment("2026-09-01T11:00:00"),
         raw: {},
     };
     const validatedSchedule = {
@@ -108,8 +112,8 @@ describe("MultiViewModal", () => {
         title: "Guitare",
         location: "Salle 1",
         teacher: {first_name: "Ada", last_name: "Lovelace"},
-        start: {_date: new Date("2026-09-01T10:00:00")},
-        end: {_date: new Date("2026-09-01T11:00:00")},
+        start: moment("2026-09-01T10:00:00"),
+        end: moment("2026-09-01T11:00:00"),
         raw: {},
         attendees: [],
     };

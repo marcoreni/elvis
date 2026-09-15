@@ -57,7 +57,7 @@ const AvailabilityIntervalContent = ({schedule, onClose, t}) => <Fragment>
     <ul class="list-group">
         <ListItem
             label={t("multiViewModal.schedule")}
-            value={`${schedule.start._date.toLocaleString()} - ${schedule.end._date.toLocaleString()}`} />
+            value={`${schedule.start.toDate().toLocaleString()} - ${schedule.end.toDate().toLocaleString()}`} />
         {schedule.raw.comment && <ListItem
             label={t("multiViewModal.comment")}
             value={schedule.raw.comment.content} />}
@@ -78,7 +78,7 @@ const ValidatedIntervalContent = ({schedule, attendees, teachers, onClose, t}) =
         <ListItem label={t("multiViewModal.room")} value={schedule.location} />
         <ListItem
             label={t("multiViewModal.schedule")}
-            value={`${schedule.start._date.toLocaleString()} - ${schedule.end._date.toLocaleString()}`}
+            value={`${schedule.start.toDate().toLocaleString()} - ${schedule.end.toDate().toLocaleString()}`}
         />
         <TeacherItem teachers={teachers} schedule={schedule} t={t} />
         <ListItem

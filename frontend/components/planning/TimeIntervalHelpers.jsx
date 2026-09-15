@@ -239,7 +239,13 @@ export const formatIntervalsForSchedule = (rawIntervals, conflict, user, resourc
 export const formatHolidays = holidays => {
     return _.map(holidays, h => {
         return {
-            id: h.id,
+            // Holiday and TimeInterval are separate AR models, each with its own auto-incrementing
+            // id sequence -- Planning.jsx's fetchIntervals() combines both into one array and does
+            // `.uniqBy("id")`, so a holiday can collide with an unrelated lesson that happens to
+            // share the same numeric id and get silently dropped. Prefixing guarantees no collision
+            // (never read back as a real id: holidays are isReadOnly, clickSchedule no-ops on
+            // isAllDay before any handler could use it).
+            id: `holiday-${h.id}`,
             calendarId: "1",
             title: h.label,
             start: h.date,

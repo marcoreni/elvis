@@ -47,21 +47,16 @@ left:
 
 ## Exotic (git-pinned) dependencies need a per-package decision, not a version bump
 
-2 dependencies resolve to a git ref rather than a registry version (no real "how far behind"
-comparison from `yarn outdated`): `react-stepzilla`, `tui-calendar`. (`jQuery-QueryBuilder` and
-`jQuery-QueryBuilder-Elasticsearch` were removed entirely along with Elasticsearch/chewy — their
-only consumer, the advanced-search UI, is gone.) Neither remaining one is pinned to a commit SHA,
-so each can change underneath the app with zero lockfile signal. For each, the real question is
-un-fork vs. patch-and-pin vs. replace — researched via `gh api` fork/compare metadata 2026-08-27:
-
-- **`tui-calendar`** — moot once PR #104 (`feat/replace-tui-calendar`, roadmap item 6 Step B) merges;
-  that PR drops the dependency entirely in favor of FullCalendar v6, so this bullet goes away rather
-  than getting "fixed." Left in place until it actually merges.
-- **`react-stepzilla`** — smallest gap (2 commits behind, 3 ahead with legitimate-looking upstreamable
-  bug fixes). Reasonable candidate to upstream the fix and drop the fork.
-
-Whatever the per-package decision, pin to an exact commit SHA (or npm release) in the meantime —
-that alone removes the "can silently change under us" risk before the fork-vs-replace call is made.
+1 dependency resolves to a git ref rather than a registry version (no real "how far behind"
+comparison from `yarn outdated`): `react-stepzilla`. (`jQuery-QueryBuilder`/
+`jQuery-QueryBuilder-Elasticsearch` were removed with Elasticsearch/chewy; `tui-calendar` was
+removed by roadmap item 6 Step B, PR #104.) Not pinned to a commit SHA, so it can change underneath
+the app with zero lockfile signal. Real question is un-fork vs. patch-and-pin vs. replace —
+researched via `gh api` fork/compare metadata 2026-08-27: smallest gap of the two originally
+surveyed here (2 commits behind, 3 ahead with legitimate-looking upstreamable bug fixes) — reasonable
+candidate to upstream the fix and drop the fork. Pin to an exact commit SHA (or npm release) in the
+meantime — that alone removes the "can silently change under us" risk before the fork-vs-replace
+call is made.
 
 ## Devise passwords/edit — reachable but unlinked, not dead
 
@@ -113,9 +108,6 @@ the same page at once. Fix (if it ever matters) is mechanical: move the string r
 `render()`/a live `useTranslation()` read.
 
 Affected, for whoever eventually does that pass:
-- `planning/Calendar.jsx` — tui-calendar's `week.daynames` and its template functions capture
-  mount-time `t` (day-name headers, "N autres", "Présences"); `CalendarControls` and the schedule
-  title are already live.
 - `DuePaymentList.jsx`, `PaymentList.jsx`, `PaymentScheduleList`, `activities/ActivityRefKind.jsx`,
   `activities/Instruments.jsx`, `parameters/BaseDataTable.jsx` (can't be `withTranslation`-wrapped,
   ~15 CRUD tables extend it), the 5 `*Parameters.jsx` tab wrappers, the 7
@@ -126,8 +118,6 @@ Affected, for whoever eventually does that pass:
   column headers are already rebuilt in `render()`.
 - `frontend/components/common/baseDataTable/BaseDataTable.jsx` — a fetch-error message is resolved
   once and stored in state, so it can show the previous language's text until the next fetch.
-- `advancedSearch/utils.js`'s `getQueryBuilderLangCode()` — read once at widget construction
-  (jQuery-QueryBuilder isn't react-i18next, has its own separate i18n mechanism).
 
 Two extra wrinkles worth flagging on top of the general pattern (not just "same as above"):
 - Several of the tables above (`parameters/Practice/*`, `parameters/Payments/*`,
@@ -182,6 +172,50 @@ restructuring ad hoc across already-merged domains.
   `await` resolves immediately, before the actual save completes. Its `.success`/`.error`
   callbacks (not the `await`) drive `closeModal()`, so this is harmless today, but the `await`
   reads as if it's waiting for the save to finish and doesn't.
+- `planning/Planning.jsx`'s `beforeDeleteSchedule` prop (`:1535-1537`) passes the whole
+  `{schedule}` event wrapper into `handleDeleteInterval(id)`, which does `intervalStore[id]` — since
+  `id` is actually an object, this coerces to the string `"[object Object]"` and never matches a
+  real interval. Confirmed during the tui-calendar -> FullCalendar v6 migration (roadmap item 6)
+  while mapping every consumer of the calendar's schedule/interval shape: every *working* delete
+  path in the app (`PauseDetailModal`, `ActivityDetailsModal`, the detail-modal delete buttons)
+  calls `handleDeleteInterval` directly with a plain id instead. `beforeDeleteSchedule` also has no
+  real trigger in the app today — nothing in the UI fires it (tui-calendar only fired it from its
+  own built-in delete-popup button, which the app explicitly disabled via `useDetailPopup: false`)
+  — so this is dead *and* broken, with zero test coverage. Preserved as-is (not fixed) during the
+  migration to keep that PR's blast radius to the calendar-engine swap only; fix is to pass a plain
+  id through instead of the wrapper, whenever a real trigger for it is added.
+
+## Found while smoke-testing the tui-calendar -> FullCalendar migration (2026-09-14)
+
+None of these are caused by or related to that migration (confirmed: none of the affected files are
+in its diff) — logged here as found, not investigated further.
+
+- `/activities` (`ActivityController#list`, `POST /activities.json`) returns HTML instead of JSON —
+  reproduces even after a fresh incognito login, so not a stale-session issue as first suspected.
+  Root-caused and fixed in `fix/activities-json-redirect` (PR #108, open for review).
+- `parameters/planning_parameters#tab-0`: "Error while fetching the availabilities" on load; creating
+  an availability 500s (`PATCH /plannings/availabilities/:id`).
+- `/evaluation_level_ref/new`: sidebar highlights "Registrations" instead of the Evaluations section.
+- Still-French UI strings outside the i18n rollout: "Lieu"/"Fermer" labels somewhere in the app, and
+  `/scripts/replicate_week_activities` is entirely un-extracted.
+- Active locale intermittently reverts to `fr` mid-session even with `en` selected, then recovers on
+  a later navigation — seen between "Registration - New Registration" and "Registration - settings",
+  not yet reproduced systematically enough to isolate.
+- `/seasons/:id/edit`: no edit button/affordance for existing holidays (only, presumably, add/delete)
+  — not investigated further, flagged during the same testing pass.
+
+## `TimeIntervalHelpers.omitInactiveStudents` forces an `as unknown as` cast in Calendar.tsx
+
+`omitInactiveStudents` (`frontend/components/planning/TimeIntervalHelpers.jsx:45`) is
+`_.differenceBy(users, inactiveStudents, 'id')` in a plain untyped `.jsx` file. Calling it from
+`Calendar.tsx` (`:239`), TS infers a bogus `string[]`-shaped return from lodash's overload
+resolution rather than `User[]` — a direct `as User[]` fails with TS2352 ("neither type
+sufficiently overlaps"), so the call site needs `as unknown as User[]`. Per the [JSX-to-TSX
+playbook](Jsx-To-Tsx-Migration-Playbook.md), `as unknown as T` should be avoided in favor of real
+types; this one is logged rather than silently cast because it's blocked on `TimeIntervalHelpers.jsx`
+itself having no types to cast *from* — real fix is migrating that file to `.ts`/`.tsx` (it has one
+other caller, `ActivityDetailsModal.jsx`, unaffected either way since that caller is also untyped
+JS) or giving `omitInactiveStudents` an explicit typed signature.
 
 ## `Activity#teacher` is N+1-prone independent of `.includes()`
 

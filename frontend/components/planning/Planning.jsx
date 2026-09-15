@@ -1550,8 +1550,14 @@ class Planning extends React.Component {
                                     return this.handleOpenPauseDetail(e.schedule);
                                 }
 
+                                // this.props.user is undefined in some single-planning contexts
+                                // (e.g. room planning) -- guard it explicitly rather than let
+                                // `.is_teacher` throw, since a bare `?.` here would silently fall
+                                // into the "not a teacher" branch below, which can *delete* the
+                                // clicked interval outright when it has no activity attached.
                                 return (!this.props.displayOnly || e.schedule.isValidated) &&
-                                this.props.detailsModal
+                                this.props.detailsModal &&
+                                this.props.user
                                     ? this.props.user.is_teacher
                                         ? this.handleOpenDetail(e.schedule)
                                         : e.schedule.activity ? null : this.handleDeleteInterval(e.schedule.id)
