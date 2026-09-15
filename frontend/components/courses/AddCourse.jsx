@@ -2,7 +2,7 @@ import React from "react";
 import _ from "lodash";
 import { withTranslation } from "react-i18next";
 import { Form } from "react-final-form";
-import StepZilla from "react-stepzilla";
+import StepZilla from "../utils/ui/StepZilla";
 import swal from "sweetalert2";
 import { toast } from "react-toastify";
 import { MESSAGES } from "../../tools/constants";

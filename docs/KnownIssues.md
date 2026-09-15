@@ -45,19 +45,6 @@ left:
   watch for the transitive `bootstrap@3` pull-in that bit `feat/bump-shakapacker` once already).
 - Smaller/lower priority: `jquery` 3→4.
 
-## Exotic (git-pinned) dependencies need a per-package decision, not a version bump
-
-1 dependency resolves to a git ref rather than a registry version (no real "how far behind"
-comparison from `yarn outdated`): `react-stepzilla`. (`jQuery-QueryBuilder`/
-`jQuery-QueryBuilder-Elasticsearch` were removed with Elasticsearch/chewy; `tui-calendar` was
-removed by roadmap item 6 Step B, PR #104.) Not pinned to a commit SHA, so it can change underneath
-the app with zero lockfile signal. Real question is un-fork vs. patch-and-pin vs. replace —
-researched via `gh api` fork/compare metadata 2026-08-27: smallest gap of the two originally
-surveyed here (2 commits behind, 3 ahead with legitimate-looking upstreamable bug fixes) — reasonable
-candidate to upstream the fix and drop the fork. Pin to an exact commit SHA (or npm release) in the
-meantime — that alone removes the "can silently change under us" risk before the fork-vs-replace
-call is made.
-
 ## Devise passwords/edit — reachable but unlinked, not dead
 
 `app/views/devise/passwords/edit.html.erb` is still rendered by Devise's own stock route
