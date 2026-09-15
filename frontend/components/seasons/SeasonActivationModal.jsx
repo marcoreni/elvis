@@ -238,7 +238,7 @@ class SeasonActivationModal extends React.Component {
                     "planning:seasonActivation.confirmNoHolidays.cancel"
                 ),
             }).then((result) => {
-                if (result.value) {
+                if (result.isConfirmed) {
                     this.setState({ step });
                 }
             });

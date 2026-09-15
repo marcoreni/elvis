@@ -78,7 +78,7 @@ export default function AttachAccount({ onSuccess }) {
             confirmButtonText: t("activityApplications:activityItems.yes"),
             cancelButtonText: t("activityApplications:activityItems.no"),
         }).then((result) => {
-            if (result.value) {
+            if (result.isConfirmed) {
                 api.set()
                     .success(() => {
                         swal.fire({

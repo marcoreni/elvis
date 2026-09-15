@@ -103,7 +103,7 @@ class HandleFamilyMember extends React.Component {
             confirmButtonText: confirmtext,
             cancelButtonText: t("users:handleFamilyMember.deleteCancel"),
         }).then(res => {
-            if (res.value) {
+            if (res.isConfirmed) {
                 api.set()
                     .del(`/members/${this.props.familyMember.link_id}`)
                     .then(({ data, error }) => {

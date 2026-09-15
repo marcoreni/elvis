@@ -287,7 +287,7 @@ class MergeUsers extends React.Component {
             showCancelButton: true,
             cancelButtonText: t("users:mergeUsers.no"),
         }).then((willMerge) => {
-            if (willMerge.value) {
+            if (willMerge.isConfirmed) {
                 api.set()
                     .success(() => {
                         swal.fire({
