@@ -276,7 +276,15 @@ class ActivityDetailsModal extends React.Component {
     }
 
     toggleGroupNameEdit() {
-        this.setState({ isEditingGroup: !this.state.isEditingGroup });
+        const isEditingGroup = !this.state.isEditingGroup;
+
+        // Seed groupName from the activity's current value when entering edit mode, so saving
+        // without typing anything doesn't send a null group_name and wipe it out. Reset back to
+        // null on exit so stale typed-but-unsaved text isn't reused next time edit mode opens.
+        this.setState({
+            isEditingGroup,
+            groupName: isEditingGroup ? this.state.activity.group_name : null,
+        });
     }
 
     handleSelectActivity(e) {
@@ -2098,5 +2106,9 @@ const formatInstances = (instances, startTime, endTime) =>
                 .format(),
         }))
         .value();
+
+// Exported unwrapped (no withTranslation) so tests can mount it directly with a `t` prop, same
+// rationale as the other named exports in this file (see ActivityDetailsModal.test.jsx).
+export { ActivityDetailsModal };
 
 export default withTranslation("planning")(ActivityDetailsModal);
