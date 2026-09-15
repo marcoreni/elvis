@@ -97,7 +97,7 @@ export default function AdhesionSettings() {
                 confirmButton: "order-2",
             },
         }).then((result) => {
-            if (result.value) {
+            if (result.isConfirmed) {
                 api.set()
                     .success((data) => {
                         setAdhesionPrices(

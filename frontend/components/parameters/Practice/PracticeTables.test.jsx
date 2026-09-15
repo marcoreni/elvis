@@ -37,8 +37,8 @@ vi.mock("react-table", () => ({
     ),
 }));
 
-// --- sweetalert2 stub: `swal(opts)` resolves to `{}` so `.then(res => res.value)` is falsy and
-//     no DELETE `fetch` fires from `deleteStatus`.
+// --- sweetalert2 stub: `swal(opts)` resolves to `{}` so `.then(res => res.isConfirmed)` is
+//     falsy and no DELETE `fetch` fires from `deleteStatus`.
 vi.mock("sweetalert2", () => ({
     default: { fire: vi.fn(() => Promise.resolve({})) },
 }));
@@ -414,7 +414,7 @@ describe("Practice tables — deleteStatus swal i18n", () => {
             await i18n.changeLanguage(lng);
             const t = i18n.getFixedT(lng, "parameters");
             swal.fire.mockImplementation(() =>
-                Promise.resolve({ value: true })
+                Promise.resolve({ isConfirmed: true })
             );
             global.fetch = vi.fn().mockResolvedValue({
                 status: 422,
