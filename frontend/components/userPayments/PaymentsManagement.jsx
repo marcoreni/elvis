@@ -1477,7 +1477,7 @@ class PaymentsManagement extends React.Component {
             confirmButtonText: t("common:actions.send"),
             cancelButtonText: t("common:actions.cancel"),
         }).then((res) => {
-            if (res.value) {
+            if (res.isConfirmed) {
                 swal.showLoading();
 
                 api.set()
