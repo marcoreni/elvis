@@ -116,7 +116,6 @@ export default class AddLocationForCourse extends React.Component {
             rooms,
             locationOptions,
             roomsOptions,
-            href_path,
             summary,
         } = this.state;
         return (
@@ -191,7 +190,9 @@ export default class AddLocationForCourse extends React.Component {
                                             options={locationOptions}
                                             button={{
                                                 icon: "fa fa-plus-circle",
-                                                href_path: `${href_path}/locations/new`,
+                                                // Relative path (not `${href_path}/...`) --
+                                                // see AddActivityForCourse.jsx for why.
+                                                href_path: "/locations/new",
                                                 text: "",
                                                 tooltip: t("addLocation.addLocationTooltip"),
                                             }}
@@ -214,7 +215,7 @@ export default class AddLocationForCourse extends React.Component {
                                             options={roomsOptions}
                                             button={{
                                                 icon: "fa fa-plus-circle",
-                                                href_path: `${href_path}/rooms/new`,
+                                                href_path: "/rooms/new",
                                                 text: "",
                                                 tooltip: t("addLocation.addRoomTooltip"),
                                             }}

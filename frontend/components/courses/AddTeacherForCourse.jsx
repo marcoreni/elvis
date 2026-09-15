@@ -144,7 +144,6 @@ export default class AddTeacherForCourse extends React.Component {
 
     render() {
         const { t } = this.props;
-        const href_path = this.props.href_path;
         const {
             firstDayEndTime,
             firstDayStartTime,
@@ -245,7 +244,9 @@ export default class AddTeacherForCourse extends React.Component {
                                                 )}
                                                 button={{
                                                     icon: "fa fa-plus-circle",
-                                                    href_path: `${href_path}/users/new`,
+                                                    // Relative path (not `${href_path}/...`) --
+                                                    // see AddActivityForCourse.jsx for why.
+                                                    href_path: "/users/new",
                                                     text: "",
                                                     tooltip: t(
                                                         "addTeacher.addTeacherTooltip"

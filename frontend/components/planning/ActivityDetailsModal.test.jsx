@@ -10,7 +10,7 @@
 // the real translated copy.
 
 import React from "react";
-import {render, screen} from "@testing-library/react";
+import {render, screen, fireEvent, waitFor} from "@testing-library/react";
 import moment from "moment";
 import i18n from "../../i18n";
 
@@ -22,7 +22,13 @@ import {
     EditGroupNameInput,
     ActivitySelection,
     GroupNameInput,
+    ActivityDetailsModal,
 } from "./ActivityDetailsModal";
+
+const apiState = vi.hoisted(() => ({post: vi.fn()}));
+vi.mock("../../tools/api", () => ({
+    post: (...args) => apiState.post(...args),
+}));
 
 afterEach(async () => {
     await i18n.changeLanguage("fr");
@@ -173,6 +179,85 @@ describe("EditGroupNameInput", () => {
         expect(screen.queryByText("Nom du groupe")).not.toBeInTheDocument();
         expect(screen.getByText("Group name")).toBeInTheDocument();
         expect(screen.getByText("Save")).toBeInTheDocument();
+    });
+});
+
+describe("ActivityDetailsModal — group name edit regression", () => {
+    // Regression for the bug fixed here: toggleGroupNameEdit() used to only flip
+    // isEditingGroup, leaving state.groupName at its initial null until the input's onChange
+    // fired. Clicking edit then Save without typing sent group_name: null and wiped out the
+    // existing name. toggleGroupNameEdit() now seeds groupName from the activity's current
+    // value on entry.
+    //
+    // The class is mounted directly (unwrapped `t` prop, no withTranslation) with isAdmin/
+    // isTeacher false and no students, so the only rendered tab body is the safe "no students"
+    // placeholder — the heavier tab contents (ActivityEdition, YearlyCalendar,
+    // TeacherCoveringEditor) are only constructed as unrendered element descriptors, per
+    // TabbedComponent only mounting the active tab's body.
+    const activity = {
+        id: 999,
+        group_name: "Original Group",
+        activity_ref: {label: "Guitare", occupation_limit: 10},
+        users: [],
+        options: [],
+        teachers_activities: [],
+        teacher: null,
+        evaluation_level_ref_id: null,
+    };
+
+    const baseProps = {
+        t: i18n.getFixedT(null, "planning"),
+        generic: true, // skip componentDidMount's verifyTimeOverlap fetch
+        isAdmin: false,
+        isTeacher: false,
+        room_refs: [{id: 10, location_id: 100, label: "Salle A", location: {id: 100}}],
+        rooms: [{id: 10, location_id: 100, label: "Salle A"}],
+        teachers: [],
+        seasons: [],
+        closeModal: () => {},
+        handleUpdateActivityInInstances: () => {},
+        interval: {
+            id: 1,
+            is_validated: true,
+            start: "2026-09-01T10:00:00",
+            end: "2026-09-01T11:00:00",
+            comment: null,
+            activity_instance: {
+                id: 55,
+                room: {id: 10},
+                student_attendances: [],
+                inactive_students: [],
+                potential_covering_teachers: [],
+                teachers_activity_instances: [],
+                activity,
+            },
+        },
+    };
+
+    beforeEach(async () => {
+        await i18n.changeLanguage("fr");
+        apiState.post.mockReset();
+        apiState.post.mockResolvedValue({data: activity, error: null});
+    });
+
+    test("saving right after opening edit mode keeps the existing group name (does not send null)", async () => {
+        render(<ActivityDetailsModal {...baseProps} />);
+
+        expect(screen.getByText("Original Group")).toBeInTheDocument();
+
+        fireEvent.click(
+            screen.getByTitle("Éditer le nom du groupe de cette activité"),
+        );
+
+        // The input should already show the current name, not be blank.
+        expect(screen.getByRole("textbox")).toHaveValue("Original Group");
+
+        fireEvent.click(screen.getByRole("button", {name: "Enregistrer"}));
+
+        await waitFor(() => expect(apiState.post).toHaveBeenCalledTimes(1));
+        expect(apiState.post).toHaveBeenCalledWith("/activity/999", {
+            activity: {id: 999, group_name: "Original Group"},
+        });
     });
 });
 

@@ -166,6 +166,14 @@ export default function Plugins(props) {
                 ...prevActivatedPlugins,
                 [pluginID]: !prevActivatedPlugins[pluginID],
             }));
+
+            // Also drop the cancelled toggle from selectedPlugins -- handleSaveAndRestart POSTs
+            // this whole accumulated map, so leaving the entry in place here meant a cancelled
+            // toggle got saved anyway once a different plugin was later confirmed.
+            setSelectedPlugins((prevSelectedPlugins) => {
+                const { [pluginID]: _cancelled, ...rest } = prevSelectedPlugins;
+                return rest;
+            });
         }
 
         setIsModalOpen(false);

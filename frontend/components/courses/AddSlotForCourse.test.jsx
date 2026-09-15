@@ -101,3 +101,19 @@ describe("AddSlotForCourse — i18n", () => {
         await waitFor(() => expect(global.fetch).toHaveBeenCalled());
     });
 });
+
+// Regression: the "+" button next to the season selector used to be built as
+// `${href_path}/seasons/new`, where href_path is a server-computed absolute URL that can point at
+// the wrong host/port for the current environment (observed as a stale "http://127.0.0.1:3000" in
+// dev). A deliberately hostile href_path proves the link is now always a plain relative path,
+// matching the window.open("/inscriptions/...") convention used elsewhere in the app.
+test("the 'add season' + button is a relative link, not the server-supplied href_path", async () => {
+    const {container} = render(
+        <AddSlotForCourse {...makeProps()} href_path="http://127.0.0.1:3000" />
+    );
+    await waitFor(() => expect(global.fetch).toHaveBeenCalled());
+
+    const plusLink = container.querySelector("a.fa-plus-circle");
+    expect(plusLink).not.toBeNull();
+    expect(plusLink.getAttribute("href")).toBe("/seasons/new");
+});

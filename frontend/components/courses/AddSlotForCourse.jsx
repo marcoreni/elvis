@@ -193,7 +193,6 @@ export default class AddSlotForCourse extends React.Component {
             endTime,
             fromDate,
             toDate,
-            href_path,
             summary,
         } = this.state;
 
@@ -228,7 +227,9 @@ export default class AddSlotForCourse extends React.Component {
                                                 })}
                                                 button={{
                                                     icon: "fa fa-plus-circle",
-                                                    href_path: `${href_path}/seasons/new`,
+                                                    // Relative path (not `${href_path}/...`) --
+                                                    // see AddActivityForCourse.jsx for why.
+                                                    href_path: "/seasons/new",
                                                     text: "",
                                                     tooltip: t("addSlot.addSeasonTooltip"),
                                                 }}
