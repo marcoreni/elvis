@@ -1,13 +1,19 @@
 /* Ici on met le css custom */
 
-// @use rules must precede every other rule (Sass requirement) -- these are the app's own two
-// real Sass-module imports (media-queries.scss defines the respond-above/respond-below mixins
-// application.scss calls below; timeline.scss only defines selectors, nothing consumed by name).
-// `as *` keeps media-queries' mixins unprefixed at their existing call sites rather than
-// requiring every @include to be renamed to a namespaced form.
+// @use rules must precede every other rule (Sass requirement). media-queries.scss defines the
+// respond-above/respond-below mixins application.scss calls below, and its compiled output is
+// variables/mixins only -- zero selectors, so hoisting it here can't affect cascade order.
+// `as *` keeps its mixins unprefixed at their existing call sites rather than requiring every
+// @include to be renamed to a namespaced form.
+//
+// timeline.scss is deliberately NOT @use'd here even though it's equally app-owned: unlike
+// media-queries.scss, it compiles to ~232 lines of real selectors (.fc-timeline-*), and hoisting
+// those to the top of the bundle changed which rule wins against inspinia's same-specificity
+// .fc-event rule on FullCalendar's timeline view (both apply to the same element) -- a real
+// visual regression on /practice/planning, caught in review. It stays a plain @import below, in
+// its original position after the inspinia imports, so cascade order matches `develop` exactly.
 @use 'sass:color';
 @use './media-queries.scss' as *;
-@use '../../frontend/packs/timeline.scss';
 
 @import "../inspinia/css/bootstrap.css";
 // bootstrap-grid and style.scss are real Sass imports (no/.scss extension -- unlike the plain
@@ -33,8 +39,9 @@
 // FullCalendar v6 injects its own CSS at runtime (CSS-in-JS) -- no more manual .css imports.
 //@import 'timeline.css';
 @import '../../frontend/components/planning/practice_planning/styles.css';
-// timeline.scss and media-queries.scss are @use'd at the top of this file instead (Sass requires
-// @use rules to precede all other rules).
+@import '../../frontend/packs/timeline.scss';
+// breakpoints
+// media-queries.scss is @use'd at the top of this file instead (see the comment there).
 
 @import "react-draft-wysiwyg/dist/react-draft-wysiwyg.css";
 
