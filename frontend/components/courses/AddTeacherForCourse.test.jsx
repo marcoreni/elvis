@@ -94,6 +94,25 @@ describe("AddTeacherForCourse — a teacher is available", () => {
 
         await waitFor(() => expect(global.fetch).toHaveBeenCalled());
     });
+
+    // Regression: the "add teacher" + button used to be built as `${href_path}/users/new`, where
+    // href_path is a server-computed absolute URL that can point at the wrong host/port for the
+    // current environment (observed as a stale "http://127.0.0.1:3000" in dev). A deliberately
+    // hostile href_path proves the link is now always a plain relative path, matching the
+    // window.open("/inscriptions/...") convention used elsewhere in the app.
+    test("the 'add teacher' + button is a relative link, not the server-supplied href_path", async () => {
+        const {container} = render(
+            <AddTeacherForCourse
+                {...makeProps()}
+                href_path="http://127.0.0.1:3000"
+            />
+        );
+        await screen.findByText("Professeur");
+
+        const plusLink = container.querySelector("a.fa-plus-circle");
+        expect(plusLink).not.toBeNull();
+        expect(plusLink.getAttribute("href")).toBe("/users/new");
+    });
 });
 
 describe("AddTeacherForCourse — no teacher teaches the activity", () => {

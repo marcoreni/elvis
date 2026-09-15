@@ -115,7 +115,6 @@ export default class AddActivityForCourse extends React.Component {
             activityRefs,
             activityRefOptions,
             activityRefKindOptions,
-            href_path,
             summary,
         } = this.state;
 
@@ -194,7 +193,11 @@ export default class AddActivityForCourse extends React.Component {
                                             options={activityRefKindOptions}
                                             button={{
                                                 icon: "fa fa-plus-circle",
-                                                href_path: `${href_path}/activity_ref_kind/new`,
+                                                // Relative path, not `${href_path}/...`: href_path
+                                                // is a server-computed absolute URL (can be a
+                                                // stale/misconfigured dev port) — same convention
+                                                // as window.open("/inscriptions/...") elsewhere.
+                                                href_path: "/activity_ref_kind/new",
                                                 text: "",
                                                 tooltip: t("addActivity.addFamily"),
                                             }}
@@ -217,7 +220,7 @@ export default class AddActivityForCourse extends React.Component {
                                             options={activityRefOptions}
                                             button={{
                                                 icon: "fa fa-plus-circle",
-                                                href_path: `${href_path}/activity_ref/new`,
+                                                href_path: "/activity_ref/new",
                                                 text: "",
                                                 tooltip: t("addActivity.addActivity"),
                                             }}
@@ -230,7 +233,7 @@ export default class AddActivityForCourse extends React.Component {
                                                     {t("addActivity.noActivityYet")}
                                                 </label>
                                                 <a
-                                                    href={`${href_path}/activity_ref_kind/new`}
+                                                    href="/activity_ref_kind/new"
                                                     className="btn btn-primary btn-md"
                                                 >
                                                     {t("addActivity.createActivity")}

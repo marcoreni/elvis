@@ -121,6 +121,48 @@ describe("AddActivityForCourse — isValidated() toasts the localized MESSAGES.e
     });
 });
 
+describe("AddActivityForCourse — 'add new' links are relative, not server-supplied absolute URLs", () => {
+    // Regression: these "+" links used to be built as `${href_path}/activity_ref_kind/new` /
+    // `${href_path}/activity_ref/new`, where href_path is a server-computed absolute URL
+    // (`ApplicationUrl.main_root_url` / `ENV["DOMAIN"]` / a hardcoded "http://localhost:7212"
+    // fallback in activity_controller.rb) that can point at the wrong host/port for the current
+    // environment (observed as a stale "http://127.0.0.1:3000" in dev). A deliberately hostile
+    // href_path proves the component now ignores it entirely and always emits a plain relative
+    // path, matching the window.open("/inscriptions/...") convention used elsewhere in the app.
+    const hostileProps = () => ({
+        ...makeProps(),
+        href_path: "http://127.0.0.1:3000",
+    });
+
+    test("the empty-state 'create an activity' CTA is a relative link", async () => {
+        global.fetch = vi.fn().mockResolvedValue({
+            ok: false,
+            headers: {get: () => null},
+            json: () => Promise.resolve({errors: ["boom"]}),
+        });
+
+        render(<AddActivityForCourse {...hostileProps()} />);
+
+        const cta = await screen.findByText("Créer une activité");
+        expect(cta.getAttribute("href")).toBe("/activity_ref_kind/new");
+    });
+
+    test("the 'add family' / 'add activity' + buttons are relative links", async () => {
+        global.fetch = okJson([]);
+
+        const {container} = render(
+            <AddActivityForCourse {...hostileProps()} />
+        );
+        await screen.findByText("Filtrer par famille d'activité");
+
+        const plusLinks = container.querySelectorAll("a.fa-plus-circle");
+        expect(plusLinks).toHaveLength(2);
+        expect(
+            Array.from(plusLinks).map(a => a.getAttribute("href"))
+        ).toEqual(["/activity_ref_kind/new", "/activity_ref/new"]);
+    });
+});
+
 describe("AddActivityForCourse — no activity yet (fetch fails)", () => {
     beforeEach(() => {
         global.fetch = vi.fn().mockResolvedValue({
