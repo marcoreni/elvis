@@ -52,9 +52,9 @@ ci-dessous pour ne pas les reproduire.
 ### Verify a proposed fix, not just the finding
 
 When implementing (or reviewing) a suggested fix, confirm it actually changes runtime behavior
-instead of trusting its description. Example from PR #2's findings doc
-(`docs/I18n-PR2-Review-Findings.md`, finding #5): a fix proposal for `LocaleController#update`'s
-guest-redirect bug was to set `fallback_location: request.referer.presence || root_path`. That
+instead of trusting its description. Example from an early i18n-rollout PR review
+(`LocaleController#update`'s guest-redirect bug, since fixed): a fix proposal was to set
+`fallback_location: request.referer.presence || root_path`. That
 reads as reasonable, but it's a no-op — `redirect_back` already tries `request.referer` internally
 before ever falling back to `fallback_location`, so the fallback branch only runs when `referer` is
 already blank, meaning `request.referer.presence` inside it is always `nil`. The actual fix had to
