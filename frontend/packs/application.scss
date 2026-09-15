@@ -1,9 +1,29 @@
 /* Ici on met le css custom */
 
+// @use rules must precede every other rule (Sass requirement). media-queries.scss defines the
+// respond-above/respond-below mixins application.scss calls below, and its compiled output is
+// variables/mixins only -- zero selectors, so hoisting it here can't affect cascade order.
+// `as *` keeps its mixins unprefixed at their existing call sites rather than requiring every
+// @include to be renamed to a namespaced form.
+//
+// timeline.scss is deliberately NOT @use'd here even though it's equally app-owned: unlike
+// media-queries.scss, it compiles to ~232 lines of real selectors (.fc-timeline-*), and hoisting
+// those to the top of the bundle changed which rule wins against inspinia's same-specificity
+// .fc-event rule on FullCalendar's timeline view (both apply to the same element) -- a real
+// visual regression on /practice/planning, caught in review. It stays a plain @import below, in
+// its original position after the inspinia imports, so cascade order matches `develop` exactly.
+@use 'sass:color';
+@use './media-queries.scss' as *;
+
 @import "../inspinia/css/bootstrap.css";
-@import "../inspinia/css/bootstrap-grid";
+// bootstrap-grid and style.scss are real Sass imports (no/.scss extension -- unlike the plain
+// .css imports around them, which Sass passes through as native CSS @import and never
+// Sass-deprecation-warns) -- loaded via the loadPaths entry in rspack.config.js instead of a
+// relative path so Dart Sass's quietDeps treats frontend/inspinia as a dependency and silences
+// its deprecation warnings, without editing any of inspinia's own vendored files.
+@import "inspinia/css/bootstrap-grid";
 @import "../inspinia/css/animate.css";
-@import "../inspinia/css/style.scss";
+@import "inspinia/css/style.scss";
 @import "../inspinia/css/jasny-bootstrap.css";
 @import "../components/stepzilla.css";
 
@@ -21,7 +41,7 @@
 @import '../../frontend/components/planning/practice_planning/styles.css';
 @import '../../frontend/packs/timeline.scss';
 // breakpoints
-@import './media-queries.scss';
+// media-queries.scss is @use'd at the top of this file instead (see the comment there).
 
 @import "react-draft-wysiwyg/dist/react-draft-wysiwyg.css";
 
@@ -234,7 +254,7 @@ body {
     margin: 20px 0 10px;
 
     .btn-group .btn-primary {
-        border-right: 1px solid lighten($red, 10);
+        border-right: 1px solid color.adjust($red, $lightness: 10%);
         margin-left: 0;
 
         &:last-child {
