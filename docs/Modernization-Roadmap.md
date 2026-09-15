@@ -250,6 +250,14 @@ site, leaving 6 `swal(...)` calls that would have hard-crashed under v11) plus 3
 `*Class`/`inputClass` keys silently dropped elsewhere — both fixed before merge. `.value` was left
 untouched as planned (still valid in v11, non-breaking, a safe future follow-up).
 
+**`.value`→`.isConfirmed` cleanup shipped** (2026-09-15, 4 PRs, domain-batched per this repo's
+lean-batches convention): every boolean confirm-gate call site across the app (verified file-by-file
+against each `.fire()` call's options, not a blind find/replace) rewritten from `.value` to
+`.isConfirmed`. Genuine input-value/`preConfirm` sites (status-change `input: "select"` dialogs,
+`Holidays.jsx`'s date-range `preConfirm`, the notify-student `input: "checkbox"`, the day-count
+`input: "number"`) deliberately left on `.value`, which stays correct and non-deprecated there. This
+closes out item 7 entirely.
+
 ## 8. Elasticsearch removed entirely — done, `chore/remove-elasticsearch`
 
 Analysis (2026-09-14) found: only 13 files touched Chewy app-wide, all 5 indices were structurally
