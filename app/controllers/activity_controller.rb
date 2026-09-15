@@ -26,11 +26,12 @@ class ActivityController < ApplicationController
   def list
     query = get_query_from_params
 
-    if current_user.is_admin
-      authorize! :manager, query
-      current_user.is_teacher && Parameter.get_value("teachers.teacher_can_manage_courses", default: false)
+    unless current_user.is_admin ||
+           (current_user.is_teacher && Parameter.get_value("teachers.teacher_can_manage_courses", default: false))
       redirect_to root_path and return
     end
+
+    authorize! :manager, query if current_user.is_admin
 
     respond_to do |format|
       format.json { render json: activities_list_json(query) }
