@@ -481,6 +481,81 @@ this app regardless. 10 new unit tests (`StepZilla.test.jsx`) plus the existing 
 `package.json`/`yarn.lock`/`node_modules`. `docs/KnownIssues.md`'s "Exotic (git-pinned)
 dependencies" section is now fully resolved (react-stepzilla was its last entry) and removed.
 
+## 13. `react-table` v6 → TanStack Table — path forward decided, not started
+
+`react-table@^6.8.0` (peer dep `react: ^16.x.x` — doesn't even officially claim React 17 support,
+same pattern as `react-loader-spinner`, item in the "Frontend dependencies" KnownIssues entry) is 4
+years old; the project renamed to `@tanstack/react-table` at v7. Evaluated 2026-09-16 against the
+question of sequencing this relative to the React 17→18 bump (item 14).
+
+**Decision: migrate to TanStack Table v8 *before* the React 18 bump, not after or bundled with it.**
+The premise that "the latest react-table requires React ≥18" is only true of **v9** — checked
+directly against npm, not assumed:
+- `@tanstack/react-table@8.21.3` (latest stable v8, actively patched): `peerDependencies: { react:
+  ">=16.8", "react-dom": ">=16.8" }` — works fine under this app's current React 17.
+- `@tanstack/react-table@9.2.4` (latest overall): `peerDependencies: { react: ">=18" }` — this is
+  the version that actually requires 18+.
+
+So v8 is a fully-supported, independent target today; nothing about it needs to wait on item 14.
+Doing it first (rather than after, or in the same push as, the React bump) keeps two large,
+unrelated-risk migrations bisectable instead of one giant compound change — and removes react-table
+entirely from the "does this survive React 18" unknown-list before that bump even starts, since v6
+was already peer-dep-unverified past React 16 anyway.
+
+**Scope, characterized (2026-09-16), not yet executed:**
+- No official v6→v8 guide exists — TanStack's own migration doc
+  (tanstack.com/table/v8/docs/guide/migrating) only covers v7→v8 ("a major rewrite of React Table
+  v7 from the ground up in TypeScript"). v6's API (pass `columns`/`data`/feature-flag props like
+  `manual`/`filterable`/`resizable`/`sortable` straight to a `<ReactTable>` component, no headless
+  markup) is a different paradigm entirely from v8's hooks-based `useReactTable()` + explicit row
+  models (`getCoreRowModel()`, `getPaginationRowModel()`, `getSortedRowModel()`,
+  `getFilteredRowModel()`) + hand-built `<table>` markup. This is a real per-table rewrite, not a
+  mechanical rename pass — `Cell:`/`accessor` become `cell:`/`accessorKey`/`accessorFn` with a
+  `getValue()`-based access pattern, but the surrounding structure changes completely.
+- 26 files import `react-table` directly; `frontend/components/common/baseDataTable/BaseDataTable.jsx`
+  and `frontend/components/parameters/BaseDataTable.jsx` are 2 of those 26, each extended by CRUD
+  tables (17 files extend the `common/` one) that never import `react-table` themselves — rewriting
+  each base wrapper's *internals* to v8 while preserving its external prop contract should give
+  those subclasses close to a free ride. The other ~24 standalone direct importers each need an
+  individual rewrite.
+- Real features to preserve, confirmed via `BaseDataTable.jsx`: server-side/manual
+  pagination+sorting+filtering (v6's `manual` prop → v8's `manualPagination`/`manualSorting`/
+  `manualFiltering` table options), per-column `sortable`/`filterable` toggles, custom `Cell`
+  renderers, `resizable`.
+- Batch per this repo's established convention ([[feedback-lean-batches-bulk-work]] memory) —
+  large PRs, not one table per PR. A sensible first batch: both `BaseDataTable.jsx` wrappers plus 1-2
+  of their simplest subclasses, as a proof-of-concept before committing to the full sweep.
+
+**Sequencing this sets for the rest of the React-version work**: TanStack v8 migration (this item)
+→ stabilize → React 17→18 bump (item 14) → TanStack v9 migration, if ever wanted, as its own later
+follow-up (only unblocked once 18 has landed).
+
+## 14. React 17 → 18 — pre-check done, not started; sequenced after item 13
+
+First stage of the eventual 17→19 jump (19 removes legacy string refs/context, already ahead of
+that since item 12 retired `react-stepzilla`'s). Pre-check (2026-09-16): every React-adjacent
+package's real `peerDependencies` checked against the installed tree, not assumed.
+
+- **Real hard blocker**: `@testing-library/react@^12.1.5` requires `react <18.0.0` — must bump to
+  v13+ in the *same* commit as the React bump itself, not before (nothing breaks yet) or after
+  (breaks every test in between).
+- **Confirmed still true from the original survey**: `react_ujs` (`^2.4.3`) needs bumping in
+  lockstep — `ReactDOM.render` is gone in 18+.
+- **Confirmed clear, no action needed**: `react-select`, `react-hook-form`, `react-final-form`(+
+  arrays), `react-modal`, `react-switch`, `react-i18next`, `@fullcalendar/react`,
+  `react-draft-wysiwyg`, `@ramonak/react-progress-bar`, `react-toastify`, `react-input-mask`,
+  `react-dropzone`, `react-email-editor`, `react-autosuggest` all explicitly support React 18 in
+  their published peer deps already.
+- `react-table`/`react-loader-spinner` intentionally not re-checked here — item 13 replaces
+  `react-table` before this lands, and `react-loader-spinner` is separately tracked in
+  KnownIssues.md's "Frontend dependencies" entry as needing its own bump regardless of React's
+  version.
+
+Once started: bump react/react-dom → 18, `react_ujs`, `@testing-library/react` → v13+, all in one
+commit (per the blocker above), then a real smoke pass — React 18's StrictMode/effect-timing
+changes can surface latent lifecycle bugs across this app's ~118 class components, not caught by
+`tsc`/a green test suite alone.
+
 ## Context this roadmap assumes (don't re-derive, just re-read if needed)
 
 - `docs/KnownIssues.md` and `docs/I18n-Roadmap.md` (Phase 07
