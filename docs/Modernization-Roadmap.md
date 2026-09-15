@@ -81,7 +81,7 @@ was the wider, actual source. Confirmed via 19 consecutive clean full-suite runs
 reproduced within 1-3 runs).
 
 ## 6. Replace `tui-calendar` — Step A (FullCalendar v5→v6 bump) done; Step B (actual tui-calendar
-replacement) not started
+replacement) shipped, PR #104 open for review
 
 **Recommendation: FullCalendar, bumped to v6 first** (standalone step, before migrating) — every
 feature this app actually uses maps to a native, free, stable FullCalendar v6 API; nothing lost.
@@ -136,15 +136,18 @@ undocumented re-export that a major bump could easily have dropped; fixed before
 via a real `yarn build` (not just `tsc`/mocked tests, since `PracticePlanning.jsx`'s FullCalendar
 usage is mocked out in its own test suite) — full rspec/vitest/tsc all clean after.
 
-**Step B (the actual tui-calendar → FullCalendar replacement) is a much larger, separate
-undertaking**: the "schedule" object shape `Calendar.jsx` builds (kind/teacher/activity/raw/
-isPrivate/isValidated/isReadOnly/recurrenceRule/attendees/location/etc.) is a contract consumed
-directly by `Planning.jsx` (1794 lines) and by ~8 other modal components downstream of its
-`beforeCreateSchedule`/`beforeUpdateSchedule`/`beforeDeleteSchedule`/`clickSchedule` callback
-props — not something contained inside `Calendar.jsx` alone. The safe approach is an adapter: keep
-building/consuming schedule objects in that same shape internally, translate only at the
-FullCalendar boundary (event ↔ schedule), so `Planning.jsx` and its modals need no changes. Needs
-its own planning/alignment pass before writing it, given the blast radius.
+**Step B shipped** (`feat/replace-tui-calendar`, PR #104, open for review): built the adapter this
+item anticipated — `Calendar.tsx` (rewritten as a typed functional component) reconstructs a
+tui-calendar-shaped `Schedule` object from FullCalendar's native event model on every callback
+(`reconstructSchedule()`, called from `select`/`eventClick`/`eventDrop`/`eventResize`), so
+`Planning.jsx` (1794 lines, untouched) and its ~8 downstream modals never needed to change. Bundled
+with the rewrite per the item's own recommendation: functional component + `useTranslation` (not
+`withTranslation`), real types reusing `entities.ts` in place of `any`, lodash dropped entirely.
+Extensively live-tested (`/planning`, all views, teacher/room plannings) with several rounds of bug
+fixes from real usage: all-day event rendering, group-name-deletion regression, a holiday/lesson id
+collision in dedup, a room-planning click crash on a missing `user`, month-view event colors, header
+alignment. See `docs/Jsx-To-Tsx-Migration-Playbook.md` (written alongside this, PR #107) for the
+general lifecycle/typing/lodash conventions this established for future `.jsx`→`.tsx` work.
 
 ## 7. Migrate `sweetalert2` off the legacy API — done, `chore/sweetalert2-v11-bump` (PR #99, merged)
 
@@ -423,7 +426,7 @@ in the small-fixes batch (2026-09-14): `Plugins.jsx` now passes `pluginID` down,
 
 ## Context this roadmap assumes (don't re-derive, just re-read if needed)
 
-- `docs/KnownIssues.md` (~273 lines as of this roadmap) and `docs/I18n-Roadmap.md` (Phase 07
+- `docs/KnownIssues.md` and `docs/I18n-Roadmap.md` (Phase 07
   confirmed complete 2026-09-13 — see git history / session notes for the verification method:
   `i18n-tasks health`, menu caption audit, layout grep, mailer subject audit).
 - `docs/I18n-Extraction-Gotchas.md` — i18n conventions reference, unrelated to this roadmap but
