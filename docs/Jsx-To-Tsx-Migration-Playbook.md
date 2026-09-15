@@ -79,24 +79,45 @@ fields like colors), define a local interface that *uses* the entities as buildi
 (`teacher?: Partial<User>`, `activity?: Activity`) rather than either inventing a parallel type or
 giving up and typing the whole thing `Record<string, any>`.
 
-**Where you genuinely can't do better**: this codebase is a mix of `.ts`/`.tsx` and untyped `.jsx`
-files, and most business logic still lives in the latter (`TimeIntervalHelpers.jsx`, `Planning.jsx`).
-Calling an untyped `.jsx` function from `.tsx` code means TypeScript can't verify its real return
-shape — an explicit, commented cast is more honest here than either leaving an implicit `any` or
-fighting the type checker:
+**Avoid `as unknown as T`.** Going through `unknown` defeats the one thing an assertion is supposed
+to preserve — that the source and target types are at least structurally plausible — so it hides
+exactly the kind of mismatch worth catching. If `as SomeType` itself errors ("neither type
+sufficiently overlaps"), that's a real signal, most often that the value came from an untyped `.jsx`
+function and TypeScript inferred something structurally unrelated for its return (lodash calls
+against untyped JS args are a repeat offender — they can infer bizarre structural types like treating
+a return as `string[]`). Fix the actual gap instead of punching through it:
+
+- Give the untyped function a real signature — migrate the file to `.ts`/`.tsx` (see the checklist
+  below), or at minimum add a narrow local type for just that function's return.
+- Or write the transformation yourself in typed code at the call site instead of calling into the
+  untyped helper.
+
+**Where you genuinely can't do better right now** — the untyped file is out of scope for the current
+change (a shared helper with other untyped callers, a larger migration than the task at hand) — an
+`as unknown as T` cast is the least-bad fallback, but it's not a stopping point: comment *why* the
+direct cast doesn't work, and log a `docs/KnownIssues.md` entry naming the real fix (typically
+"migrate `<file>.jsx` to TypeScript" or "add a signature for `<function>`") so it gets tracked instead
+of silently living in the codebase forever:
 
 ```ts
-// omitInactiveStudents lives in TimeIntervalHelpers.jsx (untyped JS) -- TS can't infer its real
-// return shape across that boundary, so this cast is the honest option rather than a suppressed
-// error.
+// omitInactiveStudents lives in TimeIntervalHelpers.jsx (untyped JS) and calls lodash's
+// differenceBy, whose overload resolution gives a bogus string[]-shaped return here -- a direct
+// `as User[]` errors (TS2352, no overlap), so this needs the unknown hop. Logged as a KnownIssues
+// entry rather than left silent -- see docs/KnownIssues.md.
 const students = TimeIntervalHelpers.omitInactiveStudents(...) as unknown as User[];
 ```
 
-The same applies to third-party library types that are deliberately loose (FullCalendar's
-`EventApi.extendedProps` is typed as an untyped `Dictionary` in its own `.d.ts`, since FullCalendar
-has no way to know what you put there) — cast at that specific boundary with a comment explaining
-*why* it's safe (usually: "this file is also what populates it, so it's this shape by construction"),
-rather than loosening your own type to match the library's laziness.
+A plain `as SomeType` (no `unknown` hop) that the compiler accepts outright is different and fine —
+it means the two types already overlap enough that TS trusts the narrowing. `reconstructSchedule` in
+`Calendar.tsx` does this for its `Schedule` cast (the compiler accepts it because the constructed
+object is built from `Schedule`-shaped data by construction) — comment why it's safe, same as any
+other assertion, but no `unknown` hop and no KnownIssues entry needed.
+
+The same untyped-boundary problem applies to third-party library types that are deliberately loose
+(FullCalendar's `EventApi.extendedProps` is typed as an untyped `Dictionary` in its own `.d.ts`, since
+FullCalendar has no way to know what you put there) — cast at that specific boundary with a comment
+explaining *why* it's safe (usually: "this file is also what populates it, so it's this shape by
+construction"), rather than loosening your own type to match the library's laziness.
 
 **Library-boundary type mismatches are worth listening to.** Tightening `Schedule.start`/`.end` to a
 real `Moment` type (instead of `any`) surfaced a real TypeScript error: FullCalendar's `EventInput`
@@ -104,11 +125,6 @@ wants a `Date`/`string` for `start`/`end`, not a `Moment` instance. That wasn't 
 work around — it was strict typing catching that the code needed `moment(x).toDate()` at the
 FullCalendar boundary that it wasn't doing before. Don't reach for `any`/`as` to silence a type error
 from an external library's stricter type without first checking whether the library is right.
-
-**Casts that don't obviously work**: if `as SomeType` itself errors ("neither type sufficiently
-overlaps"), that's usually because TypeScript inferred something structurally unrelated (commonly
-seen with lodash calls against untyped JS args, which can infer bizarre structural types). Follow the
-compiler's own suggestion and go through `unknown` first: `x as unknown as SomeType`.
 
 ## 4. Reduce lodash — most `_.get`/`_.filter` calls become redundant once things are typed
 
