@@ -7,7 +7,7 @@ import AddCourseSummary from "./AddCourseSummary";
 
 // NOTE: exported as a plain class, not withTranslation()-wrapped. This is a
 // StepZilla step; StepZilla only wires its per-step `isValidated()` hook when the
-// step element `instanceof Component` (react-stepzilla main.js), and a
+// step element `instanceof Component` (see StepZilla.tsx), and a
 // withTranslation HOC (a function component / forwardRef) fails that check,
 // silently disabling step validation. `t` is threaded in as a prop from AddCourse.
 export default class AddActivityForCourse extends React.Component {

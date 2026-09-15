@@ -453,6 +453,34 @@ rather than fixed here, since it's an unrelated pre-existing logic bug, not an i
 in the small-fixes batch (2026-09-14): `Plugins.jsx` now passes `pluginID` down, and
 `PluginActivationModal.jsx` keys `isActivated` off `activatedPlugins[pluginID]`.
 
+## 12. `react-stepzilla` vendored and rewritten — done, `feat/vendor-react-stepzilla`
+
+Replaces the last remaining exotic (git-pinned) frontend dependency
+(`SIXMON/react-stepzilla.git`, no version tag) with a local, typed, functional-component copy —
+`frontend/components/utils/ui/StepZilla.tsx`. Feasibility (2026-09-15): ISC-licensed, single
+385-line source file; its CSS was already vendored separately (`frontend/components/stepzilla.css`,
+predates this change, unrelated to the npm package); the fork's only delta over upstream (a
+`componentDidUpdate` nav-resync when `steps.length` changes) was already baked into the installed
+source and is preserved as a `useEffect`. Real usage was narrow — 2 consumers (`AddCourse.jsx`,
+`Wizard.jsx`), a small prop subset, no `react-validation-mixin` (not even installed).
+
+**Shipped**: full functional-component rewrite, real TS types (`StepZillaStep`,
+`StepZillaStepInstance`) instead of `PropTypes`, `useState`/`useRef`/`useEffect` instead of a class
++ legacy string refs (`this.refs.activeComponent` → `useRef`) — the latter also relevant to the
+next item (React 19 removes string refs outright). Dropped the HOC-validation branch
+(`hocValidationAppliedTo`) entirely: confirmed unused in this app, and it depends on
+react-validation-mixin's *own* internal string refs, which a clean rewrite can't meaningfully
+type-support anyway. Caught and fixed 2 behavior discrepancies against upstream during the port
+(both would have been real regressions, not preserved-on-purpose simplifications): the
+`prevBtnOnLastStep` override was silently dropped from the last-step button-visibility calc in an
+early draft (covered by a mutation-tested regression case — reverting the fix reproduces the
+failure); and the initial per-step `validated` flag was miscomputed based on whether a step has
+`isValidated()`, when upstream's real (HOC-validation-only) condition means it's always `true` in
+this app regardless. 10 new unit tests (`StepZilla.test.jsx`) plus the existing `AddCourse.test.jsx`
+(which mounts the real component, not a mock) all pass; `react-stepzilla` fully removed from
+`package.json`/`yarn.lock`/`node_modules`. `docs/KnownIssues.md`'s "Exotic (git-pinned)
+dependencies" section is now fully resolved (react-stepzilla was its last entry) and removed.
+
 ## Context this roadmap assumes (don't re-derive, just re-read if needed)
 
 - `docs/KnownIssues.md` and `docs/I18n-Roadmap.md` (Phase 07

@@ -52,7 +52,7 @@ const makeProps = () => ({
 });
 
 // Regression guard: StepZilla only wires a step's isValidated() hook when the step element is
-// `instanceof Component` (react-stepzilla main.js). Wrapping this export in withTranslation()
+// `instanceof Component` (see StepZilla.tsx). Wrapping this export in withTranslation()
 // (a function component) makes that check fail and silently disables the step's "choose a
 // teacher before continuing" validation. Keep it an unwrapped class.
 test("is exported as a plain class extending React.Component (StepZilla ref gate)", () => {

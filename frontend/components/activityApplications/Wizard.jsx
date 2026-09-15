@@ -3,7 +3,7 @@ import { withTranslation } from "react-i18next";
 import _ from "lodash";
 import moment from "moment";
 
-import StepZilla from "react-stepzilla";
+import StepZilla from "../utils/ui/StepZilla";
 
 import Evaluation from "./Evaluation";
 import Validation from "./Validation";

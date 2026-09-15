@@ -29,7 +29,7 @@ import i18n from "../../i18n";
 
 // Heavy children / libs that only matter once StepZilla actually renders a step — mocked so the
 // module graph loads under jsdom. The closed-seasons guard returns before any of them mount.
-vi.mock("react-stepzilla", () => ({default: () => null}));
+vi.mock("../utils/ui/StepZilla", () => ({default: () => null}));
 vi.mock("sweetalert2", () => ({default: vi.fn()}));
 vi.mock("react-select", () => ({default: () => null}));
 vi.mock("react-toastify", () => ({toast: Object.assign(vi.fn(), {error: vi.fn()})}));

@@ -3866,10 +3866,6 @@ react-select@^5.0.0:
     react-transition-group "^4.3.0"
     use-isomorphic-layout-effect "^1.2.0"
 
-"react-stepzilla@https://github.com/SIXMON/react-stepzilla.git":
-  version "6.0.3"
-  resolved "https://github.com/SIXMON/react-stepzilla.git#21f3ad6891c00e972eccda3692a667f7b775bbab"
-
 react-switch@^6.0.0:
   version "6.1.0"
   resolved "https://registry.yarnpkg.com/react-switch/-/react-switch-6.1.0.tgz#46239535820f6cf1331aecd948ba585d8a7b532a"
