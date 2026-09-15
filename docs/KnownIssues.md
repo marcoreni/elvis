@@ -54,10 +54,9 @@ only consumer, the advanced-search UI, is gone.) Neither remaining one is pinned
 so each can change underneath the app with zero lockfile signal. For each, the real question is
 un-fork vs. patch-and-pin vs. replace — researched via `gh api` fork/compare metadata 2026-08-27:
 
-- **`tui-calendar`** — highest effort. Upstream (`nhn/tui.calendar`) is healthy and active, but the
-  fork (`SIXMON/tui.calendar`) is 1426 commits behind with 14 commits of real app-specific behavior
-  (data-model conformance, scheduling-precision tweaks). Un-forking means re-implementing those 14
-  commits against a version 1426 commits newer — scope carefully before starting.
+- **`tui-calendar`** — moot once PR #104 (`feat/replace-tui-calendar`, roadmap item 6 Step B) merges;
+  that PR drops the dependency entirely in favor of FullCalendar v6, so this bullet goes away rather
+  than getting "fixed." Left in place until it actually merges.
 - **`react-stepzilla`** — smallest gap (2 commits behind, 3 ahead with legitimate-looking upstreamable
   bug fixes). Reasonable candidate to upstream the fix and drop the fork.
 
@@ -83,10 +82,15 @@ implementation (the opposite of dead code). Needs its own investigation.
 
 `rubocop` was added 2026-08-26; a safe-autocorrect pass plus a case-by-case triage of
 `Lint/DuplicateMethods`/`Lint/MissingSuper`/`Style/ClassVars` and a full audit of
-`Style/FrozenStringLiteralComment` have all landed. Current count: **1037 offenses across 214 files**
-(`bundle exec rubocop`), none of them from those four cops. What's left:
+`Style/FrozenStringLiteralComment` have all landed. Current count (2026-09-15):
+**973 offenses across 206 files** (`bundle exec rubocop`), none of them from those four cops. An
+audit of the safe-autocorrect commits themselves (2026-09-15, prompted by a real regression one of
+them caused — see `app/controllers/activity_controller.rb`'s permission-gate fix, PR #108) found no
+other instances of that bug: RuboCop's `Lint/EmptyConditionalBody` autocorrect can silently merge a
+sibling branch's code into the wrong conditional path when the branch it's collapsing has an empty
+body, but that pattern only fired once across all 4 autocorrect commits. What's left:
 
-- `Layout/LineLength` (~488) — rubocop's corrector can only reflow what it can mechanically split;
+- `Layout/LineLength` (~349) — rubocop's corrector can only reflow what it can mechanically split;
   the rest need a human call on how to wrap.
 - The remaining offenses are spread across cops needing real code changes rather than reformatting
   (`Style/OptionalBooleanParameter`, `Naming/VariableName`, `Naming/AccessorMethodName`, a long tail
