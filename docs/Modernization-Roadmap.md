@@ -522,9 +522,21 @@ was already peer-dep-unverified past React 16 anyway.
   pagination+sorting+filtering (v6's `manual` prop → v8's `manualPagination`/`manualSorting`/
   `manualFiltering` table options), per-column `sortable`/`filterable` toggles, custom `Cell`
   renderers, `resizable`.
-- Batch per this repo's established convention ([[feedback-lean-batches-bulk-work]] memory) —
-  large PRs, not one table per PR. A sensible first batch: both `BaseDataTable.jsx` wrappers plus 1-2
-  of their simplest subclasses, as a proof-of-concept before committing to the full sweep.
+- Batch large, not one table per PR (this repo's established convention for bulk mechanical/
+  rewrite work). A sensible first batch: both `BaseDataTable.jsx` wrappers plus 1-2 of their
+  simplest subclasses, as a proof-of-concept before committing to the full sweep.
+
+**To investigate before starting the actual migration** (flagged 2026-09-16, not yet researched):
+whether to run v6 and v8 side by side during the transition, rather than one atomic cutover.
+[`react-table-6`](https://www.npmjs.com/package/react-table-6) republishes v6 under a separate
+package name, which could let the app keep `react-table-6` pinned for not-yet-migrated tables while
+installing `@tanstack/react-table` for migrated ones — migrating table-by-table with both APIs
+live, instead of a single big-bang PR touching all ~26+17 files at once. Needs real scrutiny before
+committing to it: how actively maintained/trustworthy `react-table-6` actually is (unofficial
+republish, not the original maintainer), whether two table libraries' CSS/bundle size cost is
+acceptable even temporarily, and how long the transition period would realistically stay open in
+practice. A few migration guides exist online beyond TanStack's own v7→v8 doc (community-written
+v6→v7/v8 guides) — worth surveying alongside this before picking a strategy.
 
 **Sequencing this sets for the rest of the React-version work**: TanStack v8 migration (this item)
 → stabilize → React 17→18 bump (item 14) → TanStack v9 migration, if ever wanted, as its own later
