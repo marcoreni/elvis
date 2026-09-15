@@ -13,22 +13,26 @@ import type {
     MoreLinkContentArg,
 } from "@fullcalendar/core";
 import type { EventResizeDoneArg } from "@fullcalendar/interaction";
-import { withTranslation, WithTranslation } from "react-i18next";
+import { useTranslation } from "react-i18next";
 
 import * as TimeIntervalHelpers from "./TimeIntervalHelpers";
 import { getHoursString } from "../utils/DateUtils";
+import type {
+    Activity,
+    Comment,
+    Planning,
+    Season,
+    User,
+} from "../utils/entities";
 import i18n from "../../i18n";
 
 import moment from "moment";
+import type { Moment } from "moment";
 
-import _ from "lodash";
-
-// The domain "schedule" shape is built by TimeIntervalHelpers.formatIntervalsForSchedule and
-// consumed all the way up through Planning.jsx and several modal components -- it carries
-// whatever fields the raw interval had (kind/teacher/activity/activityInstance/raw/etc.) on top
-// of the calendar-generic ones below. Not worth modeling exhaustively here; callers already know
-// its shape.
-type Schedule = Record<string, any>;
+// A plain, non-namespaced t() -- everything CalendarControls/getTimeTemplate call it with is a
+// simple key(+interpolation) lookup, never react-i18next's `returnObjects` mode (which CustomCalendar
+// itself uses directly, via the real hook-typed `t`, for `daynames` below).
+type TFunction = (key: string, options?: Record<string, unknown>) => string;
 
 const VIEW_MAP: Record<string, string> = {
     month: "dayGridMonth",
@@ -36,19 +40,86 @@ const VIEW_MAP: Record<string, string> = {
     day: "timeGridDay",
 };
 
+// The raw domain object underneath a schedule -- the untouched original TimeInterval-derived API
+// record, still carrying its own snake_case fields (see TimeIntervalHelpers.formatIntervalsForSchedule,
+// which sets `raw: int` verbatim).
+type ActivityWithLocation = Activity & { location?: { label?: string } };
+
+interface ActivityInstanceInfo {
+    id?: number;
+    activity?: ActivityWithLocation;
+    location?: { label?: string };
+    cover_teacher?: Partial<User>;
+    are_hours_counted?: boolean;
+    inactive_students?: User[];
+}
+
+interface ScheduleRaw {
+    comment?: Comment | null;
+    activity_instance?: ActivityInstanceInfo;
+    activity?: ActivityWithLocation;
+    is_validated?: boolean;
+}
+
+// The domain "schedule" shape built by TimeIntervalHelpers.formatIntervalsForSchedule/
+// formatHolidays and consumed all the way up through Planning.jsx and several modal components.
+// Two producers share this type but don't populate it identically -- formatHolidays' output is
+// missing several fields real schedules always have (attendees, kind, teacher, activity, ...) --
+// every all-day consumer (this file's eventContent, Planning.jsx's clickSchedule) short-circuits
+// on isAllDay before reading any of those, which is why they're typed optional here rather than
+// splitting this into two interfaces.
+interface Schedule {
+    id: number | string;
+    title: string;
+    start: Moment;
+    end: Moment;
+    isAllDay?: boolean;
+    isReadOnly?: boolean;
+    isPrivate?: boolean;
+    recurrenceRule?: string | null;
+    attendees?: Partial<User>[];
+    location?: string;
+    category?: string;
+    color?: string;
+    bgColor?: string;
+    borderColor?: string;
+    dragBgColor?: string;
+    kind?: string;
+    isValidated?: boolean;
+    teacher?: Partial<User>;
+    activity?: Activity;
+    // formatIntervalsForSchedule (TimeIntervalHelpers.jsx) sets this snake_case field directly on
+    // the schedule -- a sibling of `raw`, not nested inside it -- copying it from the raw
+    // interval's own `activity_instance`. `activityInstance` (camelCase, below) only exists after
+    // the `events` useMemo further down replicates the tui-calendar fork's rename; this field is
+    // the untranslated source it reads from.
+    activity_instance?: ActivityInstanceInfo;
+    activityInstance?: ActivityInstanceInfo | null;
+    raw: ScheduleRaw;
+}
+
+// What beforeCreateSchedule actually receives (handleSelect below) -- a draft, not a full
+// Schedule: no id/title/colors/etc exist yet, this is what Planning.jsx's handleCreateInterval/
+// handleOpenCreation read to build the real interval.
+interface NewIntervalDraft {
+    start: Moment;
+    end: Moment;
+    isAllDay: boolean;
+}
+
 interface TimeTemplateOptions {
     isAllDay?: boolean;
     isRoomCalendar?: boolean;
-    seasons?: any[];
-    user?: any;
+    seasons?: Season[];
+    user?: User | null;
     isMonthView?: boolean;
-    t?: (key: string, opts?: any) => any;
+    t?: TFunction;
 }
 
 export function getTimeTemplate(
-    schedule: any,
-    isMultiView: any,
-    show_activity_code: any,
+    schedule: Schedule,
+    isMultiView: boolean,
+    show_activity_code: boolean | undefined,
     options: TimeTemplateOptions
 ) {
     const {
@@ -59,7 +130,7 @@ export function getTimeTemplate(
         isMonthView = false,
         t = (k: string) => k,
     } = options;
-    let html: any[] = [];
+    let html: string[] = [];
     const start = moment(schedule.start);
     const end = moment(schedule.end);
 
@@ -94,7 +165,7 @@ export function getTimeTemplate(
             }
         }
 
-        const comment = _.get(schedule, "raw.comment")
+        const comment = schedule.raw?.comment
             ? ' <i class="fa fa-comment"></i>'
             : "";
         const label = `${timeStr} - ${monthTitle}${comment}`;
@@ -119,13 +190,11 @@ export function getTimeTemplate(
 
     let pattern = "";
 
-    switch (
-        _.get(
-            _.get(schedule.raw, "activity_instance.activity.location") ||
-                _.get(schedule.raw, "activity.location"),
-            "label"
-        )
-    ) {
+    const locationLabel = (
+        schedule.raw?.activity_instance?.activity?.location ||
+        schedule.raw?.activity?.location
+    )?.label;
+    switch (locationLabel) {
         case "Harfleur":
             pattern = "pattern-stars";
         default:
@@ -144,14 +213,16 @@ export function getTimeTemplate(
             locationTeacherDisplayLine += '<i class="fas fa-eye"></i>';
         } else if (schedule.recurrenceRule) {
             locationTeacherDisplayLine += '<i class="fas fa-sync"></i>';
-        } else if (schedule.attendees.length > 0) {
+        } else if ((schedule.attendees?.length ?? 0) > 0) {
             locationTeacherDisplayLine += '<i class="fas fa-user"></i>';
         } else if (schedule.location) {
             locationTeacherDisplayLine +=
                 '<i class="fas fa-map-marker-alt"></i>';
         }
         const teacherName =
-            schedule.teacher.first_name + " " + schedule.teacher.last_name;
+            (schedule.teacher?.first_name ?? "") +
+            " " +
+            (schedule.teacher?.last_name ?? "");
         const roomName = schedule.location;
 
         locationTeacherDisplayLine += isRoomCalendar ? teacherName : roomName;
@@ -162,10 +233,13 @@ export function getTimeTemplate(
         );
 
         if (schedule.activity && schedule.activityInstance) {
-            const students: any[] = TimeIntervalHelpers.omitInactiveStudents(
+            // omitInactiveStudents lives in TimeIntervalHelpers.jsx (untyped JS) -- TS can't infer
+            // its real return shape across that boundary, so this cast is the honest option
+            // rather than a suppressed error.
+            const students = TimeIntervalHelpers.omitInactiveStudents(
                 schedule.activity.users,
                 schedule.activityInstance.inactive_students
-            );
+            ) as unknown as User[];
 
             studentTeacherDisplayLine +=
                 (students.length === 1
@@ -206,21 +280,18 @@ export function getTimeTemplate(
             title = schedule.title;
         }
 
-        if (schedule.raw.comment)
+        if (schedule.raw?.comment)
             title += '<i class="m-l-xs fa fa-comment"></i>';
 
         hourDateDisplayLine += " - " + title;
 
-        const coverTeacher = _.get(
-            schedule.raw.activity_instance,
-            "cover_teacher"
-        );
+        const coverTeacher = schedule.raw?.activity_instance?.cover_teacher;
         if (coverTeacher) {
-            const teacher = _.get(schedule.activity, "teacher");
+            const teacher = schedule.activity?.teacher;
 
-            if (teacher && teacher.id === user.id) {
+            if (teacher && user && teacher.id === user.id) {
                 studentTeacherDisplayLine += `${t("multiViewModal.replacedBy")} <a style="color:inherit;font-weight:bold;" href="/users/${coverTeacher.id}">${coverTeacher.first_name} ${coverTeacher.last_name}</a>`;
-            } else if (teacher && coverTeacher.id === user.id) {
+            } else if (teacher && user && coverTeacher.id === user.id) {
                 studentTeacherDisplayLine = `${t("calendar.substituteFor")} <a style="color:inherit;font-weight:bold;" href="/users/${teacher.id}">${teacher.first_name} ${teacher.last_name}</a>`;
             }
         }
@@ -239,7 +310,7 @@ export function getTimeTemplate(
         html.push(locationTeacherDisplayLine);
 
         if (
-            _.get(schedule, "activity.activity_ref.occupation_limit") === 1 &&
+            schedule.activity?.activity_ref?.occupation_limit === 1 &&
             duration < 60
         ) {
             // append studentTeacherDisplayLine to first element of html tab
@@ -259,12 +330,17 @@ export function getTimeTemplate(
 // below); start/end are re-derived from the live FullCalendar event so drag/resize updates are
 // reflected, wrapped in moment() so callers can keep calling .toDate() the way tui-calendar's
 // TZDate always let them.
+// event's extendedProps is typed loosely (FullCalendar's own EventApi/EventImpl types it as an
+// untyped Dictionary) since real callers pass FullCalendar's actual EventApi objects, not a
+// hand-built Schedule -- the cast below is safe because this file is also what populates
+// extendedProps in the first place (the `events` useMemo further down), so it's genuinely
+// Schedule-shaped at runtime by construction.
 function reconstructSchedule(event: {
     title: string;
     start: Date | null;
     end: Date | null;
     allDay: boolean;
-    extendedProps: Record<string, any>;
+    extendedProps: Record<string, unknown>;
 }): Schedule {
     // event.id is intentionally not used here -- FullCalendar requires string event ids, but
     // extendedProps.id already carries the schedule's real id (often numeric) exactly as
@@ -283,21 +359,25 @@ function reconstructSchedule(event: {
         isAllDay: event.allDay,
         start: moment(event.start),
         end: moment(event.end ?? event.start),
-    };
+    } as Schedule;
 }
 
-interface CalendarProps extends WithTranslation {
+interface Conflict {
+    is_resolved: boolean;
+}
+
+interface CalendarProps {
     intervals: Schedule[];
-    selectedPlannings: any[];
+    selectedPlannings: Planning[];
     show_activity_code?: boolean;
     generic?: boolean;
-    user?: any;
+    user?: User;
     isTeacher?: boolean;
     isAdmin?: boolean;
-    season?: { start: string };
-    seasons?: any[];
-    nextSeason?: { start: string };
-    conflicts?: any[];
+    season?: Season;
+    seasons?: Season[];
+    nextSeason?: Season;
+    conflicts?: Conflict[];
     conflict?: { ts: string | number } | null;
     displayOnly?: boolean;
     isRoomCalendar?: boolean;
@@ -305,12 +385,12 @@ interface CalendarProps extends WithTranslation {
     loading?: boolean;
     view: "month" | "week" | "day";
     updateIntervals: (day: Date, view: string) => void;
-    beforeCreateSchedule?: (interval: Schedule) => void;
+    beforeCreateSchedule?: (interval: NewIntervalDraft) => void;
     beforeUpdateSchedule?: (event: {
         schedule: Schedule;
-        start: any;
-        end: any;
-    }) => any;
+        start: Moment;
+        end: Moment;
+    }) => unknown;
     // Accepted for interface parity with what Planning.jsx passes, but currently unwired below --
     // tui-calendar only fired this from its own built-in delete popup, which the app always kept
     // disabled (useDetailPopup: false), and FullCalendar has no equivalent built-in gesture to
@@ -319,10 +399,11 @@ interface CalendarProps extends WithTranslation {
     clickSchedule?: (event: { schedule: Schedule }) => void;
 }
 
-const isDateValid = (d: any) => d instanceof Date && !isNaN(d.valueOf());
+const isDateValid = (d: unknown): d is Date =>
+    d instanceof Date && !isNaN(d.valueOf());
 
 function CustomCalendar(props: CalendarProps) {
-    const { t } = props;
+    const { t } = useTranslation("planning");
     const calendarRef = useRef<FullCalendar>(null);
 
     const isMultiView = props.selectedPlannings.length > 1;
@@ -354,7 +435,7 @@ function CustomCalendar(props: CalendarProps) {
                 // snake_case key, so callers reading the camelCase field (Planning.jsx,
                 // MultiViewModal.jsx, this file's own getTimeTemplate) need that rename replicated
                 // here, or activityInstance is silently undefined everywhere downstream.
-                const normalizedSchedule = {
+                const normalizedSchedule: Schedule = {
                     ...schedule,
                     activityInstance:
                         schedule.activityInstance ??
@@ -365,8 +446,12 @@ function CustomCalendar(props: CalendarProps) {
                 return {
                     id: String(schedule.id),
                     title: schedule.title,
-                    start: schedule.start,
-                    end: schedule.end,
+                    // formatIntervalsForSchedule (an untyped .jsx call site) actually hands these
+                    // through as raw strings/Dates, not real Moment instances -- moment(...) here
+                    // normalizes either provenance, and FullCalendar's own EventInput type wants a
+                    // real Date/string, not a Moment object, for start/end.
+                    start: moment(schedule.start).toDate(),
+                    end: moment(schedule.end).toDate(),
                     allDay: !!schedule.isAllDay,
                     editable: !isReadOnly && !schedule.isReadOnly,
                     // formatIntervalsForSchedule computes per-event color/bgColor/borderColor
@@ -405,7 +490,7 @@ function CustomCalendar(props: CalendarProps) {
                         seasons: props.seasons,
                         user: props.user,
                         isMonthView: props.view === "month",
-                        t: props.t,
+                        t,
                     }
                 ),
             };
@@ -417,7 +502,7 @@ function CustomCalendar(props: CalendarProps) {
             props.seasons,
             props.user,
             props.view,
-            props.t,
+            t,
         ]
     );
 
@@ -540,14 +625,14 @@ function CustomCalendar(props: CalendarProps) {
     }, [props.view, props.updateIntervals]);
 
     const handleToggleSeasonStartView = useCallback(() => {
-        if (!props.season) return;
+        if (!props.season?.start) return;
         const seasonStart = new Date(props.season.start);
         calendarRef.current?.getApi().gotoDate(seasonStart);
         props.updateIntervals(seasonStart, props.view);
     }, [props.season, props.view, props.updateIntervals]);
 
     const handleToggleNextSeasonStartView = useCallback(() => {
-        if (!props.nextSeason) return;
+        if (!props.nextSeason?.start) return;
         const nextSeasonStart = new Date(props.nextSeason.start);
 
         // si le jour de la semaine n'est pas lundi, ajuster nextSeasonStart
@@ -615,7 +700,7 @@ function CustomCalendar(props: CalendarProps) {
         <React.Fragment>
             {props.conflict || props.generic ? null : (
                 <CalendarControls
-                    t={props.t}
+                    t={t}
                     currentDate={props.day}
                     conflicts={props.conflicts}
                     view={props.view}
@@ -695,8 +780,8 @@ function CustomCalendar(props: CalendarProps) {
 }
 
 interface CalendarControlsProps {
-    t: (key: string, opts?: any) => any;
-    currentDate: any;
+    t: TFunction;
+    currentDate: Date | null;
     view: string;
     totalHours: { lesson: number; option: number };
     handleToggleView: (view: string) => void;
@@ -705,7 +790,7 @@ interface CalendarControlsProps {
     handleToggleNextSeasonStartView: () => void;
     handleTogglePrev: () => void;
     handleToggleNext: () => void;
-    conflicts?: any[];
+    conflicts?: Conflict[];
 }
 
 export const CalendarControls = ({
@@ -721,7 +806,7 @@ export const CalendarControls = ({
     handleToggleNext,
     conflicts,
 }: CalendarControlsProps) => {
-    const filteredConflicts = _.filter(conflicts, (c) => !c.is_resolved);
+    const filteredConflicts = (conflicts ?? []).filter((c) => !c.is_resolved);
 
     return (
         <React.Fragment>
@@ -821,7 +906,7 @@ const CurrentDateDisplay = ({
     currentDate,
     view,
 }: {
-    currentDate: any;
+    currentDate: Date;
     view: string;
 }) => {
     // TODO We can do much better, but not for now
@@ -845,4 +930,4 @@ const CurrentDateDisplay = ({
     return <h4>{dateFormat}</h4>;
 };
 
-export default withTranslation("planning")(CustomCalendar);
+export default CustomCalendar;
