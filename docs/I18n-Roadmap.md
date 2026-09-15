@@ -1,5 +1,10 @@
 # Internationalisation (i18n) d'Elvis — feuille de route
 
+> **COMPLETE, historical record** (verified 2026-09-13 — see `docs/I18n.md` for how i18n actually
+> works today, and `docs/Modernization-Roadmap.md` for what came after). The rollout this document
+> planned is fully done; treat every "remaining work"/"in progress" section below as a snapshot of
+> the past, not a live TODO list.
+
 Ce document est la source de vérité pour le chantier d'internationalisation d'Elvis. Il est
 volontairement autonome (pas de dépendance à un fichier de plan externe) afin que n'importe quelle
 session future — humaine ou agent — puisse reprendre le travail exactement là où il a été laissé.
