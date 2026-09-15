@@ -233,9 +233,11 @@ export function getTimeTemplate(
         );
 
         if (schedule.activity && schedule.activityInstance) {
-            // omitInactiveStudents lives in TimeIntervalHelpers.jsx (untyped JS) -- TS can't infer
-            // its real return shape across that boundary, so this cast is the honest option
-            // rather than a suppressed error.
+            // omitInactiveStudents lives in TimeIntervalHelpers.jsx (untyped JS) and calls
+            // lodash's differenceBy, whose overload resolution gives a bogus string[]-shaped
+            // return here -- a direct `as User[]` errors (TS2352, no overlap), so this needs the
+            // unknown hop. Logged as a KnownIssues entry rather than left silent -- see
+            // docs/KnownIssues.md ("TimeIntervalHelpers.omitInactiveStudents untyped").
             const students = TimeIntervalHelpers.omitInactiveStudents(
                 schedule.activity.users,
                 schedule.activityInstance.inactive_students

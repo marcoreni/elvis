@@ -220,6 +220,19 @@ in its diff) — logged here as found, not investigated further.
 - `/seasons/:id/edit`: no edit button/affordance for existing holidays (only, presumably, add/delete)
   — not investigated further, flagged during the same testing pass.
 
+## `TimeIntervalHelpers.omitInactiveStudents` forces an `as unknown as` cast in Calendar.tsx
+
+`omitInactiveStudents` (`frontend/components/planning/TimeIntervalHelpers.jsx:45`) is
+`_.differenceBy(users, inactiveStudents, 'id')` in a plain untyped `.jsx` file. Calling it from
+`Calendar.tsx` (`:239`), TS infers a bogus `string[]`-shaped return from lodash's overload
+resolution rather than `User[]` — a direct `as User[]` fails with TS2352 ("neither type
+sufficiently overlaps"), so the call site needs `as unknown as User[]`. Per the [JSX-to-TSX
+playbook](Jsx-To-Tsx-Migration-Playbook.md), `as unknown as T` should be avoided in favor of real
+types; this one is logged rather than silently cast because it's blocked on `TimeIntervalHelpers.jsx`
+itself having no types to cast *from* — real fix is migrating that file to `.ts`/`.tsx` (it has one
+other caller, `ActivityDetailsModal.jsx`, unaffected either way since that caller is also untyped
+JS) or giving `omitInactiveStudents` an explicit typed signature.
+
 ## `Activity#teacher` is N+1-prone independent of `.includes()`
 
 `Activity#teacher` (`app/models/activity.rb`) is a plain Ruby method
