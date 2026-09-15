@@ -86,7 +86,7 @@ export default function EditPaymentScheduleOptions() {
             confirmButtonText: t("payments.scheduleOptions.delete.confirm"),
             cancelButtonText: t("payments.scheduleOptions.delete.cancel"),
         }).then((result) => {
-            if (result.value) {
+            if (result.isConfirmed) {
                 api.set()
                     .success((res) => {
                         setPaymentScheduleOptions(

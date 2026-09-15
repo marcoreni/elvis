@@ -355,7 +355,7 @@ describe("PaymentsMethods / PaymentsStatus — class tables extending BaseDataTa
                     await i18n.changeLanguage(lng);
                     const t = tP(lng);
                     swal.fire.mockImplementation(() =>
-                        Promise.resolve({ value: true })
+                        Promise.resolve({ isConfirmed: true })
                     );
                     global.fetch = vi.fn().mockResolvedValue({
                         status: 422,

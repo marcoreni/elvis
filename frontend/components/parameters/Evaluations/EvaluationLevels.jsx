@@ -84,7 +84,7 @@ class EvaluationLevels extends BaseDataTable {
             cancelButtonText: t("shared.deleteConfirmNo"),
             confirmButtonText: t("shared.deleteConfirmYes"),
         }).then((res) => {
-            if (res.value) {
+            if (res.isConfirmed) {
                 fetch(`/evaluation_level_ref/${status.id}`, {
                     method: "DELETE",
                     credentials: "same-origin",

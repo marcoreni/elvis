@@ -155,7 +155,7 @@ class Localisations extends React.Component {
             cancelButtonText: t("shared.deleteConfirmNo"),
             confirmButtonText: t("shared.deleteConfirmYes"),
         }).then((res) => {
-            if (res.value) {
+            if (res.isConfirmed) {
                 fetch(`/locations/${status.id}`, {
                     method: "DELETE",
                     credentials: "same-origin",

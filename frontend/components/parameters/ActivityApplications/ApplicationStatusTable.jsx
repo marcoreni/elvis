@@ -195,7 +195,7 @@ class ApplicationStatusTable extends Component {
             cancelButtonText: t("shared.deleteConfirmNo"),
             confirmButtonText: t("shared.deleteConfirmYes"),
         }).then((res) => {
-            if (res.value) {
+            if (res.isConfirmed) {
                 fetch(`/activity_application_statuses/${status.id}`, {
                     method: "DELETE",
                     credentials: "same-origin",
