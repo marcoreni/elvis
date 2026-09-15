@@ -217,7 +217,7 @@ class LessonList extends React.Component {
                         width: "400px",
                         confirmButtonText: t("lessonList.ok"),
                     }).then((res) => {
-                        if (res.value) {
+                        if (res.isConfirmed) {
                             window.location.href = `/activities?auth_token=${csrfToken}`;
                         }
                     });
@@ -241,7 +241,7 @@ class LessonList extends React.Component {
                         width: "400px",
                         confirmButtonText: t("lessonList.ok"),
                     }).then((res) => {
-                        if (res.value) {
+                        if (res.isConfirmed) {
                             window.location.href = `/activities?auth_token=${csrfToken}`;
                         }
                     });
@@ -268,7 +268,7 @@ class LessonList extends React.Component {
             confirmButtonText: t("lessonList.yesDelete"),
             cancelButtonText: t("common:actions.cancel"),
         }).then((r) => {
-            if (r.value) {
+            if (r.isConfirmed) {
                 fetch("/lessons/bulkdelete", {
                     method: "DELETE",
                     headers: {
@@ -545,7 +545,7 @@ class LessonList extends React.Component {
             showCancelButton: true,
         })
             .then((v) => {
-                if (v.value) {
+                if (v.isConfirmed) {
                     return fetch("/messages/create", {
                         method: "POST",
                         headers: {

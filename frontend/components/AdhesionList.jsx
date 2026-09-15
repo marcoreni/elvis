@@ -80,7 +80,7 @@ class AdhesionList extends React.Component {
             cancelButtonText: t("common:actions.cancel"),
             showCancelButton: true,
         }).then((a) => {
-            if (a.value)
+            if (a.isConfirmed)
                 fetch(`/adhesions/${id}/reminder`, {
                     method: "POST",
                     headers: {
@@ -110,7 +110,7 @@ class AdhesionList extends React.Component {
             cancelButtonText: t("common:actions.cancel"),
             showCancelButton: true,
         }).then((a) => {
-            if (a.value)
+            if (a.isConfirmed)
                 fetch(`/adhesions/${id}`, {
                     method: "DELETE",
                     headers: {

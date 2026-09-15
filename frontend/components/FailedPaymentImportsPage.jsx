@@ -59,7 +59,7 @@ class FailedPaymentImportsPage extends React.Component {
             cancelButtonText: t("failedImports.confirm.no"),
             focusCancel: true,
         }).then((reason) => {
-            if (reason.value) {
+            if (reason.isConfirmed) {
                 fetch(
                     `/payments/failed_imports/reason/${
                         this.state.selectedReason.id
@@ -97,7 +97,7 @@ class FailedPaymentImportsPage extends React.Component {
             cancelButtonText: t("failedImports.confirm.no"),
             focusCancel: true,
         }).then((reason) => {
-            if (reason.value) {
+            if (reason.isConfirmed) {
                 fetch("/payments/failed_imports/many", {
                     method: "DELETE",
                     headers: {
@@ -139,7 +139,7 @@ class FailedPaymentImportsPage extends React.Component {
             cancelButtonText: t("failedImports.confirm.no"),
             focusCancel: true,
         }).then((reason) => {
-            if (reason.value)
+            if (reason.isConfirmed)
                 fetch(`/payments/failed_imports/delete?id=${id}`, {
                     headers: {
                         "X-CSRF-Token": csrfToken,
@@ -176,7 +176,7 @@ class FailedPaymentImportsPage extends React.Component {
             cancelButtonText: t("failedImports.confirm.no"),
             focusCancel: true,
         }).then((reason) => {
-            if (reason.value)
+            if (reason.isConfirmed)
                 fetch(`/payments/failed_imports/import_single`, {
                     headers: {
                         "X-CSRF-Token": csrfToken,

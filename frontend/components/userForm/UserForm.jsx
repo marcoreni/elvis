@@ -157,7 +157,7 @@ class UserForm extends React.PureComponent {
                     showCancelButton: true,
                     cancelButtonText: cancelText,
                 }).then(result => {
-                    if (result.value) {
+                    if (result.isConfirmed) {
                         window.location.href = "/";
                     }
                 });

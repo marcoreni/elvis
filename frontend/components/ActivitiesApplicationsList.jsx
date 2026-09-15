@@ -255,7 +255,7 @@ class ActivitiesApplicationsList extends React.Component {
                 confirmButtonColor: "#d33",
                 reverseButtons: true,
             }).then((result) => {
-                if (result.value) {
+                if (result.isConfirmed) {
                     this.performBulkEdit();
                 }
             });
@@ -322,7 +322,7 @@ class ActivitiesApplicationsList extends React.Component {
             confirmButtonColor: "#ec4758",
             reverseButtons: true,
         }).then((r) => {
-            if (r.value) {
+            if (r.isConfirmed) {
                 fetch("/inscriptions", {
                     method: "DELETE",
                     headers: {

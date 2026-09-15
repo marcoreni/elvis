@@ -224,7 +224,7 @@ class UserList extends React.Component {
             confirmButtonText: t("list.deleteUser.confirmButton"),
             cancelButtonText: t("list.deleteUser.cancelButton"),
         }).then((result) => {
-            if (result.value) {
+            if (result.isConfirmed) {
                 Promise.all(
                     selectedUserIds.map((id) =>
                         api

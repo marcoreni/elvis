@@ -117,7 +117,7 @@ class AddCourse extends React.Component {
                         cancelButtonText: t("addCourse.seeCourseList"),
                         confirmButtonText: t("addCourse.createAnother"),
                     }).then((res) => {
-                        if (res.value) {
+                        if (res.isConfirmed) {
                             window.location.href = `/addCourse?auth_token=${csrfToken}`;
                         } else {
                             window.location.href = `/activities?auth_token=${csrfToken}`;

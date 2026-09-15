@@ -38,7 +38,7 @@ class SeasonsList extends React.Component {
             cancelButtonText: t("common:actions.cancel"),
             confirmButtonText: t("common:actions.confirm"),
         }).then((a) => {
-            if (a.value) {
+            if (a.isConfirmed) {
                 fetch(`/seasons/${id}`, {
                     method: "DELETE",
                     headers: {

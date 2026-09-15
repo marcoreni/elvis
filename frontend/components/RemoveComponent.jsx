@@ -76,7 +76,7 @@ export default function RemoveComponent({
             confirmButtonText: t("common:yesNo.yes"),
             cancelButtonText: t("common:yesNo.no"),
         }).then((result) => {
-            if (result.value) {
+            if (result.isConfirmed) {
                 api.set()
                     .success((data) => {
                         if (data.success) {
