@@ -1,10 +1,47 @@
-import React, {useState} from "react";
-import ReactTable from "react-table";
+import React, {useEffect, useMemo, useRef, useState} from "react";
+import {flexRender, getCoreRowModel, useReactTable} from "@tanstack/react-table";
+import fscreen from "fscreen";
 import {useTranslation} from "react-i18next";
 import {makeDebounce} from "../../../tools/inputs";
 import ItemFormModal from "./ItemFormModal";
 import DeleteItemModal from "./DeleteItemModal";
-import ReactTableFullScreen, {goFullScreen} from "../../ReactTableFullScreen";
+import {goFullScreen} from "../../ReactTableFullScreen";
+
+// Column defs here use the v6 react-table shape (Header/accessor/Cell/sortable/filterable/width)
+// so callers didn't need to change when this wrapper moved to TanStack Table v8 internally --
+// see docs/Modernization-Roadmap.md item 13. `accessor` may be a dot-path string (TanStack
+// supports nested accessorKey paths natively) or a function.
+function toTanStackColumn(column) {
+    const tanstackColumn = {
+        id: column.id ?? (typeof column.accessor === "string" ? column.accessor : undefined),
+        header: column.Header,
+        enableSorting: column.sortable !== false,
+        enableColumnFilter: column.filterable !== false,
+    };
+
+    if (typeof column.accessor === "function") {
+        tanstackColumn.accessorFn = column.accessor;
+    } else if (typeof column.accessor === "string") {
+        tanstackColumn.accessorKey = column.accessor;
+    }
+
+    if (column.Cell) {
+        tanstackColumn.cell = ctx => column.Cell({
+            value: ctx.getValue(),
+            original: ctx.row.original,
+            index: ctx.row.index,
+        });
+    }
+
+    if (column.width) {
+        // Not `size`: TanStack defaults every column's `size` to 150 whether or not one is set,
+        // so reading it back at render time couldn't distinguish "explicit width" from "default".
+        // `meta` is untouched by that default.
+        tanstackColumn.meta = {width: column.width};
+    }
+
+    return tanstackColumn;
+}
 
 
 /**
@@ -24,7 +61,7 @@ import ReactTableFullScreen, {goFullScreen} from "../../ReactTableFullScreen";
  * @param {string} oneResourceTypeName - Singular name of the resource for modals and messages (e.g., "user").
  * @param {string} thisResourceTypeName - Indicative form of the resource for delete confirmation (e.g., "this user").
  * @param {component} formContentComponent - React component for the content inside the item form modal.
- * @param {object} reactTableProps - Additional props to pass to the ReactTable component.
+ * @param {array} [defaultSorted] - Initial sort state, e.g. [{id: "name", desc: true}].
  *
  * State:
  * @state {array} data - List of items to be displayed.
@@ -88,7 +125,7 @@ export default function BaseDataTable({
                                           oneResourceTypeName,
                                           thisResourceTypeName,
                                           formContentComponent,
-                                          ...reactTableProps
+                                          defaultSorted,
                                       }) {
     const {t} = useTranslation("common");
     const debounce = makeDebounce();
@@ -103,6 +140,12 @@ export default function BaseDataTable({
         filter: null,
         wantUpdate: true,
     });
+
+    const [sorting, setSorting] = useState(
+        () => (defaultSorted || []).map(s => ({id: s.id, desc: !!s.desc})),
+    );
+    const [columnFilters, setColumnFilters] = useState([]);
+    const [pagination, setPagination] = useState({pageIndex: 0, pageSize: 20});
 
     const ActionButtonsComponent = actionButtons;
     const CreateButtonComponent = createButton;
@@ -232,6 +275,61 @@ export default function BaseDataTable({
             })
     }
 
+    const tanstackColumns = useMemo(() => reactTableColumns.map(toTanStackColumn), [reactTableColumns]);
+
+    const table = useReactTable({
+        data: state.data,
+        columns: tanstackColumns,
+        state: {sorting, columnFilters, pagination},
+        onSortingChange: setSorting,
+        onColumnFiltersChange: setColumnFilters,
+        onPaginationChange: setPagination,
+        manualPagination: true,
+        manualSorting: true,
+        manualFiltering: true,
+        pageCount: state.pages ?? -1,
+        getCoreRowModel: getCoreRowModel(),
+    });
+
+    useEffect(() => {
+        // Server-driven table: whenever page/sort/filter state changes, re-fetch. `fetchData`
+        // isn't a dep -- it's redefined every render, and including it would re-trigger this
+        // effect on every unrelated state change (e.g. its own setState calls) instead of only
+        // on real page/sort/filter changes.
+        fetchData({
+            page: pagination.pageIndex,
+            pageSize: pagination.pageSize,
+            sorted: sorting,
+            filtered: columnFilters,
+        });
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [pagination, sorting, columnFilters]);
+
+    const fullScreenRef = useRef(null);
+    const [isFullScreen, setIsFullScreen] = useState(false);
+
+    useEffect(() => {
+        const handleFullScreenChange = () =>
+            setIsFullScreen(fscreen.fullscreenElement === fullScreenRef.current);
+        const handleToggle = () => {
+            if (fscreen.fullscreenElement) {
+                fscreen.exitFullscreen().then(() => fscreen.requestFullscreen(fullScreenRef.current));
+            } else if (fullScreenRef.current) {
+                fscreen.requestFullscreen(fullScreenRef.current);
+            }
+        };
+
+        fscreen.addEventListener("fullscreenchange", handleFullScreenChange, false);
+        window.addEventListener(`reactTableFullscreen${tableName}Change`, handleToggle, false);
+        return () => {
+            fscreen.removeEventListener("fullscreenchange", handleFullScreenChange, false);
+            window.removeEventListener(`reactTableFullscreen${tableName}Change`, handleToggle, false);
+        };
+    }, [tableName]);
+
+    const columnCount = tanstackColumns.length || 1;
+    const headers = table.getHeaderGroups()[0].headers;
+
     return (
         <div>
             <div className="row">
@@ -252,33 +350,96 @@ export default function BaseDataTable({
 
             <div className="row">
                 <div className="col"> {/* vérifier si col*/}
-                    <ReactTableFullScreen
-                        tableName={tableName}
-                        data={state.data}
-                        manual
-                        pages={state.pages}
-                        loading={state.loading}
-                        onFetchData={fetchData}
-                        columns={reactTableColumns}
-                        filterable
-                        defaultFilterMethod={(filter, row) => {
-                            if (row[filter.id] != null) {
-                                return row[filter.id]
-                                    .toLowerCase()
-                                    .startsWith(filter.value.toLowerCase());
-                            }
-                        }}
-                        resizable={false}
-                        previousText={t("reactTable.previousText")}
-                        nextText={t("reactTable.nextText")}
-                        loadingText={t("reactTable.loadingText")}
-                        noDataText={state.errorMessage || t("reactTable.noDataText")}
-                        pageText={t("reactTable.pageText")}
-                        ofText={t("reactTable.ofText")}
-                        rowsText={t("reactTable.rowsText")}
-                        minRows={1}
-                        {...reactTableProps}
-                    />
+                    <div
+                        ref={fullScreenRef}
+                        data-testid={tableName}
+                        className={isFullScreen ? "fullscreen fullscreen-enabled" : undefined}
+                        style={isFullScreen ? {height: "100%", width: "100%"} : undefined}
+                    >
+                        <table className="table">
+                            <thead>
+                            <tr>
+                                {headers.map(header => (
+                                    <th
+                                        key={header.id}
+                                        style={header.column.columnDef.meta?.width
+                                            ? {width: header.column.columnDef.meta.width}
+                                            : undefined}
+                                        onClick={header.column.getCanSort()
+                                            ? header.column.getToggleSortingHandler()
+                                            : undefined}
+                                        className={header.column.getCanSort() ? "sortable" : undefined}
+                                    >
+                                        {flexRender(header.column.columnDef.header, header.getContext())}
+                                        {{asc: " ▲", desc: " ▼"}[header.column.getIsSorted()] ?? ""}
+                                    </th>
+                                ))}
+                            </tr>
+                            <tr>
+                                {headers.map(header => (
+                                    <th key={header.id}>
+                                        {header.column.getCanFilter() &&
+                                            <input
+                                                type="text"
+                                                className="form-control form-control-sm"
+                                                value={header.column.getFilterValue() ?? ""}
+                                                onChange={e => header.column.setFilterValue(e.target.value)}
+                                            />}
+                                    </th>
+                                ))}
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {state.loading ? (
+                                <tr>
+                                    <td colSpan={columnCount}>{t("reactTable.loadingText")}</td>
+                                </tr>
+                            ) : table.getRowModel().rows.length === 0 ? (
+                                <tr>
+                                    <td colSpan={columnCount}>
+                                        {state.errorMessage || t("reactTable.noDataText")}
+                                    </td>
+                                </tr>
+                            ) : (
+                                table.getRowModel().rows.map(row => (
+                                    <tr key={row.id}>
+                                        {row.getVisibleCells().map(cell => (
+                                            <td key={cell.id}>
+                                                {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                                            </td>
+                                        ))}
+                                    </tr>
+                                ))
+                            )}
+                            </tbody>
+                        </table>
+
+                        <div className="d-flex justify-content-between align-items-center">
+                            <div>
+                                <button
+                                    type="button"
+                                    className="btn btn-sm btn-outline-secondary mr-1"
+                                    disabled={!table.getCanPreviousPage()}
+                                    onClick={() => table.previousPage()}
+                                >
+                                    {t("reactTable.previousText")}
+                                </button>
+                                <button
+                                    type="button"
+                                    className="btn btn-sm btn-outline-secondary"
+                                    disabled={!table.getCanNextPage()}
+                                    onClick={() => table.nextPage()}
+                                >
+                                    {t("reactTable.nextText")}
+                                </button>
+                            </div>
+                            <div>
+                                {t("reactTable.pageText")} {pagination.pageIndex + 1} {t("reactTable.ofText")}{" "}
+                                {Math.max(state.pages || 1, 1)}
+                            </div>
+                            <div>{state.data.length} {t("reactTable.rowsText")}</div>
+                        </div>
+                    </div>
                 </div>
 
                 {allowEdit &&

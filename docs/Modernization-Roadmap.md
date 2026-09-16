@@ -513,12 +513,19 @@ was already peer-dep-unverified past React 16 anyway.
   mechanical rename pass — `Cell:`/`accessor` become `cell:`/`accessorKey`/`accessorFn` with a
   `getValue()`-based access pattern, but the surrounding structure changes completely.
 - 26 files import `react-table` directly. Two are shared wrappers: `frontend/components/common/
-  baseDataTable/BaseDataTable.jsx` (functional, 15 real CRUD-table consumers, e.g. `BandsType`,
-  `Materials`, `Coupons`, `EvaluationLevels`) and `frontend/components/parameters/BaseDataTable.jsx`
-  (class-based, its own smaller extender set, still reads the i18n singleton directly per the
-  existing KnownIssues.md caveat). Rewriting each wrapper's *internals* to v8 while preserving its
-  external prop contract should give their subclasses close to a free ride. The remaining ~24
-  standalone direct importers each need an individual rewrite.
+  baseDataTable/BaseDataTable.jsx` (functional) and `frontend/components/parameters/BaseDataTable.jsx`
+  (class-based, its own extender set, still reads the i18n singleton directly per the existing
+  KnownIssues.md caveat). **Correction (2026-09-16):** an earlier pass of this doc said the
+  functional wrapper had "15 consumers, e.g. `BandsType`, `Materials`" — wrong, a grep on the
+  literal string `BaseDataTable` conflated both wrappers' consumers (`parameters/Practice/
+  BandsType.jsx` imports `../BaseDataTable`, i.e. the *class-based* one, not the functional one).
+  Checked precisely by import specifier: the functional wrapper has only **3** real consumers
+  (`ActivityRefBasics.jsx`, `EditFormule.jsx`, `PricingCategoriesEdit.jsx`); the class-based one has
+  **12** (`BandsType`, `Materials`, `Groups`, `FlatRate`, `Features`, `Instruments` ×2 — activities/
+  and parameters/Practice/, `MusicGenres`, `PaymentsStatus`, `PaymentsMethods`, `EvaluationLevels`,
+  `ActivityRefKind`). Rewriting each wrapper's *internals* while preserving its external prop
+  contract gives their consumers a free ride either way — this just changes which batch each
+  consumer falls into.
 - Real features to preserve, confirmed by grepping actual usage, not just `BaseDataTable.jsx`:
   server-side/manual pagination+sorting+filtering (v6's `manual` prop → v8's `manualPagination`/
   `manualSorting`/`manualFiltering` table options), per-column `sortable`/`filterable` toggles,
@@ -529,24 +536,44 @@ was already peer-dep-unverified past React 16 anyway.
   custom `Expander` cell renderer + `expander: true` column config — the most complex table in the
   set, not proof-of-concept material.
 - Batch large, not one table per PR (this repo's established convention for bulk mechanical/rewrite
-  work). Proposed order, each batch depending on the pattern proven by the previous one:
-  1. `common/BaseDataTable.jsx` internals + 2 of its simplest consumers with no `SubComponent`
-     (`BandsType.jsx`, `Materials.jsx`) — proves manual pagination/sorting/filtering + actions
-     column under v8.
-  2. Remaining 13 simple `common/BaseDataTable` consumers — near-mechanical once (1) holds.
-  3. `parameters/BaseDataTable.jsx` + its extenders — recheck the i18n-singleton caveat still holds
-     under v8.
-  4. The 6 `SubComponent`/expander tables together (excluding `Activity.jsx`) — write the
-     `getExpandedRowModel()` pattern once, reuse across all of them.
-  5. Remaining standalone direct importers not covered above (`AdhesionList`, `PaymentScheduleList`,
+  work). Order, each batch depending on the pattern proven by the previous one:
+  1. **DONE (2026-09-16, `feat/tanstack-table-batch1-basedatatable`).** `common/baseDataTable/
+     BaseDataTable.jsx` internals rewritten to v8 (`@tanstack/react-table@^8.21.3` added). Its
+     external prop contract held exactly — all 3 real consumers needed **zero** changes (columns
+     stay in the v6 shape; an internal `toTanStackColumn` adapter translates `Header`/`accessor`
+     (string, dot-path, or function)/`Cell`/`sortable`/`filterable`/`width` to v8's column-def
+     shape). `frontend/components/ReactTableFullScreen.jsx` was deliberately left untouched (still
+     v6) rather than folded into this batch as originally sketched — it's shared by 4 other real
+     tables outside this batch (`UserList`, `generalPayments/CheckList`, `DuePaymentList`,
+     `PaymentList`), one of which (`DuePaymentList`) uses `SubComponent`; rewriting it now would
+     have silently pulled those four into a "batch 1 proof of concept" and jumped the expander
+     problem ahead of schedule. `common/BaseDataTable.jsx` now renders its own hand-rolled
+     `<table>` + pagination footer + per-column filter inputs directly (headless v8 has no
+     replacement black-box component to delegate to) and reimplements the fullscreen toggle
+     in-place (same `fscreen` + `goFullScreen(tableName)` event convention, just not routed through
+     `ReactTableFullScreen`). Verified: full `vitest run` (1316 tests, was already-passing suites
+     for the 3 consumers plus a rewritten `BaseDataTable.test.jsx` — now asserts against real
+     rendered DOM instead of a mocked `"react-table"` module, since v8 is headless and needs no
+     jsdom workaround), `tsc --noEmit` clean, `yarn build` clean.
+  2. `parameters/BaseDataTable.jsx` + its 12 extenders — recheck the i18n-singleton caveat still
+     holds under v8.
+  3. The 6 `SubComponent`/expander tables together (excluding `Activity.jsx`) — write the
+     `getExpandedRowModel()` pattern once, reuse across all of them. `DuePaymentList.jsx` is one of
+     these and is one of 4 real consumers of `frontend/components/ReactTableFullScreen.jsx`
+     (`UserList.jsx`, `generalPayments/CheckList.jsx`, `generalPayments/PaymentList.jsx` are the
+     other 3, none of which use `SubComponent` themselves) — rewriting `ReactTableFullScreen.jsx`
+     to v8 here for `DuePaymentList`'s sake affects those other 3 too, so fold them into this batch
+     rather than leaving them on the shared component's old v6 codepath while everything else
+     moves on.
+  4. Remaining standalone direct importers not covered above (`AdhesionList`, `PaymentScheduleList`,
      `SubPaymentList`, `TemplateIndex`, `ApplicationStatusTable`, `PlanningListRooms`,
      `PlanningListTeachers`, `FailedPaymentImportsPage`, `StopList`, `UserAttach`, `SeasonsList`,
      `Holidays`, `EventsRules`, `Formules`, `StudentEvaluationsStats.tsx`, `PaymentsList`,
      `DuePaymentsList`) — audit each for `manual`/custom-cell usage before sub-batching further.
      `StudentEvaluationsStats.tsx` is already TypeScript, a reasonable early pick here since v8
      ships full TS types natively.
-  6. `Activity.jsx` alone, last, once the expander pattern from batch 4 is proven.
-  7. Drop `react-table` from `package.json`/`yarn.lock` and the `KnownIssues.md` entry; fold
+  5. `Activity.jsx` alone, last, once the expander pattern from batch 3 is proven.
+  6. Drop `react-table` from `package.json`/`yarn.lock` and the `KnownIssues.md` entry; fold
      `ReactTableFullScreen.jsx` (thin v6 wrapper both base wrappers depend on) into whichever batch
      touches it first.
 
