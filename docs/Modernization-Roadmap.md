@@ -512,31 +512,64 @@ was already peer-dep-unverified past React 16 anyway.
   `getFilteredRowModel()`) + hand-built `<table>` markup. This is a real per-table rewrite, not a
   mechanical rename pass — `Cell:`/`accessor` become `cell:`/`accessorKey`/`accessorFn` with a
   `getValue()`-based access pattern, but the surrounding structure changes completely.
-- 26 files import `react-table` directly; `frontend/components/common/baseDataTable/BaseDataTable.jsx`
-  and `frontend/components/parameters/BaseDataTable.jsx` are 2 of those 26, each extended by CRUD
-  tables (17 files extend the `common/` one) that never import `react-table` themselves — rewriting
-  each base wrapper's *internals* to v8 while preserving its external prop contract should give
-  those subclasses close to a free ride. The other ~24 standalone direct importers each need an
-  individual rewrite.
-- Real features to preserve, confirmed via `BaseDataTable.jsx`: server-side/manual
-  pagination+sorting+filtering (v6's `manual` prop → v8's `manualPagination`/`manualSorting`/
-  `manualFiltering` table options), per-column `sortable`/`filterable` toggles, custom `Cell`
-  renderers, `resizable`.
-- Batch large, not one table per PR (this repo's established convention for bulk mechanical/
-  rewrite work). A sensible first batch: both `BaseDataTable.jsx` wrappers plus 1-2 of their
-  simplest subclasses, as a proof-of-concept before committing to the full sweep.
+- 26 files import `react-table` directly. Two are shared wrappers: `frontend/components/common/
+  baseDataTable/BaseDataTable.jsx` (functional, 15 real CRUD-table consumers, e.g. `BandsType`,
+  `Materials`, `Coupons`, `EvaluationLevels`) and `frontend/components/parameters/BaseDataTable.jsx`
+  (class-based, its own smaller extender set, still reads the i18n singleton directly per the
+  existing KnownIssues.md caveat). Rewriting each wrapper's *internals* to v8 while preserving its
+  external prop contract should give their subclasses close to a free ride. The remaining ~24
+  standalone direct importers each need an individual rewrite.
+- Real features to preserve, confirmed by grepping actual usage, not just `BaseDataTable.jsx`:
+  server-side/manual pagination+sorting+filtering (v6's `manual` prop → v8's `manualPagination`/
+  `manualSorting`/`manualFiltering` table options), per-column `sortable`/`filterable` toggles,
+  custom `Cell` renderers, `resizable`. One feature has no v8 built-in equivalent: `SubComponent`
+  (expandable rows), used in 6 files (`DuePaymentList`, `LessonList`, `Localisations`,
+  `PackUtilization`, `Activity.jsx`, `parameters/BaseDataTable.jsx`) — v8 needs
+  `getExpandedRowModel()` plus a hand-rolled extra `<tr colSpan>`. `Activity.jsx` additionally has a
+  custom `Expander` cell renderer + `expander: true` column config — the most complex table in the
+  set, not proof-of-concept material.
+- Batch large, not one table per PR (this repo's established convention for bulk mechanical/rewrite
+  work). Proposed order, each batch depending on the pattern proven by the previous one:
+  1. `common/BaseDataTable.jsx` internals + 2 of its simplest consumers with no `SubComponent`
+     (`BandsType.jsx`, `Materials.jsx`) — proves manual pagination/sorting/filtering + actions
+     column under v8.
+  2. Remaining 13 simple `common/BaseDataTable` consumers — near-mechanical once (1) holds.
+  3. `parameters/BaseDataTable.jsx` + its extenders — recheck the i18n-singleton caveat still holds
+     under v8.
+  4. The 6 `SubComponent`/expander tables together (excluding `Activity.jsx`) — write the
+     `getExpandedRowModel()` pattern once, reuse across all of them.
+  5. Remaining standalone direct importers not covered above (`AdhesionList`, `PaymentScheduleList`,
+     `SubPaymentList`, `TemplateIndex`, `ApplicationStatusTable`, `PlanningListRooms`,
+     `PlanningListTeachers`, `FailedPaymentImportsPage`, `StopList`, `UserAttach`, `SeasonsList`,
+     `Holidays`, `EventsRules`, `Formules`, `StudentEvaluationsStats.tsx`, `PaymentsList`,
+     `DuePaymentsList`) — audit each for `manual`/custom-cell usage before sub-batching further.
+     `StudentEvaluationsStats.tsx` is already TypeScript, a reasonable early pick here since v8
+     ships full TS types natively.
+  6. `Activity.jsx` alone, last, once the expander pattern from batch 4 is proven.
+  7. Drop `react-table` from `package.json`/`yarn.lock` and the `KnownIssues.md` entry; fold
+     `ReactTableFullScreen.jsx` (thin v6 wrapper both base wrappers depend on) into whichever batch
+     touches it first.
 
-**To investigate before starting the actual migration** (flagged 2026-09-16, not yet researched):
-whether to run v6 and v8 side by side during the transition, rather than one atomic cutover.
-[`react-table-6`](https://www.npmjs.com/package/react-table-6) republishes v6 under a separate
-package name, which could let the app keep `react-table-6` pinned for not-yet-migrated tables while
-installing `@tanstack/react-table` for migrated ones — migrating table-by-table with both APIs
-live, instead of a single big-bang PR touching all ~26+17 files at once. Needs real scrutiny before
-committing to it: how actively maintained/trustworthy `react-table-6` actually is (unofficial
-republish, not the original maintainer), whether two table libraries' CSS/bundle size cost is
-acceptable even temporarily, and how long the transition period would realistically stay open in
-practice. A few migration guides exist online beyond TanStack's own v7→v8 doc (community-written
-v6→v7/v8 guides) — worth surveying alongside this before picking a strategy.
+**Side-by-side migration during the transition — resolved 2026-09-16, no action needed beyond
+adding the new dependency.** The `react-table-6` idea flagged earlier (republishing v6 under an
+alias package name so both versions could stay installed) turned out to solve a problem this
+migration doesn't have: that alias only matters for a v6→v7 or v7→v8 jump, where both versions
+publish under the *same* npm name (`react-table`) and you need an alias to keep the old one
+resolvable. TanStack v8 publishes under a different name entirely — `@tanstack/react-table` — so
+`react-table@^6.8.0` and `@tanstack/react-table@^8.21.3` install side by side with zero aliasing;
+migrated files import from the new package, everything else keeps importing `react-table`
+unchanged. (`react-table-6` itself, checked directly on npm, is legitimate — published by
+`tannerlinsley`, react-table's original author, frozen at `6.11.4` since 2019 — just not the right
+tool here.) Bundle cost of the temporary overlap is negligible: v6 is ~11kb+2kb CSS per its own
+docs, TanStack markets v8 core at ~10-15kb gzip; trivial next to this app's existing FullCalendar/
+bootstrap/react-draft-wysiwyg weight. TanStack's own v7→v8 guide explicitly endorses this pattern
+("you can keep the old react-table packages installed... use both packages side-by-side for
+separate tables"), and a live migration thread ([TanStack/table#4019](https://github.com/TanStack/
+table/discussions/4019)) confirms no CSS/runtime conflicts in practice from running both — though
+it also describes the jump as "a re-write vs an upgrade" (one dev: ~a week for one complex table),
+consistent with sizing `Activity.jsx` as its own batch above. No official or community v6→v8 guide
+exists beyond that; bridging the v6→v7 conceptual gap (props-driven monolith → headless hooks +
+hand-built markup) falls on this migration's own batches.
 
 **Sequencing this sets for the rest of the React-version work**: TanStack v8 migration (this item)
 → stabilize → React 17→18 bump (item 14) → TanStack v9 migration, if ever wanted, as its own later
