@@ -37,9 +37,18 @@ left:
   removed in 19 (grep the ~118 class components first); `ReactDOM.render` is gone from 18+
   (`react_ujs`, currently `^2.4.3`, needs bumping in lockstep); React 18 changes effect/StrictMode
   timing enough to surface latent class-component lifecycle bugs. Stage 17→18 first, prove it out,
-  then 18→19. `@testing-library/react` is pinned at `^12.1.5` until React moves past 17.
-- Downstream of the React bump (pinned below latest, bump after React itself): `react-table`,
-  `react-toastify`, `react-loader-spinner`, `react-autosuggest`, `react-switch`.
+  then 18→19. `@testing-library/react` is pinned at `^12.1.5` until React moves past 17 (must bump
+  to v13+ in the same commit as React itself — see `docs/Modernization-Roadmap.md` item 14).
+- **`react-table` v6 → TanStack Table**: NOT downstream of the React bump — checked against npm
+  directly (2026-09-16), TanStack Table v8 (`react: ">=16.8"`) works under today's React 17; only
+  v9 (`react: ">=18"`) needs the bump. Sequenced *before* item 14 instead — see
+  `docs/Modernization-Roadmap.md` item 13 for the full path-forward writeup.
+- `react-toastify`/`react-autosuggest`/`react-switch` all already declare React 18 support in their
+  published peer deps (checked 2026-09-16) — a version bump for these is a separate, whenever-
+  convenient task, not blocked on or blocking the React bump either way.
+- `react-loader-spinner`'s installed version (`^3.1.14`) declares `react: "^16.8.6"` only — doesn't
+  even claim 17 (already silently tolerated). Worth a real bump + verification independent of the
+  React-version work, not assumed to "just work" under 18 either.
 - Independent, real API-surface jumps: `sweetalert2` 7→11 (callback API → promises, dozens of call
   sites to review — see roadmap item 7), `bootstrap` 4→5 (drops jQuery, markup/class changes —
   watch for the transitive `bootstrap@3` pull-in that bit `feat/bump-shakapacker` once already).
