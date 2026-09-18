@@ -26,7 +26,7 @@ export default function PricingCategoriesEdit()
             accessor: "name",
         },
         {
-            id: "number_lesson",
+            id: "number_lessons",
             Header: t("activities.pricing.lessonsCount"),
             accessor: "number_lessons",
         },
@@ -50,6 +50,7 @@ export default function PricingCategoriesEdit()
                                 actionButtons={DefaultActionButtons}
                                 createButton={CreateButton}
                                 formContentComponent={PricingCategoryFormContent}
+                                labellizer={item => item.name}
                                 showFullScreenButton={false}
                                 oneResourceTypeName={t("activities.pricing.oneResourceTypeName")}
                                 thisResourceTypeName={t("activities.pricing.thisResourceTypeName")}

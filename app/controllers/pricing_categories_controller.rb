@@ -84,6 +84,8 @@ class PricingCategoriesController < ApplicationController
       query = case filter[:id]
               when "id"
                 query.where(id: filter[:value])
+              when "name"
+                query.where("name ILIKE ?", "%#{filter[:value]}%")
               else
                 query
               end
