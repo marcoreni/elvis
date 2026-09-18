@@ -598,6 +598,23 @@ consistent with sizing `Activity.jsx` as its own batch above. No official or com
 exists beyond that; bridging the v6→v7 conceptual gap (props-driven monolith → headless hooks +
 hand-built markup) falls on this migration's own batches.
 
+**Follow-up flagged during batch 1, to tackle once all of item 13's batches land (not before):**
+`ActivityRefBasics.jsx` and `EditFormule.jsx` both reconstruct their `dataService` and `columns`
+props fresh inside `render()` on every render, instead of building them once and reusing. Found
+while root-causing a real bug in batch 1 (rows not appearing after create — fixed by resetting
+`BaseDataTable`'s internal TanStack row-model cache unconditionally every render, see that fix's
+commit message for the full trace). Both components sit inside a shared `react-final-form` `Form`
+that re-renders on every field interaction anywhere in the whole multi-tab form, so this table gets
+re-rendered far more often than its own state changes would suggest, and rebuilding `dataService`/
+`columns` on every one of those renders is pure waste on top of that. Stabilizing their identity
+(build once — constructor for the class component, once via a stable pattern for the functional
+one — only rebuild when their real inputs change) would cut that churn at the source; the
+unconditional cache reset in `BaseDataTable.jsx` would then rarely matter in practice, though it
+should stay regardless as a correctness safety net for any caller with similar habits. Scoped as
+its own pass after the rest of item 13's batches, since it touches caller components outside
+`BaseDataTable.jsx` itself and other consumers may have the same pattern worth auditing together
+rather than piecemeal.
+
 **Sequencing this sets for the rest of the React-version work**: TanStack v8 migration (this item)
 → stabilize → React 17→18 bump (item 14) → TanStack v9 migration, if ever wanted, as its own later
 follow-up (only unblocked once 18 has landed).
