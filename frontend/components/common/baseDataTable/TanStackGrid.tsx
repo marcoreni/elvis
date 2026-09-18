@@ -23,8 +23,12 @@ declare module "@tanstack/react-table" {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     interface ColumnMeta<TData extends RowData, TValue> {
         width?: number;
+        Filter?: LegacyColumnFilterRenderer;
     }
 }
+
+type LegacyColumnFilterRenderer =
+    (props: {filter?: {value: unknown}; onChange: (value: unknown) => void}) => React.ReactNode;
 
 const coreRowModel = getCoreRowModel();
 const expandedRowModel = getExpandedRowModel();
@@ -40,6 +44,8 @@ export interface LegacyColumn {
     // A dot-path string (TanStack supports nested accessorKey paths natively) or a function.
     accessor?: string | ((row: any) => unknown);
     Cell?: (props: {value: unknown; original: any; index: number}) => React.ReactNode;
+    /** Custom filter-row UI for this column (e.g. a <select> of fixed options), v6's `Filter`. */
+    Filter?: LegacyColumnFilterRenderer;
     sortable?: boolean;
     filterable?: boolean;
     width?: number;
@@ -58,7 +64,7 @@ interface MutableColumnDef {
     accessorFn?: (row: any) => unknown;
     accessorKey?: string;
     cell?: ColumnDef<any>["cell"];
-    meta?: {width?: number};
+    meta?: {width?: number; Filter?: LegacyColumnFilterRenderer};
 }
 
 function toTanStackColumn(column: LegacyColumn): ColumnDef<any> {
@@ -84,8 +90,8 @@ function toTanStackColumn(column: LegacyColumn): ColumnDef<any> {
         });
     }
 
-    if (column.width) {
-        tanstackColumn.meta = {width: column.width};
+    if (column.width || column.Filter) {
+        tanstackColumn.meta = {width: column.width, Filter: column.Filter};
     }
 
     return tanstackColumn as ColumnDef<any>;
@@ -171,6 +177,8 @@ interface TanStackGridProps {
     onFetchData?: (filter: FetchDataFilter) => void;
     /** Uncontrolled mode only: initial sort state, e.g. [{id: "name", desc: true}]. */
     defaultSorted?: {id: string; desc?: boolean}[];
+    /** Uncontrolled mode only: initial column-filter state, e.g. [{id: "role", value: "student"}]. */
+    defaultFiltered?: ColumnFiltersState;
     /** Pad the tbody with blank rows until it reaches this many, matching v6's `minRows`. */
     minRows?: number;
     /** When set, renders an expander column; expanding a row shows this under it (v6's `SubComponent`). */
@@ -205,6 +213,7 @@ export default function TanStackGrid({
     errorMessage,
     onFetchData,
     defaultSorted,
+    defaultFiltered,
     minRows,
     renderSubComponent,
     getRowProps,
@@ -224,7 +233,7 @@ export default function TanStackGrid({
         (defaultSorted || []).map(s => ({id: s.id, desc: !!s.desc})),
     );
     const [columnFilters, setColumnFilters] = useControllableState<ColumnFiltersState>(
-        controlledColumnFilters, onColumnFiltersChange, [],
+        controlledColumnFilters, onColumnFiltersChange, defaultFiltered || [],
     );
     const [pagination, setPagination] = useControllableState<PaginationState>(
         controlledPagination, onPaginationChange, {pageIndex: 0, pageSize: 20},
@@ -345,17 +354,29 @@ export default function TanStackGrid({
                     ))}
                 </tr>
                 <tr>
-                    {headers.map(header => (
-                        <th key={header.id}>
-                            {header.column.getCanFilter() &&
-                                <input
-                                    type="text"
-                                    className="form-control form-control-sm"
-                                    value={(header.column.getFilterValue() as string) ?? ""}
-                                    onChange={e => header.column.setFilterValue(e.target.value)}
-                                />}
-                        </th>
-                    ))}
+                    {headers.map(header => {
+                        const CustomFilter = header.column.columnDef.meta?.Filter;
+                        const filterValue = header.column.getFilterValue();
+                        return (
+                            <th key={header.id}>
+                                {header.column.getCanFilter() && (
+                                    CustomFilter ? (
+                                        <CustomFilter
+                                            filter={filterValue !== undefined ? {value: filterValue} : undefined}
+                                            onChange={value => header.column.setFilterValue(value)}
+                                        />
+                                    ) : (
+                                        <input
+                                            type="text"
+                                            className="form-control form-control-sm"
+                                            value={(filterValue as string) ?? ""}
+                                            onChange={e => header.column.setFilterValue(e.target.value)}
+                                        />
+                                    )
+                                )}
+                            </th>
+                        );
+                    })}
                 </tr>
                 </thead>
                 <tbody>

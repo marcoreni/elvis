@@ -1,7 +1,7 @@
 import React, { useState, useEffect, Fragment } from "react";
-import ReactTable from "react-table";
 import { csrfToken } from "../utils";
 import { useTranslation } from "react-i18next";
+import TanStackGrid from "../common/baseDataTable/TanStackGrid";
 
 const PackUtilization = () => {
     const { t } = useTranslation("activityApplications");
@@ -11,7 +11,6 @@ const PackUtilization = () => {
     const [loadingTable, setLoadingTable] = useState(true);
     const [filter, setFilter] = useState({});
     const [tableState, setTableState] = useState({});
-    const [subComponent, setSubComponent] = useState(null);
     const [selectedTeacher, setSelectedTeacher] = useState("");
     const [selectedActivityRef, setSelectedActivityRef] = useState("");
     const [selectedSeason, setSelectedSeason] = useState("");
@@ -89,7 +88,7 @@ const PackUtilization = () => {
             });
     };
 
-    const fetchTableData = (state, instance) => {
+    const fetchTableData = state => {
         setLoadingTable(true);
         setFilter(state);
         setTableState(state);
@@ -97,7 +96,9 @@ const PackUtilization = () => {
         requestData(state.pageSize, state.page, state.sorted, state.filtered)
             .then(response => response.json())
             .then(result => {
-                setData(result.packs);
+                // TanStackGrid assumes an array (reads .length); fall back defensively rather
+                // than propagate a malformed/empty response into a render-time crash.
+                setData(result.packs || []);
                 setLoadingTable(false);
             });
     };
@@ -211,26 +212,15 @@ const PackUtilization = () => {
                 </div>
 
                 <div className="col">
-                    <ReactTable
+                    <TanStackGrid
+                        tableName="table-pack-utilization"
                         data={data}
-                        manual
                         pages={pages}
                         loading={loadingTable}
-                        onFetchData={(state, instance) =>
-                            fetchTableData(state, instance)
-                        }
+                        onFetchData={fetchTableData}
                         columns={columns}
                         defaultSorted={[{ id: "id", desc: true }]}
-                        resizable={false}
-                        previousText={t("common:reactTable.previousText")}
-                        nextText={t("common:reactTable.nextText")}
-                        loadingText={t("common:reactTable.loadingText")}
-                        noDataText={t("common:reactTable.noDataText")}
-                        pageText={t("common:reactTable.pageText")}
-                        ofText={t("common:reactTable.ofText")}
-                        rowsText={t("common:reactTable.rowsText")}
                         minRows={1}
-                        SubComponent={subComponent}
                     />
                 </div>
 

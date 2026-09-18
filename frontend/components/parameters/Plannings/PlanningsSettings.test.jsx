@@ -93,33 +93,6 @@ vi.mock("sweetalert2", () => ({
     },
 }));
 
-// --- react-table stub: surface every column's string `Header` in order, render every `Cell`
-//     once against `globalThis.__rtRow`, and keep the last props object for pagination-string
-//     assertions (Localisations). -----------------------------------------------------------------
-const rtProps = vi.hoisted(() => ({ last: null }));
-vi.mock("react-table", () => ({
-    default: (props) => {
-        rtProps.last = props;
-        const { columns = [] } = props;
-        return (
-            <div data-testid="react-table">
-                {columns.map((col, i) => (
-                    <span key={i} data-testid="col-header">
-                        {typeof col.Header === "string" ? col.Header : ""}
-                    </span>
-                ))}
-                {columns.map((col, i) =>
-                    col.Cell ? (
-                        <span key={`cell-${i}`} data-testid="col-cell">
-                            {col.Cell({ original: globalThis.__rtRow || {} })}
-                        </span>
-                    ) : null
-                )}
-            </div>
-        );
-    },
-}));
-
 // --- SchoolAvailabilities' heavy child ------------------------------------------------------------
 vi.mock("../../availability/AvailabilityManager", () => ({
     default: () => <div data-testid="availability-manager" />,
@@ -187,8 +160,6 @@ beforeEach(() => {
     apiState.lastSuccess = null;
     apiState.lastError = null;
     apiState.getResolve = { data: { session_hour: { e: 30 } } };
-    rtProps.last = null;
-    globalThis.__rtRow = {};
     globalThis.__packValue = undefined;
     global.fetch = vi.fn().mockResolvedValue({
         ok: true,
@@ -201,7 +172,6 @@ beforeEach(() => {
 afterEach(async () => {
     await i18n.changeLanguage("fr");
     vi.clearAllMocks();
-    delete globalThis.__rtRow;
     delete globalThis.__packValue;
 });
 
@@ -864,19 +834,27 @@ describe("Localisations", () => {
         ).toBe(React.Component.prototype);
     });
 
+    // TanStackGrid (the real grid Localisations renders since batch 3, see
+    // docs/Modernization-Roadmap.md item 13) renders headers as real `<th>`s and resolves its own
+    // pagination copy via `useTranslation` rather than accepting it as react-table props.
+    function getRenderedHeaders(container) {
+        return [...container.querySelectorAll("thead tr:first-child th")].map(
+            (th) => th.textContent.replace(/ [▲▼]$/, "")
+        );
+    }
+
     test.each(["fr", "en"])(
         "renders the (translated) column headers in %s",
         async (lng) => {
             await i18n.changeLanguage(lng);
-            render(<Localisations rooms={[]} />);
+            const { container } = render(<Localisations rooms={[]} />);
 
-            const got = screen
-                .getAllByTestId("col-header")
-                .map((el) => el.textContent)
-                .filter(Boolean);
+            const got = getRenderedHeaders(container);
             // colSite / shared.actions happen to be identical fr/en, but they must still resolve
-            // (no "translation missing", no key leak).
+            // (no "translation missing", no key leak). Leading "" is the auto-injected expander
+            // column's blank header (Localisations passes renderSubComponent).
             expect(got).toEqual([
+                "",
                 "#",
                 tP(lng)("rooms.localisations.colSite"),
                 tP(lng)("shared.actions"),
@@ -888,36 +866,32 @@ describe("Localisations", () => {
     );
 
     test.each(["fr", "en"])(
-        "threads translated ReactTable pagination strings in %s",
+        "renders the translated pagination chrome in %s",
         async (lng) => {
             await i18n.changeLanguage(lng);
             render(<Localisations rooms={[]} />);
 
-            expect(rtProps.last).toBeTruthy();
-            expect(rtProps.last.previousText).toBe(
-                tC(lng)("reactTable.previousText")
-            );
-            expect(rtProps.last.nextText).toBe(tC(lng)("reactTable.nextText"));
-            expect(rtProps.last.loadingText).toBe(
-                tC(lng)("reactTable.loadingText")
-            );
-            expect(rtProps.last.noDataText).toBe(
-                tC(lng)("reactTable.noDataText")
-            );
-            expect(rtProps.last.pageText).toBe(tC(lng)("reactTable.pageText"));
-            expect(rtProps.last.ofText).toBe(tC(lng)("reactTable.ofText"));
-            expect(rtProps.last.rowsText).toBe(tC(lng)("reactTable.rowsText"));
+            expect(
+                screen.getByText(tC(lng)("reactTable.previousText"))
+            ).toBeInTheDocument();
+            expect(
+                screen.getByText(tC(lng)("reactTable.nextText"))
+            ).toBeInTheDocument();
+            expect(
+                await screen.findByText(tC(lng)("reactTable.noDataText"))
+            ).toBeInTheDocument();
         }
     );
 
     test("pagination strings actually differ between fr and en (previousText)", async () => {
         await i18n.changeLanguage("fr");
-        render(<Localisations rooms={[]} />);
-        expect(rtProps.last.previousText).toBe("Précédent");
+        const { unmount } = render(<Localisations rooms={[]} />);
+        expect(screen.getByText("Précédent")).toBeInTheDocument();
+        unmount();
 
         await i18n.changeLanguage("en");
         render(<Localisations rooms={[]} />);
-        expect(rtProps.last.previousText).toBe("Previous");
+        expect(screen.getByText("Previous")).toBeInTheDocument();
     });
 
     function mountInstance(lng) {
@@ -986,12 +960,16 @@ describe("Localisations", () => {
             swal.fire.mockImplementation(() =>
                 Promise.resolve({ isConfirmed: true })
             );
+            const inst = mountInstance(lng);
+            // The mount's own list-fetch already resolved against the file's default
+            // global.fetch (set in the top-level beforeEach); only now swap in the narrower
+            // response deleteStatus's own DELETE call expects.
             global.fetch = vi.fn().mockResolvedValue({
                 status: 422,
                 text: () => Promise.resolve("boom"),
             });
 
-            mountInstance(lng).deleteStatus({ id: 1, label: "Zephyr" });
+            inst.deleteStatus({ id: 1, label: "Zephyr" });
             await new Promise((r) => setTimeout(r, 0));
             await new Promise((r) => setTimeout(r, 0));
 
