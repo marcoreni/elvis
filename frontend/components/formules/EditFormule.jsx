@@ -638,6 +638,7 @@ export default function EditFormule({ formule }) {
                                         pricingCategories={allPricingCategories}
                                     />
                                 )}
+                                labellizer={(item) => item.pricing_category.name}
                                 showFullScreenButton={false}
                                 oneResourceTypeName={t(
                                     "form.pricing.oneResourceTypeName"

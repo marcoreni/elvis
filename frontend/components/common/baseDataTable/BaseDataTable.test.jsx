@@ -51,7 +51,7 @@ afterEach(async () => {
 
 describe("BaseDataTable — pagination chrome follows the active UI language", () => {
     for (const lng of ["fr", "en"]) {
-        test(`${lng}: previousText/nextText/pageText/ofText/rowsText come from common:reactTable.*`, async () => {
+        test(`${lng}: previousText/nextText/pageText/ofText/resultsCount come from common:*`, async () => {
             await i18n.changeLanguage(lng);
             render(
                 <BaseDataTable
@@ -80,9 +80,32 @@ describe("BaseDataTable — pagination chrome follows the active UI language", (
             ).toBeInTheDocument();
             expect(grid.textContent).toContain(t("reactTable.pageText"));
             expect(grid.textContent).toContain(t("reactTable.ofText"));
-            expect(grid.textContent).toContain(t("reactTable.rowsText"));
+            expect(grid.textContent).toContain(
+                t("baseDataTable.resultsCount", { count: 0 })
+            );
         });
     }
+
+    // Regression: the results-count footer used to interpolate the raw common:reactTable.rowsText
+    // string ("results", plural-only) after the count, producing "1 results" for a single row.
+    // common:baseDataTable.resultsCount is now a proper i18next plural key (_one/_other).
+    test("results count is grammatically singular for exactly 1 row", async () => {
+        await i18n.changeLanguage("en");
+        const dataService = makeDataService({
+            listData: () => Promise.resolve({ data: [{ id: 1 }], pages: 1 }),
+        });
+        render(
+            <BaseDataTable
+                dataService={dataService}
+                columns={[]}
+                oneResourceTypeName="x"
+            />
+        );
+        await waitForDebouncedFetch();
+
+        expect(screen.getByText("1 result")).toBeInTheDocument();
+        expect(screen.queryByText("1 results")).not.toBeInTheDocument();
+    });
 
     // fr and en happen to both render "Page" for common:reactTable.pageText, so the loop above
     // can't tell "wired through i18n" apart from "still the old hardcoded pageText='Page'" for

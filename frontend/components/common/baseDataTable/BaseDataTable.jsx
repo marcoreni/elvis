@@ -7,6 +7,8 @@ import ItemFormModal from "./ItemFormModal";
 import DeleteItemModal from "./DeleteItemModal";
 import {goFullScreen} from "../../ReactTableFullScreen";
 
+const coreRowModel = getCoreRowModel();
+
 // Column defs here use the v6 react-table shape (Header/accessor/Cell/sortable/filterable/width)
 // so callers didn't need to change when this wrapper moved to TanStack Table v8 internally --
 // see docs/Modernization-Roadmap.md item 13. `accessor` may be a dot-path string (TanStack
@@ -153,15 +155,13 @@ export default function BaseDataTable({
     const allowEdit = !!formContentComponent;
     const tableName = "table-" + oneResourceTypeName;
 
-    let reactTableColumns = [...columns];
-    if (actionButtons) {
-        reactTableColumns.push(
-            {
-
+    const reactTableColumns = useMemo(() => {
+        const cols = [...columns];
+        if (actionButtons) {
+            cols.push({
                 id: "actions",
                 Header: "Actions",
                 Cell: props => (
-                    // console.log("props", props)),
                     <ActionButtonsComponent
                         item={props.original}
                         onEdit={() => showItemFormModal(true, props.original)}
@@ -171,7 +171,10 @@ export default function BaseDataTable({
                 filterable: false,
                 width: 150
             });
-    }
+        }
+        return cols;
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [columns, actionButtons]);
 
     /*
     =========================================
@@ -288,8 +291,19 @@ export default function BaseDataTable({
         manualSorting: true,
         manualFiltering: true,
         pageCount: state.pages ?? -1,
-        getCoreRowModel: getCoreRowModel(),
+        getCoreRowModel: coreRowModel,
     });
+
+    // TanStack's own getCoreRowModel() memoization (keyed on table.options.data) doesn't reliably
+    // invalidate here: confirmed live (React 17 + react_ujs mount) that table.options.data updates
+    // to the new array correctly (same reference BaseDataTable's own state holds) but
+    // table.getCoreRowModel() keeps returning the stale empty row set from before data arrived,
+    // across many consecutive renders, until the cached getter is discarded. A `data`-changed ref
+    // guard to only reset when needed proved unreliable (this app renders more than once per commit
+    // in ways that starve the guard of the render where it actually matters) -- reset
+    // unconditionally instead. Cheap: these are small, one-page-at-a-time admin CRUD tables, not
+    // client-side-paginated grids with thousands of rows.
+    delete table._getCoreRowModel;
 
     useEffect(() => {
         // Server-driven table: whenever page/sort/filter state changes, re-fetch. `fetchData`
@@ -392,7 +406,11 @@ export default function BaseDataTable({
                             <tbody>
                             {state.loading ? (
                                 <tr>
-                                    <td colSpan={columnCount}>{t("reactTable.loadingText")}</td>
+                                    <td colSpan={columnCount} className="text-center py-5">
+                                        <div className="spinner-border text-primary" role="status">
+                                            <span className="sr-only">{t("reactTable.loadingText")}</span>
+                                        </div>
+                                    </td>
                                 </tr>
                             ) : table.getRowModel().rows.length === 0 ? (
                                 <tr>
@@ -437,7 +455,7 @@ export default function BaseDataTable({
                                 {t("reactTable.pageText")} {pagination.pageIndex + 1} {t("reactTable.ofText")}{" "}
                                 {Math.max(state.pages || 1, 1)}
                             </div>
-                            <div>{state.data.length} {t("reactTable.rowsText")}</div>
+                            <div>{t("baseDataTable.resultsCount", {count: state.data.length})}</div>
                         </div>
                     </div>
                 </div>
