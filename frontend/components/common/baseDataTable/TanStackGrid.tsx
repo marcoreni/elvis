@@ -33,6 +33,13 @@ type LegacyColumnFilterRenderer =
 const coreRowModel = getCoreRowModel();
 const expandedRowModel = getExpandedRowModel();
 
+// Was frontend/components/ReactTableFullScreen.jsx's export -- moved here once every consumer of
+// that v6 wrapper had migrated to TanStackGrid (item 13 batch 3), since this is the component that
+// actually listens for the event this dispatches.
+export function goFullScreen(tableName: string) {
+    window.dispatchEvent(new Event(`reactTableFullscreen${tableName}Change`));
+}
+
 // Column defs here use the v6 react-table shape (Header/accessor/Cell/sortable/filterable/width)
 // so callers didn't need to change when this wrapper moved to TanStack Table v8 internally --
 // see docs/Modernization-Roadmap.md item 13. Row shape is intentionally left loose (`any`): every

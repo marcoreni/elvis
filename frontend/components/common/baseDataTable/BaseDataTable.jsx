@@ -3,8 +3,7 @@ import {useTranslation} from "react-i18next";
 import {makeDebounce} from "../../../tools/inputs";
 import ItemFormModal from "./ItemFormModal";
 import DeleteItemModal from "./DeleteItemModal";
-import {goFullScreen} from "../../ReactTableFullScreen";
-import TanStackGrid from "./TanStackGrid";
+import TanStackGrid, {goFullScreen} from "./TanStackGrid";
 
 /**
  * BaseDataTable Component
