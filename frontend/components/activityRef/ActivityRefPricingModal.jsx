@@ -42,7 +42,7 @@ class ActivityRefPricingModal extends React.Component {
 
 
     ReactSelectAdapter = ({ input, ...rest }) => (
-        <Select {...input} {...rest} searchable required />
+        <Select {...input} {...rest} searchable />
     );
 
     findSelectedOption = (options, value) => {
@@ -71,6 +71,7 @@ class ActivityRefPricingModal extends React.Component {
                         component={this.ReactSelectAdapter}
                         render={Input}
                         className="col-12"
+                        required
                         isDisabled={this.props.isUpdate}
                         options={pricingCategories}
                         defaultValue={selectedPricingCategory}

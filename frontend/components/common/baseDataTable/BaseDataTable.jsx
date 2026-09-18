@@ -295,14 +295,24 @@ export default function BaseDataTable({
     });
 
     // TanStack's own getCoreRowModel() memoization (keyed on table.options.data) doesn't reliably
-    // invalidate here: confirmed live (React 17 + react_ujs mount) that table.options.data updates
-    // to the new array correctly (same reference BaseDataTable's own state holds) but
-    // table.getCoreRowModel() keeps returning the stale empty row set from before data arrived,
-    // across many consecutive renders, until the cached getter is discarded. A `data`-changed ref
-    // guard to only reset when needed proved unreliable (this app renders more than once per commit
-    // in ways that starve the guard of the render where it actually matters) -- reset
-    // unconditionally instead. Cheap: these are small, one-page-at-a-time admin CRUD tables, not
-    // client-side-paginated grids with thousands of rows.
+    // invalidate here: confirmed live that table.options.data updates to the new array correctly
+    // (same reference this component's own state holds) but table.getCoreRowModel() keeps
+    // returning the stale row set across many consecutive renders, until the cached getter is
+    // discarded. Root cause traced to render *frequency*, not this component's own logic: callers
+    // embedded in a react-final-form form (ActivityRefBasics.jsx, EditFormule.jsx) re-render on
+    // every field interaction anywhere in the whole multi-tab form, and both rebuild `dataService`
+    // and `columns` fresh in every render() -- so this table is churned through far more renders
+    // than its own state changes would suggest, and TanStack's cache (a plain mutable object kept
+    // outside React state, updated via a side effect during render) gets out of sync somewhere in
+    // that churn. A `data`-changed ref guard to only reset when needed proved unreliable under that
+    // same churn (some intervening render already "consumes" the change the guard was watching
+    // for). Resetting unconditionally sidesteps the whole render-ordering question and is cheap
+    // regardless: this only reconstructs lightweight row-wrapper objects (no cell rendering, no DOM
+    // work) once per render of *this* table, not once per unrelated re-render elsewhere in the
+    // form -- negligible even at a few hundred rows. The real long-term fix is upstream: stabilize
+    // `dataService`/`columns` identity in those callers (build once, not on every render) so this
+    // table isn't re-rendered nearly as often in the first place -- worth a follow-up pass, out of
+    // scope for this batch.
     delete table._getCoreRowModel;
 
     useEffect(() => {
