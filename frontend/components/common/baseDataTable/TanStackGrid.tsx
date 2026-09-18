@@ -2,11 +2,14 @@ import React, {useEffect, useMemo, useRef, useState} from "react";
 import {
     ColumnDef,
     ColumnFiltersState,
+    ExpandedState,
     PaginationState,
     RowData,
     SortingState,
+    Updater,
     flexRender,
     getCoreRowModel,
+    getExpandedRowModel,
     useReactTable,
 } from "@tanstack/react-table";
 import fscreen from "fscreen";
@@ -24,6 +27,7 @@ declare module "@tanstack/react-table" {
 }
 
 const coreRowModel = getCoreRowModel();
+const expandedRowModel = getExpandedRowModel();
 
 // Column defs here use the v6 react-table shape (Header/accessor/Cell/sortable/filterable/width)
 // so callers didn't need to change when this wrapper moved to TanStack Table v8 internally --
@@ -87,11 +91,62 @@ function toTanStackColumn(column: LegacyColumn): ColumnDef<any> {
     return tanstackColumn as ColumnDef<any>;
 }
 
+const EXPANDER_COLUMN_ID = "__expander";
+
+function buildExpanderColumn(): ColumnDef<any> {
+    return {
+        id: EXPANDER_COLUMN_ID,
+        header: () => null,
+        enableSorting: false,
+        enableColumnFilter: false,
+        meta: {width: 32},
+        cell: ({row}) => (
+            <button
+                type="button"
+                className="btn btn-link btn-sm p-0"
+                onClick={row.getToggleExpandedHandler()}
+            >
+                {row.getIsExpanded() ? "▼" : "▶"}
+            </button>
+        ),
+    } as ColumnDef<any>;
+}
+
 export interface FetchDataFilter {
     page: number;
     pageSize: number;
     sorted: SortingState;
     filtered: ColumnFiltersState;
+}
+
+// Resolves a TanStack `Updater<T>` (either a plain value or a `(old: T) => T` functional update,
+// same convention as `useState`'s setter) against the value currently held -- needed because
+// `useControllableState` below has to support the same calling convention TanStack itself uses
+// internally (`table.setPageSize()`, a sort-header click, etc. all call `onXChange` this way).
+function resolveUpdater<T>(updater: Updater<T>, current: T): T {
+    return typeof updater === "function" ? (updater as (old: T) => T)(current) : updater;
+}
+
+// Standard "controlled if a value prop is passed, otherwise uncontrolled" pattern. Batches 1-2's
+// callers (and this batch's simpler ones) never pass `controlled`/`onChange`, so they get plain
+// internal state, unchanged. Batch 3's more complex tables (DuePaymentList, PaymentList,
+// CheckList, LessonList) need externally-resettable pagination/sorting/filtering -- e.g. a "reset
+// filters" button elsewhere on the page -- which TanStack (like v6 before it) supports via
+// controlled state: the parent owns the value and this grid just renders it.
+function useControllableState<T>(
+    controlled: T | undefined,
+    onChange: ((value: T) => void) | undefined,
+    initial: T,
+): [T, (updater: Updater<T>) => void] {
+    const [internal, setInternal] = useState<T>(initial);
+    const isControlled = controlled !== undefined;
+    const value = isControlled ? controlled : internal;
+    const setValue = (updater: Updater<T>) => {
+        const resolved = resolveUpdater(updater, value);
+        if (onChange) onChange(resolved);
+        if (!isControlled) setInternal(resolved);
+    };
+    return [value, setValue];
 }
 
 interface TanStackGridProps {
@@ -107,19 +162,39 @@ interface TanStackGridProps {
     /** Shown instead of the translated noDataText when set. */
     errorMessage?: string | null;
     /**
-     * Called with {page, pageSize, sorted, filtered} whenever pagination/sorting/filtering state
-     * changes, including once on mount.
+     * Uncontrolled mode only: called with {page, pageSize, sorted, filtered} whenever
+     * pagination/sorting/filtering state changes, including once on mount. Omit this and pass
+     * `pagination`/`sorting`/`columnFilters` (+ their `onXChange` counterparts) instead for
+     * controlled mode, where the caller owns that state itself (e.g. to support an external
+     * "reset filters" button) and is responsible for fetching on its own state changes.
      */
-    onFetchData: (filter: FetchDataFilter) => void;
-    /** Initial sort state, e.g. [{id: "name", desc: true}]. */
+    onFetchData?: (filter: FetchDataFilter) => void;
+    /** Uncontrolled mode only: initial sort state, e.g. [{id: "name", desc: true}]. */
     defaultSorted?: {id: string; desc?: boolean}[];
+    /** Pad the tbody with blank rows until it reaches this many, matching v6's `minRows`. */
+    minRows?: number;
+    /** When set, renders an expander column; expanding a row shows this under it (v6's `SubComponent`). */
+    renderSubComponent?: (row: {original: any; index: number}) => React.ReactNode;
+    /** Per-row `<tr>` props (e.g. conditional styling), keyed off the row's data -- v6's `getTrProps`. */
+    getRowProps?: (original: any) => React.HTMLAttributes<HTMLTableRowElement> | undefined;
+    /** Renders a page-size `<select>` in the footer when set. */
+    pageSizeOptions?: number[];
+    /** Controlled pagination -- see `onFetchData`. */
+    pagination?: PaginationState;
+    onPaginationChange?: (pagination: PaginationState) => void;
+    /** Controlled sorting -- see `onFetchData`. */
+    sorting?: SortingState;
+    onSortingChange?: (sorting: SortingState) => void;
+    /** Controlled column filters -- see `onFetchData`. */
+    columnFilters?: ColumnFiltersState;
+    onColumnFiltersChange?: (filters: ColumnFiltersState) => void;
 }
 
 /**
  * TanStackGrid — the headless-table + pagination-footer machinery shared by both BaseDataTable
  * wrappers (common/baseDataTable/BaseDataTable.jsx, function-based, and
- * parameters/BaseDataTable.jsx, class-based). Both wrappers own CRUD state/actions themselves and
- * just render this for the actual grid; see docs/Modernization-Roadmap.md item 13.
+ * parameters/BaseDataTable.jsx, class-based) and, since batch 3, the standalone tables that need
+ * expandable rows and/or externally-controlled pagination (docs/Modernization-Roadmap.md item 13).
  */
 export default function TanStackGrid({
     tableName,
@@ -130,29 +205,51 @@ export default function TanStackGrid({
     errorMessage,
     onFetchData,
     defaultSorted,
+    minRows,
+    renderSubComponent,
+    getRowProps,
+    pageSizeOptions,
+    pagination: controlledPagination,
+    onPaginationChange,
+    sorting: controlledSorting,
+    onSortingChange,
+    columnFilters: controlledColumnFilters,
+    onColumnFiltersChange,
 }: TanStackGridProps) {
     const {t} = useTranslation("common");
 
-    const [sorting, setSorting] = useState<SortingState>(
-        () => (defaultSorted || []).map(s => ({id: s.id, desc: !!s.desc})),
+    const [sorting, setSorting] = useControllableState<SortingState>(
+        controlledSorting,
+        onSortingChange,
+        (defaultSorted || []).map(s => ({id: s.id, desc: !!s.desc})),
     );
-    const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
-    const [pagination, setPagination] = useState<PaginationState>({pageIndex: 0, pageSize: 20});
+    const [columnFilters, setColumnFilters] = useControllableState<ColumnFiltersState>(
+        controlledColumnFilters, onColumnFiltersChange, [],
+    );
+    const [pagination, setPagination] = useControllableState<PaginationState>(
+        controlledPagination, onPaginationChange, {pageIndex: 0, pageSize: 20},
+    );
+    const [expanded, setExpanded] = useState<ExpandedState>({});
 
-    const tanstackColumns = useMemo(() => columns.map(toTanStackColumn), [columns]);
+    const tanstackColumns = useMemo(() => {
+        const mapped = columns.map(toTanStackColumn);
+        return renderSubComponent ? [buildExpanderColumn(), ...mapped] : mapped;
+    }, [columns, renderSubComponent]);
 
     const table = useReactTable({
         data,
         columns: tanstackColumns,
-        state: {sorting, columnFilters, pagination},
+        state: {sorting, columnFilters, pagination, expanded},
         onSortingChange: setSorting,
         onColumnFiltersChange: setColumnFilters,
         onPaginationChange: setPagination,
+        onExpandedChange: setExpanded,
         manualPagination: true,
         manualSorting: true,
         manualFiltering: true,
         pageCount: pages ?? -1,
         getCoreRowModel: coreRowModel,
+        getExpandedRowModel: expandedRowModel,
     });
 
     // TanStack's own getCoreRowModel() memoization (keyed on table.options.data) doesn't reliably
@@ -177,16 +274,20 @@ export default function TanStackGrid({
     delete (table as {_getCoreRowModel?: unknown})._getCoreRowModel;
 
     useEffect(() => {
-        // Server-driven table: whenever page/sort/filter state changes, re-fetch. `onFetchData`
-        // isn't a dep -- it's redefined every render by the caller, and including it would
-        // re-trigger this effect on every unrelated state change instead of only on real
-        // page/sort/filter changes.
+        // Controlled mode: the caller owns pagination/sorting/filtering state itself and fetches
+        // on its own state changes (e.g. inside its onPaginationChange handler) -- nothing to do
+        // here. Uncontrolled mode (no onFetchData either -- shouldn't normally happen, but avoids
+        // a crash if it does): server-driven table, re-fetch whenever page/sort/filter changes.
+        if (!onFetchData) return;
         onFetchData({
             page: pagination.pageIndex,
             pageSize: pagination.pageSize,
             sorted: sorting,
             filtered: columnFilters,
         });
+        // `onFetchData` isn't a dep -- it's redefined every render by the caller, and including it
+        // would re-trigger this effect on every unrelated state change instead of only on real
+        // page/sort/filter changes.
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [pagination, sorting, columnFilters]);
 
@@ -214,6 +315,8 @@ export default function TanStackGrid({
 
     const columnCount = tanstackColumns.length || 1;
     const headers = table.getHeaderGroups()[0].headers;
+    const rows = table.getRowModel().rows;
+    const paddingRowCount = !loading && minRows ? Math.max(minRows - rows.length, 0) : 0;
 
     return (
         <div
@@ -264,22 +367,38 @@ export default function TanStackGrid({
                             </div>
                         </td>
                     </tr>
-                ) : table.getRowModel().rows.length === 0 ? (
+                ) : rows.length === 0 ? (
                     <tr>
                         <td colSpan={columnCount}>
                             {errorMessage || t("reactTable.noDataText")}
                         </td>
                     </tr>
                 ) : (
-                    table.getRowModel().rows.map(row => (
-                        <tr key={row.id}>
-                            {row.getVisibleCells().map(cell => (
-                                <td key={cell.id}>
-                                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                                </td>
-                            ))}
-                        </tr>
-                    ))
+                    <>
+                        {rows.map(row => (
+                            <React.Fragment key={row.id}>
+                                <tr {...(getRowProps ? getRowProps(row.original) : undefined)}>
+                                    {row.getVisibleCells().map(cell => (
+                                        <td key={cell.id}>
+                                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                                        </td>
+                                    ))}
+                                </tr>
+                                {renderSubComponent && row.getIsExpanded() && (
+                                    <tr>
+                                        <td colSpan={columnCount}>
+                                            {renderSubComponent({original: row.original, index: row.index})}
+                                        </td>
+                                    </tr>
+                                )}
+                            </React.Fragment>
+                        ))}
+                        {Array.from({length: paddingRowCount}).map((_, i) => (
+                            <tr key={`pad-${i}`}>
+                                {Array.from({length: columnCount}).map((__, j) => <td key={j}>&nbsp;</td>)}
+                            </tr>
+                        ))}
+                    </>
                 )}
                 </tbody>
             </table>
@@ -302,6 +421,17 @@ export default function TanStackGrid({
                     >
                         {t("reactTable.nextText")}
                     </button>
+                    {pageSizeOptions && (
+                        <select
+                            className="form-control form-control-sm d-inline-block w-auto ml-2"
+                            value={pagination.pageSize}
+                            onChange={e => table.setPageSize(Number(e.target.value))}
+                        >
+                            {pageSizeOptions.map(size => (
+                                <option key={size} value={size}>{size}</option>
+                            ))}
+                        </select>
+                    )}
                 </div>
                 <div>
                     {t("reactTable.pageText")} {pagination.pageIndex + 1} {t("reactTable.ofText")}{" "}
