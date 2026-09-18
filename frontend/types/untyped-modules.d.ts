@@ -4,3 +4,4 @@
 
 declare module "draft-js";
 declare module "draftjs-to-html";
+declare module "fscreen";

@@ -22,34 +22,22 @@
 // not under test here. We assert only the chrome's own translated copy.
 
 import React from "react";
-import {render, screen} from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import i18n from "../../i18n";
 
-// --- react-table stub: echo the i18n-driven props as data-* attributes -----------------------
-vi.mock("react-table", () => ({
-    default: (props) => (
-        <div
-            data-testid="react-table"
-            data-previous={props.previousText}
-            data-next={props.nextText}
-            data-loading={props.loadingText}
-            data-nodata={props.noDataText}
-            data-page={props.pageText}
-            data-of={props.ofText}
-            data-rows={props.rowsText}
-        />
-    ),
-}));
-
 // --- heavy tab-content children: replace with inert stubs ------------------------------------
 // Factory kept in `vi.hoisted` so it is initialised before the hoisted `vi.mock` calls run.
-const {stub} = vi.hoisted(() => {
+const { stub } = vi.hoisted(() => {
     const React = require("react");
     return {
         stub: (name) => ({
             default: (props) =>
-                React.createElement("div", {"data-testid": `stub-${name}`}, props.desc ?? null),
+                React.createElement(
+                    "div",
+                    { "data-testid": `stub-${name}` },
+                    props.desc ?? null
+                ),
         }),
     };
 });
@@ -62,21 +50,37 @@ vi.mock("./Practice/FlatRate", () => stub("flat-rate"));
 vi.mock("./Practice/Features", () => stub("features"));
 vi.mock("./Practice/Instruments", () => stub("instruments"));
 
-vi.mock("./Plannings/SchoolAvailabilities", () => stub("school-availabilities"));
-vi.mock("./Plannings/TeacherAvailabilities", () => stub("teacher-availabilities"));
+vi.mock("./Plannings/SchoolAvailabilities", () =>
+    stub("school-availabilities")
+);
+vi.mock("./Plannings/TeacherAvailabilities", () =>
+    stub("teacher-availabilities")
+);
 vi.mock("./Plannings/CancelActivityParameters", () => stub("cancel-activity"));
-vi.mock("./Plannings/PlanningDisplayParameters", () => stub("planning-display"));
+vi.mock("./Plannings/PlanningDisplayParameters", () =>
+    stub("planning-display")
+);
 
-vi.mock("./ActivityApplications/ApplicationStatusTable", () => stub("status-table"));
-vi.mock("./ActivityApplications/ConsentDocumentsList", () => stub("consent-docs"));
-vi.mock("./ActivityApplications/ApplicationParameters", () => stub("application-parameters"));
-vi.mock("./ActivityApplications/ApplicationStepParameters", () => stub("step-parameters"));
+vi.mock("./ActivityApplications/ApplicationStatusTable", () =>
+    stub("status-table")
+);
+vi.mock("./ActivityApplications/ConsentDocumentsList", () =>
+    stub("consent-docs")
+);
+vi.mock("./ActivityApplications/ApplicationParameters", () =>
+    stub("application-parameters")
+);
+vi.mock("./ActivityApplications/ApplicationStepParameters", () =>
+    stub("step-parameters")
+);
 
 vi.mock("./Activities/PricingCategoriesEdit", () => stub("pricing-categories"));
 
 vi.mock("./Payments/AdhesionSettings", () => stub("adhesion-settings"));
 vi.mock("./Payments/PaymentsMethods", () => stub("payments-methods"));
-vi.mock("./Payments/EditPaymentScheduleOptions", () => stub("payment-schedule-options"));
+vi.mock("./Payments/EditPaymentScheduleOptions", () =>
+    stub("payment-schedule-options")
+);
 vi.mock("./Payments/Coupons", () => stub("coupons"));
 
 import BaseDataTable from "./BaseDataTable";
@@ -98,10 +102,13 @@ afterEach(async () => {
 // wrappers, the props.t-in-constructor regression guard) stay.
 
 // ============================================================================================
-// B. BaseDataTable — the "+ Créer" link + the ReactTable i18n props
+// B. BaseDataTable — the "+ Créer" link + TanStackGrid's i18n'd pagination chrome
 //
 // BaseDataTable is abstract (no `columns` in state). Subclass it with `columns = []` and mount.
-// react-table is stubbed above so no fetch fires and the props are readable as data-* attrs.
+// Since batch 2 (docs/Modernization-Roadmap.md item 13) BaseDataTable renders the real
+// TanStackGrid, which resolves its own pagination/loading/empty-state copy via `useTranslation`
+// rather than accepting it as react-table props — assert against that real rendered output.
+// TanStackGrid's own mount effect fires a real `fetchData` -> `fetch`, so it needs a mock here.
 // ============================================================================================
 describe("BaseDataTable — singleton-driven chrome", () => {
     class TestTable extends BaseDataTable {
@@ -111,34 +118,45 @@ describe("BaseDataTable — singleton-driven chrome", () => {
         }
     }
 
-    test("renders the create link (fr) pointing at props.urlNew, and localised ReactTable props", async () => {
+    beforeEach(() => {
+        global.fetch = vi.fn().mockResolvedValue({
+            ok: true,
+            status: 200,
+            json: () => Promise.resolve({}),
+        });
+    });
+
+    test("renders the create link (fr) pointing at props.urlNew, and the localised pagination chrome", async () => {
         await i18n.changeLanguage("fr");
         render(<TestTable urlNew="/widgets/new" urlListData="/widgets/list" />);
 
-        const link = screen.getByRole("link", {name: /Créer/});
+        const link = screen.getByRole("link", { name: /Créer/ });
         expect(link).toHaveAttribute("href", "/widgets/new");
 
-        const table = screen.getByTestId("react-table");
-        expect(table).toHaveAttribute("data-previous", "Précédent");
-        expect(table).toHaveAttribute("data-next", "Suivant");
-        expect(table).toHaveAttribute("data-loading", "Chargement...");
-        expect(table).toHaveAttribute("data-nodata", "Aucune donnée");
-        expect(table).toHaveAttribute("data-page", "Page");
-        expect(table).toHaveAttribute("data-of", "sur");
-        expect(table).toHaveAttribute("data-rows", "résultats");
+        // Rendered unconditionally, so readable synchronously before the mount fetch resolves.
+        expect(screen.getByText("Précédent")).toBeInTheDocument();
+        expect(screen.getByText("Suivant")).toBeInTheDocument();
+        // pageText/pageIndex/ofText/pages render as sibling text nodes under one div, so the
+        // whole merged string is what a leaf-node text query sees.
+        expect(screen.getByText(/Page 1 sur 1/)).toBeInTheDocument();
+        // Still loading at mount -- the spinner's sr-only text.
+        expect(screen.getByText("Chargement...")).toBeInTheDocument();
+
+        // Once the mount fetch resolves, there is no data to show.
+        expect(await screen.findByText("Aucune donnée")).toBeInTheDocument();
     });
 
-    test("renders the create link + ReactTable props in en", async () => {
+    test("renders the create link + the localised pagination chrome in en", async () => {
         await i18n.changeLanguage("en");
         render(<TestTable urlNew="/widgets/new" urlListData="/widgets/list" />);
 
-        expect(screen.getByRole("link", {name: /Create/})).toHaveAttribute("href", "/widgets/new");
-
-        const table = screen.getByTestId("react-table");
-        expect(table).toHaveAttribute("data-previous", "Previous");
-        expect(table).toHaveAttribute("data-nodata", "No data");
-        expect(table).toHaveAttribute("data-of", "of");
-        expect(table).toHaveAttribute("data-rows", "results");
+        expect(screen.getByRole("link", { name: /Create/ })).toHaveAttribute(
+            "href",
+            "/widgets/new"
+        );
+        expect(screen.getByText("Previous")).toBeInTheDocument();
+        expect(screen.getByText(/Page 1 of 1/)).toBeInTheDocument();
+        expect(await screen.findByText("No data")).toBeInTheDocument();
     });
 });
 
@@ -153,8 +171,12 @@ describe("parameters tab wrappers — translated tab links", () => {
             Component: PracticeParameters,
             props: {},
             keys: [
-                "practice.tabs.bandTypes", "practice.tabs.musicGenre", "practice.tabs.manageBands",
-                "practice.tabs.materials", "practice.tabs.flatRates", "practice.tabs.roomOptions",
+                "practice.tabs.bandTypes",
+                "practice.tabs.musicGenre",
+                "practice.tabs.manageBands",
+                "practice.tabs.materials",
+                "practice.tabs.flatRates",
+                "practice.tabs.roomOptions",
                 "practice.tabs.instruments",
             ],
         },
@@ -163,18 +185,27 @@ describe("parameters tab wrappers — translated tab links", () => {
             Component: PaymentsParameters,
             props: {},
             keys: [
-                "payments.tabs.adhesion", "payments.tabs.paymentMethods",
-                "payments.tabs.pricingCategories", "payments.tabs.paymentTerms",
+                "payments.tabs.adhesion",
+                "payments.tabs.paymentMethods",
+                "payments.tabs.pricingCategories",
+                "payments.tabs.paymentTerms",
                 "payments.tabs.discountRate",
             ],
         },
         {
             name: "PlanningsParameters (fn wrapper, useTranslation)",
             Component: PlanningsParameters,
-            props: {planningId: 1, auth_token: "x", seasons: [], availabilityChecked: false},
+            props: {
+                planningId: 1,
+                auth_token: "x",
+                seasons: [],
+                availabilityChecked: false,
+            },
             keys: [
-                "plannings.tabs.schoolAvailability", "plannings.tabs.teachers",
-                "plannings.tabs.cancelActivity", "plannings.tabs.displaySettings",
+                "plannings.tabs.schoolAvailability",
+                "plannings.tabs.teachers",
+                "plannings.tabs.cancelActivity",
+                "plannings.tabs.displaySettings",
             ],
         },
         {
@@ -182,8 +213,10 @@ describe("parameters tab wrappers — translated tab links", () => {
             Component: ActivityApplicationsParameters,
             props: {},
             keys: [
-                "activityApplications.tabs.statuses", "activityApplications.tabs.consentDocuments",
-                "activityApplications.tabs.applicationSettings", "activityApplications.tabs.applicationPath",
+                "activityApplications.tabs.statuses",
+                "activityApplications.tabs.consentDocuments",
+                "activityApplications.tabs.applicationSettings",
+                "activityApplications.tabs.applicationPath",
             ],
         },
         {
@@ -194,32 +227,44 @@ describe("parameters tab wrappers — translated tab links", () => {
         },
     ];
 
-    for (const {name, Component, props, keys} of CASES) {
+    for (const { name, Component, props, keys } of CASES) {
         describe(name, () => {
-            test.each(["fr", "en"])("renders every tab name as a link in %s", async (lng) => {
-                await i18n.changeLanguage(lng);
-                const t = i18n.getFixedT(lng, "parameters");
+            test.each(["fr", "en"])(
+                "renders every tab name as a link in %s",
+                async (lng) => {
+                    await i18n.changeLanguage(lng);
+                    const t = i18n.getFixedT(lng, "parameters");
 
-                render(<Component {...props} />);
+                    render(<Component {...props} />);
 
-                for (const key of keys) {
-                    expect(screen.getByRole("link", {name: t(key)})).toBeInTheDocument();
+                    for (const key of keys) {
+                        expect(
+                            screen.getByRole("link", { name: t(key) })
+                        ).toBeInTheDocument();
+                    }
                 }
-            });
+            );
         });
     }
 
     test.each([
         ["fr", "Type de groupes", "Professeurs"],
         ["en", "Band types", "Teachers"],
-    ])("explicit spot-check in %s (Practice band-types tab, Plannings teachers tab)", async (lng, band, teacher) => {
-        await i18n.changeLanguage(lng);
-        render(<PracticeParameters />);
-        expect(screen.getByRole("link", {name: band})).toBeInTheDocument();
+    ])(
+        "explicit spot-check in %s (Practice band-types tab, Plannings teachers tab)",
+        async (lng, band, teacher) => {
+            await i18n.changeLanguage(lng);
+            render(<PracticeParameters />);
+            expect(
+                screen.getByRole("link", { name: band })
+            ).toBeInTheDocument();
 
-        render(<PlanningsParameters seasons={[]} />);
-        expect(screen.getByRole("link", {name: teacher})).toBeInTheDocument();
-    });
+            render(<PlanningsParameters seasons={[]} />);
+            expect(
+                screen.getByRole("link", { name: teacher })
+            ).toBeInTheDocument();
+        }
+    );
 });
 
 // ============================================================================================
@@ -232,7 +277,9 @@ describe("ActivitiesParameters — pricing-categories page heading", () => {
     ])("renders the h2 heading in %s", async (lng, heading) => {
         await i18n.changeLanguage(lng);
         render(<ActivitiesParameters />);
-        expect(screen.getByRole("heading", {name: heading})).toBeInTheDocument();
+        expect(
+            screen.getByRole("heading", { name: heading })
+        ).toBeInTheDocument();
     });
 });
 
@@ -244,19 +291,24 @@ describe("ActivityApplicationsParameters — stepDesc threaded into ApplicationS
     test.each([
         ["fr", "Message tarifs", "Message disponibilités"],
         ["en", "Pricing message", "Availability message"],
-    ])("passes the translated desc props in %s", async (lng, pricingDesc, availabilityDesc) => {
-        await i18n.changeLanguage(lng);
-        render(<ActivityApplicationsParameters />);
+    ])(
+        "passes the translated desc props in %s",
+        async (lng, pricingDesc, availabilityDesc) => {
+            await i18n.changeLanguage(lng);
+            render(<ActivityApplicationsParameters />);
 
-        // BaseParameters only mounts the active tab; activate the 4th tab ("applicationPath").
-        const t = i18n.getFixedT(lng, "parameters");
-        await userEvent.click(
-            screen.getByRole("link", {name: t("activityApplications.tabs.applicationPath")}),
-        );
+            // BaseParameters only mounts the active tab; activate the 4th tab ("applicationPath").
+            const t = i18n.getFixedT(lng, "parameters");
+            await userEvent.click(
+                screen.getByRole("link", {
+                    name: t("activityApplications.tabs.applicationPath"),
+                })
+            );
 
-        const steps = screen.getAllByTestId("stub-step-parameters");
-        const texts = steps.map((el) => el.textContent);
-        expect(texts).toContain(pricingDesc);
-        expect(texts).toContain(availabilityDesc);
-    });
+            const steps = screen.getAllByTestId("stub-step-parameters");
+            const texts = steps.map((el) => el.textContent);
+            expect(texts).toContain(pricingDesc);
+            expect(texts).toContain(availabilityDesc);
+        }
+    );
 });
