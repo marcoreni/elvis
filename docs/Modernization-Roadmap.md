@@ -530,8 +530,13 @@ was already peer-dep-unverified past React 16 anyway.
   server-side/manual pagination+sorting+filtering (v6's `manual` prop → v8's `manualPagination`/
   `manualSorting`/`manualFiltering` table options), per-column `sortable`/`filterable` toggles,
   custom `Cell` renderers, `resizable`. One feature has no v8 built-in equivalent: `SubComponent`
-  (expandable rows), used in 6 files (`DuePaymentList`, `LessonList`, `Localisations`,
-  `PackUtilization`, `Activity.jsx`, `parameters/BaseDataTable.jsx`) — v8 needs
+  (expandable rows), used in 6 files. **Correction (2026-09-19):** an earlier pass of this list said
+  `parameters/BaseDataTable.jsx` was one of the 6 — wrong, checked by grepping the literal
+  `SubComponent` prop (not just the coincidentally-named `subComponent` state key
+  `parameters/BaseDataTable.jsx` carries but never wires up, confirmed dead/unused by grepping all
+  12 real extenders — harmless to have left inert in batch 2). The actual 6th file is
+  `generalPayments/PaymentList.jsx`, missed by the earlier pass. Correct list: `DuePaymentList`,
+  `PaymentList`, `LessonList`, `Localisations`, `PackUtilization`, `Activity.jsx` — v8 needs
   `getExpandedRowModel()` plus a hand-rolled extra `<tr colSpan>`. `Activity.jsx` additionally has a
   custom `Expander` cell renderer + `expander: true` column config — the most complex table in the
   set, not proof-of-concept material.
@@ -604,14 +609,19 @@ was already peer-dep-unverified past React 16 anyway.
      scope, not on every render) so `TanStackGrid` re-renders far less often in the first place. Not
      tackled here — explicitly deferred until all of this item's batches land, since it's a
      consumer-side fix orthogonal to any single batch's own table-engine swap.
-  3. The 6 `SubComponent`/expander tables together (excluding `Activity.jsx`) — write the
-     `getExpandedRowModel()` pattern once, reuse across all of them. `DuePaymentList.jsx` is one of
-     these and is one of 4 real consumers of `frontend/components/ReactTableFullScreen.jsx`
-     (`UserList.jsx`, `generalPayments/CheckList.jsx`, `generalPayments/PaymentList.jsx` are the
-     other 3, none of which use `SubComponent` themselves) — rewriting `ReactTableFullScreen.jsx`
-     to v8 here for `DuePaymentList`'s sake affects those other 3 too, so fold them into this batch
-     rather than leaving them on the shared component's old v6 codepath while everything else
-     moves on.
+  3. The 5 `SubComponent`/expander tables together (excluding `Activity.jsx`, see the
+     `SubComponent`-list correction above): `DuePaymentList`, `PaymentList`, `LessonList`,
+     `Localisations`, `PackUtilization` — write the `getExpandedRowModel()` pattern once, reuse
+     across all of them. `DuePaymentList.jsx` and `generalPayments/PaymentList.jsx` are also 2 of 4
+     real consumers of `frontend/components/ReactTableFullScreen.jsx` (`UserList.jsx`,
+     `generalPayments/CheckList.jsx` are the other 2 — `ReactTableFullScreen` consumers, but neither
+     uses `SubComponent` itself) — rewriting `ReactTableFullScreen.jsx` to v8 here for
+     `DuePaymentList`/`PaymentList`'s sake affects those other 2 too, so fold them into this batch
+     rather than leaving them on the shared component's old v6 codepath while everything else moves
+     on. Net batch-3 file set: `ReactTableFullScreen.jsx` + `DuePaymentList`, `PaymentList`,
+     `UserList`, `CheckList` (share the fullscreen wrapper) + `LessonList`, `Localisations`,
+     `PackUtilization` (standalone `<ReactTable>` + `SubComponent`, no fullscreen) — 8 files total,
+     not 6; the extra 2 come from `UserList`/`CheckList` riding along via the shared wrapper.
   4. Remaining standalone direct importers not covered above (`AdhesionList`, `PaymentScheduleList`,
      `SubPaymentList`, `TemplateIndex`, `ApplicationStatusTable`, `PlanningListRooms`,
      `PlanningListTeachers`, `FailedPaymentImportsPage`, `StopList`, `UserAttach`, `SeasonsList`,
