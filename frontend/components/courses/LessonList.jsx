@@ -1,5 +1,5 @@
 import React from "react";
-import ReactTable from "react-table";
+import TanStackGrid from "../common/baseDataTable/TanStackGrid";
 import Select from "react-select";
 import { toast } from "react-toastify";
 import { withTranslation, useTranslation } from "react-i18next";
@@ -348,7 +348,11 @@ class LessonList extends React.Component {
         });
 
         debounce(() =>
-            fetchInstancesList(filter).then(({ data, pages, total }) => {
+            fetchInstancesList(filter).then((result) => {
+                // fetchInstancesList resolves to undefined on a fetch error (its own .catch
+                // swallows and toasts). TanStackGrid assumes an array (reads .length); fall back
+                // defensively rather than propagate that into a render-time crash.
+                const { data = [], pages, total } = result || {};
                 const processedData = data.map((activity) => {
                     const referenceDate = findAndGet(
                         filter.filtered,
@@ -1177,71 +1181,47 @@ class LessonList extends React.Component {
                     {this.state.targets.length > 0
                         ? this.renderTargetsAlert()
                         : null}
-                    <ReactTable
-                        key={this.state.filter.filtered
-                            .map((f) => f.id)
-                            .join("-")}
+                    <TanStackGrid
+                        tableName="table-lessons"
                         style={{ backgroundColor: "white" }}
                         data={this.state.data}
-                        manual
                         pages={this.state.pages}
                         columns={filteredColumns}
                         loading={this.state.loading}
                         pageSizeOptions={[5, 10, 15, 20, 50, 100]}
-                        page={
-                            this.state.filter.page <= this.state.pages
-                                ? this.state.filter.page
-                                : this.state.pages - 1
-                        }
-                        pageSize={this.state.filter.pageSize}
-                        sorted={this.state.filter.sorted}
-                        filtered={this.state.filter.filtered}
-                        onPageChange={(page) =>
-                            this.fetchData({ ...this.state.filter, page })
-                        }
-                        onPageSizeChange={(pageSize, page) =>
+                        pagination={{
+                            pageIndex:
+                                this.state.filter.page <= this.state.pages
+                                    ? this.state.filter.page
+                                    : this.state.pages - 1,
+                            pageSize: this.state.filter.pageSize,
+                        }}
+                        onPaginationChange={({ pageIndex, pageSize }) =>
                             this.fetchData({
                                 ...this.state.filter,
-                                page,
+                                page: pageIndex,
                                 pageSize,
                             })
                         }
-                        onSortedChange={(sorted) =>
+                        sorting={this.state.filter.sorted}
+                        onSortingChange={(sorted) =>
                             this.fetchData({ ...this.state.filter, sorted })
                         }
-                        onFilteredChange={(filtered) =>
+                        columnFilters={this.state.filter.filtered}
+                        onColumnFiltersChange={(filtered) =>
                             this.fetchData({
                                 ...this.state.filter,
                                 filtered,
                                 page: 0,
                             })
                         }
-                        filterable
-                        sortable
-                        resizable={true}
-                        previousText={t("common:reactTable.previousText")}
-                        nextText={t("common:reactTable.nextText")}
-                        loadingText={t("common:reactTable.loadingText")}
-                        noDataText={t("common:reactTable.noDataText")}
-                        pageText={t("common:reactTable.pageText")}
-                        ofText={t("common:reactTable.ofText")}
-                        rowsText={t("common:reactTable.rowsText")}
                         minRows={10}
-                        getTrProps={(state, rowInfo, column) => {
-                            if (rowInfo) {
-                                if (rowInfo.original.isOnlyOneOption) {
-                                    return {
-                                        style: {
-                                            color: "#9575CD",
-                                        },
-                                    };
-                                }
-                                if (rowInfo.original.options.length != 0) {
-                                }
-                            }
-                            return {};
-                        }}
-                        SubComponent={(row) => {
+                        getRowProps={(original) =>
+                            original.isOnlyOneOption
+                                ? { style: { color: "#9575CD" } }
+                                : undefined
+                        }
+                        renderSubComponent={(row) => {
                             let hasUser =
                                 row.original.users.filter(
                                     (u) =>

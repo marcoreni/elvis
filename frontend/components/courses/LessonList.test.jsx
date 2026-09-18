@@ -6,11 +6,12 @@
 // covers it).
 //
 // What is mocked and why:
-//  - `react-table` (v6 default export) does DOM measurement / virtualisation that does not run in
-//    jsdom, and the point here is the i18n wiring, not the grid. The stub renders the resolved
-//    string `Header`s of the `columns` prop plus the `noDataText` / `previousText` / `nextText`
-//    i18n props, so the `t("lessonList.columns.*")` and `t("common:reactTable.*")` threading is
-//    what gets asserted.
+//  - `common/baseDataTable/TanStackGrid` (the real grid since item 13 batch 3) does DOM
+//    measurement that does not run in jsdom, and the point here is the i18n wiring, not the grid
+//    itself -- covered directly for TanStackGrid by its own consumers' tests elsewhere (e.g.
+//    PlanningsSettings.test.jsx, PaymentsSettings.test.jsx). The stub renders the resolved string
+//    `Header`s of the `columns` prop and stashes every prop so a test can invoke `Cell`/`Filter`/
+//    `renderSubComponent` directly with synthetic row data.
 //  - `MessageModal`, `ListPreferences`, `DeleteCourseModal` — heavy children that carry none of
 //    this component's own copy.
 //  - `sweetalert2` / `react-toastify` — only used in event handlers (not render); stubbed so the
@@ -31,23 +32,19 @@ import { act, render, screen, waitFor } from "@testing-library/react";
 import i18n from "../../i18n";
 import LessonList from "./LessonList";
 
-// The stub also stashes the live `SubComponent` render prop so a test can invoke it and reach
-// the otherwise-unexported UserList / UserRow.
-let lastReactTableProps = null;
-vi.mock("react-table", () => ({
+// Stashes the live grid props so a test can invoke the raw `Cell`/`Filter`/`renderSubComponent`
+// functions LessonList builds, and reach the otherwise-unexported UserList / UserRow.
+let lastGridProps = null;
+vi.mock("../common/baseDataTable/TanStackGrid", () => ({
     default: (props) => {
-        lastReactTableProps = props;
+        lastGridProps = props;
         return (
-            <div data-testid="react-table-stub">
+            <div data-testid="tanstack-grid-stub">
                 {(props.columns || []).map((c, i) => (
                     <span key={i} data-testid="rt-header">
                         {typeof c.Header === "string" ? c.Header : ""}
                     </span>
                 ))}
-                <span data-testid="rt-noDataText">{props.noDataText}</span>
-                <span data-testid="rt-previousText">{props.previousText}</span>
-                <span data-testid="rt-nextText">{props.nextText}</span>
-                <span data-testid="rt-loadingText">{props.loadingText}</span>
             </div>
         );
     },
@@ -185,14 +182,6 @@ describe("LessonList — column header row (i18n)", () => {
             ])
         );
 
-        // common:reactTable.* threading
-        expect(screen.getByTestId("rt-noDataText")).toHaveTextContent(
-            "Aucune donnée"
-        );
-        expect(screen.getByTestId("rt-previousText")).toHaveTextContent(
-            "Précédent"
-        );
-
         // courseCount <h2> — state.total starts at 0 (fetch is debounced), fr plural _other.
         expect(
             screen.getByRole("heading", { name: "0 cours" })
@@ -215,13 +204,6 @@ describe("LessonList — column header row (i18n)", () => {
                 "Occupancy",
                 "Action",
             ])
-        );
-
-        expect(screen.getByTestId("rt-noDataText")).toHaveTextContent(
-            "No data"
-        );
-        expect(screen.getByTestId("rt-previousText")).toHaveTextContent(
-            "Previous"
         );
 
         expect(
@@ -255,7 +237,7 @@ describe("LessonList — column header row (i18n)", () => {
 // stub props (same technique as the SubComponent reach below).
 describe("day column follows the active UI language (moment locale no longer forced to fr)", () => {
     const dayColumn = () =>
-        lastReactTableProps.columns.find((c) => c.id === "day");
+        lastGridProps.columns.find((c) => c.id === "day");
 
     test("Cell renders the weekday in French by default", async () => {
         await i18n.changeLanguage("fr");
@@ -336,8 +318,8 @@ describe("row expander (UserList / UserRow) — i18n", () => {
     const renderSubRow = async (lng) => {
         await i18n.changeLanguage(lng);
         render(<LessonList {...makeProps()} />);
-        await waitFor(() => expect(lastReactTableProps).not.toBeNull());
-        const sub = lastReactTableProps.SubComponent({
+        await waitFor(() => expect(lastGridProps).not.toBeNull());
+        const sub = lastGridProps.renderSubComponent({
             original: activityFixture(),
         });
         return render(sub);
@@ -379,9 +361,9 @@ describe("row expander (UserList / UserRow) — i18n", () => {
 
         await i18n.changeLanguage("fr");
         const frList = render(<LessonList {...makeProps()} />);
-        await waitFor(() => expect(lastReactTableProps).not.toBeNull());
+        await waitFor(() => expect(lastGridProps).not.toBeNull());
         const frSub = render(
-            lastReactTableProps.SubComponent({ original: withStoppedAt() })
+            lastGridProps.renderSubComponent({ original: withStoppedAt() })
         );
         expect(frSub.getByText("01/01/2020")).toBeInTheDocument();
         expect(frSub.getByText("15/06/2030")).toBeInTheDocument();
@@ -390,9 +372,9 @@ describe("row expander (UserList / UserRow) — i18n", () => {
 
         await i18n.changeLanguage("en");
         const enList = render(<LessonList {...makeProps()} />);
-        await waitFor(() => expect(lastReactTableProps).not.toBeNull());
+        await waitFor(() => expect(lastGridProps).not.toBeNull());
         const enSub = render(
-            lastReactTableProps.SubComponent({ original: withStoppedAt() })
+            lastGridProps.renderSubComponent({ original: withStoppedAt() })
         );
         expect(enSub.getByText("1/1/2020")).toBeInTheDocument();
         expect(enSub.getByText("6/15/2030")).toBeInTheDocument();
@@ -417,9 +399,9 @@ describe("row expander (UserList / UserRow) — i18n", () => {
 
         await i18n.changeLanguage("en");
         render(<LessonList {...makeProps()} />);
-        await waitFor(() => expect(lastReactTableProps).not.toBeNull());
+        await waitFor(() => expect(lastGridProps).not.toBeNull());
         const sub = render(
-            lastReactTableProps.SubComponent({ original: withParisMidnight() })
+            lastGridProps.renderSubComponent({ original: withParisMidnight() })
         );
         expect(sub.getByText("1/1/2020")).toBeInTheDocument();
         expect(sub.getByText("6/15/2030")).toBeInTheDocument();
@@ -433,9 +415,9 @@ describe("row expander (UserList / UserRow) — i18n", () => {
     test("studentLevel is set straight from the API's evaluation_level_ref string, no .label", async () => {
         await i18n.changeLanguage("fr");
         render(<LessonList {...makeProps()} />);
-        await waitFor(() => expect(lastReactTableProps).not.toBeNull());
+        await waitFor(() => expect(lastGridProps).not.toBeNull());
         render(
-            lastReactTableProps.SubComponent({ original: activityFixture() })
+            lastGridProps.renderSubComponent({ original: activityFixture() })
         );
 
         expect(lastApiSuccess).not.toBeNull();

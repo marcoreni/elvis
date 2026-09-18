@@ -194,6 +194,8 @@ interface TanStackGridProps {
     getRowProps?: (original: any) => React.HTMLAttributes<HTMLTableRowElement> | undefined;
     /** Renders a page-size `<select>` in the footer when set. */
     pageSizeOptions?: number[];
+    /** Extra inline style merged onto the root div (e.g. a background color). */
+    style?: React.CSSProperties;
     /** Controlled pagination -- see `onFetchData`. */
     pagination?: PaginationState;
     onPaginationChange?: (pagination: PaginationState) => void;
@@ -225,6 +227,7 @@ export default function TanStackGrid({
     renderSubComponent,
     getRowProps,
     pageSizeOptions,
+    style,
     pagination: controlledPagination,
     onPaginationChange,
     sorting: controlledSorting,
@@ -339,7 +342,7 @@ export default function TanStackGrid({
             ref={fullScreenRef}
             data-testid={tableName}
             className={isFullScreen ? "fullscreen fullscreen-enabled" : undefined}
-            style={isFullScreen ? {height: "100%", width: "100%"} : undefined}
+            style={isFullScreen ? {...style, height: "100%", width: "100%"} : style}
         >
             <table className="table">
                 <thead>
