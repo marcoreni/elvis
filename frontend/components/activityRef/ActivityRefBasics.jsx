@@ -417,6 +417,7 @@ class ActivityRefBasics extends React.Component {
                                         }
                                     />
                                 )}
+                                labellizer={(item) => item.pricing_category.name}
                                 showFullScreenButton={false}
                                 oneResourceTypeName={t(
                                     "activityRefBasics.pricing.oneResourceTypeName"

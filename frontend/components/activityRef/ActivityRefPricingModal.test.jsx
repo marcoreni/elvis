@@ -16,15 +16,17 @@
 // early return. Language via the frontend/i18n singleton; `afterEach` restores "fr".
 
 import React from "react";
-import {render, screen} from "@testing-library/react";
-import {Form} from "react-final-form";
+import { render, screen } from "@testing-library/react";
+import { Form } from "react-final-form";
 import i18n from "../../i18n";
 import ActivityRefPricingModal from "./ActivityRefPricingModal";
 
-vi.mock("../common/Input", () => ({default: props => <div>{props.label}</div>}));
+vi.mock("../common/Input", () => ({
+    default: (props) => <div>{props.label}</div>,
+}));
 vi.mock("react-select", () => ({
-    default: ({label, placeholder}) => (
-        <div data-testid="react-select">
+    default: ({ label, placeholder, required }) => (
+        <div data-testid="react-select" data-required={!!required}>
             {label ? <span>{label}</span> : null}
             {placeholder ? <span>{placeholder}</span> : null}
         </div>
@@ -37,14 +39,17 @@ afterEach(async () => {
 
 function renderModal(extraProps = {}) {
     const props = {
-        seasons: [{id: 1, label: "2025-26"}],
-        pricingCategories: [{id: 1, name: "Trimestre"}],
+        seasons: [{ id: 1, label: "2025-26" }],
+        pricingCategories: [{ id: 1, name: "Trimestre" }],
         isUpdate: false,
         item: undefined,
         ...extraProps,
     };
     return render(
-        <Form onSubmit={() => {}} render={() => <ActivityRefPricingModal {...props} />} />,
+        <Form
+            onSubmit={() => {}}
+            render={() => <ActivityRefPricingModal {...props} />}
+        />
     );
 }
 
@@ -61,18 +66,24 @@ describe("ActivityRefPricingModal", () => {
             expect(screen.getByText("Type de tarif :")).toBeInTheDocument();
             expect(screen.getByText("Prix")).toBeInTheDocument();
             expect(screen.getByText("à partir de :")).toBeInTheDocument();
-            expect(screen.getByText("jusqu'à (optionnel) :")).toBeInTheDocument();
+            expect(
+                screen.getByText("jusqu'à (optionnel) :")
+            ).toBeInTheDocument();
         });
 
         test("renders the Field label / placeholder copy (via stubs)", async () => {
             await i18n.changeLanguage("fr");
             renderModal();
 
-            expect(screen.getByText("Choisir une catégorie de tarif")).toBeInTheDocument();
             expect(
-                screen.getByText("sélectionner une catégorie de tarif"),
+                screen.getByText("Choisir une catégorie de tarif")
             ).toBeInTheDocument();
-            expect(screen.getAllByText("sélectionner une saison")).toHaveLength(2);
+            expect(
+                screen.getByText("sélectionner une catégorie de tarif")
+            ).toBeInTheDocument();
+            expect(screen.getAllByText("sélectionner une saison")).toHaveLength(
+                2
+            );
         });
     });
 
@@ -91,24 +102,48 @@ describe("ActivityRefPricingModal", () => {
             await i18n.changeLanguage("en");
             renderModal();
 
-            expect(screen.getByText("Choose a pricing category")).toBeInTheDocument();
-            expect(screen.getByText("select a pricing category")).toBeInTheDocument();
+            expect(
+                screen.getByText("Choose a pricing category")
+            ).toBeInTheDocument();
+            expect(
+                screen.getByText("select a pricing category")
+            ).toBeInTheDocument();
             expect(screen.getAllByText("select a season")).toHaveLength(2);
         });
     });
 
+    // Regression: ReactSelectAdapter used to hardcode `required` on every <Select> it rendered,
+    // regardless of the field -- so "until (optional):" (toSeason, no `required` prop on its
+    // Field) was blocked by the browser's native "please fill this field" validation exactly like
+    // "from:" (fromSeason, which *is* meant to be required). The adapter now only forwards
+    // whatever `required` each Field actually declares.
+    test("only the pricing-category and from-season selects are required; until (optional) is not", async () => {
+        renderModal();
+
+        const selects = screen.getAllByTestId("react-select");
+        expect(selects).toHaveLength(3);
+        const [pricingType, fromSeason, toSeason] = selects;
+        expect(pricingType).toHaveAttribute("data-required", "true");
+        expect(fromSeason).toHaveAttribute("data-required", "true");
+        expect(toSeason).toHaveAttribute("data-required", "false");
+    });
+
     describe("isUpdate with unresolvable options → common:loading early return", () => {
-        const item = {pricing_category: {id: 9}, from_season_id: 9, to_season_id: 9};
+        const item = {
+            pricing_category: { id: 9 },
+            from_season_id: 9,
+            to_season_id: 9,
+        };
 
         test("fr", async () => {
             await i18n.changeLanguage("fr");
-            renderModal({isUpdate: true, item});
+            renderModal({ isUpdate: true, item });
             expect(screen.getByText("Chargement...")).toBeInTheDocument();
         });
 
         test("en", async () => {
             await i18n.changeLanguage("en");
-            renderModal({isUpdate: true, item});
+            renderModal({ isUpdate: true, item });
             expect(screen.getByText("Loading...")).toBeInTheDocument();
         });
     });

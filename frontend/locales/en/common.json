@@ -44,7 +44,9 @@
         "deleteQuestion": "Do you really want to delete {{name}}: {{label}}?",
         "loadError": "An error occurred while loading the data.",
         "itemNotFound": "The item could not be found in the list of items.",
-        "fullScreenTooltip": "Make the table fullscreen"
+        "fullScreenTooltip": "Make the table fullscreen",
+        "resultsCount_one": "{{count}} result",
+        "resultsCount_other": "{{count}} results"
     },
     "itemFormModal": {
         "updateTitleFallback": "Update",
