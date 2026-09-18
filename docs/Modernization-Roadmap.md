@@ -555,8 +555,55 @@ was already peer-dep-unverified past React 16 anyway.
      for the 3 consumers plus a rewritten `BaseDataTable.test.jsx` — now asserts against real
      rendered DOM instead of a mocked `"react-table"` module, since v8 is headless and needs no
      jsdom workaround), `tsc --noEmit` clean, `yarn build` clean.
-  2. `parameters/BaseDataTable.jsx` + its 12 extenders — recheck the i18n-singleton caveat still
-     holds under v8.
+  2. **DONE (2026-09-19, `feat/tanstack-table-batch2-parameters-basedatatable`).**
+     `parameters/BaseDataTable.jsx` (class-based, `class X extends BaseDataTable`, 12 extenders)
+     rewritten to v8. The i18n-singleton caveat still holds unchanged: this class still can't be
+     `withTranslation()`-wrapped without breaking the inheritance chain, so it still reads `i18n.t`
+     directly (see the comment at the top of the file) — orthogonal to the table-engine swap.
+     Rather than duplicate batch 1's ~200 lines of grid-rendering/pagination-footer logic between
+     the two BaseDataTable wrappers, extracted it into a new shared
+     `common/baseDataTable/TanStackGrid.tsx` (the `useReactTable()` setup, the `toTanStackColumn`
+     adapter, fullscreen wiring, and the hand-rolled `<table>` + pagination JSX); both wrappers now
+     just own their CRUD state/modals and render `<TanStackGrid columns={...} data={...} .../>`.
+     Per an explicit standing instruction, `TanStackGrid.tsx` is TypeScript + a functional
+     component (new files going forward should be too, to reduce future refactoring — see
+     `frontend/types/untyped-modules.d.ts`'s new `declare module "fscreen"` entry, added for this
+     file's `tsc` pass). `fetchData`'s signature simplified from v6's `fetchData(state, instance)`
+     to a single `fetchData(filter)` — safe, since every subclass already only ever called
+     `this.fetchData(this.state.tableState)` with one argument. Also hardened against a malformed/
+     empty API response (`data: data.status || []`, was `data: data.status`), found live via a test
+     failure, not a reported bug. Investigated, and fixed, a real TanStack v8 caching bug along the
+     way — `getCoreRowModel()`'s internal memoization doesn't reliably invalidate under this app's
+     render-frequency churn (react-final-form re-rendering embedding forms on every field
+     interaction, plus `dataService`/`columns` rebuilt fresh every render in `ActivityRefBasics.jsx`
+     /`EditFormule.jsx` — see the follow-up flagged below); fixed by unconditionally discarding the
+     memoized row model each render inside `TanStackGrid`, which is cheap (only rebuilds lightweight
+     row-wrapper objects, no cell rendering) — documented in full in a comment at the deletion site.
+     Removing `react-table` from this file broke test-suite assumptions baked into 4 test files that
+     mocked the `"react-table"` package to both stub headers (`col-header` testid) and silently
+     swallow the mount-time `onFetchData` call (so no real `fetch()` ever fired): `PlanningsSettings
+     .test.jsx`, `PracticeTables.test.jsx`, `Payments/PaymentsSettings.test.jsx`,
+     `ParametersChrome.test.jsx`. Fixed by querying real rendered `<thead>` DOM instead of the old
+     stub testid, and by adding/reordering `global.fetch` mocks so a delete-error test's own narrow
+     override doesn't leak into the mount's own incidental list-fetch. `ParametersChrome.test.jsx`'s
+     two BaseDataTable-chrome tests additionally needed a full rewrite: they asserted on
+     `previousText`/`nextText`/etc. props once passed straight through to the real `<ReactTable>`
+     component, which no longer exist as props at all now that `TanStackGrid` resolves that copy
+     internally via `useTranslation` — rewritten to assert against the actual rendered pagination
+     footer text instead. Verified: full `vitest run` (1318 tests, was 1316 pre-batch — net +2 from
+     the AdhesionSettings-style regression tests folded into the fixed files), `tsc --noEmit` clean,
+     and live-checked in the browser (`/parameters/practice_parameters` Band types + Music genre
+     tabs, `/parameters/payment_parameters` Payment methods tab including sorting by Label) — no
+     console errors, sorting/filtering/pagination all behave as before.
+
+     **Follow-up flagged during batch 1, still open:** `ActivityRefBasics.jsx` and `EditFormule.jsx`
+     (the functional wrapper's other 2 consumers) rebuild their `dataService`/`columns` props fresh
+     on every render, which is what drives the `getCoreRowModel()` churn above into being an
+     externally-observable problem rather than a latent one. The real long-term fix is to stabilize
+     those two callers' `dataService`/`columns` identity (build once, e.g. via `useMemo`/module
+     scope, not on every render) so `TanStackGrid` re-renders far less often in the first place. Not
+     tackled here — explicitly deferred until all of this item's batches land, since it's a
+     consumer-side fix orthogonal to any single batch's own table-engine swap.
   3. The 6 `SubComponent`/expander tables together (excluding `Activity.jsx`) — write the
      `getExpandedRowModel()` pattern once, reuse across all of them. `DuePaymentList.jsx` is one of
      these and is one of 4 real consumers of `frontend/components/ReactTableFullScreen.jsx`

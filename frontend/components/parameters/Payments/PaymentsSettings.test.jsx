@@ -292,6 +292,16 @@ describe("PaymentsMethods / PaymentsStatus — class tables extending BaseDataTa
         },
     };
 
+    // TanStackGrid (the real grid `parameters/BaseDataTable` renders since batch 2, see
+    // docs/Modernization-Roadmap.md item 13) renders headers as real `<th>`s, not the old
+    // react-table stub's `col-header` spans -- read them from the DOM instead, stripping the
+    // sort-direction arrow TanStackGrid appends to the active sort column.
+    function getRenderedHeaders(container) {
+        return [...container.querySelectorAll("thead tr:first-child th")].map(
+            (th) => th.textContent.replace(/ [▲▼]$/, "")
+        );
+    }
+
     function mountInstance(WrappedDefault, lng) {
         const Klass = WrappedDefault.WrappedComponent;
         let inst;
@@ -316,13 +326,11 @@ describe("PaymentsMethods / PaymentsStatus — class tables extending BaseDataTa
                 "renders the translated column headers in %s",
                 async (lng) => {
                     await i18n.changeLanguage(lng);
-                    render(<cfg.Component urlListData="/x" urlNew="/x/new" />);
+                    const { container } = render(
+                        <cfg.Component urlListData="/x" urlNew="/x/new" />
+                    );
 
-                    const got = screen
-                        .getAllByTestId("col-header")
-                        .map((el) => el.textContent)
-                        .filter(Boolean);
-                    expect(got).toEqual(cfg[lng]);
+                    expect(getRenderedHeaders(container)).toEqual(cfg[lng]);
                 }
             );
 
@@ -357,12 +365,15 @@ describe("PaymentsMethods / PaymentsStatus — class tables extending BaseDataTa
                     swal.fire.mockImplementation(() =>
                         Promise.resolve({ isConfirmed: true })
                     );
+                    const inst = mountInstance(cfg.Component, lng);
+                    // The mount's own list-fetch already resolved against the file's default
+                    // global.fetch (set in the top-level beforeEach); only now swap in the
+                    // narrower response deleteStatus's own DELETE call expects.
                     global.fetch = vi.fn().mockResolvedValue({
                         status: 422,
                         text: () => Promise.resolve("boom"),
                     });
 
-                    const inst = mountInstance(cfg.Component, lng);
                     inst.deleteStatus({ id: 1, label: "Visa" });
                     await new Promise((r) => setTimeout(r, 0));
                     await new Promise((r) => setTimeout(r, 0));

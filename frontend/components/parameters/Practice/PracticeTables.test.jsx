@@ -20,22 +20,32 @@
 // (mirrors the "getting an instance of a withTranslation-wrapped class" note in the qa brief).
 
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { render } from "@testing-library/react";
 import i18n from "../../../i18n";
 
-// --- react-table stub: echo every column's (string) Header into the DOM, in column order.
-//     Also short-circuits the real ReactTable's mount-time `onFetchData` -> no `fetch`.
-vi.mock("react-table", () => ({
-    default: ({ columns = [] }) => (
-        <div data-testid="react-table">
-            {columns.map((col, idx) => (
-                <span key={idx} data-testid="col-header">
-                    {typeof col.Header === "string" ? col.Header : ""}
-                </span>
-            ))}
-        </div>
-    ),
-}));
+// Since docs/Modernization-Roadmap.md item 13 batch 2, parameters/BaseDataTable.jsx no longer
+// imports "react-table" at all -- it renders a real TanStack Table v8 grid (TanStackGrid), which
+// genuinely fires its own mount-time list-fetch (the old react-table stub below used to silently
+// swallow that -- see its comment in git history). Column headers are asserted against the real
+// rendered <thead> via `getRenderedHeaders` instead of a stub; the default `global.fetch` below
+// keeps every other mount's incidental list-fetch from rejecting unhandled.
+beforeEach(() => {
+    global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve({}),
+        text: () => Promise.resolve(""),
+    });
+});
+
+// The currently-sorted column (parameters/BaseDataTable.jsx hardcodes defaultSorted to id "id")
+// gets a trailing sort-arrow decoration in its header text; strip it, it's incidental to what
+// these tests actually check (i18n of the header labels).
+function getRenderedHeaders(container) {
+    return [...container.querySelectorAll("thead tr:first-child th")].map(
+        (th) => th.textContent.replace(/ [▲▼]$/, "")
+    );
+}
 
 // --- sweetalert2 stub: `swal(opts)` resolves to `{}` so `.then(res => res.isConfirmed)` is
 //     falsy and no DELETE `fetch` fires from `deleteStatus`.
@@ -207,14 +217,14 @@ describe("Practice tables — translated column headers", () => {
                 "renders the expected column headers in %s",
                 async (lng) => {
                     await i18n.changeLanguage(lng);
-                    render(<Component urlListData="/x" urlNew="/x/new" />);
+                    const { container } = render(
+                        <Component urlListData="/x" urlNew="/x/new" />
+                    );
 
-                    const got = screen
-                        .getAllByTestId("col-header")
-                        .map((el) => el.textContent)
-                        .filter(Boolean);
-
-                    expect(got).toEqual(["#", ...headers[lng]]);
+                    expect(getRenderedHeaders(container)).toEqual([
+                        "#",
+                        ...headers[lng],
+                    ]);
                 }
             );
         });
@@ -226,10 +236,10 @@ describe("Practice tables — translated column headers", () => {
         ["en", "Name", "Actions"],
     ])("shared headers in %s (BandsType)", async (lng, nameCol, actionsCol) => {
         await i18n.changeLanguage(lng);
-        render(<BandsType urlListData="/x" urlNew="/x/new" />);
-        const got = screen
-            .getAllByTestId("col-header")
-            .map((el) => el.textContent);
+        const { container } = render(
+            <BandsType urlListData="/x" urlNew="/x/new" />
+        );
+        const got = getRenderedHeaders(container);
         expect(got).toContain(nameCol);
         expect(got).toContain(actionsCol);
     });
@@ -239,10 +249,10 @@ describe("Practice tables — translated column headers", () => {
         ["en", "Active?"],
     ])("boolean 'active' header in %s (Features)", async (lng, activeCol) => {
         await i18n.changeLanguage(lng);
-        render(<Features urlListData="/x" urlNew="/x/new" />);
-        expect(
-            screen.getAllByTestId("col-header").map((el) => el.textContent)
-        ).toContain(activeCol);
+        const { container } = render(
+            <Features urlListData="/x" urlNew="/x/new" />
+        );
+        expect(getRenderedHeaders(container)).toContain(activeCol);
     });
 
     test.each([
@@ -250,10 +260,10 @@ describe("Practice tables — translated column headers", () => {
         ["en", ["Band name", "Type", "Music genre"]],
     ])("Groups table-specific headers in %s", async (lng, cols) => {
         await i18n.changeLanguage(lng);
-        render(<Groups urlListData="/x" urlNew="/x/new" />);
-        const got = screen
-            .getAllByTestId("col-header")
-            .map((el) => el.textContent);
+        const { container } = render(
+            <Groups urlListData="/x" urlNew="/x/new" />
+        );
+        const got = getRenderedHeaders(container);
         for (const c of cols) expect(got).toContain(c);
     });
 
@@ -262,10 +272,10 @@ describe("Practice tables — translated column headers", () => {
         ["en", ["Number of hours", "Solo/duo rate", "Group rate"]],
     ])("FlatRate table-specific headers in %s", async (lng, cols) => {
         await i18n.changeLanguage(lng);
-        render(<FlatRate urlListData="/x" urlNew="/x/new" />);
-        const got = screen
-            .getAllByTestId("col-header")
-            .map((el) => el.textContent);
+        const { container } = render(
+            <FlatRate urlListData="/x" urlNew="/x/new" />
+        );
+        const got = getRenderedHeaders(container);
         for (const c of cols) expect(got).toContain(c);
     });
 
@@ -274,10 +284,10 @@ describe("Practice tables — translated column headers", () => {
         ["en", ["Active?", "Price /h"]],
     ])("Materials table-specific headers in %s", async (lng, cols) => {
         await i18n.changeLanguage(lng);
-        render(<Materials urlListData="/x" urlNew="/x/new" />);
-        const got = screen
-            .getAllByTestId("col-header")
-            .map((el) => el.textContent);
+        const { container } = render(
+            <Materials urlListData="/x" urlNew="/x/new" />
+        );
+        const got = getRenderedHeaders(container);
         for (const c of cols) expect(got).toContain(c);
     });
 });
@@ -416,12 +426,14 @@ describe("Practice tables — deleteStatus swal i18n", () => {
             swal.fire.mockImplementation(() =>
                 Promise.resolve({ isConfirmed: true })
             );
+            const inst = mountInstance(Materials, lng);
+            // The mount's own list-fetch already resolved against the safe beforeEach default;
+            // only now swap in the narrower response deleteStatus's own DELETE call expects.
             global.fetch = vi.fn().mockResolvedValue({
                 status: 422,
                 text: () => Promise.resolve("boom"),
             });
 
-            const inst = mountInstance(Materials, lng);
             await inst.deleteStatus({ id: 1, name: "Amp" });
             await new Promise((r) => setTimeout(r, 0));
 
@@ -431,8 +443,6 @@ describe("Practice tables — deleteStatus swal i18n", () => {
             expect(errCall).toBeTruthy();
             expect(errCall[0].title).toBe(t("shared.errorTitle"));
             expect(errCall[0].text).toBe("boom");
-
-            delete global.fetch;
         }
     );
 });

@@ -1,9 +1,9 @@
 import React, {Component, Fragment} from "react";
-import ReactTable from "react-table";
 import {csrfToken} from "../utils";
 import i18n from "../../i18n";
+import TanStackGrid from "../common/baseDataTable/TanStackGrid";
 
-// `BaseDataTable` is a base class extended by ~15 CRUD tables (`class X extends BaseDataTable`),
+// `BaseDataTable` is a base class extended by ~12 CRUD tables (`class X extends BaseDataTable`),
 // so it cannot be wrapped in `withTranslation()` without breaking that inheritance chain. It reads
 // the i18n singleton directly instead. Consequence: these strings are resolved once at render and
 // do not re-derive on `languageChanged` — currently harmless (nothing calls `i18n.changeLanguage`
@@ -30,22 +30,26 @@ export default class BaseDataTable extends Component
             tableState: {},
             subComponent: null
         };
+
+        this.fetchData = this.fetchData.bind(this);
     }
 
-    fetchData(state, instance)
+    fetchData(filter)
     {
-        this.setState({ loading: true, filter: state, tableState: state });
+        this.setState({ loading: true, filter, tableState: filter });
 
         this.requestData.call(this,
-            state.pageSize,
-            state.page,
-            state.sorted,
-            state.filtered,
+            filter.pageSize,
+            filter.page,
+            filter.sorted,
+            filter.filtered,
         )
             .then(response => response.json())
             .then(data => {
                 return {
-                    data: data.status,
+                    // TanStackGrid assumes an array (reads .length); fall back defensively rather
+                    // than propagate a malformed/empty response into a render-time crash.
+                    data: data.status || [],
                     pages: data.pages,
                     total: data.total,
                 };
@@ -90,32 +94,14 @@ export default class BaseDataTable extends Component
             </div>
             <div className="row">
                 <div className="col">
-                    <ReactTable
-                        data={data}
-                        manual
-                        pages={pages}
-                        loading={loading}
-                        onFetchData={(state, instance) => this.fetchData.call(this, state, instance)}
+                    <TanStackGrid
+                        tableName={"table-" + (this.props.urlListData || "parameters")}
                         columns={this.state.columns}
+                        data={data}
+                        loading={loading}
+                        pages={pages}
+                        onFetchData={this.fetchData}
                         defaultSorted={[{ id: "id", desc: true }]}
-                        filterable
-                        defaultFilterMethod={(filter, row) => {
-                            if (row[filter.id] != null) {
-                                return row[filter.id]
-                                    .toLowerCase()
-                                    .startsWith(filter.value.toLowerCase());
-                            }
-                        }}
-                        resizable={false}
-                        previousText={i18n.t("common:reactTable.previousText")}
-                        nextText={i18n.t("common:reactTable.nextText")}
-                        loadingText={i18n.t("common:reactTable.loadingText")}
-                        noDataText={i18n.t("common:reactTable.noDataText")}
-                        pageText={i18n.t("common:reactTable.pageText")}
-                        ofText={i18n.t("common:reactTable.ofText")}
-                        rowsText={i18n.t("common:reactTable.rowsText")}
-                        minRows={1}
-                        SubComponent={this.state.subComponent}
                     />
                 </div>
             </div>

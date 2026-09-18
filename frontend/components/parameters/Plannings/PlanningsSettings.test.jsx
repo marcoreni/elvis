@@ -564,16 +564,21 @@ describe("EvaluationLevels", () => {
         ).toBe(BaseDataTable.prototype);
     });
 
+    // EvaluationLevels extends parameters/BaseDataTable.jsx, which renders a real TanStack Table
+    // v8 grid (TanStackGrid) since docs/Modernization-Roadmap.md item 13 batch 2 -- no more
+    // "react-table" stub to read columns off of. Headers render regardless of fetched data, so
+    // this asserts against the real <thead>; the currently-sorted column ("#", id, per the base
+    // class's hardcoded defaultSorted) gets a trailing sort-arrow decoration stripped here since
+    // it's incidental to what this test actually checks (i18n of the header labels).
     test.each(["fr", "en"])(
         "renders the translated column headers in %s",
         async (lng) => {
             await i18n.changeLanguage(lng);
-            render(<EvaluationLevels />);
+            const { container } = render(<EvaluationLevels />);
 
-            const got = screen
-                .getAllByTestId("col-header")
-                .map((el) => el.textContent)
-                .filter(Boolean);
+            const got = [
+                ...container.querySelectorAll("thead tr:first-child th"),
+            ].map((th) => th.textContent.replace(/ [▲▼]$/, ""));
             expect(got).toEqual(HEADERS[lng]);
         }
     );
@@ -582,19 +587,52 @@ describe("EvaluationLevels", () => {
         "can_continue Cell renders shared.yes / shared.no in %s",
         async (lng) => {
             await i18n.changeLanguage(lng);
+            const t = tP(lng);
 
-            globalThis.__rtRow = { can_continue: true };
+            global.fetch = vi.fn().mockResolvedValue({
+                ok: true,
+                status: 200,
+                json: () =>
+                    Promise.resolve({
+                        status: [
+                            {
+                                id: 1,
+                                label: "Zephyr",
+                                value: 1,
+                                can_continue: true,
+                            },
+                        ],
+                        pages: 1,
+                        total: 1,
+                    }),
+                text: () => Promise.resolve(""),
+            });
             const { unmount } = render(<EvaluationLevels />);
             expect(
-                screen.getAllByTestId("col-cell").map((e) => e.textContent)
-            ).toContain(tP(lng)("shared.yes"));
+                await screen.findByText(t("shared.yes"))
+            ).toBeInTheDocument();
             unmount();
 
-            globalThis.__rtRow = { can_continue: false };
+            global.fetch = vi.fn().mockResolvedValue({
+                ok: true,
+                status: 200,
+                json: () =>
+                    Promise.resolve({
+                        status: [
+                            {
+                                id: 2,
+                                label: "Zephyr",
+                                value: 1,
+                                can_continue: false,
+                            },
+                        ],
+                        pages: 1,
+                        total: 1,
+                    }),
+                text: () => Promise.resolve(""),
+            });
             render(<EvaluationLevels />);
-            expect(
-                screen.getAllByTestId("col-cell").map((e) => e.textContent)
-            ).toContain(tP(lng)("shared.no"));
+            expect(await screen.findByText(t("shared.no"))).toBeInTheDocument();
         }
     );
 
@@ -663,12 +701,16 @@ describe("EvaluationLevels", () => {
             swal.fire.mockImplementation(() =>
                 Promise.resolve({ isConfirmed: true })
             );
+            const inst = mountInstance(lng);
+            // The mount's own list-fetch already resolved against the file's default
+            // global.fetch (set in the top-level beforeEach); only now swap in the narrower
+            // response deleteStatus's own DELETE call expects.
             global.fetch = vi.fn().mockResolvedValue({
                 status: 422,
                 text: () => Promise.resolve("boom"),
             });
 
-            mountInstance(lng).deleteStatus({ id: 1, label: "Zephyr" });
+            inst.deleteStatus({ id: 1, label: "Zephyr" });
             await new Promise((r) => setTimeout(r, 0));
             await new Promise((r) => setTimeout(r, 0));
 
