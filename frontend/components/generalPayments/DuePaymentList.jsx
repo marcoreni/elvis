@@ -1,9 +1,10 @@
 import _, { isDate } from "lodash";
 import React from "react";
-import Select from "react-select";
 import TanStackGrid, {
     goFullScreen,
 } from "../common/baseDataTable/TanStackGrid";
+import FilterSelect from "../common/baseDataTable/FilterSelect";
+import FilterReactSelect from "../common/baseDataTable/FilterReactSelect";
 import swal from "sweetalert2";
 import { withTranslation } from "react-i18next";
 import { makeDebounce } from "../../tools/inputs";
@@ -168,7 +169,7 @@ class DuePaymentList extends React.Component {
                     );
 
                     return (
-                        <Select
+                        <FilterReactSelect
                             options={options}
                             defaultValue={options[0]}
                             value={value}
@@ -275,7 +276,7 @@ class DuePaymentList extends React.Component {
                 accessor: (d) => d.due_payment_status_id,
                 Cell: (c) => this.renderStatus(c),
                 Filter: ({ filter, onChange }) => (
-                    <select
+                    <FilterSelect
                         onChange={(event) => onChange(event.target.value)}
                         style={{ width: "100%" }}
                         value={filter ? filter.value : ""}
@@ -286,7 +287,7 @@ class DuePaymentList extends React.Component {
                                 {method.label}
                             </option>
                         ))}
-                    </select>
+                    </FilterSelect>
                 ),
             },
             {
@@ -323,7 +324,7 @@ class DuePaymentList extends React.Component {
                 },
                 sortable: false,
                 Filter: ({ filter, onChange }) => (
-                    <Select
+                    <FilterReactSelect
                         options={duePaymentMethodsOptions}
                         isMulti={true}
                         isClearable={true}
@@ -373,7 +374,7 @@ class DuePaymentList extends React.Component {
                 accessor: (d) =>
                     d.location_id && this.props.locations[d.location_id].label,
                 Filter: ({ filter, onChange }) => (
-                    <select
+                    <FilterSelect
                         value={(filter && filter.value) || ""}
                         onChange={(e) => onChange(e.target.value)}
                     >
@@ -386,7 +387,7 @@ class DuePaymentList extends React.Component {
                                 {l.label}
                             </option>
                         ))}
-                    </select>
+                    </FilterSelect>
                 ),
             },
             {

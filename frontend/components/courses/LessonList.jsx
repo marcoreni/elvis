@@ -1,6 +1,7 @@
 import React from "react";
 import TanStackGrid from "../common/baseDataTable/TanStackGrid";
-import Select from "react-select";
+import FilterSelect from "../common/baseDataTable/FilterSelect";
+import FilterReactSelect from "../common/baseDataTable/FilterReactSelect";
 import { toast } from "react-toastify";
 import { withTranslation, useTranslation } from "react-i18next";
 import i18n from "../../i18n";
@@ -733,13 +734,13 @@ class LessonList extends React.Component {
                 Cell: (c) =>
                     c.value ? moment(c.value.start).format("dddd") : "?",
                 Filter: ({ filter, onChange }) => (
-                    <select
+                    <FilterSelect
                         value={(filter && filter.value) || ""}
                         onChange={(e) => onChange(e.target.value)}
                     >
                         <option value="" />
                         {daysOptions}
-                    </select>
+                    </FilterSelect>
                 ),
             },
             {
@@ -757,6 +758,7 @@ class LessonList extends React.Component {
                         <div className="flex flex-space-around-justified">
                             <input
                                 type="time"
+                                className="form-control form-control-sm"
                                 defaultValue={start}
                                 onChange={(e) =>
                                     onChange({
@@ -767,6 +769,7 @@ class LessonList extends React.Component {
                             />
                             <input
                                 type="time"
+                                className="form-control form-control-sm"
                                 defaultValue={end}
                                 onChange={(e) =>
                                     onChange({
@@ -812,13 +815,13 @@ class LessonList extends React.Component {
                     );
                 },
                 Filter: ({ filter, onChange }) => (
-                    <select
+                    <FilterSelect
                         onChange={(e) => onChange(e.target.value)}
                         value={filter ? filter.value : ""}
                     >
                         <option value="" />
                         {refsOptions}
-                    </select>
+                    </FilterSelect>
                 ),
             },
             ...(!this.props.isTeacherView
@@ -831,13 +834,13 @@ class LessonList extends React.Component {
                           Cell: (c) =>
                               `${c.value.first_name} ${c.value.last_name}`,
                           Filter: ({ filter, onChange }) => (
-                              <select
+                              <FilterSelect
                                   onChange={(e) => onChange(e.target.value)}
                                   value={filter ? filter.value : ""}
                               >
                                   <option value="" />
                                   {teachersOptions}
-                              </select>
+                              </FilterSelect>
                           ),
                       },
                   ]
@@ -857,14 +860,14 @@ class LessonList extends React.Component {
                 },
 
                 Filter: ({ filter, onChange }) => (
-                    <select
+                    <FilterSelect
                         style={{ maxWidth: "115px" }}
                         onChange={(e) => onChange(e.target.value)}
                         value={filter ? filter.value : ""}
                     >
                         <option value="" />
                         {roomsOptions}
-                    </select>
+                    </FilterSelect>
                 ),
             },
             {
@@ -873,14 +876,14 @@ class LessonList extends React.Component {
                 maxWidth: 125,
                 accessor: (a) => a.location.label,
                 Filter: ({ filter, onChange }) => (
-                    <select
+                    <FilterSelect
                         style={{ maxWidth: "115px" }}
                         onChange={(e) => onChange(e.target.value)}
                         value={filter ? filter.value : ""}
                     >
                         <option value="" />
                         {locationsOptions}
-                    </select>
+                    </FilterSelect>
                 ),
             },
             {
@@ -927,7 +930,7 @@ class LessonList extends React.Component {
                     );
 
                     return (
-                        <Select
+                        <FilterReactSelect
                             options={options}
                             defaultValue={options[0]}
                             value={value}
@@ -985,7 +988,7 @@ class LessonList extends React.Component {
                 maxWidth: 125,
                 accessor: (d) => d,
                 Filter: ({ filter, onChange }) => (
-                    <select
+                    <FilterSelect
                         onChange={(e) => onChange(e.target.value)}
                         defaultValue={filter ? filter.value : ""}
                     >
@@ -998,7 +1001,7 @@ class LessonList extends React.Component {
                                 {r.label}
                             </option>
                         ))}
-                    </select>
+                    </FilterSelect>
                 ),
                 Cell: (c) =>
                     TimeIntervalHelpers.levelDisplayLabel(
@@ -1029,13 +1032,13 @@ class LessonList extends React.Component {
                     }
 
                     return (
-                        <select
+                        <FilterSelect
                             onChange={(e) => onChange(e.target.value)}
                             value={filter?.value ?? ""}
                         >
                             <option value="" />
                             {seasonsOptions}
-                        </select>
+                        </FilterSelect>
                     );
                 },
             },

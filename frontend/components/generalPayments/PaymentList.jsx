@@ -3,6 +3,7 @@ import React from "react";
 import TanStackGrid, {
     goFullScreen,
 } from "../common/baseDataTable/TanStackGrid";
+import FilterSelect from "../common/baseDataTable/FilterSelect";
 import swal from "sweetalert2";
 import { withTranslation, useTranslation } from "react-i18next";
 import { makeDebounce } from "../../tools/inputs";
@@ -196,11 +197,8 @@ class PaymentList extends React.Component {
                 Cell: (c) => this.renderStatus(c),
                 //filterable: true,
                 Filter: ({ filter, onChange }) => (
-                    <select
-                        onChange={(event) => {
-                            console.log("Selected value:", event.target.value);
-                            onChange(event.target.value);
-                        }}
+                    <FilterSelect
+                        onChange={(event) => onChange(event.target.value)}
                         style={{ width: "100%" }}
                         value={filter ? filter.value : ""}
                     >
@@ -215,7 +213,7 @@ class PaymentList extends React.Component {
                                 {method.label}
                             </option>
                         ))}
-                    </select>
+                    </FilterSelect>
                 ),
             },
             {
@@ -254,7 +252,7 @@ class PaymentList extends React.Component {
                         : t("general.payments.noPaymentMethod");
                 },
                 Filter: ({ filter, onChange }) => (
-                    <select
+                    <FilterSelect
                         onChange={(event) => onChange(event.target.value)}
                         style={{ width: "100%" }}
                         value={filter ? filter.value : ""}
@@ -271,7 +269,7 @@ class PaymentList extends React.Component {
                                 {method.label}
                             </option>
                         ))}
-                    </select>
+                    </FilterSelect>
                 ),
             },
             {
@@ -300,7 +298,7 @@ class PaymentList extends React.Component {
                 accessor: (d) =>
                     d.location_id && this.props.locations[d.location_id].label,
                 Filter: ({ filter, onChange }) => (
-                    <select
+                    <FilterSelect
                         value={(filter && filter.value) || ""}
                         onChange={(e) => onChange(e.target.value)}
                     >
@@ -313,7 +311,7 @@ class PaymentList extends React.Component {
                                 {l.label}
                             </option>
                         ))}
-                    </select>
+                    </FilterSelect>
                 ),
             },
             {
