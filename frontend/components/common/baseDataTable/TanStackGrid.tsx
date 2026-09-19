@@ -415,20 +415,26 @@ export default function TanStackGrid({
             }
         >
             <div style={{ overflowX: "auto" }}>
-                <table className="table">
+                {/* .table sets max-width: 100%, which caps the table at the wrapper's width
+                    instead of letting it grow to its content's natural width -- with that cap in
+                    place there's nothing for the wrapper's overflow-x to ever scroll, and columns
+                    get squeezed/clipped instead. Override it so a table wider than its container
+                    actually overflows (and scrolls) rather than shrinking its own columns. */}
+                <table className="table" style={{ maxWidth: "none" }}>
                     <thead>
                         <tr>
                             {headers.map((header) => (
                                 <th
                                     key={header.id}
-                                    style={
-                                        header.column.columnDef.meta?.width
+                                    style={{
+                                        whiteSpace: "nowrap",
+                                        ...(header.column.columnDef.meta?.width
                                             ? {
                                                   width: header.column.columnDef
                                                       .meta.width,
                                               }
-                                            : undefined
-                                    }
+                                            : undefined),
+                                    }}
                                     onClick={
                                         header.column.getCanSort()
                                             ? (header.column.getToggleSortingHandler() ??
@@ -458,7 +464,14 @@ export default function TanStackGrid({
                                 const filterValue =
                                     header.column.getFilterValue();
                                 return (
-                                    <th key={header.id}>
+                                    <th
+                                        key={header.id}
+                                        style={{
+                                            minWidth:
+                                                header.column.columnDef.meta
+                                                    ?.width ?? 100,
+                                        }}
+                                    >
                                         {header.column.getCanFilter() &&
                                             (CustomFilter ? (
                                                 <CustomFilter
@@ -528,7 +541,13 @@ export default function TanStackGrid({
                                             {row
                                                 .getVisibleCells()
                                                 .map((cell) => (
-                                                    <td key={cell.id}>
+                                                    <td
+                                                        key={cell.id}
+                                                        style={{
+                                                            whiteSpace:
+                                                                "nowrap",
+                                                        }}
+                                                    >
                                                         {flexRender(
                                                             cell.column
                                                                 .columnDef.cell,

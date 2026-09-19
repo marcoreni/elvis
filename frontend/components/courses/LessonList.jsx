@@ -1219,7 +1219,6 @@ class LessonList extends React.Component {
                                 page: 0,
                             })
                         }
-                        minRows={10}
                         getRowProps={(original) =>
                             original.isOnlyOneOption
                                 ? { style: { color: "#9575CD" } }
