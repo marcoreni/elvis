@@ -186,9 +186,6 @@ restructuring ad hoc across already-merged domains.
 None of these are caused by or related to that migration (confirmed: none of the affected files are
 in its diff) — logged here as found, not investigated further.
 
-- `/activities` (`ActivityController#list`, `POST /activities.json`) returns HTML instead of JSON —
-  reproduces even after a fresh incognito login, so not a stale-session issue as first suspected.
-  Root-caused and fixed in `fix/activities-json-redirect` (PR #108, open for review).
 - `parameters/planning_parameters#tab-0`: "Error while fetching the availabilities" on load; creating
   an availability 500s (`PATCH /plannings/availabilities/:id`).
 - `/evaluation_level_ref/new`: sidebar highlights "Registrations" instead of the Evaluations section.

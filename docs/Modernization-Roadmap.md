@@ -3,485 +3,123 @@
 Scoped 2026-09-13, after the i18n Phase 07 rollout was confirmed complete and
 `docs/KnownIssues.md` was trimmed to its current ~11 sections. This tracks the next batch of
 work so it survives a context reset without having to be re-discussed. Update the status line
-of each item as it moves; when an item is fully done, remove it and note the fact (with a
-commit/PR reference) rather than leaving a stale "done" entry — same discipline as
-`docs/KnownIssues.md`.
+of each item as it moves; while an item is still active, keep whatever detail is actually useful
+for picking the work back up. Once an item is fully done, trim it to a short summary (what
+shipped, in a few lines) plus its commit/PR reference — the commit message/PR description is the
+full record, not this file (trimmed 2026-09-19; items had accumulated 50+ line investigation
+narratives whose lasting value was already covered by git history).
 
-## 1. CI workflow on develop/main — see `.github/workflows/ci.yml`
+## 1. CI workflow on develop/main — done, see `.github/workflows/ci.yml`
 
-CI's `rspec` job has **no Elasticsearch service at all** — `config/environments/test.rb` sets
-`Chewy.strategy(:bypass)`, so specs never index/search; two full local runs with zero ES running
-produced zero ES-connection errors. Removes a whole class of infra flakiness (was the ES
-container's cgroup-v2 JDK crash, see below) from CI's critical path for free. Dev/prod
-(docker-compose.yml, docker-compose-dev.yml) still run ES 7.16.3 → bumped to 7.17.28 there, since
-those DO search for real — the old JDK NPEs on modern cgroup v2 hosts (verified with a real
-index/import/search round trip via `UsersIndex` against 7.17.28: works). Chewy 7.x + ES 7.17 is
-the officially-supported combo (the "8.x incompatible" risk floated was Chewy *8.x* needing ES
-8.x, not this).
-
-Also fixed: a broken production Rspack build on `develop` (stale `.js` extensions after a TS
-rename), locale YAML comments `i18n-tasks normalize` was stripping (moved to `docs/I18n.md`), and
-`RequestData`'s type not allowing numbers/booleans in request bodies. A Gemfile-level fix for
-`bundle exec <tool>`'s logger crash was tried and reverted — broke Rails boot itself (see
-`reference_i18n_tasks_binstub` memory); stick with `bin/i18n-tasks`. See item 5 for the flake this
-job will occasionally hit.
+CI's `rspec` job runs with `Chewy.strategy(:bypass)`, no Elasticsearch service — removes a class of
+infra flakiness for free. Dev/prod ES bumped 7.16.3 → 7.17.28 separately (they search for real).
+Also fixed along the way: a broken production Rspack build, stripped locale YAML comments, and
+`RequestData`'s type. See item 5 for a related flake.
 
 ## 2. Orphaned-code tracking file — done, see `docs/OrphanedCode.md`
 
-Created, seeded with the two prior deletion commits (`9ad195d8`, `48a62087`). Re-audited
-`docs/KnownIssues.md`'s "Dead/unrouted code" section item by item (route + controller action
-inspection, not just grep) and deleted 17 confirmed-dead files/routes/actions (logged with
-reasoning in `docs/OrphanedCode.md`), verified via a full local `bundle exec rspec` run (300
-examples, 0 failures) after. The KnownIssues section is gone — the 2 genuinely-still-open items
-(Devise passwords/edit reachable-but-unlinked, missing `editParameters/FormulesParameters`
-component) got their own smaller entries instead. README's old "Removed dead code" section now
-points at the new doc instead of duplicating it.
+Created; deleted 17 confirmed-dead files/routes/actions found via `docs/KnownIssues.md`'s old
+"Dead/unrouted code" audit. 2 genuinely-open items became their own smaller `KnownIssues.md`
+entries. README's old "Removed dead code" section now points here instead of duplicating it.
 
 ## 3. Move hardcoded `Europe/Paris` timezone into configuration — done, `feat/school-timezone-config`
 
-Shipped as env/boot-time config, matching `config.i18n.default_locale`'s category (deploy-time
-decision, one Rails process per school per `CLAUDE.md`'s multi-tenancy note) rather than a DB
-`Parameter` row:
-- Backend: `config.time_zone = ENV.fetch("SCHOOL_TIMEZONE", "Paris")` in `config/application.rb`
-  (default preserves today's behavior).
-- New `Elvis::SchoolTimezone.iana_name` (`lib/elvis/school_timezone.rb`) resolves Rails' short
-  zone name to the real IANA identifier the frontend needs, via
-  `ActiveSupport::TimeZone[...].tzinfo.name` — single source of truth, nothing hardcodes the IANA
-  name separately.
-- Exposed to the frontend the same way locale already is: `data-timezone="<%= ... %>"` on
-  `<html>` in all 3 layouts (`application`/`devise`/`simple.html.erb`), read once via
-  `document.documentElement.dataset.timezone`.
-- New `frontend/tools/timezone.ts` exports `SCHOOL_TIMEZONE`/`SCHOOL_DATE_FORMAT_OPTIONS`,
-  replacing the two separate hardcoded `PARIS_DATE_FORMAT_OPTIONS` constants in
-  `courses/LessonList.jsx` and `activityApplications/summary/Activity.jsx`.
-- Verified: `tsc --noEmit` clean, full `vitest run` (1275 tests) green, `bin/rails runner`
-  confirms `Elvis::SchoolTimezone.iana_name` resolves `"Paris"` → `"Europe/Paris"` at boot.
-  `docs/KnownIssues.md`'s "Frontend date formatting hardcodes Europe/Paris" entry removed
-  (resolved by this item).
+Shipped as env/boot-time config (`config.time_zone = ENV.fetch("SCHOOL_TIMEZONE", "Paris")`,
+matching `config.i18n.default_locale`'s category), not a DB `Parameter` row. New
+`Elvis::SchoolTimezone.iana_name` resolves the IANA name for the frontend (`data-timezone` on
+`<html>`, read via `frontend/tools/timezone.ts`'s `SCHOOL_TIMEZONE`), replacing 2 hardcoded
+`PARIS_DATE_FORMAT_OPTIONS` constants. `KnownIssues.md`'s matching entry removed.
 
 ## 4. i18n PRs #7–#10 — done, see `fix/i18n-pr7-10-review-findings`
 
-Fresh-eyes review of current develop's state of the 4 areas (not the ancient original diffs)
-found 2 real bugs: `UserList.jsx`'s `total` count rendered the raw i18n key on every page load
+Fresh-eyes review found and fixed 2 real bugs: `UserList.jsx`'s `total` rendered a raw i18n key
 until the debounced fetch resolved (missing `total: 0` initial state), and
-`StudentEvaluationsStats.tsx`'s react-table instance was the one consumer in the repo not passing
-the shared `common:reactTable.*` props, so its pagination chrome stayed English-only regardless of
-locale. Both fixed, plus a regression test for the second (verified it fails without the fix).
-KnownIssues entry removed.
+`StudentEvaluationsStats.tsx` was the one react-table instance not passing the shared
+`common:reactTable.*` props, so its pagination stayed English-only. Regression test added for the
+second. `KnownIssues.md` entry removed.
 
 ## 5. `DeviseMailer`/`ApplicationController` order-dependent flake — resolved, see `fix/locale-flake-async-queue-adapter`
 
-Root cause: `config/environments/test.rb` had no `config.active_job.queue_adapter` override, so
-Rails' global default (`:async`, a persistent `concurrent-ruby` thread pool) applied — real
-background threads ran for the whole suite, racing the main thread on I18n's shared translation
-lookup and silently resolving via the `en -> fr` fallback safety net on a miss. Fixed by setting
-`queue_adapter = :test`. A prior pass had tried `BaseEventJob.queue_adapter = :inline` and ruled
-it out — that only covered one caller of the same shared thread pool; Rails' own default adapter
-was the wider, actual source. Confirmed via 19 consecutive clean full-suite runs (previously
-reproduced within 1-3 runs).
+Root cause: no `config.active_job.queue_adapter` override in test, so Rails' `:async` default ran
+real background threads racing the main thread on I18n's shared translation lookup, silently
+falling back `en → fr` on a miss. Fixed with `queue_adapter = :test`. Confirmed via 19 consecutive
+clean full-suite runs (previously reproduced within 1-3).
 
 ## 6. Replace `tui-calendar` — done, `feat/replace-tui-calendar` (PR #104, Step A: `chore/fullcalendar-v6-bump`)
 
-**Recommendation: FullCalendar, bumped to v6 first** (standalone step, before migrating) — every
-feature this app actually uses maps to a native, free, stable FullCalendar v6 API; nothing lost.
-
-- Real consumer: only `planning/Calendar.jsx` (587 lines, one caller: `Planning.jsx`). A second
-  `import ti from "tui-calendar"` in `evaluationAppointments/EvaluationAppointmentsManager.jsx` was
-  dead (unused import, `ti` elsewhere in that file is an unrelated loop variable) — already deleted
-  in an earlier pass, confirmed gone. tui-calendar pinned at `1.8.2` (not `1.8.0`).
-- Feature surface: month/week/day views, drag-to-create/move/resize, a large custom per-event HTML
-  template (teacher/room labels, icons, roster/occupation/level), custom day-header content
-  (teacher presence-sheet link), read-only/multi-select overlay mode. Built-in tui-calendar popups
-  are explicitly disabled (`useCreationPopup/useDetailPopup: false`) — not in scope at all.
-  Near-zero existing test coverage of the actual widget integration (only the pure template
-  function is tested).
-- Fork vs upstream (14 commits): only 2 things are real, load-bearing behavior — **15-minute
-  snap** on create/move/resize (fork lowered tui-calendar's 30-min default) and **raw domain
-  fields grafted onto each event** (`kind`/`teacher`/`activity`/etc., for the custom template).
-  The other ~7 commits are for tui-calendar's native popups, which the app doesn't use — nothing
-  to replicate there.
-- FullCalendar v5→v6: import path changes, `eventContent` semantics, no bundler CSS loader needed
-  — manageable, no functional loss. v6→v7 is a much bigger jump (ESM-only, CSS theming rework,
-  `temporal-polyfill` dep) — land on v6 for this pass, defer v7's rework to its own.
-  `@fullcalendar/resource-timeline` is confirmed a **premium plugin**, tri-licensed: paid
-  commercial license, CC BY-NC-ND (non-commercial only, no source modifications), or free under
-  **GPLv3** for open-source projects — verified against the `LICENSE.md` shipped in the installed
-  `^5.5.1` package and against v6.1.19 on unpkg (the v6 this item targets). Pre-existing, not new,
-  but worth knowing. Note: FullCalendar's *upcoming* v7 (still `7.0.0-rc.0` on npm at the time of
-  this check, since released stable) switches this tier to AGPLv3 per fullcalendar.io's licensing
-  page — irrelevant to the v5→v6 move this item scopes, but re-check if a future v7 upgrade is
-  ever considered. Its real consumer turned out to be `planning/practice_planning/PracticePlanning.jsx`
-  (not `YearlyCalendar.jsx`/`.tsx` as first thought while planning this item — that component was
-  rewritten into a fully custom implementation, `frontend/components/yearlyCalendar/`, with no
-  FullCalendar dependency at all; `PlanningModals.test.jsx` still had stale mocks/comments
-  referencing the old FullCalendar-based version, cleaned up in Step A).
-- Real decision point (not silently assumed): the app's "compare multiple plannings" mode has
-  always been one overlaid view, never true side-by-side columns. If that's ever wanted, it needs
-  FullCalendar's paid resource-timeline tier or a switch to react-big-calendar (free, native
-  resource columns) — not needed for today's feature parity.
-- Bundling functional-component + TS conversion while doing this: low-to-moderate risk, worth it —
-  the calendar-engine integration code is being written fresh against the new library regardless,
-  so there's no extra "convert working code" risk. Add real interaction tests (view switching, at
-  minimum) as part of this, since none exist today.
-
-**Step A shipped** (`chore/fullcalendar-v6-bump`): bumped `@fullcalendar/{core,react,interaction,
-resource-timeline}` to `^6.1.21`, added `@fullcalendar/resource` (a new separate peer dependency
-in v6 that `resource-timeline` didn't need in v5), and dropped `@fullcalendar/daygrid`/`timegrid`
-(unused — nothing in the app actually imports them; their v5-era global `.css` imports in
-`application.scss` were also dead and removed, since v6 injects its own CSS at runtime). Two files
-(`Summary.jsx`, `DuePaymentsList.jsx`) turned out to import `Fragment`/`isValidDate` from
-`@fullcalendar/react` instead of their real sources (`react` / a plain `Number.isNaN` check) — an
-undocumented re-export that a major bump could easily have dropped; fixed before bumping. Verified
-via a real `yarn build` (not just `tsc`/mocked tests, since `PracticePlanning.jsx`'s FullCalendar
-usage is mocked out in its own test suite) — full rspec/vitest/tsc all clean after.
-
-**Step B shipped** (`feat/replace-tui-calendar`, PR #104): `Calendar.jsx` rewritten as `Calendar.tsx`,
-a functional component wrapping FullCalendar v6 (`dayGridMonth`/`timeGridWeek`/`timeGridDay`)
-instead of tui-calendar, as an **adapter** — `Planning.jsx` (1794 lines) and every modal it opens
-from a calendar callback (`MultiViewModal`, `EvaluationModal`, `PauseDetailModal`,
-`ActivityDetailsModal`, `CreateActivityModal`) needed almost no changes, because the adapter
-reconstructs the exact same tui-calendar-shaped "schedule" object (`id`/`title`/`start`/`end`/`kind`/
-`isValidated`/`teacher`/`activity`/`activityInstance`/`raw`, with moment-wrapped `start`/`end` so
-`.toDate()` still works) from FullCalendar's `extendedProps` on every callback. The one exception:
-`MultiViewModal.jsx` read `schedule.start._date` — a private tui-calendar `TZDate` internal, not the
-public `.toDate()` API — fixed to use `.toDate()` instead, since the old code was already relying on
-an undocumented field rather than the API tui-calendar itself exposed. The 15-minute snap, previously
-hardcoded inside the tui-calendar fork's `handler/time/*.js` (not a `Calendar.jsx` option at all), is
-now FullCalendar's native `snapDuration: "00:15:00"`. Re-added `@fullcalendar/daygrid`/`timegrid`
-(dropped in Step A when nothing used them yet).
-
-Two review passes (code-reviewer subagent) caught real bugs before merge: icon spans relying on
-tui-calendar's own removed bundled icon-font CSS (swapped for Font Awesome), a missing
-`activityInstance` field rename the tui-calendar fork used to do internally, a private `._date`
-dependency (see above), dropped per-event colors, a declined drag/resize left visually applied with
-nothing persisted, bogus Jan-1970 dates in month-view day headers, a stringified id breaking
-`Planning.jsx`'s strict-equality interval lookups, and no locale wired (English 12-hour time labels).
-All fixed; see the PR history for detail. One deliberate, user-visible behavior change from fix #5:
-month view now uses FullCalendar's own default day-of-week header instead of the custom one (which
-carried a day-number and presence-sheet link) — that header row has no real per-cell date in month
-view, so the custom content was rendering nonsense dates there even before the fix. Added 10
-interaction tests (view switching, create/click/drag-update adapters incl. revert-on-reject, snap
-config, multi-planning read-only gating, day-header content in both month and week view) — the "none
-exist today" gap this item originally flagged. Found two pre-existing issues while mapping the
-schedule-shape contract (`beforeDeleteSchedule` passing the wrong shape, `StudentModal.jsx` being
-dead code, since deleted) — logged in `docs/KnownIssues.md`, not fixed here, since neither was caused
-by or blocked this migration. Bundled with the rewrite per the item's own recommendation:
-`useTranslation` (not `withTranslation`), real types reusing `entities.ts` in place of `any`, lodash
-dropped entirely. See `docs/Jsx-To-Tsx-Migration-Playbook.md` (written alongside this, PR #107) for
-the general lifecycle/typing/lodash conventions this established for future `.jsx`→`.tsx` work.
+Replaced with FullCalendar v6 (`@fullcalendar/{core,react,interaction,resource-timeline,resource}`)
+via `planning/Calendar.tsx`, a functional adapter that reconstructs the same tui-calendar-shaped
+"schedule" object from FullCalendar's `extendedProps` so `Planning.jsx` and its modals needed almost
+no changes. Preserved the fork's only 2 load-bearing customizations (15-minute snap, raw domain
+fields grafted onto events) via FullCalendar's native `snapDuration`/`extendedProps`. Two
+code-reviewer passes caught several real bugs before merge (icon-font CSS, a private `._date`
+tui-calendar internal, dropped per-event colors, stringified-id equality breakage, no locale) — all
+fixed, see PR #104. Added 10 interaction tests (none existed before). Bundled with the item's own
+recommendation: functional + TS (`useTranslation`, real types, lodash dropped) — see
+`docs/Jsx-To-Tsx-Migration-Playbook.md` (PR #107) for the conventions this established. Note for any
+future "true side-by-side plannings" feature: `@fullcalendar/resource-timeline` is a premium plugin
+(paid, CC BY-NC-ND, or free under GPLv3 for open source) — not needed for today's feature parity.
 
 ## 7. Migrate `sweetalert2` off the legacy API — done, `chore/sweetalert2-v11-bump` (PR #99, merged)
 
-**Version facts**: `package.json`'s `^7.26.11` and the resolved `7.33.1` (in both `yarn.lock` and
-`node_modules`) are not a stale-lockfile mismatch — **7.33.1 is the actual final 7.x release**
-(next is `8.0.0`), so the semver range is already maxed out. Latest overall is `11.26.25`.
-
-**The `.fire()` question is resolved: not a bug.** 6 files already call `.fire()`
-(`ActivitiesApplicationsList.jsx`, `HandleFamilyMember.jsx`, `Absences.jsx`, `UserForm.jsx`,
-`Wizard.jsx`, `AddPreAppFromStopApp.jsx`). Checked directly against the installed
-`node_modules/sweetalert2/dist/sweetalert2.js`: `Swal.fire` is a real static method in 7.33.1
-(`Swal.fire = function fire() { return _construct(Swal, args) }`), an intentional alias for
-calling the default export directly. These 6 files are already using the more future-proof form
-— no live bug, nothing to fix independent of the migration.
-
-**No shared wrapper exists** — `SwalBackEndModal.jsx` and `BtnApiElement.jsx` looked like central
-wrappers but neither is imported by any other JS file (`SwalBackEndModal` is mounted standalone
-via `react_component(...)` from 4 separate ERB views, each passing its own props). **107 files**
-import sweetalert2 directly and call it independently — this is a ~107-independent-call-site
-migration, not a "fix a few wrappers" one.
-
-**Call-site classification**:
-- Old positional/string-arg style (`swal("title", "text", "error")`): only ~4 live sites (2 more
-  are commented-out dead code) — small.
-- `type:` option (renamed to `icon:` in v8, removed by v9): **83 files, 224 occurrences** — the
-  single biggest breaking-change surface.
-- `.value` result-shape usage (v11 requires `.isConfirmed`/`.isDenied`/`.isDismissed` instead):
-  **70 files**, heavily overlapping with the above.
-- `onOpen`/`onClose`/`onBeforeOpen` callbacks (renamed `didOpen`/`didClose`/`willOpen` in v10.3.0):
-  6 files — small.
-- Bare `swal({...})` calls with no `.fire` (the majority pattern) **will hard-break in v11** — v11
-  only exposes `Swal` as a namespace object with `.fire()`/`.mixin()`/etc., no callable default
-  export. Effectively all 107 files need a `swal(...)` → `swal.fire(...)` rewrite on top of the
-  option renames.
-- 15 test files already `jest.mock`/`vi.mock` sweetalert2 — mocks need shape updates too.
-
-**Follow-up check (2026-09-14, against the real v11.26.25 package, not just changelogs) revises
-the verdict below** — pulled the actual `sweetalert2@11.26.25` tarball and its `.d.ts`/dist bundle
-to check what's *actually* breaking vs. cosmetic:
-
-- **`.value` is NOT breaking.** v11's `SweetAlertResult<T>` interface still has
-  `readonly value?: T` alongside `isConfirmed`/`isDenied`/`isDismissed` — existing
-  `result.value`-based branching keeps working unchanged after the bump. The 70-file bucket is a
-  pure style modernization, safe to defer indefinitely; it does **not** gate the version bump.
-- **Bare `swal(...)` calls hard-crash in v11** — verified by requiring the real v11 dist and
-  calling it bare: `Class constructor SweetAlert cannot be invoked without 'new'`. This is the one
-  truly mandatory, atomic-with-the-bump rewrite (all ~101 non-`.fire()` files).
-- **`type:` is a soft break** — v11's dist has no `defaultParams.type` and no icon-lookup keyed off
-  `params.type` at all; using it just warns `Unknown parameter "type"` to the console and renders
-  no icon. Not a crash, but silent enough in production to require fixing at the same time as the
-  bump rather than trusting a later pass to catch it.
-- **`onOpen`/`onClose`/`onBeforeOpen` are gone, replaced by `willOpen`/`didOpen`/`didClose`** —
-  confirmed both directions: v7.33.1's dist only recognizes the `on*` names (no `did*`/`will*` at
-  all), v11's dist only recognizes `did*`/`will*` (old names hit the same "Unknown parameter"
-  warning and silently never fire). Because neither version accepts both spellings, this rename
-  **cannot be done before or after the bump** — it's forced into the same atomic commit as the
-  bump, like `type:`/bare-call.
-- **CSS is unaffected** — both v7.33.1 and v11.26.25 resolve `main`/`browser` to the `.all.js`
-  bundle (styles auto-injected via JS), so there's no separate CSS import to add/change.
-
-**Revised verdict**: the truly breaking surface (bare-call→`.fire()`, `type:`→`icon:`,
-`on*`→`did*`/`will*`, the ~4 positional-arg sites) is forced into **one atomic PR** together with
-the version bump — a single global package version means there's no safe way to split it across
-independently-mergeable PRs without the app being broken in between. This piece is lower-risk than
-it sounds specifically *because* it's mechanical and scriptable (same substitution pattern applies
-uniformly), not because it's small. The **only** genuinely independent, safely-deferrable follow-up
-is the `.value`→`.isConfirmed`/`.isDenied`/`.isDismissed` modernization (non-breaking, so can land
-as its own later PR/PRs, domain-grouped, whenever convenient) plus adding interaction tests for
-the highest-traffic confirm/cancel flows (none exist today).
-
-**Shipped** (PR #99, merged): the full mechanical migration in one PR as planned — bare
-calls→`.fire()`, `type:`→`icon:`, `on*`→`did*`/`will*`, positional-arg calls converted to object
-form, across all ~107 files, via a small AST-driven codemod (not committed — built on
-`@babel/parser`+`traverse`, per-file default-import-binding tracking so it wouldn't touch unrelated
-`type:` keys elsewhere in the same file). Code review caught a real miss the codemod's single-
-binding-per-file assumption couldn't handle (`ActivitiesApplicationsList.jsx` had two separate
-`sweetalert2` default imports, `swal` and `Swal` — the codemod only rewrote the `Swal` one's call
-site, leaving 6 `swal(...)` calls that would have hard-crashed under v11) plus 3 v9-removed
-`*Class`/`inputClass` keys silently dropped elsewhere — both fixed before merge. `.value` was left
-untouched as planned (still valid in v11, non-breaking, a safe future follow-up).
-
-**`.value`→`.isConfirmed` cleanup shipped** (2026-09-15, 4 PRs, domain-batched per this repo's
-lean-batches convention): every boolean confirm-gate call site across the app (verified file-by-file
-against each `.fire()` call's options, not a blind find/replace) rewritten from `.value` to
-`.isConfirmed`. Genuine input-value/`preConfirm` sites (status-change `input: "select"` dialogs,
-`Holidays.jsx`'s date-range `preConfirm`, the notify-student `input: "checkbox"`, the day-count
-`input: "number"`) deliberately left on `.value`, which stays correct and non-deprecated there. This
-closes out item 7 entirely.
+`7.33.1` (final 7.x) → `11.26.25` across ~107 independent call sites (no shared wrapper existed).
+Truly breaking surface — bare `swal(...)` calls (crash in v11, no callable default export),
+`type:`→`icon:`, `on*`→`did*`/`will*` callbacks — forced into one atomic PR with the version bump
+via a small AST-driven codemod. `.value` turned out non-breaking (v11 keeps it), so that
+modernization was deferred safely. Code review caught a real codemod miss (`ActivitiesApplicationsList.jsx`
+had two separate `sweetalert2` imports, only one got rewritten) plus 3 dropped `*Class` keys — both
+fixed before merge. `.value`→`.isConfirmed` cleanup shipped separately (2026-09-15, 4 domain-batched
+PRs), closing out this item entirely.
 
 ## 8. Elasticsearch removed entirely — done, `chore/remove-elasticsearch`
 
-Analysis (2026-09-14) found: only 13 files touched Chewy app-wide, all 5 indices were structurally
-simple (one shared edge_ngram analyzer, flat fields, no nesting/geo/synonyms/custom scoring), and
-there was exactly one *reachable* consumer — `#index` (`POST /omnisearch`, the global search box),
-one `multi_match`/`cross_fields`/`operator: and` query across all 5 indices and ~13 fields, "these
-words must all appear somewhere," no relevance tuning. `#advanced_search_query`
-(`POST /advanced_query`, the ad-hoc `jQuery-QueryBuilder`-driven ES query UI) was the one piece
-that would have genuinely resisted a Postgres rewrite — but its page's GET route was already
-commented out (same orphaned-code pattern as item 2), unreachable through the app's UI. Given
-that, removed Elasticsearch/chewy entirely rather than partially, per explicit instruction to ship
-it as "one single PR to get rid of all elasticsearch world":
+Only 13 files touched Chewy app-wide; the one reachable consumer (`#index`/omnisearch) was
+rewritten onto Postgres `ILIKE` + `unaccent` (`Search::OmnisearchService`), matching this repo's
+existing `ci_ilike_find` convention rather than adding full-text-search infra. `#advanced_search*`
+was unroutable dead code, deleted rather than ported. New `spec/requests/search_controller_spec.rb`
+(no prior coverage existed). Verified: full `rspec`/`tsc`/`vitest`/`rubocop` all clean.
 
-- **Backend**: deleted `app/chewy/` (5 index definitions), the `chewy` gem, `config/chewy.yml` +
-  `config/initializers/chewy.rb`, every `Chewy.strategy(:bypass)`/`update_index`/
-  `run_chewy_callbacks` call site (5 models + `application_record.rb`'s `AsyncExecutor`/
-  `base_chewy_callbacks`, both only ever used for chewy — see item 9), `healthcheck_controller.rb`'s
-  cluster-health check, `entrypoints/init.sh`'s `chewy:upgrade`, and the ES service from both
-  `docker-compose.yml` and `docker-compose-dev.yml`.
-- **`#index` (omnisearch) rewritten**, not deleted: new `Search::OmnisearchService`
-  (`app/services/search/omnisearch_service.rb`) replicates the same "every query word must match
-  somewhere across these fields" semantics per source (users/activity_applications/adhesions/
-  activity_refs/rooms) via Postgres `ILIKE` + the `unaccent` extension (new migration
-  `20260914120000_enable_unaccent_extension.rb`) instead of `tsvector`/`tsquery` — matches this
-  codebase's existing `ci_ilike_find`-style convention (`app/models/user.rb`) rather than
-  introducing full-text-search infrastructure the app had never used anywhere else. Same
-  `{ results: [{ attributes: {...} }], total }` response shape `frontend/components/Omnisearch.jsx`
-  already expects — zero frontend changes needed for the live feature.
-- **`#advanced_search`/`#advanced_search_query`/`#indexation` deleted** (unroutable/inconsistent
-  dead code, not ported), along with `frontend/components/advancedSearch/` (`AdvancedSearch.jsx`,
-  `utils.js`, its test), `app/views/search/advanced_search.html.erb`, and the
-  `jQuery-QueryBuilder`/`jQuery-QueryBuilder-Elasticsearch` npm packages + their SCSS import.
-  `advancedSearch/utils.js`'s one unrelated export (`PAYMENT_SCHEDULE_OPTIONS_PAYMENTS_NUMBERS`,
-  colocated but never search-related) moved to `frontend/tools/constants.ts` alongside its sibling
-  `export let`/`languageChanged` live-bindings; its test coverage moved to `constants.test.js`.
-- **New test coverage**: `spec/requests/search_controller_spec.rb` (9 examples covering all 5
-  result kinds, accent/case-insensitive + substring matching, the AND-across-words requirement,
-  and the empty/no-match cases) — there was no existing test for this endpoint at all, confirmed
-  via a repo-wide grep before starting.
-- Verified: full local `bundle exec rspec` (309 examples incl. the new spec, 0 failures — also
-  confirmed the new spec doesn't introduce cross-file flakiness via `ActivityApplicationStatus`'s
-  class-load-time-memoized `find_or_create_by!` constants and DatabaseCleaner's transaction
-  rollback, a real trap the new spec's design tripped into once), `tsc --noEmit` and full
-  `vitest run` (1273/1273) both clean, `rubocop` clean on every new/touched file.
+## 9. `run_chewy_callbacks` override — was a real live bug, now moot
 
-## 9. `run_chewy_callbacks` override — NOT dead, live bug found and fixed — 2026-09-14
-
-**Correction to the original finding**: this is not dead code. `run_chewy_callbacks` is a **real
-Chewy gem convention method**, not an app-invented name — confirmed by reading the installed gem
-source (`chewy-7.3.6/lib/chewy/index/observe/active_record_methods.rb`).
-
-**Correction to this item's own first analysis pass, too**: the override affects **create and
-update as well as destroy**, not just destroy. `chewy_callbacks.each { |cb| cb.call(self) }`
-(Chewy's default `run_chewy_callbacks`) is wired straight to `after_commit :run_chewy_callbacks,
-on: :destroy` for the destroy path — but `Chewy::Strategy::Base#update_chewy_indices(object)`
-(`chewy/strategy/base.rb`), which every strategy inherits and which is what
-`after_commit :update_chewy_indices, on: %i[create update]` actually calls, is itself just
-`object.run_chewy_callbacks` — so the override intercepts *every* commit path, not a destroy-only
-one. Verified empirically (see below), not just by reading source this time.
-
-Adhesion/Room/ActivityApplication/ActivityRef/User's own `run_chewy_callbacks` (calling
-`base_chewy_callbacks`, `app/models/application_record.rb`) **overrides** Chewy's default via
-normal Ruby method resolution — a deliberate customization: move ES reindexing off the
-request/transaction thread into a background thread (`AsyncExecutor` / `Concurrent::Async`)
-running under a hardcoded `Chewy.strategy(:active_job)`, instead of blocking on Elasticsearch
-synchronously inside the commit callback, for **every** create/update/destroy of these 5 models —
-i.e. this is load-bearing, high-traffic infrastructure, not an edge case.
-
-**The live bug**: `Chewy.strategy` is stored via `Thread.current.thread_variable_get(:chewy)` —
-genuinely per-thread. `config/environments/test.rb`'s `Chewy.strategy(:bypass)` only pushes
-`:bypass` onto the *main* thread's stack. The spawned background thread has no such stack yet, so
-`Chewy.strategy(:active_job)` inside it lazily initializes a **fresh** stack from
-`Chewy.root_strategy` and pushes `:active_job` on top — the test suite's bypass strategy is never
-inherited.
-
-**First fix attempt was wrong, caught by actually running the suite**: deleting the override
-outright (letting Chewy's synchronous default run under the ambient strategy) seemed like the
-simpler of the two options this item originally proposed — but a full local `bundle exec rspec`
-after making that change surfaced real, reproducible `Faraday::ConnectionFailed: connection
-refused: localhost:9200` failures (confirmed via bisection down to this exact change, with no
-Elasticsearch running locally, matching this dev machine's normal state). Root cause: because the
-override applies to create/update too, deleting it means routine `FactoryBot.create(:user, ...)`
-calls in specs now synchronously hit `update_chewy_indices` → `run_chewy_callbacks` → a real
-attempted Elasticsearch round trip, no longer shielded by the (buggy but load-bearing) async
-detour. This is exactly why the bug had gone unnoticed: the async thread's connection failures
-were silently swallowed (fire-and-forget, nothing awaits it), so the test suite looked green
-despite doing real, wasted, occasionally-flaky background work on every relevant commit.
-
-**Actual fix shipped**: kept the async dispatch (needed — see above), but `base_chewy_callbacks`
-now captures `Chewy.strategy.current.name` on the *calling* thread before spawning, and only
-special-cases `:bypass` — propagating it into the background thread so tests genuinely skip
-Elasticsearch as intended — while every other context (production's real strategies) keeps the
-original hardcoded `:active_job` dispatch unchanged, zero behavior change there:
-```ruby
-def base_chewy_callbacks
-  caller = self
-  calling_strategy = Chewy.strategy.current.name
-  AsyncExecutor.new.async.execute do
-    Chewy.strategy(calling_strategy == :bypass ? :bypass : :active_job) do
-      chewy_callbacks.each { |callback| callback.call(caller) }
-    end
-  end
-end
-```
-Verified: full local `bundle exec rspec` — 300 examples, 0 failures — both before this fix
-(baseline) and after, isolating the change to exactly this method.
+Found and fixed a real per-thread `Chewy.strategy` propagation bug in
+`application_record.rb#base_chewy_callbacks` (async reindex thread never inherited the test suite's
+`:bypass` strategy, so specs silently attempted real ES connections in the background). Fully
+superseded days later by item 8's complete Elasticsearch removal, which deleted this method
+entirely — kept here only as a pointer in case the per-thread-strategy pattern resurfaces elsewhere;
+see git history for the fix if ever needed.
 
 ## 10. Hardcoded `"fr"`/`"fr-FR"` locale in date/number formatting — done except `bill.html.erb`, `fix/locale-and-untranslated-strings`
 
-Same category of bug as item 3 (a hardcoded constant that should follow a runtime setting) but for
-*language*, not timezone — these format dates/numbers in French regardless of the viewer's actual
-`i18n.language`/`I18n.locale`:
-
-- **Frontend, straightforward fix**: `frontend/components/activityApplications/EvaluationIntervalChoice.jsx:9-10`
-  — `monthNameFormat`/`weekDayDateFormat` are module-level `new Intl.DateTimeFormat("fr", {...})`
-  constants, computed once at import time. Needs the same treatment `format.tsx`/`LessonList.jsx`
-  already use elsewhere (`Intl.DateTimeFormat(i18n.language, {...})`) — since language can change
-  at runtime (locale switcher), these can't stay module-level constants; compute them where
-  `i18n.language` is in scope (component render / a `useMemo`), not at import time.
-- **Frontend, same pattern for numbers**: `new Intl.NumberFormat("fr-FR", { style: "currency",
-  currency: "EUR" })` hardcoded in `generalPayments/DuePaymentList.jsx:1047,1056`,
-  `generalPayments/PaymentList.jsx:964`, `generalPayments/CheckList.jsx:403`. All 3 files are
-  class components using `withTranslation("payments")`, so `this.props.i18n.language` is already
-  available in scope — swap the literal `"fr-FR"` for it. (`currency: "EUR"` is a separate,
-  deliberately out-of-scope concern — a deployment/business decision like item 3's timezone, not
-  a locale bug — leave it as-is here.)
-- **Backend, straightforward fix**: `app/views/devise/registrations/new.html.erb:68` —
-  the surrounding copy is properly extracted (`t("views.devise.registrations.new...")`, follows
-  the current locale), but the interpolated date uses `I18n.with_locale("fr") { I18n.l(...) }`,
-  hardcoding French into an otherwise-translated sentence. Should use the current `I18n.locale`
-  (i.e. drop the `with_locale("fr")` wrapper and just call `I18n.l(...)` directly).
-- **Backend, NOT a standalone fix — needs its own pass**: `app/views/payments/bill.html.erb:68,101`
-  have the same `I18n.with_locale("fr")` pattern, but that entire template (labels, headers,
-  "Téléphone:", "Reçu pour la", "Attestation de paiement", etc.) is hardcoded French prose that
-  was never i18n-extracted — it predates the i18n rollout and was presumably out of scope then.
-  Changing just the two date lines to follow `I18n.locale` would produce a document with a
-  translated date sitting inside otherwise all-French text, which is worse, not better. Fixing
-  this properly means extracting the whole template (a real, if small, i18n-extraction job), not
-  a one-line locale swap — track as its own follow-up rather than bundling with the two fixes
-  above.
-
-**Shipped**: all of the above except `bill.html.erb` (still deliberately deferred, same reasoning
-as when found). Fixed `EvaluationIntervalChoice.jsx` (module-level constants moved into
-`useMemo(() => ..., [i18n.language])`), the 3 `NumberFormat` class components (swapped `"fr-FR"`
-for `this.props.i18n.language`), and `devise/registrations/new.html.erb` (dropped the
-`with_locale("fr")` wrapper). A final repo-wide sweep also caught a 6th site not in the original
-finding — `userPayments/PaymentsSummary.jsx` (5 more hardcoded `"fr-FR"` `.toLocaleString()`
-calls) — fixed the same way. Regression test added in `PaymentsSummary.test.jsx` asserting the
-footer total's currency formatting actually differs between `fr`/`en`, not just "doesn't throw".
+Same category as item 3 (hardcoded constant that should follow a runtime setting) but for language:
+module-level `Intl.DateTimeFormat("fr", ...)`/`Intl.NumberFormat("fr-FR", ...)` calls that never
+re-evaluate on locale switch. Fixed in `EvaluationIntervalChoice.jsx` (moved into
+`useMemo(..., [i18n.language])`), 3 payment-list class components (swapped to
+`this.props.i18n.language`), `devise/registrations/new.html.erb` (dropped a stray
+`I18n.with_locale("fr")`), and a 6th site found by a repo-wide sweep (`PaymentsSummary.jsx`, +
+regression test). **Still deliberately deferred**: `app/views/payments/bill.html.erb` has the same
+pattern but sits inside an entire never-i18n-extracted French template — fixing just the date would
+make it worse (translated date inside all-French prose); needs its own extraction pass.
 
 ## 11. Hardcoded French UI strings outside the i18n rollout — done, `fix/locale-and-untranslated-strings`
 
-Found while auditing sweetalert2 call sites for item 7 — not a locale-follows-setting bug like
-item 10, just plain un-extracted French text that never went through `t()` at all, so it shows in
-French for every user regardless of `i18n.language`.
-
-- **Highest impact — `frontend/tools/api.ts:118-129`**: the generic fetch-error fallback (fires
-  whenever a request errors with no `.error()` callback registered — the app-wide catch-all) has a
-  hardcoded `title: "Oops... une erreur est survenue"` and hardcoded French body text, including a
-  typo (`"cod suivant"` should be `"code suivant"`). This is a shared low-level helper (`api.set()`
-  is used by nearly every component), so this is the single highest-traffic hardcoded string in
-  the app — every unhandled API error surfaces it. `frontend/tools/constants.ts` already
-  establishes the pattern for `t()` outside a component (`import i18n from "../i18n"` then
-  `i18n.t("common:apiErrors...")`) — reuse that here instead of a hook.
-- **`frontend/components/utils/BtnApiElement.jsx`**: hardcoded French swal text (`"Une erreur est
-  survenue."`, `"Email envoyé"`) and a suspicious `title: "error"` (line 16) — the literal English
-  word "error" as a dialog title looks like a copy-paste placeholder bug, not intentional copy;
-  worth checking what this button is actually used for before deciding the real title.
-- **`frontend/components/plugins/Plugins.jsx` and `PluginActivationModal.jsx`**: not just the swal
-  calls — the entire admin plugin-management UI (buttons, confirmation copy, "Êtes-vous sûr(e) de
-  vouloir désactiver/activer ce plugin ?", "Supprimer les données du plugin", etc.) was never
-  i18n-extracted. Same category as item 10's `bill.html.erb` finding: a real extraction job for
-  2 whole components, not a one-line fix — track as its own pass rather than folding into the
-  sweetalert2 migration or item 10's smaller fixes.
-- **Unrelated but adjacent, found while checking error pages**: `public/500.html`'s `<title>` reads
-  "The page you were looking for doesn't exist (404)" — copy-pasted from `404.html`, wrong for a
-  500. Not a locale issue (Rails' static crash pages are deliberately English/dependency-free,
-  served when Rails itself may be down — not worth translating), just a plain mislabeled title,
-  trivial one-line fix whenever someone's in that file.
-
-**Shipped**: `api.ts`'s generic fetch-error fallback now uses `i18n.t("common:apiErrors...")`
-(also fixed the "cod suivant" typo along the way). `public/500.html`'s title fixed to match this
-repo's existing 422-page naming convention. `BtnApiElement.jsx` turned out to be genuinely dead
-code (zero importers, no ERB `react_component` mount anywhere) — deleted rather than extracted,
-logged in `docs/OrphanedCode.md`. The plugin-management UI (`Plugins.jsx`,
-`PluginActivationModal.jsx`, `PluginsList.jsx`, `RestartingMessage.jsx`, `PluginCard.jsx`) got a
-full extraction pass into a new `plugins` i18n namespace (`frontend/locales/{fr,en}/plugins.json`);
-the activate/deactivate confirmation ternary was initially transcribed inverted during extraction,
-caught by re-deriving the original logic before it shipped — code review then found the *value*
-feeding that ternary (`isActivated`, derived from `Object.keys(selectedPlugins)[0]` rather than the
-plugin actually being confirmed) was already wrong before this PR; logged in `docs/KnownIssues.md`
-rather than fixed here, since it's an unrelated pre-existing logic bug, not an i18n one. **Fixed**
-in the small-fixes batch (2026-09-14): `Plugins.jsx` now passes `pluginID` down, and
-`PluginActivationModal.jsx` keys `isActivated` off `activatedPlugins[pluginID]`.
+Found while auditing item 7's sweetalert2 call sites — plain un-extracted French text, not a
+locale-follows-setting bug like item 10. Fixed: `api.ts`'s app-wide fetch-error fallback (highest
+traffic — every unhandled API error hit this; also fixed a "cod suivant" typo), `public/500.html`'s
+copy-pasted 404 title, and a full i18n-extraction pass on the plugin-management UI (`Plugins.jsx`,
+`PluginActivationModal.jsx` + 3 more, new `plugins` locale namespace) — which also surfaced and
+fixed a pre-existing, unrelated logic bug (`isActivated` derived from the wrong value).
+`BtnApiElement.jsx` turned out fully dead (zero importers) — deleted, logged in `docs/OrphanedCode.md`.
 
 ## 12. `react-stepzilla` vendored and rewritten — done, `feat/vendor-react-stepzilla`
 
-Replaces the last remaining exotic (git-pinned) frontend dependency
-(`SIXMON/react-stepzilla.git`, no version tag) with a local, typed, functional-component copy —
-`frontend/components/utils/ui/StepZilla.tsx`. Feasibility (2026-09-15): ISC-licensed, single
-385-line source file; its CSS was already vendored separately (`frontend/components/stepzilla.css`,
-predates this change, unrelated to the npm package); the fork's only delta over upstream (a
-`componentDidUpdate` nav-resync when `steps.length` changes) was already baked into the installed
-source and is preserved as a `useEffect`. Real usage was narrow — 2 consumers (`AddCourse.jsx`,
-`Wizard.jsx`), a small prop subset, no `react-validation-mixin` (not even installed).
+Replaced the last exotic (git-pinned) frontend dependency with a local, typed, functional rewrite
+(`frontend/components/utils/ui/StepZilla.tsx` — `useState`/`useRef`/`useEffect` instead of a class +
+legacy string refs). Caught and fixed 2 real behavior regressions against upstream during the port
+(a dropped `prevBtnOnLastStep` override, a miscomputed initial `validated` flag), both covered by
+new tests. `react-stepzilla` fully removed from `package.json`/`yarn.lock`. `KnownIssues.md`'s
+"Exotic dependencies" section (its last entry) removed.
 
-**Shipped**: full functional-component rewrite, real TS types (`StepZillaStep`,
-`StepZillaStepInstance`) instead of `PropTypes`, `useState`/`useRef`/`useEffect` instead of a class
-+ legacy string refs (`this.refs.activeComponent` → `useRef`) — the latter also relevant to the
-next item (React 19 removes string refs outright). Dropped the HOC-validation branch
-(`hocValidationAppliedTo`) entirely: confirmed unused in this app, and it depends on
-react-validation-mixin's *own* internal string refs, which a clean rewrite can't meaningfully
-type-support anyway. Caught and fixed 2 behavior discrepancies against upstream during the port
-(both would have been real regressions, not preserved-on-purpose simplifications): the
-`prevBtnOnLastStep` override was silently dropped from the last-step button-visibility calc in an
-early draft (covered by a mutation-tested regression case — reverting the fix reproduces the
-failure); and the initial per-step `validated` flag was miscomputed based on whether a step has
-`isValidated()`, when upstream's real (HOC-validation-only) condition means it's always `true` in
-this app regardless. 10 new unit tests (`StepZilla.test.jsx`) plus the existing `AddCourse.test.jsx`
-(which mounts the real component, not a mock) all pass; `react-stepzilla` fully removed from
-`package.json`/`yarn.lock`/`node_modules`. `docs/KnownIssues.md`'s "Exotic (git-pinned)
-dependencies" section is now fully resolved (react-stepzilla was its last entry) and removed.
-
-## 13. `react-table` v6 → TanStack Table — path forward decided, not started
+## 13. `react-table` v6 → TanStack Table — batches 1-3 done and merged, batch 4 in progress
 
 `react-table@^6.8.0` (peer dep `react: ^16.x.x` — doesn't even officially claim React 17 support,
 same pattern as `react-loader-spinner`, item in the "Frontend dependencies" KnownIssues entry) is 4
@@ -740,22 +378,15 @@ consistent with sizing `Activity.jsx` as its own batch above. No official or com
 exists beyond that; bridging the v6→v7 conceptual gap (props-driven monolith → headless hooks +
 hand-built markup) falls on this migration's own batches.
 
-**Follow-up flagged during batch 1, to tackle once all of item 13's batches land (not before):**
-`ActivityRefBasics.jsx` and `EditFormule.jsx` both reconstruct their `dataService` and `columns`
-props fresh inside `render()` on every render, instead of building them once and reusing. Found
-while root-causing a real bug in batch 1 (rows not appearing after create — fixed by resetting
-`BaseDataTable`'s internal TanStack row-model cache unconditionally every render, see that fix's
-commit message for the full trace). Both components sit inside a shared `react-final-form` `Form`
-that re-renders on every field interaction anywhere in the whole multi-tab form, so this table gets
-re-rendered far more often than its own state changes would suggest, and rebuilding `dataService`/
-`columns` on every one of those renders is pure waste on top of that. Stabilizing their identity
-(build once — constructor for the class component, once via a stable pattern for the functional
-one — only rebuild when their real inputs change) would cut that churn at the source; the
-unconditional cache reset in `BaseDataTable.jsx` would then rarely matter in practice, though it
-should stay regardless as a correctness safety net for any caller with similar habits. Scoped as
-its own pass after the rest of item 13's batches, since it touches caller components outside
-`BaseDataTable.jsx` itself and other consumers may have the same pattern worth auditing together
-rather than piecemeal.
+**Stale note removed (2026-09-19):** this section used to flag `ActivityRefBasics.jsx`/
+`EditFormule.jsx` rebuilding `dataService`/`columns` fresh every render as a correctness follow-up
+to tackle after all of item 13's batches land, on the theory that this render churn was the cause of
+a real `getCoreRowModel()` caching bug found in batch 1. That diagnosis was wrong — see the
+"batch 1 — now resolved differently than expected" correction earlier in this item: the actual cause
+was `ActivityRefDataService`/`NewFormulePricingDataService` mutating a shared array in place and
+handing back the same reference, fixed at the source in batch 3. Rebuilding `dataService`/`columns`
+every render is still real and still slightly wasteful, but it's now just a minor, non-blocking
+efficiency nit, not something to schedule as its own pass.
 
 **Sequencing this sets for the rest of the React-version work**: TanStack v8 migration (this item)
 → stabilize → React 17→18 bump (item 14) → TanStack v9 migration, if ever wanted, as its own later

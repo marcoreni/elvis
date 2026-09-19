@@ -20,7 +20,7 @@ docker-compose up
 App is served at `http://localhost:7212`. `GITHUB_TOKEN` env var is required (used to fetch private plugin
 gems) — remove the `GITHUB_TOKEN is required` requirement in `docker-compose.yml` if not needed.
 
-For local (non-Docker) development, see the "Install manually" section of `README.md` — ruby 3.3.2, node 20,
+For local (non-Docker) development, see the "Install manually" section of `README.md` — ruby 3.3.12, node 22,
 postgresql 14, and optionally a local redis. Then:
 ```bash
 bundle install
@@ -53,7 +53,7 @@ u.save!
   `.jsx`/`.tsx` by default, unlike this app's actual Rspack build, which doesn't care about
   the extension. Component-rendering tests use `@testing-library/react@^12`
   (`@testing-library/jest-dom@6.9.1`/`@testing-library/user-event@^13`) — pinned below their
-  latest majors for this app's React 16/Node 20, not because of a Vite/Vitest constraint.
+  latest majors for this app's React 17/Node 22, not because of a Vite/Vitest constraint.
 - JS formatting: `.prettierrc` sets 4-space tabs; no lint script is wired up in `package.json`
 
 Note: this repo has **two parallel test frameworks** — RSpec (`spec/`, newer/preferred) and Minitest
@@ -66,8 +66,18 @@ first — this repo has two remotes (upstream + a personal fork) and a stacked-b
 have already caused the review agent to silently review the wrong diff more than once.
 
 This repo also defines project-specific subagents under `.claude/agents/`
-(`backend-specialist`, `frontend-specialist`, `orchestrator`) — see `docs/Agents.md` for what each
-one covers and when to reach for the orchestrator instead of a single specialist.
+(`backend-specialist`, `frontend-specialist`, `orchestrator`, `qa`, `translator`, `code-reviewer`) —
+see `docs/Agents.md` for what each one covers. **Route work through the subagent that owns it
+instead of implementing directly in the main session/thread**, even when you already have the
+context loaded and it would be faster not to: single-sided `frontend/` work goes to
+`frontend-specialist`, single-sided Rails work to `backend-specialist`, anything spanning both to
+`orchestrator`, new/changed test coverage to `qa`, locale-file changes to `translator`, and a review
+pass before every merge to `code-reviewer`. Having full context yourself is not a reason to skip
+delegating — it happened once already (the entire TanStack Table migration, batches 1-4, was
+implemented and tested directly in-thread with zero use of `frontend-specialist`/`qa`) precisely
+because delegating felt like unnecessary overhead mid-flow. Treat "should this go through a
+subagent instead" as a check to make *before* the first `Edit`/`Write` of an implementation or
+test-writing task, not an afterthought.
 
 ## Commit conventions
 
