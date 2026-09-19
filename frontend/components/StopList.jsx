@@ -1,4 +1,4 @@
-import React, { Fragment, useState } from "react";
+import React, { Fragment, useMemo, useState } from "react";
 import TanStackGrid from "./common/baseDataTable/TanStackGrid";
 import { useTranslation } from "react-i18next";
 import * as StopReasons from "./utils/StopReasons";
@@ -145,6 +145,19 @@ export default function StopList({ seasons }) {
         fetchData();
     };
 
+    // Stable reference across renders (only recomputed when `data`/`season` actually change) --
+    // TanStack's core row-model memoization is keyed on this array's *reference*, and manual={false}
+    // means its own _autoResetPageIndex is active: a brand-new array every render (as `.filter(...)`
+    // inlined into the `data` prop would produce) resets `pageIndex` back to 0 on every render, so
+    // pagination past the first page is never reachable.
+    const filteredData = useMemo(
+        () =>
+            data.filter(
+                (d) => !season || d.pre_application.season_id === season.id
+            ),
+        [data, season]
+    );
+
     return (
         <Fragment>
             <button
@@ -164,11 +177,7 @@ export default function StopList({ seasons }) {
                 <div className="flex flex-space-between-justified">
                     <h1>
                         {t("activityApplications:stopList.heading", {
-                            count: data.filter(
-                                (d) =>
-                                    !season ||
-                                    d.pre_application.season_id === season.id
-                            ).length,
+                            count: filteredData.length,
                         })}
                     </h1>
                     <div>
@@ -204,11 +213,7 @@ export default function StopList({ seasons }) {
                     <TanStackGrid
                         tableName="stop-list"
                         manual={false}
-                        data={data.filter(
-                            (d) =>
-                                !season ||
-                                d.pre_application.season_id === season.id
-                        )}
+                        data={filteredData}
                         loading={loading}
                         pages={null}
                         pagination={pagination}

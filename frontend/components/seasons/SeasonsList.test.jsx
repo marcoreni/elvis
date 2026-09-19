@@ -8,9 +8,44 @@
 // unmocked.
 
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import i18n from "../../i18n";
 import SeasonsList from "./SeasonsList";
+
+// SeasonsList's `onActivationSuccess` is only ever invoked as SeasonActivationModal's `onSuccess`
+// prop, deep inside that modal's own multi-step activation flow -- mocked out here (as a plain
+// button forwarding a fabricated payload) so the regression below can call it directly without
+// driving that whole flow. `forwardRef` + `useImperativeHandle` avoids a "function components
+// cannot be given refs" warning from SeasonsList's `ref={this.state.modalRef}`.
+vi.mock("./SeasonActivationModal", () => ({
+    default: React.forwardRef((props, ref) => {
+        React.useImperativeHandle(ref, () => ({ openModal: () => {} }));
+        return (
+            <button
+                onClick={() =>
+                    props.onSuccess({
+                        id: 1,
+                        new_next_season: true,
+                        next: {
+                            id: 3,
+                            label: "2027-2028",
+                            start: "2027-09-01",
+                            end: "2028-06-30",
+                            start_formatted: "01/09/2027",
+                            end_formatted: "30/06/2028",
+                            is_current: false,
+                            next_season_id: null,
+                            next_season: null,
+                        },
+                    })
+                }
+            >
+                trigger-activation-success
+            </button>
+        );
+    }),
+}));
 
 beforeEach(async () => {
     await i18n.changeLanguage("fr");
@@ -56,4 +91,21 @@ test("renders season rows with formatted dates and status controls", () => {
     expect(screen.getByText("Active")).toBeInTheDocument();
     // Row 2 is not current -> shows the activation button instead.
     expect(screen.getByText("Activer")).toBeInTheDocument();
+});
+
+test("activating a season that creates a new next season shows the new row immediately, without a reload (regression: `onActivationSuccess` mutated the previous `seasons` array in place, so TanStack's row-model memoization -- keyed on that array's reference -- never picked up the new row)", async () => {
+    // The activated season's own row also gains a "Suivante" cell showing the new season's label,
+    // so "2027-2028" legitimately appears twice once activation succeeds (the new row's own label
+    // cell, plus the activated row's "next" column) -- assert on the new row specifically via its
+    // edit link's href (unique to that row) rather than on the label text alone.
+    const { container } = render(<SeasonsList seasons={seasons()} />);
+    const newSeasonEditLink = () =>
+        container.querySelector('a[href="/seasons/3/edit"]');
+
+    expect(newSeasonEditLink()).not.toBeInTheDocument();
+
+    await userEvent.click(screen.getByText("trigger-activation-success"));
+
+    await waitFor(() => expect(newSeasonEditLink()).toBeInTheDocument());
+    expect(screen.getAllByText("2027-2028").length).toBeGreaterThan(0);
 });

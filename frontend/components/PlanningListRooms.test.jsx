@@ -7,7 +7,7 @@
 // `withTranslation("planning")` wraps the class; render() reads `t` from props via the HOC.
 
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import i18n from "../i18n";
 import PlanningListRooms from "./PlanningListRooms";
 
@@ -43,10 +43,13 @@ test("renders room rows with the expected columns and planning link", () => {
 
 // Regression check: every column here is explicit `filterable: false` (v6 never showed a filter
 // row on this table) -- TanStackGrid defaults a column with no `filterable` key to filterable-on,
-// so a column left un-migrated would silently grow a filter input it never had under v6.
+// so a column left un-migrated would silently grow a filter input it never had under v6. Scoped to
+// the table itself (not the whole page) so it doesn't also trip on the unrelated page-size
+// <select> that TanStackGrid's footer renders outside the <table>.
 test("no column renders a filter input (every column is explicitly filterable: false)", () => {
     render(<PlanningListRooms plannings={[{ id: 1, label: "Salle A" }]} />);
 
-    expect(screen.queryAllByRole("textbox")).toHaveLength(0);
-    expect(screen.queryAllByRole("combobox")).toHaveLength(0);
+    const table = screen.getByRole("table");
+    expect(within(table).queryAllByRole("textbox")).toHaveLength(0);
+    expect(within(table).queryAllByRole("combobox")).toHaveLength(0);
 });

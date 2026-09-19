@@ -55,6 +55,7 @@ class PlanningListRooms extends React.Component {
                 columns={columns}
                 defaultSorted={[{ id: "room", desc: false }]}
                 minRows={1}
+                pageSizeOptions={[5, 10, 20, 25, 50, 100]}
             />
         );
     }

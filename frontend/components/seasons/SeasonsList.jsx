@@ -80,25 +80,33 @@ class SeasonsList extends React.Component {
 
     onActivationSuccess = (data) => {
         this.setState(function (previousState) {
-            const state = Object.assign({}, previousState);
-            const currentSeason = state.seasons.find((s) => s.is_current);
+            // Build a genuinely new array (not just a shallow-copied wrapper object still pointing
+            // at the same `seasons` array) before mutating anything -- TanStack's core row-model
+            // memoization is keyed on that array's *reference*, so mutating the previous reference
+            // in place (as `.sort`/`.push` do) means the newly-created "next" season never appears
+            // in the table until a full page reload.
+            const seasons = previousState.seasons.map((s) => ({ ...s }));
+            const currentSeason = seasons.find((s) => s.is_current);
             if (currentSeason) {
                 currentSeason.is_current = false;
             }
 
-            const newCurrent = state.seasons.find((s) => s.id === data.id);
+            const newCurrent = seasons.find((s) => s.id === data.id);
             if (newCurrent) {
                 newCurrent.is_current = true;
             }
 
             if (data.new_next_season) {
-                state.seasons.sort((a, b) => a.start < b.start);
                 newCurrent.next_season = data.next;
                 newCurrent.next_season_id = data.next.id;
-                state.seasons.push(data.next);
+                return {
+                    seasons: [...seasons, data.next].sort(
+                        (a, b) => a.start < b.start
+                    ),
+                };
             }
 
-            return state;
+            return { seasons };
         });
     };
 
@@ -281,6 +289,7 @@ class SeasonsList extends React.Component {
                     columns={columns}
                     defaultSorted={[{ id: "start", desc: true }]}
                     minRows={1}
+                    pageSizeOptions={[5, 10, 20, 25, 50, 100]}
                 />
             </div>
         );

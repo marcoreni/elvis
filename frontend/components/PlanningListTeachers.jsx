@@ -125,6 +125,7 @@ class PlanningListTeachers extends React.Component {
                 // explicit here.
                 defaultSorted={[{ id: "lastname", desc: false }]}
                 minRows={1}
+                pageSizeOptions={[5, 10, 20, 25, 50, 100]}
             />
         );
     }

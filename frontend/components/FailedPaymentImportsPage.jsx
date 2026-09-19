@@ -46,9 +46,10 @@ class FailedPaymentImportsPage extends React.Component {
             selectedRows: [],
             selectedReason: null,
             // Controlled, rather than TanStackGrid's own uncontrolled default (pageSize 20), so
-            // the initial page size matches v6's old `defaultPageSize={10}` (no page-size
-            // selector was ever shown here -- that requires its own `pageSizeOptions` prop, never
-            // passed to the old <ReactTable> either).
+            // the initial page size matches v6's old `defaultPageSize={10}`. The old <ReactTable>
+            // also showed a page-size selector by default (v6's `showPageSizeOptions: true`,
+            // `pageSizeOptions: [5, 10, 20, 25, 50, 100]`) -- restored below via TanStackGrid's own
+            // `pageSizeOptions` prop.
             pagination: { pageIndex: 0, pageSize: 10 },
         };
     }
@@ -266,6 +267,12 @@ class FailedPaymentImportsPage extends React.Component {
                     {cell.original[field]}
                 </a>
             );
+
+        // Not editable and no user_id -- near-unreachable today (every non-`payer_not_found` row
+        // gets a `user_id` from the controller), but a Cell renderer returning `undefined` (rather
+        // than `null`) is a React error ("Nothing was returned from render"), unlike v6 which
+        // tolerated it. Fall back to the plain text instead of rendering nothing.
+        return cell.original[field] ?? null;
     }
 
     renderDateCell(cell, editable, field) {
@@ -300,7 +307,7 @@ class FailedPaymentImportsPage extends React.Component {
                 <input
                     type="number"
                     onChange={(e) => {
-                        const { data } = this.state;
+                        const data = [...this.state.data];
                         data[cell.index][field] = parseFloat(e.target.value);
                         this.setState({ data });
                     }}
@@ -403,11 +410,20 @@ class FailedPaymentImportsPage extends React.Component {
                 id: "reason",
                 // A string here, not the raw numeric `failed_payment_import_reason_id` -- TanStack's
                 // "auto" filterFn is picked from the *row value's* type, and for a number that's
-                // `inNumberRange` (expects a [min, max] tuple), which throws on the single option
-                // string this <FilterSelect> actually produces. Stringifying keeps the auto-picked
-                // filterFn as a case-insensitive "contains" instead, matching (closely enough) v6's
-                // own default filter method here (`String(value).startsWith(filter.value)`). The
-                // Cell below reads the real numeric id back off `original`, not off this value.
+                // `inNumberRange` (expects a [min, max] tuple). It doesn't throw on the single option
+                // string this <FilterSelect> actually produces: `resolveFilterValue` destructures it
+                // into `[min, undefined]`, and `parseFloat(undefined)` -> `NaN` -> the upper bound
+                // becomes `Infinity`, so the filter silently behaved as "reason id >= selected"
+                // instead of an exact match (e.g. selecting reason 1 wrongly showed every row).
+                // Stringifying keeps the auto-picked filterFn as a case-insensitive "contains"
+                // instead, matching (closely enough) v6's own default filter method here
+                // (`String(value).startsWith(filter.value)`). The Cell below reads the real numeric
+                // id back off `original`, not off this value.
+                //
+                // Latent limitation: "contains" (not exact match) means selecting reason "1" would
+                // also match reason "10"/"11" if `failed_payment_import_reason_id`s ever reach two
+                // digits (a real possibility -- that table is `find_or_create_by`'d). LegacyColumn
+                // has no per-column filterFn override hook today to fix this properly.
                 accessor: (d) => String(d.failed_payment_import_reason_id),
                 filterable: true,
                 minWidth: 70,
@@ -508,9 +524,10 @@ class FailedPaymentImportsPage extends React.Component {
             },
             {
                 // Was missing an `id` (and had no accessor either) under v6, which tolerated it
-                // silently -- TanStack Table throws ("Columns require an id when using an
-                // accessorFn") for any column that ends up with neither a string accessor nor an
-                // explicit id, since every column here gets a (possibly no-op) accessorFn.
+                // silently. TanStack doesn't throw on this: `createColumn` falls back to the
+                // column's `header` when it's a string, so the column silently got the *translated
+                // label string* as its id instead of throwing -- a real bug (a locale-dependent
+                // column id), just not a crash. Explicit `id` here fixes it.
                 id: "actions",
                 Header: t("failedImports.columns.actions"),
                 maxWidth: 100,
@@ -615,6 +632,7 @@ class FailedPaymentImportsPage extends React.Component {
                             onPaginationChange={(pagination) =>
                                 this.setState({ pagination })
                             }
+                            pageSizeOptions={[5, 10, 20, 25, 50, 100]}
                             columns={columns}
                         />
                     </div>

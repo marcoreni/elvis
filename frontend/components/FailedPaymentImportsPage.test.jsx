@@ -3,12 +3,17 @@
 // test file existed for this component. Each test below is a regression for a real bug the
 // migration pass found and fixed -- see the diff comments in FailedPaymentImportsPage.jsx itself:
 //
-//  1. The "actions" column had no `id` and no `accessor` -- v6 tolerated this, but TanStack Table
-//     throws ("Columns require an id when using an accessorFn") since every column gets a no-op
-//     accessorFn in TanStackGrid's adapter. Fixed by adding `id: "actions"`.
+//  1. The "actions" column had no `id` and no `accessor` -- v6 tolerated this. TanStack doesn't
+//     throw on this either: `createColumn` falls back to the column's `header` when it's a string,
+//     so the column silently got the *translated label string* as its id instead (a locale-dependent
+//     column id -- a real bug, just not a crash). Fixed by adding `id: "actions"`.
 //  2. The "reason" column's accessor returned a raw number; TanStack's "auto" filterFn picks
-//     `inNumberRange` for a numeric value (destructures `[min, max]`), which throws on the plain
-//     string a <select> filter produces. Fixed by stringifying the accessor's return value.
+//     `inNumberRange` for a numeric value (destructures `[min, max]`). It doesn't throw on the
+//     plain string a <select> filter produces: `resolveFilterValue` destructures it into
+//     `[min, undefined]`, `parseFloat(undefined)` -> `NaN` -> the upper bound becomes `Infinity`,
+//     so the filter silently behaved as "reason id >= selected" instead of an exact match (e.g.
+//     selecting reason 1 wrongly showed every row). Fixed by stringifying the accessor's return
+//     value, which keeps the auto-picked filterFn as a "contains" match instead.
 //  3. `renderNameCell` used to read the field to write back into `this.state.data` off
 //     `cell.column.id` (a v6-only API absent from TanStackGrid's `{value, original, index}` Cell
 //     shape) -- fixed by passing the field name explicitly per call site.
@@ -18,7 +23,7 @@
 // covers it, per the LessonList.test.jsx convention).
 
 import React from "react";
-import { render, screen, within } from "@testing-library/react";
+import { render, screen, within, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import i18n from "../i18n";
 import FailedPaymentImportsPage from "./FailedPaymentImportsPage";
@@ -65,7 +70,7 @@ const rows = () => [
     },
 ];
 
-test("renders without crashing and shows the actions column buttons (regression: the actions column had no `id`, which crashes TanStack Table)", () => {
+test("renders without crashing and shows the actions column buttons (regression: the actions column had no `id`, so it silently got the translated header string as its id)", () => {
     const { container } = render(
         <FailedPaymentImportsPage data={rows()} reasons={REASONS} />
     );
@@ -74,7 +79,7 @@ test("renders without crashing and shows the actions column buttons (regression:
     expect(container.querySelectorAll(".fa-trash")).toHaveLength(2);
 });
 
-test("filtering the reason column via its <select> narrows rows without crashing (regression: a numeric accessor picked TanStack's inNumberRange filterFn, which throws on the <select>'s string value)", async () => {
+test('filtering the reason column via its <select> narrows rows to an exact match (regression: a numeric accessor picked TanStack\'s inNumberRange filterFn, which silently matched every row "reason id >= selected" instead of throwing)', async () => {
     render(<FailedPaymentImportsPage data={rows()} reasons={REASONS} />);
 
     const table = screen.getByRole("table");
@@ -100,4 +105,45 @@ test("editable name cells use the caller-supplied field name for each column, no
     // Column order: selection(0), reason(1), first_name(2), last_name(3), ...
     expect(cells[2]).toHaveTextContent("Jean");
     expect(cells[3]).toHaveTextContent("Dupont");
+});
+
+test("editing the amount cell displays the newly typed value, not the stale one (regression: onChange mutated `this.state.data` in place instead of copying it first, via `data[cell.index][field] = ...`)", async () => {
+    const editableAmountRow = {
+        id: 103,
+        failed_payment_import_reason_id: 3, // different_amounts -> amount cell editable
+        first_name: "Paul",
+        last_name: "Durand",
+        due_date: "2026-03-15",
+        cashing_date: "2026-03-20",
+        created_at: "2026-03-01T10:00:00",
+        amount: 42.5,
+        user_id: 77,
+    };
+
+    render(
+        <FailedPaymentImportsPage
+            data={[editableAmountRow]}
+            reasons={REASONS}
+        />
+    );
+
+    // Re-queried after the edit, not reused from before it: TanStackGrid's `Cell` prop is called
+    // through TanStack's own `flexRender`, which re-mounts (rather than updates in place) the
+    // returned element on every parent re-render -- a pre-existing, unrelated quirk of every
+    // editable-cell column here, not this regression. Holding onto the pre-edit node would just
+    // assert against that now-detached element instead of what's actually on screen.
+    expect(screen.getByRole("spinbutton")).toHaveValue(42.5);
+
+    // A single fireEvent (rather than userEvent.clear + type) avoids an intermediate "" ->
+    // parseFloat -> NaN keystroke, which is its own (separate, pre-existing) rough edge of this
+    // controlled number input and not what this regression is about.
+    fireEvent.change(screen.getByRole("spinbutton"), {
+        target: { value: "99.9" },
+    });
+
+    // Regression: with the old in-place mutation, `this.state.data` kept the same array
+    // *reference* across the edit, so TanStack's per-row `getValue()` cache (invalidated only when
+    // that reference changes) kept returning the stale 42.5 despite the underlying object having
+    // actually been mutated to 99.9.
+    expect(screen.getByRole("spinbutton")).toHaveValue(99.9);
 });

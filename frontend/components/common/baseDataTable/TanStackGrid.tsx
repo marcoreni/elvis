@@ -112,9 +112,14 @@ function toTanStackColumn(column: LegacyColumn): ColumnDef<any> {
         // (a "select all" checkbox living in the Filter slot, payer-name text filters, the
         // occupation dropdown) have no accessor at all (their Cell reads `original` directly)
         // but still need their filter/sort UI to render. A no-op accessor unblocks TanStack's
-        // gates without affecting any real value lookup -- safe here specifically because every
-        // real table is manualSorting/manualFiltering, so TanStack never actually sorts/filters
-        // rows using this value itself, only tracks state and defers to the server.
+        // gates without affecting any real value lookup -- safe for a manualSorting/manualFiltering
+        // table, where TanStack never actually sorts/filters rows using this value itself, only
+        // tracks state and defers to the server. NOT safe for a client-mode table (manual={false}):
+        // an accessor-less column left `filterable` (i.e. not explicitly `false`) there gets
+        // TanStack's auto-picked `weakEquals` filterFn, which compares every row's `undefined`
+        // value against the typed filter text and is always false -- the first keystroke empties
+        // the whole table. Any accessor-less column on a client-mode table must set
+        // `filterable: false` explicitly.
         tanstackColumn.accessorFn = () => undefined;
     }
 
