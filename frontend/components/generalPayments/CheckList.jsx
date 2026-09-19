@@ -425,6 +425,7 @@ class CheckList extends React.Component {
                         tableName="table-checks"
                         data={data}
                         pages={pages}
+                        totalCount={this.state.rowsCount}
                         loading={loading}
                         columns={columns}
                         pageSizeOptions={[5, 10, 11, 15, 20, 50, 100]}
@@ -465,6 +466,7 @@ class CheckList extends React.Component {
                             this.fetchData({
                                 ...this.state.filter,
                                 filtered,
+                                page: 0,
                             })
                         }
                         minRows={1}

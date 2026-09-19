@@ -195,11 +195,27 @@ interface TanStackGridProps {
     tableName: string;
     /** v6-shaped column defs, including any "actions" column the caller already built. */
     columns: LegacyColumn[];
-    /** Current page's rows. */
+    /**
+     * Current page's rows. TanStack's own row-model memoization is keyed on this array's
+     * *reference*, not its contents -- a caller whose data source mutates an array in place
+     * (`push`/`splice`) and hands back that same reference will see a stale table after a
+     * create/delete, since nothing changed by reference. Real callers fetching fresh JSON per
+     * request are unaffected (a new `response.json()` array every time); this bit two in-memory
+     * mock DataServices (activityRef/NewActivityRefDataService.jsx,
+     * formules/NewFormulePricingDataService.js) before their own `listData()` was fixed to return
+     * a copy (`[...this.items]`) instead of the mutated original.
+     */
     data: any[];
     loading: boolean;
     /** Total page count, as reported by the server. */
     pages: number | null;
+    /**
+     * Total row count across every page, as reported by the server, for the "N results" footer.
+     * Falls back to the current page's own row count when omitted -- correct only when there's a
+     * single page, wrong (under-reports) otherwise; most real callers already track this in their
+     * own state (often called `total`/`rowsCount`) but don't all thread it through yet.
+     */
+    totalCount?: number;
     /** Shown instead of the translated noDataText when set. */
     errorMessage?: string | null;
     /**
@@ -252,6 +268,7 @@ export default function TanStackGrid({
     data,
     loading,
     pages,
+    totalCount,
     errorMessage,
     onFetchData,
     defaultSorted,
@@ -305,12 +322,26 @@ export default function TanStackGrid({
     // that reads `data`, not just here -- the resultsCount footer needs the same guard.
     const safeData = data ?? [];
 
+    // v6 reset the current page to 0 whenever the filter set changed (its own
+    // calculateNewResolvedState); TanStack v8 has no equivalent, and manualPagination blocks its
+    // autoResetPageIndex from covering it either. Only safe to do internally in uncontrolled mode
+    // -- a controlled caller owns pagination itself and must reset it as part of its own
+    // onColumnFiltersChange -> fetch call (as LessonList already does), since forcing it here too
+    // would fire that caller's onPaginationChange a second time for the same interaction.
+    const isPaginationControlled = controlledPagination !== undefined;
+    const handleColumnFiltersChange: typeof setColumnFilters = (updater) => {
+        setColumnFilters(updater);
+        if (!isPaginationControlled) {
+            setPagination((old) => ({ ...old, pageIndex: 0 }));
+        }
+    };
+
     const table = useReactTable({
         data: safeData,
         columns: tanstackColumns,
         state: { sorting, columnFilters, pagination, expanded },
         onSortingChange: setSorting,
-        onColumnFiltersChange: setColumnFilters,
+        onColumnFiltersChange: handleColumnFiltersChange,
         onPaginationChange: setPagination,
         onExpandedChange: setExpanded,
         manualPagination: true,
@@ -331,27 +362,6 @@ export default function TanStackGrid({
               }
             : {}),
     });
-
-    // TanStack's own getCoreRowModel() memoization (keyed on table.options.data) doesn't reliably
-    // invalidate here: confirmed live that table.options.data updates to the new array correctly
-    // (same reference the caller's own state holds) but table.getCoreRowModel() keeps returning
-    // the stale row set across many consecutive renders, until the cached getter is discarded.
-    // Root cause traced to render *frequency*, not this component's own logic: callers embedded in
-    // a react-final-form form (ActivityRefBasics.jsx, EditFormule.jsx) re-render on every field
-    // interaction anywhere in the whole multi-tab form, and rebuild their `dataService`/`columns`
-    // fresh in every render() -- so this grid is churned through far more renders than its own data
-    // changes would suggest, and TanStack's cache (a plain mutable object kept outside React state,
-    // updated via a side effect during render) gets out of sync somewhere in that churn. A
-    // `data`-changed ref guard to only reset when needed proved unreliable under that same churn
-    // (some intervening render already "consumes" the change the guard was watching for).
-    // Resetting unconditionally sidesteps the whole render-ordering question and is cheap
-    // regardless: this only reconstructs lightweight row-wrapper objects (no cell rendering, no DOM
-    // work) once per render of *this* grid, not once per unrelated re-render elsewhere in the form
-    // -- negligible even at a few hundred rows. The real long-term fix is upstream: stabilize
-    // `dataService`/`columns` identity in those callers (build once, not on every render) so this
-    // grid isn't re-rendered nearly as often in the first place -- flagged as its own follow-up
-    // (see docs/Modernization-Roadmap.md item 13), out of scope here.
-    delete (table as { _getCoreRowModel?: unknown })._getCoreRowModel;
 
     useEffect(() => {
         // Controlled mode: the caller owns pagination/sorting/filtering state itself and fetches
@@ -650,7 +660,7 @@ export default function TanStackGrid({
                 </div>
                 <div>
                     {t("baseDataTable.resultsCount", {
-                        count: safeData.length,
+                        count: totalCount ?? safeData.length,
                     })}
                 </div>
             </div>

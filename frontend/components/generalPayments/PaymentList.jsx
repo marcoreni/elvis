@@ -1036,6 +1036,7 @@ class PaymentList extends React.Component {
                         tableName="table-payments"
                         data={data}
                         pages={pages}
+                        totalCount={this.state.rowsCount}
                         loading={loading}
                         columns={this.state.columns}
                         pageSizeOptions={pageSizeOptions}
@@ -1062,6 +1063,7 @@ class PaymentList extends React.Component {
                             this.fetchData({
                                 ...this.state.filter,
                                 filtered,
+                                page: 0,
                             })
                         }
                         minRows={8}

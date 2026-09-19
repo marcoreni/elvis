@@ -1190,6 +1190,7 @@ class LessonList extends React.Component {
                         style={{ backgroundColor: "white" }}
                         data={this.state.data}
                         pages={this.state.pages}
+                        totalCount={this.state.total}
                         columns={filteredColumns}
                         loading={this.state.loading}
                         pageSizeOptions={[5, 10, 15, 20, 50, 100]}

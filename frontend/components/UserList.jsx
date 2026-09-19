@@ -273,7 +273,7 @@ class UserList extends React.Component {
     };
 
     render() {
-        const { data, pages, loading } = this.state;
+        const { data, pages, total, loading } = this.state;
         const { t } = this.props;
 
         const columns = [
@@ -605,6 +605,7 @@ class UserList extends React.Component {
                     tableName="userTable"
                     data={data}
                     pages={pages}
+                    totalCount={total}
                     loading={loading}
                     onFetchData={this.fetchData}
                     columns={columns}

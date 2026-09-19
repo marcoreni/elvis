@@ -185,13 +185,14 @@ class Localisations extends React.Component {
     }
 
     render() {
-        const { data, pages, loading } = this.state;
+        const { data, pages, total, loading } = this.state;
 
         return (
             <TanStackGrid
                 tableName="table-localisations"
                 data={data}
                 pages={pages}
+                totalCount={total}
                 loading={loading}
                 onFetchData={this.fetchData}
                 columns={this.state.columns}

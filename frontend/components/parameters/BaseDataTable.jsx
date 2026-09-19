@@ -79,7 +79,7 @@ export default class BaseDataTable extends Component {
     }
 
     render() {
-        const { data, pages, loading } = this.state;
+        const { data, pages, total, loading } = this.state;
 
         return (
             <Fragment>
@@ -105,6 +105,7 @@ export default class BaseDataTable extends Component {
                             data={data}
                             loading={loading}
                             pages={pages}
+                            totalCount={total}
                             onFetchData={this.fetchData}
                             defaultSorted={[{ id: "id", desc: true }]}
                         />
