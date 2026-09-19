@@ -127,17 +127,20 @@ test("editing the amount cell displays the newly typed value, not the stale one 
         />
     );
 
-    // Re-queried after the edit, not reused from before it: TanStackGrid's `Cell` prop is called
-    // through TanStack's own `flexRender`, which re-mounts (rather than updates in place) the
-    // returned element on every parent re-render -- a pre-existing, unrelated quirk of every
-    // editable-cell column here, not this regression. Holding onto the pre-edit node would just
-    // assert against that now-detached element instead of what's actually on screen.
-    expect(screen.getByRole("spinbutton")).toHaveValue(42.5);
+    // Held onto (not re-queried) across the edit below: `columns` is now cached across renders
+    // (see `getColumns()` in FailedPaymentImportsPage.jsx), so the `cell` function TanStack's
+    // `flexRender` calls keeps the same identity across the `this.setState({data})` each keystroke
+    // triggers, and React treats it as the same component type rather than unmounting/remounting
+    // it. Before that fix, this same node would have been detached from the document after the
+    // edit below (a real regression this branch introduced: the amount input lost focus on every
+    // keystroke).
+    const input = screen.getByRole("spinbutton");
+    expect(input).toHaveValue(42.5);
 
     // A single fireEvent (rather than userEvent.clear + type) avoids an intermediate "" ->
-    // parseFloat -> NaN keystroke, which is its own (separate, pre-existing) rough edge of this
-    // controlled number input and not what this regression is about.
-    fireEvent.change(screen.getByRole("spinbutton"), {
+    // parseFloat -> NaN keystroke, which is a separate, pre-existing rough edge of this controlled
+    // number input and not what this regression is about.
+    fireEvent.change(input, {
         target: { value: "99.9" },
     });
 
@@ -145,5 +148,8 @@ test("editing the amount cell displays the newly typed value, not the stale one 
     // *reference* across the edit, so TanStack's per-row `getValue()` cache (invalidated only when
     // that reference changes) kept returning the stale 42.5 despite the underlying object having
     // actually been mutated to 99.9.
-    expect(screen.getByRole("spinbutton")).toHaveValue(99.9);
+    expect(input).toHaveValue(99.9);
+    // Same DOM node, not a freshly-mounted replacement -- confirms the cell subtree wasn't
+    // unmounted/remounted by this edit (the focus-loss regression this branch introduced).
+    expect(screen.getByRole("spinbutton")).toBe(input);
 });

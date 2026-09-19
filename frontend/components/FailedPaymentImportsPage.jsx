@@ -358,16 +358,32 @@ class FailedPaymentImportsPage extends React.Component {
         this.setState({ selectedRows: [], selectAll: false });
     }
 
-    render() {
-        const { t } = this.props;
+    // TanStackGrid's `tanstackColumns` memo is keyed on this array's *identity*, and a changed
+    // `cell` function identity inside it makes TanStack's `flexRender` (which calls it via
+    // `React.createElement(cellFn, props)`) treat it as a brand-new component type -- unmounting
+    // and remounting the whole cell subtree, which destroys any `<input>` DOM node and its focus.
+    // A class component's `render()` used to build this array fresh every time (including on
+    // every keystroke into an editable cell, via the `this.setState({data})` each onChange
+    // triggers), so cache it here and only rebuild when something it actually reads that isn't
+    // reached through a stable `this.` reference changes: the translated headers (`t`) and the
+    // `reasons` prop the editable/id lookups and the reason filter's <select> options are built
+    // from. Everything else this closes over (`this.state.selectAll`/`selectedRows`/`data`) is
+    // read live off `this` inside each Cell/Filter at call time, not captured by value, so caching
+    // the array doesn't make those go stale.
+    getColumns() {
+        const { t, reasons } = this.props;
 
-        const payerNotFound = this.props.reasons.find(
-            (d) => d.code === "payer_not_found"
-        );
-        const dueNotFound = this.props.reasons.find(
-            (d) => d.code === "due_not_found"
-        );
-        const differentAmounts = this.props.reasons.find(
+        if (
+            this._columnsCache &&
+            this._columnsCacheT === t &&
+            this._columnsCacheReasons === reasons
+        ) {
+            return this._columnsCache;
+        }
+
+        const payerNotFound = reasons.find((d) => d.code === "payer_not_found");
+        const dueNotFound = reasons.find((d) => d.code === "due_not_found");
+        const differentAmounts = reasons.find(
             (d) => d.code === "different_amounts"
         );
 
@@ -434,7 +450,7 @@ class FailedPaymentImportsPage extends React.Component {
                         onChange={(event) => onChange(event.target.value)}
                     >
                         <option key="" value="" />
-                        {this.props.reasons.map((r) => (
+                        {reasons.map((r) => (
                             <option key={r.id} value={r.id}>
                                 {r.label}
                             </option>
@@ -443,7 +459,7 @@ class FailedPaymentImportsPage extends React.Component {
                 ),
                 Cell: (cell) => {
                     const reason = _.find(
-                        this.props.reasons,
+                        reasons,
                         (rea) =>
                             rea.id ===
                             cell.original.failed_payment_import_reason_id
@@ -554,6 +570,16 @@ class FailedPaymentImportsPage extends React.Component {
                 ),
             },
         ];
+
+        this._columnsCache = columns;
+        this._columnsCacheT = t;
+        this._columnsCacheReasons = reasons;
+        return columns;
+    }
+
+    render() {
+        const { t } = this.props;
+        const columns = this.getColumns();
 
         let bulkDeleteButtonLabel = t("failedImports.bulk.byReason");
 

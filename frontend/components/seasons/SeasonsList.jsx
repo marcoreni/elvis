@@ -97,12 +97,12 @@ class SeasonsList extends React.Component {
             }
 
             if (data.new_next_season) {
-                newCurrent.next_season = data.next;
-                newCurrent.next_season_id = data.next.id;
+                if (newCurrent) {
+                    newCurrent.next_season = data.next;
+                    newCurrent.next_season_id = data.next.id;
+                }
                 return {
-                    seasons: [...seasons, data.next].sort(
-                        (a, b) => a.start < b.start
-                    ),
+                    seasons: [...seasons, data.next],
                 };
             }
 

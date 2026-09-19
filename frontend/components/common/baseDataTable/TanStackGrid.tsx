@@ -377,6 +377,18 @@ export default function TanStackGrid({
         // Kept unconditional (not gated on `manual`) -- a UX consistency improvement in both
         // modes, not a manual-mode-only concern.
         enableSortingRemoval: false,
+        // TanStack's own `_autoResetPageIndex` (on by default whenever `manualPagination` is
+        // false) resets `pageIndex` to 0 whenever the core row model's data-reference dependency
+        // changes -- not just on real pagination/filtering, but on *any* new `data` array
+        // reference, including one produced by an unrelated in-place edit (e.g. typing into an
+        // editable cell that copies-then-replaces `data` to avoid a stale-display bug). That
+        // silently snapped a client-mode table back to page 1 mid-edit. The one legitimate reset
+        // case (filters changing) is already handled explicitly above in
+        // `handleColumnFiltersChange`, so this built-in auto-reset has no case left to cover.
+        // Unconditional (not gated on `manual`): `autoResetPageIndex ?? !manualPagination`
+        // already resolves to `false` for every `manual={true}` (server-side) caller, so this
+        // only changes behavior for `manual={false}` callers.
+        autoResetPageIndex: false,
         pageCount: manual ? (pages ?? -1) : undefined,
         getCoreRowModel: coreRowModel,
         // Rows here are flat records with no real `subRows` -- expansion is used purely as a
