@@ -609,19 +609,65 @@ was already peer-dep-unverified past React 16 anyway.
      scope, not on every render) so `TanStackGrid` re-renders far less often in the first place. Not
      tackled here — explicitly deferred until all of this item's batches land, since it's a
      consumer-side fix orthogonal to any single batch's own table-engine swap.
-  3. The 5 `SubComponent`/expander tables together (excluding `Activity.jsx`, see the
-     `SubComponent`-list correction above): `DuePaymentList`, `PaymentList`, `LessonList`,
-     `Localisations`, `PackUtilization` — write the `getExpandedRowModel()` pattern once, reuse
-     across all of them. `DuePaymentList.jsx` and `generalPayments/PaymentList.jsx` are also 2 of 4
-     real consumers of `frontend/components/ReactTableFullScreen.jsx` (`UserList.jsx`,
-     `generalPayments/CheckList.jsx` are the other 2 — `ReactTableFullScreen` consumers, but neither
-     uses `SubComponent` itself) — rewriting `ReactTableFullScreen.jsx` to v8 here for
-     `DuePaymentList`/`PaymentList`'s sake affects those other 2 too, so fold them into this batch
-     rather than leaving them on the shared component's old v6 codepath while everything else moves
-     on. Net batch-3 file set: `ReactTableFullScreen.jsx` + `DuePaymentList`, `PaymentList`,
-     `UserList`, `CheckList` (share the fullscreen wrapper) + `LessonList`, `Localisations`,
-     `PackUtilization` (standalone `<ReactTable>` + `SubComponent`, no fullscreen) — 8 files total,
-     not 6; the extra 2 come from `UserList`/`CheckList` riding along via the shared wrapper.
+  3. **DONE (2026-09-19, `feat/tanstack-table-batch3-subcomponent-tables`).** The 8-file set
+     scoped above: `DuePaymentList`, `PaymentList`, `UserList`, `CheckList` (shared
+     `ReactTableFullScreen.jsx`) + `LessonList`, `Localisations`, `PackUtilization` (standalone,
+     `SubComponent`). **Correction found mid-batch:** `PackUtilization`'s `SubComponent` state was
+     never set (declared, always `null`) — same dead-state class as `parameters/BaseDataTable.jsx`
+     found in batch 2 — so it needed no real expander support, just the plain uncontrolled
+     `onFetchData` migration.
+
+     Extended `TanStackGrid` (additive only, batches 1-2 unaffected) with: `renderSubComponent` +
+     an auto-injected expander column (`getExpandedRowModel()`); **controlled** pagination/sorting/
+     columnFilters (value + `onXChange` triples, mirroring TanStack's own vocabulary) for
+     `DuePaymentList`/`PaymentList`/`CheckList`/`LessonList`, which need externally-resettable
+     table state for their "reset filters" button — v6 supported this via controlled props,
+     TanStack v8 the same way; `minRows` (blank-row padding); `getRowProps` (per-row `<tr>` props,
+     `LessonList`'s v6 `getTrProps`); a `pageSizeOptions` `<select>`; and a per-column custom
+     `Filter` render prop (v6's `Filter: ({filter, onChange}) => ...`, used by several of these
+     tables for dropdown/checkbox filter-row UI instead of the default text `<input>`).
+
+     Dropped two v6-specific things with no real replacement needed: `LessonList`'s
+     `resizable={true}` (column drag-resize — the only table in the app using it; an isolated,
+     documented regression rather than building full resize support in `TanStackGrid` for one
+     table) and its `key={filtered.map(f=>f.id).join("-")}` remount hack (a v6 workaround,
+     unnecessary once state is genuinely controlled and TanStack re-renders correctly from it).
+
+     Found and fixed two real bugs live in the browser, both in `TanStackGrid` itself and present
+     since batch 1 with zero prior coverage: a column whose `accessor` returns JSX with no `Cell`
+     rendered as the literal string `"[object Object]"` (TanStack's own default `cell` renderer
+     does `` `${renderValue()}` `` when none is specified, stringifying a React element instead of
+     rendering it — fixed by always setting an explicit `cell`); and clicking the expander
+     toggle silently did nothing (TanStack's default `getRowCanExpand` only allows expanding rows
+     with real `subRows`, which these flat records don't have — fixed with
+     `getRowCanExpand: () => true`). Added `TanStackGrid.test.tsx` (new, TypeScript + functional)
+     with direct regression coverage for both plus a basic render smoke test — the first dedicated
+     test file for `TanStackGrid` itself, rather than only reached through a consumer.
+
+     Also found and fixed a real, independently-reachable bug in 3 files: the fullscreen button in
+     `DuePaymentList`/`PaymentList`/`CheckList` called `events[0]()` where `events` was a
+     permanently-empty array — clicking it threw. Rewired through `TanStackGrid`'s working
+     fullscreen support (`goFullScreen`, moved here from `ReactTableFullScreen.jsx` once every
+     consumer had migrated off it). And applied the same `data.x || []` defensive guard used in
+     batch 2 everywhere a fetched response feeds `TanStackGrid` (TanStack throws on `data ===
+     undefined`, which v6 tolerated) — including a genuine pre-existing crash path in
+     `LessonList.jsx`, where its own `fetchInstancesList` resolves to `undefined` on a swallowed
+     fetch error.
+
+     `PlanningsSettings.test.jsx`'s Localisations coverage and `LessonList.test.jsx` both needed
+     the same `vi.mock("react-table", ...)`-stub rework as batch 2's fallout (stub swallowed the
+     mount fetch and stashed headers/props); `LessonList.test.jsx`'s heavy stash-and-reach-render-
+     props technique (used to invoke `Cell`/`Filter`/`SubComponent` directly, bypassing jsdom's
+     lack of react-table's DOM measurement) was retargeted at a mock of
+     `common/baseDataTable/TanStackGrid` instead — same technique, new module boundary, all 30
+     tests kept passing including the day-column locale/timezone/evaluation-level regressions it
+     guards. With every real consumer migrated, `ReactTableFullScreen.jsx` is now dead — deleted.
+
+     Verified: full `vitest run` (1323 tests, was 1318 pre-batch), `tsc --noEmit` clean, and
+     live-checked every migrated table in the browser (`/payments` all 4 tabs including clicking
+     the now-fixed fullscreen button, `/users`, `/activities`, `/monitorStudentPacks`,
+     `/parameters/rooms_parameters` including expanding a row) — no console errors beyond the
+     browser's own fullscreen-permission rejection (expected in an automated/headless context).
   4. Remaining standalone direct importers not covered above (`AdhesionList`, `PaymentScheduleList`,
      `SubPaymentList`, `TemplateIndex`, `ApplicationStatusTable`, `PlanningListRooms`,
      `PlanningListTeachers`, `FailedPaymentImportsPage`, `StopList`, `UserAttach`, `SeasonsList`,
@@ -630,9 +676,9 @@ was already peer-dep-unverified past React 16 anyway.
      `StudentEvaluationsStats.tsx` is already TypeScript, a reasonable early pick here since v8
      ships full TS types natively.
   5. `Activity.jsx` alone, last, once the expander pattern from batch 3 is proven.
-  6. Drop `react-table` from `package.json`/`yarn.lock` and the `KnownIssues.md` entry; fold
-     `ReactTableFullScreen.jsx` (thin v6 wrapper both base wrappers depend on) into whichever batch
-     touches it first.
+  6. Drop `react-table` from `package.json`/`yarn.lock` and the `KnownIssues.md` entry.
+     `ReactTableFullScreen.jsx` (thin v6 wrapper) is already gone — deleted in batch 3 once its
+     last 4 consumers migrated off it.
 
 **Side-by-side migration during the transition — resolved 2026-09-16, no action needed beyond
 adding the new dependency.** The `react-table-6` idea flagged earlier (republishing v6 under an
