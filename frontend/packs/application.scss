@@ -2490,6 +2490,14 @@ body {
     }
 }
 
+// TanStackGrid's sortable column headers use this class -- no rule existed for it anywhere in the
+// app (the only other ".sortable*" is the unrelated ".sortable-list" agile-board class above), so
+// a sortable header gave no visual affordance at all before a click (only the ▲/▼ glyph appears,
+// and only after sorting is already active).
+th.sortable {
+    cursor: pointer;
+}
+
 .weekday-availabilities {
     padding: 3px;
 

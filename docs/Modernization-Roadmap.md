@@ -616,7 +616,9 @@ was already peer-dep-unverified past React 16 anyway.
      the AdhesionSettings-style regression tests folded into the fixed files), `tsc --noEmit` clean,
      and live-checked in the browser (`/parameters/practice_parameters` Band types + Music genre
      tabs, `/parameters/payment_parameters` Payment methods tab including sorting by Label) — no
-     console errors, sorting/filtering/pagination all behave as before.
+     console errors, sorting/filtering/pagination all behave as before **for two clicks** — see the
+     `enableSortingRemoval` correction below the batch 3 entry for a third-click bug this
+     verification pass missed.
 
      **Follow-up flagged during batch 1 — now resolved differently than expected.** This originally
      described `ActivityRefBasics.jsx`/`EditFormule.jsx` rebuilding `dataService`/`columns` fresh on
@@ -691,6 +693,20 @@ was already peer-dep-unverified past React 16 anyway.
      the now-fixed fullscreen button, `/users`, `/activities`, `/monitorStudentPacks`,
      `/parameters/rooms_parameters` including expanding a row) — no console errors beyond the
      browser's own fullscreen-permission rejection (expected in an automated/headless context).
+
+     **Corrected (2026-09-19, by a retroactive review of the batch 2 PR): third-click sorting
+     silently broke every `TanStackGrid` table, including batch 2's.** TanStack v8 defaults to
+     `enableSortingRemoval: true` — a third click on a sortable header cycles past desc back to
+     "unsorted" (`sorting: []`), a state v6 never had (its own header click only toggled asc/desc).
+     Every real caller sends `sorted: sorted[0]` straight into the request body; an empty array
+     makes `sorted[0]` `undefined`, which `JSON.stringify` drops the key for entirely, and every
+     backend `#list_json` handler dereferences `params[:sorted][:desc]` unguarded — 500, silently
+     swallowed client-side (no `.catch` anywhere), leaving the table stuck loading forever. Missed
+     by batch 2's own live-check (which only clicked each header twice). Fixed by setting
+     `enableSortingRemoval: false` in `TanStackGrid`'s `useReactTable()` config, plus a direct
+     regression test (`TanStackGrid.test.tsx`) clicking a header three times and asserting
+     `sorted` stays non-empty. Landed in `feat/tanstack-table-batch3-subcomponent-tables` since
+     the fix lives in the shared component; applies retroactively to every batch 1-3 table.
   4. Remaining standalone direct importers not covered above (`AdhesionList`, `PaymentScheduleList`,
      `SubPaymentList`, `TemplateIndex`, `ApplicationStatusTable`, `PlanningListRooms`,
      `PlanningListTeachers`, `FailedPaymentImportsPage`, `StopList`, `UserAttach`, `SeasonsList`,

@@ -347,6 +347,13 @@ export default function TanStackGrid({
         manualPagination: true,
         manualSorting: true,
         manualFiltering: true,
+        // TanStack's default lets a third header click cycle past desc back to "unsorted"
+        // (sorting: []) -- v6 never had that state reachable by clicking (asc/desc toggle only).
+        // Every real caller sends `sorted: sorted[0]` straight into a request body; an empty
+        // array makes `sorted[0]` undefined, which JSON.stringify drops the key for entirely, and
+        // every backend #list_json handler dereferences `params[:sorted][:desc]` unguarded --
+        // 500, silently swallowed client-side (no .catch anywhere), table stuck loading forever.
+        enableSortingRemoval: false,
         pageCount: pages ?? -1,
         getCoreRowModel: coreRowModel,
         // Rows here are flat records with no real `subRows` -- expansion is used purely as a
@@ -524,7 +531,7 @@ export default function TanStackGrid({
                                             ) : (
                                                 <input
                                                     type="text"
-                                                    className="form-control form-control-sm"
+                                                    className="form-control form-control-small"
                                                     value={
                                                         (filterValue as string) ??
                                                         ""
@@ -639,7 +646,7 @@ export default function TanStackGrid({
                     </button>
                     {pageSizeOptions && (
                         <select
-                            className="form-control form-control-sm d-inline-block ml-2"
+                            className="form-control form-control-small d-inline-block ml-2"
                             style={{ width: "auto" }}
                             value={pagination.pageSize}
                             onChange={(e) =>

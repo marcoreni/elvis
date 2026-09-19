@@ -13,7 +13,11 @@ export default function FilterSelect({
 }: React.SelectHTMLAttributes<HTMLSelectElement>) {
     return (
         <select
-            className={["form-control", "form-control-sm", className]
+            // `form-control-sm` (Bootstrap 4's compact-size modifier) doesn't exist anywhere in
+            // this app's actual CSS (a Bootstrap 3.3.7 vendor file + a separate BS4 grid/flex-only
+            // utility sheet) -- `form-control-small` is this app's own, differently-shaped
+            // equivalent (min-width + rounded corners, not a padding/font-size reduction).
+            className={["form-control", "form-control-small", className]
                 .filter(Boolean)
                 .join(" ")}
             {...rest}

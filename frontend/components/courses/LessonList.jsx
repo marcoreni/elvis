@@ -758,7 +758,7 @@ class LessonList extends React.Component {
                         <div className="flex flex-space-around-justified">
                             <input
                                 type="time"
-                                className="form-control form-control-sm"
+                                className="form-control form-control-small"
                                 value={start}
                                 onChange={(e) =>
                                     onChange({
@@ -769,7 +769,7 @@ class LessonList extends React.Component {
                             />
                             <input
                                 type="time"
-                                className="form-control form-control-sm"
+                                className="form-control form-control-small"
                                 value={end}
                                 onChange={(e) =>
                                     onChange({

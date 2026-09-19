@@ -26,6 +26,7 @@ import { afterEach, beforeEach, describe, expect, test } from "vitest";
 // vitest.setup.js already imports this at runtime; needed again here so tsc's type-checker (which
 // doesn't process setupFiles) sees jest-dom's matcher augmentation of vitest's `Assertion` type.
 import "@testing-library/jest-dom/vitest";
+import type { SortingState } from "@tanstack/react-table";
 import i18n from "../../../i18n";
 import TanStackGrid, { LegacyColumn } from "./TanStackGrid";
 
@@ -231,5 +232,36 @@ describe("TanStackGrid — columns with no accessor keep their filter/sort UI", 
         );
 
         expect(screen.getByText("Payer").closest("th")).toHaveClass("sortable");
+    });
+});
+
+describe("TanStackGrid — sorting never clears entirely (enableSortingRemoval: false)", () => {
+    test("a third click on a sortable header keeps sorting non-empty instead of cycling to []", async () => {
+        const columns: LegacyColumn[] = [
+            { id: "label", Header: "Label", accessor: "label" },
+        ];
+        const calls: SortingState[] = [];
+
+        render(
+            <TanStackGrid
+                tableName="table-sort-removal"
+                columns={columns}
+                data={[{ id: 1, label: "Zephyr" }]}
+                loading={false}
+                pages={1}
+                onFetchData={({ sorted }) => calls.push(sorted)}
+            />
+        );
+
+        const header = screen.getByText("Label");
+        await userEvent.click(header); // asc
+        await userEvent.click(header); // desc
+        await userEvent.click(header); // would be "unsorted" ([]) by TanStack's default
+
+        // Every real caller sends `sorted[0]` straight into the request body; an empty array
+        // makes that `undefined`, which every backend #list_json handler chokes on unguarded.
+        const lastCall = calls[calls.length - 1];
+        expect(lastCall.length).toBeGreaterThan(0);
+        expect(lastCall[0].id).toBe("label");
     });
 });
