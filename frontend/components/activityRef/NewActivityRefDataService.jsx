@@ -1,9 +1,14 @@
 import DataService from "../common/baseDataTable/DataService";
 import * as api from "../../tools/api";
 
-export default class ActivityRefDataService extends DataService
-{
-    constructor(handleSaveForNewActivity, handleUpdateForNewActivity, handleDeleteForNewActivity, activityRefPricings, pricing_categories) {
+export default class ActivityRefDataService extends DataService {
+    constructor(
+        handleSaveForNewActivity,
+        handleUpdateForNewActivity,
+        handleDeleteForNewActivity,
+        activityRefPricings,
+        pricing_categories
+    ) {
         super("/activity_ref_pricings");
 
         this.handleSaveForNewActivity = handleSaveForNewActivity;
@@ -19,11 +24,15 @@ export default class ActivityRefDataService extends DataService
 
     listData(filter, format) {
         return new Promise((resolve, reject) => {
-
             return resolve({
-                data: this.activityRefPricings,
+                // A fresh array, not `this.activityRefPricings` directly: TanStackGrid's row-model
+                // cache is keyed by data reference, and createData/deleteData mutate this array in
+                // place (push/splice) rather than replacing it, so returning it as-is here would
+                // hand back the *same* reference before and after a create/delete -- the new/
+                // removed row would never appear, since nothing actually changed by reference.
+                data: [...this.activityRefPricings],
                 pages: 1,
-                total: this.activityRefPricings.length
+                total: this.activityRefPricings.length,
             });
         });
     }
@@ -31,22 +40,24 @@ export default class ActivityRefDataService extends DataService
     updateData(data) {
         // console.log(data)
         const updatedPricing = {
-            "id": data.id,
-            "price": data.price,
-            "from_season_id": data.fromSeason.value,
-            "to_season_id": data.toSeason.value,
-            "pricing_category": {
-                "id": data.pricing_category.id,
-                "name": data.pricing_category.name,
-                "number_lessons": data.pricing_category.number_lessons,
-                "is_a_pack": data.pricing_category.is_a_pack,
-                "created_at": data.pricing_category.created_at,
-                "updated_at": data.pricing_category.updated_at
-            }
+            id: data.id,
+            price: data.price,
+            from_season_id: data.fromSeason.value,
+            to_season_id: data.toSeason.value,
+            pricing_category: {
+                id: data.pricing_category.id,
+                name: data.pricing_category.name,
+                number_lessons: data.pricing_category.number_lessons,
+                is_a_pack: data.pricing_category.is_a_pack,
+                created_at: data.pricing_category.created_at,
+                updated_at: data.pricing_category.updated_at,
+            },
         };
 
         // update the pricing in the activityRefPricings array
-        let index = this.activityRefPricings.findIndex(arp => arp.id === data.id);
+        let index = this.activityRefPricings.findIndex(
+            (arp) => arp.id === data.id
+        );
         this.activityRefPricings[index] = updatedPricing;
 
         // update the state of the parent component
@@ -54,30 +65,31 @@ export default class ActivityRefDataService extends DataService
 
         return new Promise((resolve, reject) => {
             return resolve({
-                    data: updatedPricing
-                }
-            );
+                data: updatedPricing,
+            });
         });
     }
 
     createData(data) {
-        let pc = this.pricing_categories.find(pc => pc.name === data.name.label);
+        let pc = this.pricing_categories.find(
+            (pc) => pc.name === data.name.label
+        );
 
-        console.log(data)
+        console.log(data);
 
         const newPricing = {
-            "id": this.tempIdCounter++, // temporary id
-            "price": data.price,
-            "from_season_id": data.fromSeason.value,
-            "to_season_id": data.toSeason ? data.toSeason.value : null,
-            "pricing_category": {
-                "id": pc.id,
-                "name": pc.name,
-                "number_lessons": pc.number_lessons,
-                "is_a_pack": pc.is_a_pack,
-                "created_at": pc.created_at,
-                "updated_at": pc.updated_at
-            }
+            id: this.tempIdCounter++, // temporary id
+            price: data.price,
+            from_season_id: data.fromSeason.value,
+            to_season_id: data.toSeason ? data.toSeason.value : null,
+            pricing_category: {
+                id: pc.id,
+                name: pc.name,
+                number_lessons: pc.number_lessons,
+                is_a_pack: pc.is_a_pack,
+                created_at: pc.created_at,
+                updated_at: pc.updated_at,
+            },
         };
 
         // add to pricing_categories the new pricing
@@ -88,14 +100,16 @@ export default class ActivityRefDataService extends DataService
 
         return new Promise((resolve, reject) => {
             return resolve({
-                data: newPricing
+                data: newPricing,
             });
         });
     }
 
     deleteData(data) {
         // remove the pricing from the activityRefPricings array
-        let index = this.activityRefPricings.findIndex(arp => arp.id === data.id);
+        let index = this.activityRefPricings.findIndex(
+            (arp) => arp.id === data.id
+        );
         this.activityRefPricings.splice(index, 1);
 
         // update the state of the parent component
@@ -103,9 +117,8 @@ export default class ActivityRefDataService extends DataService
 
         return new Promise((resolve, reject) => {
             return resolve({
-                    data: this.activityRefPricings
-                }
-            );
+                data: this.activityRefPricings,
+            });
         });
     }
 }

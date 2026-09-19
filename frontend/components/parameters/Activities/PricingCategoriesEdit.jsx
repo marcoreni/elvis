@@ -1,13 +1,13 @@
-import React, {Fragment} from "react";
-import {useTranslation} from "react-i18next";
+import React, { Fragment } from "react";
+import { useTranslation } from "react-i18next";
 import BaseDataTable from "../../common/baseDataTable/BaseDataTable";
 import DataService from "../../common/baseDataTable/DataService";
 import DefaultCreateButton from "../../common/baseDataTable/DefaultCreateButton";
 import DefaultActionButtons from "../../common/baseDataTable/DefaultActionButtons";
 import PricingCategoryFormContent from "./PricingCategoryFormContent";
 
-function CreateButton({onCreate}) {
-    const {t} = useTranslation("parameters");
+function CreateButton({ onCreate }) {
+    const { t } = useTranslation("parameters");
     return (
         <DefaultCreateButton
             label={t("activities.pricing.createButton")}
@@ -16,9 +16,8 @@ function CreateButton({onCreate}) {
     );
 }
 
-export default function PricingCategoriesEdit()
-{
-    const {t} = useTranslation("parameters");
+export default function PricingCategoriesEdit() {
+    const { t } = useTranslation("parameters");
     const columns = [
         {
             id: "name",
@@ -31,11 +30,11 @@ export default function PricingCategoriesEdit()
             accessor: "number_lessons",
         },
         {
-            id: "is_pack",
+            id: "is_a_pack",
             Header: t("activities.pricing.isPack"),
             accessor: "is_a_pack",
-            Cell: ({value}) => value ? t("shared.yes") : t("shared.no")
-        }
+            Cell: ({ value }) => (value ? t("shared.yes") : t("shared.no")),
+        },
     ];
 
     return (
@@ -45,21 +44,29 @@ export default function PricingCategoriesEdit()
                     <div className="ibox">
                         <div className="ibox-content">
                             <BaseDataTable
-                                dataService={new DataService("/pricing_categories")}
+                                dataService={
+                                    new DataService("/pricing_categories")
+                                }
                                 columns={columns}
                                 actionButtons={DefaultActionButtons}
                                 createButton={CreateButton}
-                                formContentComponent={PricingCategoryFormContent}
-                                labellizer={item => item.name}
+                                formContentComponent={
+                                    PricingCategoryFormContent
+                                }
+                                labellizer={(item) => item.name}
                                 showFullScreenButton={false}
-                                oneResourceTypeName={t("activities.pricing.oneResourceTypeName")}
-                                thisResourceTypeName={t("activities.pricing.thisResourceTypeName")}
-                                defaultSorted={[{id: "name", asc: true}]}
+                                oneResourceTypeName={t(
+                                    "activities.pricing.oneResourceTypeName"
+                                )}
+                                thisResourceTypeName={t(
+                                    "activities.pricing.thisResourceTypeName"
+                                )}
+                                defaultSorted={[{ id: "name", asc: true }]}
                             />
                         </div>
                     </div>
                 </div>
             </div>
         </Fragment>
-    )
+    );
 }

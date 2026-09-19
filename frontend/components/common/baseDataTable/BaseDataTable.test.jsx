@@ -62,9 +62,12 @@ describe("BaseDataTable — pagination chrome follows the active UI language", (
             );
 
             expect(
-                screen.getByText(
-                    i18n.getFixedT(lng, "common")("reactTable.loadingText")
-                )
+                screen.getByRole("status", {
+                    name: i18n.getFixedT(
+                        lng,
+                        "common"
+                    )("reactTable.loadingText"),
+                })
             ).toBeInTheDocument();
             await waitForDebouncedFetch();
 

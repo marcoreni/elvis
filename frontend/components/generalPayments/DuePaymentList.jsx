@@ -1,7 +1,10 @@
 import _, { isDate } from "lodash";
 import React from "react";
-import Select from "react-select";
-import ReactTableFullScreen from "../ReactTableFullScreen";
+import TanStackGrid, {
+    goFullScreen,
+} from "../common/baseDataTable/TanStackGrid";
+import FilterSelect from "../common/baseDataTable/FilterSelect";
+import FilterReactSelect from "../common/baseDataTable/FilterReactSelect";
 import swal from "sweetalert2";
 import { withTranslation } from "react-i18next";
 import { makeDebounce } from "../../tools/inputs";
@@ -63,7 +66,9 @@ const requestData = (pageSize, page, sorted, filtered, format) => {
         .then((data) => {
             if (!format || format === "json") {
                 return {
-                    data: data.payments,
+                    // TanStackGrid assumes an array (reads .length); fall back defensively rather
+                    // than propagate a malformed/empty response into a render-time crash.
+                    data: data.payments || [],
                     pages: data.pages,
                     rowsCount: data.rowsCount,
                     totalAmount: data.totalDueAmount,
@@ -164,7 +169,7 @@ class DuePaymentList extends React.Component {
                     );
 
                     return (
-                        <Select
+                        <FilterReactSelect
                             options={options}
                             defaultValue={options[0]}
                             value={value}
@@ -271,7 +276,7 @@ class DuePaymentList extends React.Component {
                 accessor: (d) => d.due_payment_status_id,
                 Cell: (c) => this.renderStatus(c),
                 Filter: ({ filter, onChange }) => (
-                    <select
+                    <FilterSelect
                         onChange={(event) => onChange(event.target.value)}
                         style={{ width: "100%" }}
                         value={filter ? filter.value : ""}
@@ -282,7 +287,7 @@ class DuePaymentList extends React.Component {
                                 {method.label}
                             </option>
                         ))}
-                    </select>
+                    </FilterSelect>
                 ),
             },
             {
@@ -319,16 +324,17 @@ class DuePaymentList extends React.Component {
                 },
                 sortable: false,
                 Filter: ({ filter, onChange }) => (
-                    <Select
+                    <FilterReactSelect
                         options={duePaymentMethodsOptions}
                         isMulti={true}
                         isClearable={true}
-                        defaultValue={
-                            filter &&
-                            filter.value &&
-                            duePaymentMethodsOptions.filter((o) =>
-                                filter.value.includes(o.value)
-                            )
+                        value={
+                            (filter &&
+                                filter.value &&
+                                duePaymentMethodsOptions.filter((o) =>
+                                    filter.value.includes(o.value)
+                                )) ||
+                            []
                         }
                         onChange={(v) =>
                             onChange((v.length && v.map((v) => v.value)) || "")
@@ -369,7 +375,7 @@ class DuePaymentList extends React.Component {
                 accessor: (d) =>
                     d.location_id && this.props.locations[d.location_id].label,
                 Filter: ({ filter, onChange }) => (
-                    <select
+                    <FilterSelect
                         value={(filter && filter.value) || ""}
                         onChange={(e) => onChange(e.target.value)}
                     >
@@ -382,7 +388,7 @@ class DuePaymentList extends React.Component {
                                 {l.label}
                             </option>
                         ))}
-                    </select>
+                    </FilterSelect>
                 ),
             },
             {
@@ -1005,8 +1011,6 @@ class DuePaymentList extends React.Component {
                 "value"
             ) || "";
 
-        const events = [];
-
         return (
             <div>
                 <div
@@ -1014,7 +1018,7 @@ class DuePaymentList extends React.Component {
                     style={{ width: "100%" }}
                 >
                     <div className="flex flex-center-aligned">
-                        <h2 className="m-r">
+                        <h2 className="m-r" style={{ whiteSpace: "nowrap" }}>
                             {t("general.dueDates.rowCount", {
                                 n: this.state.rowsCount,
                             })}
@@ -1043,7 +1047,7 @@ class DuePaymentList extends React.Component {
                                 "general.tableControls.fullscreen"
                             )}
                             className="btn btn-primary m-r"
-                            onClick={() => events[0]()}
+                            onClick={() => goFullScreen("table-due-payments")}
                         >
                             <i className="fas fa-expand-arrows-alt"></i>
                         </button>
@@ -1111,52 +1115,42 @@ class DuePaymentList extends React.Component {
                 {this.state.targets.length > 0 ? this.targetsAlert() : null}
 
                 <div className="ibox-content no-padding">
-                    <ReactTableFullScreen
-                        events={events}
+                    <TanStackGrid
+                        tableName="table-due-payments"
                         data={data}
-                        manual
                         pages={pages}
+                        totalCount={this.state.rowsCount}
                         loading={loading}
                         columns={this.state.columns}
                         pageSizeOptions={[10, 12, 15, 20, 50, 100]}
-                        page={
-                            this.state.filter.page <= this.state.pages
-                                ? this.state.filter.page
-                                : this.state.pages - 1
-                        }
-                        pageSize={this.state.filter.pageSize}
-                        sorted={this.state.filter.sorted}
-                        filtered={this.state.filter.filtered}
-                        onPageChange={(page) =>
-                            this.fetchData({ ...this.state.filter, page })
-                        }
-                        onPageSizeChange={(pageSize, page) =>
+                        pagination={{
+                            pageIndex:
+                                this.state.filter.page <= this.state.pages
+                                    ? this.state.filter.page
+                                    : this.state.pages - 1,
+                            pageSize: this.state.filter.pageSize,
+                        }}
+                        onPaginationChange={({ pageIndex, pageSize }) =>
                             this.fetchData({
                                 ...this.state.filter,
-                                page,
+                                page: pageIndex,
                                 pageSize,
                             })
                         }
-                        onSortedChange={(sorted) =>
+                        sorting={this.state.filter.sorted}
+                        onSortingChange={(sorted) =>
                             this.fetchData({ ...this.state.filter, sorted })
                         }
-                        onFilteredChange={(filtered) =>
+                        columnFilters={this.state.filter.filtered}
+                        onColumnFiltersChange={(filtered) =>
                             this.fetchData({
                                 ...this.state.filter,
                                 filtered,
+                                page: 0,
                             })
                         }
-                        filterable
-                        resizable={false}
-                        previousText={t("common:reactTable.previousText")}
-                        nextText={t("common:reactTable.nextText")}
-                        loadingText={t("common:reactTable.loadingText")}
-                        noDataText={t("common:reactTable.noDataText")}
-                        pageText={t("common:reactTable.pageText")}
-                        ofText={t("common:reactTable.ofText")}
-                        rowsText={t("common:reactTable.rowsText")}
                         minRows={10}
-                        SubComponent={(row) => {
+                        renderSubComponent={(row) => {
                             if (row.original.payments.length > 0) {
                                 return (
                                     <SubPaymentList

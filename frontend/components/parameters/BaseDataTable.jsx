@@ -1,5 +1,5 @@
-import React, {Component, Fragment} from "react";
-import {csrfToken} from "../utils";
+import React, { Component, Fragment } from "react";
+import { csrfToken } from "../utils";
 import i18n from "../../i18n";
 import TanStackGrid from "../common/baseDataTable/TanStackGrid";
 
@@ -16,10 +16,8 @@ import TanStackGrid from "../common/baseDataTable/TanStackGrid";
  * mettre l'URL de récupération en json des données dans les propriétés de l'élément enfant sous le nom "urllistdata'
  * Modifier le state "column" pour mettre un tableau de colonne.
  */
-export default class BaseDataTable extends Component
-{
-    constructor(props)
-    {
+export default class BaseDataTable extends Component {
+    constructor(props) {
         super(props);
 
         this.state = {
@@ -28,24 +26,24 @@ export default class BaseDataTable extends Component
             loading: true,
             filter: {},
             tableState: {},
-            subComponent: null
         };
 
         this.fetchData = this.fetchData.bind(this);
     }
 
-    fetchData(filter)
-    {
+    fetchData(filter) {
         this.setState({ loading: true, filter, tableState: filter });
 
-        this.requestData.call(this,
-            filter.pageSize,
-            filter.page,
-            filter.sorted,
-            filter.filtered,
-        )
-            .then(response => response.json())
-            .then(data => {
+        this.requestData
+            .call(
+                this,
+                filter.pageSize,
+                filter.page,
+                filter.sorted,
+                filter.filtered
+            )
+            .then((response) => response.json())
+            .then((data) => {
                 return {
                     // TanStackGrid assumes an array (reads .length); fall back defensively rather
                     // than propagate a malformed/empty response into a render-time crash.
@@ -54,7 +52,7 @@ export default class BaseDataTable extends Component
                     total: data.total,
                 };
             })
-            .then(res => {
+            .then((res) => {
                 this.setState({
                     ...res,
                     loading: false,
@@ -62,49 +60,58 @@ export default class BaseDataTable extends Component
             });
     }
 
-    requestData(pageSize, page, sorted, filtered, format)
-    {
-        return fetch(`${this.props.urlListData}${format ? "." + format : ""}`,
-            {
-                method: "POST",
-                credentials: "same-origin",
-                headers: {
-                    "X-CSRF-Token": csrfToken,
-                    "Content-Type": "application/json",
-                    Accept: "application/json",
-                },
-                body: JSON.stringify({
-                    pageSize,
-                    page,
-                    sorted: sorted[0],
-                    filtered,
-                }),
-            });
+    requestData(pageSize, page, sorted, filtered, format) {
+        return fetch(`${this.props.urlListData}${format ? "." + format : ""}`, {
+            method: "POST",
+            credentials: "same-origin",
+            headers: {
+                "X-CSRF-Token": csrfToken,
+                "Content-Type": "application/json",
+                Accept: "application/json",
+            },
+            body: JSON.stringify({
+                pageSize,
+                page,
+                sorted: sorted[0],
+                filtered,
+            }),
+        });
     }
 
-    render()
-    {
-        const { data, pages, loading } = this.state;
+    render() {
+        const { data, pages, total, loading } = this.state;
 
-        return <Fragment>
-            <div className="row">
-                <div className="col">
-                    <a className="btn btn-success pull-right" href={this.props.urlNew}><i className="fas fa-plus"></i> {i18n.t("common:actions.create")}</a>
+        return (
+            <Fragment>
+                <div className="row">
+                    <div className="col">
+                        <a
+                            className="btn btn-success pull-right"
+                            href={this.props.urlNew}
+                        >
+                            <i className="fas fa-plus"></i>{" "}
+                            {i18n.t("common:actions.create")}
+                        </a>
+                    </div>
                 </div>
-            </div>
-            <div className="row">
-                <div className="col">
-                    <TanStackGrid
-                        tableName={"table-" + (this.props.urlListData || "parameters")}
-                        columns={this.state.columns}
-                        data={data}
-                        loading={loading}
-                        pages={pages}
-                        onFetchData={this.fetchData}
-                        defaultSorted={[{ id: "id", desc: true }]}
-                    />
+                <div className="row">
+                    <div className="col">
+                        <TanStackGrid
+                            tableName={
+                                "table-" +
+                                (this.props.urlListData || "parameters")
+                            }
+                            columns={this.state.columns}
+                            data={data}
+                            loading={loading}
+                            pages={pages}
+                            totalCount={total}
+                            onFetchData={this.fetchData}
+                            defaultSorted={[{ id: "id", desc: true }]}
+                        />
+                    </div>
                 </div>
-            </div>
-        </Fragment>
+            </Fragment>
+        );
     }
 }

@@ -525,13 +525,24 @@ was already peer-dep-unverified past React 16 anyway.
   and parameters/Practice/, `MusicGenres`, `PaymentsStatus`, `PaymentsMethods`, `EvaluationLevels`,
   `ActivityRefKind`). Rewriting each wrapper's *internals* while preserving its external prop
   contract gives their consumers a free ride either way — this just changes which batch each
-  consumer falls into.
+  consumer falls into. **Second correction (2026-09-19, found by a retroactive review of the
+  merged batch-1 PR):** the "3 real consumers" count above is itself still wrong — there's a
+  fourth, `parameters/Payments/Coupons.jsx`, which imports the functional wrapper with a
+  single-quoted specifier (`from '../../common/baseDataTable/BaseDataTable'`), invisible to the
+  double-quote-sensitive grep the first correction used. It happened to work unmodified (its
+  column ids all match real `coupons` table columns), but that was luck, not something the batch-1
+  verification actually checked.
 - Real features to preserve, confirmed by grepping actual usage, not just `BaseDataTable.jsx`:
   server-side/manual pagination+sorting+filtering (v6's `manual` prop → v8's `manualPagination`/
   `manualSorting`/`manualFiltering` table options), per-column `sortable`/`filterable` toggles,
   custom `Cell` renderers, `resizable`. One feature has no v8 built-in equivalent: `SubComponent`
-  (expandable rows), used in 6 files (`DuePaymentList`, `LessonList`, `Localisations`,
-  `PackUtilization`, `Activity.jsx`, `parameters/BaseDataTable.jsx`) — v8 needs
+  (expandable rows), used in 6 files. **Correction (2026-09-19):** an earlier pass of this list said
+  `parameters/BaseDataTable.jsx` was one of the 6 — wrong, checked by grepping the literal
+  `SubComponent` prop (not just the coincidentally-named `subComponent` state key
+  `parameters/BaseDataTable.jsx` carries but never wires up, confirmed dead/unused by grepping all
+  12 real extenders — harmless to have left inert in batch 2). The actual 6th file is
+  `generalPayments/PaymentList.jsx`, missed by the earlier pass. Correct list: `DuePaymentList`,
+  `PaymentList`, `LessonList`, `Localisations`, `PackUtilization`, `Activity.jsx` — v8 needs
   `getExpandedRowModel()` plus a hand-rolled extra `<tr colSpan>`. `Activity.jsx` additionally has a
   custom `Expander` cell renderer + `expander: true` column config — the most complex table in the
   set, not proof-of-concept material.
@@ -572,13 +583,24 @@ was already peer-dep-unverified past React 16 anyway.
      to a single `fetchData(filter)` — safe, since every subclass already only ever called
      `this.fetchData(this.state.tableState)` with one argument. Also hardened against a malformed/
      empty API response (`data: data.status || []`, was `data: data.status`), found live via a test
-     failure, not a reported bug. Investigated, and fixed, a real TanStack v8 caching bug along the
-     way — `getCoreRowModel()`'s internal memoization doesn't reliably invalidate under this app's
-     render-frequency churn (react-final-form re-rendering embedding forms on every field
-     interaction, plus `dataService`/`columns` rebuilt fresh every render in `ActivityRefBasics.jsx`
-     /`EditFormule.jsx` — see the follow-up flagged below); fixed by unconditionally discarding the
-     memoized row model each render inside `TanStackGrid`, which is cheap (only rebuilds lightweight
-     row-wrapper objects, no cell rendering) — documented in full in a comment at the deletion site.
+     failure, not a reported bug. Investigated a real TanStack v8 caching bug along the way —
+     `getCoreRowModel()`'s internal memoization (keyed on `table.options.data`'s *reference*) didn't
+     reliably invalidate for `ActivityRefBasics.jsx`/`EditFormule.jsx`'s pricing tables, so a
+     just-created or just-deleted row didn't appear until some unrelated re-render happened to
+     dislodge the cache. Landed a workaround at the time (unconditionally discarding the memoized
+     row model every render) with a long comment misattributing the cause to render-frequency
+     "churn" from those callers rebuilding `dataService`/`columns` on every render.
+     **Corrected (2026-09-19, by a retroactive review of this merged PR):** that diagnosis was
+     wrong. The real cause: `ActivityRefDataService`/`NewFormulePricingDataService` (in-memory mock
+     data sources backing those two pages) mutate one long-lived array in place
+     (`push`/`splice`) and hand that *same reference* back from `listData()` on every call — so
+     `table.options.data` genuinely never changes reference, and the row-model cache is correctly
+     (not incorrectly) treating it as unchanged. Real API-backed tables never hit this, since a
+     fresh `response.json()` is a new array every time. Fixed at the actual source in
+     `feat/tanstack-table-batch3-subcomponent-tables`: both mock services now return a copy
+     (`[...this.items]`) from `listData()`, and the blanket per-render cache-discard hack — which
+     was silently costing every other `TanStackGrid` table a small amount of unnecessary
+     recomputation for a bug only these two callers had — was removed from `TanStackGrid` entirely.
      Removing `react-table` from this file broke test-suite assumptions baked into 4 test files that
      mocked the `"react-table"` package to both stub headers (`col-header` testid) and silently
      swallow the mount-time `onFetchData` call (so no real `fetch()` ever fired): `PlanningsSettings
@@ -594,24 +616,97 @@ was already peer-dep-unverified past React 16 anyway.
      the AdhesionSettings-style regression tests folded into the fixed files), `tsc --noEmit` clean,
      and live-checked in the browser (`/parameters/practice_parameters` Band types + Music genre
      tabs, `/parameters/payment_parameters` Payment methods tab including sorting by Label) — no
-     console errors, sorting/filtering/pagination all behave as before.
+     console errors, sorting/filtering/pagination all behave as before **for two clicks** — see the
+     `enableSortingRemoval` correction below the batch 3 entry for a third-click bug this
+     verification pass missed.
 
-     **Follow-up flagged during batch 1, still open:** `ActivityRefBasics.jsx` and `EditFormule.jsx`
-     (the functional wrapper's other 2 consumers) rebuild their `dataService`/`columns` props fresh
-     on every render, which is what drives the `getCoreRowModel()` churn above into being an
-     externally-observable problem rather than a latent one. The real long-term fix is to stabilize
-     those two callers' `dataService`/`columns` identity (build once, e.g. via `useMemo`/module
-     scope, not on every render) so `TanStackGrid` re-renders far less often in the first place. Not
-     tackled here — explicitly deferred until all of this item's batches land, since it's a
-     consumer-side fix orthogonal to any single batch's own table-engine swap.
-  3. The 6 `SubComponent`/expander tables together (excluding `Activity.jsx`) — write the
-     `getExpandedRowModel()` pattern once, reuse across all of them. `DuePaymentList.jsx` is one of
-     these and is one of 4 real consumers of `frontend/components/ReactTableFullScreen.jsx`
-     (`UserList.jsx`, `generalPayments/CheckList.jsx`, `generalPayments/PaymentList.jsx` are the
-     other 3, none of which use `SubComponent` themselves) — rewriting `ReactTableFullScreen.jsx`
-     to v8 here for `DuePaymentList`'s sake affects those other 3 too, so fold them into this batch
-     rather than leaving them on the shared component's old v6 codepath while everything else
-     moves on.
+     **Follow-up flagged during batch 1 — now resolved differently than expected.** This originally
+     described `ActivityRefBasics.jsx`/`EditFormule.jsx` rebuilding `dataService`/`columns` fresh on
+     every render as the presumed cause of the caching bug above, and proposed stabilizing their
+     identity as the real fix. As corrected in batch 1's own entry above, that wasn't actually the
+     cause — the two data services' shared-array mutation was, and that's what got fixed. Rebuilding
+     `dataService`/`columns` every render is still real and still slightly wasteful (a fresh
+     `useMemo`/module-scope-built identity would reduce unnecessary re-renders), but it's a minor,
+     independent efficiency concern now, not a correctness one — no longer treated as a blocking
+     follow-up for this item.
+  3. **DONE (2026-09-19, `feat/tanstack-table-batch3-subcomponent-tables`).** The 8-file set
+     scoped above: `DuePaymentList`, `PaymentList`, `UserList`, `CheckList` (shared
+     `ReactTableFullScreen.jsx`) + `LessonList`, `Localisations`, `PackUtilization` (standalone,
+     `SubComponent`). **Correction found mid-batch:** `PackUtilization`'s `SubComponent` state was
+     never set (declared, always `null`) — same dead-state class as `parameters/BaseDataTable.jsx`
+     found in batch 2 — so it needed no real expander support, just the plain uncontrolled
+     `onFetchData` migration.
+
+     Extended `TanStackGrid` (additive only, batches 1-2 unaffected) with: `renderSubComponent` +
+     an auto-injected expander column (`getExpandedRowModel()`); **controlled** pagination/sorting/
+     columnFilters (value + `onXChange` triples, mirroring TanStack's own vocabulary) for
+     `DuePaymentList`/`PaymentList`/`CheckList`/`LessonList`, which need externally-resettable
+     table state for their "reset filters" button — v6 supported this via controlled props,
+     TanStack v8 the same way; `minRows` (blank-row padding); `getRowProps` (per-row `<tr>` props,
+     `LessonList`'s v6 `getTrProps`); a `pageSizeOptions` `<select>`; and a per-column custom
+     `Filter` render prop (v6's `Filter: ({filter, onChange}) => ...`, used by several of these
+     tables for dropdown/checkbox filter-row UI instead of the default text `<input>`).
+
+     Dropped `LessonList`'s `resizable={true}` (column drag-resize — the only table in the app
+     using it; an isolated, documented regression rather than building full resize support in
+     `TanStackGrid` for one table). Also dropped its `key={filtered.map(f=>f.id).join("-")}`
+     remount hack — **this one turned out not to be safe to drop as-is** (found by a follow-up
+     code review): three of `LessonList`'s Filter inputs (`level`, and the two `time_interval`
+     start/end inputs) were uncontrolled (`defaultValue`, not `value`), so without the remount
+     they went stale after "reset filters" — the underlying state reset correctly, but the
+     rendered input kept showing its last-typed value. Fixed by making those three (and a fourth,
+     same-shaped bug independently found in `DuePaymentList`'s payment-method multi-select) fully
+     controlled instead, which is the real fix the removed remount hack was standing in for.
+
+     Found and fixed two real bugs live in the browser, both in `TanStackGrid` itself and present
+     since batch 1 with zero prior coverage: a column whose `accessor` returns JSX with no `Cell`
+     rendered as the literal string `"[object Object]"` (TanStack's own default `cell` renderer
+     does `` `${renderValue()}` `` when none is specified, stringifying a React element instead of
+     rendering it — fixed by always setting an explicit `cell`); and clicking the expander
+     toggle silently did nothing (TanStack's default `getRowCanExpand` only allows expanding rows
+     with real `subRows`, which these flat records don't have — fixed with
+     `getRowCanExpand: () => true`). Added `TanStackGrid.test.tsx` (new, TypeScript + functional)
+     with direct regression coverage for both plus a basic render smoke test — the first dedicated
+     test file for `TanStackGrid` itself, rather than only reached through a consumer.
+
+     Also found and fixed a real, independently-reachable bug in 3 files: the fullscreen button in
+     `DuePaymentList`/`PaymentList`/`CheckList` called `events[0]()` where `events` was a
+     permanently-empty array — clicking it threw. Rewired through `TanStackGrid`'s working
+     fullscreen support (`goFullScreen`, moved here from `ReactTableFullScreen.jsx` once every
+     consumer had migrated off it). And applied the same `data.x || []` defensive guard used in
+     batch 2 everywhere a fetched response feeds `TanStackGrid` (TanStack throws on `data ===
+     undefined`, which v6 tolerated) — including a genuine pre-existing crash path in
+     `LessonList.jsx`, where its own `fetchInstancesList` resolves to `undefined` on a swallowed
+     fetch error.
+
+     `PlanningsSettings.test.jsx`'s Localisations coverage and `LessonList.test.jsx` both needed
+     the same `vi.mock("react-table", ...)`-stub rework as batch 2's fallout (stub swallowed the
+     mount fetch and stashed headers/props); `LessonList.test.jsx`'s heavy stash-and-reach-render-
+     props technique (used to invoke `Cell`/`Filter`/`SubComponent` directly, bypassing jsdom's
+     lack of react-table's DOM measurement) was retargeted at a mock of
+     `common/baseDataTable/TanStackGrid` instead — same technique, new module boundary, all 30
+     tests kept passing including the day-column locale/timezone/evaluation-level regressions it
+     guards. With every real consumer migrated, `ReactTableFullScreen.jsx` is now dead — deleted.
+
+     Verified: full `vitest run` (1323 tests, was 1318 pre-batch), `tsc --noEmit` clean, and
+     live-checked every migrated table in the browser (`/payments` all 4 tabs including clicking
+     the now-fixed fullscreen button, `/users`, `/activities`, `/monitorStudentPacks`,
+     `/parameters/rooms_parameters` including expanding a row) — no console errors beyond the
+     browser's own fullscreen-permission rejection (expected in an automated/headless context).
+
+     **Corrected (2026-09-19, by a retroactive review of the batch 2 PR): third-click sorting
+     silently broke every `TanStackGrid` table, including batch 2's.** TanStack v8 defaults to
+     `enableSortingRemoval: true` — a third click on a sortable header cycles past desc back to
+     "unsorted" (`sorting: []`), a state v6 never had (its own header click only toggled asc/desc).
+     Every real caller sends `sorted: sorted[0]` straight into the request body; an empty array
+     makes `sorted[0]` `undefined`, which `JSON.stringify` drops the key for entirely, and every
+     backend `#list_json` handler dereferences `params[:sorted][:desc]` unguarded — 500, silently
+     swallowed client-side (no `.catch` anywhere), leaving the table stuck loading forever. Missed
+     by batch 2's own live-check (which only clicked each header twice). Fixed by setting
+     `enableSortingRemoval: false` in `TanStackGrid`'s `useReactTable()` config, plus a direct
+     regression test (`TanStackGrid.test.tsx`) clicking a header three times and asserting
+     `sorted` stays non-empty. Landed in `feat/tanstack-table-batch3-subcomponent-tables` since
+     the fix lives in the shared component; applies retroactively to every batch 1-3 table.
   4. Remaining standalone direct importers not covered above (`AdhesionList`, `PaymentScheduleList`,
      `SubPaymentList`, `TemplateIndex`, `ApplicationStatusTable`, `PlanningListRooms`,
      `PlanningListTeachers`, `FailedPaymentImportsPage`, `StopList`, `UserAttach`, `SeasonsList`,
@@ -620,9 +715,9 @@ was already peer-dep-unverified past React 16 anyway.
      `StudentEvaluationsStats.tsx` is already TypeScript, a reasonable early pick here since v8
      ships full TS types natively.
   5. `Activity.jsx` alone, last, once the expander pattern from batch 3 is proven.
-  6. Drop `react-table` from `package.json`/`yarn.lock` and the `KnownIssues.md` entry; fold
-     `ReactTableFullScreen.jsx` (thin v6 wrapper both base wrappers depend on) into whichever batch
-     touches it first.
+  6. Drop `react-table` from `package.json`/`yarn.lock` and the `KnownIssues.md` entry.
+     `ReactTableFullScreen.jsx` (thin v6 wrapper) is already gone — deleted in batch 3 once its
+     last 4 consumers migrated off it.
 
 **Side-by-side migration during the transition — resolved 2026-09-16, no action needed beyond
 adding the new dependency.** The `react-table-6` idea flagged earlier (republishing v6 under an

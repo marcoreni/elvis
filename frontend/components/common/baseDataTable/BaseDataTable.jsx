@@ -1,10 +1,9 @@
-import React, {useMemo, useState} from "react";
-import {useTranslation} from "react-i18next";
-import {makeDebounce} from "../../../tools/inputs";
+import React, { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { makeDebounce } from "../../../tools/inputs";
 import ItemFormModal from "./ItemFormModal";
 import DeleteItemModal from "./DeleteItemModal";
-import {goFullScreen} from "../../ReactTableFullScreen";
-import TanStackGrid from "./TanStackGrid";
+import TanStackGrid, { goFullScreen } from "./TanStackGrid";
 
 /**
  * BaseDataTable Component
@@ -78,23 +77,24 @@ import TanStackGrid from "./TanStackGrid";
  */
 
 export default function BaseDataTable({
-                                          dataService,
-                                          columns,
-                                          labellizer,
-                                          actionButtons,
-                                          createButton,
-                                          showFullScreenButton,
-                                          oneResourceTypeName,
-                                          thisResourceTypeName,
-                                          formContentComponent,
-                                          defaultSorted,
-                                      }) {
-    const {t} = useTranslation("common");
+    dataService,
+    columns,
+    labellizer,
+    actionButtons,
+    createButton,
+    showFullScreenButton,
+    oneResourceTypeName,
+    thisResourceTypeName,
+    formContentComponent,
+    defaultSorted,
+}) {
+    const { t } = useTranslation("common");
     const debounce = makeDebounce();
 
     const [state, setState] = useState({
         data: [],
         pages: null,
+        total: undefined,
         loading: true,
         showItemModal: false,
         showDeleteModal: false,
@@ -115,15 +115,16 @@ export default function BaseDataTable({
             cols.push({
                 id: "actions",
                 Header: "Actions",
-                Cell: props => (
+                Cell: (props) => (
                     <ActionButtonsComponent
                         item={props.original}
                         onEdit={() => showItemFormModal(true, props.original)}
                         onDelete={showDeleteItemModal}
-                    />),
+                    />
+                ),
                 sortable: false,
                 filterable: false,
-                width: 150
+                width: 150,
             });
         }
         return cols;
@@ -136,54 +137,62 @@ export default function BaseDataTable({
     */
 
     function fetchData(filter) {
-        setState(prevState => ({...prevState, loading: true, filter: filter}));
+        setState((prevState) => ({
+            ...prevState,
+            loading: true,
+            filter: filter,
+        }));
         debounce(() => {
-            dataService.listData(filter)
-                .then(res => {
+            dataService
+                .listData(filter)
+                .then((res) => {
                     // console.log("Data fetched:", res)
-                    setState(prevState => ({
+                    setState((prevState) => ({
                         ...prevState,
                         data: res.data,
                         pages: res.pages,
+                        total: res.total,
                         loading: false,
-                        errorMessage: null
+                        errorMessage: null,
                     }));
                 })
-                .catch(errors => {
+                .catch((errors) => {
                     console.error("Errors fetching data:", errors);
-                    setState(prevState => ({
+                    setState((prevState) => ({
                         ...prevState,
                         loading: false,
-                        errorMessage: t("baseDataTable.loadError")
+                        errorMessage: t("baseDataTable.loadError"),
                     }));
                 });
         }, 400);
     }
 
     function showItemFormModal(wantUpdate, item) {
-        if (!allowEdit)
-            return;
+        if (!allowEdit) return;
 
-        setState(prevState => ({
+        setState((prevState) => ({
             ...prevState,
             showItemModal: true,
             wantUpdate,
-            item
+            item,
         }));
     }
 
     function closeItemFormModal() {
-        setState(prevState => ({...prevState, showItemModal: false}));
+        setState((prevState) => ({ ...prevState, showItemModal: false }));
     }
 
     function showDeleteItemModal(item) {
-        setState(prevState => ({...prevState, showDeleteModal: true, item}));
+        setState((prevState) => ({
+            ...prevState,
+            showDeleteModal: true,
+            item,
+        }));
     }
 
     function closeDeleteItemModal() {
-        setState(prevState => ({...prevState, showDeleteModal: false}));
+        setState((prevState) => ({ ...prevState, showDeleteModal: false }));
     }
-
 
     /*
     =========================================
@@ -192,97 +201,125 @@ export default function BaseDataTable({
     */
 
     function createItem(item) {
-        return dataService.createData(item)
-            .then(() => {
-                closeItemFormModal();
-                fetchData(state.filter);
-            })
+        return dataService.createData(item).then(() => {
+            closeItemFormModal();
+            fetchData(state.filter);
+        });
     }
 
     function updateItem(item) {
-        const index = state.data.findIndex(i => i.id === item.id)
+        const index = state.data.findIndex((i) => i.id === item.id);
 
         if (index >= 0) {
-            return dataService.updateData(item)
-                .then(res => { //fetchData sous condition
-                    setState(prevState => ({
-                        ...prevState,
-                        data: [...prevState.data.slice(0, index), item, ...prevState.data.slice(index + 1)],
-                    }));
+            return dataService.updateData(item).then((res) => {
+                //fetchData sous condition
+                setState((prevState) => ({
+                    ...prevState,
+                    data: [
+                        ...prevState.data.slice(0, index),
+                        item,
+                        ...prevState.data.slice(index + 1),
+                    ],
+                }));
 
-                    closeItemFormModal();
-                })
-
+                closeItemFormModal();
+            });
         } else {
-            console.error(t("baseDataTable.itemNotFound"))
-            return Promise.reject([t("baseDataTable.itemNotFound")])
+            console.error(t("baseDataTable.itemNotFound"));
+            return Promise.reject([t("baseDataTable.itemNotFound")]);
         }
     }
 
     function deleteItem(item) {
         const index = state.data.indexOf(item);
 
-        return dataService.deleteData(item)
-            .then(res => {
-                setState(prevState => ({
-                    ...prevState,
-                    data: [...prevState.data.slice(0, index), ...prevState.data.slice(index + 1)],
-                }));
-                closeDeleteItemModal();
-            })
+        return dataService.deleteData(item).then((res) => {
+            setState((prevState) => ({
+                ...prevState,
+                data: [
+                    ...prevState.data.slice(0, index),
+                    ...prevState.data.slice(index + 1),
+                ],
+            }));
+            closeDeleteItemModal();
+        });
     }
 
     return (
         <div>
             <div className="row">
                 <div className="col">
-                    {showFullScreenButton &&
-                        <button data-tippy-content={t("baseDataTable.fullScreenTooltip")}
-                                className="btn btn-primary"
-                                onClick={() => goFullScreen(tableName)}>
+                    {showFullScreenButton && (
+                        <button
+                            data-tippy-content={t(
+                                "baseDataTable.fullScreenTooltip"
+                            )}
+                            className="btn btn-primary"
+                            onClick={() => goFullScreen(tableName)}
+                        >
                             <i className="fas fa-expand-arrows-alt"></i>
                         </button>
-                    }
-                    {createButton &&
-                        <CreateButtonComponent onCreate={() => showItemFormModal(false, null)}/>
-                    }
+                    )}
+                    {createButton && (
+                        <CreateButtonComponent
+                            onCreate={() => showItemFormModal(false, null)}
+                        />
+                    )}
                 </div>
             </div>
 
-
             <div className="row">
-                <div className="col"> {/* vérifier si col*/}
+                <div className="col">
+                    {" "}
+                    {/* vérifier si col*/}
                     <TanStackGrid
                         tableName={tableName}
                         columns={reactTableColumns}
                         data={state.data}
                         loading={state.loading}
                         pages={state.pages}
+                        totalCount={state.total}
                         errorMessage={state.errorMessage}
                         onFetchData={fetchData}
                         defaultSorted={defaultSorted}
                     />
                 </div>
 
-                {allowEdit &&
+                {allowEdit && (
                     <ItemFormModal
                         item={state.item}
                         component={formContentComponent}
                         isOpen={state.showItemModal}
-                        updateTitle={t("baseDataTable.updateTitle", {name: oneResourceTypeName})}
-                        createTitle={t("baseDataTable.createTitle", {name: oneResourceTypeName})}
+                        updateTitle={t("baseDataTable.updateTitle", {
+                            name: oneResourceTypeName,
+                        })}
+                        createTitle={t("baseDataTable.createTitle", {
+                            name: oneResourceTypeName,
+                        })}
                         onRequestClose={closeItemFormModal}
-                        onSubmit={item => (state.wantUpdate ? updateItem(item) : createItem(item))}
-                    />}
+                        onSubmit={(item) =>
+                            state.wantUpdate
+                                ? updateItem(item)
+                                : createItem(item)
+                        }
+                    />
+                )}
 
                 <DeleteItemModal
                     item={state.item}
                     isOpen={state.showDeleteModal}
                     onRequestClose={closeDeleteItemModal}
-                    title={t("baseDataTable.deleteTitle", {name: oneResourceTypeName})}
+                    title={t("baseDataTable.deleteTitle", {
+                        name: oneResourceTypeName,
+                    })}
                     question={t("baseDataTable.deleteQuestion", {
-                        name: thisResourceTypeName || t("baseDataTable.defaultResource"),
-                        label: state.item && labellizer ? labellizer(state.item) : "",
+                        name:
+                            thisResourceTypeName ||
+                            t("baseDataTable.defaultResource"),
+                        label:
+                            state.item && labellizer
+                                ? labellizer(state.item)
+                                : "",
                     })}
                     onDelete={() => deleteItem(state.item)}
                 />

@@ -6,7 +6,8 @@ import moment from "moment";
 
 import { csrfToken } from "./utils";
 import { makeDebounce } from "../tools/inputs";
-import ReactTableFullScreen from "./ReactTableFullScreen";
+import TanStackGrid from "./common/baseDataTable/TanStackGrid";
+import FilterSelect from "./common/baseDataTable/FilterSelect";
 import * as api from "../tools/api";
 import swal from "sweetalert2";
 import { post } from "../tools/api";
@@ -72,7 +73,7 @@ class UserList extends React.Component {
         this.sendConfirmationMail = this.sendConfirmationMail.bind(this);
     }
 
-    fetchData(state, instance) {
+    fetchData(state) {
         this.setState({ loading: true, filter: state });
 
         debounce(() => {
@@ -85,7 +86,9 @@ class UserList extends React.Component {
                 .then((response) => response.json())
                 .then((data) => {
                     const res = {
-                        data: data.users,
+                        // TanStackGrid assumes an array (reads .length); fall back defensively
+                        // rather than propagate a malformed/empty response into a render-time crash.
+                        data: data.users || [],
                         pages: data.pages,
                         total: data.total,
                     };
@@ -270,7 +273,7 @@ class UserList extends React.Component {
     };
 
     render() {
-        const { data, pages, loading } = this.state;
+        const { data, pages, total, loading } = this.state;
         const { t } = this.props;
 
         const columns = [
@@ -380,7 +383,7 @@ class UserList extends React.Component {
                 sortable: false,
                 filterable: !this.props.nofilter,
                 Filter: ({ filter, onChange }) => (
-                    <select
+                    <FilterSelect
                         onChange={(event) => onChange(event.target.value)}
                         style={{ width: "100%" }}
                         value={filter ? filter.value : "all"}
@@ -403,7 +406,7 @@ class UserList extends React.Component {
                         <option value="teacher">
                             {t("list.table.roleFilter.teacher")}
                         </option>
-                    </select>
+                    </FilterSelect>
                 ),
             },
             {
@@ -413,7 +416,7 @@ class UserList extends React.Component {
                 sortable: false,
                 filterable: true,
                 Filter: ({ filter, onChange }) => (
-                    <select
+                    <FilterSelect
                         onChange={(event) => onChange(event.target.value)}
                         style={{ width: "100%" }}
                         value={filter ? filter.value : "all"}
@@ -427,7 +430,7 @@ class UserList extends React.Component {
                         <option value="false">
                             {t("list.table.accountTypeFilter.attached")}
                         </option>
-                    </select>
+                    </FilterSelect>
                 ),
                 accessor: (d) =>
                     d.attached_to_id
@@ -557,8 +560,6 @@ class UserList extends React.Component {
             },
         ];
 
-        const events = [];
-
         return (
             <div>
                 <div className="m-md">
@@ -600,33 +601,16 @@ class UserList extends React.Component {
                     ) : null}
                 </div>
 
-                <ReactTableFullScreen
-                    events={events}
+                <TanStackGrid
                     tableName="userTable"
                     data={data}
-                    manual
                     pages={pages}
+                    totalCount={total}
                     loading={loading}
                     onFetchData={this.fetchData}
                     columns={columns}
                     defaultSorted={[{ id: "adherent_number", desc: true }]}
-                    filterable
                     defaultFiltered={[{ id: "role", value: this.props.filter }]}
-                    defaultFilterMethod={(filter, row) => {
-                        if (row[filter.id] != null) {
-                            return row[filter.id]
-                                .toLowerCase()
-                                .startsWith(filter.value.toLowerCase());
-                        }
-                    }}
-                    resizable={false}
-                    previousText={t("common:reactTable.previousText")}
-                    nextText={t("common:reactTable.nextText")}
-                    loadingText={t("common:reactTable.loadingText")}
-                    noDataText={t("common:reactTable.noDataText")}
-                    pageText={t("common:reactTable.pageText")}
-                    ofText={t("common:reactTable.ofText")}
-                    rowsText={t("common:reactTable.rowsText")}
                     minRows={1}
                 />
 

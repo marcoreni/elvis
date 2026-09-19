@@ -1,6 +1,7 @@
 import React from "react";
-import ReactTable from "react-table";
-import Select from "react-select";
+import TanStackGrid from "../common/baseDataTable/TanStackGrid";
+import FilterSelect from "../common/baseDataTable/FilterSelect";
+import FilterReactSelect from "../common/baseDataTable/FilterReactSelect";
 import { toast } from "react-toastify";
 import { withTranslation, useTranslation } from "react-i18next";
 import i18n from "../../i18n";
@@ -348,7 +349,12 @@ class LessonList extends React.Component {
         });
 
         debounce(() =>
-            fetchInstancesList(filter).then(({ data, pages, total }) => {
+            fetchInstancesList(filter).then((result) => {
+                // fetchInstancesList resolves to undefined on a fetch error (its own .catch
+                // swallows and toasts). TanStackGrid assumes an array (reads .length) and render()
+                // does `pages - 1` for the current-page clamp -- default all three rather than
+                // propagate undefined into a render-time crash/NaN.
+                const { data = [], pages = 1, total = 0 } = result || {};
                 const processedData = data.map((activity) => {
                     const referenceDate = findAndGet(
                         filter.filtered,
@@ -728,13 +734,13 @@ class LessonList extends React.Component {
                 Cell: (c) =>
                     c.value ? moment(c.value.start).format("dddd") : "?",
                 Filter: ({ filter, onChange }) => (
-                    <select
+                    <FilterSelect
                         value={(filter && filter.value) || ""}
                         onChange={(e) => onChange(e.target.value)}
                     >
                         <option value="" />
                         {daysOptions}
-                    </select>
+                    </FilterSelect>
                 ),
             },
             {
@@ -752,7 +758,8 @@ class LessonList extends React.Component {
                         <div className="flex flex-space-around-justified">
                             <input
                                 type="time"
-                                defaultValue={start}
+                                className="form-control form-control-small"
+                                value={start}
                                 onChange={(e) =>
                                     onChange({
                                         ...filter,
@@ -762,7 +769,8 @@ class LessonList extends React.Component {
                             />
                             <input
                                 type="time"
-                                defaultValue={end}
+                                className="form-control form-control-small"
+                                value={end}
                                 onChange={(e) =>
                                     onChange({
                                         ...filter,
@@ -807,13 +815,13 @@ class LessonList extends React.Component {
                     );
                 },
                 Filter: ({ filter, onChange }) => (
-                    <select
+                    <FilterSelect
                         onChange={(e) => onChange(e.target.value)}
                         value={filter ? filter.value : ""}
                     >
                         <option value="" />
                         {refsOptions}
-                    </select>
+                    </FilterSelect>
                 ),
             },
             ...(!this.props.isTeacherView
@@ -826,13 +834,13 @@ class LessonList extends React.Component {
                           Cell: (c) =>
                               `${c.value.first_name} ${c.value.last_name}`,
                           Filter: ({ filter, onChange }) => (
-                              <select
+                              <FilterSelect
                                   onChange={(e) => onChange(e.target.value)}
                                   value={filter ? filter.value : ""}
                               >
                                   <option value="" />
                                   {teachersOptions}
-                              </select>
+                              </FilterSelect>
                           ),
                       },
                   ]
@@ -852,14 +860,14 @@ class LessonList extends React.Component {
                 },
 
                 Filter: ({ filter, onChange }) => (
-                    <select
+                    <FilterSelect
                         style={{ maxWidth: "115px" }}
                         onChange={(e) => onChange(e.target.value)}
                         value={filter ? filter.value : ""}
                     >
                         <option value="" />
                         {roomsOptions}
-                    </select>
+                    </FilterSelect>
                 ),
             },
             {
@@ -868,14 +876,14 @@ class LessonList extends React.Component {
                 maxWidth: 125,
                 accessor: (a) => a.location.label,
                 Filter: ({ filter, onChange }) => (
-                    <select
+                    <FilterSelect
                         style={{ maxWidth: "115px" }}
                         onChange={(e) => onChange(e.target.value)}
                         value={filter ? filter.value : ""}
                     >
                         <option value="" />
                         {locationsOptions}
-                    </select>
+                    </FilterSelect>
                 ),
             },
             {
@@ -922,7 +930,7 @@ class LessonList extends React.Component {
                     );
 
                     return (
-                        <Select
+                        <FilterReactSelect
                             options={options}
                             defaultValue={options[0]}
                             value={value}
@@ -980,9 +988,9 @@ class LessonList extends React.Component {
                 maxWidth: 125,
                 accessor: (d) => d,
                 Filter: ({ filter, onChange }) => (
-                    <select
+                    <FilterSelect
                         onChange={(e) => onChange(e.target.value)}
-                        defaultValue={filter ? filter.value : ""}
+                        value={filter ? filter.value : ""}
                     >
                         <option value="" />
                         <option value="TBD">
@@ -993,7 +1001,7 @@ class LessonList extends React.Component {
                                 {r.label}
                             </option>
                         ))}
-                    </select>
+                    </FilterSelect>
                 ),
                 Cell: (c) =>
                     TimeIntervalHelpers.levelDisplayLabel(
@@ -1024,13 +1032,13 @@ class LessonList extends React.Component {
                     }
 
                     return (
-                        <select
+                        <FilterSelect
                             onChange={(e) => onChange(e.target.value)}
                             value={filter?.value ?? ""}
                         >
                             <option value="" />
                             {seasonsOptions}
-                        </select>
+                        </FilterSelect>
                     );
                 },
             },
@@ -1103,7 +1111,7 @@ class LessonList extends React.Component {
             <div className="ibox">
                 <div className="ibox-title">
                     <div className="flex flex-center-aligned">
-                        <h2 className="m-r">
+                        <h2 className="m-r" style={{ whiteSpace: "nowrap" }}>
                             {t("lessonList.courseCount", {
                                 count: this.state.total,
                             })}
@@ -1177,71 +1185,47 @@ class LessonList extends React.Component {
                     {this.state.targets.length > 0
                         ? this.renderTargetsAlert()
                         : null}
-                    <ReactTable
-                        key={this.state.filter.filtered
-                            .map((f) => f.id)
-                            .join("-")}
+                    <TanStackGrid
+                        tableName="table-lessons"
                         style={{ backgroundColor: "white" }}
                         data={this.state.data}
-                        manual
                         pages={this.state.pages}
+                        totalCount={this.state.total}
                         columns={filteredColumns}
                         loading={this.state.loading}
                         pageSizeOptions={[5, 10, 15, 20, 50, 100]}
-                        page={
-                            this.state.filter.page <= this.state.pages
-                                ? this.state.filter.page
-                                : this.state.pages - 1
-                        }
-                        pageSize={this.state.filter.pageSize}
-                        sorted={this.state.filter.sorted}
-                        filtered={this.state.filter.filtered}
-                        onPageChange={(page) =>
-                            this.fetchData({ ...this.state.filter, page })
-                        }
-                        onPageSizeChange={(pageSize, page) =>
+                        pagination={{
+                            pageIndex:
+                                this.state.filter.page <= this.state.pages
+                                    ? this.state.filter.page
+                                    : this.state.pages - 1,
+                            pageSize: this.state.filter.pageSize,
+                        }}
+                        onPaginationChange={({ pageIndex, pageSize }) =>
                             this.fetchData({
                                 ...this.state.filter,
-                                page,
+                                page: pageIndex,
                                 pageSize,
                             })
                         }
-                        onSortedChange={(sorted) =>
+                        sorting={this.state.filter.sorted}
+                        onSortingChange={(sorted) =>
                             this.fetchData({ ...this.state.filter, sorted })
                         }
-                        onFilteredChange={(filtered) =>
+                        columnFilters={this.state.filter.filtered}
+                        onColumnFiltersChange={(filtered) =>
                             this.fetchData({
                                 ...this.state.filter,
                                 filtered,
                                 page: 0,
                             })
                         }
-                        filterable
-                        sortable
-                        resizable={true}
-                        previousText={t("common:reactTable.previousText")}
-                        nextText={t("common:reactTable.nextText")}
-                        loadingText={t("common:reactTable.loadingText")}
-                        noDataText={t("common:reactTable.noDataText")}
-                        pageText={t("common:reactTable.pageText")}
-                        ofText={t("common:reactTable.ofText")}
-                        rowsText={t("common:reactTable.rowsText")}
-                        minRows={10}
-                        getTrProps={(state, rowInfo, column) => {
-                            if (rowInfo) {
-                                if (rowInfo.original.isOnlyOneOption) {
-                                    return {
-                                        style: {
-                                            color: "#9575CD",
-                                        },
-                                    };
-                                }
-                                if (rowInfo.original.options.length != 0) {
-                                }
-                            }
-                            return {};
-                        }}
-                        SubComponent={(row) => {
+                        getRowProps={(original) =>
+                            original.isOnlyOneOption
+                                ? { style: { color: "#9575CD" } }
+                                : undefined
+                        }
+                        renderSubComponent={(row) => {
                             let hasUser =
                                 row.original.users.filter(
                                     (u) =>

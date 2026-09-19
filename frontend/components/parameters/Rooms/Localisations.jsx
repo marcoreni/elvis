@@ -2,8 +2,8 @@ import React from "react";
 import swal from "sweetalert2";
 import { csrfToken } from "../../utils";
 import _ from "lodash";
-import ReactTable from "react-table";
 import { withTranslation } from "react-i18next";
+import TanStackGrid from "../../common/baseDataTable/TanStackGrid";
 
 class Localisations extends React.Component {
     constructor(props) {
@@ -94,23 +94,26 @@ class Localisations extends React.Component {
         };
 
         this.deleteStatus = this.deleteStatus.bind(this);
+        this.fetchData = this.fetchData.bind(this);
     }
 
-    fetchData(state, instance) {
-        this.setState({ loading: true, filter: state, tableState: state });
+    fetchData(filter) {
+        this.setState({ loading: true, filter, tableState: filter });
 
         this.requestData
             .call(
                 this,
-                state.pageSize,
-                state.page,
-                state.sorted,
-                state.filtered
+                filter.pageSize,
+                filter.page,
+                filter.sorted,
+                filter.filtered
             )
             .then((response) => response.json())
             .then((data) => {
                 return {
-                    data: data.status,
+                    // TanStackGrid assumes an array (reads .length); fall back defensively rather
+                    // than propagate a malformed/empty response into a render-time crash.
+                    data: data.status || [],
                     pages: data.pages,
                     total: data.total,
                 };
@@ -182,38 +185,20 @@ class Localisations extends React.Component {
     }
 
     render() {
-        const { t } = this.props;
-        const { data, pages, loading } = this.state;
+        const { data, pages, total, loading } = this.state;
 
         return (
-            <ReactTable
+            <TanStackGrid
+                tableName="table-localisations"
                 data={data}
-                manual
                 pages={pages}
+                totalCount={total}
                 loading={loading}
-                onFetchData={(state, instance) =>
-                    this.fetchData.call(this, state, instance)
-                }
+                onFetchData={this.fetchData}
                 columns={this.state.columns}
                 defaultSorted={[{ id: "id", desc: true }]}
-                filterable
-                defaultFilterMethod={(filter, row) => {
-                    if (row[filter.id] != null) {
-                        return row[filter.id]
-                            .toLowerCase()
-                            .startsWith(filter.value.toLowerCase());
-                    }
-                }}
-                resizable={false}
-                previousText={t("common:reactTable.previousText")}
-                nextText={t("common:reactTable.nextText")}
-                loadingText={t("common:reactTable.loadingText")}
-                noDataText={t("common:reactTable.noDataText")}
-                pageText={t("common:reactTable.pageText")}
-                ofText={t("common:reactTable.ofText")}
-                rowsText={t("common:reactTable.rowsText")}
                 minRows={1}
-                SubComponent={this.state.subComponent}
+                renderSubComponent={this.state.subComponent}
             />
         );
     }

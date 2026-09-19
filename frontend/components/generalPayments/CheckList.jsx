@@ -1,7 +1,9 @@
 import _, { filter } from "lodash";
 import React from "react";
 import { withTranslation } from "react-i18next";
-import ReactTableFullScreen from "../ReactTableFullScreen";
+import TanStackGrid, {
+    goFullScreen,
+} from "../common/baseDataTable/TanStackGrid";
 import Switch from "react-switch";
 import { makeDebounce } from "../../tools/inputs";
 import {
@@ -52,7 +54,9 @@ const requestData = (pageSize, page, sorted, filtered, format) => {
         .then((data) => {
             if (!format || format === "json") {
                 return {
-                    data: data.payments,
+                    // TanStackGrid assumes an array (reads .length); fall back defensively rather
+                    // than propagate a malformed/empty response into a render-time crash.
+                    data: data.payments || [],
                     pages: data.pages,
                     rowsCount: data.rowsCount,
                     totalAmount: data.totalAmount,
@@ -302,8 +306,6 @@ class CheckList extends React.Component {
             },
         ];
 
-        const events = [];
-
         return (
             <div>
                 <div
@@ -394,12 +396,12 @@ class CheckList extends React.Component {
                                 "general.tableControls.fullscreen"
                             )}
                             className="btn btn-primary m-r"
-                            onClick={() => events[0]()}
+                            onClick={() => goFullScreen("table-checks")}
                         >
                             <i className="fas fa-expand-arrows-alt"></i>
                         </button>
 
-                        <h2 className="m-r">
+                        <h2 className="m-r" style={{ whiteSpace: "nowrap" }}>
                             {t("general.checks.checkCount", {
                                 n: this.state.rowsCount,
                             })}
@@ -419,35 +421,31 @@ class CheckList extends React.Component {
                 </div>
 
                 <div className="ibox-content no-padding">
-                    <ReactTableFullScreen
-                        events={events}
+                    <TanStackGrid
+                        tableName="table-checks"
                         data={data}
-                        manual
                         pages={pages}
+                        totalCount={this.state.rowsCount}
                         loading={loading}
                         columns={columns}
                         pageSizeOptions={[5, 10, 11, 15, 20, 50, 100]}
-                        page={
-                            this.state.filter.page <= this.state.pages
-                                ? this.state.filter.page
-                                : this.state.pages - 1
-                        }
-                        pageSize={this.state.filter.pageSize}
-                        sorted={this.state.filter.sorted}
-                        filtered={this.state.filter.filtered}
-                        onPageChange={(page) =>
-                            this.fetchData({ ...this.state.filter, page })
-                        }
-                        onPageSizeChange={(pageSize, page) =>
+                        pagination={{
+                            pageIndex:
+                                this.state.filter.page <= this.state.pages
+                                    ? this.state.filter.page
+                                    : this.state.pages - 1,
+                            pageSize: this.state.filter.pageSize,
+                        }}
+                        onPaginationChange={({ pageIndex, pageSize }) =>
                             this.fetchData({
                                 ...this.state.filter,
-                                page,
+                                page: pageIndex,
                                 pageSize,
                             })
                         }
-                        onSortedChange={(sorted) => {
-                            console.log(sorted);
-                            if (sorted[0].id === "payments.amount") {
+                        sorting={this.state.filter.sorted}
+                        onSortingChange={(sorted) => {
+                            if (sorted[0]?.id === "payments.amount") {
                                 this.setState({
                                     data: _.orderBy(
                                         this.state.data,
@@ -463,21 +461,14 @@ class CheckList extends React.Component {
                                 });
                             }
                         }}
-                        onFilteredChange={(filtered) =>
+                        columnFilters={this.state.filter.filtered}
+                        onColumnFiltersChange={(filtered) =>
                             this.fetchData({
                                 ...this.state.filter,
                                 filtered,
+                                page: 0,
                             })
                         }
-                        filterable
-                        resizable={false}
-                        previousText={t("common:reactTable.previousText")}
-                        nextText={t("common:reactTable.nextText")}
-                        loadingText={t("common:reactTable.loadingText")}
-                        noDataText={t("common:reactTable.noDataText")}
-                        pageText={t("common:reactTable.pageText")}
-                        ofText={t("common:reactTable.ofText")}
-                        rowsText={t("common:reactTable.rowsText")}
                         minRows={1}
                     />
                 </div>
