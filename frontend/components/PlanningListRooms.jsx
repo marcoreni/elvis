@@ -2,7 +2,7 @@ import React from "react";
 import PropTypes from "prop-types";
 import moment from "moment";
 
-import ReactTable from "react-table";
+import TanStackGrid from "./common/baseDataTable/TanStackGrid";
 import { withTranslation } from "react-i18next";
 
 class PlanningListRooms extends React.Component {
@@ -17,20 +17,21 @@ class PlanningListRooms extends React.Component {
                 Header: "#",
                 accessor: "id",
                 width: 50,
+                filterable: false,
             },
             {
                 Header: t("planning:plannings.columns.room"),
                 id: "room",
-                accessor: r => r.label,
-                sortMethod: (a, b) => {
-                    if (a === b) return 0;
-                    return a.toLowerCase() > b.toLowerCase() ? 1 : -1;
-                },
+                accessor: (r) => r.label,
+                // v6's sortMethod did a case-insensitive compare; TanStack's default string
+                // sortingFn ("alphanumeric") is already case-insensitive, so no custom sortingFn
+                // is needed here.
+                filterable: false,
             },
             {
                 id: "actions",
                 Header: t("planning:plannings.columns.actions"),
-                Cell: props => {
+                Cell: (props) => {
                     return (
                         <a href={`/rooms/${props.original.id}/planning`}>
                             <button className="btn btn-xs btn-primary ">
@@ -40,23 +41,21 @@ class PlanningListRooms extends React.Component {
                     );
                 },
                 sortable: false,
+                filterable: false,
             },
         ];
 
         return (
-            <ReactTable
+            <TanStackGrid
+                tableName="planning-list-rooms"
+                manual={false}
                 data={this.props.plannings}
+                loading={false}
+                pages={null}
                 columns={columns}
                 defaultSorted={[{ id: "room", desc: false }]}
-                resizable={false}
-                previousText={t("common:reactTable.previousText")}
-                nextText={t("common:reactTable.nextText")}
-                loadingText={t("common:reactTable.loadingText")}
-                noDataText={t("common:reactTable.noDataText")}
-                pageText={t("common:reactTable.pageText")}
-                ofText={t("common:reactTable.ofText")}
-                rowsText={t("common:reactTable.rowsText")}
                 minRows={1}
+                pageSizeOptions={[5, 10, 20, 25, 50, 100]}
             />
         );
     }

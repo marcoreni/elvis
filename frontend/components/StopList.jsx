@@ -1,5 +1,5 @@
-import React, { Fragment, useState } from "react";
-import ReactTable from "react-table";
+import React, { Fragment, useMemo, useState } from "react";
+import TanStackGrid from "./common/baseDataTable/TanStackGrid";
 import { useTranslation } from "react-i18next";
 import * as StopReasons from "./utils/StopReasons";
 import Modal from "react-modal";
@@ -15,12 +15,12 @@ const MODAL_STYLE = {
     },
 };
 
-const getTableColumns = t => [
+const getTableColumns = (t) => [
     {
         id: "last_name",
         Header: t("activityApplications:stopList.columns.name"),
         width: 175,
-        accessor: d =>
+        accessor: (d) =>
             `${_.get(d, "pre_application.user.first_name")} ${_.get(
                 d,
                 "pre_application.user.last_name"
@@ -33,14 +33,14 @@ const getTableColumns = t => [
         id: "season",
         width: 150,
         Header: t("activityApplications:stopList.columns.season"),
-        accessor: d => _.get(d, "pre_application.season.label"),
+        accessor: (d) => _.get(d, "pre_application.season.label"),
         filterable: false,
         sortable: false,
     },
     {
         id: "activity",
         Header: t("activityApplications:stopList.columns.activity"),
-        accessor: d => {
+        accessor: (d) => {
             const activityLabel = _.get(d, "activity.activity_ref.label");
             const teachersName = `${_.get(
                 d,
@@ -52,24 +52,31 @@ const getTableColumns = t => [
                 teacher: teachersName,
             });
         },
+        // No top-level `filterable` prop was ever passed to the old <ReactTable> here (v6
+        // defaults filtering off unless a column opts in) -- explicit `false` on every column
+        // preserves that "no filter row" look under TanStackGrid, whose own per-column default is
+        // filterable-on.
+        filterable: false,
     },
     {
         id: "comment",
         Header: t("activityApplications:stopList.columns.reason"),
-        accessor: d => {
+        accessor: (d) => {
             const foundReason = StopReasons.STOP_REASONS.find(
-                r => r.id == d.comment
+                (r) => r.id == d.comment
             );
 
             return _.get(foundReason, "label") || d.comment;
         },
+        filterable: false,
     },
     {
         Header: t("activityApplications:stopList.columns.actions"),
         id: "actions",
         sortable: false,
+        filterable: false,
         width: 100,
-        Cell: props => {
+        Cell: (props) => {
             return (
                 <div className="flex flex-center-justified">
                     <button
@@ -78,7 +85,7 @@ const getTableColumns = t => [
                         title={t(
                             "activityApplications:stopList.cancelStopRequest"
                         )}
-                        onClick={id =>
+                        onClick={(id) =>
                             handleSelectStopApplicationToEdit(props.original)
                         }
                     >
@@ -90,7 +97,7 @@ const getTableColumns = t => [
     },
 ];
 
-const handleSelectStopApplicationToEdit = action => {
+const handleSelectStopApplicationToEdit = (action) => {
     let actions = [
         fetch(`/pre_application/${action.id}/process?auth_token=${csrfToken}`, {
             method: "PATCH",
@@ -115,12 +122,18 @@ export default function StopList({ seasons }) {
     const [loading, setLoading] = useState(false);
     const [data, setData] = useState([]);
     const [season, setSeason] = useState(undefined);
+    // Controlled, rather than TanStackGrid's own uncontrolled default (pageSize 20), so the
+    // page-size selector below can start at v6's old `defaultPageSize={15}`.
+    const [pagination, setPagination] = useState({
+        pageIndex: 0,
+        pageSize: 15,
+    });
 
     const fetchData = () => {
         setLoading(true);
 
         api.set()
-            .success(data => {
+            .success((data) => {
                 setLoading(false);
                 setData(data);
             })
@@ -131,6 +144,19 @@ export default function StopList({ seasons }) {
         setIsOpen(true);
         fetchData();
     };
+
+    // Stable reference across renders (only recomputed when `data`/`season` actually change) --
+    // TanStack's core row-model memoization is keyed on this array's *reference*, and manual={false}
+    // means its own _autoResetPageIndex is active: a brand-new array every render (as `.filter(...)`
+    // inlined into the `data` prop would produce) resets `pageIndex` back to 0 on every render, so
+    // pagination past the first page is never reachable.
+    const filteredData = useMemo(
+        () =>
+            data.filter(
+                (d) => !season || d.pre_application.season_id === season.id
+            ),
+        [data, season]
+    );
 
     return (
         <Fragment>
@@ -151,11 +177,7 @@ export default function StopList({ seasons }) {
                 <div className="flex flex-space-between-justified">
                     <h1>
                         {t("activityApplications:stopList.heading", {
-                            count: data.filter(
-                                d =>
-                                    !season ||
-                                    d.pre_application.season_id === season.id
-                            ).length,
+                            count: filteredData.length,
                         })}
                     </h1>
                     <div>
@@ -165,13 +187,17 @@ export default function StopList({ seasons }) {
                         <select
                             className="form-control"
                             value={season ? season.id : ""}
-                            onChange={e =>
+                            onChange={(e) => {
                                 setSeason(
                                     seasons.find(
-                                        s => s.id === parseInt(e.target.value)
+                                        (s) => s.id === parseInt(e.target.value)
                                     )
-                                )
-                            }
+                                );
+                                setPagination((old) => ({
+                                    ...old,
+                                    pageIndex: 0,
+                                }));
+                            }}
                         >
                             <option value="">
                                 {t("activityApplications:stopList.all")}
@@ -183,24 +209,19 @@ export default function StopList({ seasons }) {
                     </div>
                 </div>
                 <hr style={{ marginBottom: "0" }} />
-                <ReactTable
-                    className="m-b-sm"
-                    defaultPageSize={15}
-                    data={data.filter(
-                        d =>
-                            !season || d.pre_application.season_id === season.id
-                    )}
-                    pageSizeOptions={[10, 15, 20]}
-                    loading={loading}
-                    columns={getTableColumns(t)}
-                    previousText={t("common:reactTable.previousText")}
-                    nextText={t("common:reactTable.nextText")}
-                    loadingText={t("common:reactTable.loadingText")}
-                    noDataText={t("common:reactTable.noDataText")}
-                    pageText={t("common:reactTable.pageText")}
-                    ofText={t("common:reactTable.ofText")}
-                    rowsText={t("common:reactTable.rowsText")}
-                />
+                <div className="m-b-sm">
+                    <TanStackGrid
+                        tableName="stop-list"
+                        manual={false}
+                        data={filteredData}
+                        loading={loading}
+                        pages={null}
+                        pagination={pagination}
+                        onPaginationChange={setPagination}
+                        pageSizeOptions={[10, 15, 20]}
+                        columns={getTableColumns(t)}
+                    />
+                </div>
             </Modal>
         </Fragment>
     );

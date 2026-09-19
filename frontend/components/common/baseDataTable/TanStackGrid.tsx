@@ -11,6 +11,9 @@ import {
     functionalUpdate,
     getCoreRowModel,
     getExpandedRowModel,
+    getFilteredRowModel,
+    getPaginationRowModel,
+    getSortedRowModel,
     useReactTable,
 } from "@tanstack/react-table";
 import fscreen from "fscreen";
@@ -35,6 +38,9 @@ type LegacyColumnFilterRenderer = (props: {
 
 const coreRowModel = getCoreRowModel();
 const expandedRowModel = getExpandedRowModel();
+const sortedRowModel = getSortedRowModel();
+const filteredRowModel = getFilteredRowModel();
+const paginationRowModel = getPaginationRowModel();
 
 // Was frontend/components/ReactTableFullScreen.jsx's export -- moved here once every consumer of
 // that v6 wrapper had migrated to TanStackGrid (item 13 batch 3), since this is the component that
@@ -106,9 +112,14 @@ function toTanStackColumn(column: LegacyColumn): ColumnDef<any> {
         // (a "select all" checkbox living in the Filter slot, payer-name text filters, the
         // occupation dropdown) have no accessor at all (their Cell reads `original` directly)
         // but still need their filter/sort UI to render. A no-op accessor unblocks TanStack's
-        // gates without affecting any real value lookup -- safe here specifically because every
-        // real table is manualSorting/manualFiltering, so TanStack never actually sorts/filters
-        // rows using this value itself, only tracks state and defers to the server.
+        // gates without affecting any real value lookup -- safe for a manualSorting/manualFiltering
+        // table, where TanStack never actually sorts/filters rows using this value itself, only
+        // tracks state and defers to the server. NOT safe for a client-mode table (manual={false}):
+        // an accessor-less column left `filterable` (i.e. not explicitly `false`) there gets
+        // TanStack's auto-picked `weakEquals` filterFn, which compares every row's `undefined`
+        // value against the typed filter text and is always false -- the first keystroke empties
+        // the whole table. Any accessor-less column on a client-mode table must set
+        // `filterable: false` explicitly.
         tanstackColumn.accessorFn = () => undefined;
     }
 
@@ -254,6 +265,14 @@ interface TanStackGridProps {
     /** Controlled column filters -- see `onFetchData`. */
     columnFilters?: ColumnFiltersState;
     onColumnFiltersChange?: (filters: ColumnFiltersState) => void;
+    /**
+     * Defaults to `true` -- every batch 1-3 caller is server-paginated (fetches a page of data via
+     * `onFetchData` on page/sort/filter change) and is unaffected by this prop. Set `false` for a
+     * table whose full dataset is already in memory (no backend pagination endpoint exists for
+     * it) to get TanStack's own client-side sorting/filtering/pagination instead, matching how
+     * these tables behaved under react-table v6.
+     */
+    manual?: boolean;
 }
 
 /**
@@ -284,8 +303,10 @@ export default function TanStackGrid({
     onSortingChange,
     columnFilters: controlledColumnFilters,
     onColumnFiltersChange,
+    manual: manualProp,
 }: TanStackGridProps) {
     const { t } = useTranslation("common");
+    const manual = manualProp ?? true;
 
     const [sorting, setSorting] = useControllableState<SortingState>(
         controlledSorting,
@@ -344,17 +365,31 @@ export default function TanStackGrid({
         onColumnFiltersChange: handleColumnFiltersChange,
         onPaginationChange: setPagination,
         onExpandedChange: setExpanded,
-        manualPagination: true,
-        manualSorting: true,
-        manualFiltering: true,
+        manualPagination: manual,
+        manualSorting: manual,
+        manualFiltering: manual,
         // TanStack's default lets a third header click cycle past desc back to "unsorted"
         // (sorting: []) -- v6 never had that state reachable by clicking (asc/desc toggle only).
         // Every real caller sends `sorted: sorted[0]` straight into a request body; an empty
         // array makes `sorted[0]` undefined, which JSON.stringify drops the key for entirely, and
         // every backend #list_json handler dereferences `params[:sorted][:desc]` unguarded --
         // 500, silently swallowed client-side (no .catch anywhere), table stuck loading forever.
+        // Kept unconditional (not gated on `manual`) -- a UX consistency improvement in both
+        // modes, not a manual-mode-only concern.
         enableSortingRemoval: false,
-        pageCount: pages ?? -1,
+        // TanStack's own `_autoResetPageIndex` (on by default whenever `manualPagination` is
+        // false) resets `pageIndex` to 0 whenever the core row model's data-reference dependency
+        // changes -- not just on real pagination/filtering, but on *any* new `data` array
+        // reference, including one produced by an unrelated in-place edit (e.g. typing into an
+        // editable cell that copies-then-replaces `data` to avoid a stale-display bug). That
+        // silently snapped a client-mode table back to page 1 mid-edit. The one legitimate reset
+        // case (filters changing) is already handled explicitly above in
+        // `handleColumnFiltersChange`, so this built-in auto-reset has no case left to cover.
+        // Unconditional (not gated on `manual`): `autoResetPageIndex ?? !manualPagination`
+        // already resolves to `false` for every `manual={true}` (server-side) caller, so this
+        // only changes behavior for `manual={false}` callers.
+        autoResetPageIndex: false,
+        pageCount: manual ? (pages ?? -1) : undefined,
         getCoreRowModel: coreRowModel,
         // Rows here are flat records with no real `subRows` -- expansion is used purely as a
         // "toggle to reveal renderSubComponent's extra content" mechanism (v6's SubComponent),
@@ -368,6 +403,13 @@ export default function TanStackGrid({
                   getRowCanExpand: () => true,
               }
             : {}),
+        ...(manual
+            ? {}
+            : {
+                  getSortedRowModel: sortedRowModel,
+                  getFilteredRowModel: filteredRowModel,
+                  getPaginationRowModel: paginationRowModel,
+              }),
     });
 
     useEffect(() => {
@@ -663,11 +705,15 @@ export default function TanStackGrid({
                 </div>
                 <div>
                     {t("reactTable.pageText")} {pagination.pageIndex + 1}{" "}
-                    {t("reactTable.ofText")} {Math.max(pages || 1, 1)}
+                    {t("reactTable.ofText")} {Math.max(table.getPageCount(), 1)}
                 </div>
                 <div>
                     {t("baseDataTable.resultsCount", {
-                        count: totalCount ?? safeData.length,
+                        count:
+                            totalCount ??
+                            (manual
+                                ? safeData.length
+                                : table.getFilteredRowModel().rows.length),
                     })}
                 </div>
             </div>
