@@ -119,7 +119,7 @@ legacy string refs). Caught and fixed 2 real behavior regressions against upstre
 new tests. `react-stepzilla` fully removed from `package.json`/`yarn.lock`. `KnownIssues.md`'s
 "Exotic dependencies" section (its last entry) removed.
 
-## 13. `react-table` v6 → TanStack Table — batches 1-3 done and merged, batch 4 in progress
+## 13. `react-table` v6 → TanStack Table — batches 1-4a done and merged, batch 4b in progress
 
 `react-table@^6.8.0` (peer dep `react: ^16.x.x` — doesn't even officially claim React 17 support,
 same pattern as `react-loader-spinner`, item in the "Frontend dependencies" KnownIssues entry) is 4
@@ -345,15 +345,52 @@ was already peer-dep-unverified past React 16 anyway.
      regression test (`TanStackGrid.test.tsx`) clicking a header three times and asserting
      `sorted` stays non-empty. Landed in `feat/tanstack-table-batch3-subcomponent-tables` since
      the fix lives in the shared component; applies retroactively to every batch 1-3 table.
-  4. Remaining standalone direct importers not covered above (`AdhesionList`, `PaymentScheduleList`,
-     `SubPaymentList`, `TemplateIndex`, `ApplicationStatusTable`, `PlanningListRooms`,
-     `PlanningListTeachers`, `FailedPaymentImportsPage`, `StopList`, `UserAttach`, `SeasonsList`,
-     `Holidays`, `EventsRules`, `Formules`, `StudentEvaluationsStats.tsx`, `PaymentsList`,
-     `DuePaymentsList`) — audit each for `manual`/custom-cell usage before sub-batching further.
-     `StudentEvaluationsStats.tsx` is already TypeScript, a reasonable early pick here since v8
-     ships full TS types natively.
-  5. `Activity.jsx` alone, last, once the expander pattern from batch 3 is proven.
-  6. Drop `react-table` from `package.json`/`yarn.lock` and the `KnownIssues.md` entry.
+  4. **DONE (2026-09-19, PR #126, `feat/tanstack-table-batch4a-client-side-tables`).** 5 tables with
+     no paginated backend endpoint at all — full dataset arrives as a single embedded prop from the
+     ERB view (`PlanningListRooms`, `PlanningListTeachers`, `StopList`, `seasons/SeasonsList`,
+     `FailedPaymentImportsPage`). Added an opt-in `manual?: boolean` prop to `TanStackGrid` (default
+     `true`, every batch 1-3 caller unaffected; `false` wires TanStack's own `getSortedRowModel`/
+     `getFilteredRowModel`/`getPaginationRowModel` instead of a server round-trip). Went through 3
+     rounds of `code-reviewer` before push — found more real bugs than any single batch 1-3 PR, all
+     the same root cause as batch 1/3's `getCoreRowModel` bug but in these components' own state-
+     update code: `StopList` inlined `data.filter(...)` into the `data` prop (new array every
+     render → with `manual={false}`, TanStack's own `_autoResetPageIndex` snapped `pageIndex` back
+     to 0 on every render, pagination past page 1 unreachable); `FailedPaymentImportsPage`'s Amount
+     cell mutated `this.state.data` in place instead of copying it (displayed value went stale while
+     the submitted value silently diverged); `SeasonsList`'s activation handler shallow-copied the
+     state wrapper but not the `seasons` array itself (a newly-activated season's auto-created
+     "next" season never appeared without a full reload). Fixing the Amount-cell bug then introduced
+     a *new* page-reset bug (copying `data` on every keystroke re-triggered the same
+     `_autoResetPageIndex` mechanism) and exposed a real focus-loss bug (TanStackGrid's `columns`
+     memo is keyed on array identity; a class component rebuilding `columns` fresh in `render()`
+     gives `flexRender` a new `cell` function identity every keystroke, which React treats as a new
+     component type and unmounts/remounts the cell, killing input focus — invisible until this batch
+     since it's the first consumer with real typed-into `<input>` cells). Fixed with
+     `autoResetPageIndex: false` (redundant for `manual={true}` callers, only removes a harmful
+     reset for `manual={false}` ones) and by caching `FailedPaymentImportsPage`'s `columns` array on
+     the instance. Regression tests added for all 3 correctness bugs. Verified: `vitest run` (1343
+     tests, was 1327 pre-batch), `tsc --noEmit` clean.
+  5. Remaining standalone direct importers, split by whether they need item 4's client-mode
+     `manual` prop:
+     - **Batch 4b, in progress (`feat/tanstack-table-batch4b-standard-tables`):** 9 files already
+       `manual`/`onFetchData`-shaped like batches 1-3, no client-mode gap — `AdhesionList`,
+       `generalPayments/PaymentScheduleList`, `generalPayments/SubPaymentList`,
+       `mailTemplates/TemplateIndex`, `parameters/ActivityApplications/ApplicationStatusTable`,
+       `UserAttach`, `seasons/Holidays`, `eventsRules/EventsRules`, `formules/Formules`.
+     - **Batch 4c, not yet started:** 3 more client-mode files needing the same `manual={false}`
+       treatment as batch 4a — `evaluation/StudentEvaluationsStats.tsx` (trivial, already TS, no
+       manual/fetch logic at all — a reasonable easy first pick), `userPayments/PaymentsList.jsx`,
+       `userPayments/DuePaymentsList.jsx` (both large files overall, 948/1573 lines, but only one
+       `<ReactTable>` each — most of the file is unrelated payment-modal/bulk-action logic).
+       **Flagged for future improvement, not a blocker for 4c itself:** `PaymentsList`/
+       `DuePaymentsList` get their full dataset via `this.props.payments`/`this.props.data` (a
+       payer's payment history), which — unlike batch 4a's genuinely bounded lists (seasons, rooms,
+       teachers) — can grow large over a long relationship with the school. Client-side pagination
+       matches today's v6 behavior and is fine to ship as-is, but revisit with real server-side
+       pagination (a new backend endpoint + view change) if this page's performance or row count
+       ever becomes a real complaint.
+  6. `Activity.jsx` alone, last, once the expander pattern from batch 3 is proven.
+  7. Drop `react-table` from `package.json`/`yarn.lock` and the `KnownIssues.md` entry.
      `ReactTableFullScreen.jsx` (thin v6 wrapper) is already gone — deleted in batch 3 once its
      last 4 consumers migrated off it.
 
