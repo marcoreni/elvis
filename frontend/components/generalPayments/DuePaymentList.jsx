@@ -1,7 +1,9 @@
 import _, { isDate } from "lodash";
 import React from "react";
 import Select from "react-select";
-import TanStackGrid, { goFullScreen } from "../common/baseDataTable/TanStackGrid";
+import TanStackGrid, {
+    goFullScreen,
+} from "../common/baseDataTable/TanStackGrid";
 import swal from "sweetalert2";
 import { withTranslation } from "react-i18next";
 import { makeDebounce } from "../../tools/inputs";
@@ -1014,7 +1016,7 @@ class DuePaymentList extends React.Component {
                     style={{ width: "100%" }}
                 >
                     <div className="flex flex-center-aligned">
-                        <h2 className="m-r">
+                        <h2 className="m-r" style={{ whiteSpace: "nowrap" }}>
                             {t("general.dueDates.rowCount", {
                                 n: this.state.rowsCount,
                             })}

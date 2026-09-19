@@ -139,8 +139,10 @@ describe("BaseDataTable — singleton-driven chrome", () => {
         // pageText/pageIndex/ofText/pages render as sibling text nodes under one div, so the
         // whole merged string is what a leaf-node text query sees.
         expect(screen.getByText(/Page 1 sur 1/)).toBeInTheDocument();
-        // Still loading at mount -- the spinner's sr-only text.
-        expect(screen.getByText("Chargement...")).toBeInTheDocument();
+        // Still loading at mount -- the spinner's aria-label.
+        expect(
+            screen.getByRole("status", { name: "Chargement..." })
+        ).toBeInTheDocument();
 
         // Once the mount fetch resolves, there is no data to show.
         expect(await screen.findByText("Aucune donnée")).toBeInTheDocument();

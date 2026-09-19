@@ -1,7 +1,9 @@
 import _, { filter } from "lodash";
 import React from "react";
 import { withTranslation } from "react-i18next";
-import TanStackGrid, { goFullScreen } from "../common/baseDataTable/TanStackGrid";
+import TanStackGrid, {
+    goFullScreen,
+} from "../common/baseDataTable/TanStackGrid";
 import Switch from "react-switch";
 import { makeDebounce } from "../../tools/inputs";
 import {
@@ -399,7 +401,7 @@ class CheckList extends React.Component {
                             <i className="fas fa-expand-arrows-alt"></i>
                         </button>
 
-                        <h2 className="m-r">
+                        <h2 className="m-r" style={{ whiteSpace: "nowrap" }}>
                             {t("general.checks.checkCount", {
                                 n: this.state.rowsCount,
                             })}
@@ -442,7 +444,7 @@ class CheckList extends React.Component {
                         }
                         sorting={this.state.filter.sorted}
                         onSortingChange={(sorted) => {
-                            if (sorted[0].id === "payments.amount") {
+                            if (sorted[0]?.id === "payments.amount") {
                                 this.setState({
                                     data: _.orderBy(
                                         this.state.data,

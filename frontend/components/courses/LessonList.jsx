@@ -350,9 +350,10 @@ class LessonList extends React.Component {
         debounce(() =>
             fetchInstancesList(filter).then((result) => {
                 // fetchInstancesList resolves to undefined on a fetch error (its own .catch
-                // swallows and toasts). TanStackGrid assumes an array (reads .length); fall back
-                // defensively rather than propagate that into a render-time crash.
-                const { data = [], pages, total } = result || {};
+                // swallows and toasts). TanStackGrid assumes an array (reads .length) and render()
+                // does `pages - 1` for the current-page clamp -- default all three rather than
+                // propagate undefined into a render-time crash/NaN.
+                const { data = [], pages = 1, total = 0 } = result || {};
                 const processedData = data.map((activity) => {
                     const referenceDate = findAndGet(
                         filter.filtered,
@@ -1107,7 +1108,7 @@ class LessonList extends React.Component {
             <div className="ibox">
                 <div className="ibox-title">
                     <div className="flex flex-center-aligned">
-                        <h2 className="m-r">
+                        <h2 className="m-r" style={{ whiteSpace: "nowrap" }}>
                             {t("lessonList.courseCount", {
                                 count: this.state.total,
                             })}

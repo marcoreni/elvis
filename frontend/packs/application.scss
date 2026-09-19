@@ -2471,6 +2471,25 @@ body {
     }
 }
 
+// Native loading spinner for TanStackGrid (frontend/components/common/baseDataTable/TanStackGrid.tsx)
+// -- deliberately not Bootstrap's .spinner-border: this app's vendored inspinia/css/bootstrap.css
+// predates that component (added in Bootstrap 4.2), so it renders as an inert, invisible <div>.
+.tsg-spinner {
+    display: inline-block;
+    width: 2rem;
+    height: 2rem;
+    border: 0.25em solid rgba($red, 0.25);
+    border-top-color: $red;
+    border-radius: 50%;
+    animation: tsg-spin 0.75s linear infinite;
+}
+
+@keyframes tsg-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
 .weekday-availabilities {
     padding: 3px;
 

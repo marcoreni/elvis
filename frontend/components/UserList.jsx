@@ -383,6 +383,7 @@ class UserList extends React.Component {
                 filterable: !this.props.nofilter,
                 Filter: ({ filter, onChange }) => (
                     <select
+                        className="form-control form-control-sm"
                         onChange={(event) => onChange(event.target.value)}
                         style={{ width: "100%" }}
                         value={filter ? filter.value : "all"}
@@ -416,6 +417,7 @@ class UserList extends React.Component {
                 filterable: true,
                 Filter: ({ filter, onChange }) => (
                     <select
+                        className="form-control form-control-sm"
                         onChange={(event) => onChange(event.target.value)}
                         style={{ width: "100%" }}
                         value={filter ? filter.value : "all"}

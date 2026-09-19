@@ -1,6 +1,8 @@
 import _ from "lodash";
 import React from "react";
-import TanStackGrid, { goFullScreen } from "../common/baseDataTable/TanStackGrid";
+import TanStackGrid, {
+    goFullScreen,
+} from "../common/baseDataTable/TanStackGrid";
 import swal from "sweetalert2";
 import { withTranslation, useTranslation } from "react-i18next";
 import { makeDebounce } from "../../tools/inputs";
@@ -932,7 +934,7 @@ class PaymentList extends React.Component {
                     style={{ width: "100%" }}
                 >
                     <div className="flex flex-center-aligned">
-                        <h2 className="m-r">
+                        <h2 className="m-r" style={{ whiteSpace: "nowrap" }}>
                             {t("general.payments.rowCount", {
                                 n: this.state.rowsCount,
                             })}

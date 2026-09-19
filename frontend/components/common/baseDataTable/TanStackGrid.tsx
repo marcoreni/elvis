@@ -1,4 +1,4 @@
-import React, {useEffect, useMemo, useRef, useState} from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
     ColumnDef,
     ColumnFiltersState,
@@ -8,12 +8,13 @@ import {
     SortingState,
     Updater,
     flexRender,
+    functionalUpdate,
     getCoreRowModel,
     getExpandedRowModel,
     useReactTable,
 } from "@tanstack/react-table";
 import fscreen from "fscreen";
-import {useTranslation} from "react-i18next";
+import { useTranslation } from "react-i18next";
 
 // TanStack's `meta` bag is an empty interface by design, meant to be augmented by the consuming
 // app -- see https://tanstack.com/table/v8/docs/api/core/column-def#meta. Used below instead of
@@ -27,8 +28,10 @@ declare module "@tanstack/react-table" {
     }
 }
 
-type LegacyColumnFilterRenderer =
-    (props: {filter?: {value: unknown}; onChange: (value: unknown) => void}) => React.ReactNode;
+type LegacyColumnFilterRenderer = (props: {
+    filter?: { value: unknown };
+    onChange: (value: unknown) => void;
+}) => React.ReactNode;
 
 const coreRowModel = getCoreRowModel();
 const expandedRowModel = getExpandedRowModel();
@@ -50,7 +53,11 @@ export interface LegacyColumn {
     Header?: React.ReactNode;
     // A dot-path string (TanStack supports nested accessorKey paths natively) or a function.
     accessor?: string | ((row: any) => unknown);
-    Cell?: (props: {value: unknown; original: any; index: number}) => React.ReactNode;
+    Cell?: (props: {
+        value: unknown;
+        original: any;
+        index: number;
+    }) => React.ReactNode;
     /** Custom filter-row UI for this column (e.g. a <select> of fixed options), v6's `Filter`. */
     Filter?: LegacyColumnFilterRenderer;
     sortable?: boolean;
@@ -71,12 +78,14 @@ interface MutableColumnDef {
     accessorFn?: (row: any) => unknown;
     accessorKey?: string;
     cell?: ColumnDef<any>["cell"];
-    meta?: {width?: number; Filter?: LegacyColumnFilterRenderer};
+    meta?: { width?: number; Filter?: LegacyColumnFilterRenderer };
 }
 
 function toTanStackColumn(column: LegacyColumn): ColumnDef<any> {
     const tanstackColumn: MutableColumnDef = {
-        id: column.id ?? (typeof column.accessor === "string" ? column.accessor : undefined),
+        id:
+            column.id ??
+            (typeof column.accessor === "string" ? column.accessor : undefined),
         header: column.Header as ColumnDef<any>["header"],
         enableSorting: column.sortable !== false,
         enableColumnFilter: column.filterable !== false,
@@ -90,22 +99,23 @@ function toTanStackColumn(column: LegacyColumn): ColumnDef<any> {
 
     if (column.Cell) {
         const cellRenderer = column.Cell;
-        tanstackColumn.cell = ctx => cellRenderer({
-            value: ctx.getValue(),
-            original: ctx.row.original,
-            index: ctx.row.index,
-        });
+        tanstackColumn.cell = (ctx) =>
+            cellRenderer({
+                value: ctx.getValue(),
+                original: ctx.row.original,
+                index: ctx.row.index,
+            });
     } else {
         // Without an explicit `cell`, TanStack's own default renders `${renderValue()}` -- a
         // plain string template. Harmless for a primitive accessor result, but a v6 `accessor`
         // returning JSX directly (legal there, and used by a couple of real columns) would get
         // silently coerced to the literal string "[object Object]" instead of rendered. Always
         // render the accessed value as a node instead of leaving that default in place.
-        tanstackColumn.cell = ctx => ctx.getValue() as React.ReactNode;
+        tanstackColumn.cell = (ctx) => ctx.getValue() as React.ReactNode;
     }
 
     if (column.width || column.Filter) {
-        tanstackColumn.meta = {width: column.width, Filter: column.Filter};
+        tanstackColumn.meta = { width: column.width, Filter: column.Filter };
     }
 
     return tanstackColumn as ColumnDef<any>;
@@ -119,8 +129,8 @@ function buildExpanderColumn(): ColumnDef<any> {
         header: () => null,
         enableSorting: false,
         enableColumnFilter: false,
-        meta: {width: 32},
-        cell: ({row}) => (
+        meta: { width: 32 },
+        cell: ({ row }) => (
             <button
                 type="button"
                 className="btn btn-link btn-sm p-0"
@@ -139,14 +149,6 @@ export interface FetchDataFilter {
     filtered: ColumnFiltersState;
 }
 
-// Resolves a TanStack `Updater<T>` (either a plain value or a `(old: T) => T` functional update,
-// same convention as `useState`'s setter) against the value currently held -- needed because
-// `useControllableState` below has to support the same calling convention TanStack itself uses
-// internally (`table.setPageSize()`, a sort-header click, etc. all call `onXChange` this way).
-function resolveUpdater<T>(updater: Updater<T>, current: T): T {
-    return typeof updater === "function" ? (updater as (old: T) => T)(current) : updater;
-}
-
 // Standard "controlled if a value prop is passed, otherwise uncontrolled" pattern. Batches 1-2's
 // callers (and this batch's simpler ones) never pass `controlled`/`onChange`, so they get plain
 // internal state, unchanged. Batch 3's more complex tables (DuePaymentList, PaymentList,
@@ -156,13 +158,13 @@ function resolveUpdater<T>(updater: Updater<T>, current: T): T {
 function useControllableState<T>(
     controlled: T | undefined,
     onChange: ((value: T) => void) | undefined,
-    initial: T,
+    initial: T
 ): [T, (updater: Updater<T>) => void] {
     const [internal, setInternal] = useState<T>(initial);
     const isControlled = controlled !== undefined;
     const value = isControlled ? controlled : internal;
     const setValue = (updater: Updater<T>) => {
-        const resolved = resolveUpdater(updater, value);
+        const resolved = functionalUpdate(updater, value);
         if (onChange) onChange(resolved);
         if (!isControlled) setInternal(resolved);
     };
@@ -190,15 +192,20 @@ interface TanStackGridProps {
      */
     onFetchData?: (filter: FetchDataFilter) => void;
     /** Uncontrolled mode only: initial sort state, e.g. [{id: "name", desc: true}]. */
-    defaultSorted?: {id: string; desc?: boolean}[];
+    defaultSorted?: { id: string; desc?: boolean }[];
     /** Uncontrolled mode only: initial column-filter state, e.g. [{id: "role", value: "student"}]. */
     defaultFiltered?: ColumnFiltersState;
     /** Pad the tbody with blank rows until it reaches this many, matching v6's `minRows`. */
     minRows?: number;
     /** When set, renders an expander column; expanding a row shows this under it (v6's `SubComponent`). */
-    renderSubComponent?: (row: {original: any; index: number}) => React.ReactNode;
+    renderSubComponent?: (row: {
+        original: any;
+        index: number;
+    }) => React.ReactNode;
     /** Per-row `<tr>` props (e.g. conditional styling), keyed off the row's data -- v6's `getTrProps`. */
-    getRowProps?: (original: any) => React.HTMLAttributes<HTMLTableRowElement> | undefined;
+    getRowProps?: (
+        original: any
+    ) => React.HTMLAttributes<HTMLTableRowElement> | undefined;
     /** Renders a page-size `<select>` in the footer when set. */
     pageSizeOptions?: number[];
     /** Extra inline style merged onto the root div (e.g. a background color). */
@@ -242,30 +249,44 @@ export default function TanStackGrid({
     columnFilters: controlledColumnFilters,
     onColumnFiltersChange,
 }: TanStackGridProps) {
-    const {t} = useTranslation("common");
+    const { t } = useTranslation("common");
 
     const [sorting, setSorting] = useControllableState<SortingState>(
         controlledSorting,
         onSortingChange,
-        (defaultSorted || []).map(s => ({id: s.id, desc: !!s.desc})),
+        (defaultSorted || []).map((s) => ({ id: s.id, desc: !!s.desc }))
     );
-    const [columnFilters, setColumnFilters] = useControllableState<ColumnFiltersState>(
-        controlledColumnFilters, onColumnFiltersChange, defaultFiltered || [],
-    );
+    const [columnFilters, setColumnFilters] =
+        useControllableState<ColumnFiltersState>(
+            controlledColumnFilters,
+            onColumnFiltersChange,
+            defaultFiltered || []
+        );
     const [pagination, setPagination] = useControllableState<PaginationState>(
-        controlledPagination, onPaginationChange, {pageIndex: 0, pageSize: 20},
+        controlledPagination,
+        onPaginationChange,
+        { pageIndex: 0, pageSize: 20 }
     );
     const [expanded, setExpanded] = useState<ExpandedState>({});
 
+    const hasExpander = !!renderSubComponent;
     const tanstackColumns = useMemo(() => {
         const mapped = columns.map(toTanStackColumn);
-        return renderSubComponent ? [buildExpanderColumn(), ...mapped] : mapped;
-    }, [columns, renderSubComponent]);
+        return hasExpander ? [buildExpanderColumn(), ...mapped] : mapped;
+        // `renderSubComponent` itself isn't a dep: callers may pass a fresh inline arrow every
+        // render (LessonList/DuePaymentList/PaymentList all do), which would defeat this memo on
+        // every unrelated re-render even though the columns never actually change -- only whether
+        // the expander column should exist at all does.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [columns, hasExpander]);
 
     const table = useReactTable({
-        data,
+        // TanStack throws inside its own row-model code on `data === undefined` (v6 tolerated
+        // it); every real caller already guards its own fetched data, but default defensively
+        // here too so that invariant can't be silently reintroduced by a future caller.
+        data: data ?? [],
         columns: tanstackColumns,
-        state: {sorting, columnFilters, pagination, expanded},
+        state: { sorting, columnFilters, pagination, expanded },
         onSortingChange: setSorting,
         onColumnFiltersChange: setColumnFilters,
         onPaginationChange: setPagination,
@@ -275,12 +296,18 @@ export default function TanStackGrid({
         manualFiltering: true,
         pageCount: pages ?? -1,
         getCoreRowModel: coreRowModel,
-        getExpandedRowModel: expandedRowModel,
         // Rows here are flat records with no real `subRows` -- expansion is used purely as a
         // "toggle to reveal renderSubComponent's extra content" mechanism (v6's SubComponent),
         // not real row hierarchy. TanStack's default getRowCanExpand only allows expanding rows
         // that already have subRows, which makes the toggle handler a silent no-op otherwise.
-        getRowCanExpand: () => true,
+        // Both scoped to tables that actually have an expander column -- inert but pointless
+        // (and a small amount of avoidable per-render work) on every other table otherwise.
+        ...(hasExpander
+            ? {
+                  getExpandedRowModel: expandedRowModel,
+                  getRowCanExpand: () => true,
+              }
+            : {}),
     });
 
     // TanStack's own getCoreRowModel() memoization (keyed on table.options.data) doesn't reliably
@@ -302,7 +329,7 @@ export default function TanStackGrid({
     // `dataService`/`columns` identity in those callers (build once, not on every render) so this
     // grid isn't re-rendered nearly as often in the first place -- flagged as its own follow-up
     // (see docs/Modernization-Roadmap.md item 13), out of scope here.
-    delete (table as {_getCoreRowModel?: unknown})._getCoreRowModel;
+    delete (table as { _getCoreRowModel?: unknown })._getCoreRowModel;
 
     useEffect(() => {
         // Controlled mode: the caller owns pagination/sorting/filtering state itself and fetches
@@ -327,130 +354,225 @@ export default function TanStackGrid({
 
     useEffect(() => {
         const handleFullScreenChange = () =>
-            setIsFullScreen(fscreen.fullscreenElement === fullScreenRef.current);
+            setIsFullScreen(
+                fscreen.fullscreenElement === fullScreenRef.current
+            );
         const handleToggle = () => {
             if (fscreen.fullscreenElement) {
-                fscreen.exitFullscreen().then(() => fscreen.requestFullscreen(fullScreenRef.current as Element));
+                fscreen
+                    .exitFullscreen()
+                    .then(() =>
+                        fscreen.requestFullscreen(
+                            fullScreenRef.current as Element
+                        )
+                    );
             } else if (fullScreenRef.current) {
                 fscreen.requestFullscreen(fullScreenRef.current);
             }
         };
 
-        fscreen.addEventListener("fullscreenchange", handleFullScreenChange, false);
-        window.addEventListener(`reactTableFullscreen${tableName}Change`, handleToggle, false);
+        fscreen.addEventListener(
+            "fullscreenchange",
+            handleFullScreenChange,
+            false
+        );
+        window.addEventListener(
+            `reactTableFullscreen${tableName}Change`,
+            handleToggle,
+            false
+        );
         return () => {
-            fscreen.removeEventListener("fullscreenchange", handleFullScreenChange, false);
-            window.removeEventListener(`reactTableFullscreen${tableName}Change`, handleToggle, false);
+            fscreen.removeEventListener(
+                "fullscreenchange",
+                handleFullScreenChange,
+                false
+            );
+            window.removeEventListener(
+                `reactTableFullscreen${tableName}Change`,
+                handleToggle,
+                false
+            );
         };
     }, [tableName]);
 
     const columnCount = tanstackColumns.length || 1;
     const headers = table.getHeaderGroups()[0].headers;
     const rows = table.getRowModel().rows;
-    const paddingRowCount = !loading && minRows ? Math.max(minRows - rows.length, 0) : 0;
+    const paddingRowCount =
+        !loading && minRows ? Math.max(minRows - rows.length, 0) : 0;
 
     return (
         <div
             ref={fullScreenRef}
             data-testid={tableName}
-            className={isFullScreen ? "fullscreen fullscreen-enabled" : undefined}
-            style={isFullScreen ? {...style, height: "100%", width: "100%"} : style}
+            className={
+                isFullScreen ? "fullscreen fullscreen-enabled" : undefined
+            }
+            style={
+                isFullScreen
+                    ? { ...style, height: "100%", width: "100%" }
+                    : style
+            }
         >
-            <table className="table">
-                <thead>
-                <tr>
-                    {headers.map(header => (
-                        <th
-                            key={header.id}
-                            style={header.column.columnDef.meta?.width
-                                ? {width: header.column.columnDef.meta.width}
-                                : undefined}
-                            onClick={header.column.getCanSort()
-                                ? header.column.getToggleSortingHandler() ?? undefined
-                                : undefined}
-                            className={header.column.getCanSort() ? "sortable" : undefined}
-                        >
-                            {flexRender(header.column.columnDef.header, header.getContext())}
-                            {{asc: " ▲", desc: " ▼"}[header.column.getIsSorted() as string] ?? ""}
-                        </th>
-                    ))}
-                </tr>
-                <tr>
-                    {headers.map(header => {
-                        const CustomFilter = header.column.columnDef.meta?.Filter;
-                        const filterValue = header.column.getFilterValue();
-                        return (
-                            <th key={header.id}>
-                                {header.column.getCanFilter() && (
-                                    CustomFilter ? (
-                                        <CustomFilter
-                                            filter={filterValue !== undefined ? {value: filterValue} : undefined}
-                                            onChange={value => header.column.setFilterValue(value)}
-                                        />
-                                    ) : (
-                                        <input
-                                            type="text"
-                                            className="form-control form-control-sm"
-                                            value={(filterValue as string) ?? ""}
-                                            onChange={e => header.column.setFilterValue(e.target.value)}
-                                        />
+            <div style={{ overflowX: "auto" }}>
+                <table className="table">
+                    <thead>
+                        <tr>
+                            {headers.map((header) => (
+                                <th
+                                    key={header.id}
+                                    style={
+                                        header.column.columnDef.meta?.width
+                                            ? {
+                                                  width: header.column.columnDef
+                                                      .meta.width,
+                                              }
+                                            : undefined
+                                    }
+                                    onClick={
+                                        header.column.getCanSort()
+                                            ? (header.column.getToggleSortingHandler() ??
+                                              undefined)
+                                            : undefined
+                                    }
+                                    className={
+                                        header.column.getCanSort()
+                                            ? "sortable"
+                                            : undefined
+                                    }
+                                >
+                                    {flexRender(
+                                        header.column.columnDef.header,
+                                        header.getContext()
+                                    )}
+                                    {{ asc: " ▲", desc: " ▼" }[
+                                        header.column.getIsSorted() as string
+                                    ] ?? ""}
+                                </th>
+                            ))}
+                        </tr>
+                        <tr>
+                            {headers.map((header) => {
+                                const CustomFilter =
+                                    header.column.columnDef.meta?.Filter;
+                                const filterValue =
+                                    header.column.getFilterValue();
+                                return (
+                                    <th key={header.id}>
+                                        {header.column.getCanFilter() &&
+                                            (CustomFilter ? (
+                                                <CustomFilter
+                                                    filter={
+                                                        filterValue !==
+                                                        undefined
+                                                            ? {
+                                                                  value: filterValue,
+                                                              }
+                                                            : undefined
+                                                    }
+                                                    onChange={(value) =>
+                                                        header.column.setFilterValue(
+                                                            value
+                                                        )
+                                                    }
+                                                />
+                                            ) : (
+                                                <input
+                                                    type="text"
+                                                    className="form-control form-control-sm"
+                                                    value={
+                                                        (filterValue as string) ??
+                                                        ""
+                                                    }
+                                                    onChange={(e) =>
+                                                        header.column.setFilterValue(
+                                                            e.target.value
+                                                        )
+                                                    }
+                                                />
+                                            ))}
+                                    </th>
+                                );
+                            })}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {loading ? (
+                            <tr>
+                                <td
+                                    colSpan={columnCount}
+                                    className="text-center py-5"
+                                >
+                                    <div
+                                        className="tsg-spinner"
+                                        role="status"
+                                        aria-label={t("reactTable.loadingText")}
+                                    />
+                                </td>
+                            </tr>
+                        ) : rows.length === 0 ? (
+                            <tr>
+                                <td colSpan={columnCount}>
+                                    {errorMessage || t("reactTable.noDataText")}
+                                </td>
+                            </tr>
+                        ) : (
+                            <>
+                                {rows.map((row) => (
+                                    <React.Fragment key={row.id}>
+                                        <tr
+                                            {...(getRowProps
+                                                ? getRowProps(row.original)
+                                                : undefined)}
+                                        >
+                                            {row
+                                                .getVisibleCells()
+                                                .map((cell) => (
+                                                    <td key={cell.id}>
+                                                        {flexRender(
+                                                            cell.column
+                                                                .columnDef.cell,
+                                                            cell.getContext()
+                                                        )}
+                                                    </td>
+                                                ))}
+                                        </tr>
+                                        {renderSubComponent &&
+                                            row.getIsExpanded() && (
+                                                <tr>
+                                                    <td colSpan={columnCount}>
+                                                        {renderSubComponent({
+                                                            original:
+                                                                row.original,
+                                                            index: row.index,
+                                                        })}
+                                                    </td>
+                                                </tr>
+                                            )}
+                                    </React.Fragment>
+                                ))}
+                                {Array.from({ length: paddingRowCount }).map(
+                                    (_, i) => (
+                                        <tr key={`pad-${i}`}>
+                                            {Array.from({
+                                                length: columnCount,
+                                            }).map((__, j) => (
+                                                <td key={j}>&nbsp;</td>
+                                            ))}
+                                        </tr>
                                     )
                                 )}
-                            </th>
-                        );
-                    })}
-                </tr>
-                </thead>
-                <tbody>
-                {loading ? (
-                    <tr>
-                        <td colSpan={columnCount} className="text-center py-5">
-                            <div className="spinner-border text-primary" role="status">
-                                <span className="sr-only">{t("reactTable.loadingText")}</span>
-                            </div>
-                        </td>
-                    </tr>
-                ) : rows.length === 0 ? (
-                    <tr>
-                        <td colSpan={columnCount}>
-                            {errorMessage || t("reactTable.noDataText")}
-                        </td>
-                    </tr>
-                ) : (
-                    <>
-                        {rows.map(row => (
-                            <React.Fragment key={row.id}>
-                                <tr {...(getRowProps ? getRowProps(row.original) : undefined)}>
-                                    {row.getVisibleCells().map(cell => (
-                                        <td key={cell.id}>
-                                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                                        </td>
-                                    ))}
-                                </tr>
-                                {renderSubComponent && row.getIsExpanded() && (
-                                    <tr>
-                                        <td colSpan={columnCount}>
-                                            {renderSubComponent({original: row.original, index: row.index})}
-                                        </td>
-                                    </tr>
-                                )}
-                            </React.Fragment>
-                        ))}
-                        {Array.from({length: paddingRowCount}).map((_, i) => (
-                            <tr key={`pad-${i}`}>
-                                {Array.from({length: columnCount}).map((__, j) => <td key={j}>&nbsp;</td>)}
-                            </tr>
-                        ))}
-                    </>
-                )}
-                </tbody>
-            </table>
+                            </>
+                        )}
+                    </tbody>
+                </table>
+            </div>
 
             <div className="d-flex justify-content-between align-items-center">
                 <div>
                     <button
                         type="button"
-                        className="btn btn-sm btn-outline-secondary mr-1"
+                        className="btn btn-sm btn-default mr-1"
                         disabled={!table.getCanPreviousPage()}
                         onClick={() => table.previousPage()}
                     >
@@ -458,7 +580,7 @@ export default function TanStackGrid({
                     </button>
                     <button
                         type="button"
-                        className="btn btn-sm btn-outline-secondary"
+                        className="btn btn-sm btn-default"
                         disabled={!table.getCanNextPage()}
                         onClick={() => table.nextPage()}
                     >
@@ -466,21 +588,28 @@ export default function TanStackGrid({
                     </button>
                     {pageSizeOptions && (
                         <select
-                            className="form-control form-control-sm d-inline-block w-auto ml-2"
+                            className="form-control form-control-sm d-inline-block ml-2"
+                            style={{ width: "auto" }}
                             value={pagination.pageSize}
-                            onChange={e => table.setPageSize(Number(e.target.value))}
+                            onChange={(e) =>
+                                table.setPageSize(Number(e.target.value))
+                            }
                         >
-                            {pageSizeOptions.map(size => (
-                                <option key={size} value={size}>{size}</option>
+                            {pageSizeOptions.map((size) => (
+                                <option key={size} value={size}>
+                                    {size}
+                                </option>
                             ))}
                         </select>
                     )}
                 </div>
                 <div>
-                    {t("reactTable.pageText")} {pagination.pageIndex + 1} {t("reactTable.ofText")}{" "}
-                    {Math.max(pages || 1, 1)}
+                    {t("reactTable.pageText")} {pagination.pageIndex + 1}{" "}
+                    {t("reactTable.ofText")} {Math.max(pages || 1, 1)}
                 </div>
-                <div>{t("baseDataTable.resultsCount", {count: data.length})}</div>
+                <div>
+                    {t("baseDataTable.resultsCount", { count: data.length })}
+                </div>
             </div>
         </div>
     );
