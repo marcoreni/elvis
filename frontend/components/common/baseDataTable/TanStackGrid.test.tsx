@@ -349,6 +349,163 @@ describe("TanStackGrid — client-side mode (manual=false)", () => {
     });
 });
 
+// Batch 4b (docs/Modernization-Roadmap.md item 13): three new props added to support the
+// standard-tables migration -- `showPagination` (hide the footer entirely), `filterable` /
+// `sortable` (table-wide overrides forcing every column's filter/sort UI off at once), and
+// `noDataText` (override the generic translated empty-state string).
+describe("TanStackGrid — showPagination", () => {
+    const columns: LegacyColumn[] = [
+        { id: "label", Header: "Label", accessor: "label" },
+    ];
+
+    test("defaults to true: the pagination footer (prev/next + page count + results count) renders", () => {
+        render(
+            <TanStackGrid
+                tableName="table-pagination-default"
+                columns={columns}
+                data={[{ id: 1, label: "Zephyr" }]}
+                loading={false}
+                pages={1}
+                onFetchData={noop}
+            />
+        );
+
+        expect(
+            screen.getByRole("button", { name: "Précédent" })
+        ).toBeInTheDocument();
+        expect(screen.getByText("Page 1 sur 1")).toBeInTheDocument();
+        expect(screen.getByText("1 résultat")).toBeInTheDocument();
+    });
+
+    test("showPagination={false} hides the footer entirely", () => {
+        render(
+            <TanStackGrid
+                tableName="table-pagination-hidden"
+                columns={columns}
+                data={[{ id: 1, label: "Zephyr" }]}
+                loading={false}
+                pages={1}
+                onFetchData={noop}
+                showPagination={false}
+            />
+        );
+
+        expect(
+            screen.queryByRole("button", { name: "Précédent" })
+        ).not.toBeInTheDocument();
+        expect(screen.queryByText(/Page 1/)).not.toBeInTheDocument();
+        expect(screen.queryByText(/résultat/)).not.toBeInTheDocument();
+    });
+});
+
+describe("TanStackGrid — table-wide filterable/sortable overrides", () => {
+    // Column itself asks for both -- the table-wide prop must win regardless.
+    const columns: LegacyColumn[] = [
+        {
+            id: "label",
+            Header: "Label",
+            accessor: "label",
+            sortable: true,
+            filterable: true,
+        },
+    ];
+
+    test("filterable={false} removes the filter row for every column, even one with filterable: true", () => {
+        render(
+            <TanStackGrid
+                tableName="table-not-filterable"
+                columns={columns}
+                data={[{ id: 1, label: "Zephyr" }]}
+                loading={false}
+                pages={1}
+                onFetchData={noop}
+                filterable={false}
+            />
+        );
+
+        expect(screen.queryByRole("textbox")).not.toBeInTheDocument();
+    });
+
+    test("sortable={false} removes the sortable header class/click-handler for every column, even one with sortable: true", () => {
+        render(
+            <TanStackGrid
+                tableName="table-not-sortable"
+                columns={columns}
+                data={[{ id: 1, label: "Zephyr" }]}
+                loading={false}
+                pages={1}
+                onFetchData={noop}
+                sortable={false}
+            />
+        );
+
+        expect(screen.getByText("Label").closest("th")).not.toHaveClass(
+            "sortable"
+        );
+    });
+
+    test("defaults (omitted): filter row and sortable header both still render", () => {
+        render(
+            <TanStackGrid
+                tableName="table-filter-sort-default"
+                columns={columns}
+                data={[{ id: 1, label: "Zephyr" }]}
+                loading={false}
+                pages={1}
+                onFetchData={noop}
+            />
+        );
+
+        expect(screen.getByRole("textbox")).toBeInTheDocument();
+        expect(screen.getByText("Label").closest("th")).toHaveClass(
+            "sortable"
+        );
+    });
+});
+
+describe("TanStackGrid — noDataText", () => {
+    const columns: LegacyColumn[] = [
+        { id: "label", Header: "Label", accessor: "label" },
+    ];
+
+    test("overrides the generic translated empty-state string when set", () => {
+        render(
+            <TanStackGrid
+                tableName="table-nodatatext"
+                columns={columns}
+                data={[]}
+                loading={false}
+                pages={1}
+                onFetchData={noop}
+                noDataText="Rien à afficher ici"
+            />
+        );
+
+        expect(screen.getByText("Rien à afficher ici")).toBeInTheDocument();
+        expect(screen.queryByText("Aucune donnée")).not.toBeInTheDocument();
+    });
+
+    test("errorMessage still wins over noDataText when both are set", () => {
+        render(
+            <TanStackGrid
+                tableName="table-nodatatext-errormessage"
+                columns={columns}
+                data={[]}
+                loading={false}
+                pages={1}
+                onFetchData={noop}
+                noDataText="Rien à afficher ici"
+                errorMessage="Boom"
+            />
+        );
+
+        expect(screen.getByText("Boom")).toBeInTheDocument();
+        expect(
+            screen.queryByText("Rien à afficher ici")
+        ).not.toBeInTheDocument();
+    });
+});
+
 describe("TanStackGrid — sorting never clears entirely (enableSortingRemoval: false)", () => {
     test("a third click on a sortable header keeps sorting non-empty instead of cycling to []", async () => {
         const columns: LegacyColumn[] = [

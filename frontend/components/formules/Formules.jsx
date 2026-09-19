@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import ReactTable from "react-table";
+import TanStackGrid from "../common/baseDataTable/TanStackGrid";
 import { useTranslation } from "react-i18next";
 import * as api from "../../tools/api";
 import swal from "sweetalert2";
@@ -10,6 +10,12 @@ export default function Formules() {
     const [data, setData] = useState([]);
     const [pages, setPages] = useState(0);
     const [loading, setLoading] = useState(false);
+    // Controlled, rather than TanStackGrid's own uncontrolled default (pageSize 20), so the
+    // initial page size matches v6's old `defaultPageSize={10}`.
+    const [pagination, setPagination] = useState({
+        pageIndex: 0,
+        pageSize: 10,
+    });
 
     function deleteFormule(formule) {
         swal.fire({
@@ -24,15 +30,10 @@ export default function Formules() {
                     await api
                         .set()
                         .success((res) => {
-                            fetchData(
-                                {
-                                    page: 0,
-                                    pageSize: 10,
-                                    sorted: [],
-                                    filtered: {},
-                                },
-                                null
-                            );
+                            // Resetting the (controlled) pagination back to page 1 triggers
+                            // TanStackGrid's own onFetchData effect, which re-fetches -- no
+                            // need to call fetchData directly here too.
+                            setPagination({ pageIndex: 0, pageSize: 10 });
                             swal.fire({
                                 title: t("list.delete.successTitle"),
                                 text: t("list.delete.successText"),
@@ -64,10 +65,10 @@ export default function Formules() {
         const isArchived = formule["archived?"];
         api.set()
             .success(() => {
-                fetchData(
-                    { page: 0, pageSize: 10, sorted: [], filtered: {} },
-                    null
-                );
+                // Resetting the (controlled) pagination back to page 1 triggers TanStackGrid's
+                // own onFetchData effect, which re-fetches -- no need to call fetchData
+                // directly here too.
+                setPagination({ pageIndex: 0, pageSize: 10 });
                 swal.fire({
                     title: isArchived
                         ? t("list.archive.unarchivedTitle")
@@ -174,12 +175,11 @@ export default function Formules() {
                     );
                 },
                 sortable: false,
-                filterable: false,
             },
         ];
     }
 
-    async function fetchData(state, instance) {
+    async function fetchData(state) {
         setLoading(true);
         try {
             await api
@@ -226,22 +226,16 @@ export default function Formules() {
 
             <div className="ibox mt-5">
                 <div className="ibox-content p-5">
-                    <ReactTable
+                    <TanStackGrid
+                        tableName="formules"
                         columns={columns()}
                         data={data}
                         pages={pages}
                         loading={loading}
                         onFetchData={fetchData}
-                        manual
-                        className="-striped -highlight"
-                        defaultPageSize={10}
-                        previousText={t("common:reactTable.previousText")}
-                        nextText={t("common:reactTable.nextText")}
-                        loadingText={t("common:reactTable.loadingText")}
-                        noDataText={t("common:reactTable.noDataText")}
-                        pageText={t("common:reactTable.pageText")}
-                        ofText={t("common:reactTable.ofText")}
-                        rowsText={t("common:reactTable.rowsText")}
+                        pagination={pagination}
+                        onPaginationChange={setPagination}
+                        filterable={false}
                     />
                 </div>
             </div>

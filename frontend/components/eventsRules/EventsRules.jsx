@@ -3,7 +3,7 @@ import _ from "lodash";
 import { withTranslation } from "react-i18next";
 import Select from "react-select";
 import makeAnimated from "react-select/animated";
-import ReactTable from "react-table";
+import TanStackGrid from "../common/baseDataTable/TanStackGrid";
 import Modal from "react-modal";
 import { Field, Form } from "react-final-form";
 import { required } from "../../tools/validators";
@@ -67,7 +67,7 @@ class EventsRules extends Component {
             .then((response) => response.json())
             .then((data) => {
                 const res = {
-                    data: data.rules,
+                    data: data.rules || [],
                     pages: data.pages,
                     total: data.total,
                 };
@@ -442,38 +442,13 @@ class EventsRules extends Component {
                 <div className="row">
                     <div className="col-12">
                         <div className="col-8 margin-auto">
-                            <ReactTable
-                                id="templateTable"
+                            <TanStackGrid
+                                tableName="events-rules-table"
                                 data={data}
-                                manual
                                 loading={loading}
                                 onFetchData={this.fetchData}
                                 columns={columns}
-                                // getTrProps={(state, rowInfo) => {
-                                //     if (rowInfo && rowInfo.row) {
-                                //         return {
-                                //             onClick: (e) => {
-                                //                 this.setState({
-                                //                     selected: rowInfo.original.id,
-                                //                     isModifyRuleModalOpen : true
-                                //                 })
-                                //             },
-                                //         }
-                                //     } else {
-                                //         return {}
-                                //     }
-                                // }}
-                                resizable={false}
                                 showPagination={false}
-                                previousText={t(
-                                    "common:reactTable.previousText"
-                                )}
-                                nextText={t("common:reactTable.nextText")}
-                                loadingText={t("common:reactTable.loadingText")}
-                                noDataText={t("common:reactTable.noDataText")}
-                                pageText={t("common:reactTable.pageText")}
-                                ofText={t("common:reactTable.ofText")}
-                                rowsText={t("common:reactTable.rowsText")}
                                 minRows={1}
                             />
                             <div className="pull-right mt-3">

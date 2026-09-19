@@ -1,5 +1,5 @@
 import React, { Component, Fragment, useRef } from "react";
-import ReactTable from "react-table";
+import TanStackGrid from "../common/baseDataTable/TanStackGrid";
 import { withTranslation } from "react-i18next";
 import { csrfToken } from "../utils";
 import swal from "sweetalert2";
@@ -103,7 +103,13 @@ class TemplateIndex extends Component {
                 accessor: "name",
             },
             {
-                id: "",
+                // Was `id: ""` -- an empty string, not a real id. TanStack falls back to a
+                // string `header` when `id`/`accessorKey` are both missing/falsy, but here
+                // `accessor: "path"` already yields a real accessorKey, so `""` (not nullish)
+                // stuck as the literal column id instead of being auto-derived. Harmless in v6,
+                // which didn't key much off column id, but an empty-string id is fragile to
+                // build anything else on top of -- naming it properly instead.
+                id: "path",
                 Header: t("parameters:mailTemplates.columns.path"),
                 accessor: "path",
             },
@@ -128,7 +134,6 @@ class TemplateIndex extends Component {
                     );
                 },
                 sortable: false,
-                filterable: false,
                 width: 200,
             },
         ];
@@ -143,31 +148,17 @@ class TemplateIndex extends Component {
                     <div className="row">
                         <div className="col-12">
                             <div className="mb-3 pl-4 pr-4">
-                                <ReactTable
-                                    id="templateTable"
+                                <TanStackGrid
+                                    tableName="templateTable"
                                     data={data}
-                                    manual
                                     loading={loading}
                                     onFetchData={this.fetchData}
                                     defaultSorted={[
                                         { id: "label", desc: false },
                                     ]}
                                     columns={columns}
-                                    resizable={false}
                                     showPagination={false}
-                                    previousText={t(
-                                        "common:reactTable.previousText"
-                                    )}
-                                    nextText={t("common:reactTable.nextText")}
-                                    loadingText={t(
-                                        "common:reactTable.loadingText"
-                                    )}
-                                    noDataText={t(
-                                        "common:reactTable.noDataText"
-                                    )}
-                                    pageText={t("common:reactTable.pageText")}
-                                    ofText={t("common:reactTable.ofText")}
-                                    rowsText={t("common:reactTable.rowsText")}
+                                    filterable={false}
                                     minRows={1}
                                 />
                             </div>

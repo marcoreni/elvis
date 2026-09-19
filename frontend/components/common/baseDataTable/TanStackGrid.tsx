@@ -229,6 +229,9 @@ interface TanStackGridProps {
     totalCount?: number;
     /** Shown instead of the translated noDataText when set. */
     errorMessage?: string | null;
+    /** Overrides the default translated "no data" text (v6's own `noDataText`) when set and
+     * `errorMessage` isn't. */
+    noDataText?: string;
     /**
      * Uncontrolled mode only: called with {page, pageSize, sorted, filtered} whenever
      * pagination/sorting/filtering state changes, including once on mount. Omit this and pass
@@ -254,6 +257,19 @@ interface TanStackGridProps {
     ) => React.HTMLAttributes<HTMLTableRowElement> | undefined;
     /** Renders a page-size `<select>` in the footer when set. */
     pageSizeOptions?: number[];
+    /** Defaults to `true`. Set `false` to hide the prev/next/page-count/results-count footer
+     * entirely -- v6's `showPagination={false}`, used by a few small/unpaginated tables. */
+    showPagination?: boolean;
+    /** Defaults to `true`, matching v6's own table-level `filterable`. Set `false` to disable
+     * filtering on every column at once (overriding any column's own `filterable: true`) --
+     * for a table that never filters at all, instead of repeating `filterable: false` on every
+     * column definition. */
+    filterable?: boolean;
+    /** Defaults to `true`, matching v6's own table-level `sortable`. Set `false` to disable
+     * sorting on every column at once (overriding any column's own `sortable: true`) -- for a
+     * table that never sorts at all, instead of repeating `sortable: false` on every column
+     * definition. */
+    sortable?: boolean;
     /** Extra inline style merged onto the root div (e.g. a background color). */
     style?: React.CSSProperties;
     /** Controlled pagination -- see `onFetchData`. */
@@ -289,6 +305,7 @@ export default function TanStackGrid({
     pages,
     totalCount,
     errorMessage,
+    noDataText: noDataTextProp,
     onFetchData,
     defaultSorted,
     defaultFiltered,
@@ -296,6 +313,9 @@ export default function TanStackGrid({
     renderSubComponent,
     getRowProps,
     pageSizeOptions,
+    showPagination = true,
+    filterable: tableFilterable = true,
+    sortable: tableSortable = true,
     style,
     pagination: controlledPagination,
     onPaginationChange,
@@ -328,14 +348,27 @@ export default function TanStackGrid({
 
     const hasExpander = !!renderSubComponent;
     const tanstackColumns = useMemo(() => {
-        const mapped = columns.map(toTanStackColumn);
+        let mapped = columns.map(toTanStackColumn);
+        // Table-wide overrides, matching v6's own table-level `filterable`/`sortable` (which
+        // gated every column's filter/sort UI regardless of that column's own setting) --
+        // cheaper than requiring every column definition to repeat `filterable: false` /
+        // `sortable: false` when the whole table never filters or sorts at all.
+        if (!tableFilterable || !tableSortable) {
+            mapped = mapped.map((c) => ({
+                ...c,
+                enableColumnFilter: tableFilterable
+                    ? c.enableColumnFilter
+                    : false,
+                enableSorting: tableSortable ? c.enableSorting : false,
+            }));
+        }
         return hasExpander ? [buildExpanderColumn(), ...mapped] : mapped;
         // `renderSubComponent` itself isn't a dep: callers may pass a fresh inline arrow every
         // render (LessonList/DuePaymentList/PaymentList all do), which would defeat this memo on
         // every unrelated re-render even though the columns never actually change -- only whether
         // the expander column should exist at all does.
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [columns, hasExpander]);
+    }, [columns, hasExpander, tableFilterable, tableSortable]);
 
     // TanStack throws inside its own row-model code on `data === undefined` (v6 tolerated it);
     // every real caller already guards its own fetched data, but default defensively here too so
@@ -607,7 +640,9 @@ export default function TanStackGrid({
                         ) : rows.length === 0 ? (
                             <tr>
                                 <td colSpan={columnCount}>
-                                    {errorMessage || t("reactTable.noDataText")}
+                                    {errorMessage ||
+                                        noDataTextProp ||
+                                        t("reactTable.noDataText")}
                                 </td>
                             </tr>
                         ) : (
@@ -668,55 +703,58 @@ export default function TanStackGrid({
                 </table>
             </div>
 
-            <div className="d-flex justify-content-between align-items-center">
-                <div>
-                    <button
-                        type="button"
-                        className="btn btn-sm btn-default mr-1"
-                        disabled={!table.getCanPreviousPage()}
-                        onClick={() => table.previousPage()}
-                    >
-                        {t("reactTable.previousText")}
-                    </button>
-                    <button
-                        type="button"
-                        className="btn btn-sm btn-default"
-                        disabled={!table.getCanNextPage()}
-                        onClick={() => table.nextPage()}
-                    >
-                        {t("reactTable.nextText")}
-                    </button>
-                    {pageSizeOptions && (
-                        <select
-                            className="form-control form-control-small d-inline-block ml-2"
-                            style={{ width: "auto" }}
-                            value={pagination.pageSize}
-                            onChange={(e) =>
-                                table.setPageSize(Number(e.target.value))
-                            }
+            {showPagination && (
+                <div className="d-flex justify-content-between align-items-center">
+                    <div>
+                        <button
+                            type="button"
+                            className="btn btn-sm btn-default mr-1"
+                            disabled={!table.getCanPreviousPage()}
+                            onClick={() => table.previousPage()}
                         >
-                            {pageSizeOptions.map((size) => (
-                                <option key={size} value={size}>
-                                    {size}
-                                </option>
-                            ))}
-                        </select>
-                    )}
+                            {t("reactTable.previousText")}
+                        </button>
+                        <button
+                            type="button"
+                            className="btn btn-sm btn-default"
+                            disabled={!table.getCanNextPage()}
+                            onClick={() => table.nextPage()}
+                        >
+                            {t("reactTable.nextText")}
+                        </button>
+                        {pageSizeOptions && (
+                            <select
+                                className="form-control form-control-small d-inline-block ml-2"
+                                style={{ width: "auto" }}
+                                value={pagination.pageSize}
+                                onChange={(e) =>
+                                    table.setPageSize(Number(e.target.value))
+                                }
+                            >
+                                {pageSizeOptions.map((size) => (
+                                    <option key={size} value={size}>
+                                        {size}
+                                    </option>
+                                ))}
+                            </select>
+                        )}
+                    </div>
+                    <div>
+                        {t("reactTable.pageText")} {pagination.pageIndex + 1}{" "}
+                        {t("reactTable.ofText")}{" "}
+                        {Math.max(table.getPageCount(), 1)}
+                    </div>
+                    <div>
+                        {t("baseDataTable.resultsCount", {
+                            count:
+                                totalCount ??
+                                (manual
+                                    ? safeData.length
+                                    : table.getFilteredRowModel().rows.length),
+                        })}
+                    </div>
                 </div>
-                <div>
-                    {t("reactTable.pageText")} {pagination.pageIndex + 1}{" "}
-                    {t("reactTable.ofText")} {Math.max(table.getPageCount(), 1)}
-                </div>
-                <div>
-                    {t("baseDataTable.resultsCount", {
-                        count:
-                            totalCount ??
-                            (manual
-                                ? safeData.length
-                                : table.getFilteredRowModel().rows.length),
-                    })}
-                </div>
-            </div>
+            )}
         </div>
     );
 }

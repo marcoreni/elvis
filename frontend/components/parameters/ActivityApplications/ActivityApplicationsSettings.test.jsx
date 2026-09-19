@@ -71,27 +71,17 @@ vi.mock("sweetalert2", () => ({
     default: { fire: vi.fn(() => Promise.resolve({})) },
 }));
 
-// --- react-table stub: surface every column's string `Header` in order, and render every
-//     column's `Cell` once against `globalThis.__rtRow` so Cell-internal i18n (Oui/Non) is
-//     reachable without real table data. --------------------------------------------------------
-vi.mock("react-table", () => ({
-    default: ({ columns = [] }) => (
-        <div data-testid="react-table">
-            {columns.map((col, i) => (
-                <span key={i} data-testid="col-header">
-                    {typeof col.Header === "string" ? col.Header : ""}
-                </span>
-            ))}
-            {columns.map((col, i) =>
-                col.Cell ? (
-                    <span key={`cell-${i}`} data-testid="col-cell">
-                        {col.Cell({ original: globalThis.__rtRow || {} })}
-                    </span>
-                ) : null
-            )}
-        </div>
-    ),
-}));
+// ApplicationStatusTable no longer imports "react-table" -- it renders a real TanStack Table v8
+// grid (TanStackGrid, see docs/Modernization-Roadmap.md item 13 batch 4b), which fires its own
+// mount-time `onFetchData` -> real `fetch`. Column headers/cells are asserted against the real
+// rendered <table> instead of a stub; `global.fetch` below (set per-test/beforeEach) keeps that
+// mount fetch from rejecting unhandled. `__rtRow` is no longer used -- boolean-cell i18n is now
+// exercised by rendering one real data row instead of hand-invoking a stubbed `Cell` fn.
+function getRenderedHeaders(container) {
+    return [...container.querySelectorAll("thead tr:first-child th")].map(
+        (th) => th.textContent.replace(/ [▲▼]$/, "")
+    );
+}
 
 // --- react-modal: render children unconditionally; expose setAppElement (ConsentDocumentsList) --
 vi.mock("react-modal", () => ({
@@ -185,7 +175,6 @@ beforeEach(() => {
     swal.fire.mockImplementation(() => Promise.resolve({}));
     apiState.lastSuccess = null;
     apiState.lastError = null;
-    globalThis.__rtRow = {};
     global.fetch = vi.fn().mockResolvedValue({
         ok: true,
         status: 200,
@@ -197,7 +186,6 @@ beforeEach(() => {
 afterEach(async () => {
     await i18n.changeLanguage("fr");
     vi.clearAllMocks();
-    delete globalThis.__rtRow;
 });
 
 // ============================================================================================
@@ -652,28 +640,46 @@ describe("ApplicationStatusTable", () => {
         "renders the translated column headers in %s",
         async (lng) => {
             await i18n.changeLanguage(lng);
-            render(<ApplicationStatusTable />);
+            const { container } = render(<ApplicationStatusTable />);
 
-            const got = screen
-                .getAllByTestId("col-header")
-                .map((el) => el.textContent)
-                .filter(Boolean);
-            expect(got).toEqual(HEADERS[lng]);
+            expect(getRenderedHeaders(container)).toEqual(HEADERS[lng]);
         }
     );
 
+    // Renders a real data row (instead of hand-invoking a stubbed Cell fn) so the boolean Cells'
+    // internal i18n (Oui/Non) is exercised through the real mounted TanStackGrid. fetchData
+    // debounces its request by 400ms (ApplicationStatusTable's own debounce, unrelated to the
+    // TanStack migration) before firing `fetch`.
     test.each(["fr", "en"])(
         "boolean Cells render shared.yes / shared.no in %s",
         async (lng) => {
             await i18n.changeLanguage(lng);
-            globalThis.__rtRow = { is_stopping: true, is_active: false };
+            global.fetch = vi.fn().mockResolvedValue({
+                ok: true,
+                status: 200,
+                json: () =>
+                    Promise.resolve({
+                        status: [
+                            {
+                                id: 1,
+                                label: "S",
+                                is_stopping: true,
+                                is_active: false,
+                            },
+                        ],
+                        pages: 1,
+                        total: 1,
+                    }),
+                text: () => Promise.resolve(""),
+            });
             render(<ApplicationStatusTable />);
 
-            const cellText = screen
-                .getAllByTestId("col-cell")
-                .map((el) => el.textContent);
-            expect(cellText).toContain(tP(lng)("shared.yes"));
-            expect(cellText).toContain(tP(lng)("shared.no"));
+            await new Promise((r) => setTimeout(r, 450));
+
+            expect(
+                await screen.findByText(tP(lng)("shared.yes"))
+            ).toBeInTheDocument();
+            expect(screen.getByText(tP(lng)("shared.no"))).toBeInTheDocument();
         }
     );
 

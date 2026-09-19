@@ -5,8 +5,7 @@ import { withTranslation } from "react-i18next";
 
 import moment from "moment";
 
-import ReactTable from "react-table";
-import Select from "react-select";
+import TanStackGrid from "../common/baseDataTable/TanStackGrid";
 import MessageModal from "./MessageModal";
 import { csrfToken } from "../utils";
 
@@ -28,13 +27,21 @@ const requestData = (pageSize, page, sorted, filtered) => {
             filtered,
         }),
     })
-        .catch((reason) => alert(reason))
         .then((response) => response.json())
         .then((data) => ({
-            data: data.users,
+            data: data.users || [],
             pages: data.pages,
             total: data.total,
-        }));
+        }))
+        .catch((reason) => {
+            // Was a `.catch` placed *before* the `.then(json)`/`.then(shape)` steps, which only
+            // catches a network-level fetch rejection -- a bare `alert()` there swallows it and
+            // lets the chain fall through to `.then((response) => response.json())` on
+            // `undefined` (alert's return value), throwing "Cannot read properties of undefined"
+            // uncaught. Moved to the end so it actually catches every failure in the chain.
+            console.error(reason);
+            alert(reason);
+        });
 };
 
 class DuePaymentList extends React.Component {
@@ -58,6 +65,9 @@ class DuePaymentList extends React.Component {
             page: 0,
             loading: true,
             total: 0,
+            // Controlled, rather than TanStackGrid's own uncontrolled default (pageSize 20), so
+            // the initial page size matches v6's old `defaultPageSize={14}`.
+            pagination: { pageIndex: 0, pageSize: 14 },
         };
     }
 
@@ -437,30 +447,35 @@ class DuePaymentList extends React.Component {
                 </div>
                 {this.state.targets.length ? this.targetsAlert() : null}
                 <div className="ibox-content no-padding">
-                    <ReactTable
+                    <TanStackGrid
+                        tableName="payment-schedule-list"
                         data={this.state.data}
-                        manual
                         pages={this.state.pages}
+                        totalCount={this.state.total}
                         loading={this.state.loading}
                         onFetchData={(filter) => this.fetchData(filter)}
                         columns={columns}
                         pageSizeOptions={[10, 14, 20, 30, 50]}
-                        defaultPageSize={14}
+                        pagination={this.state.pagination}
+                        onPaginationChange={(pagination) =>
+                            this.setState({ pagination })
+                        }
+                        // Observer only (no `columnFilters` prop passed) -- filtering itself
+                        // stays uncontrolled/internal, this only mirrors v6's own behavior of
+                        // resetting to page 1 whenever a filter changes. TanStackGrid's built-in
+                        // auto-reset-on-filter-change is skipped once `pagination` is controlled
+                        // (see its own comment), so it has to be done here instead.
+                        onColumnFiltersChange={() =>
+                            this.setState((s) => ({
+                                pagination: { ...s.pagination, pageIndex: 0 },
+                            }))
+                        }
                         defaultFiltered={[
                             {
                                 id: "season",
                                 value: currentSeason && currentSeason.id,
                             },
                         ]}
-                        filterable
-                        resizable={false}
-                        previousText={t("common:reactTable.previousText")}
-                        nextText={t("common:reactTable.nextText")}
-                        loadingText={t("common:reactTable.loadingText")}
-                        noDataText={t("common:reactTable.noDataText")}
-                        pageText={t("common:reactTable.pageText")}
-                        ofText={t("common:reactTable.ofText")}
-                        rowsText={t("common:reactTable.rowsText")}
                         minRows={1}
                     />
                 </div>

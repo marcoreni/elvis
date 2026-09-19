@@ -4,7 +4,7 @@ import _ from "lodash";
 
 import moment from "moment";
 
-import ReactTable from "react-table";
+import TanStackGrid from "./common/baseDataTable/TanStackGrid";
 import swal from "sweetalert2";
 import { csrfToken } from "./utils";
 
@@ -27,7 +27,7 @@ const requestData = (pageSize, page, sorted, filtered) => {
         .then((response) => response.json())
         .then((data) => {
             const res = {
-                data: data.adhesions,
+                data: data.adhesions || [],
                 pages: data.pages,
                 total: data.total,
             };
@@ -305,23 +305,15 @@ class AdhesionList extends React.Component {
 
         return (
             <div>
-                <ReactTable
+                <TanStackGrid
+                    tableName="adhesion-list"
                     data={data}
-                    manual
                     pages={pages}
+                    totalCount={this.state.total}
                     loading={loading}
                     onFetchData={this.fetchData}
                     columns={columns}
                     defaultSorted={[{ id: "validity_end_date", desc: true }]}
-                    filterable
-                    resizable={false}
-                    previousText={t("common:reactTable.previousText")}
-                    nextText={t("common:reactTable.nextText")}
-                    loadingText={t("common:reactTable.loadingText")}
-                    noDataText={t("common:reactTable.noDataText")}
-                    pageText={t("common:reactTable.pageText")}
-                    ofText={t("common:reactTable.ofText")}
-                    rowsText={t("common:reactTable.rowsText")}
                     minRows={1}
                 />
 
