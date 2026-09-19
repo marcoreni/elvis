@@ -759,7 +759,7 @@ class LessonList extends React.Component {
                             <input
                                 type="time"
                                 className="form-control form-control-sm"
-                                defaultValue={start}
+                                value={start}
                                 onChange={(e) =>
                                     onChange({
                                         ...filter,
@@ -770,7 +770,7 @@ class LessonList extends React.Component {
                             <input
                                 type="time"
                                 className="form-control form-control-sm"
-                                defaultValue={end}
+                                value={end}
                                 onChange={(e) =>
                                     onChange({
                                         ...filter,
@@ -990,7 +990,7 @@ class LessonList extends React.Component {
                 Filter: ({ filter, onChange }) => (
                     <FilterSelect
                         onChange={(e) => onChange(e.target.value)}
-                        defaultValue={filter ? filter.value : ""}
+                        value={filter ? filter.value : ""}
                     >
                         <option value="" />
                         <option value="TBD">

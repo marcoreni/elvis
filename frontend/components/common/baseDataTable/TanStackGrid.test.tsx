@@ -1,7 +1,7 @@
-// Regression tests for two bugs found via live QA while migrating item 13 batch 3 (
-// docs/Modernization-Roadmap.md), both with zero prior coverage since no earlier consumer's own
-// test exercised these paths for real (batches 1-2 reach Cell/SubComponent via a mocked-grid
-// stub, never through a real mounted TanStackGrid):
+// Regression tests for bugs found via live QA and a follow-up code review while migrating item 13
+// batch 3 (docs/Modernization-Roadmap.md), all with zero prior coverage since no earlier
+// consumer's own test exercised these paths for real (batches 1-2 reach Cell/SubComponent via a
+// mocked-grid stub, never through a real mounted TanStackGrid):
 //
 //  - A v6-shaped column whose `accessor` returns JSX directly (legal there, no `Cell` required)
 //    rendered as the literal string "[object Object]": TanStack's own default `cell` renderer
@@ -10,9 +10,14 @@
 //    `getRowCanExpand` only allows expanding rows that already have real `subRows`, which none of
 //    these flat-record rows do -- `renderSubComponent` is used purely as a "reveal extra content"
 //    toggle, not real row hierarchy.
+//  - A column with no `accessor` at all (v6 allowed this -- a `Filter`/`Cell` reading `original`
+//    directly, e.g. a "select all" checkbox living in the Filter slot, or a payer-name text
+//    filter) silently lost its entire filter row *and* its sortable header: TanStack's own
+//    `getCanFilter()`/`getCanSort()` both require a real `accessorFn` internally, which v6 never
+//    did. Found by a follow-up code review, not by live QA -- the Cell still rendered fine (it
+//    reads `original`, not the accessor value), so the missing filter/sort UI was easy to miss.
 //
-// Both are fixed in TanStackGrid itself, so covered here directly rather than through any one
-// consumer.
+// All fixed in TanStackGrid itself, so covered here directly rather than through any one consumer.
 
 import React from "react";
 import { render, screen } from "@testing-library/react";
@@ -150,5 +155,81 @@ describe("TanStackGrid — renderSubComponent (expander column)", () => {
 
         await userEvent.click(screen.getByRole("button", { name: "▶" }));
         expect(screen.getByRole("button", { name: "▼" })).toBeInTheDocument();
+    });
+});
+
+describe("TanStackGrid — columns with no accessor keep their filter/sort UI", () => {
+    test("a custom Filter renders even without an accessor (e.g. a select-all checkbox column)", () => {
+        const columns: LegacyColumn[] = [
+            {
+                id: "selection",
+                Header: "",
+                sortable: false,
+                Filter: () => <input type="checkbox" aria-label="select all" />,
+            },
+            { id: "label", Header: "Label", accessor: "label" },
+        ];
+
+        render(
+            <TanStackGrid
+                tableName="table-no-accessor-filter"
+                columns={columns}
+                data={[{ id: 1, label: "Zephyr" }]}
+                loading={false}
+                pages={1}
+                onFetchData={noop}
+            />
+        );
+
+        expect(
+            screen.getByRole("checkbox", { name: "select all" })
+        ).toBeInTheDocument();
+    });
+
+    test("the default text filter renders for an accessor-less, non-custom-Filter column", () => {
+        const columns: LegacyColumn[] = [
+            {
+                id: "payer_name",
+                Header: "Payer",
+                Cell: ({ original }) => original.name,
+            },
+        ];
+
+        render(
+            <TanStackGrid
+                tableName="table-no-accessor-default-filter"
+                columns={columns}
+                data={[{ id: 1, name: "Zephyr" }]}
+                loading={false}
+                pages={1}
+                onFetchData={noop}
+            />
+        );
+
+        expect(screen.getByText("Zephyr")).toBeInTheDocument();
+        expect(screen.getByRole("textbox")).toBeInTheDocument();
+    });
+
+    test("an accessor-less column stays sortable (clickable header) unless sortable: false", () => {
+        const columns: LegacyColumn[] = [
+            {
+                id: "payer_name",
+                Header: "Payer",
+                Cell: ({ original }) => original.name,
+            },
+        ];
+
+        render(
+            <TanStackGrid
+                tableName="table-no-accessor-sortable"
+                columns={columns}
+                data={[{ id: 1, name: "Zephyr" }]}
+                loading={false}
+                pages={1}
+                onFetchData={noop}
+            />
+        );
+
+        expect(screen.getByText("Payer").closest("th")).toHaveClass("sortable");
     });
 });

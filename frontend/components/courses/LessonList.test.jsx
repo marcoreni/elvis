@@ -6,12 +6,13 @@
 // covers it).
 //
 // What is mocked and why:
-//  - `common/baseDataTable/TanStackGrid` (the real grid since item 13 batch 3) does DOM
-//    measurement that does not run in jsdom, and the point here is the i18n wiring, not the grid
-//    itself -- covered directly for TanStackGrid by its own consumers' tests elsewhere (e.g.
+//  - `common/baseDataTable/TanStackGrid` (the real grid since item 13 batch 3) is headless and
+//    renders fine in jsdom (unlike v6's `react-table`, which did DOM measurement that didn't) --
+//    mocked here anyway because the point of this file is the i18n wiring, not the grid itself
+//    (covered directly by TanStackGrid.test.tsx and by its other consumers' tests, e.g.
 //    PlanningsSettings.test.jsx, PaymentsSettings.test.jsx). The stub renders the resolved string
 //    `Header`s of the `columns` prop and stashes every prop so a test can invoke `Cell`/`Filter`/
-//    `renderSubComponent` directly with synthetic row data.
+//    `renderSubComponent` directly with synthetic row data, without needing a real table mount.
 //  - `MessageModal`, `ListPreferences`, `DeleteCourseModal` — heavy children that carry none of
 //    this component's own copy.
 //  - `sweetalert2` / `react-toastify` — only used in event handlers (not render); stubbed so the

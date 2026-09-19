@@ -627,11 +627,16 @@ was already peer-dep-unverified past React 16 anyway.
      `Filter` render prop (v6's `Filter: ({filter, onChange}) => ...`, used by several of these
      tables for dropdown/checkbox filter-row UI instead of the default text `<input>`).
 
-     Dropped two v6-specific things with no real replacement needed: `LessonList`'s
-     `resizable={true}` (column drag-resize — the only table in the app using it; an isolated,
-     documented regression rather than building full resize support in `TanStackGrid` for one
-     table) and its `key={filtered.map(f=>f.id).join("-")}` remount hack (a v6 workaround,
-     unnecessary once state is genuinely controlled and TanStack re-renders correctly from it).
+     Dropped `LessonList`'s `resizable={true}` (column drag-resize — the only table in the app
+     using it; an isolated, documented regression rather than building full resize support in
+     `TanStackGrid` for one table). Also dropped its `key={filtered.map(f=>f.id).join("-")}`
+     remount hack — **this one turned out not to be safe to drop as-is** (found by a follow-up
+     code review): three of `LessonList`'s Filter inputs (`level`, and the two `time_interval`
+     start/end inputs) were uncontrolled (`defaultValue`, not `value`), so without the remount
+     they went stale after "reset filters" — the underlying state reset correctly, but the
+     rendered input kept showing its last-typed value. Fixed by making those three (and a fourth,
+     same-shaped bug independently found in `DuePaymentList`'s payment-method multi-select) fully
+     controlled instead, which is the real fix the removed remount hack was standing in for.
 
      Found and fixed two real bugs live in the browser, both in `TanStackGrid` itself and present
      since batch 1 with zero prior coverage: a column whose `accessor` returns JSX with no `Cell`

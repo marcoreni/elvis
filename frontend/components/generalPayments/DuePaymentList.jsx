@@ -328,12 +328,13 @@ class DuePaymentList extends React.Component {
                         options={duePaymentMethodsOptions}
                         isMulti={true}
                         isClearable={true}
-                        defaultValue={
-                            filter &&
-                            filter.value &&
-                            duePaymentMethodsOptions.filter((o) =>
-                                filter.value.includes(o.value)
-                            )
+                        value={
+                            (filter &&
+                                filter.value &&
+                                duePaymentMethodsOptions.filter((o) =>
+                                    filter.value.includes(o.value)
+                                )) ||
+                            []
                         }
                         onChange={(v) =>
                             onChange((v.length && v.map((v) => v.value)) || "")

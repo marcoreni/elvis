@@ -7,6 +7,7 @@ import moment from "moment";
 import { csrfToken } from "./utils";
 import { makeDebounce } from "../tools/inputs";
 import TanStackGrid from "./common/baseDataTable/TanStackGrid";
+import FilterSelect from "./common/baseDataTable/FilterSelect";
 import * as api from "../tools/api";
 import swal from "sweetalert2";
 import { post } from "../tools/api";
@@ -382,8 +383,7 @@ class UserList extends React.Component {
                 sortable: false,
                 filterable: !this.props.nofilter,
                 Filter: ({ filter, onChange }) => (
-                    <select
-                        className="form-control form-control-sm"
+                    <FilterSelect
                         onChange={(event) => onChange(event.target.value)}
                         style={{ width: "100%" }}
                         value={filter ? filter.value : "all"}
@@ -406,7 +406,7 @@ class UserList extends React.Component {
                         <option value="teacher">
                             {t("list.table.roleFilter.teacher")}
                         </option>
-                    </select>
+                    </FilterSelect>
                 ),
             },
             {
@@ -416,8 +416,7 @@ class UserList extends React.Component {
                 sortable: false,
                 filterable: true,
                 Filter: ({ filter, onChange }) => (
-                    <select
-                        className="form-control form-control-sm"
+                    <FilterSelect
                         onChange={(event) => onChange(event.target.value)}
                         style={{ width: "100%" }}
                         value={filter ? filter.value : "all"}
@@ -431,7 +430,7 @@ class UserList extends React.Component {
                         <option value="false">
                             {t("list.table.accountTypeFilter.attached")}
                         </option>
-                    </select>
+                    </FilterSelect>
                 ),
                 accessor: (d) =>
                     d.attached_to_id

@@ -62,6 +62,11 @@ export interface LegacyColumn {
     Filter?: LegacyColumnFilterRenderer;
     sortable?: boolean;
     filterable?: boolean;
+    /** Explicit column width in px. `width` only -- v6's `maxWidth`/`minWidth` are not read here;
+     * columns instead get a real natural width from `white-space: nowrap` + a `min-width` floor,
+     * so the table can overflow (and scroll) instead of squeezing its own columns. Several
+     * migrated columns still carry `maxWidth`/`minWidth` from their v6 defs -- inert, harmless to
+     * leave, not cleaned up here. */
     width?: number;
 }
 
@@ -95,6 +100,16 @@ function toTanStackColumn(column: LegacyColumn): ColumnDef<any> {
         tanstackColumn.accessorFn = column.accessor;
     } else if (typeof column.accessor === "string") {
         tanstackColumn.accessorKey = column.accessor;
+    } else {
+        // TanStack's own getCanFilter()/getCanSort() both require a real accessor internally,
+        // unlike v6 where Filter/sortable were independent of accessor -- several real columns
+        // (a "select all" checkbox living in the Filter slot, payer-name text filters, the
+        // occupation dropdown) have no accessor at all (their Cell reads `original` directly)
+        // but still need their filter/sort UI to render. A no-op accessor unblocks TanStack's
+        // gates without affecting any real value lookup -- safe here specifically because every
+        // real table is manualSorting/manualFiltering, so TanStack never actually sorts/filters
+        // rows using this value itself, only tracks state and defers to the server.
+        tanstackColumn.accessorFn = () => undefined;
     }
 
     if (column.Cell) {
@@ -110,8 +125,12 @@ function toTanStackColumn(column: LegacyColumn): ColumnDef<any> {
         // plain string template. Harmless for a primitive accessor result, but a v6 `accessor`
         // returning JSX directly (legal there, and used by a couple of real columns) would get
         // silently coerced to the literal string "[object Object]" instead of rendered. Always
-        // render the accessed value as a node instead of leaving that default in place.
-        tanstackColumn.cell = (ctx) => ctx.getValue() as React.ReactNode;
+        // render the accessed value as a node instead of leaving that default in place. `?? null`
+        // matters, not just belt-and-suspenders: an accessor-less column's value is always
+        // `undefined` (see the no-op accessorFn above), and a cell renderer returning `undefined`
+        // (rather than `null`) is a React error ("nothing was returned from render").
+        tanstackColumn.cell = (ctx) =>
+            (ctx.getValue() as React.ReactNode) ?? null;
     }
 
     if (column.width || column.Filter) {
@@ -280,11 +299,14 @@ export default function TanStackGrid({
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [columns, hasExpander]);
 
+    // TanStack throws inside its own row-model code on `data === undefined` (v6 tolerated it);
+    // every real caller already guards its own fetched data, but default defensively here too so
+    // that invariant can't be silently reintroduced by a future caller. Used everywhere below
+    // that reads `data`, not just here -- the resultsCount footer needs the same guard.
+    const safeData = data ?? [];
+
     const table = useReactTable({
-        // TanStack throws inside its own row-model code on `data === undefined` (v6 tolerated
-        // it); every real caller already guards its own fetched data, but default defensively
-        // here too so that invariant can't be silently reintroduced by a future caller.
-        data: data ?? [],
+        data: safeData,
         columns: tanstackColumns,
         state: { sorting, columnFilters, pagination, expanded },
         onSortingChange: setSorting,
@@ -627,7 +649,9 @@ export default function TanStackGrid({
                     {t("reactTable.ofText")} {Math.max(pages || 1, 1)}
                 </div>
                 <div>
-                    {t("baseDataTable.resultsCount", { count: data.length })}
+                    {t("baseDataTable.resultsCount", {
+                        count: safeData.length,
+                    })}
                 </div>
             </div>
         </div>
