@@ -1,6 +1,7 @@
 import React from "react";
 
-import ReactTable from "react-table";
+import TanStackGrid from "./common/baseDataTable/TanStackGrid";
+import FilterSelect from "./common/baseDataTable/FilterSelect";
 
 import moment from "moment";
 import swal from "sweetalert2";
@@ -44,6 +45,11 @@ class FailedPaymentImportsPage extends React.Component {
             selectAll: false,
             selectedRows: [],
             selectedReason: null,
+            // Controlled, rather than TanStackGrid's own uncontrolled default (pageSize 20), so
+            // the initial page size matches v6's old `defaultPageSize={10}` (no page-size
+            // selector was ever shown here -- that requires its own `pageSizeOptions` prop, never
+            // passed to the old <ReactTable> either).
+            pagination: { pageIndex: 0, pageSize: 10 },
         };
     }
 
@@ -224,25 +230,31 @@ class FailedPaymentImportsPage extends React.Component {
         });
     }
 
-    renderNameCell(cell, editable) {
-        if (editable) {
-            cell.styles.background = "#d63031";
-            cell.styles.color = "white";
-        }
-
+    // `field` used to be read off `cell.column.id` -- v6 exposed the owning column on every cell;
+    // TanStackGrid's Cell props are just {value, original, index}, so the field name each of
+    // these needs to write back into `this.state.data` is passed in explicitly by the caller
+    // instead (every call site already knows its own column's field statically).
+    renderNameCell(cell, editable, field) {
         if (editable)
             return (
                 <div
+                    // Was a `cell.styles.background/color` mutation onto the surrounding <td> --
+                    // TanStackGrid's <td> isn't influenceable from a Cell renderer, so the
+                    // highlight moves onto this wrapping element instead (fills the cell's
+                    // content box, not its full padding/border).
+                    style={{ background: "#d63031", color: "white" }}
                     contentEditable={editable}
                     suppressContentEditableWarning={editable}
                     onBlur={(e) => {
                         const data = [...this.state.data];
-                        data[cell.index][cell.column.id] =
-                            e.target.innerText.replace(/\n/g, "");
+                        data[cell.index][field] = e.target.innerText.replace(
+                            /\n/g,
+                            ""
+                        );
                         this.setState({ data });
                     }}
                 >
-                    {cell.original[cell.column.id]}
+                    {cell.original[field]}
                 </div>
             );
         else if (cell.original.user_id)
@@ -251,29 +263,26 @@ class FailedPaymentImportsPage extends React.Component {
                     href={`/payments/summary/${cell.original.user_id}`}
                     target="_blank"
                 >
-                    {cell.original[cell.column.id]}
+                    {cell.original[field]}
                 </a>
             );
     }
 
-    renderDateCell(cell, editable) {
+    renderDateCell(cell, editable, field) {
         if (editable) {
-            cell.styles.padding = "0";
-
             return (
                 <input
                     type="date"
                     disabled={!editable}
                     onChange={(e) => {
                         const data = [...this.state.data];
-                        data[cell.index][cell.column.id] = moment(
-                            e.target.value
-                        );
+                        data[cell.index][field] = moment(e.target.value);
                         this.setState({ data });
                     }}
                     style={{
                         width: "100%",
                         height: "100%",
+                        padding: "0",
                         background: "#d63031",
                         color: "white",
                     }}
@@ -285,16 +294,14 @@ class FailedPaymentImportsPage extends React.Component {
         return <div>{cell.value.format("DD/MM/YYYY")}</div>;
     }
 
-    renderAmountCell(cell, editable) {
+    renderAmountCell(cell, editable, field) {
         if (editable)
             return (
                 <input
                     type="number"
                     onChange={(e) => {
                         const { data } = this.state;
-                        data[cell.index][cell.column.id] = parseFloat(
-                            e.target.value
-                        );
+                        data[cell.index][field] = parseFloat(e.target.value);
                         this.setState({ data });
                     }}
                     style={{
@@ -394,16 +401,21 @@ class FailedPaymentImportsPage extends React.Component {
             {
                 Header: t("failedImports.columns.reason"),
                 id: "reason",
-                accessor: "failed_payment_import_reason_id",
+                // A string here, not the raw numeric `failed_payment_import_reason_id` -- TanStack's
+                // "auto" filterFn is picked from the *row value's* type, and for a number that's
+                // `inNumberRange` (expects a [min, max] tuple), which throws on the single option
+                // string this <FilterSelect> actually produces. Stringifying keeps the auto-picked
+                // filterFn as a case-insensitive "contains" instead, matching (closely enough) v6's
+                // own default filter method here (`String(value).startsWith(filter.value)`). The
+                // Cell below reads the real numeric id back off `original`, not off this value.
+                accessor: (d) => String(d.failed_payment_import_reason_id),
                 filterable: true,
                 minWidth: 70,
                 Filter: ({ filter, onChange }) => (
-                    <select
-                        onChange={(event) =>
-                            parseInt(onChange(event.target.value))
-                        }
+                    <FilterSelect
                         style={{ width: "100%" }}
                         value={(filter && filter.value) || ""}
+                        onChange={(event) => onChange(event.target.value)}
                     >
                         <option key="" value="" />
                         {this.props.reasons.map((r) => (
@@ -411,12 +423,14 @@ class FailedPaymentImportsPage extends React.Component {
                                 {r.label}
                             </option>
                         ))}
-                    </select>
+                    </FilterSelect>
                 ),
                 Cell: (cell) => {
                     const reason = _.find(
                         this.props.reasons,
-                        (rea) => rea.id === cell.value
+                        (rea) =>
+                            rea.id ===
+                            cell.original.failed_payment_import_reason_id
                     );
                     return (
                         (reason && reason.label) ||
@@ -428,45 +442,53 @@ class FailedPaymentImportsPage extends React.Component {
                 Header: t("failedImports.columns.firstName"),
                 id: "first_name",
                 accessor: "first_name",
+                filterable: false,
                 Cell: (c) =>
                     this.renderNameCell(
                         c,
                         c.original.failed_payment_import_reason_id ===
-                            payerNotFound.id
+                            payerNotFound.id,
+                        "first_name"
                     ),
             },
             {
                 Header: t("failedImports.columns.lastName"),
                 id: "last_name",
                 accessor: "last_name",
+                filterable: false,
                 Cell: (c) =>
                     this.renderNameCell(
                         c,
                         c.original.failed_payment_import_reason_id ===
-                            payerNotFound.id
+                            payerNotFound.id,
+                        "last_name"
                     ),
             },
             {
                 Header: t("failedImports.columns.dueDate"),
                 id: "due_date",
                 accessor: (d) => moment(d.due_date),
+                filterable: false,
                 Cell: (c) =>
                     this.renderDateCell(
                         c,
                         c.original.failed_payment_import_reason_id ===
-                            dueNotFound.id
+                            dueNotFound.id,
+                        "due_date"
                     ),
             },
             {
                 Header: t("failedImports.columns.cashingDate"),
                 id: "cashing_date",
                 accessor: (d) => moment(d.cashing_date),
+                filterable: false,
                 Cell: (cell) => cell.value.format("DD/MM/YYYY"),
             },
             {
                 Header: t("failedImports.columns.importDate"),
                 id: "import_date",
                 accessor: (d) => moment(d.created_at),
+                filterable: false,
                 Cell: (cell) =>
                     cell.value.format(t("failedImports.importDateFormat")),
             },
@@ -475,16 +497,24 @@ class FailedPaymentImportsPage extends React.Component {
                 maxWidth: 125,
                 id: "amount",
                 accessor: "amount",
+                filterable: false,
                 Cell: (cell) =>
                     this.renderAmountCell(
                         cell,
                         cell.original.failed_payment_import_reason_id ===
-                            differentAmounts.id
+                            differentAmounts.id,
+                        "amount"
                     ),
             },
             {
+                // Was missing an `id` (and had no accessor either) under v6, which tolerated it
+                // silently -- TanStack Table throws ("Columns require an id when using an
+                // accessorFn") for any column that ends up with neither a string accessor nor an
+                // explicit id, since every column here gets a (possibly no-op) accessorFn.
+                id: "actions",
                 Header: t("failedImports.columns.actions"),
                 maxWidth: 100,
+                filterable: false,
                 Cell: (c) => (
                     <div className="flex flex-space-around-justified">
                         <button
@@ -575,17 +605,17 @@ class FailedPaymentImportsPage extends React.Component {
                         </div>
                     </div>
                     <div className="ibox-content no-padding">
-                        <ReactTable
+                        <TanStackGrid
+                            tableName="failed-payment-imports"
+                            manual={false}
                             data={this.state.data}
+                            loading={false}
+                            pages={null}
+                            pagination={this.state.pagination}
+                            onPaginationChange={(pagination) =>
+                                this.setState({ pagination })
+                            }
                             columns={columns}
-                            defaultPageSize={10}
-                            previousText={t("common:reactTable.previousText")}
-                            nextText={t("common:reactTable.nextText")}
-                            loadingText={t("common:reactTable.loadingText")}
-                            noDataText={t("common:reactTable.noDataText")}
-                            pageText={t("common:reactTable.pageText")}
-                            ofText={t("common:reactTable.ofText")}
-                            rowsText={t("common:reactTable.rowsText")}
                         />
                     </div>
                 </div>

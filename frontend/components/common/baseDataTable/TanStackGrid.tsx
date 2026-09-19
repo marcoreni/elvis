@@ -11,6 +11,9 @@ import {
     functionalUpdate,
     getCoreRowModel,
     getExpandedRowModel,
+    getFilteredRowModel,
+    getPaginationRowModel,
+    getSortedRowModel,
     useReactTable,
 } from "@tanstack/react-table";
 import fscreen from "fscreen";
@@ -35,6 +38,9 @@ type LegacyColumnFilterRenderer = (props: {
 
 const coreRowModel = getCoreRowModel();
 const expandedRowModel = getExpandedRowModel();
+const sortedRowModel = getSortedRowModel();
+const filteredRowModel = getFilteredRowModel();
+const paginationRowModel = getPaginationRowModel();
 
 // Was frontend/components/ReactTableFullScreen.jsx's export -- moved here once every consumer of
 // that v6 wrapper had migrated to TanStackGrid (item 13 batch 3), since this is the component that
@@ -254,6 +260,14 @@ interface TanStackGridProps {
     /** Controlled column filters -- see `onFetchData`. */
     columnFilters?: ColumnFiltersState;
     onColumnFiltersChange?: (filters: ColumnFiltersState) => void;
+    /**
+     * Defaults to `true` -- every batch 1-3 caller is server-paginated (fetches a page of data via
+     * `onFetchData` on page/sort/filter change) and is unaffected by this prop. Set `false` for a
+     * table whose full dataset is already in memory (no backend pagination endpoint exists for
+     * it) to get TanStack's own client-side sorting/filtering/pagination instead, matching how
+     * these tables behaved under react-table v6.
+     */
+    manual?: boolean;
 }
 
 /**
@@ -284,8 +298,10 @@ export default function TanStackGrid({
     onSortingChange,
     columnFilters: controlledColumnFilters,
     onColumnFiltersChange,
+    manual: manualProp,
 }: TanStackGridProps) {
     const { t } = useTranslation("common");
+    const manual = manualProp ?? true;
 
     const [sorting, setSorting] = useControllableState<SortingState>(
         controlledSorting,
@@ -344,17 +360,19 @@ export default function TanStackGrid({
         onColumnFiltersChange: handleColumnFiltersChange,
         onPaginationChange: setPagination,
         onExpandedChange: setExpanded,
-        manualPagination: true,
-        manualSorting: true,
-        manualFiltering: true,
+        manualPagination: manual,
+        manualSorting: manual,
+        manualFiltering: manual,
         // TanStack's default lets a third header click cycle past desc back to "unsorted"
         // (sorting: []) -- v6 never had that state reachable by clicking (asc/desc toggle only).
         // Every real caller sends `sorted: sorted[0]` straight into a request body; an empty
         // array makes `sorted[0]` undefined, which JSON.stringify drops the key for entirely, and
         // every backend #list_json handler dereferences `params[:sorted][:desc]` unguarded --
         // 500, silently swallowed client-side (no .catch anywhere), table stuck loading forever.
+        // Kept unconditional (not gated on `manual`) -- a UX consistency improvement in both
+        // modes, not a manual-mode-only concern.
         enableSortingRemoval: false,
-        pageCount: pages ?? -1,
+        pageCount: manual ? (pages ?? -1) : undefined,
         getCoreRowModel: coreRowModel,
         // Rows here are flat records with no real `subRows` -- expansion is used purely as a
         // "toggle to reveal renderSubComponent's extra content" mechanism (v6's SubComponent),
@@ -368,6 +386,13 @@ export default function TanStackGrid({
                   getRowCanExpand: () => true,
               }
             : {}),
+        ...(manual
+            ? {}
+            : {
+                  getSortedRowModel: sortedRowModel,
+                  getFilteredRowModel: filteredRowModel,
+                  getPaginationRowModel: paginationRowModel,
+              }),
     });
 
     useEffect(() => {
@@ -663,11 +688,15 @@ export default function TanStackGrid({
                 </div>
                 <div>
                     {t("reactTable.pageText")} {pagination.pageIndex + 1}{" "}
-                    {t("reactTable.ofText")} {Math.max(pages || 1, 1)}
+                    {t("reactTable.ofText")} {Math.max(table.getPageCount(), 1)}
                 </div>
                 <div>
                     {t("baseDataTable.resultsCount", {
-                        count: totalCount ?? safeData.length,
+                        count:
+                            totalCount ??
+                            (manual
+                                ? safeData.length
+                                : table.getFilteredRowModel().rows.length),
                     })}
                 </div>
             </div>

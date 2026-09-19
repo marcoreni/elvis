@@ -1,7 +1,7 @@
 import React from "react";
 import swal from "sweetalert2";
 
-import ReactTable from "react-table";
+import TanStackGrid from "../common/baseDataTable/TanStackGrid";
 import { withTranslation } from "react-i18next";
 import { csrfToken } from "../utils";
 import RemoveComponent from "../RemoveComponent";
@@ -117,6 +117,11 @@ class SeasonsList extends React.Component {
                 id: "label",
                 Header: t("planning:seasonsList.columns.label"),
                 accessor: (d) => d.label,
+                // Table-level `filterable` was never passed to the old <ReactTable> below (v6
+                // defaults filtering off unless a column opts in) -- explicit `false` here and on
+                // start/end/next preserves that "no filter row" look under TanStackGrid, whose own
+                // per-column default is filterable-on.
+                filterable: false,
             },
             {
                 id: "start",
@@ -125,6 +130,7 @@ class SeasonsList extends React.Component {
                 Cell: (props) => {
                     return props.original.start_formatted;
                 },
+                filterable: false,
             },
             {
                 id: "end",
@@ -133,6 +139,7 @@ class SeasonsList extends React.Component {
                 Cell: (props) => {
                     return props.original.end_formatted;
                 },
+                filterable: false,
             },
             {
                 id: "is_current",
@@ -181,6 +188,7 @@ class SeasonsList extends React.Component {
                 id: "next",
                 Header: t("planning:seasonsList.columns.next"),
                 accessor: (d) => (d.next_season_id ? d.next_season.label : "-"),
+                filterable: false,
             },
             // {
             //     id: "is_off",
@@ -264,26 +272,14 @@ class SeasonsList extends React.Component {
                     ref={this.state.modalRef}
                     onSuccess={this.onActivationSuccess}
                 />
-                <ReactTable
+                <TanStackGrid
+                    tableName="seasons-list"
+                    manual={false}
                     data={this.state.seasons}
+                    loading={false}
+                    pages={null}
                     columns={columns}
                     defaultSorted={[{ id: "start", desc: true }]}
-                    // filterable
-                    // defaultFilterMethod={(filter, row) => {
-                    //     if (row[filter.id] != null) {
-                    //         return row[filter.id]
-                    //             .toLowerCase()
-                    //             .includes(filter.value.toLowerCase());
-                    //     }
-                    // }}
-                    resizable={false}
-                    previousText={t("common:reactTable.previousText")}
-                    nextText={t("common:reactTable.nextText")}
-                    loadingText={t("common:reactTable.loadingText")}
-                    noDataText={t("common:reactTable.noDataText")}
-                    pageText={t("common:reactTable.pageText")}
-                    ofText={t("common:reactTable.ofText")}
-                    rowsText={t("common:reactTable.rowsText")}
                     minRows={1}
                 />
             </div>

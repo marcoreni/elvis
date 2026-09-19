@@ -235,6 +235,120 @@ describe("TanStackGrid — columns with no accessor keep their filter/sort UI", 
     });
 });
 
+// Batch 4a (docs/Modernization-Roadmap.md item 13): `manual={false}` opts a table with no backend
+// pagination endpoint into TanStack's own client-side sorting/filtering/pagination instead of the
+// manual* + onFetchData round-trip every batch 1-3 caller uses. Every test above passes no
+// `manual` prop at all, so they continue exercising the (unchanged) manual=true default -- these
+// are the first tests of manual=false itself.
+describe("TanStackGrid — client-side mode (manual=false)", () => {
+    const columns: LegacyColumn[] = [
+        { id: "label", Header: "Label", accessor: "label" },
+    ];
+
+    test("clicking a sortable header re-orders rendered rows client-side", async () => {
+        render(
+            <TanStackGrid
+                tableName="table-client-sort"
+                manual={false}
+                columns={columns}
+                data={[
+                    { id: 1, label: "Zephyr" },
+                    { id: 2, label: "Alpha" },
+                    { id: 3, label: "Mercury" },
+                ]}
+                loading={false}
+                pages={null}
+            />
+        );
+
+        const cellTexts = () =>
+            screen.getAllByRole("cell").map((c) => c.textContent);
+        expect(cellTexts()).toEqual(["Zephyr", "Alpha", "Mercury"]);
+
+        await userEvent.click(
+            screen.getByRole("columnheader", { name: /Label/ })
+        );
+        expect(cellTexts()).toEqual(["Alpha", "Mercury", "Zephyr"]);
+
+        await userEvent.click(
+            screen.getByRole("columnheader", { name: /Label/ })
+        );
+        expect(cellTexts()).toEqual(["Zephyr", "Mercury", "Alpha"]);
+    });
+
+    test("typing in a column's filter input narrows rendered rows client-side", async () => {
+        render(
+            <TanStackGrid
+                tableName="table-client-filter"
+                manual={false}
+                columns={columns}
+                data={[
+                    { id: 1, label: "Zephyr" },
+                    { id: 2, label: "Alpha" },
+                    { id: 3, label: "Zeta" },
+                ]}
+                loading={false}
+                pages={null}
+            />
+        );
+
+        expect(screen.getAllByRole("cell")).toHaveLength(3);
+
+        await userEvent.type(screen.getByRole("textbox"), "Ze");
+
+        expect(screen.getAllByRole("cell").map((c) => c.textContent)).toEqual([
+            "Zephyr",
+            "Zeta",
+        ]);
+    });
+
+    test("pagination reflects the real client-side row count, ignoring the server-reported `pages` prop", () => {
+        const data = Array.from({ length: 25 }, (_, i) => ({
+            id: i,
+            label: `Row ${i}`,
+        }));
+
+        render(
+            <TanStackGrid
+                tableName="table-client-pagination"
+                manual={false}
+                columns={columns}
+                data={data}
+                loading={false}
+                pages={999} // bogus server value -- must be ignored in client mode
+            />
+        );
+
+        // Default uncontrolled pageSize is 20 -> 25 rows spans 2 pages, not `pages={999}`.
+        expect(screen.getByText("Page 1 sur 2")).toBeInTheDocument();
+        expect(screen.getAllByRole("cell")).toHaveLength(20);
+    });
+
+    test('the "N results" footer reflects the filtered row count in client mode, not the raw data length', async () => {
+        render(
+            <TanStackGrid
+                tableName="table-client-resultscount"
+                manual={false}
+                columns={columns}
+                data={[
+                    { id: 1, label: "Zephyr" },
+                    { id: 2, label: "Alpha" },
+                    { id: 3, label: "Zeta" },
+                ]}
+                loading={false}
+                pages={null}
+            />
+        );
+
+        expect(screen.getByText("3 résultats")).toBeInTheDocument();
+
+        await userEvent.type(screen.getByRole("textbox"), "Ze");
+
+        expect(screen.getByText("2 résultats")).toBeInTheDocument();
+        expect(screen.queryByText("3 résultats")).not.toBeInTheDocument();
+    });
+});
+
 describe("TanStackGrid — sorting never clears entirely (enableSortingRemoval: false)", () => {
     test("a third click on a sortable header keeps sorting non-empty instead of cycling to []", async () => {
         const columns: LegacyColumn[] = [
