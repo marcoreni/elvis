@@ -95,6 +95,13 @@ function toTanStackColumn(column: LegacyColumn): ColumnDef<any> {
             original: ctx.row.original,
             index: ctx.row.index,
         });
+    } else {
+        // Without an explicit `cell`, TanStack's own default renders `${renderValue()}` -- a
+        // plain string template. Harmless for a primitive accessor result, but a v6 `accessor`
+        // returning JSX directly (legal there, and used by a couple of real columns) would get
+        // silently coerced to the literal string "[object Object]" instead of rendered. Always
+        // render the accessed value as a node instead of leaving that default in place.
+        tanstackColumn.cell = ctx => ctx.getValue() as React.ReactNode;
     }
 
     if (column.width || column.Filter) {
@@ -269,6 +276,11 @@ export default function TanStackGrid({
         pageCount: pages ?? -1,
         getCoreRowModel: coreRowModel,
         getExpandedRowModel: expandedRowModel,
+        // Rows here are flat records with no real `subRows` -- expansion is used purely as a
+        // "toggle to reveal renderSubComponent's extra content" mechanism (v6's SubComponent),
+        // not real row hierarchy. TanStack's default getRowCanExpand only allows expanding rows
+        // that already have subRows, which makes the toggle handler a silent no-op otherwise.
+        getRowCanExpand: () => true,
     });
 
     // TanStack's own getCoreRowModel() memoization (keyed on table.options.data) doesn't reliably

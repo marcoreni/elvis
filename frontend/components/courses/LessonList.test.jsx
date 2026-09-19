@@ -236,8 +236,7 @@ describe("LessonList — column header row (i18n)", () => {
 // already set. Reached via the "day" column's Cell/Filter, extracted from the stashed react-table
 // stub props (same technique as the SubComponent reach below).
 describe("day column follows the active UI language (moment locale no longer forced to fr)", () => {
-    const dayColumn = () =>
-        lastGridProps.columns.find((c) => c.id === "day");
+    const dayColumn = () => lastGridProps.columns.find((c) => c.id === "day");
 
     test("Cell renders the weekday in French by default", async () => {
         await i18n.changeLanguage("fr");
