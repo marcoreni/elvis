@@ -6,8 +6,9 @@
 // The "select all" header column is a specific regression target: its `Header` is a checkbox
 // element (not a string) and it has no `accessor`, so it relies entirely on the explicit
 // `id: "select_all"` added during the migration for TanStack to identify it (see
-// `toTanStackColumn` in TanStackGrid.tsx). Without that id, TanStack falls back to deriving an id
-// from the header content, which fails for a non-string Header.
+// `toTanStackColumn` in TanStackGrid.tsx). Without that id, TanStack throws
+// ("Columns require an id when using an accessorFn") for a non-string Header -- unconditionally,
+// in production too -- crashing the whole React island rather than degrading gracefully.
 //
 // Note: TanStackGrid rebuilds its column defs (and re-renders every cell) on every state change
 // here, since PaymentsList/DuePaymentsList build a fresh `columns` array inline on every render

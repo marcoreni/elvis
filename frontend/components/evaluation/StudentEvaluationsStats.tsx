@@ -103,6 +103,7 @@ const StudentEvaluationStats: React.FC<StudentEvaluationStatsProps> = ({
             pages={null}
             manual={false}
             filterable={false}
+            pageSizeOptions={[5, 10, 20, 25, 50, 100]}
         />
     );
 };

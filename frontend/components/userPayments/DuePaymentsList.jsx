@@ -537,7 +537,9 @@ class DuePaymentsList extends React.Component {
                     />
                 ),
                 width: 25,
-                className: "flex flex-center-justified",
+                // This column was center-justified under v6's per-column `className`;
+                // TanStackGrid has no className passthrough, so it now renders left-aligned
+                // like every other column -- documented, accepted regression, not fixed here.
             },
         ];
         let columns = [
@@ -551,7 +553,9 @@ class DuePaymentsList extends React.Component {
                 Header: t("userPayments.duePaymentsList.columns.status"),
                 id: "payment_status_id",
                 maxWidth: 75,
-                className: "flex flex-center-justified",
+                // This column was center-justified under v6's per-column `className`;
+                // TanStackGrid has no className passthrough, so it now renders left-aligned
+                // like every other column -- documented, accepted regression, not fixed here.
                 accessor: (d) => d.due_payment_status_id,
                 Cell: (c) => this.renderStatus(c),
             },
@@ -578,20 +582,18 @@ class DuePaymentsList extends React.Component {
                 Header: t("userPayments.duePaymentsList.columns.amount"),
                 id: "amount",
                 width: 100,
-                style: {
-                    display: "block",
-                    textAlign: "right",
-                },
+                // This column was right-aligned under v6's per-column `style`; TanStackGrid has
+                // no style passthrough, so it now renders left-aligned like every other column --
+                // documented, accepted regression, not fixed here.
                 accessor: (d) => `(${d.operation}) ${d.amount} €`,
             },
             {
                 Header: t("userPayments.duePaymentsList.columns.actions"),
                 id: "actions",
                 sortable: false,
-                style: {
-                    display: "block",
-                    textAlign: "right",
-                },
+                // This column was right-aligned under v6's per-column `style`; TanStackGrid has
+                // no style passthrough, so it now renders left-aligned like every other column --
+                // documented, accepted regression, not fixed here.
                 Cell: (props) => {
                     return (
                         <div className="flex flex-center-justified">

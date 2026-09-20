@@ -3,7 +3,7 @@
 // the active locale (found during the i18n PRs #7-10 re-review, docs/Modernization-Roadmap.md).
 
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import i18n from "../../i18n";
 import StudentEvaluationsStats from "./StudentEvaluationsStats";
 
@@ -46,11 +46,14 @@ describe("StudentEvaluationsStats", () => {
         ).toBeInTheDocument();
 
         // Cell renderers read `c.value as string`/`as number` post-migration -- assert the
-        // actual accessed values render, not just placeholder chrome.
+        // actual accessed values render, not just placeholder chrome. Scoped to the table
+        // itself: the pageSizeOptions selector (added for F3) also renders "5"/"10" as
+        // <option> text in the pagination footer, outside the table.
+        const table = screen.getByRole("table");
         expect(screen.getByText("Dupont Jean")).toBeInTheDocument();
-        expect(screen.getByText("10")).toBeInTheDocument();
-        expect(screen.getByText("5")).toBeInTheDocument();
-        expect(screen.getByText("50%")).toBeInTheDocument();
+        expect(within(table).getByText("10")).toBeInTheDocument();
+        expect(within(table).getByText("5")).toBeInTheDocument();
+        expect(within(table).getByText("50%")).toBeInTheDocument();
     });
 
     test("react-table chrome is translated in English", async () => {
