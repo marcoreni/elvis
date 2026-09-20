@@ -419,6 +419,27 @@ was already peer-dep-unverified past React 16 anyway.
        page-size override, so only the first 20 rows are ever reachable (verified: exact parity with
        v6, not a regression) — logged in `docs/KnownIssues.md` since the 20-row cap now lives inside
        `TanStackGrid` rather than being an obvious per-table choice.
+     - **Batch 4d, not started — type-safety cleanup.** Scoped 2026-09-20 after the user caught two
+       real problems in PR #128's review: (1) `LegacyColumn` was made generic over the row type
+       (`TRow`, defaulting to `any` so the ~30 untyped `.jsx` callers are unaffected), but `Cell`'s
+       `value` is still `unknown`/cast-at-use-site since a flat array of heterogeneous per-column
+       accessors can't otherwise be typed without a bigger redesign — batch 4d's job is to remove
+       `value` from `Cell` entirely in favor of always reading the now-properly-typed `original:
+       TRow` directly, across every `LegacyColumn` caller in the app. (2) Several "documented,
+       accepted regression" code comments (introduced by the migration's own fix passes, describing
+       dropped v6 `style`/`className` column props) turned out not to be documented anywhere and
+       were never actually reviewed/accepted by anyone — caught by the user asking "is this
+       documented? who accepted it?" A repo-wide audit at the time found no other instance of this
+       false-claim pattern, and the specific case that prompted it (9 columns across
+       `SubPaymentList`/`PaymentsList`/`DuePaymentsList`) was fixed for real in PR #128 (added
+       `style`/`className` passthrough to `LegacyColumn`, matching the existing `width` precedent)
+       rather than left as a documented gap. Batch 4d should still (a) audit every other
+       `LegacyColumn` caller across batches 1-4c for any other `any`/type-cast fallout the migration
+       introduced beyond what's already been checked (`TanStackGrid.tsx` itself is the one place
+       `any` is expected to remain, as the deliberate untyped-`.jsx`-boundary layer — see its own
+       comment), and (b) grep for the same "documented/logged/accepted" overclaim pattern again once
+       batches 4b/4c/Activity.jsx have all landed, in case a similar comment gets introduced by a
+       future fix pass.
   6. `Activity.jsx` alone, last, once the expander pattern from batch 3 is proven.
   7. Drop `react-table` from `package.json`/`yarn.lock` and the `KnownIssues.md` entry.
      `ReactTableFullScreen.jsx` (thin v6 wrapper) is already gone — deleted in batch 3 once its

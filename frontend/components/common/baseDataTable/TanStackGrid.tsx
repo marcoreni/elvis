@@ -28,6 +28,12 @@ declare module "@tanstack/react-table" {
     interface ColumnMeta<TData extends RowData, TValue> {
         width?: number;
         Filter?: LegacyColumnFilterRenderer;
+        /** v6's per-column `style`/`className`, applied to the data `<td>` only -- v6's own Td
+         * rendering (react-table/src/index.js) reads `column.style`/`column.className` there;
+         * the header instead reads `column.headerClassName` (never `column.style`/`.className`)
+         * so header scope is deliberately not replicated here. */
+        style?: React.CSSProperties;
+        className?: string;
     }
 }
 
@@ -51,17 +57,21 @@ export function goFullScreen(tableName: string) {
 
 // Column defs here use the v6 react-table shape (Header/accessor/Cell/sortable/filterable/width)
 // so callers didn't need to change when this wrapper moved to TanStack Table v8 internally --
-// see docs/Modernization-Roadmap.md item 13. Row shape is intentionally left loose (`any`): every
-// real caller has its own ad hoc row type, and this is a thin adapter over them, not a place
-// that benefits from generic row-type inference.
-export interface LegacyColumn {
+// see docs/Modernization-Roadmap.md item 13. Generic over the row type (`TRow`, defaulting to
+// `any`) so a real TypeScript caller (e.g. StudentEvaluationsStats.tsx) gets a checked
+// accessor/Cell, matching what it had with v6's own `Column<TRow>`; every other caller is a plain
+// `.jsx` file with no static row type to parametrize with, and keeps compiling unchanged via the
+// `any` default. `value` stays `unknown` (not `any`) per this repo's TS migration playbook
+// (docs/Jsx-To-Tsx-Migration-Playbook.md §3, "eliminate `any`") -- callers narrow it with a cast
+// at the point of use instead.
+export interface LegacyColumn<TRow = any> {
     id?: string;
     Header?: React.ReactNode;
     // A dot-path string (TanStack supports nested accessorKey paths natively) or a function.
-    accessor?: string | ((row: any) => unknown);
+    accessor?: string | ((row: TRow) => unknown);
     Cell?: (props: {
         value: unknown;
-        original: any;
+        original: TRow;
         index: number;
     }) => React.ReactNode;
     /** Custom filter-row UI for this column (e.g. a <select> of fixed options), v6's `Filter`. */
@@ -74,6 +84,10 @@ export interface LegacyColumn {
      * migrated columns still carry `maxWidth`/`minWidth` from their v6 defs -- inert, harmless to
      * leave, not cleaned up here. */
     width?: number;
+    /** v6's per-column `style`/`className`, applied to the data `<td>` only (matching v6's own
+     * scope -- see the ColumnMeta augmentation above). */
+    style?: React.CSSProperties;
+    className?: string;
 }
 
 // ColumnDef's own type is a discriminated union keyed on how a column identifies itself
@@ -89,10 +103,15 @@ interface MutableColumnDef {
     accessorFn?: (row: any) => unknown;
     accessorKey?: string;
     cell?: ColumnDef<any>["cell"];
-    meta?: { width?: number; Filter?: LegacyColumnFilterRenderer };
+    meta?: {
+        width?: number;
+        Filter?: LegacyColumnFilterRenderer;
+        style?: React.CSSProperties;
+        className?: string;
+    };
 }
 
-function toTanStackColumn(column: LegacyColumn): ColumnDef<any> {
+function toTanStackColumn<TRow>(column: LegacyColumn<TRow>): ColumnDef<TRow> {
     const tanstackColumn: MutableColumnDef = {
         id:
             column.id ??
@@ -144,11 +163,16 @@ function toTanStackColumn(column: LegacyColumn): ColumnDef<any> {
             (ctx.getValue() as React.ReactNode) ?? null;
     }
 
-    if (column.width || column.Filter) {
-        tanstackColumn.meta = { width: column.width, Filter: column.Filter };
+    if (column.width || column.Filter || column.style || column.className) {
+        tanstackColumn.meta = {
+            width: column.width,
+            Filter: column.Filter,
+            style: column.style,
+            className: column.className,
+        };
     }
 
-    return tanstackColumn as ColumnDef<any>;
+    return tanstackColumn as ColumnDef<TRow>;
 }
 
 const EXPANDER_COLUMN_ID = "__expander";
@@ -201,11 +225,11 @@ function useControllableState<T>(
     return [value, setValue];
 }
 
-interface TanStackGridProps {
+interface TanStackGridProps<TRow = any> {
     /** Unique per table; used for data-testid and the fullscreen toggle event. */
     tableName: string;
     /** v6-shaped column defs, including any "actions" column the caller already built. */
-    columns: LegacyColumn[];
+    columns: LegacyColumn<TRow>[];
     /**
      * Current page's rows. TanStack's own row-model memoization is keyed on this array's
      * *reference*, not its contents -- a caller whose data source mutates an array in place
@@ -216,7 +240,7 @@ interface TanStackGridProps {
      * formules/NewFormulePricingDataService.js) before their own `listData()` was fixed to return
      * a copy (`[...this.items]`) instead of the mutated original.
      */
-    data: any[];
+    data: TRow[];
     loading: boolean;
     /** Total page count, as reported by the server. */
     pages: number | null;
@@ -248,12 +272,12 @@ interface TanStackGridProps {
     minRows?: number;
     /** When set, renders an expander column; expanding a row shows this under it (v6's `SubComponent`). */
     renderSubComponent?: (row: {
-        original: any;
+        original: TRow;
         index: number;
     }) => React.ReactNode;
     /** Per-row `<tr>` props (e.g. conditional styling), keyed off the row's data -- v6's `getTrProps`. */
     getRowProps?: (
-        original: any
+        original: TRow
     ) => React.HTMLAttributes<HTMLTableRowElement> | undefined;
     /** Renders a page-size `<select>` in the footer when set. */
     pageSizeOptions?: number[];
@@ -299,7 +323,7 @@ interface TanStackGridProps {
  * parameters/BaseDataTable.jsx, class-based) and, since batch 3, the standalone tables that need
  * expandable rows and/or externally-controlled pagination (docs/Modernization-Roadmap.md item 13).
  */
-export default function TanStackGrid({
+export default function TanStackGrid<TRow = any>({
     tableName,
     columns,
     data,
@@ -326,7 +350,7 @@ export default function TanStackGrid({
     columnFilters: controlledColumnFilters,
     onColumnFiltersChange,
     manual: manualProp,
-}: TanStackGridProps) {
+}: TanStackGridProps<TRow>) {
     const { t } = useTranslation("common");
     const manual = manualProp ?? true;
 
@@ -350,7 +374,12 @@ export default function TanStackGrid({
 
     const hasExpander = !!renderSubComponent;
     const tanstackColumns = useMemo(() => {
-        let mapped = columns.map(toTanStackColumn);
+        // Built loose (`ColumnDef<any>`, same as toTanStackColumn's own internal
+        // MutableColumnDef) and cast once to `ColumnDef<TRow>[]` at the end -- spreading a
+        // discriminated union type parametrized on a generic (`ColumnDef<TRow>`) confuses TS's
+        // structural checks in the override branch below, same reasoning as toTanStackColumn's
+        // own single-cast-at-the-end pattern.
+        let mapped: ColumnDef<any>[] = columns.map((c) => toTanStackColumn(c));
         // Table-wide overrides. Unlike v6 -- where a column's own `filterable`/`sortable`
         // setting was checked first and won over the table-level value, which only acted as a
         // default for columns that didn't set their own -- `false` here unconditionally disables
@@ -366,7 +395,9 @@ export default function TanStackGrid({
                 enableSorting: tableSortable ? c.enableSorting : false,
             }));
         }
-        return hasExpander ? [buildExpanderColumn(), ...mapped] : mapped;
+        return (
+            hasExpander ? [buildExpanderColumn(), ...mapped] : mapped
+        ) as ColumnDef<TRow>[];
         // `renderSubComponent` itself isn't a dep: callers may pass a fresh inline arrow every
         // render (LessonList/DuePaymentList/PaymentList all do), which would defeat this memo on
         // every unrelated re-render even though the columns never actually change -- only whether
@@ -378,7 +409,7 @@ export default function TanStackGrid({
     // every real caller already guards its own fetched data, but default defensively here too so
     // that invariant can't be silently reintroduced by a future caller. Used everywhere below
     // that reads `data`, not just here -- the resultsCount footer needs the same guard.
-    const safeData = data ?? [];
+    const safeData: TRow[] = data ?? [];
 
     // v6 reset the current page to 0 whenever the filter set changed (its own
     // calculateNewResolvedState); TanStack v8 has no equivalent, and manualPagination blocks its
@@ -394,7 +425,7 @@ export default function TanStackGrid({
         }
     };
 
-    const table = useReactTable({
+    const table = useReactTable<TRow>({
         data: safeData,
         columns: tanstackColumns,
         state: { sorting, columnFilters, pagination, expanded },
@@ -587,8 +618,8 @@ export default function TanStackGrid({
                                             key={header.id}
                                             style={{
                                                 minWidth:
-                                                    header.column.columnDef
-                                                        .meta?.width ?? 100,
+                                                    header.column.columnDef.meta
+                                                        ?.width ?? 100,
                                             }}
                                         >
                                             {header.column.getCanFilter() &&
@@ -668,7 +699,15 @@ export default function TanStackGrid({
                                                         style={{
                                                             whiteSpace:
                                                                 "nowrap",
+                                                            ...cell.column
+                                                                .columnDef.meta
+                                                                ?.style,
                                                         }}
+                                                        className={
+                                                            cell.column
+                                                                .columnDef.meta
+                                                                ?.className
+                                                        }
                                                     >
                                                         {flexRender(
                                                             cell.column

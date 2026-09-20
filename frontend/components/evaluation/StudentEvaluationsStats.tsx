@@ -14,12 +14,11 @@ const StudentEvaluationStats: React.FC<StudentEvaluationStatsProps> = ({
 }) => {
     const { t } = useTranslation("evaluation");
 
-    const columns: LegacyColumn[] = [
+    const columns: LegacyColumn<StudentEvaluationStat>[] = [
         {
             id: "teacher",
             Header: t("stats.teacher"),
-            accessor: (d: StudentEvaluationStat) =>
-                `${d.teacher.last_name} ${d.teacher.first_name}`,
+            accessor: (d) => `${d.teacher.last_name} ${d.teacher.first_name}`,
             Cell: (c) => (
                 <a href={`/users/${c.original.teacher.id}`}>
                     {c.value as string}
@@ -29,7 +28,7 @@ const StudentEvaluationStats: React.FC<StudentEvaluationStatsProps> = ({
         {
             id: "nb_students",
             Header: t("stats.studentsCount"),
-            accessor: (d: StudentEvaluationStat) => d.nb_students,
+            accessor: (d) => d.nb_students,
             Cell: (c) => (
                 <div className="text-right font-bold font-size-big">
                     {c.value as number}
@@ -39,7 +38,7 @@ const StudentEvaluationStats: React.FC<StudentEvaluationStatsProps> = ({
         {
             id: "nb_evaluated_students",
             Header: t("stats.evaluationsCount"),
-            accessor: (d: StudentEvaluationStat) => d.nb_evaluated_students,
+            accessor: (d) => d.nb_evaluated_students,
             Cell: (c) => (
                 <div
                     className={`text-right font-bold font-size-big text-${c.original.evaluations_completion_rate_level}`}
@@ -51,7 +50,7 @@ const StudentEvaluationStats: React.FC<StudentEvaluationStatsProps> = ({
         {
             id: "nb_redirections",
             Header: t("stats.changesCount"),
-            accessor: (d: StudentEvaluationStat) => d.nb_redirections,
+            accessor: (d) => d.nb_redirections,
             Cell: (c) => (
                 <div className="text-right font-bold font-size-big">
                     {c.value as number}
@@ -61,7 +60,7 @@ const StudentEvaluationStats: React.FC<StudentEvaluationStatsProps> = ({
         {
             id: "nb_informed_redirections",
             Header: t("stats.informedCount"),
-            accessor: (d: StudentEvaluationStat) => d.nb_informed_redirections,
+            accessor: (d) => d.nb_informed_redirections,
             Cell: (c) => (
                 <div
                     className={`text-right font-bold font-size-big text-${c.original.redirection_information_rate_level}`}
@@ -73,8 +72,7 @@ const StudentEvaluationStats: React.FC<StudentEvaluationStatsProps> = ({
         {
             id: "evaluations_completion_rate",
             Header: t("stats.completionRate"),
-            accessor: (d: StudentEvaluationStat) =>
-                d.evaluations_completion_rate,
+            accessor: (d) => d.evaluations_completion_rate,
             Cell: (c) => (
                 <div
                     className="progress"
@@ -95,7 +93,7 @@ const StudentEvaluationStats: React.FC<StudentEvaluationStatsProps> = ({
     ];
 
     return (
-        <TanStackGrid
+        <TanStackGrid<StudentEvaluationStat>
             tableName="StudentEvaluationStats"
             columns={columns}
             data={stats}
