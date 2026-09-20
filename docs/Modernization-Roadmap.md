@@ -119,7 +119,7 @@ legacy string refs). Caught and fixed 2 real behavior regressions against upstre
 new tests. `react-stepzilla` fully removed from `package.json`/`yarn.lock`. `KnownIssues.md`'s
 "Exotic dependencies" section (its last entry) removed.
 
-## 13. `react-table` v6 → TanStack Table — batches 1-4c merged, batch 4d part 1 open for review
+## 13. `react-table` v6 → TanStack Table — batches 1-4d merged; `Activity.jsx` + package drop left
 
 `react-table@^6.8.0` (peer dep `react: ^16.x.x` — doesn't even officially claim React 17 support,
 same pattern as `react-loader-spinner`, item in the "Frontend dependencies" KnownIssues entry) is 4
@@ -466,12 +466,17 @@ was already peer-dep-unverified past React 16 anyway.
        Worth a `docs/KnownIssues.md` line naming it, so a future column doesn't reintroduce the
        batch 4d part 1 bug in a new place.
 
-       **Part 2, not started**: (a) audit every `LegacyColumn` caller across batches 1-4c for any
-       other `any`/type-cast fallout the migration introduced — already spot-checked once (clean:
-       `TanStackGrid.tsx` itself is the only file with `any`, as the deliberate, documented
-       untyped-`.jsx`-boundary layer), worth a final confirmation once part 1 merges; (b) re-grep
-       for the "documented/logged/accepted" overclaim pattern once `Activity.jsx` has also landed,
-       in case a similar comment gets introduced by a future fix pass.
+       **Part 2 — DONE (2026-09-20), both audits confirmed clean, no code changes needed.**
+       (a) Re-audited every `LegacyColumn`/`TanStackGrid` caller for `any`/`unknown`/`as unknown as`
+       fallout: `TanStackGrid.tsx` is still the only file with `any` (8 occurrences, all the same
+       pre-existing internal adapter scaffolding — the `MutableColumnDef` intermediate cast points
+       and `buildExpanderColumn`'s helper column — deliberate and already documented, nothing new
+       introduced by batch 4d part 1). (b) Re-grepped the whole `frontend/` tree for
+       "documented, accepted regression" and equivalent phrasing — zero matches anywhere, confirming
+       the PR #128 fix removed every instance and none crept back in. One caveat: audit (b) was
+       originally scoped to also re-run once `Activity.jsx` lands, in case that batch's own fix
+       passes introduce a similar false claim — worth one more quick grep at that point, though
+       nothing suggests it's likely to recur now that this exact pattern has been caught once.
   6. `Activity.jsx` alone, last, once the expander pattern from batch 3 is proven.
   7. Drop `react-table` from `package.json`/`yarn.lock` and the `KnownIssues.md` entry.
      `ReactTableFullScreen.jsx` (thin v6 wrapper) is already gone — deleted in batch 3 once its
