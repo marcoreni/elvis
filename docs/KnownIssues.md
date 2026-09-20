@@ -245,3 +245,21 @@ being an obvious per-table choice a future reader would notice. Fix, if a payer'
 ever needs to show more: either pass `pageSizeOptions`/re-enable pagination, or (per the
 Modernization-Roadmap item 13 batch 4c note) move these two tables to real server-side pagination.
 
+## `LegacyColumn` accessors must not close over mutable component state
+
+TanStack caches each row's `accessor` result in `row._valuesCache`, keyed only on the `data` array's
+*reference* — not on any other component state. A column whose `accessor` reads mutable state (e.g.
+`accessor: (d) => this.state.selected.includes(d.id)`) will show a stale value until something else
+happens to change `data`'s own reference; a `setState` that only touches the state the accessor
+reads (not `data`) does not invalidate the cache. This bit three real columns during item 13 batch
+4d part 1 (`UserList.jsx`, `courses/LessonList.jsx`, `generalPayments/PaymentScheduleList.jsx` — a
+selection checkbox stayed visually unchecked after being clicked, since only the selection state,
+not `data`, changed) and was fixed by having their `Cell` read straight from `original` instead of
+the cached `value`. 8 other accessor-only columns (no custom `Cell`, so they still render via
+TanStack's own default path, which does use the cache) exist across `generalPayments/
+{DuePaymentList,PaymentList,SubPaymentList}.jsx`, `courses/LessonList.jsx`, and `userPayments/
+{PaymentsList,DuePaymentsList}.jsx` — all currently read only `this.props.*`/a closured `t`, never
+mutable state, so none is a live bug today. Keep this invariant in mind before adding a new
+`LegacyColumn` accessor that reads component state: either avoid it, or give that column its own
+`Cell` reading `original` directly instead of relying on the cached accessor result.
+
