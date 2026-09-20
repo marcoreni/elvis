@@ -18,7 +18,14 @@
 //      synchronously.
 
 import React from "react";
-import { render, screen, within, waitFor } from "@testing-library/react";
+import {
+    render,
+    screen,
+    within,
+    waitFor,
+    fireEvent,
+} from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import i18n from "../../../i18n";
 import enActivityApplications from "../../../locales/en/activityApplications.json";
 import Activity from "./Activity";
@@ -88,8 +95,19 @@ vi.mock("react-modal", () => ({
     default: ({ children }) => <div data-testid="react-modal">{children}</div>,
 }));
 
+// Exposes `onUpdateActivity` via a clickable button (instead of an inert stub) so tests can drive
+// the real `renderSubComponent` -> `WorkGroupEditor.onUpdateActivity` callback path -- see the
+// id-keyed re-expand regression tests below. `activity_ref.is_work_group` is false in every
+// existing fixture above (SUB_ROW, baseProps' empty suggestions), so this change doesn't affect
+// any test that already passes.
 vi.mock("./WorkGroupEditor", () => ({
-    default: () => <div data-testid="work-group-editor" />,
+    default: ({ activity, onUpdateActivity }) => (
+        <div data-testid="work-group-editor">
+            <button onClick={() => onUpdateActivity(activity)}>
+                save-{activity.id}
+            </button>
+        </div>
+    ),
 }));
 
 // `../../../tools/api` chainable — `handleSubmitStudentLevel` uses `api.set().success(cb).post/del`;
@@ -387,6 +405,235 @@ describe("Activity — displayDuration goes through activityApplications:units.*
                 true
             );
         }
+    });
+});
+
+// ==============================================================================================
+// D. Suggestion editing keeps expansion pinned to a suggestion's id, not its array position
+// ==============================================================================================
+// Item 13's final batch: the old react-table v6 code reached into the table's internal ref API to
+// recompute a suggestion's *index* after an active sort, so it could re-expand "whatever's now
+// there". The TanStack version instead passes `getRowId={(row) => String(row.id)}` to
+// TanStackGrid and keys `tableState.expanded` off that same id (see `onUpdateActivity` in
+// Activity.jsx's `renderSubComponent`). These tests drive the update through that real callback,
+// captured off `lastGridProps.renderSubComponent` per the mocked-TanStackGrid technique above,
+// rather than calling any internal method directly.
+
+const workGroupSuggestion = (id, extra = {}) => ({
+    id,
+    time_interval: {
+        start: "2025-09-01T09:00:00",
+        end: "2025-09-01T10:00:00",
+    },
+    activity_ref: { is_work_group: true, label: `WG-${id}` },
+    location: { label: "Salle" },
+    teacher: { first_name: "A", last_name: "B" },
+    users: [],
+    inactive_users: [],
+    options: [],
+    ...extra,
+});
+
+describe("Activity — editing a suggestion via WorkGroupEditor re-expands it by id, surviving a reorder", () => {
+    test("the edited suggestion stays expanded by id after the suggestions array reorders", async () => {
+        const s1 = workGroupSuggestion(1);
+        const s2 = workGroupSuggestion(2);
+        const handleUpdateSuggestion = vi.fn();
+
+        const { rerender } = render(
+            <Activity
+                {...baseProps()}
+                suggestions={[s1, s2]}
+                handleUpdateSuggestion={handleUpdateSuggestion}
+            />
+        );
+        await waitFor(() => expect(global.fetch).toHaveBeenCalled());
+
+        // Real path: renderSubComponent -> mounted WorkGroupEditor -> click -> onUpdateActivity.
+        const editor = render(
+            lastGridProps.renderSubComponent({ original: s2, index: 1 })
+        );
+        await userEvent.click(editor.getByText("save-2"));
+
+        expect(handleUpdateSuggestion).toHaveBeenCalledWith(s2);
+        // Keyed by the suggestion's own id ("2"), not its array index (1).
+        expect(lastGridProps.expanded).toEqual({ 2: true });
+        expect(lastGridProps.getRowId(s2)).toBe("2");
+
+        // Simulate the parent re-rendering with suggestions reordered after the update -- exactly
+        // the scenario the deleted index-based hack existed to handle.
+        rerender(
+            <Activity
+                {...baseProps()}
+                suggestions={[s2, s1]}
+                handleUpdateSuggestion={handleUpdateSuggestion}
+            />
+        );
+
+        // s2 is now at index 0 instead of 1; the expanded key is untouched -- still id "2" -- proof
+        // it tracks the suggestion's own identity, not its position in the array.
+        expect(lastGridProps.data.map((s) => s.id)).toEqual([2, 1]);
+        expect(lastGridProps.expanded).toEqual({ 2: true });
+    });
+});
+
+// ==============================================================================================
+// E. createAllExpanded — id-keyed, and scoped to the currently-filtered suggestions
+// ==============================================================================================
+
+describe("Activity — expand all uses suggestion ids, not row indexes", () => {
+    test("expand all marks every visible suggestion's id as expanded", async () => {
+        const s1 = workGroupSuggestion(11);
+        const s2 = workGroupSuggestion(12);
+        const s3 = workGroupSuggestion(13);
+
+        const { container } = render(
+            <Activity {...baseProps()} suggestions={[s1, s2, s3]} />
+        );
+        await waitFor(() => expect(global.fetch).toHaveBeenCalled());
+
+        await userEvent.click(
+            container.querySelector(".fa-caret-down").closest("button")
+        );
+
+        expect(lastGridProps.expanded).toEqual({
+            11: true,
+            12: true,
+            13: true,
+        });
+    });
+
+    test("expand all only expands the currently-filtered-in suggestions, not filtered-out ones", async () => {
+        const piano = workGroupSuggestion(21, {
+            activity_ref: { is_work_group: true, label: "Piano" },
+        });
+        const guitare = workGroupSuggestion(22, {
+            activity_ref: { is_work_group: true, label: "Guitare" },
+        });
+
+        const { container } = render(
+            <Activity {...baseProps()} suggestions={[piano, guitare]} />
+        );
+        await waitFor(() => expect(global.fetch).toHaveBeenCalled());
+
+        const typeCourFilter = lastGridProps.columns.find(
+            (c) => c.id === "type_cour"
+        ).Filter;
+        const filterRender = render(React.createElement(typeCourFilter));
+        await userEvent.selectOptions(
+            within(filterRender.container).getByRole("combobox"),
+            "Piano"
+        );
+
+        // Sanity check: the post-filter data handed to TanStackGrid narrowed to Piano only.
+        expect(lastGridProps.data.map((s) => s.id)).toEqual([21]);
+
+        await userEvent.click(
+            container.querySelector(".fa-caret-down").closest("button")
+        );
+
+        expect(lastGridProps.expanded).toEqual({ 21: true });
+    });
+});
+
+// ==============================================================================================
+// F. The three custom-filtered columns (day/type_cour/time) narrow suggestions via applyCustomFilters
+// ==============================================================================================
+
+describe("Activity — day/type_cour/time custom filters narrow the suggestion list", () => {
+    const suggestion = (id, extra = {}) => ({
+        id,
+        time_interval: {
+            start: "2025-09-01T09:00:00",
+            end: "2025-09-01T10:00:00",
+        },
+        activity_ref: { is_work_group: false, label: "Piano" },
+        location: { label: "Salle" },
+        teacher: { first_name: "A", last_name: "B" },
+        users: [],
+        inactive_users: [],
+        options: [],
+        ...extra,
+    });
+
+    test("day filter keeps only suggestions on the selected weekday", async () => {
+        // 2025-09-01 is a Monday (isoWeekday 1); 2025-09-03 is a Wednesday (isoWeekday 3). Picked
+        // deliberately away from Sunday, where WEEKDAYS' 0-based option id (0) and moment's
+        // 1-based isoWeekday() (7) don't line up -- not this test's concern.
+        const monday = suggestion(31);
+        const wednesday = suggestion(32, {
+            time_interval: {
+                start: "2025-09-03T09:00:00",
+                end: "2025-09-03T10:00:00",
+            },
+        });
+
+        render(<Activity {...baseProps()} suggestions={[monday, wednesday]} />);
+        await waitFor(() => expect(global.fetch).toHaveBeenCalled());
+
+        const dayFilter = lastGridProps.columns.find(
+            (c) => c.id === "day"
+        ).Filter;
+        const filterRender = render(React.createElement(dayFilter));
+        await userEvent.selectOptions(
+            within(filterRender.container).getByRole("combobox"),
+            "1"
+        ); // Lundi
+
+        expect(lastGridProps.data.map((s) => s.id)).toEqual([31]);
+    });
+
+    test("type_cour filter keeps only suggestions of the selected activity ref label", async () => {
+        const piano = suggestion(41, {
+            activity_ref: { is_work_group: false, label: "Piano" },
+        });
+        const guitare = suggestion(42, {
+            activity_ref: { is_work_group: false, label: "Guitare" },
+        });
+
+        render(<Activity {...baseProps()} suggestions={[piano, guitare]} />);
+        await waitFor(() => expect(global.fetch).toHaveBeenCalled());
+
+        const typeCourFilter = lastGridProps.columns.find(
+            (c) => c.id === "type_cour"
+        ).Filter;
+        const filterRender = render(React.createElement(typeCourFilter));
+        await userEvent.selectOptions(
+            within(filterRender.container).getByRole("combobox"),
+            "Guitare"
+        );
+
+        expect(lastGridProps.data.map((s) => s.id)).toEqual([42]);
+    });
+
+    test("time filter keeps only suggestions whose start is on/after the selected start time", async () => {
+        const early = suggestion(51, {
+            time_interval: {
+                start: "2025-09-01T08:00:00",
+                end: "2025-09-01T09:00:00",
+            },
+        });
+        const late = suggestion(52, {
+            time_interval: {
+                start: "2025-09-01T15:00:00",
+                end: "2025-09-01T16:00:00",
+            },
+        });
+
+        render(<Activity {...baseProps()} suggestions={[early, late]} />);
+        await waitFor(() => expect(global.fetch).toHaveBeenCalled());
+
+        const timeFilter = lastGridProps.columns.find(
+            (c) => c.id === "time"
+        ).Filter;
+        const { container: filterContainer } = render(
+            React.createElement(timeFilter)
+        );
+        const [startInput] =
+            filterContainer.querySelectorAll('input[type="time"]');
+        fireEvent.change(startInput, { target: { value: "10:00" } });
+
+        expect(lastGridProps.data.map((s) => s.id)).toEqual([52]);
     });
 });
 
