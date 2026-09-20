@@ -651,7 +651,7 @@ class PaymentList extends React.Component {
         const { t } = this.props;
 
         let status = this.props.paymentStatuses.find(
-            (s) => s.id === cell.value
+            (s) => s.id === cell.original.payment_status_id
         );
         let paymentId = cell.original.id;
 

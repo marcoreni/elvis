@@ -245,7 +245,11 @@ describe("day column follows the active UI language (moment locale no longer for
 
         // 2026-01-12 is a Monday.
         expect(
-            dayColumn().Cell({ value: { start: "2026-01-12T10:00:00" } })
+            dayColumn().Cell({
+                original: {
+                    time_interval: { start: "2026-01-12T10:00:00" },
+                },
+            })
         ).toBe("lundi");
     });
 
@@ -254,7 +258,11 @@ describe("day column follows the active UI language (moment locale no longer for
         render(<LessonList {...makeProps()} />);
 
         expect(
-            dayColumn().Cell({ value: { start: "2026-01-12T10:00:00" } })
+            dayColumn().Cell({
+                original: {
+                    time_interval: { start: "2026-01-12T10:00:00" },
+                },
+            })
         ).toBe("Monday");
     });
 

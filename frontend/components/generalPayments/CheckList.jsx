@@ -297,7 +297,7 @@ class CheckList extends React.Component {
                                         d.original
                                     );
                                 }}
-                                checked={d.value}
+                                checked={d.original.check_status}
                             />
                         </label>
                     );

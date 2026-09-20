@@ -100,6 +100,8 @@ class DuePaymentList extends React.Component {
             ..._.map(this.props.paymentMethods, reactOptionMapper()),
         ];
 
+        const validityFor = (d) => this.state.validityMap[d.id];
+
         const columns = [
             {
                 Header: "",
@@ -154,7 +156,7 @@ class DuePaymentList extends React.Component {
                 Header: t("general.dueDates.columns.validity"),
                 id: "validity",
                 maxWidth: 50,
-                accessor: (d) => this.state.validityMap[d.id],
+                accessor: validityFor,
                 sortable: false,
                 Filter: ({ filter, onChange }) => {
                     const options = [
@@ -205,7 +207,7 @@ class DuePaymentList extends React.Component {
                 Cell: (row) => {
                     let color = "";
 
-                    switch (row.value) {
+                    switch (validityFor(row.original)) {
                         case "N":
                             color = "#ff2e00";
                             break;
@@ -807,8 +809,10 @@ class DuePaymentList extends React.Component {
     }
 
     renderStatus(cell) {
-        if (cell.value) {
-            let status = this.props.statuses.find((s) => s.id === cell.value);
+        if (cell.original.due_payment_status_id) {
+            let status = this.props.statuses.find(
+                (s) => s.id === cell.original.due_payment_status_id
+            );
             let dueId = cell.original.id;
 
             return status ? (

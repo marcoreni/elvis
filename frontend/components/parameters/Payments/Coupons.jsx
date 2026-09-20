@@ -38,7 +38,7 @@ export default function Coupons() {
             id: "enabled",
             Header: t("payments.coupons.cols.enabled"),
             accessor: "enabled",
-            Cell: ({value}) => value ? t("shared.yes") : t("shared.no")
+            Cell: ({original}) => original.enabled ? t("shared.yes") : t("shared.no")
         }
     ];
 

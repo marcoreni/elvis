@@ -276,13 +276,15 @@ class UserList extends React.Component {
         const { data, pages, total, loading } = this.state;
         const { t } = this.props;
 
+        const isSelected = (d) => this.state.selected.includes(d.id);
+
         const columns = [
             {
                 Header: "",
                 id: "selection",
                 width: 25,
                 sortable: false,
-                accessor: (d) => this.state.selected.includes(d.id),
+                accessor: isSelected,
                 Filter: () => (
                     <input
                         type="checkbox"
@@ -302,7 +304,10 @@ class UserList extends React.Component {
                 Cell: (d) => (
                     <input
                         type="checkbox"
-                        checked={this.state.selected === "all" || d.value}
+                        checked={
+                            this.state.selected === "all" ||
+                            isSelected(d.original)
+                        }
                         onChange={(e) =>
                             this.setState({
                                 selected: e.target.checked

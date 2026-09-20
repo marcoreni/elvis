@@ -14,14 +14,17 @@ const StudentEvaluationStats: React.FC<StudentEvaluationStatsProps> = ({
 }) => {
     const { t } = useTranslation("evaluation");
 
+    const teacherName = (d: StudentEvaluationStat) =>
+        `${d.teacher.last_name} ${d.teacher.first_name}`;
+
     const columns: LegacyColumn<StudentEvaluationStat>[] = [
         {
             id: "teacher",
             Header: t("stats.teacher"),
-            accessor: (d) => `${d.teacher.last_name} ${d.teacher.first_name}`,
+            accessor: teacherName,
             Cell: (c) => (
                 <a href={`/users/${c.original.teacher.id}`}>
-                    {c.value as string}
+                    {teacherName(c.original)}
                 </a>
             ),
         },
@@ -31,7 +34,7 @@ const StudentEvaluationStats: React.FC<StudentEvaluationStatsProps> = ({
             accessor: (d) => d.nb_students,
             Cell: (c) => (
                 <div className="text-right font-bold font-size-big">
-                    {c.value as number}
+                    {c.original.nb_students}
                 </div>
             ),
         },
@@ -43,7 +46,7 @@ const StudentEvaluationStats: React.FC<StudentEvaluationStatsProps> = ({
                 <div
                     className={`text-right font-bold font-size-big text-${c.original.evaluations_completion_rate_level}`}
                 >
-                    {c.value as number}
+                    {c.original.nb_evaluated_students}
                 </div>
             ),
         },
@@ -53,7 +56,7 @@ const StudentEvaluationStats: React.FC<StudentEvaluationStatsProps> = ({
             accessor: (d) => d.nb_redirections,
             Cell: (c) => (
                 <div className="text-right font-bold font-size-big">
-                    {c.value as number}
+                    {c.original.nb_redirections}
                 </div>
             ),
         },
@@ -65,7 +68,7 @@ const StudentEvaluationStats: React.FC<StudentEvaluationStatsProps> = ({
                 <div
                     className={`text-right font-bold font-size-big text-${c.original.redirection_information_rate_level}`}
                 >
-                    {c.value as number}
+                    {c.original.nb_informed_redirections}
                 </div>
             ),
         },
@@ -81,11 +84,11 @@ const StudentEvaluationStats: React.FC<StudentEvaluationStatsProps> = ({
                     <div
                         className={`progress-bar progress-bar-${c.original.evaluations_completion_rate_level}`}
                         style={{
-                            width: (c.value as number) + "%",
+                            width: c.original.evaluations_completion_rate + "%",
                             minWidth: "2em",
                         }}
                     >
-                        {c.value as number}%
+                        {c.original.evaluations_completion_rate}%
                     </div>
                 </div>
             ),

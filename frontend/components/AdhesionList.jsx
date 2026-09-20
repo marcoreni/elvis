@@ -146,6 +146,14 @@ class AdhesionList extends React.Component {
             end_dates_diffs[adh.id] = diff;
         });
 
+        const endDateLink = (d) => (
+            <a href={`/users/${d.user.id}`} className="w-100 d-flex text-dark">
+                {d.validity_end_date
+                    ? moment(d.validity_end_date).format("DD MMM YYYY")
+                    : t("users:adhesionList.notSpecified")}
+            </a>
+        );
+
         const columns = [
             {
                 Header: "#",
@@ -204,16 +212,7 @@ class AdhesionList extends React.Component {
             {
                 Header: t("users:adhesionList.columns.endDate"),
                 id: "validity_end_date",
-                accessor: (d) => (
-                    <a
-                        href={`/users/${d.user.id}`}
-                        className="w-100 d-flex text-dark"
-                    >
-                        {d.validity_end_date
-                            ? moment(d.validity_end_date).format("DD MMM YYYY")
-                            : t("users:adhesionList.notSpecified")}
-                    </a>
-                ),
+                accessor: endDateLink,
                 filterable: true,
                 Filter: ({ onChange }) => (
                     <div
@@ -240,7 +239,7 @@ class AdhesionList extends React.Component {
 
                     return (
                         <div>
-                            {d.value}
+                            {endDateLink(d.original)}
                             {diff < 30 && diff >= 0 ? (
                                 <span className="m-l-md text-danger">
                                     <i className="fas fa-exclamation-circle m-r-xs" />
