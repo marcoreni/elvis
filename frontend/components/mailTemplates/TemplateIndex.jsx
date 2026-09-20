@@ -106,9 +106,11 @@ class TemplateIndex extends Component {
                 // Was `id: ""` -- an empty string, not a real id. TanStack falls back to a
                 // string `header` when `id`/`accessorKey` are both missing/falsy, but here
                 // `accessor: "path"` already yields a real accessorKey, so `""` (not nullish)
-                // stuck as the literal column id instead of being auto-derived. Harmless in v6,
-                // which didn't key much off column id, but an empty-string id is fragile to
-                // build anything else on top of -- naming it properly instead.
+                // stuck as the literal column id instead of being auto-derived. This isn't
+                // cosmetic: TanStack's `createColumn` throws ("Columns require an id when using
+                // a non-string header") whenever a column ends up with an empty-string id, in
+                // production too -- this would have crashed the whole table, not just misbehaved
+                // silently. Naming it properly instead.
                 id: "path",
                 Header: t("parameters:mailTemplates.columns.path"),
                 accessor: "path",

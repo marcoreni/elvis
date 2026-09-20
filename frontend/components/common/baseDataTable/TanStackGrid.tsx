@@ -260,15 +260,17 @@ interface TanStackGridProps {
     /** Defaults to `true`. Set `false` to hide the prev/next/page-count/results-count footer
      * entirely -- v6's `showPagination={false}`, used by a few small/unpaginated tables. */
     showPagination?: boolean;
-    /** Defaults to `true`, matching v6's own table-level `filterable`. Set `false` to disable
-     * filtering on every column at once (overriding any column's own `filterable: true`) --
-     * for a table that never filters at all, instead of repeating `filterable: false` on every
-     * column definition. */
+    /** Defaults to `true`. Unlike v6 (where a column's own `filterable` setting was checked
+     * first and won over this table-level value, which only acted as a default for columns that
+     * didn't set their own), here `false` unconditionally disables filtering on every column,
+     * even one with its own `filterable: true` -- for a table that never filters at all, instead
+     * of repeating `filterable: false` on every column definition. */
     filterable?: boolean;
-    /** Defaults to `true`, matching v6's own table-level `sortable`. Set `false` to disable
-     * sorting on every column at once (overriding any column's own `sortable: true`) -- for a
-     * table that never sorts at all, instead of repeating `sortable: false` on every column
-     * definition. */
+    /** Defaults to `true`. Unlike v6 (where a column's own `sortable` setting was checked first
+     * and won over this table-level value, which only acted as a default for columns that didn't
+     * set their own), here `false` unconditionally disables sorting on every column, even one
+     * with its own `sortable: true` -- for a table that never sorts at all, instead of repeating
+     * `sortable: false` on every column definition. */
     sortable?: boolean;
     /** Extra inline style merged onto the root div (e.g. a background color). */
     style?: React.CSSProperties;
@@ -349,9 +351,11 @@ export default function TanStackGrid({
     const hasExpander = !!renderSubComponent;
     const tanstackColumns = useMemo(() => {
         let mapped = columns.map(toTanStackColumn);
-        // Table-wide overrides, matching v6's own table-level `filterable`/`sortable` (which
-        // gated every column's filter/sort UI regardless of that column's own setting) --
-        // cheaper than requiring every column definition to repeat `filterable: false` /
+        // Table-wide overrides. Unlike v6 -- where a column's own `filterable`/`sortable`
+        // setting was checked first and won over the table-level value, which only acted as a
+        // default for columns that didn't set their own -- `false` here unconditionally disables
+        // every column's filter/sort UI, even a column with its own `filterable`/`sortable: true`.
+        // Still cheaper than requiring every column definition to repeat `filterable: false` /
         // `sortable: false` when the whole table never filters or sorts at all.
         if (!tableFilterable || !tableSortable) {
             mapped = mapped.map((c) => ({
@@ -571,57 +575,59 @@ export default function TanStackGrid({
                                 </th>
                             ))}
                         </tr>
-                        <tr>
-                            {headers.map((header) => {
-                                const CustomFilter =
-                                    header.column.columnDef.meta?.Filter;
-                                const filterValue =
-                                    header.column.getFilterValue();
-                                return (
-                                    <th
-                                        key={header.id}
-                                        style={{
-                                            minWidth:
-                                                header.column.columnDef.meta
-                                                    ?.width ?? 100,
-                                        }}
-                                    >
-                                        {header.column.getCanFilter() &&
-                                            (CustomFilter ? (
-                                                <CustomFilter
-                                                    filter={
-                                                        filterValue !==
-                                                        undefined
-                                                            ? {
-                                                                  value: filterValue,
-                                                              }
-                                                            : undefined
-                                                    }
-                                                    onChange={(value) =>
-                                                        header.column.setFilterValue(
-                                                            value
-                                                        )
-                                                    }
-                                                />
-                                            ) : (
-                                                <input
-                                                    type="text"
-                                                    className="form-control form-control-small"
-                                                    value={
-                                                        (filterValue as string) ??
-                                                        ""
-                                                    }
-                                                    onChange={(e) =>
-                                                        header.column.setFilterValue(
-                                                            e.target.value
-                                                        )
-                                                    }
-                                                />
-                                            ))}
-                                    </th>
-                                );
-                            })}
-                        </tr>
+                        {headers.some((h) => h.column.getCanFilter()) && (
+                            <tr>
+                                {headers.map((header) => {
+                                    const CustomFilter =
+                                        header.column.columnDef.meta?.Filter;
+                                    const filterValue =
+                                        header.column.getFilterValue();
+                                    return (
+                                        <th
+                                            key={header.id}
+                                            style={{
+                                                minWidth:
+                                                    header.column.columnDef
+                                                        .meta?.width ?? 100,
+                                            }}
+                                        >
+                                            {header.column.getCanFilter() &&
+                                                (CustomFilter ? (
+                                                    <CustomFilter
+                                                        filter={
+                                                            filterValue !==
+                                                            undefined
+                                                                ? {
+                                                                      value: filterValue,
+                                                                  }
+                                                                : undefined
+                                                        }
+                                                        onChange={(value) =>
+                                                            header.column.setFilterValue(
+                                                                value
+                                                            )
+                                                        }
+                                                    />
+                                                ) : (
+                                                    <input
+                                                        type="text"
+                                                        className="form-control form-control-small"
+                                                        value={
+                                                            (filterValue as string) ??
+                                                            ""
+                                                        }
+                                                        onChange={(e) =>
+                                                            header.column.setFilterValue(
+                                                                e.target.value
+                                                            )
+                                                        }
+                                                    />
+                                                ))}
+                                        </th>
+                                    );
+                                })}
+                            </tr>
+                        )}
                     </thead>
                     <tbody>
                         {loading ? (

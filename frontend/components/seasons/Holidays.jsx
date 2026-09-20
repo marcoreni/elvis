@@ -301,7 +301,12 @@ class Holidays extends React.Component {
                         s["end"] !== props.original.end
                 );
 
-                this.setState({ sauv, datas });
+                const { pageSize } = this.state.pagination;
+                this.setState({
+                    sauv,
+                    datas,
+                    pages: ceil(sauv.length / pageSize),
+                });
             }
         });
     }
@@ -368,6 +373,8 @@ class Holidays extends React.Component {
                     filterable={false}
                     noDataText={t("planning:holidays.noData")}
                     pages={this.state.pages}
+                    totalCount={this.state.sauv.length}
+                    minRows={this.state.pagination.pageSize}
                 />
             </div>
         );

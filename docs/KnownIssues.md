@@ -221,3 +221,15 @@ pre-existing, not introduced by any recent change. Fixing it means changing `Act
 to read from an already-loaded `teachers_activities` array in Ruby — a model-behavior change, not
 attempted as part of unrelated work.
 
+## Orphaned code left in place after the TanStack migration (batch 4b, item 13)
+
+Not deleted per this repo's standing policy on unused-looking code — logged instead:
+
+- `frontend/components/utils/DateFilter.tsx`'s default export (`DateFilter`) has no importer
+  anywhere in `frontend/`; every real caller (`HoursSheet.jsx`) uses the named `RangedSelect`
+  export instead.
+- `frontend/components/generalPayments/SubPaymentList.jsx` no longer reads its `minYear`/`maxYear`
+  props (dropped along with the v6-only column `Filter` render props during the TanStack
+  migration, since table-level `filterable={false}` already disabled them regardless). Its one
+  caller, `DuePaymentList.jsx` (`:1163-1164`), still passes both — harmless, just now inert.
+

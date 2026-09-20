@@ -457,9 +457,7 @@ describe("TanStackGrid — table-wide filterable/sortable overrides", () => {
         );
 
         expect(screen.getByRole("textbox")).toBeInTheDocument();
-        expect(screen.getByText("Label").closest("th")).toHaveClass(
-            "sortable"
-        );
+        expect(screen.getByText("Label").closest("th")).toHaveClass("sortable");
     });
 });
 

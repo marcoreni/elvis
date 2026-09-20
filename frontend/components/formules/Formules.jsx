@@ -9,6 +9,7 @@ export default function Formules() {
 
     const [data, setData] = useState([]);
     const [pages, setPages] = useState(0);
+    const [total, setTotal] = useState(0);
     const [loading, setLoading] = useState(false);
     // Controlled, rather than TanStackGrid's own uncontrolled default (pageSize 20), so the
     // initial page size matches v6's old `defaultPageSize={10}`.
@@ -187,6 +188,7 @@ export default function Formules() {
                 .success((res) => {
                     setData(res.data);
                     setPages(res.pages);
+                    setTotal(res.total);
                 })
                 .error((res) => {
                     swal.fire({
@@ -231,6 +233,7 @@ export default function Formules() {
                         columns={columns()}
                         data={data}
                         pages={pages}
+                        totalCount={total}
                         loading={loading}
                         onFetchData={fetchData}
                         pagination={pagination}

@@ -261,6 +261,7 @@ class AdhesionList extends React.Component {
                 accessor: (d) => (d.adhesion_price || {}).price,
             },
             {
+                id: "actions",
                 Header: t("users:list.table.headers.actions"),
                 filterable: false,
                 sortable: false,

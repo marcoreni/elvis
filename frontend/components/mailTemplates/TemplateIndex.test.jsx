@@ -5,9 +5,10 @@
 // The "path" column used to be defined with `id: ""` (an empty string, not a real id) --
 // harmless under react-table v6, but TanStack falls back to auto-deriving a column id only when
 // `id`/`accessorKey` are nullish, and an empty string is not nullish, so it stuck as the literal
-// column id. Fixed to `id: "path"`. Rendering a real row through the real mounted table (not a
-// stub) is what would have caught this: an id collision/empty id can silently break which
-// accessor a cell reads.
+// column id. TanStack's `createColumn` throws ("Columns require an id when using a non-string
+// header") whenever a column ends up with an empty-string id, in production too -- this would
+// have crashed the whole table, not silently misbehaved. Fixed to `id: "path"`. Rendering a real
+// row through the real mounted table (not a stub) is what would have caught this.
 //
 // Also covers `showPagination={false}` and `filterable={false}` -- both new TanStackGrid
 // table-wide props used by this component (see TanStackGrid.test.tsx for their generic coverage;

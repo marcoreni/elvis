@@ -412,6 +412,7 @@ class UserAttach extends React.Component {
                                 tableName="userTable"
                                 data={this.state.data}
                                 pages={this.state.pages}
+                                totalCount={this.state.total}
                                 loading={this.state.loading}
                                 onFetchData={this.fetchUsers}
                                 columns={columns}

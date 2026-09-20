@@ -56,31 +56,22 @@ class SubPaymentList extends React.Component {
                         ? moment(d.cashing_date).format("DD-MM-YYYY")
                         : "",
             },
+            // These 3 columns were right-aligned under v6's per-column `style`; TanStackGrid has
+            // no style passthrough, so they now render left-aligned like every other column --
+            // documented, accepted regression, not fixed here.
             {
                 Header: t("general.subPayments.columns.checkNumber"),
                 id: "check_number",
-                style: {
-                    display: "block",
-                    textAlign: "right",
-                },
                 accessor: d => d.check_number || t("general.subPayments.unspecified"),
             },
             {
                 Header: t("general.subPayments.columns.checkIssuer"),
                 id: "check_issuer_name",
-                style: {
-                    display: "block",
-                    textAlign: "right",
-                },
                 accessor: d => d.check_issuer_name || t("general.subPayments.unknown"),
             },
             {
                 Header: t("general.subPayments.columns.amount"),
                 id: "amount",
-                style: {
-                    display: "block",
-                    textAlign: "right",
-                },
                 accessor: d => `(${d.operation}) ${d.amount || "#"} €`,
             },
         ];

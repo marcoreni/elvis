@@ -82,7 +82,7 @@ class ApplicationStatusTable extends Component {
 
     render() {
         const { t } = this.props;
-        const { data, pages, loading } = this.state;
+        const { data, pages, loading, total } = this.state;
 
         const columns = [
             {
@@ -160,6 +160,7 @@ class ApplicationStatusTable extends Component {
                     tableName="application-status-table"
                     data={data}
                     pages={pages}
+                    totalCount={total}
                     loading={loading}
                     onFetchData={this.fetchData}
                     columns={columns}

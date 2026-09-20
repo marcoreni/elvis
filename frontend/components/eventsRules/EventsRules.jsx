@@ -450,6 +450,7 @@ class EventsRules extends Component {
                                 columns={columns}
                                 showPagination={false}
                                 minRows={1}
+                                filterable={false}
                             />
                             <div className="pull-right mt-3">
                                 <button
