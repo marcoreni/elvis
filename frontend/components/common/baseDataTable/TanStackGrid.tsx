@@ -229,6 +229,9 @@ interface TanStackGridProps {
     totalCount?: number;
     /** Shown instead of the translated noDataText when set. */
     errorMessage?: string | null;
+    /** Overrides the default translated "no data" text (v6's own `noDataText`) when set and
+     * `errorMessage` isn't. */
+    noDataText?: string;
     /**
      * Uncontrolled mode only: called with {page, pageSize, sorted, filtered} whenever
      * pagination/sorting/filtering state changes, including once on mount. Omit this and pass
@@ -254,6 +257,21 @@ interface TanStackGridProps {
     ) => React.HTMLAttributes<HTMLTableRowElement> | undefined;
     /** Renders a page-size `<select>` in the footer when set. */
     pageSizeOptions?: number[];
+    /** Defaults to `true`. Set `false` to hide the prev/next/page-count/results-count footer
+     * entirely -- v6's `showPagination={false}`, used by a few small/unpaginated tables. */
+    showPagination?: boolean;
+    /** Defaults to `true`. Unlike v6 (where a column's own `filterable` setting was checked
+     * first and won over this table-level value, which only acted as a default for columns that
+     * didn't set their own), here `false` unconditionally disables filtering on every column,
+     * even one with its own `filterable: true` -- for a table that never filters at all, instead
+     * of repeating `filterable: false` on every column definition. */
+    filterable?: boolean;
+    /** Defaults to `true`. Unlike v6 (where a column's own `sortable` setting was checked first
+     * and won over this table-level value, which only acted as a default for columns that didn't
+     * set their own), here `false` unconditionally disables sorting on every column, even one
+     * with its own `sortable: true` -- for a table that never sorts at all, instead of repeating
+     * `sortable: false` on every column definition. */
+    sortable?: boolean;
     /** Extra inline style merged onto the root div (e.g. a background color). */
     style?: React.CSSProperties;
     /** Controlled pagination -- see `onFetchData`. */
@@ -289,6 +307,7 @@ export default function TanStackGrid({
     pages,
     totalCount,
     errorMessage,
+    noDataText: noDataTextProp,
     onFetchData,
     defaultSorted,
     defaultFiltered,
@@ -296,6 +315,9 @@ export default function TanStackGrid({
     renderSubComponent,
     getRowProps,
     pageSizeOptions,
+    showPagination = true,
+    filterable: tableFilterable = true,
+    sortable: tableSortable = true,
     style,
     pagination: controlledPagination,
     onPaginationChange,
@@ -328,14 +350,29 @@ export default function TanStackGrid({
 
     const hasExpander = !!renderSubComponent;
     const tanstackColumns = useMemo(() => {
-        const mapped = columns.map(toTanStackColumn);
+        let mapped = columns.map(toTanStackColumn);
+        // Table-wide overrides. Unlike v6 -- where a column's own `filterable`/`sortable`
+        // setting was checked first and won over the table-level value, which only acted as a
+        // default for columns that didn't set their own -- `false` here unconditionally disables
+        // every column's filter/sort UI, even a column with its own `filterable`/`sortable: true`.
+        // Still cheaper than requiring every column definition to repeat `filterable: false` /
+        // `sortable: false` when the whole table never filters or sorts at all.
+        if (!tableFilterable || !tableSortable) {
+            mapped = mapped.map((c) => ({
+                ...c,
+                enableColumnFilter: tableFilterable
+                    ? c.enableColumnFilter
+                    : false,
+                enableSorting: tableSortable ? c.enableSorting : false,
+            }));
+        }
         return hasExpander ? [buildExpanderColumn(), ...mapped] : mapped;
         // `renderSubComponent` itself isn't a dep: callers may pass a fresh inline arrow every
         // render (LessonList/DuePaymentList/PaymentList all do), which would defeat this memo on
         // every unrelated re-render even though the columns never actually change -- only whether
         // the expander column should exist at all does.
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [columns, hasExpander]);
+    }, [columns, hasExpander, tableFilterable, tableSortable]);
 
     // TanStack throws inside its own row-model code on `data === undefined` (v6 tolerated it);
     // every real caller already guards its own fetched data, but default defensively here too so
@@ -538,57 +575,59 @@ export default function TanStackGrid({
                                 </th>
                             ))}
                         </tr>
-                        <tr>
-                            {headers.map((header) => {
-                                const CustomFilter =
-                                    header.column.columnDef.meta?.Filter;
-                                const filterValue =
-                                    header.column.getFilterValue();
-                                return (
-                                    <th
-                                        key={header.id}
-                                        style={{
-                                            minWidth:
-                                                header.column.columnDef.meta
-                                                    ?.width ?? 100,
-                                        }}
-                                    >
-                                        {header.column.getCanFilter() &&
-                                            (CustomFilter ? (
-                                                <CustomFilter
-                                                    filter={
-                                                        filterValue !==
-                                                        undefined
-                                                            ? {
-                                                                  value: filterValue,
-                                                              }
-                                                            : undefined
-                                                    }
-                                                    onChange={(value) =>
-                                                        header.column.setFilterValue(
-                                                            value
-                                                        )
-                                                    }
-                                                />
-                                            ) : (
-                                                <input
-                                                    type="text"
-                                                    className="form-control form-control-small"
-                                                    value={
-                                                        (filterValue as string) ??
-                                                        ""
-                                                    }
-                                                    onChange={(e) =>
-                                                        header.column.setFilterValue(
-                                                            e.target.value
-                                                        )
-                                                    }
-                                                />
-                                            ))}
-                                    </th>
-                                );
-                            })}
-                        </tr>
+                        {headers.some((h) => h.column.getCanFilter()) && (
+                            <tr>
+                                {headers.map((header) => {
+                                    const CustomFilter =
+                                        header.column.columnDef.meta?.Filter;
+                                    const filterValue =
+                                        header.column.getFilterValue();
+                                    return (
+                                        <th
+                                            key={header.id}
+                                            style={{
+                                                minWidth:
+                                                    header.column.columnDef
+                                                        .meta?.width ?? 100,
+                                            }}
+                                        >
+                                            {header.column.getCanFilter() &&
+                                                (CustomFilter ? (
+                                                    <CustomFilter
+                                                        filter={
+                                                            filterValue !==
+                                                            undefined
+                                                                ? {
+                                                                      value: filterValue,
+                                                                  }
+                                                                : undefined
+                                                        }
+                                                        onChange={(value) =>
+                                                            header.column.setFilterValue(
+                                                                value
+                                                            )
+                                                        }
+                                                    />
+                                                ) : (
+                                                    <input
+                                                        type="text"
+                                                        className="form-control form-control-small"
+                                                        value={
+                                                            (filterValue as string) ??
+                                                            ""
+                                                        }
+                                                        onChange={(e) =>
+                                                            header.column.setFilterValue(
+                                                                e.target.value
+                                                            )
+                                                        }
+                                                    />
+                                                ))}
+                                        </th>
+                                    );
+                                })}
+                            </tr>
+                        )}
                     </thead>
                     <tbody>
                         {loading ? (
@@ -607,7 +646,9 @@ export default function TanStackGrid({
                         ) : rows.length === 0 ? (
                             <tr>
                                 <td colSpan={columnCount}>
-                                    {errorMessage || t("reactTable.noDataText")}
+                                    {errorMessage ||
+                                        noDataTextProp ||
+                                        t("reactTable.noDataText")}
                                 </td>
                             </tr>
                         ) : (
@@ -668,55 +709,58 @@ export default function TanStackGrid({
                 </table>
             </div>
 
-            <div className="d-flex justify-content-between align-items-center">
-                <div>
-                    <button
-                        type="button"
-                        className="btn btn-sm btn-default mr-1"
-                        disabled={!table.getCanPreviousPage()}
-                        onClick={() => table.previousPage()}
-                    >
-                        {t("reactTable.previousText")}
-                    </button>
-                    <button
-                        type="button"
-                        className="btn btn-sm btn-default"
-                        disabled={!table.getCanNextPage()}
-                        onClick={() => table.nextPage()}
-                    >
-                        {t("reactTable.nextText")}
-                    </button>
-                    {pageSizeOptions && (
-                        <select
-                            className="form-control form-control-small d-inline-block ml-2"
-                            style={{ width: "auto" }}
-                            value={pagination.pageSize}
-                            onChange={(e) =>
-                                table.setPageSize(Number(e.target.value))
-                            }
+            {showPagination && (
+                <div className="d-flex justify-content-between align-items-center">
+                    <div>
+                        <button
+                            type="button"
+                            className="btn btn-sm btn-default mr-1"
+                            disabled={!table.getCanPreviousPage()}
+                            onClick={() => table.previousPage()}
                         >
-                            {pageSizeOptions.map((size) => (
-                                <option key={size} value={size}>
-                                    {size}
-                                </option>
-                            ))}
-                        </select>
-                    )}
+                            {t("reactTable.previousText")}
+                        </button>
+                        <button
+                            type="button"
+                            className="btn btn-sm btn-default"
+                            disabled={!table.getCanNextPage()}
+                            onClick={() => table.nextPage()}
+                        >
+                            {t("reactTable.nextText")}
+                        </button>
+                        {pageSizeOptions && (
+                            <select
+                                className="form-control form-control-small d-inline-block ml-2"
+                                style={{ width: "auto" }}
+                                value={pagination.pageSize}
+                                onChange={(e) =>
+                                    table.setPageSize(Number(e.target.value))
+                                }
+                            >
+                                {pageSizeOptions.map((size) => (
+                                    <option key={size} value={size}>
+                                        {size}
+                                    </option>
+                                ))}
+                            </select>
+                        )}
+                    </div>
+                    <div>
+                        {t("reactTable.pageText")} {pagination.pageIndex + 1}{" "}
+                        {t("reactTable.ofText")}{" "}
+                        {Math.max(table.getPageCount(), 1)}
+                    </div>
+                    <div>
+                        {t("baseDataTable.resultsCount", {
+                            count:
+                                totalCount ??
+                                (manual
+                                    ? safeData.length
+                                    : table.getFilteredRowModel().rows.length),
+                        })}
+                    </div>
                 </div>
-                <div>
-                    {t("reactTable.pageText")} {pagination.pageIndex + 1}{" "}
-                    {t("reactTable.ofText")} {Math.max(table.getPageCount(), 1)}
-                </div>
-                <div>
-                    {t("baseDataTable.resultsCount", {
-                        count:
-                            totalCount ??
-                            (manual
-                                ? safeData.length
-                                : table.getFilteredRowModel().rows.length),
-                    })}
-                </div>
-            </div>
+            )}
         </div>
     );
 }

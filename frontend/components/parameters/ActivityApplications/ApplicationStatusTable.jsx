@@ -2,7 +2,7 @@ import React, { Component, Fragment, useRef } from "react";
 import { csrfToken } from "../../utils";
 import { makeDebounce } from "../../../tools/inputs";
 import moment from "moment";
-import ReactTable from "react-table";
+import TanStackGrid from "../../common/baseDataTable/TanStackGrid";
 import swal from "sweetalert2";
 import { withTranslation } from "react-i18next";
 
@@ -82,7 +82,7 @@ class ApplicationStatusTable extends Component {
 
     render() {
         const { t } = this.props;
-        const { data, pages, loading } = this.state;
+        const { data, pages, loading, total } = this.state;
 
         const columns = [
             {
@@ -156,30 +156,15 @@ class ApplicationStatusTable extends Component {
 
         return (
             <Fragment>
-                <ReactTable
+                <TanStackGrid
+                    tableName="application-status-table"
                     data={data}
-                    manual
                     pages={pages}
+                    totalCount={total}
                     loading={loading}
                     onFetchData={this.fetchData}
                     columns={columns}
                     defaultSorted={[{ id: "id", desc: true }]}
-                    filterable
-                    defaultFilterMethod={(filter, row) => {
-                        if (row[filter.id] != null) {
-                            return row[filter.id]
-                                .toLowerCase()
-                                .startsWith(filter.value.toLowerCase());
-                        }
-                    }}
-                    resizable={false}
-                    previousText={t("common:reactTable.previousText")}
-                    nextText={t("common:reactTable.nextText")}
-                    loadingText={t("common:reactTable.loadingText")}
-                    noDataText={t("common:reactTable.noDataText")}
-                    pageText={t("common:reactTable.pageText")}
-                    ofText={t("common:reactTable.ofText")}
-                    rowsText={t("common:reactTable.rowsText")}
                     minRows={1}
                 />
             </Fragment>

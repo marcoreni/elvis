@@ -1,7 +1,7 @@
 import React from "react";
 import { withTranslation } from "react-i18next";
 import swal from "sweetalert2";
-import ReactTable from "react-table";
+import TanStackGrid from "./common/baseDataTable/TanStackGrid";
 import { csrfToken } from "./utils";
 import { makeDebounce } from "../tools/inputs";
 import DetachAccount from "./DetachAccount";
@@ -255,12 +255,10 @@ class UserAttach extends React.Component {
                     <span className="w-100 d-flex text-dark">{d.id}</span>
                 ),
                 width: 75,
-                sortable: false,
             },
             {
                 id: "last_name",
                 Header: t("users:list.table.headers.lastName"),
-                sortable: false,
                 accessor: (d) => (
                     <a
                         href={`/users/${d.id}`}
@@ -273,7 +271,6 @@ class UserAttach extends React.Component {
             {
                 id: "first_name",
                 Header: t("users:list.table.headers.firstName"),
-                sortable: false,
                 accessor: (d) => (
                     <a
                         href={`/users/${d.id}`}
@@ -287,7 +284,6 @@ class UserAttach extends React.Component {
                 Header: t("users:list.table.headers.birthday"),
                 id: "birthday",
                 accessor: "birthday",
-                sortable: false,
                 width: 150,
                 Cell: (props) => {
                     if (props.original.birthday) {
@@ -308,7 +304,6 @@ class UserAttach extends React.Component {
                 width: 200,
                 id: "attached",
                 Header: t("users:list.table.headers.accountType"),
-                sortable: false,
                 filterable: false,
                 accessor: (d) =>
                     d.attached_to_id
@@ -363,7 +358,6 @@ class UserAttach extends React.Component {
                         </div>
                     );
                 },
-                sortable: false,
                 filterable: false,
             },
         ];
@@ -414,36 +408,17 @@ class UserAttach extends React.Component {
                     </div>
                     <div className="row">
                         <div className="col-lg-12">
-                            <ReactTable
-                                events={events}
-                                id="userTable"
+                            <TanStackGrid
+                                tableName="userTable"
                                 data={this.state.data}
-                                manual
                                 pages={this.state.pages}
+                                totalCount={this.state.total}
                                 loading={this.state.loading}
                                 onFetchData={this.fetchUsers}
                                 columns={columns}
                                 defaultSorted={[{ id: "id", desc: false }]}
-                                filterable
-                                defaultFilterMethod={(filter, row) => {
-                                    if (row[filter.id] != null) {
-                                        return row[filter.id]
-                                            .toLowerCase()
-                                            .startsWith(
-                                                filter.value.toLowerCase()
-                                            );
-                                    }
-                                }}
-                                resizable={false}
-                                previousText={t(
-                                    "common:reactTable.previousText"
-                                )}
-                                nextText={t("common:reactTable.nextText")}
-                                loadingText={t("common:reactTable.loadingText")}
+                                sortable={false}
                                 noDataText={this.state.no_data_text}
-                                pageText={t("common:reactTable.pageText")}
-                                ofText={t("common:reactTable.ofText")}
-                                rowsText={t("common:reactTable.rowsText")}
                                 minRows={2}
                             />
                         </div>

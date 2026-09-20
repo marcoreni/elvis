@@ -119,7 +119,7 @@ legacy string refs). Caught and fixed 2 real behavior regressions against upstre
 new tests. `react-stepzilla` fully removed from `package.json`/`yarn.lock`. `KnownIssues.md`'s
 "Exotic dependencies" section (its last entry) removed.
 
-## 13. `react-table` v6 → TanStack Table — batches 1-4a done and merged, batch 4b in progress
+## 13. `react-table` v6 → TanStack Table — batches 1-4a merged, batch 4b open for review, 4c next
 
 `react-table@^6.8.0` (peer dep `react: ^16.x.x` — doesn't even officially claim React 17 support,
 same pattern as `react-loader-spinner`, item in the "Frontend dependencies" KnownIssues entry) is 4
@@ -372,11 +372,23 @@ was already peer-dep-unverified past React 16 anyway.
      tests, was 1327 pre-batch), `tsc --noEmit` clean.
   5. Remaining standalone direct importers, split by whether they need item 4's client-mode
      `manual` prop:
-     - **Batch 4b, in progress (`feat/tanstack-table-batch4b-standard-tables`):** 9 files already
-       `manual`/`onFetchData`-shaped like batches 1-3, no client-mode gap — `AdhesionList`,
+     - **Batch 4b — implemented, PR open for review (2026-09-20, `feat/tanstack-table-batch4b-standard-tables`).** 9 files
+       already `manual`/`onFetchData`-shaped like batches 1-3, no client-mode gap — `AdhesionList`,
        `generalPayments/PaymentScheduleList`, `generalPayments/SubPaymentList`,
        `mailTemplates/TemplateIndex`, `parameters/ActivityApplications/ApplicationStatusTable`,
-       `UserAttach`, `seasons/Holidays`, `eventsRules/EventsRules`, `formules/Formules`.
+       `UserAttach`, `seasons/Holidays`, `eventsRules/EventsRules`, `formules/Formules`. Added 3
+       props `TanStackGrid` didn't have yet: `showPagination` (hide the footer), table-wide
+       `filterable`/`sortable` overrides, `noDataText`. A `code-reviewer` pass found a genuine
+       infinite render loop in `Holidays.jsx` (its `onFetchData` handler rewrote the controlled
+       `pagination` prop with a fresh object on every fetch — reference-keyed effect deps fed that
+       straight back into firing `onFetchData` again, forever; confirmed via 100%+ CPU on mount in
+       a test run) plus a blocking dead-filter-UI bug in `EventsRules` (missing `filterable={false}`
+       left two inputs that visibly did nothing, since the backend never reads `filtered` params)
+       and several smaller issues (two locale-dependent column ids, a wrong "N results" count on 4
+       files, dropped `minRows` padding, a misleading comment on the new table-wide filter/sort
+       override semantics). All fixed across 2 follow-up commits, regression test added for the
+       infinite-loop fix. Verified: `vitest run` (1367 tests, was 1343 pre-batch), `tsc --noEmit`
+       clean.
      - **Batch 4c, not yet started:** 3 more client-mode files needing the same `manual={false}`
        treatment as batch 4a — `evaluation/StudentEvaluationsStats.tsx` (trivial, already TS, no
        manual/fetch logic at all — a reasonable easy first pick), `userPayments/PaymentsList.jsx`,

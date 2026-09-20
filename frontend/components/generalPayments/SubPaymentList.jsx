@@ -4,8 +4,7 @@ import { withTranslation } from "react-i18next";
 
 import moment from "moment";
 
-import ReactTable from "react-table";
-import DateFilter from "../utils/DateFilter";
+import TanStackGrid from "../common/baseDataTable/TanStackGrid";
 
 class SubPaymentList extends React.Component {
     constructor(props) {
@@ -25,6 +24,10 @@ class SubPaymentList extends React.Component {
         const { pages } = this.state;
         const { t } = this.props;
 
+        // The couple of Filter render props these columns used to carry (payment_method_id/
+        // reception_date/cashing_date) were dead code even under v6 -- table-level
+        // `filterable={false}` disabled them regardless of any column-level setting -- so they
+        // were dropped rather than carried forward.
         const columns = [
             {
                 Header: t("general.subPayments.columns.method"),
@@ -36,21 +39,6 @@ class SubPaymentList extends React.Component {
                     );
                     return pm ? pm.label : t("general.subPayments.unspecified");
                 },
-                sortable: false,
-                Filter: ({ filter, onChange }) => (
-                    <select
-                        onChange={event => onChange(event.target.value)}
-                        style={{ width: "100%" }}
-                        value={filter ? filter.value : ""}
-                    >
-                        <option value="" />
-                        {this.props.paymentMethods.map(method => (
-                            <option key={method.id} value={method.id}>
-                                {method.label}
-                            </option>
-                        ))}
-                    </select>
-                ),
             },
             {
                 Header: t("general.subPayments.columns.reception"),
@@ -59,13 +47,6 @@ class SubPaymentList extends React.Component {
                     d.reception_date
                         ? moment(d.reception_date).format("DD-MM-YYYY")
                         : "",
-                Filter: ({ filter, onChange }) => (
-                    <DateFilter
-                        minYear={this.props.minYear}
-                        maxYear={this.props.maxYear}
-                        onChange={onChange}
-                    />
-                ),
             },
             {
                 Header: t("general.subPayments.columns.cashing"),
@@ -74,65 +55,44 @@ class SubPaymentList extends React.Component {
                     d.cashing_date
                         ? moment(d.cashing_date).format("DD-MM-YYYY")
                         : "",
-                Filter: ({ filter, onChange }) => (
-                    <DateFilter
-                        minYear={this.props.minYear}
-                        maxYear={this.props.maxYear}
-                        onChange={onChange}
-                    />
-                ),
             },
+            // These 3 columns were right-aligned under v6's per-column `style`; TanStackGrid has
+            // no style passthrough, so they now render left-aligned like every other column --
+            // documented, accepted regression, not fixed here.
             {
                 Header: t("general.subPayments.columns.checkNumber"),
                 id: "check_number",
-                style: {
-                    display: "block",
-                    textAlign: "right",
-                },
                 accessor: d => d.check_number || t("general.subPayments.unspecified"),
             },
             {
                 Header: t("general.subPayments.columns.checkIssuer"),
                 id: "check_issuer_name",
-                style: {
-                    display: "block",
-                    textAlign: "right",
-                },
                 accessor: d => d.check_issuer_name || t("general.subPayments.unknown"),
             },
             {
                 Header: t("general.subPayments.columns.amount"),
                 id: "amount",
-                style: {
-                    display: "block",
-                    textAlign: "right",
-                },
                 accessor: d => `(${d.operation}) ${d.amount || "#"} €`,
-                filterable: false,
             },
         ];
 
         return (
             <div style={{ padding: "20px 20px", background: "aliceblue" }}>
-                <ReactTable
+                <TanStackGrid
+                    tableName="sub-payment-list"
                     style={{ backgroundColor: "white" }}
                     data={this.props.data}
-                    manual
                     pages={pages}
+                    // Not `this.state.loading`: that flag starts (and stays) `true` -- nothing in
+                    // this component ever sets it `false` -- and was never actually wired into the
+                    // old <ReactTable> either (v6 defaults `loading` to `false` when the prop is
+                    // omitted, which is what actually rendered). Wiring it here would show
+                    // TanStackGrid's spinner forever instead of the rows.
+                    loading={false}
                     columns={columns}
-                    defaultSorted={[{ id: "number", desc: true }]}
-                    defaultPageSize={10}
-                    filterable={false}
                     showPagination={false}
+                    filterable={false}
                     sortable={false}
-                    resizable={false}
-                    previousText={t("common:reactTable.previousText")}
-                    nextText={t("common:reactTable.nextText")}
-                    loadingText={t("common:reactTable.loadingText")}
-                    noDataText={t("common:reactTable.noDataText")}
-                    pageText={t("common:reactTable.pageText")}
-                    ofText={t("common:reactTable.ofText")}
-                    rowsText={t("common:reactTable.rowsText")}
                     minRows={1}
                 />
             </div>

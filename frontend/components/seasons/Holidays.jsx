@@ -1,5 +1,5 @@
 import React from "react";
-import ReactTable from "react-table";
+import TanStackGrid from "../common/baseDataTable/TanStackGrid";
 import { ceil } from "lodash";
 import swal from "sweetalert2";
 import { withTranslation } from "react-i18next";
@@ -13,7 +13,9 @@ class Holidays extends React.Component {
 
         this.state = {
             datas: this.props.datas.slice(0, 15) || [],
-            pageSize: 15,
+            // Controlled, rather than TanStackGrid's own uncontrolled default (pageSize 20), so
+            // the page-size selector below can start at v6's old `defaultPageSize={15}`.
+            pagination: { pageIndex: 0, pageSize: 15 },
             pages: ceil((this.props.datas || []).length / 15),
             sauv: (this.props.datas || []).slice(),
         };
@@ -28,11 +30,13 @@ class Holidays extends React.Component {
 
         return [
             {
+                id: "label",
                 Header: t("planning:holidays.columns.label"),
                 accessor: "label",
                 sortable: true,
             },
             {
+                id: "start",
                 Header: t("planning:holidays.columns.start"),
                 accessor: "start",
                 sortable: true,
@@ -46,6 +50,7 @@ class Holidays extends React.Component {
                 ),
             },
             {
+                id: "end",
                 Header: t("planning:holidays.columns.end"),
                 accessor: "end",
                 sortable: true,
@@ -59,6 +64,10 @@ class Holidays extends React.Component {
                 ),
             },
             {
+                // Was missing an `id` and had no accessor either -- v6 tolerated it silently,
+                // but TanStack falls back to a string `header` when both are missing, which
+                // here is a *translated* string, making the column id locale-dependent.
+                id: "action",
                 Header: t("planning:holidays.columns.action"),
                 sortable: false,
                 width: 75,
@@ -79,9 +88,8 @@ class Holidays extends React.Component {
         ];
     }
 
-    changeData(state) {
-        const columns_sort =
-            state.sorted.length > 0 ? state.sorted[0].id : undefined;
+    changeData({ page, pageSize, sorted }) {
+        const columns_sort = sorted.length > 0 ? sorted[0].id : undefined;
 
         let data = this.state.sauv.slice();
 
@@ -92,16 +100,19 @@ class Holidays extends React.Component {
                 if (h1[columns_sort] > h2[columns_sort]) return 1;
             });
 
-            if (state.sorted[0].desc) data = data.reverse();
+            if (sorted[0].desc) data = data.reverse();
         }
 
+        // Not `pagination` -- that's already kept in sync via `onPaginationChange` below
+        // whenever TanStack itself resolves a new page/pageSize. Re-setting it here too, from a
+        // fresh object literal built off this callback's own args, made `state.pagination` a new
+        // reference on every call regardless of whether the values actually changed -- TanStackGrid's
+        // onFetchData effect depends on `pagination` by reference, so that fed straight back into
+        // firing `onFetchData` (this function) again, which reset `pagination` again, forever: a
+        // genuine infinite render loop (confirmed via 100%+ CPU on mount in a test run).
         this.setState({
-            datas: data.slice(
-                state.pageSize * state.page,
-                state.pageSize * (state.page + 1)
-            ),
-            pages: ceil(data.length / state.pageSize),
-            pageSize: state.pageSize,
+            datas: data.slice(pageSize * page, pageSize * (page + 1)),
+            pages: ceil(data.length / pageSize),
         });
     }
 
@@ -186,10 +197,12 @@ class Holidays extends React.Component {
                 sauv.push(result.value);
                 datas.push(result.value);
 
+                const { pageSize } = this.state.pagination;
                 this.setState({
                     sauv,
-                    datas: datas.slice(0, this.state.pageSize),
-                    pages: ceil(datas.length / this.state.pageSize),
+                    datas: datas.slice(0, pageSize),
+                    pages: ceil(datas.length / pageSize),
+                    pagination: { pageIndex: 0, pageSize },
                 });
             }
         });
@@ -232,10 +245,12 @@ class Holidays extends React.Component {
                     datas.push(elt);
                 }
 
+                const { pageSize } = this.state.pagination;
                 this.setState({
                     sauv,
-                    datas: datas.slice(0, this.state.pageSize),
-                    pages: ceil(datas.length / this.state.pageSize),
+                    datas: datas.slice(0, pageSize),
+                    pages: ceil(datas.length / pageSize),
+                    pagination: { pageIndex: 0, pageSize },
                 });
             }
         });
@@ -286,7 +301,12 @@ class Holidays extends React.Component {
                         s["end"] !== props.original.end
                 );
 
-                this.setState({ sauv, datas });
+                const { pageSize } = this.state.pagination;
+                this.setState({
+                    sauv,
+                    datas,
+                    pages: ceil(sauv.length / pageSize),
+                });
             }
         });
     }
@@ -339,20 +359,22 @@ class Holidays extends React.Component {
                         </button>
                     </div>
                 </div>
-                <ReactTable
+                <TanStackGrid
+                    tableName="holidays"
                     pageSizeOptions={[5, 10, 15]}
-                    defaultPageSize={15}
                     data={this.state.datas}
                     onFetchData={this.changeData}
-                    manual
+                    pagination={this.state.pagination}
+                    onPaginationChange={(pagination) =>
+                        this.setState({ pagination })
+                    }
                     columns={this.getColumns()}
-                    resizable={false}
-                    previousText={t("common:reactTable.previousText")}
-                    nextText={t("common:reactTable.nextText")}
+                    loading={false}
+                    filterable={false}
                     noDataText={t("planning:holidays.noData")}
-                    pageText={t("common:reactTable.pageText")}
-                    ofText={t("common:reactTable.ofText")}
                     pages={this.state.pages}
+                    totalCount={this.state.sauv.length}
+                    minRows={this.state.pagination.pageSize}
                 />
             </div>
         );
