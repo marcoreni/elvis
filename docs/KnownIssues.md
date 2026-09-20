@@ -233,3 +233,15 @@ Not deleted per this repo's standing policy on unused-looking code — logged in
   migration, since table-level `filterable={false}` already disabled them regardless). Its one
   caller, `DuePaymentList.jsx` (`:1163-1164`), still passes both — harmless, just now inert.
 
+## `PaymentsList`/`DuePaymentsList` cap at 20 visible rows, no way to see more
+
+Both (`frontend/components/userPayments/{PaymentsList,DuePaymentsList}.jsx`, migrated to
+`TanStackGrid` in item 13 batch 4c) pass `showPagination={false}` with no page-size override, so
+only the table's default first page (20 rows) is ever reachable — there's no pager to reach row 21+.
+Verified exact parity with the pre-migration `react-table` v6 behavior (both rendered 20 of a
+25-row test set identically before and after), so not a regression from that migration — but worth
+tracking now that the 20-row default lives inside the shared `TanStackGrid` component rather than
+being an obvious per-table choice a future reader would notice. Fix, if a payer's payment history
+ever needs to show more: either pass `pageSizeOptions`/re-enable pagination, or (per the
+Modernization-Roadmap item 13 batch 4c note) move these two tables to real server-side pagination.
+

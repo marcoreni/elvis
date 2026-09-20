@@ -5,7 +5,7 @@ import { withTranslation } from "react-i18next";
 
 import moment from "moment";
 
-import ReactTable from "react-table";
+import TanStackGrid from "../common/baseDataTable/TanStackGrid";
 
 import BulkEditModalAlert from "../utils/alerts/BulkEditModalAlert";
 import { csrfToken, ISO_DATE_FORMAT } from "../utils";
@@ -220,6 +220,7 @@ class PaymentsList extends React.Component {
         const selectedRows = this.state.selectedRows;
         const headSelectorColumn = [
             {
+                id: "select_all",
                 Header: () => (
                     <input
                         type="checkbox"
@@ -301,10 +302,7 @@ class PaymentsList extends React.Component {
                 Header: t("userPayments.paymentsList.columns.checkNumber"),
                 id: "check_number",
                 maxWidth: 150,
-                style: {
-                    display: "block",
-                    textAlign: "right",
-                },
+                style: { display: "block", textAlign: "right" },
                 accessor: (d) => d.check_number,
             },
             // {
@@ -321,19 +319,14 @@ class PaymentsList extends React.Component {
                 Header: t("userPayments.paymentsList.columns.amount"),
                 id: "amount",
                 maxWidth: 100,
-                style: {
-                    display: "block",
-                    textAlign: "right",
-                },
+                style: { display: "block", textAlign: "right" },
                 accessor: (d) => `(${d.operation}) ${d.amount} €`,
             },
             {
                 Header: t("userPayments.paymentsList.columns.actions"),
                 id: "receipt",
-                style: {
-                    display: "block",
-                    textAlign: "right",
-                },
+                sortable: false,
+                style: { display: "block", textAlign: "right" },
                 Cell: (row) => (
                     <div className="flex flex-center-justified">
                         {this.props.isStudentView ? (
@@ -458,21 +451,18 @@ class PaymentsList extends React.Component {
                     )}
                 </div>
 
-                <ReactTable
+                <TanStackGrid
+                    tableName="payments-list"
                     data={this.props.payments}
+                    loading={false}
+                    pages={null}
+                    manual={false}
                     columns={columns}
-                    resizable={false}
                     defaultSorted={[{ id: "due_payment_number", desc: true }]}
-                    previousText={t("common:reactTable.previousText")}
-                    nextText={t("common:reactTable.nextText")}
-                    loadingText={t("common:reactTable.loadingText")}
-                    noDataText={t("common:reactTable.noDataText")}
-                    pageText={t("common:reactTable.pageText")}
-                    ofText={t("common:reactTable.ofText")}
-                    rowsText={t("common:reactTable.rowsText")}
                     minRows={1}
                     showPagination={false}
-                    className="whitebg"
+                    filterable={false}
+                    style={{ backgroundColor: "white" }}
                 />
 
                 <div

@@ -902,7 +902,7 @@ class PaymentsManagement extends React.Component {
         })
             .then((response) => response.json())
             .then((duePayment) => {
-                let duePayments = this.state.duePayments[payerId];
+                const duePayments = [...this.state.duePayments[payerId]];
 
                 const index = _.findIndex(
                     duePayments,
@@ -1446,14 +1446,13 @@ class PaymentsManagement extends React.Component {
                             icon: "error",
                         });
                     else {
-                        let payments = this.state.payments[payer.id];
-                        const index = _.findIndex(
-                            payments,
-                            (p) => p.id == paymentId
+                        const payments = this.state.payments[payer.id].map(
+                            (p) =>
+                                p.id == paymentId
+                                    ? { ...p, payment_status_id: newStatusId }
+                                    : p
                         );
-                        payments[index].payment_status_id = newStatusId;
 
-                        //this.setState({payments[payer.id]: payments});
                         this.setState({
                             payments: {
                                 ...this.state.payments,

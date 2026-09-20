@@ -32,10 +32,10 @@ class SubPaymentList extends React.Component {
             {
                 Header: t("general.subPayments.columns.method"),
                 id: "payment_method_id",
-                accessor: d => {
+                accessor: (d) => {
                     const pm = _.find(
                         this.props.paymentMethods,
-                        pm => pm.id == d.payment_method_id
+                        (pm) => pm.id == d.payment_method_id
                     );
                     return pm ? pm.label : t("general.subPayments.unspecified");
                 },
@@ -43,7 +43,7 @@ class SubPaymentList extends React.Component {
             {
                 Header: t("general.subPayments.columns.reception"),
                 id: "reception_date",
-                accessor: d =>
+                accessor: (d) =>
                     d.reception_date
                         ? moment(d.reception_date).format("DD-MM-YYYY")
                         : "",
@@ -51,28 +51,30 @@ class SubPaymentList extends React.Component {
             {
                 Header: t("general.subPayments.columns.cashing"),
                 id: "cashing_date",
-                accessor: d =>
+                accessor: (d) =>
                     d.cashing_date
                         ? moment(d.cashing_date).format("DD-MM-YYYY")
                         : "",
             },
-            // These 3 columns were right-aligned under v6's per-column `style`; TanStackGrid has
-            // no style passthrough, so they now render left-aligned like every other column --
-            // documented, accepted regression, not fixed here.
             {
                 Header: t("general.subPayments.columns.checkNumber"),
                 id: "check_number",
-                accessor: d => d.check_number || t("general.subPayments.unspecified"),
+                style: { display: "block", textAlign: "right" },
+                accessor: (d) =>
+                    d.check_number || t("general.subPayments.unspecified"),
             },
             {
                 Header: t("general.subPayments.columns.checkIssuer"),
                 id: "check_issuer_name",
-                accessor: d => d.check_issuer_name || t("general.subPayments.unknown"),
+                style: { display: "block", textAlign: "right" },
+                accessor: (d) =>
+                    d.check_issuer_name || t("general.subPayments.unknown"),
             },
             {
                 Header: t("general.subPayments.columns.amount"),
                 id: "amount",
-                accessor: d => `(${d.operation}) ${d.amount || "#"} €`,
+                style: { display: "block", textAlign: "right" },
+                accessor: (d) => `(${d.operation}) ${d.amount || "#"} €`,
             },
         ];
 

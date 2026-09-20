@@ -4,7 +4,7 @@ import _ from "lodash";
 
 import moment from "moment";
 
-import ReactTable from "react-table";
+import TanStackGrid from "../common/baseDataTable/TanStackGrid";
 import BulkEditModalAlert from "../utils/alerts/BulkEditModalAlert";
 
 // import { ADHESION_PRICE } from "./PaymentsManagement";
@@ -515,6 +515,7 @@ class DuePaymentsList extends React.Component {
         const selectedRows = this.state.selectedRows;
         const headSelectorColumn = [
             {
+                id: "select_all",
                 Header: () => (
                     <input
                         type="checkbox"
@@ -577,20 +578,14 @@ class DuePaymentsList extends React.Component {
                 Header: t("userPayments.duePaymentsList.columns.amount"),
                 id: "amount",
                 width: 100,
-                style: {
-                    display: "block",
-                    textAlign: "right",
-                },
+                style: { display: "block", textAlign: "right" },
                 accessor: (d) => `(${d.operation}) ${d.amount} €`,
             },
             {
                 Header: t("userPayments.duePaymentsList.columns.actions"),
                 id: "actions",
                 sortable: false,
-                style: {
-                    display: "block",
-                    textAlign: "right",
-                },
+                style: { display: "block", textAlign: "right" },
                 Cell: (props) => {
                     return (
                         <div className="flex flex-center-justified">
@@ -756,21 +751,18 @@ class DuePaymentsList extends React.Component {
                     )}
                 </div>
 
-                <ReactTable
+                <TanStackGrid
+                    tableName="due-payments-list"
                     data={this.props.data}
+                    loading={false}
+                    pages={null}
+                    manual={false}
                     columns={columns}
                     defaultSorted={[{ id: "number", desc: true }]}
-                    resizable={false}
-                    previousText={t("common:reactTable.previousText")}
-                    nextText={t("common:reactTable.nextText")}
-                    loadingText={t("common:reactTable.loadingText")}
-                    noDataText={t("common:reactTable.noDataText")}
-                    pageText={t("common:reactTable.pageText")}
-                    ofText={t("common:reactTable.ofText")}
-                    rowsText={t("common:reactTable.rowsText")}
                     minRows={1}
                     showPagination={false}
-                    className="whitebg"
+                    filterable={false}
+                    style={{ backgroundColor: "white" }}
                 />
 
                 <div

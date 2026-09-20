@@ -1,7 +1,9 @@
 import React from "react";
-import Table, { Column } from "react-table";
+import TanStackGrid, {
+    LegacyColumn,
+} from "../common/baseDataTable/TanStackGrid";
 import { useTranslation } from "react-i18next";
-import type { StudentEvaluationStat, Teacher } from "../utils/entities";
+import type { StudentEvaluationStat } from "../utils/entities";
 
 interface StudentEvaluationStatsProps {
     stats: StudentEvaluationStat[];
@@ -12,13 +14,15 @@ const StudentEvaluationStats: React.FC<StudentEvaluationStatsProps> = ({
 }) => {
     const { t } = useTranslation("evaluation");
 
-    const columns: Column<StudentEvaluationStat>[] = [
+    const columns: LegacyColumn<StudentEvaluationStat>[] = [
         {
             id: "teacher",
             Header: t("stats.teacher"),
             accessor: (d) => `${d.teacher.last_name} ${d.teacher.first_name}`,
             Cell: (c) => (
-                <a href={`/users/${c.original.teacher.id}`}>{c.value}</a>
+                <a href={`/users/${c.original.teacher.id}`}>
+                    {c.value as string}
+                </a>
             ),
         },
         {
@@ -27,7 +31,7 @@ const StudentEvaluationStats: React.FC<StudentEvaluationStatsProps> = ({
             accessor: (d) => d.nb_students,
             Cell: (c) => (
                 <div className="text-right font-bold font-size-big">
-                    {c.value}
+                    {c.value as number}
                 </div>
             ),
         },
@@ -39,7 +43,7 @@ const StudentEvaluationStats: React.FC<StudentEvaluationStatsProps> = ({
                 <div
                     className={`text-right font-bold font-size-big text-${c.original.evaluations_completion_rate_level}`}
                 >
-                    {c.value}
+                    {c.value as number}
                 </div>
             ),
         },
@@ -49,7 +53,7 @@ const StudentEvaluationStats: React.FC<StudentEvaluationStatsProps> = ({
             accessor: (d) => d.nb_redirections,
             Cell: (c) => (
                 <div className="text-right font-bold font-size-big">
-                    {c.value}
+                    {c.value as number}
                 </div>
             ),
         },
@@ -61,7 +65,7 @@ const StudentEvaluationStats: React.FC<StudentEvaluationStatsProps> = ({
                 <div
                     className={`text-right font-bold font-size-big text-${c.original.redirection_information_rate_level}`}
                 >
-                    {c.value}
+                    {c.value as number}
                 </div>
             ),
         },
@@ -77,11 +81,11 @@ const StudentEvaluationStats: React.FC<StudentEvaluationStatsProps> = ({
                     <div
                         className={`progress-bar progress-bar-${c.original.evaluations_completion_rate_level}`}
                         style={{
-                            width: c.value + "%",
+                            width: (c.value as number) + "%",
                             minWidth: "2em",
                         }}
                     >
-                        {c.value}%
+                        {c.value as number}%
                     </div>
                 </div>
             ),
@@ -89,17 +93,15 @@ const StudentEvaluationStats: React.FC<StudentEvaluationStatsProps> = ({
     ];
 
     return (
-        <Table
+        <TanStackGrid<StudentEvaluationStat>
+            tableName="StudentEvaluationStats"
             columns={columns}
             data={stats}
-            sortable
-            previousText={t("common:reactTable.previousText")}
-            nextText={t("common:reactTable.nextText")}
-            loadingText={t("common:reactTable.loadingText")}
-            noDataText={t("common:reactTable.noDataText")}
-            pageText={t("common:reactTable.pageText")}
-            ofText={t("common:reactTable.ofText")}
-            rowsText={t("common:reactTable.rowsText")}
+            loading={false}
+            pages={null}
+            manual={false}
+            filterable={false}
+            pageSizeOptions={[5, 10, 20, 25, 50, 100]}
         />
     );
 };
