@@ -119,7 +119,7 @@ legacy string refs). Caught and fixed 2 real behavior regressions against upstre
 new tests. `react-stepzilla` fully removed from `package.json`/`yarn.lock`. `KnownIssues.md`'s
 "Exotic dependencies" section (its last entry) removed.
 
-## 13. `react-table` v6 → TanStack Table — batches 1-4a merged, 4b/4c open for review (stacked)
+## 13. `react-table` v6 → TanStack Table — batches 1-4c merged, batch 4d part 1 open for review
 
 `react-table@^6.8.0` (peer dep `react: ^16.x.x` — doesn't even officially claim React 17 support,
 same pattern as `react-loader-spinner`, item in the "Frontend dependencies" KnownIssues entry) is 4
@@ -419,27 +419,59 @@ was already peer-dep-unverified past React 16 anyway.
        page-size override, so only the first 20 rows are ever reachable (verified: exact parity with
        v6, not a regression) — logged in `docs/KnownIssues.md` since the 20-row cap now lives inside
        `TanStackGrid` rather than being an obvious per-table choice.
-     - **Batch 4d, not started — type-safety cleanup.** Scoped 2026-09-20 after the user caught two
-       real problems in PR #128's review: (1) `LegacyColumn` was made generic over the row type
-       (`TRow`, defaulting to `any` so the ~30 untyped `.jsx` callers are unaffected), but `Cell`'s
-       `value` is still `unknown`/cast-at-use-site since a flat array of heterogeneous per-column
-       accessors can't otherwise be typed without a bigger redesign — batch 4d's job is to remove
-       `value` from `Cell` entirely in favor of always reading the now-properly-typed `original:
-       TRow` directly, across every `LegacyColumn` caller in the app. (2) Several "documented,
+     - **Batch 4d — type-safety cleanup, scoped 2026-09-20 after two real problems the user caught
+       in PR #128's review.** (1) `LegacyColumn` was made generic over the row type (`TRow`,
+       defaulting to `any` so the ~30 untyped `.jsx` callers are unaffected), but `Cell`'s `value`
+       was still `unknown`/cast-at-use-site, since a flat array of heterogeneous per-column
+       accessors can't otherwise be typed without a bigger redesign. (2) Several "documented,
        accepted regression" code comments (introduced by the migration's own fix passes, describing
        dropped v6 `style`/`className` column props) turned out not to be documented anywhere and
        were never actually reviewed/accepted by anyone — caught by the user asking "is this
        documented? who accepted it?" A repo-wide audit at the time found no other instance of this
-       false-claim pattern, and the specific case that prompted it (9 columns across
+       false-claim pattern; the specific case that prompted it (12 columns across
        `SubPaymentList`/`PaymentsList`/`DuePaymentsList`) was fixed for real in PR #128 (added
-       `style`/`className` passthrough to `LegacyColumn`, matching the existing `width` precedent)
-       rather than left as a documented gap. Batch 4d should still (a) audit every other
-       `LegacyColumn` caller across batches 1-4c for any other `any`/type-cast fallout the migration
-       introduced beyond what's already been checked (`TanStackGrid.tsx` itself is the one place
-       `any` is expected to remain, as the deliberate untyped-`.jsx`-boundary layer — see its own
-       comment), and (b) grep for the same "documented/logged/accepted" overclaim pattern again once
-       batches 4b/4c/Activity.jsx have all landed, in case a similar comment gets introduced by a
-       future fix pass.
+       `style`/`className` passthrough to `LegacyColumn`, matching the existing `width` precedent).
+
+       **Part 1 — DONE, PR open for review (2026-09-20, `feat/tanstack-table-batch4d-remove-cell-value`).**
+       Removed `value` from `Cell` entirely — every `Cell` across ~40 callers now reads from the
+       properly-typed `original: TRow` instead, either directly (a simple accessor) or via a small
+       function shared with `accessor` (a computed one, so the logic exists in exactly one place).
+       This tsconfig has `allowJs` but not `checkJs`, so `tsc` can't catch a missed `.value`
+       reference in a plain `.jsx` file — compensated with an independent, repo-wide grep sweep
+       (done twice, once by the implementing pass and once independently by `code-reviewer`) rather
+       than trusting the compiler alone. **Turned out not to be a pure refactor**: `code-reviewer`
+       found this change fixes a real, previously-undetected bug in `UserList.jsx`, `courses/
+       LessonList.jsx`, and `generalPayments/PaymentScheduleList.jsx` — each had a selection-
+       checkbox column whose `accessor` read live selection state, and TanStack caches each row's
+       accessor result keyed only on the `data` array's *reference*; clicking a row's checkbox
+       `setState`d the selection state without changing `data`'s reference, so the cache never
+       recomputed and the row's own checkbox stayed visually unchecked (the header "select all" box
+       and any bulk-action toolbar, reading the same state directly rather than through the stale
+       accessor, updated correctly — only the per-row checkbox was wrong). Reading straight from
+       `original` bypasses the cache and fixes it as a side effect. Regression tests added for all
+       three. Also found and fixed: `FailedPaymentImportsPage.test.jsx`'s existing stale-value
+       regression test (from an earlier batch) no longer actually exercised the bug it was written
+       to guard, since the cell it covers stopped going through `getValue()`'s cache as a result of
+       this same change — repointed at a column that still does. Verified: `vitest run` (see PR for
+       exact count), `tsc --noEmit` clean.
+
+       **Noted, not code-changed**: 8 accessor-only columns (no custom `Cell`, so they still render
+       via TanStack's own default `ctx.getValue()` path) exist across `generalPayments/
+       {DuePaymentList,PaymentList,SubPaymentList}.jsx`, `courses/LessonList.jsx`, and `userPayments/
+       {PaymentsList,DuePaymentsList}.jsx`. All currently read only `this.props.*`/a closured `t`
+       (safe — props come from the ERB mount, locale switch is a full server reload), never mutable
+       state, so none is a live bug — but the invariant this batch surfaced ("a `LegacyColumn`
+       accessor must not close over mutable component state, or its cached value goes stale until
+       `data`'s reference happens to change for an unrelated reason") isn't written down anywhere.
+       Worth a `docs/KnownIssues.md` line naming it, so a future column doesn't reintroduce the
+       batch 4d part 1 bug in a new place.
+
+       **Part 2, not started**: (a) audit every `LegacyColumn` caller across batches 1-4c for any
+       other `any`/type-cast fallout the migration introduced — already spot-checked once (clean:
+       `TanStackGrid.tsx` itself is the only file with `any`, as the deliberate, documented
+       untyped-`.jsx`-boundary layer), worth a final confirmation once part 1 merges; (b) re-grep
+       for the "documented/logged/accepted" overclaim pattern once `Activity.jsx` has also landed,
+       in case a similar comment gets introduced by a future fix pass.
   6. `Activity.jsx` alone, last, once the expander pattern from batch 3 is proven.
   7. Drop `react-table` from `package.json`/`yarn.lock` and the `KnownIssues.md` entry.
      `ReactTableFullScreen.jsx` (thin v6 wrapper) is already gone — deleted in batch 3 once its

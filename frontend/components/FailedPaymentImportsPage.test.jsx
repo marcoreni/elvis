@@ -15,7 +15,7 @@
 //     selecting reason 1 wrongly showed every row). Fixed by stringifying the accessor's return
 //     value, which keeps the auto-picked filterFn as a "contains" match instead.
 //  3. `renderNameCell` used to read the field to write back into `this.state.data` off
-//     `cell.column.id` (a v6-only API absent from TanStackGrid's `{value, original, index}` Cell
+//     `cell.column.id` (a v6-only API absent from TanStackGrid's `{original, index}` Cell
 //     shape) -- fixed by passing the field name explicitly per call site.
 //
 // `withTranslation("payments")` wraps the class; render() reads `t` from props via the HOC, so no
@@ -107,7 +107,7 @@ test("editable name cells use the caller-supplied field name for each column, no
     expect(cells[3]).toHaveTextContent("Dupont");
 });
 
-test("editing the amount cell displays the newly typed value, not the stale one (regression: onChange mutated `this.state.data` in place instead of copying it first, via `data[cell.index][field] = ...`)", async () => {
+test("editing the amount cell displays the newly typed value, and doesn't remount the input (regression: onChange used to mutate `this.state.data` in place instead of copying it, and `columns` used to be rebuilt fresh every render)", async () => {
     const editableAmountRow = {
         id: 103,
         failed_payment_import_reason_id: 3, // different_amounts -> amount cell editable
@@ -144,12 +144,79 @@ test("editing the amount cell displays the newly typed value, not the stale one 
         target: { value: "99.9" },
     });
 
-    // Regression: with the old in-place mutation, `this.state.data` kept the same array
-    // *reference* across the edit, so TanStack's per-row `getValue()` cache (invalidated only when
-    // that reference changes) kept returning the stale 42.5 despite the underlying object having
-    // actually been mutated to 99.9.
+    // `renderAmountCell` reads `cell.original[field]` directly (this commit's change, item 13
+    // batch 4d part 1) -- this display no longer goes through TanStack's `getValue()` cache
+    // either way, so on its own this assertion would pass even with the in-place-mutation bug
+    // the array-copy fix below still guards against (verified: reverting just that copy, this
+    // assertion alone still passes 4/4). The client-mode-sorting test right below is what
+    // actually still exercises the cache and would catch that regression.
     expect(input).toHaveValue(99.9);
     // Same DOM node, not a freshly-mounted replacement -- confirms the cell subtree wasn't
     // unmounted/remounted by this edit (the focus-loss regression this branch introduced).
     expect(screen.getByRole("spinbutton")).toBe(input);
+});
+
+test("editing the amount cell is reflected by a subsequent client-mode sort (regression: onChange used to mutate `this.state.data` in place instead of copying it, leaving TanStack's per-row `getValue()` cache stale)", async () => {
+    // `renderAmountCell` (like every other Cell since this commit) reads `cell.original[field]`
+    // directly, not `getValue()` -- so the cell's own displayed text no longer proves the
+    // array-copy fix is still needed (see the previous test's comment). This table is
+    // `manual={false}` though, so its "amount" column's client-mode *sort* still calls
+    // `row.getValue("amount")` under the hood, which does go through TanStack's per-row
+    // `_valuesCache` -- keyed on `data`'s reference, not on the mutated object itself. That cache
+    // is what this test actually exercises.
+    const rowsForSort = [
+        {
+            id: 201,
+            failed_payment_import_reason_id: 3, // different_amounts -> amount cell editable
+            first_name: "Alice",
+            last_name: "Martin",
+            due_date: "2026-03-15",
+            cashing_date: "2026-03-20",
+            created_at: "2026-03-01T10:00:00",
+            amount: 10,
+            user_id: 77,
+        },
+        {
+            id: 202,
+            failed_payment_import_reason_id: 1, // payer_not_found -> amount not editable
+            first_name: "Bruno",
+            last_name: "Petit",
+            due_date: "2026-04-15",
+            cashing_date: "2026-04-20",
+            created_at: "2026-04-01T10:00:00",
+            amount: 50,
+            user_id: null,
+        },
+    ];
+
+    render(<FailedPaymentImportsPage data={rowsForSort} reasons={REASONS} />);
+
+    const dataRows = () => screen.getAllByRole("row").slice(2); // skip the header + filter rows
+
+    // Unsorted: input order (Alice, then Bruno).
+    expect(within(dataRows()[0]).getByText("Alice")).toBeInTheDocument();
+    expect(within(dataRows()[1]).getByText("Bruno")).toBeInTheDocument();
+
+    // A single click sorts descending (TanStack's default first click direction here) -- this is
+    // what actually populates the per-row `_valuesCache` for the "amount" column: 50 > 10 flips
+    // the order to Bruno first, Alice second.
+    await userEvent.click(
+        screen.getByRole("columnheader", { name: "Montant import" })
+    );
+    expect(within(dataRows()[0]).getByText("Bruno")).toBeInTheDocument();
+    expect(within(dataRows()[1]).getByText("Alice")).toBeInTheDocument();
+
+    // Edit Alice's amount from 10 to 100 -- now bigger than Bruno's fixed 50.
+    fireEvent.change(screen.getByRole("spinbutton"), {
+        target: { value: "100" },
+    });
+
+    // Regression: with the old in-place mutation, `this.state.data` kept the same array
+    // *reference* across the edit, so the descending sort above (driven by the now-stale
+    // `_valuesCache`) would never re-flow even though `row.original.amount` was actually 100 --
+    // Bruno would incorrectly stay sorted ahead of Alice. The array-copy fix produces a fresh
+    // `data` reference, invalidating that cache and letting the still-descending sort put Alice
+    // (now 100) back ahead of Bruno (50).
+    expect(within(dataRows()[0]).getByText("Alice")).toBeInTheDocument();
+    expect(within(dataRows()[1]).getByText("Bruno")).toBeInTheDocument();
 });

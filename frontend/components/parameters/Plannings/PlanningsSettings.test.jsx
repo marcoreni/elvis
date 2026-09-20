@@ -119,7 +119,9 @@ vi.mock("../../common/baseDataTable/BaseDataTable", () => ({
             {columns.map((col, i) =>
                 col.Cell ? (
                     <span key={`c-${i}`} data-testid="bdt-col-cell">
-                        {col.Cell({ value: globalThis.__packValue })}
+                        {col.Cell({
+                            original: { is_a_pack: globalThis.__packValue },
+                        })}
                     </span>
                 ) : null
             )}

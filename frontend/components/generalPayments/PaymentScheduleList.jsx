@@ -290,13 +290,20 @@ class DuePaymentList extends React.Component {
             {}
         );
 
+        const isTargeted = (r) => this.state.targets.includes(r.id);
+        const fullName = (d) => `${d.first_name} ${d.last_name}`;
+        const actionInfo = (u) => ({
+            userId: u.id,
+            mail: validityMap[u.id] !== "E",
+        });
+
         const columns = [
             {
                 Header: "",
                 id: "selection",
                 width: 25,
                 sortable: false,
-                accessor: (r) => this.state.targets.includes(r.id),
+                accessor: isTargeted,
                 Filter: () => (
                     <input
                         type="checkbox"
@@ -316,7 +323,10 @@ class DuePaymentList extends React.Component {
                 Cell: (d) => (
                     <input
                         type="checkbox"
-                        checked={this.state.targets === "all" || d.value}
+                        checked={
+                            this.state.targets === "all" ||
+                            isTargeted(d.original)
+                        }
                         onChange={(e) =>
                             this.updateTarget(d.original.id, e.target.checked)
                         }
@@ -326,13 +336,13 @@ class DuePaymentList extends React.Component {
             {
                 Header: t("general.schedulesWithoutPayer.columns.name"),
                 id: "name",
-                accessor: (d) => `${d.first_name} ${d.last_name}`,
+                accessor: fullName,
                 Cell: (c) => (
                     <a
                         href={`/users/${c.original.id}`}
                         style={{ fontSize: "1.2em" }}
                     >
-                        {c.value}
+                        {fullName(c.original)}
                     </a>
                 ),
             },
@@ -342,13 +352,10 @@ class DuePaymentList extends React.Component {
                 filterable: false,
                 sortable: false,
                 id: "actions",
-                accessor: (u) => ({
-                    userId: u.id,
-                    mail: validityMap[u.id] !== "E",
-                }),
+                accessor: actionInfo,
                 Cell: (d) => (
                     <div className="flex">
-                        {d.value.mail ? (
+                        {actionInfo(d.original).mail ? (
                             <button
                                 style={{ fontSize: "1.2em" }}
                                 onClick={() =>

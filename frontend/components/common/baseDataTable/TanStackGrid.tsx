@@ -61,19 +61,17 @@ export function goFullScreen(tableName: string) {
 // `any`) so a real TypeScript caller (e.g. StudentEvaluationsStats.tsx) gets a checked
 // accessor/Cell, matching what it had with v6's own `Column<TRow>`; every other caller is a plain
 // `.jsx` file with no static row type to parametrize with, and keeps compiling unchanged via the
-// `any` default. `value` stays `unknown` (not `any`) per this repo's TS migration playbook
-// (docs/Jsx-To-Tsx-Migration-Playbook.md §3, "eliminate `any`") -- callers narrow it with a cast
-// at the point of use instead.
+// `any` default. `Cell` deliberately has no `value` prop -- a single `columns` array can hold
+// columns with different `accessor` return types, so `value` (the accessor's own return,
+// recomputed per-row by TanStack) couldn't be typed more precisely than `unknown` without a much
+// bigger redesign. Every `Cell` instead reads whatever it needs directly off the properly-typed
+// `original: TRow`.
 export interface LegacyColumn<TRow = any> {
     id?: string;
     Header?: React.ReactNode;
     // A dot-path string (TanStack supports nested accessorKey paths natively) or a function.
     accessor?: string | ((row: TRow) => unknown);
-    Cell?: (props: {
-        value: unknown;
-        original: TRow;
-        index: number;
-    }) => React.ReactNode;
+    Cell?: (props: { original: TRow; index: number }) => React.ReactNode;
     /** Custom filter-row UI for this column (e.g. a <select> of fixed options), v6's `Filter`. */
     Filter?: LegacyColumnFilterRenderer;
     sortable?: boolean;
@@ -146,7 +144,6 @@ function toTanStackColumn<TRow>(column: LegacyColumn<TRow>): ColumnDef<TRow> {
         const cellRenderer = column.Cell;
         tanstackColumn.cell = (ctx) =>
             cellRenderer({
-                value: ctx.getValue(),
                 original: ctx.row.original,
                 index: ctx.row.index,
             });

@@ -485,10 +485,10 @@ class DuePaymentsList extends React.Component {
     }
 
     renderStatus(cell) {
-        if (cell.value) {
+        if (cell.original.due_payment_status_id) {
             let status = _.find(
                 this.props.statuses,
-                (status) => status.id == cell.value
+                (status) => status.id == cell.original.due_payment_status_id
             );
 
             return status ? (

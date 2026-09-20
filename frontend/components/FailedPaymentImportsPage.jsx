@@ -232,7 +232,7 @@ class FailedPaymentImportsPage extends React.Component {
     }
 
     // `field` used to be read off `cell.column.id` -- v6 exposed the owning column on every cell;
-    // TanStackGrid's Cell props are just {value, original, index}, so the field name each of
+    // TanStackGrid's Cell props are just {original, index}, so the field name each of
     // these needs to write back into `this.state.data` is passed in explicitly by the caller
     // instead (every call site already knows its own column's field statically).
     renderNameCell(cell, editable, field) {
@@ -293,12 +293,12 @@ class FailedPaymentImportsPage extends React.Component {
                         background: "#d63031",
                         color: "white",
                     }}
-                    value={cell.value.format(ISO_DATE_FORMAT)}
+                    value={moment(cell.original[field]).format(ISO_DATE_FORMAT)}
                 />
             );
         }
 
-        return <div>{cell.value.format("DD/MM/YYYY")}</div>;
+        return <div>{moment(cell.original[field]).format("DD/MM/YYYY")}</div>;
     }
 
     renderAmountCell(cell, editable, field) {
@@ -317,11 +317,11 @@ class FailedPaymentImportsPage extends React.Component {
                         background: "#d63031",
                         color: "white",
                     }}
-                    value={cell.value}
+                    value={cell.original[field]}
                 />
             );
 
-        return `${cell.value} €`;
+        return `${cell.original[field]} €`;
     }
 
     changeSelectedReason(id) {
@@ -381,6 +381,9 @@ class FailedPaymentImportsPage extends React.Component {
             return this._columnsCache;
         }
 
+        const cashingDateValue = (d) => moment(d.cashing_date);
+        const importDateValue = (d) => moment(d.created_at);
+
         const payerNotFound = reasons.find((d) => d.code === "payer_not_found");
         const dueNotFound = reasons.find((d) => d.code === "due_not_found");
         const differentAmounts = reasons.find(
@@ -413,9 +416,9 @@ class FailedPaymentImportsPage extends React.Component {
                             type="checkbox"
                             checked={
                                 this.state.selectAll ||
-                                this.state.selectedRows.includes(c.value)
+                                this.state.selectedRows.includes(c.original.id)
                             }
-                            value={c.value}
+                            value={c.original.id}
                             onChange={(e) => this.handleRowSelected(e)}
                         />
                     </div>
@@ -512,17 +515,20 @@ class FailedPaymentImportsPage extends React.Component {
             {
                 Header: t("failedImports.columns.cashingDate"),
                 id: "cashing_date",
-                accessor: (d) => moment(d.cashing_date),
+                accessor: cashingDateValue,
                 filterable: false,
-                Cell: (cell) => cell.value.format("DD/MM/YYYY"),
+                Cell: (cell) =>
+                    cashingDateValue(cell.original).format("DD/MM/YYYY"),
             },
             {
                 Header: t("failedImports.columns.importDate"),
                 id: "import_date",
-                accessor: (d) => moment(d.created_at),
+                accessor: importDateValue,
                 filterable: false,
                 Cell: (cell) =>
-                    cell.value.format(t("failedImports.importDateFormat")),
+                    importDateValue(cell.original).format(
+                        t("failedImports.importDateFormat")
+                    ),
             },
             {
                 Header: t("failedImports.columns.importAmount"),

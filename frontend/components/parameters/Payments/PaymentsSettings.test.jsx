@@ -102,7 +102,7 @@ vi.mock("../../common/baseDataTable/BaseDataTable", () => ({
                 {(props.columns || []).map((col, i) =>
                     col.Cell ? (
                         <span key={`cc-${i}`} data-testid="coupon-col-cell">
-                            {col.Cell({ value: true })}
+                            {col.Cell({ original: { enabled: true } })}
                         </span>
                     ) : null
                 )}

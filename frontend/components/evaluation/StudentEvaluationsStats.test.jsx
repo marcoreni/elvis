@@ -45,10 +45,10 @@ describe("StudentEvaluationsStats", () => {
             screen.getByRole("columnheader", { name: "Nombre élèves" })
         ).toBeInTheDocument();
 
-        // Cell renderers read `c.value as string`/`as number` post-migration -- assert the
-        // actual accessed values render, not just placeholder chrome. Scoped to the table
-        // itself: the pageSizeOptions selector (added for F3) also renders "5"/"10" as
-        // <option> text in the pagination footer, outside the table.
+        // Cell renderers read straight off `c.original.*` (typed `StudentEvaluationStat`)
+        // post-migration -- assert the actual accessed values render, not just placeholder
+        // chrome. Scoped to the table itself: the pageSizeOptions selector (added for F3) also
+        // renders "5"/"10" as <option> text in the pagination footer, outside the table.
         const table = screen.getByRole("table");
         expect(screen.getByText("Dupont Jean")).toBeInTheDocument();
         expect(within(table).getByText("10")).toBeInTheDocument();

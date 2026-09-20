@@ -33,7 +33,8 @@ export default function PricingCategoriesEdit() {
             id: "is_a_pack",
             Header: t("activities.pricing.isPack"),
             accessor: "is_a_pack",
-            Cell: ({ value }) => (value ? t("shared.yes") : t("shared.no")),
+            Cell: ({ original }) =>
+                original.is_a_pack ? t("shared.yes") : t("shared.no"),
         },
     ];
 

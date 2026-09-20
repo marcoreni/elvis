@@ -693,13 +693,16 @@ class LessonList extends React.Component {
         if (restCount)
             recipients += t("lessonList.andNOthers", { count: restCount });
 
+        const isTargeted = (r) => this.state.targets.includes(r.id);
+        const averageAge = (d) => TimeIntervalHelpers.averageAge(d.users);
+
         const tableColumns = [
             {
                 Header: "",
                 id: "selection",
                 width: 25,
                 sortable: false,
-                accessor: (r) => this.state.targets.includes(r.id),
+                accessor: isTargeted,
                 Filter: () => (
                     <input
                         type="checkbox"
@@ -719,7 +722,10 @@ class LessonList extends React.Component {
                 Cell: (d) => (
                     <input
                         type="checkbox"
-                        checked={this.state.targets === "all" || d.value}
+                        checked={
+                            this.state.targets === "all" ||
+                            isTargeted(d.original)
+                        }
                         onChange={(e) =>
                             this.updateTarget(d.original.id, e.target.checked)
                         }
@@ -732,7 +738,9 @@ class LessonList extends React.Component {
                 maxWidth: 110,
                 accessor: (d) => d.time_interval,
                 Cell: (c) =>
-                    c.value ? moment(c.value.start).format("dddd") : "?",
+                    c.original.time_interval
+                        ? moment(c.original.time_interval.start).format("dddd")
+                        : "?",
                 Filter: ({ filter, onChange }) => (
                     <FilterSelect
                         value={(filter && filter.value) || ""}
@@ -782,10 +790,12 @@ class LessonList extends React.Component {
                     );
                 },
                 Cell: (c) => {
-                    if (c.value) {
-                        return `${moment(c.value.start).format(
+                    if (c.original.time_interval) {
+                        return `${moment(c.original.time_interval.start).format(
                             "HH:mm"
-                        )} ➝ ${moment(c.value.end).format("HH:mm")}`;
+                        )} ➝ ${moment(c.original.time_interval.end).format(
+                            "HH:mm"
+                        )}`;
                     } else {
                         return "?";
                     }
@@ -796,7 +806,7 @@ class LessonList extends React.Component {
                 id: "group_name",
                 maxWidth: 60,
                 accessor: (d) => d.group_name,
-                Cell: (c) => <strong>{c.value}</strong>,
+                Cell: (c) => <strong>{c.original.group_name}</strong>,
             },
             {
                 Header: t("lessonList.columns.activity"),
@@ -808,7 +818,7 @@ class LessonList extends React.Component {
                         <span>
                             {
                                 this.props.activityRefs.find(
-                                    (r) => r.id === c.value
+                                    (r) => r.id === c.original.activity_ref_id
                                 ).label
                             }
                         </span>
@@ -832,7 +842,7 @@ class LessonList extends React.Component {
                           maxWidth: 200,
                           accessor: (d) => d.teacher,
                           Cell: (c) =>
-                              `${c.value.first_name} ${c.value.last_name}`,
+                              `${c.original.teacher.first_name} ${c.original.teacher.last_name}`,
                           Filter: ({ filter, onChange }) => (
                               <FilterSelect
                                   onChange={(e) => onChange(e.target.value)}
@@ -977,10 +987,11 @@ class LessonList extends React.Component {
                 Header: t("lessonList.columns.age"),
                 id: "average_age",
                 maxWidth: 50,
-                accessor: (d) => {
-                    return TimeIntervalHelpers.averageAge(d.users);
-                },
-                Cell: (c) => TimeIntervalHelpers.averageAgeDisplay(c.value),
+                accessor: averageAge,
+                Cell: (c) =>
+                    TimeIntervalHelpers.averageAgeDisplay(
+                        averageAge(c.original)
+                    ),
             },
             {
                 Header: t("lessonList.columns.level"),
@@ -1006,7 +1017,7 @@ class LessonList extends React.Component {
                 Cell: (c) =>
                     TimeIntervalHelpers.levelDisplayLabel(
                         TimeIntervalHelpers.levelDisplayForActivity(
-                            c.value,
+                            c.original,
                             this.props.seasons || []
                         )
                     ),
@@ -1018,7 +1029,8 @@ class LessonList extends React.Component {
                 accessor: (d) => d.time_interval,
                 Cell: (c) => {
                     const season = TimeIntervalHelpers.getSeasonFromDate(
-                        c.value && c.value.start,
+                        c.original.time_interval &&
+                            c.original.time_interval.start,
                         this.props.seasons || []
                     );
                     return (season && season.label) || "ø";

@@ -226,11 +226,12 @@ describe("BaseDataTable — pagination chrome follows the active UI language", (
 });
 
 describe("BaseDataTable — column adapter (v6-shaped column defs onto TanStack Table v8)", () => {
-    // PricingCategoriesEdit.jsx's boolean column destructures {value} rather than {original} --
-    // a distinct real-world shape from the actions-column Cell exercised by the other tests here,
-    // which reads .original. Also covers a dot-path string accessor for the same reason
-    // (ActivityRefBasics.jsx/EditFormule.jsx access "pricing_category.name").
-    test("a Cell destructuring {value}, and a dot-path string accessor, both resolve against real row data", async () => {
+    // PricingCategoriesEdit.jsx's boolean column destructures {original} (batch 4d removed `Cell`'s
+    // `value` prop entirely -- every Cell reads off `original` now) -- a distinct real-world shape
+    // from the actions-column Cell exercised by the other tests here. Also covers a dot-path string
+    // accessor for the same reason (ActivityRefBasics.jsx/EditFormule.jsx access
+    // "pricing_category.name").
+    test("a Cell destructuring {original}, and a dot-path string accessor, both resolve against real row data", async () => {
         const dataService = makeDataService({
             listData: () =>
                 Promise.resolve({
@@ -257,7 +258,8 @@ describe("BaseDataTable — column adapter (v6-shaped column defs onto TanStack 
                         id: "is_pack",
                         Header: "Pack",
                         accessor: "is_a_pack",
-                        Cell: ({ value }) => (value ? "yes" : "no"),
+                        Cell: ({ original }) =>
+                            original.is_a_pack ? "yes" : "no",
                     },
                 ]}
                 oneResourceTypeName="x"
