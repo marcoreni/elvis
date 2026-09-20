@@ -119,7 +119,7 @@ legacy string refs). Caught and fixed 2 real behavior regressions against upstre
 new tests. `react-stepzilla` fully removed from `package.json`/`yarn.lock`. `KnownIssues.md`'s
 "Exotic dependencies" section (its last entry) removed.
 
-## 13. `react-table` v6 → TanStack Table — batches 1-4a merged, batch 4b open for review, 4c next
+## 13. `react-table` v6 → TanStack Table — batches 1-4a merged, 4b/4c open for review (stacked)
 
 `react-table@^6.8.0` (peer dep `react: ^16.x.x` — doesn't even officially claim React 17 support,
 same pattern as `react-loader-spinner`, item in the "Frontend dependencies" KnownIssues entry) is 4
@@ -389,18 +389,36 @@ was already peer-dep-unverified past React 16 anyway.
        override semantics). All fixed across 2 follow-up commits, regression test added for the
        infinite-loop fix. Verified: `vitest run` (1367 tests, was 1343 pre-batch), `tsc --noEmit`
        clean.
-     - **Batch 4c, not yet started:** 3 more client-mode files needing the same `manual={false}`
-       treatment as batch 4a — `evaluation/StudentEvaluationsStats.tsx` (trivial, already TS, no
-       manual/fetch logic at all — a reasonable easy first pick), `userPayments/PaymentsList.jsx`,
-       `userPayments/DuePaymentsList.jsx` (both large files overall, 948/1573 lines, but only one
-       `<ReactTable>` each — most of the file is unrelated payment-modal/bulk-action logic).
+     - **Batch 4c — implemented, PR open for review (2026-09-20, stacked on batch 4b,
+       `feat/tanstack-table-batch4c-client-side-tables`).** 3 client-mode files —
+       `evaluation/StudentEvaluationsStats.tsx`, `userPayments/PaymentsList.jsx`,
+       `userPayments/DuePaymentsList.jsx` — migrated onto batch 4a's `manual={false}` mode. Caught
+       before landing: both payment tables' "select all" checkbox columns had neither `id` nor a
+       real accessor (a 4th instance of the locale-dependent-fallback-id class already fixed 3
+       times — `FailedPaymentImportsPage`, `Holidays`, `AdhesionList`); here it's worse than a
+       locale-dependent id, since the `Header` is itself a JSX checkbox, not a string, so TanStack's
+       id-resolution chain hits `undefined` and `createColumn` throws unconditionally, crashing the
+       whole table. Fixed with explicit `id`s. A `code-reviewer` pass then found 2 **blocking**
+       bugs, both in the *caller* (`PaymentsManagement.jsx`, not the 3 migrated files themselves):
+       both `handleSaveDuePayment` and the payment-status-edit handler mutated a shared array/row
+       object in place before `setState` — v6 tolerated this (it re-ran its own accessors every
+       render regardless of whether data changed), but `TanStackGrid`'s row-model cache is keyed on
+       the data reference and per-row values are cached off `row.original`, so neither a due-payment
+       edit nor a status change updated the table until a manual page reload. Fixed by copying
+       before mutating, matching a third handler in the same file that already did it correctly.
+       Also restored a lost rows-per-page selector on `StudentEvaluationsStats` (same "the
+       migration works but silently drops a v6 default" class hit repeatedly in batches 4a/4b).
+       Verified: `vitest run` (1372 tests, was 1367 pre-batch), `tsc --noEmit` clean.
        **Flagged for future improvement, not a blocker for 4c itself:** `PaymentsList`/
        `DuePaymentsList` get their full dataset via `this.props.payments`/`this.props.data` (a
        payer's payment history), which — unlike batch 4a's genuinely bounded lists (seasons, rooms,
        teachers) — can grow large over a long relationship with the school. Client-side pagination
        matches today's v6 behavior and is fine to ship as-is, but revisit with real server-side
        pagination (a new backend endpoint + view change) if this page's performance or row count
-       ever becomes a real complaint.
+       ever becomes a real complaint. Also, both payment tables use `showPagination={false}` with no
+       page-size override, so only the first 20 rows are ever reachable (verified: exact parity with
+       v6, not a regression) — logged in `docs/KnownIssues.md` since the 20-row cap now lives inside
+       `TanStackGrid` rather than being an obvious per-table choice.
   6. `Activity.jsx` alone, last, once the expander pattern from batch 3 is proven.
   7. Drop `react-table` from `package.json`/`yarn.lock` and the `KnownIssues.md` entry.
      `ReactTableFullScreen.jsx` (thin v6 wrapper) is already gone — deleted in batch 3 once its
