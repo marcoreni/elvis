@@ -119,7 +119,7 @@ legacy string refs). Caught and fixed 2 real behavior regressions against upstre
 new tests. `react-stepzilla` fully removed from `package.json`/`yarn.lock`. `KnownIssues.md`'s
 "Exotic dependencies" section (its last entry) removed.
 
-## 13. `react-table` v6 → TanStack Table — batches 1-4d merged; `Activity.jsx` open for review (last file), then drop the package
+## 13. `react-table` v6 → TanStack Table — batches 1-4d + Activity.jsx merged; 3 files missed by the original scope still remain
 
 `react-table@^6.8.0` (peer dep `react: ^16.x.x` — doesn't even officially claim React 17 support,
 same pattern as `react-loader-spinner`, item in the "Frontend dependencies" KnownIssues entry) is 4
@@ -477,10 +477,11 @@ was already peer-dep-unverified past React 16 anyway.
        originally scoped to also re-run once `Activity.jsx` lands, in case that batch's own fix
        passes introduce a similar false claim — worth one more quick grep at that point, though
        nothing suggests it's likely to recur now that this exact pattern has been caught once.
-  6. **`Activity.jsx` — implemented, PR #130 open for review (2026-09-25).** The last file in the
-     whole migration, deliberately saved for last as the most complex table in the app: one
-     `<Activity>` per "desired activity" on the activity-application review page
-     (`/inscriptions/:id`), each showing candidate suggestions with an expandable `WorkGroupEditor`.
+  6. **`Activity.jsx` — MERGED, PR #130 (2026-09-25).** Was believed to be the last file in the
+     whole migration and deliberately saved for last as the most complex table in the app — that
+     belief was wrong, see item 7 below. Mounted once per "desired activity" on the
+     activity-application review page (`/inscriptions/:id`), each showing candidate suggestions with
+     an expandable `WorkGroupEditor`.
      Added two new `TanStackGrid` capabilities (both precedented by the existing controlled
      pagination/sorting/columnFilters pattern): `getRowId?: (row: TRow) => string`, and controlled
      `expanded`/`onExpandedChange`. The hardest part — the original code reached into react-table
@@ -510,9 +511,26 @@ was already peer-dep-unverified past React 16 anyway.
      of exact match, and a missing rows-per-page selector. Verified: `vitest run` (1385 tests, was
      1376 pre-batch), `tsc --noEmit` clean, live-checked on `/inscriptions/1` (dev DB) — row
      expansion and the day filter's value-retention fix both confirmed working.
-  7. Drop `react-table` from `package.json`/`yarn.lock` and the `KnownIssues.md` entry.
-     `ReactTableFullScreen.jsx` (thin v6 wrapper) is already gone — deleted in batch 3 once its
-     last 4 consumers migrated off it.
+  7. **Not started — 3 files never included in any batch's file list, found late.** `docs`/
+     `git grep -rl 'from "react-table"' frontend/components/` (run 2026-09-25, right after #130
+     merged, when the user asked why `react-table` still had active references) shows:
+     `ActivitiesApplicationsList.jsx` (1369 lines, server-paginated via `manual`, several `Filter`/
+     `Cell` definitions — similar shape to batch 4b), `parameters/Payments/AdhesionSettings.jsx` (256
+     lines, only 2 `Cell`s, no `Filter`/`manual` visible — looks simple), `userPayments/
+     PaymentsSummary.jsx` (773 lines, 3 `Cell`s, `resizable={false}`, no `manual`/`onFetchData`
+     visible — looks client-mode, similar shape to batch 4a/4c). **How this was missed**: none of
+     these 3 ever appeared in item 13's original "26 files import react-table directly" scope count
+     (batch 1, 2026-09-16) or in any later batch's file list. They surfaced exactly once — a
+     `code-reviewer` pass during batch 4d independently verified "exactly four files still import
+     v6" (these 3 plus `Activity.jsx`, which *was* then migrated in #130) while confirming a
+     different, narrower claim (that they were correctly out of scope for *that specific diff*).
+     That confirmation was true and correctly reported at the time, but it was never escalated into
+     "these need their own future batch" — the roadmap kept treating `Activity.jsx` as "the last
+     file" without re-deriving that claim against an actual grep. Not yet scoped into an actual
+     batch (columns, features, complexity) — do that before starting, same as every batch before it.
+  8. Drop `react-table` from `package.json`/`yarn.lock` and the `KnownIssues.md` entry, once item 7
+     is actually done. `ReactTableFullScreen.jsx` (thin v6 wrapper) is already gone — deleted in
+     batch 3 once its last 4 consumers migrated off it.
 
 **Side-by-side migration during the transition — resolved 2026-09-16, no action needed beyond
 adding the new dependency.** The `react-table-6` idea flagged earlier (republishing v6 under an
