@@ -119,7 +119,7 @@ legacy string refs). Caught and fixed 2 real behavior regressions against upstre
 new tests. `react-stepzilla` fully removed from `package.json`/`yarn.lock`. `KnownIssues.md`'s
 "Exotic dependencies" section (its last entry) removed.
 
-## 13. `react-table` v6 → TanStack Table — batches 1-4d merged; `Activity.jsx` + package drop left
+## 13. `react-table` v6 → TanStack Table — batches 1-4d merged; `Activity.jsx` open for review (last file), then drop the package
 
 `react-table@^6.8.0` (peer dep `react: ^16.x.x` — doesn't even officially claim React 17 support,
 same pattern as `react-loader-spinner`, item in the "Frontend dependencies" KnownIssues entry) is 4
@@ -477,7 +477,39 @@ was already peer-dep-unverified past React 16 anyway.
        originally scoped to also re-run once `Activity.jsx` lands, in case that batch's own fix
        passes introduce a similar false claim — worth one more quick grep at that point, though
        nothing suggests it's likely to recur now that this exact pattern has been caught once.
-  6. `Activity.jsx` alone, last, once the expander pattern from batch 3 is proven.
+  6. **`Activity.jsx` — implemented, PR #130 open for review (2026-09-25).** The last file in the
+     whole migration, deliberately saved for last as the most complex table in the app: one
+     `<Activity>` per "desired activity" on the activity-application review page
+     (`/inscriptions/:id`), each showing candidate suggestions with an expandable `WorkGroupEditor`.
+     Added two new `TanStackGrid` capabilities (both precedented by the existing controlled
+     pagination/sorting/columnFilters pattern): `getRowId?: (row: TRow) => string`, and controlled
+     `expanded`/`onExpandedChange`. The hardest part — the original code reached into react-table
+     v6's internal ref API (`getSortedData`) after an edit, purely to recompute where the edited
+     suggestion would land under an active column sort so it could re-expand it at the new index —
+     was deleted, not ported: `getRowId={(row) => String(row.id)}` keys `expanded` state by the
+     suggestion's own stable id instead of array position, so "the row the user opened" stays the
+     same key regardless of how sorting/filtering reshuffles the array; re-expanding an edited
+     suggestion is now a 3-line `expanded: {[a.id]: true}`. Two deliberate simplifications given
+     real usage (suggestion lists are typically small — pagination only past 10 rows): dropped the
+     custom chevron expander icon for `TanStackGrid`'s default ▶/▼, and moved the expand-all/
+     collapse-all buttons out of the table (previously in the expander column's filter-row slot,
+     which would have needed a new filter-slot-injection capability) into `Activity.jsx`'s own
+     surrounding UI. 3 columns (`day`/`type_cour`/`time`) have filter comparators TanStack's
+     auto-picked `filterFn` can't reproduce (an object-valued accessor filters out every row via
+     reference inequality; a numeric accessor picks range-filtering, not exact match) — these bypass
+     TanStack's own column-filter state entirely and filter `suggestions` in application code before
+     handing it to `TanStackGrid` as `data`, reusing the exact original v6 comparator logic
+     (verified line-by-line against the pre-migration source). A `code-reviewer` pass (full
+     line-by-line comparison against the pre-migration file, not just the diff) found 4 real bugs, 2
+     high severity: pagination could strand the table on an out-of-range "no data" page when a
+     filter narrowed the row count (nothing reset/clamped `pageIndex`, since `TanStackGrid`'s own
+     filter-change reset only applies to uncontrolled pagination); the day/type_cour filter
+     `<select>`s visually blanked out on every filter change (uncontrolled `defaultValue`, remounted
+     by the per-render columns rebuild) even though the filter was still correctly applied
+     underneath. Both fixed; also fixed 3 numeric columns silently getting range-filtering instead
+     of exact match, and a missing rows-per-page selector. Verified: `vitest run` (1385 tests, was
+     1376 pre-batch), `tsc --noEmit` clean, live-checked on `/inscriptions/1` (dev DB) — row
+     expansion and the day filter's value-retention fix both confirmed working.
   7. Drop `react-table` from `package.json`/`yarn.lock` and the `KnownIssues.md` entry.
      `ReactTableFullScreen.jsx` (thin v6 wrapper) is already gone — deleted in batch 3 once its
      last 4 consumers migrated off it.
