@@ -263,3 +263,28 @@ mutable state, so none is a live bug today. Keep this invariant in mind before a
 `LegacyColumn` accessor that reads component state: either avoid it, or give that column its own
 `Cell` reading `original` directly instead of relying on the cached accessor result.
 
+## `courses/LessonList.jsx`'s "season" filter calls `setState` during render — React console warning
+
+`LessonList.jsx`'s season-column `Filter` (`Filter: ({filter, onChange}) => {...}`, the last column
+before "action") does, in its render body, unconditionally on the render where `currentAppsSeason`
+is set but `filterApplied` isn't yet:
+```js
+if (currentAppsSeason && !filterApplied) {
+    onChange(currentAppsSeason?.id || "");
+    this.setState({ filterApplied: true });
+}
+```
+Both `onChange` (which itself triggers a `TanStackGrid` column-filter state update) and
+`this.setState` are called synchronously from inside a render function, not an event handler or
+effect — React's real, correct response is the console warning "Cannot update during an existing
+state transition (such as within `render`). Render methods should be a pure function of props and
+state," observed repeatedly in this browser session's console history at `Filter → th → tr → thead
+→ table → div → TanStackGrid → ... → LessonList`. Confirmed pre-existing on `develop`, unrelated to
+any TanStack migration batch — `LessonList.jsx` predates and is untouched by later batches (verified
+via `git diff develop..<later-batch-branch> --stat` showing no changes to this file). Not
+investigated further (root cause of the warning is clear from reading the code above; whether it
+causes any *user-visible* symptom beyond the console warning, e.g. a double-render or a filter that
+applies late, hasn't been checked). Fix: move the `onChange`/`setState` pair into a
+`componentDidUpdate` (this is a class component), keyed off whatever makes `currentAppsSeason`
+become available, instead of the render body.
+
