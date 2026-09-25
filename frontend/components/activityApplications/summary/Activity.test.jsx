@@ -7,88 +7,108 @@
 //      on mount. NOT exported → its keys (`common:loading`, `summaryActivity.notSpecified`) are
 //      reachable only through `SubStudentList`, which needs deep `row.original` fixture data, so
 //      they are asserted at the i18n layer.
-//   2. `SubStudentList` — module-local fn component (`useTranslation`), rendered as the
-//      `<ReactTable>` `SubComponent`. NOT exported → its keys (`headcountAt`, `ageYears`, the
-//      `col*` <th>s) are asserted at the i18n layer.
+//   2. `SubStudentList` — module-local fn component (`useTranslation`), rendered via
+//      `TanStackGrid`'s `renderSubComponent`. NOT exported → its keys (`headcountAt`, `ageYears`,
+//      the `col*` <th>s) are asserted at the i18n layer.
 //   3. `Activity` — default export, `class` wrapped in `withTranslation("activityApplications")`.
 //      `componentDidMount → loadSuggestions()` does `fetch(".../suggestions?mode=...")`. Its
 //      `render()` threads `t` (from props, injected by the HOC) into the column Headers, the
-//      header toggle buttons + <i> labels, the `<ReactTable>` `common:reactTable.*` props and the
-//      level-edit `<ReactModal>`. Mounted here with `react-table` / `react-modal` /
-//      `./WorkGroupEditor` mocked so the translated strings render synchronously.
+//      header toggle buttons + <i> labels, and the level-edit `<ReactModal>`. Mounted here with
+//      `TanStackGrid` / `react-modal` / `./WorkGroupEditor` mocked so the translated strings render
+//      synchronously.
 
 import React from "react";
-import {render, screen, within, waitFor} from "@testing-library/react";
+import {
+    render,
+    screen,
+    within,
+    waitFor,
+    fireEvent,
+} from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import i18n from "../../../i18n";
 import enActivityApplications from "../../../locales/en/activityApplications.json";
 import Activity from "./Activity";
 
 // --- mocks -----------------------------------------------------------------------------------
 
-// react-table@6 default export. Render the string Headers + the `common:reactTable.*` text props
-// so the translated copy is assertable without a real grid.
-// A row fixture the `SubComponent` (= `SubStudentList`) can render against.
+// A row fixture `renderSubComponent` (= `SubStudentList`) can render against.
 export const SUB_ROW = {
     original: {
         id: 10,
         closest_lesson: "2025-09-01T00:00:00",
-        activity_ref: {is_work_group: false, id: 3},
+        activity_ref: { is_work_group: false, id: 3 },
         activity_ref_id: 3,
-        time_interval: {id: 7, start: "2025-09-01T17:00:00"},
-        users: [{
-            id: 99,
-            first_name: "Jean",
-            last_name: "Dupont",
-            birthday: "2014-01-01",
-            // Paris-zone midnight timestamps (config.time_zone = "Paris") -- exercises the
-            // Started/Stopped-date columns' timezone-safe formatting, see the dedicated
-            // describe block below.
-            application: {id: 1, begin_at: "2020-01-01T00:00:00+01:00", stopped_at: "2030-06-15T00:00:00+02:00"},
-        }],
+        time_interval: { id: 7, start: "2025-09-01T17:00:00" },
+        users: [
+            {
+                id: 99,
+                first_name: "Jean",
+                last_name: "Dupont",
+                birthday: "2014-01-01",
+                // Paris-zone midnight timestamps (config.time_zone = "Paris") -- exercises the
+                // Started/Stopped-date columns' timezone-safe formatting, see the dedicated
+                // describe block below.
+                application: {
+                    id: 1,
+                    begin_at: "2020-01-01T00:00:00+01:00",
+                    stopped_at: "2030-06-15T00:00:00+02:00",
+                },
+            },
+        ],
         inactive_users: [],
         options: [],
         activities_instruments: [],
     },
 };
 
-vi.mock("react-table", () => ({
-    default: props => (
-        <div data-testid="react-table">
-            <div data-testid="rt-headers">
-                {(props.columns || []).map((c, i) => (
-                    <span key={i} className="rt-th">
-                        {typeof c.Header === "string" ? c.Header : null}
-                    </span>
-                ))}
+// Stashes the live grid props (same technique as LessonList.test.jsx) so a test can invoke the
+// raw `renderSubComponent` with synthetic row data, without needing a real TanStack mount.
+let lastGridProps = null;
+vi.mock("../../common/baseDataTable/TanStackGrid", () => ({
+    default: (props) => {
+        lastGridProps = props;
+        return (
+            <div data-testid="react-table">
+                <div data-testid="rt-headers">
+                    {(props.columns || []).map((c, i) => (
+                        <span key={i} className="rt-th">
+                            {typeof c.Header === "string" ? c.Header : null}
+                        </span>
+                    ))}
+                </div>
             </div>
-            <span data-testid="rt-previousText">{props.previousText}</span>
-            <span data-testid="rt-nextText">{props.nextText}</span>
-            <span data-testid="rt-loadingText">{props.loadingText}</span>
-            <span data-testid="rt-noDataText">{props.noDataText}</span>
-            <span data-testid="rt-pageText">{props.pageText}</span>
-            <span data-testid="rt-ofText">{props.ofText}</span>
-            <span data-testid="rt-rowsText">{props.rowsText}</span>
-            {typeof props.SubComponent === "function" ? (
-                <div data-testid="rt-sub">{props.SubComponent(SUB_ROW)}</div>
-            ) : null}
-        </div>
-    ),
+        );
+    },
 }));
 
 // LevelCell fires api.set().get(...).then(...) on mount, and falls back to
 // TimeIntervalHelpers.levelDisplayForActivity. Keep the real helpers except level display, which
 // we force to the "NON INDIQUÉ" sentinel so the translated placeholder path is exercised.
-vi.mock("../../planning/TimeIntervalHelpers", async importOriginal => {
+vi.mock("../../planning/TimeIntervalHelpers", async (importOriginal) => {
     const actual = await importOriginal();
-    return {...actual, levelDisplayForActivity: () => "NON INDIQUÉ"};
+    return { ...actual, levelDisplayForActivity: () => "NON INDIQUÉ" };
 });
 
 // react-modal — render children unconditionally so the level-edit modal body is in the DOM.
 vi.mock("react-modal", () => ({
-    default: ({children}) => <div data-testid="react-modal">{children}</div>,
+    default: ({ children }) => <div data-testid="react-modal">{children}</div>,
 }));
 
-vi.mock("./WorkGroupEditor", () => ({default: () => <div data-testid="work-group-editor" />}));
+// Exposes `onUpdateActivity` via a clickable button (instead of an inert stub) so tests can drive
+// the real `renderSubComponent` -> `WorkGroupEditor.onUpdateActivity` callback path -- see the
+// id-keyed re-expand regression tests below. `activity_ref.is_work_group` is false in every
+// existing fixture above (SUB_ROW, baseProps' empty suggestions), so this change doesn't affect
+// any test that already passes.
+vi.mock("./WorkGroupEditor", () => ({
+    default: ({ activity, onUpdateActivity }) => (
+        <div data-testid="work-group-editor">
+            <button onClick={() => onUpdateActivity(activity)}>
+                save-{activity.id}
+            </button>
+        </div>
+    ),
+}));
 
 // `../../../tools/api` chainable — `handleSubmitStudentLevel` uses `api.set().success(cb).post/del`;
 // not hit on mount/render, stubbed defensively.
@@ -103,7 +123,7 @@ vi.mock("../../../tools/api", () => {
         patch: vi.fn(() => Promise.resolve()),
         del: vi.fn(() => Promise.resolve()),
     };
-    return {set: () => chain};
+    return { set: () => chain };
 });
 
 // --- props ---------------------------------------------------------------------------------------
@@ -114,19 +134,19 @@ vi.mock("../../../tools/api", () => {
 // `instruments` is non-empty so the `summaryActivity.instruments` <i> label renders — the guard is
 // `!this.props.instruments.length == 0`, which is falsy (i.e. block hidden) for an empty array.
 const baseProps = () => ({
-    desiredActivity: {id: 5, is_validated: false},
-    activityRef: {id: 7, kind: "Ado", label: "Piano"},
+    desiredActivity: { id: 5, is_validated: false },
+    activityRef: { id: 7, kind: "Ado", label: "Piano" },
     application: {
         id: 100,
         season_id: 1,
         user_id: 2,
-        user: {id: 2, levels: []},
+        user: { id: 2, levels: [] },
         pre_application_activity: null,
     },
     desiredActivities: [],
     activityRefs: [],
     suggestions: [],
-    instruments: [{label: "Piano"}],
+    instruments: [{ label: "Piano" }],
     studentEvaluationQuestions: [],
     detectedEvaluation: null,
     evaluationLevelRefs: [],
@@ -143,7 +163,9 @@ const baseProps = () => ({
 });
 
 beforeEach(() => {
-    global.fetch = vi.fn().mockResolvedValue({json: () => Promise.resolve([])});
+    global.fetch = vi
+        .fn()
+        .mockResolvedValue({ json: () => Promise.resolve([]) });
 });
 
 afterEach(async () => {
@@ -159,7 +181,9 @@ afterEach(async () => {
 describe("Activity — withTranslation HOC shape", () => {
     test("default export wraps a React.Component class that is not a StepZilla step", () => {
         expect(Activity.WrappedComponent).toBeDefined();
-        expect(Activity.WrappedComponent.prototype instanceof React.Component).toBe(true);
+        expect(
+            Activity.WrappedComponent.prototype instanceof React.Component
+        ).toBe(true);
         // StepZilla steps expose `isValidated` on the prototype; this panel must not.
         expect(Activity.WrappedComponent.prototype.isValidated).toBeUndefined();
     });
@@ -180,8 +204,6 @@ describe("Activity — rendered copy per locale", () => {
                 colOccupied: "Occupées",
                 colActions: "Actions",
             },
-            previousText: "Précédent",
-            noDataText: "Aucune donnée",
             suggestedCourses: "Cours suggérés",
             allCoursesOf: /Tous les cours de/,
             studentLevel: "Niveau de l'élève",
@@ -210,8 +232,6 @@ describe("Activity — rendered copy per locale", () => {
                 colOccupied: "Occupied",
                 colActions: "Actions",
             },
-            previousText: "Previous",
-            noDataText: "No data",
             suggestedCourses: "Suggested courses",
             allCoursesOf: /All courses of/,
             studentLevel: "Student level",
@@ -233,7 +253,7 @@ describe("Activity — rendered copy per locale", () => {
         },
     };
 
-    test.each(["fr", "en"])("%s", async lng => {
+    test.each(["fr", "en"])("%s", async (lng) => {
         await i18n.changeLanguage(lng);
         const expected = CASES[lng];
 
@@ -242,18 +262,14 @@ describe("Activity — rendered copy per locale", () => {
 
         // fetch URL carries the suggestions mode (loadSuggestions mechanic)
         expect(global.fetch.mock.calls[0][0]).toMatch(
-            /\/applications\/100\/desired_activities\/5\/suggestions\?mode=CUSTOM/,
+            /\/applications\/100\/desired_activities\/5\/suggestions\?mode=CUSTOM/
         );
 
-        // --- ReactTable column Headers ---
+        // --- TanStackGrid column Headers ---
         const headers = screen.getByTestId("rt-headers");
         for (const label of Object.values(expected.headers)) {
             expect(within(headers).getByText(label)).toBeInTheDocument();
         }
-
-        // --- ReactTable common:reactTable.* text props ---
-        expect(screen.getByTestId("rt-previousText")).toHaveTextContent(expected.previousText);
-        expect(screen.getByTestId("rt-noDataText")).toHaveTextContent(expected.noDataText);
 
         // --- header toggle button + <i> labels ---
         expect(screen.getByText(expected.suggestedCourses)).toBeInTheDocument();
@@ -261,26 +277,42 @@ describe("Activity — rendered copy per locale", () => {
         expect(screen.getByText(expected.studentLevel)).toBeInTheDocument();
         expect(screen.getByText(expected.groupChange)).toBeInTheDocument();
         expect(screen.getByText(expected.instruments)).toBeInTheDocument();
-        expect(screen.getByText(expected.suggestionCriteria)).toBeInTheDocument();
+        expect(
+            screen.getByText(expected.suggestionCriteria)
+        ).toBeInTheDocument();
 
         // --- level-edit ReactModal ---
         const modal = screen.getByTestId("react-modal");
-        expect(within(modal).getByText(expected.modal.title)).toBeInTheDocument();
-        expect(within(modal).getByText(expected.modal.notSpecified)).toBeInTheDocument();
-        expect(within(modal).getByText(expected.modal.cancel)).toBeInTheDocument();
-        expect(within(modal).getByText(expected.modal.save)).toBeInTheDocument();
+        expect(
+            within(modal).getByText(expected.modal.title)
+        ).toBeInTheDocument();
+        expect(
+            within(modal).getByText(expected.modal.notSpecified)
+        ).toBeInTheDocument();
+        expect(
+            within(modal).getByText(expected.modal.cancel)
+        ).toBeInTheDocument();
+        expect(
+            within(modal).getByText(expected.modal.save)
+        ).toBeInTheDocument();
 
-        // --- SubStudentList (the <ReactTable> SubComponent) + its nested <LevelCell> ---
-        const sub = screen.getByTestId("rt-sub");
-        expect(within(sub).getByText(expected.sub.headcountAt)).toBeInTheDocument();
+        // --- SubStudentList (via TanStackGrid's renderSubComponent) + its nested <LevelCell> ---
+        const sub = render(lastGridProps.renderSubComponent(SUB_ROW)).container;
+        expect(
+            within(sub).getByText(expected.sub.headcountAt)
+        ).toBeInTheDocument();
         for (const col of expected.sub.cols) {
             expect(within(sub).getByText(col)).toBeInTheDocument();
         }
-        expect(within(sub).getByText(expected.sub.ageYears)).toBeInTheDocument();
+        expect(
+            within(sub).getByText(expected.sub.ageYears)
+        ).toBeInTheDocument();
         // LevelCell resolves its useEffect async; the fallback path (levelDisplayForActivity
         // mocked to "NON INDIQUÉ") renders summaryActivity.notSpecified.
         await waitFor(() =>
-            expect(within(sub).getByText(expected.sub.levelCell)).toBeInTheDocument(),
+            expect(
+                within(sub).getByText(expected.sub.levelCell)
+            ).toBeInTheDocument()
         );
     });
 });
@@ -297,7 +329,7 @@ describe("Activity — SubStudentList Started/Stopped dates are locale-aware and
         render(<Activity {...baseProps()} />);
         await waitFor(() => expect(global.fetch).toHaveBeenCalled());
 
-        const sub = screen.getByTestId("rt-sub");
+        const sub = render(lastGridProps.renderSubComponent(SUB_ROW)).container;
         expect(within(sub).getByText("1/1/2020")).toBeInTheDocument();
         expect(within(sub).getByText("6/15/2030")).toBeInTheDocument();
     });
@@ -307,7 +339,7 @@ describe("Activity — SubStudentList Started/Stopped dates are locale-aware and
         render(<Activity {...baseProps()} />);
         await waitFor(() => expect(global.fetch).toHaveBeenCalled());
 
-        const sub = screen.getByTestId("rt-sub");
+        const sub = render(lastGridProps.renderSubComponent(SUB_ROW)).container;
         expect(within(sub).getByText("01/01/2020")).toBeInTheDocument();
         expect(within(sub).getByText("15/06/2030")).toBeInTheDocument();
     });
@@ -320,13 +352,17 @@ describe("Activity — displayDuration goes through activityApplications:units.*
     const withRefs = () => ({
         ...baseProps(),
         activityRefs: [
-            {id: 20, label: "Guitare", duration: 45},
-            {id: 21, label: "Batterie", duration: 90},
+            { id: 20, label: "Guitare", duration: 45 },
+            { id: 21, label: "Batterie", duration: 90 },
         ],
     });
 
-    const optionText = t =>
-        screen.getByText((_c, node) => node.tagName === "OPTION" && node.textContent.replace(/\s+/g, " ").trim() === t);
+    const optionText = (t) =>
+        screen.getByText(
+            (_c, node) =>
+                node.tagName === "OPTION" &&
+                node.textContent.replace(/\s+/g, " ").trim() === t
+        );
 
     for (const lng of ["fr", "en"]) {
         test(`${lng}: minutes-only and hours+minutes durations render via units.*`, async () => {
@@ -346,9 +382,14 @@ describe("Activity — displayDuration goes through activityApplications:units.*
         i18n.addResourceBundle(
             "en",
             "activityApplications",
-            {units: {minutes: "{{minutes}} MINS", hoursMinutes: "{{hours}}HR{{minutes}}"}},
+            {
+                units: {
+                    minutes: "{{minutes}} MINS",
+                    hoursMinutes: "{{hours}}HR{{minutes}}",
+                },
+            },
             true,
-            true,
+            true
         );
         try {
             render(<Activity {...withRefs()} />);
@@ -356,8 +397,247 @@ describe("Activity — displayDuration goes through activityApplications:units.*
             expect(optionText("Guitare - 45 MINS")).toBeInTheDocument();
             expect(optionText("Batterie - 1HR30")).toBeInTheDocument();
         } finally {
-            i18n.addResourceBundle("en", "activityApplications", enActivityApplications, true, true);
+            i18n.addResourceBundle(
+                "en",
+                "activityApplications",
+                enActivityApplications,
+                true,
+                true
+            );
         }
+    });
+});
+
+// ==============================================================================================
+// D. Suggestion editing keeps expansion pinned to a suggestion's id, not its array position
+// ==============================================================================================
+// Item 13's final batch: the old react-table v6 code reached into the table's internal ref API to
+// recompute a suggestion's *index* after an active sort, so it could re-expand "whatever's now
+// there". The TanStack version instead passes `getRowId={(row) => String(row.id)}` to
+// TanStackGrid and keys `tableState.expanded` off that same id (see `onUpdateActivity` in
+// Activity.jsx's `renderSubComponent`). These tests drive the update through that real callback,
+// captured off `lastGridProps.renderSubComponent` per the mocked-TanStackGrid technique above,
+// rather than calling any internal method directly.
+
+const workGroupSuggestion = (id, extra = {}) => ({
+    id,
+    time_interval: {
+        start: "2025-09-01T09:00:00",
+        end: "2025-09-01T10:00:00",
+    },
+    activity_ref: { is_work_group: true, label: `WG-${id}` },
+    location: { label: "Salle" },
+    teacher: { first_name: "A", last_name: "B" },
+    users: [],
+    inactive_users: [],
+    options: [],
+    ...extra,
+});
+
+describe("Activity — editing a suggestion via WorkGroupEditor re-expands it by id, surviving a reorder", () => {
+    test("the edited suggestion stays expanded by id after the suggestions array reorders", async () => {
+        const s1 = workGroupSuggestion(1);
+        const s2 = workGroupSuggestion(2);
+        const handleUpdateSuggestion = vi.fn();
+
+        const { rerender } = render(
+            <Activity
+                {...baseProps()}
+                suggestions={[s1, s2]}
+                handleUpdateSuggestion={handleUpdateSuggestion}
+            />
+        );
+        await waitFor(() => expect(global.fetch).toHaveBeenCalled());
+
+        // Real path: renderSubComponent -> mounted WorkGroupEditor -> click -> onUpdateActivity.
+        const editor = render(
+            lastGridProps.renderSubComponent({ original: s2, index: 1 })
+        );
+        await userEvent.click(editor.getByText("save-2"));
+
+        expect(handleUpdateSuggestion).toHaveBeenCalledWith(s2);
+        // Keyed by the suggestion's own id ("2"), not its array index (1).
+        expect(lastGridProps.expanded).toEqual({ 2: true });
+        expect(lastGridProps.getRowId(s2)).toBe("2");
+
+        // Simulate the parent re-rendering with suggestions reordered after the update -- exactly
+        // the scenario the deleted index-based hack existed to handle.
+        rerender(
+            <Activity
+                {...baseProps()}
+                suggestions={[s2, s1]}
+                handleUpdateSuggestion={handleUpdateSuggestion}
+            />
+        );
+
+        // s2 is now at index 0 instead of 1; the expanded key is untouched -- still id "2" -- proof
+        // it tracks the suggestion's own identity, not its position in the array.
+        expect(lastGridProps.data.map((s) => s.id)).toEqual([2, 1]);
+        expect(lastGridProps.expanded).toEqual({ 2: true });
+    });
+});
+
+// ==============================================================================================
+// E. createAllExpanded — id-keyed, and scoped to the currently-filtered suggestions
+// ==============================================================================================
+
+describe("Activity — expand all uses suggestion ids, not row indexes", () => {
+    test("expand all marks every visible suggestion's id as expanded", async () => {
+        const s1 = workGroupSuggestion(11);
+        const s2 = workGroupSuggestion(12);
+        const s3 = workGroupSuggestion(13);
+
+        const { container } = render(
+            <Activity {...baseProps()} suggestions={[s1, s2, s3]} />
+        );
+        await waitFor(() => expect(global.fetch).toHaveBeenCalled());
+
+        await userEvent.click(
+            container.querySelector(".fa-caret-down").closest("button")
+        );
+
+        expect(lastGridProps.expanded).toEqual({
+            11: true,
+            12: true,
+            13: true,
+        });
+    });
+
+    // Scoped to the three custom filters (day/type_cour/time) only: `createAllExpanded` is called
+    // with the post-`applyCustomFilters` array, which doesn't account for TanStack's own
+    // column-filter state (teacher/group/location/level/age/occupation's plain text filters).
+    // Harmless today (a page change already clears `expanded`), but worth being precise about.
+    test("expand all only expands suggestions passing the day/type_cour/time custom filters, not filtered-out ones", async () => {
+        const piano = workGroupSuggestion(21, {
+            activity_ref: { is_work_group: true, label: "Piano" },
+        });
+        const guitare = workGroupSuggestion(22, {
+            activity_ref: { is_work_group: true, label: "Guitare" },
+        });
+
+        const { container } = render(
+            <Activity {...baseProps()} suggestions={[piano, guitare]} />
+        );
+        await waitFor(() => expect(global.fetch).toHaveBeenCalled());
+
+        const typeCourFilter = lastGridProps.columns.find(
+            (c) => c.id === "type_cour"
+        ).Filter;
+        const filterRender = render(React.createElement(typeCourFilter));
+        await userEvent.selectOptions(
+            within(filterRender.container).getByRole("combobox"),
+            "Piano"
+        );
+
+        // Sanity check: the post-filter data handed to TanStackGrid narrowed to Piano only.
+        expect(lastGridProps.data.map((s) => s.id)).toEqual([21]);
+
+        await userEvent.click(
+            container.querySelector(".fa-caret-down").closest("button")
+        );
+
+        expect(lastGridProps.expanded).toEqual({ 21: true });
+    });
+});
+
+// ==============================================================================================
+// F. The three custom-filtered columns (day/type_cour/time) narrow suggestions via applyCustomFilters
+// ==============================================================================================
+
+describe("Activity — day/type_cour/time custom filters narrow the suggestion list", () => {
+    const suggestion = (id, extra = {}) => ({
+        id,
+        time_interval: {
+            start: "2025-09-01T09:00:00",
+            end: "2025-09-01T10:00:00",
+        },
+        activity_ref: { is_work_group: false, label: "Piano" },
+        location: { label: "Salle" },
+        teacher: { first_name: "A", last_name: "B" },
+        users: [],
+        inactive_users: [],
+        options: [],
+        ...extra,
+    });
+
+    test("day filter keeps only suggestions on the selected weekday", async () => {
+        // 2025-09-01 is a Monday (isoWeekday 1); 2025-09-03 is a Wednesday (isoWeekday 3). Picked
+        // deliberately away from Sunday, where WEEKDAYS' 0-based option id (0) and moment's
+        // 1-based isoWeekday() (7) don't line up -- not this test's concern.
+        const monday = suggestion(31);
+        const wednesday = suggestion(32, {
+            time_interval: {
+                start: "2025-09-03T09:00:00",
+                end: "2025-09-03T10:00:00",
+            },
+        });
+
+        render(<Activity {...baseProps()} suggestions={[monday, wednesday]} />);
+        await waitFor(() => expect(global.fetch).toHaveBeenCalled());
+
+        const dayFilter = lastGridProps.columns.find(
+            (c) => c.id === "day"
+        ).Filter;
+        const filterRender = render(React.createElement(dayFilter));
+        await userEvent.selectOptions(
+            within(filterRender.container).getByRole("combobox"),
+            "1"
+        ); // Lundi
+
+        expect(lastGridProps.data.map((s) => s.id)).toEqual([31]);
+    });
+
+    test("type_cour filter keeps only suggestions of the selected activity ref label", async () => {
+        const piano = suggestion(41, {
+            activity_ref: { is_work_group: false, label: "Piano" },
+        });
+        const guitare = suggestion(42, {
+            activity_ref: { is_work_group: false, label: "Guitare" },
+        });
+
+        render(<Activity {...baseProps()} suggestions={[piano, guitare]} />);
+        await waitFor(() => expect(global.fetch).toHaveBeenCalled());
+
+        const typeCourFilter = lastGridProps.columns.find(
+            (c) => c.id === "type_cour"
+        ).Filter;
+        const filterRender = render(React.createElement(typeCourFilter));
+        await userEvent.selectOptions(
+            within(filterRender.container).getByRole("combobox"),
+            "Guitare"
+        );
+
+        expect(lastGridProps.data.map((s) => s.id)).toEqual([42]);
+    });
+
+    test("time filter keeps only suggestions whose start is on/after the selected start time", async () => {
+        const early = suggestion(51, {
+            time_interval: {
+                start: "2025-09-01T08:00:00",
+                end: "2025-09-01T09:00:00",
+            },
+        });
+        const late = suggestion(52, {
+            time_interval: {
+                start: "2025-09-01T15:00:00",
+                end: "2025-09-01T16:00:00",
+            },
+        });
+
+        render(<Activity {...baseProps()} suggestions={[early, late]} />);
+        await waitFor(() => expect(global.fetch).toHaveBeenCalled());
+
+        const timeFilter = lastGridProps.columns.find(
+            (c) => c.id === "time"
+        ).Filter;
+        const { container: filterContainer } = render(
+            React.createElement(timeFilter)
+        );
+        const [startInput] =
+            filterContainer.querySelectorAll('input[type="time"]');
+        fireEvent.change(startInput, { target: { value: "10:00" } });
+
+        expect(lastGridProps.data.map((s) => s.id)).toEqual([52]);
     });
 });
 
@@ -413,40 +693,49 @@ describe("Activity — summaryActivity.* i18n layer", () => {
         expect(new Set(KEYS).size).toBe(39);
     });
 
-    test.each(["fr", "en"])("all 39 keys resolve to real, fully-interpolated copy in %s", lng => {
-        const t = i18n.getFixedT(lng, "activityApplications");
-        for (const key of KEYS) {
-            const v = t(`summaryActivity.${key}`, {
-                date: "01/09/2025",
-                age: 9,
-                name: "Piano",
-                label: "Piano",
-            });
-            expect(typeof v).toBe("string");
-            expect(v.length).toBeGreaterThan(0);
-            expect(v).not.toBe(`summaryActivity.${key}`);
-            expect(v).not.toContain("{{");
-            expect(v).not.toContain("}}");
+    test.each(["fr", "en"])(
+        "all 39 keys resolve to real, fully-interpolated copy in %s",
+        (lng) => {
+            const t = i18n.getFixedT(lng, "activityApplications");
+            for (const key of KEYS) {
+                const v = t(`summaryActivity.${key}`, {
+                    date: "01/09/2025",
+                    age: 9,
+                    name: "Piano",
+                    label: "Piano",
+                });
+                expect(typeof v).toBe("string");
+                expect(v.length).toBeGreaterThan(0);
+                expect(v).not.toBe(`summaryActivity.${key}`);
+                expect(v).not.toContain("{{");
+                expect(v).not.toContain("}}");
+            }
         }
-    });
+    );
 
     test("headcountAt keeps the French space before the colon; en reads naturally", () => {
         const fr = i18n.getFixedT("fr", "activityApplications");
         const en = i18n.getFixedT("en", "activityApplications");
-        expect(fr("summaryActivity.headcountAt", {date: "01/09/2025"})).toBe(
-            "Effectifs au : 01/09/2025",
+        expect(fr("summaryActivity.headcountAt", { date: "01/09/2025" })).toBe(
+            "Effectifs au : 01/09/2025"
         );
-        expect(en("summaryActivity.headcountAt", {date: "01/09/2025"})).toBe(
-            "Headcount as of 01/09/2025",
+        expect(en("summaryActivity.headcountAt", { date: "01/09/2025" })).toBe(
+            "Headcount as of 01/09/2025"
         );
     });
 
     test("ageYears interpolates {{age}}", () => {
         expect(
-            i18n.getFixedT("fr", "activityApplications")("summaryActivity.ageYears", {age: 9}),
+            i18n.getFixedT("fr", "activityApplications")(
+                "summaryActivity.ageYears",
+                { age: 9 }
+            )
         ).toBe("9 ans");
         expect(
-            i18n.getFixedT("en", "activityApplications")("summaryActivity.ageYears", {age: 9}),
+            i18n.getFixedT("en", "activityApplications")(
+                "summaryActivity.ageYears",
+                { age: 9 }
+            )
         ).toBe("9 years old");
     });
 
@@ -454,7 +743,7 @@ describe("Activity — summaryActivity.* i18n layer", () => {
         for (const lng of ["fr", "en"]) {
             const v = i18n.getFixedT(lng, "activityApplications")(
                 "summaryActivity.allCoursesOf",
-                {name: "Piano"},
+                { name: "Piano" }
             );
             expect(v).toContain("Piano");
             expect(v).not.toContain("{{");
@@ -462,15 +751,21 @@ describe("Activity — summaryActivity.* i18n layer", () => {
     });
 
     test("editLevelTitle interpolates {{label}} and uses the accented 'Édition' (fr typo fixed)", () => {
-        const fr = i18n.getFixedT("fr", "activityApplications")("summaryActivity.editLevelTitle", {
-            label: "Piano",
-        });
+        const fr = i18n.getFixedT("fr", "activityApplications")(
+            "summaryActivity.editLevelTitle",
+            {
+                label: "Piano",
+            }
+        );
         expect(fr).toContain("Édition");
         expect(fr).toContain("Piano");
 
-        const en = i18n.getFixedT("en", "activityApplications")("summaryActivity.editLevelTitle", {
-            label: "Piano",
-        });
+        const en = i18n.getFixedT("en", "activityApplications")(
+            "summaryActivity.editLevelTitle",
+            {
+                label: "Piano",
+            }
+        );
         expect(en).toContain("Piano");
     });
 
@@ -478,14 +773,20 @@ describe("Activity — summaryActivity.* i18n layer", () => {
         const fr = i18n.getFixedT("fr", "activityApplications");
         expect(fr("summaryActivity.notSpecified")).toBe("NON INDIQUÉ");
         expect(fr("summaryActivity.notIndicated")).toBe("Non indiqué");
-        expect(fr("summaryActivity.notSpecified")).not.toBe(fr("summaryActivity.notIndicated"));
+        expect(fr("summaryActivity.notSpecified")).not.toBe(
+            fr("summaryActivity.notIndicated")
+        );
     });
 
     test("lot-3f new keys removeFromSlot / select resolve in both locales", () => {
         const fr = i18n.getFixedT("fr", "activityApplications");
         const en = i18n.getFixedT("en", "activityApplications");
-        expect(fr("summaryActivity.removeFromSlot")).toBe("Retirer de ce créneau");
-        expect(en("summaryActivity.removeFromSlot")).toBe("Remove from this slot");
+        expect(fr("summaryActivity.removeFromSlot")).toBe(
+            "Retirer de ce créneau"
+        );
+        expect(en("summaryActivity.removeFromSlot")).toBe(
+            "Remove from this slot"
+        );
         expect(fr("summaryActivity.select")).toBe("Sélectionner");
         expect(en("summaryActivity.select")).toBe("Select");
     });

@@ -504,6 +504,120 @@ describe("TanStackGrid — noDataText", () => {
     });
 });
 
+// item 13, final batch (docs/Modernization-Roadmap.md, activityApplications/summary/Activity.jsx):
+// `getRowId` and controlled `expanded`/`onExpandedChange`, added so that table's suggestion-editor
+// row stays expanded by the suggestion's own id across a reorder, instead of TanStack's default
+// index-keyed row id (which would instead keep "whatever's now at that index" expanded).
+describe("TanStackGrid — getRowId keeps expansion pinned to a row's content across a data reorder", () => {
+    function ReorderableWrapper() {
+        const [data, setData] = React.useState([
+            { id: 1, label: "Alpha" },
+            { id: 2, label: "Zephyr" },
+        ]);
+        return (
+            <>
+                <button onClick={() => setData([data[1], data[0]])}>
+                    reorder
+                </button>
+                <TanStackGrid
+                    tableName="table-getrowid-reorder"
+                    columns={[
+                        { id: "label", Header: "Label", accessor: "label" },
+                    ]}
+                    data={data}
+                    loading={false}
+                    pages={1}
+                    onFetchData={noop}
+                    getRowId={(row: { id: number; label: string }) =>
+                        String(row.id)
+                    }
+                    renderSubComponent={(row) => (
+                        <div>details for {row.original.label}</div>
+                    )}
+                />
+            </>
+        );
+    }
+
+    test("expanding a row, then reordering the data array, keeps the same row's content expanded", async () => {
+        render(<ReorderableWrapper />);
+
+        // Expand the second row (Zephyr, id 2, index 1).
+        const toggles = screen.getAllByRole("button", { name: "▶" });
+        await userEvent.click(toggles[1]);
+        expect(screen.getByText("details for Zephyr")).toBeInTheDocument();
+
+        // Reorder: Zephyr moves from index 1 to index 0, Alpha from 0 to 1.
+        await userEvent.click(screen.getByRole("button", { name: "reorder" }));
+
+        // Still pinned to Zephyr's own id -- without getRowId, TanStack's default index-based row
+        // id would instead leave whatever is now at index 1 (Alpha) expanded.
+        expect(screen.getByText("details for Zephyr")).toBeInTheDocument();
+        expect(screen.queryByText("details for Alpha")).not.toBeInTheDocument();
+    });
+});
+
+describe("TanStackGrid — controlled expanded/onExpandedChange", () => {
+    const columns: LegacyColumn[] = [
+        { id: "label", Header: "Label", accessor: "label" },
+    ];
+
+    function ControlledWrapper() {
+        const [expanded, setExpanded] = React.useState({});
+        return (
+            <TanStackGrid
+                tableName="table-controlled-expanded"
+                columns={columns}
+                data={[{ id: 1, label: "Zephyr" }]}
+                loading={false}
+                pages={1}
+                onFetchData={noop}
+                renderSubComponent={(row) => (
+                    <div>details for {row.original.label}</div>
+                )}
+                expanded={expanded}
+                onExpandedChange={setExpanded}
+            />
+        );
+    }
+
+    test("toggling the expander round-trips through the caller's own expanded state", async () => {
+        render(<ControlledWrapper />);
+
+        expect(
+            screen.queryByText("details for Zephyr")
+        ).not.toBeInTheDocument();
+
+        await userEvent.click(screen.getByRole("button", { name: "▶" }));
+        expect(screen.getByText("details for Zephyr")).toBeInTheDocument();
+
+        await userEvent.click(screen.getByRole("button", { name: "▼" }));
+        expect(
+            screen.queryByText("details for Zephyr")
+        ).not.toBeInTheDocument();
+    });
+
+    test("an expanded value set by the caller (not from a click) expands the table too, proving it's controlled", () => {
+        render(
+            <TanStackGrid
+                tableName="table-controlled-expanded-external"
+                columns={columns}
+                data={[{ id: 1, label: "Zephyr" }]}
+                loading={false}
+                pages={1}
+                onFetchData={noop}
+                renderSubComponent={(row) => (
+                    <div>details for {row.original.label}</div>
+                )}
+                expanded={{ "0": true }}
+                onExpandedChange={noop}
+            />
+        );
+
+        expect(screen.getByText("details for Zephyr")).toBeInTheDocument();
+    });
+});
+
 describe("TanStackGrid — sorting never clears entirely (enableSortingRemoval: false)", () => {
     test("a third click on a sortable header keeps sorting non-empty instead of cycling to []", async () => {
         const columns: LegacyColumn[] = [

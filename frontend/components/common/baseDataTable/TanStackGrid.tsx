@@ -304,6 +304,19 @@ interface TanStackGridProps<TRow = any> {
     /** Controlled column filters -- see `onFetchData`. */
     columnFilters?: ColumnFiltersState;
     onColumnFiltersChange?: (filters: ColumnFiltersState) => void;
+    /** Controlled expanded-rows state -- see `onFetchData`. Uncontrolled (internal `useState`)
+     * when omitted, matching every caller before this prop existed. */
+    expanded?: ExpandedState;
+    onExpandedChange?: (expanded: ExpandedState) => void;
+    /**
+     * Row id used to key TanStack's internal state (selection/expansion) instead of the row's
+     * array index -- TanStack's own `getRowId` option, threaded straight through. Matters for
+     * `expanded`: with the default index-based id, expanding row 2 then having the data reorder
+     * (e.g. after a sort or an in-place edit) leaves the *new* row 2 expanded instead of the row
+     * the user actually opened. Pass a stable per-row id (e.g. `(row) => String(row.id)`) to keep
+     * expansion (or any other id-keyed state) pinned to the actual row across reorders.
+     */
+    getRowId?: (row: TRow) => string;
     /**
      * Defaults to `true` -- every batch 1-3 caller is server-paginated (fetches a page of data via
      * `onFetchData` on page/sort/filter change) and is unaffected by this prop. Set `false` for a
@@ -346,6 +359,9 @@ export default function TanStackGrid<TRow = any>({
     onSortingChange,
     columnFilters: controlledColumnFilters,
     onColumnFiltersChange,
+    expanded: controlledExpanded,
+    onExpandedChange,
+    getRowId,
     manual: manualProp,
 }: TanStackGridProps<TRow>) {
     const { t } = useTranslation("common");
@@ -367,7 +383,11 @@ export default function TanStackGrid<TRow = any>({
         onPaginationChange,
         { pageIndex: 0, pageSize: 20 }
     );
-    const [expanded, setExpanded] = useState<ExpandedState>({});
+    const [expanded, setExpanded] = useControllableState<ExpandedState>(
+        controlledExpanded,
+        onExpandedChange,
+        {}
+    );
 
     const hasExpander = !!renderSubComponent;
     const tanstackColumns = useMemo(() => {
@@ -430,6 +450,7 @@ export default function TanStackGrid<TRow = any>({
         onColumnFiltersChange: handleColumnFiltersChange,
         onPaginationChange: setPagination,
         onExpandedChange: setExpanded,
+        getRowId,
         manualPagination: manual,
         manualSorting: manual,
         manualFiltering: manual,

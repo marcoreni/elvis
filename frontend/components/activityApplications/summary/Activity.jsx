@@ -5,29 +5,43 @@ import _ from "lodash";
 import moment from "moment";
 
 import ReactModal from "react-modal";
-import ReactTable from "react-table";
+import TanStackGrid from "../../common/baseDataTable/TanStackGrid";
 
 import i18n from "../../../i18n";
 import * as api from "../../../tools/api";
 import * as TimeIntervalHelpers from "../../planning/TimeIntervalHelpers";
-import {csrfToken, FR_DATE_FORMAT, findAndGet, optionMapper} from "../../utils";
-import {radioValue} from "../../evaluation/question/radio_question";
-import {PRE_APPLICATION_ACTION_LABELS, modalStyle, WEEKDAYS} from "../../../tools/constants";
-import {displayActivityRef, formatActivityHeadcount, occupationInfos, toAge} from "../../../tools/format";
+import {
+    csrfToken,
+    FR_DATE_FORMAT,
+    findAndGet,
+    optionMapper,
+} from "../../utils";
+import { radioValue } from "../../evaluation/question/radio_question";
+import {
+    PRE_APPLICATION_ACTION_LABELS,
+    modalStyle,
+    WEEKDAYS,
+} from "../../../tools/constants";
+import {
+    displayActivityRef,
+    formatActivityHeadcount,
+    occupationInfos,
+    toAge,
+} from "../../../tools/format";
 import WorkGroupEditor from "./WorkGroupEditor";
 import { SCHOOL_DATE_FORMAT_OPTIONS } from "../../../tools/timezone";
 
 // SUB COMPONENTS
 
 const LevelCell = ({
-                       user,
-                       activityId,
-                       seasons,
-                       activityRefId,
-                       timeInterval,
-                       activityRef,
-                       initialLevel = null
-                   }) => {
+    user,
+    activityId,
+    seasons,
+    activityRefId,
+    timeInterval,
+    activityRef,
+    initialLevel = null,
+}) => {
     const { t } = useTranslation("activityApplications");
     const [studentLevel, setStudentLevel] = React.useState(initialLevel);
     const [isLoading, setIsLoading] = React.useState(!initialLevel);
@@ -38,42 +52,50 @@ const LevelCell = ({
         let isMounted = true;
         setIsLoading(true);
 
-        api
-            .set()
-            .get(`/desired_activities/user/${user.id}/activity/${activityId}/ref/${activityRefId}/time/${timeInterval.id}`)
-            .then(response => {
+        api.set()
+            .get(
+                `/desired_activities/user/${user.id}/activity/${activityId}/ref/${activityRefId}/time/${timeInterval.id}`
+            )
+            .then((response) => {
                 if (isMounted) {
                     const apiLevel = response?.data?.evaluation_level_ref;
 
                     if (!apiLevel) {
-                        const computedLevel = TimeIntervalHelpers.levelDisplayForActivity(
-                            {
-                                users: [user],
-                                activity_ref_id: activityRefId,
-                                time_interval: timeInterval,
-                                activity_ref: activityRef
-                            },
-                            seasons
+                        const computedLevel =
+                            TimeIntervalHelpers.levelDisplayForActivity(
+                                {
+                                    users: [user],
+                                    activity_ref_id: activityRefId,
+                                    time_interval: timeInterval,
+                                    activity_ref: activityRef,
+                                },
+                                seasons
+                            );
+                        setStudentLevel(
+                            computedLevel ||
+                                TimeIntervalHelpers.LEVEL_NOT_INDICATED
                         );
-                        setStudentLevel(computedLevel || TimeIntervalHelpers.LEVEL_NOT_INDICATED);
                     } else {
                         setStudentLevel(apiLevel);
                     }
                 }
             })
-            .catch(error => {
-                console.error('[LevelCell] Erreur récupération level :', error);
+            .catch((error) => {
+                console.error("[LevelCell] Erreur récupération level :", error);
                 if (isMounted) {
-                    const computedLevel = TimeIntervalHelpers.levelDisplayForActivity(
-                        {
-                            users: [user],
-                            activity_ref_id: activityRefId,
-                            time_interval: timeInterval,
-                            activity_ref: activityRef
-                        },
-                        seasons
+                    const computedLevel =
+                        TimeIntervalHelpers.levelDisplayForActivity(
+                            {
+                                users: [user],
+                                activity_ref_id: activityRefId,
+                                time_interval: timeInterval,
+                                activity_ref: activityRef,
+                            },
+                            seasons
+                        );
+                    setStudentLevel(
+                        computedLevel || TimeIntervalHelpers.LEVEL_NOT_INDICATED
                     );
-                    setStudentLevel(computedLevel || TimeIntervalHelpers.LEVEL_NOT_INDICATED);
                 }
             })
             .finally(() => {
@@ -85,7 +107,16 @@ const LevelCell = ({
         return () => {
             isMounted = false;
         };
-    }, [user.id, activityId, initialLevel, activityRefId, timeInterval, activityRef, seasons, timeInterval.id]);
+    }, [
+        user.id,
+        activityId,
+        initialLevel,
+        activityRefId,
+        timeInterval,
+        activityRef,
+        seasons,
+        timeInterval.id,
+    ]);
 
     if (isLoading) {
         return <>{t("common:loading")}</>;
@@ -101,116 +132,175 @@ const LevelCell = ({
     return <>{TimeIntervalHelpers.levelDisplayLabel(studentLevel)}</>;
 };
 
-
 const SubStudentList = ({ row, seasons }) => {
     const { t } = useTranslation("activityApplications");
-    const activeStudents = row.original.users.map(u => ({ ...u, type: 'active' }));
+    const activeStudents = row.original.users.map((u) => ({
+        ...u,
+        type: "active",
+    }));
 
     const inactiveStudents = row.original.inactive_users
-        .map(u => {
-            const application = _.find(
-                u.activity_applications,
-                app => app.desired_activities.map(da => da.activity_id).includes(row.original.id)
+        .map((u) => {
+            const application = _.find(u.activity_applications, (app) =>
+                app.desired_activities
+                    .map((da) => da.activity_id)
+                    .includes(row.original.id)
             );
             const beginAt = application && new Date(application.begin_at);
             const closestLesson = new Date(row.original.closest_lesson);
             if (!application || beginAt > closestLesson) return null;
-            return { ...u, type: 'inactive', application };
+            return { ...u, type: "inactive", application };
         })
-        .filter(u => u != null);
+        .filter((u) => u != null);
 
-    const optionStudents = row.original.options.map(o => {
-        const user = _.get(o, 'desired_activity.activity_application.user');
-        const optionLevel = _.get(o, 'desired_activity.activity_application.evaluation_level_ref') || null;
-        return { ...user, type: 'option', optionLevel };
+    const optionStudents = row.original.options.map((o) => {
+        const user = _.get(o, "desired_activity.activity_application.user");
+        const optionLevel =
+            _.get(
+                o,
+                "desired_activity.activity_application.evaluation_level_ref"
+            ) || null;
+        return { ...user, type: "option", optionLevel };
     });
 
     const combinedUsers = _.orderBy(
         [...activeStudents, ...inactiveStudents, ...optionStudents],
-        u => u.last_name
+        (u) => u.last_name
     );
 
     const isWorkGroup = row.original.activity_ref.is_work_group;
 
     return (
         <div className="flex-column">
-            <div className="flex" style={{ padding: '15px' }}>
+            <div className="flex" style={{ padding: "15px" }}>
                 <h3 className="m-r">
-                    {t("summaryActivity.headcountAt", { date: moment(row.original.closest_lesson).format('DD/MM/YYYY') })}
+                    {t("summaryActivity.headcountAt", {
+                        date: moment(row.original.closest_lesson).format(
+                            "DD/MM/YYYY"
+                        ),
+                    })}
                 </h3>
             </div>
             <table className="table table-bordered">
                 <thead>
-                <tr>
-                    <th>{t("summaryActivity.colName")}</th>
-                    <th>{t("summaryActivity.colAge")}</th>
-                    <th>{t("summaryActivity.colLevel")}</th>
-                    {isWorkGroup && <th>{t("summaryActivity.colInstrument")}</th>}
-                    <th>{t("summaryActivity.colStartDate")}</th>
-                    <th>{t("summaryActivity.colStopDate")}</th>
-                </tr>
+                    <tr>
+                        <th>{t("summaryActivity.colName")}</th>
+                        <th>{t("summaryActivity.colAge")}</th>
+                        <th>{t("summaryActivity.colLevel")}</th>
+                        {isWorkGroup && (
+                            <th>{t("summaryActivity.colInstrument")}</th>
+                        )}
+                        <th>{t("summaryActivity.colStartDate")}</th>
+                        <th>{t("summaryActivity.colStopDate")}</th>
+                    </tr>
                 </thead>
                 <tbody>
-                {combinedUsers.map((u, index) => {
-                    let customStyle = {};
-                    if (u.type === 'inactive') customStyle = { color: '#ff001a' };
-                    else if (u.type === 'option') customStyle = { color: '#9575CD' };
+                    {combinedUsers.map((u, index) => {
+                        let customStyle = {};
+                        if (u.type === "inactive")
+                            customStyle = { color: "#ff001a" };
+                        else if (u.type === "option")
+                            customStyle = { color: "#9575CD" };
 
-                    const userInstrument = isWorkGroup
-                        ? row.original.activities_instruments
-                        .filter(ai => ai.user_id === u.id)
-                        .map(ai => _.get(ai, 'instrument.label'))
-                        .join(', ') || t("summaryActivity.notAssigned")
-                        : null;
+                        const userInstrument = isWorkGroup
+                            ? row.original.activities_instruments
+                                  .filter((ai) => ai.user_id === u.id)
+                                  .map((ai) => _.get(ai, "instrument.label"))
+                                  .join(", ") ||
+                              t("summaryActivity.notAssigned")
+                            : null;
 
-                    const app = u.application || u.activity_applications?.find(a =>
-                        a.desired_activities.some(da => da.activity_id === row.original.id)
-                    );
+                        const app =
+                            u.application ||
+                            u.activity_applications?.find((a) =>
+                                a.desired_activities.some(
+                                    (da) => da.activity_id === row.original.id
+                                )
+                            );
 
-                    const formattedBeginAt = app?.begin_at
-                        ? Intl.DateTimeFormat(i18n.language, SCHOOL_DATE_FORMAT_OPTIONS).format(new Date(app.begin_at))
-                        : '';
+                        const formattedBeginAt = app?.begin_at
+                            ? Intl.DateTimeFormat(
+                                  i18n.language,
+                                  SCHOOL_DATE_FORMAT_OPTIONS
+                              ).format(new Date(app.begin_at))
+                            : "";
 
-                    const formattedStoppedAt = app?.stopped_at
-                        ? Intl.DateTimeFormat(i18n.language, SCHOOL_DATE_FORMAT_OPTIONS).format(new Date(app.stopped_at))
-                        : '';
+                        const formattedStoppedAt = app?.stopped_at
+                            ? Intl.DateTimeFormat(
+                                  i18n.language,
+                                  SCHOOL_DATE_FORMAT_OPTIONS
+                              ).format(new Date(app.stopped_at))
+                            : "";
 
-                    return (
-                        <tr key={u.id || index} style={customStyle}>
-                            <td>
-                                <a
-                                    href={app ? `/inscriptions/${app.id}` : "#"}
-                                    target="_blank"
-                                >
-                                    {u.first_name} {u.last_name}
-                                </a>
-                            </td>
-                            <td>{t("summaryActivity.ageYears", { age: TimeIntervalHelpers.age(u.birthday) })}</td>
-                            <td>
-                                <LevelCell
-                                    user={u}
-                                    activityId={row.original.id}
-                                    seasons={seasons}
-                                    activityRefId={row.original.activity_ref_id}
-                                    timeInterval={row.original.time_interval}
-                                    activityRef={row.original.activity_ref}
-                                />
-                            </td>
-                            {isWorkGroup && <td>{userInstrument}</td>}
-                            <td>{formattedBeginAt}</td>
-                            <td>{formattedStoppedAt}</td>
-                        </tr>
-                    );
-                })}
+                        return (
+                            <tr key={u.id || index} style={customStyle}>
+                                <td>
+                                    <a
+                                        href={
+                                            app
+                                                ? `/inscriptions/${app.id}`
+                                                : "#"
+                                        }
+                                        target="_blank"
+                                    >
+                                        {u.first_name} {u.last_name}
+                                    </a>
+                                </td>
+                                <td>
+                                    {t("summaryActivity.ageYears", {
+                                        age: TimeIntervalHelpers.age(
+                                            u.birthday
+                                        ),
+                                    })}
+                                </td>
+                                <td>
+                                    <LevelCell
+                                        user={u}
+                                        activityId={row.original.id}
+                                        seasons={seasons}
+                                        activityRefId={
+                                            row.original.activity_ref_id
+                                        }
+                                        timeInterval={
+                                            row.original.time_interval
+                                        }
+                                        activityRef={row.original.activity_ref}
+                                    />
+                                </td>
+                                {isWorkGroup && <td>{userInstrument}</td>}
+                                <td>{formattedBeginAt}</td>
+                                <td>{formattedStoppedAt}</td>
+                            </tr>
+                        );
+                    })}
                 </tbody>
             </table>
         </div>
     );
 };
 
+// Was index-keyed ({0: true, 1: true, ...}, one entry per page-size slot) under react-table v6's
+// index-based row identity. TanStackGrid's suggestions table now uses `getRowId` (the suggestion's
+// own `id`), so "expand all" must key by that same real id instead of a row's position.
+const createAllExpanded = (suggestions) =>
+    _.zipObject(
+        suggestions.map((s) => String(s.id)),
+        suggestions.map(() => true)
+    );
 
+// Shared accessor helpers -- single source for values otherwise duplicated across a column's
+// accessor/Cell and applyCustomFilters below.
+const getSuggestionStart = (suggestion) =>
+    suggestion.closest_lesson || suggestion.time_interval.start;
 
-const createAllExpanded = pageSize => _.zipObject(_.range(pageSize), _.times(pageSize, () => ({})));
+const getSuggestionEnd = (suggestion) =>
+    suggestion.closest_lesson_end || suggestion.time_interval.end;
+
+const getSuggestionWeekday = (suggestion) =>
+    moment(getSuggestionStart(suggestion)).isoWeekday();
+
+const getAverageAge = (suggestion) =>
+    TimeIntervalHelpers.averageAge(suggestion.users);
 
 // MAIN COMPONENT
 class Activity extends React.Component {
@@ -221,7 +311,7 @@ class Activity extends React.Component {
 
         const levelSeason = _.find(
             props.application.user.levels,
-            l =>
+            (l) =>
                 l.activity_ref_id === props.activityRef.id &&
                 l.season_id === props.application.season_id
         );
@@ -231,12 +321,21 @@ class Activity extends React.Component {
             loading: false,
             tableState: {
                 expanded: {},
-                pageSize: 10,
+                // Kept as one nested object (instead of separate page/pageSize fields spread
+                // fresh into a new object on every render) so the object handed to
+                // TanStackGrid's `pagination` prop stays reference-stable across renders that
+                // don't actually change it -- see render()'s <TanStackGrid pagination={...}>.
+                pagination: { pageIndex: 0, pageSize: 10 },
+                sorted: [],
             },
-            studentLevel: levelSeason ? levelSeason.evaluation_level_ref_id : null,
+            // "day"/"type_cour"/"time" columns need exact/range matching TanStack's own
+            // auto-picked column filterFns can't express (see the Filter definitions below for
+            // why); filtered here in JS instead of through TanStack's columnFilters state.
+            customFilters: {},
+            studentLevel: levelSeason
+                ? levelSeason.evaluation_level_ref_id
+                : null,
         };
-
-        this.tableRef = React.createRef();
     }
 
     componentDidMount() {
@@ -246,19 +345,60 @@ class Activity extends React.Component {
     componentDidUpdate(prevProps) {
         let willReloadSuggestions = false;
 
-        willReloadSuggestions = willReloadSuggestions || !this.state.loading && this.props.isAdmin && !this.props.suggestions;
+        willReloadSuggestions =
+            willReloadSuggestions ||
+            (!this.state.loading &&
+                this.props.isAdmin &&
+                !this.props.suggestions);
         //Reload suggestions if application's begin_at has changed
-        willReloadSuggestions = willReloadSuggestions || (prevProps.application.begin_at !== this.props.application.begin_at);
+        willReloadSuggestions =
+            willReloadSuggestions ||
+            prevProps.application.begin_at !== this.props.application.begin_at;
         // Reload if we change stop date
-        willReloadSuggestions = willReloadSuggestions || (prevProps.application.stopped_at !== this.props.application.stopped_at);
+        willReloadSuggestions =
+            willReloadSuggestions ||
+            prevProps.application.stopped_at !==
+                this.props.application.stopped_at;
 
         if (willReloadSuggestions) {
             this.loadSuggestions();
         }
+
+        // A fresh `suggestions` prop (a reload just completed, e.g. switching between
+        // suggestionsMode CUSTOM/ALL) can return fewer rows than the current pageIndex allows --
+        // TanStackGrid is controlled here and won't clamp on its own. Reset/clamp so the table
+        // never lands on an out-of-range, unrecoverable "no data" page.
+        if (prevProps.suggestions !== this.props.suggestions) {
+            this.clampPageIndex();
+        }
+    }
+
+    // Clamps the current pageIndex to the last valid page for the *effective* (post
+    // applyCustomFilters) row count, if it's now out of range. Called after a fresh suggestions
+    // load; the three custom-filter onChange handlers reset straight to page 0 instead, since a
+    // filter change should always land back on the first page (matches v6's own behavior).
+    clampPageIndex() {
+        const rowCount = this.applyCustomFilters(
+            this.sortSuggestions(this.props.suggestions)
+        ).length;
+        const { pageIndex, pageSize } = this.state.tableState.pagination;
+        const maxPageIndex = Math.max(0, Math.ceil(rowCount / pageSize) - 1);
+
+        if (pageIndex > maxPageIndex) {
+            this.setState((prevState) => ({
+                tableState: {
+                    ...prevState.tableState,
+                    pagination: {
+                        ...prevState.tableState.pagination,
+                        pageIndex: maxPageIndex,
+                    },
+                },
+            }));
+        }
     }
 
     loadSuggestions() {
-        this.setState({loading: true});
+        this.setState({ loading: true });
         fetch(
             `/applications/${this.props.application.id}/desired_activities/${
                 this.props.desiredActivity.id
@@ -274,18 +414,23 @@ class Activity extends React.Component {
                 },
             }
         )
-            .then(response => response.json())
-            .then(suggestions => {
+            .then((response) => response.json())
+            .then((suggestions) => {
                 // Wait for props to be update to declare loading as finished
-                this.props.handleAddSuggestions(
-                    this.props.activityRef.id,
-                    suggestions
-                ).then(() => this.setState({loading: false}));
+                this.props
+                    .handleAddSuggestions(
+                        this.props.activityRef.id,
+                        suggestions
+                    )
+                    .then(() => this.setState({ loading: false }));
             });
     }
 
     isUserInActivity(suggestion) {
-        return _.some(suggestion.users.concat(suggestion.inactive_users), u => u.id == this.props.application.user.id);
+        return _.some(
+            suggestion.users.concat(suggestion.inactive_users),
+            (u) => u.id == this.props.application.user.id
+        );
     }
 
     // Checks if given activity is the one the user is assigned to.
@@ -297,15 +442,20 @@ class Activity extends React.Component {
     // Checks if given activity is one of the options the user is assigned to.
     // (looks in student's desired activity's options)
     isSuggestionInDesiredActivityOptions(suggestion) {
-        return _.some(this.props.desiredActivity.options, opt => opt.activity_id == suggestion.id);
+        return _.some(
+            this.props.desiredActivity.options,
+            (opt) => opt.activity_id == suggestion.id
+        );
     }
 
     isUserInAnyActivity() {
-        return _.some(this.props.suggestions, s => this.isUserInActivity(s));
+        return _.some(this.props.suggestions, (s) => this.isUserInActivity(s));
     }
 
     isDesiredActivityInAnyActivity() {
-        return _.some(this.props.suggestions, s => this.isDesiredActivityInActivity(s));
+        return _.some(this.props.suggestions, (s) =>
+            this.isDesiredActivityInActivity(s)
+        );
     }
 
     displayDuration(duration) {
@@ -315,7 +465,7 @@ class Activity extends React.Component {
 
         const { t } = this.props;
         const hours = Math.floor(duration / 60);
-        const minutes = (duration % 60).toString().padStart(2, '0');
+        const minutes = (duration % 60).toString().padStart(2, "0");
 
         return duration < 60
             ? `- ${t("units.minutes", { minutes })}`
@@ -327,32 +477,42 @@ class Activity extends React.Component {
         this.setState({ submittingOptionId: suggestion.id });
 
         const promise = isOption
-            ? this.props.handleRemoveSuggestionOption(suggestion.id, this.props.desiredActivity)
-            : this.props.handleSelectSuggestionOption(suggestion.id, this.props.desiredActivity.id);
+            ? this.props.handleRemoveSuggestionOption(
+                  suggestion.id,
+                  this.props.desiredActivity
+              )
+            : this.props.handleSelectSuggestionOption(
+                  suggestion.id,
+                  this.props.desiredActivity.id
+              );
 
         return promise
             .then(() => {
                 if (isOption) {
-                    this.props.desiredActivity.options = this.props.desiredActivity.options.filter(
-                        opt => opt.activity_id !== suggestion.id
-                    );
+                    this.props.desiredActivity.options =
+                        this.props.desiredActivity.options.filter(
+                            (opt) => opt.activity_id !== suggestion.id
+                        );
                 } else {
-                    this.props.desiredActivity.options.push({ activity_id: suggestion.id });
+                    this.props.desiredActivity.options.push({
+                        activity_id: suggestion.id,
+                    });
                 }
                 this.setState({});
 
                 this.loadSuggestions();
             })
-            .catch(error => {
-                console.error("Erreur lors de la modification de l'option", error);
+            .catch((error) => {
+                console.error(
+                    "Erreur lors de la modification de l'option",
+                    error
+                );
                 this.loadSuggestions();
             })
             .finally(() => {
                 this.setState({ submittingOptionId: null });
             });
     }
-
-
 
     handleOpenLevelEditModal() {
         this.setState({
@@ -369,8 +529,7 @@ class Activity extends React.Component {
     handleStudentLevelChange(value) {
         let studentLevel = null;
 
-        if (value)
-            studentLevel = parseInt(value);
+        if (value) studentLevel = parseInt(value);
 
         this.setState({
             studentLevel,
@@ -378,31 +537,28 @@ class Activity extends React.Component {
     }
 
     handleSubmitStudentLevel() {
-        const {studentLevel} = this.state;
+        const { studentLevel } = this.state;
         const {
-            application: {
-                season_id,
-                user_id,
-            },
-            activityRef: {
-                id: activity_ref_id
-            },
+            application: { season_id, user_id },
+            activityRef: { id: activity_ref_id },
         } = this.props;
 
-
         if (studentLevel === null)
-            api
-                .set()
+            api.set()
                 .success(() => {
-                    this.setState({isLevelEditModalOpen: false});
-                    this.props.handleDeleteStudentLevel(season_id, activity_ref_id);
+                    this.setState({ isLevelEditModalOpen: false });
+                    this.props.handleDeleteStudentLevel(
+                        season_id,
+                        activity_ref_id
+                    );
                 })
-                .del(`/users/${user_id}/levels/${season_id}/${activity_ref_id}`);
+                .del(
+                    `/users/${user_id}/levels/${season_id}/${activity_ref_id}`
+                );
         else
-            api
-                .set()
-                .success(level => {
-                    this.setState({isLevelEditModalOpen: false});
+            api.set()
+                .success((level) => {
+                    this.setState({ isLevelEditModalOpen: false });
                     this.props.handleUpdateStudentLevel(level);
                 })
                 .post(`/users/${user_id}/levels`, {
@@ -412,70 +568,74 @@ class Activity extends React.Component {
                 });
     }
 
+    // Applies the "day"/"type_cour"/"time" column filters (see their Filter definitions in
+    // render()) -- kept as an exact/range match in plain JS, same as the v6 `filterMethod`s these
+    // replace, rather than through TanStack's own columnFilters (whose auto-picked filterFn for a
+    // number/object accessor value is either range- or reference-equality-based, neither of which
+    // match what these columns need).
+    applyCustomFilters(suggestions) {
+        const { day, type_cour, time } = this.state.customFilters;
+
+        return suggestions.filter((s) => {
+            if (day !== undefined && day !== "") {
+                const sDay = getSuggestionWeekday(s);
+                if (sDay !== day) return false;
+            }
+
+            if (type_cour && s.activity_ref.label !== type_cour) return false;
+
+            if (time) {
+                const rowStart = getSuggestionStart(s);
+                const rowEnd = getSuggestionEnd(s);
+
+                if (time.start && moment(rowStart).format("HH:mm") < time.start)
+                    return false;
+                if (time.end && moment(rowEnd).format("HH:mm") > time.end)
+                    return false;
+            }
+
+            return true;
+        });
+    }
+
     handleChangeSuggestionsMode(mode) {
         const shouldReload = mode !== this.state.suggestionsMode;
 
-        this.setState({
-            suggestionsMode: mode,
-        }, () => shouldReload && this.loadSuggestions());
+        this.setState(
+            {
+                suggestionsMode: mode,
+            },
+            () => shouldReload && this.loadSuggestions()
+        );
     }
 
     render() {
         const { t } = this.props;
         const self = this;
-        const {suggestionsMode} = this.state;
-        const desiredActivityInAnyActivity = self.isDesiredActivityInAnyActivity();
-        let suggestionsColumns = [
-            {
-                Header: "",
-                id: "more",
-                expander: true,
-                filterable: true,
-                Filter: () => <div className="table-expanders">
-                    <button
-                        data-tippy-content={t("summaryActivity.collapseAll")}
-                        data-tippy-placement="right"
-                        onClick={() => this.setState({tableState: {...this.state.tableState, expanded: {}}})}>
-                        <i className="fas fa-caret-up" data-fa-transform="grow-8"/>
-                    </button>
-                    <button
-                        data-tippy-content={t("summaryActivity.expandAll")}
-                        data-tippy-placement="right"
-                        onClick={() => this.setState({
-                            tableState: {
-                                ...this.state.tableState,
-                                expanded: createAllExpanded(this.state.tableState.pageSize)
-                            }
-                        })}>
-                        <i className="fas fa-caret-down" data-fa-transform="grow-8"/>
-                    </button>
-                </div>,
-                Expander: ({isExpanded, ...rest}) => {
-                    return (
-                        <div>
-                            {isExpanded ? <i className="fas fa-chevron-down"/>
-                                : <i className="fas fa-chevron-right"/>}
-                        </div>
-                    );
-                },
-                style: {
-                    cursor: "pointer",
-                    fontSize: 10,
-                    paddingTop: "10px",
-                    textAlign: "center",
-                    userSelect: "none",
-                },
-            }];
+        const { suggestionsMode } = this.state;
+        const desiredActivityInAnyActivity =
+            self.isDesiredActivityInAnyActivity();
+        let suggestionsColumns = [];
 
-        if (_.get(this.props.desiredActivity, "activity_ref.allows_timeslot_selection")) {
-            suggestionsColumns.push(
-                {
-                    Header: t("summaryActivity.colRank"),
-                    id: "rank",
-                    accessor: "rank",
-                    maxWidth: 40,
-                    Cell: ({value}) => value === 0 ? null : value
-                });
+        if (
+            _.get(
+                this.props.desiredActivity,
+                "activity_ref.allows_timeslot_selection"
+            )
+        ) {
+            suggestionsColumns.push({
+                Header: t("summaryActivity.colRank"),
+                id: "rank",
+                accessor: "rank",
+                maxWidth: 40,
+                // Numeric accessor with no explicit Filter would otherwise get TanStack's
+                // auto-picked `inNumberRange` filterFn, which destructures a typed string like
+                // "14" into a [1, 4] range instead of matching it -- not meaningfully
+                // text-filterable, same as average_age/occupation below.
+                filterable: false,
+                Cell: ({ original }) =>
+                    original.rank === 0 ? null : original.rank,
+            });
         }
 
         suggestionsColumns = [
@@ -490,15 +650,43 @@ class Activity extends React.Component {
                 Header: t("summaryActivity.colDay"),
                 id: "day",
                 maxWidth: 150,
-                accessor: s => moment(s.closest_lesson || s.time_interval.start).isoWeekday(),
-                Cell: ({ value }) =>
-                    moment(value, "E")
+                // Sorting still goes through this accessor (TanStack's default numeric sort);
+                // filtering is handled separately in JS (see the Filter below and
+                // applyCustomFilters) since TanStack's own auto-picked filterFn for a number
+                // column is a min/max range, not the exact match this needs.
+                accessor: (s) => getSuggestionWeekday(s),
+                Cell: ({ original }) =>
+                    moment(getSuggestionWeekday(original), "E")
                         .format("dddd")
                         .toUpperCase(),
-                Filter: ({ onChange }) => (
+                // Ignores the `onChange` TanStackGrid would otherwise wire to its own column-filter
+                // state (see the comment on applyCustomFilters) and drives `customFilters` directly.
+                // Controlled (not defaultValue) -- `render()` rebuilds this Filter function fresh
+                // every render (a class component's columns close over `this`), which invalidates
+                // TanStackGrid's columns memo and remounts this <select>; an uncontrolled
+                // defaultValue would then visually reset to blank on every filter change even
+                // though customFilters.day is still applied underneath.
+                Filter: () => (
                     <select
-                        defaultValue=""
-                        onChange={e => onChange(parseInt(e.target.value) || "")}
+                        value={this.state.customFilters.day ?? ""}
+                        onChange={(e) =>
+                            this.setState({
+                                customFilters: {
+                                    ...this.state.customFilters,
+                                    // Pre-existing bug inherited from v6, not introduced here:
+                                    // Sunday's option value is 0, and `0 || ""` makes it
+                                    // indistinguishable from "no filter selected".
+                                    day: parseInt(e.target.value) || "",
+                                },
+                                tableState: {
+                                    ...this.state.tableState,
+                                    pagination: {
+                                        ...this.state.tableState.pagination,
+                                        pageIndex: 0,
+                                    },
+                                },
+                            })
+                        }
                     >
                         <option value="" />
                         {WEEKDAYS.map((w, i) => ({ label: w, id: i })).map(
@@ -506,40 +694,55 @@ class Activity extends React.Component {
                         )}
                     </select>
                 ),
-                filterMethod: (filter, row) =>
-                    !filter || row.day === filter.value,
             },
             {
                 Header: t("summaryActivity.colCourseFamily"),
                 id: "type_cour",
                 maxWidth: 150,
                 accessor: "activity_ref.label",
-                Filter: ({ onChange }) => (
+                // See the "day" column above -- exact-match filtering handled in JS via
+                // customFilters/applyCustomFilters instead of TanStack's own column filter state.
+                Filter: () => (
                     <select
-                        defaultValue=""
-                        onChange={e => onChange(e.target.value)}
+                        value={this.state.customFilters.type_cour ?? ""}
+                        onChange={(e) =>
+                            this.setState({
+                                customFilters: {
+                                    ...this.state.customFilters,
+                                    type_cour: e.target.value,
+                                },
+                                tableState: {
+                                    ...this.state.tableState,
+                                    pagination: {
+                                        ...this.state.tableState.pagination,
+                                        pageIndex: 0,
+                                    },
+                                },
+                            })
+                        }
                     >
                         <option value="" />
                         {_.uniq(
                             (this.props.suggestions || []).map(
-                                s => s.activity_ref.label
+                                (s) => s.activity_ref.label
                             )
                         )
-                            .map(s => ({
+                            .map((s) => ({
                                 label: s,
                                 id: s,
                             }))
                             .map(optionMapper())}
                     </select>
                 ),
-                filterMethod: (filter, row) =>
-                    !filter || row.type_cour === filter.value,
             },
             {
                 Header: t("summaryActivity.colSchedule"),
                 id: "time",
-                Filter: ({ filter, onChange }) => {
-                    filter = (filter && filter.value) || {};
+                // Range filtering (start/end against two separate row fields) handled in JS via
+                // customFilters/applyCustomFilters -- not expressible through any single TanStack
+                // column filterFn. See the "day" column above.
+                Filter: () => {
+                    const filter = this.state.customFilters.time || {};
                     const start = filter.start || "";
                     const end = filter.end || "";
 
@@ -548,96 +751,121 @@ class Activity extends React.Component {
                             <input
                                 type="time"
                                 defaultValue={start}
-                                onChange={e =>
-                                    onChange({
-                                        ...filter,
-                                        start: e.target.value,
+                                onChange={(e) =>
+                                    this.setState({
+                                        customFilters: {
+                                            ...this.state.customFilters,
+                                            time: {
+                                                ...filter,
+                                                start: e.target.value,
+                                            },
+                                        },
+                                        tableState: {
+                                            ...this.state.tableState,
+                                            pagination: {
+                                                ...this.state.tableState
+                                                    .pagination,
+                                                pageIndex: 0,
+                                            },
+                                        },
                                     })
                                 }
                             />
                             <input
                                 type="time"
                                 defaultValue={end}
-                                onChange={e =>
-                                    onChange({
-                                        ...filter,
-                                        end: e.target.value,
+                                onChange={(e) =>
+                                    this.setState({
+                                        customFilters: {
+                                            ...this.state.customFilters,
+                                            time: {
+                                                ...filter,
+                                                end: e.target.value,
+                                            },
+                                        },
+                                        tableState: {
+                                            ...this.state.tableState,
+                                            pagination: {
+                                                ...this.state.tableState
+                                                    .pagination,
+                                                pageIndex: 0,
+                                            },
+                                        },
                                     })
                                 }
                             />
                         </div>
                     );
                 },
-                filterMethod: ({ value: { start, end } } = {}, row) => {
-                    let res = true;
-
-                    if (start)
-                        res =
-                            res &&
-                            moment(row.time.start).format("HH:mm") >= start;
-
-                    if (end)
-                        res =
-                            res && moment(row.time.end).format("HH:mm") <= end;
-
-                    return res;
-                },
-                accessor: s => ({
-                    start: s.closest_lesson || s.time_interval.start,
-                    end: s.closest_lesson_end || s.time_interval.end,
+                accessor: (s) => ({
+                    start: getSuggestionStart(s),
+                    end: getSuggestionEnd(s),
                 }),
-                Cell: ({ value: v }) =>
-                    `${moment(v.start).format("HH:mm")} ~> ${moment(
-                        v.end
+                Cell: ({ original }) =>
+                    `${moment(getSuggestionStart(original)).format("HH:mm")} ~> ${moment(
+                        getSuggestionEnd(original)
                     ).format("HH:mm")}`,
             },
             {
                 Header: t("summaryActivity.colTeacher"),
                 id: "teacher",
-                accessor: ({ teacher }) => `${teacher.first_name} ${teacher.last_name}`,
-                filterMethod: (filter, { teacher }) =>
-                    !filter ||
-                    teacher.match(new RegExp(`.*${filter.value}.*`, "i")),
+                // No custom Filter/filterMethod needed -- the accessor returns a plain string, and
+                // TanStack's default column filterFn for a string column (`includesString`, a
+                // case-insensitive substring match) is functionally identical to the old
+                // `.*value.*` case-insensitive regex this replaces.
+                accessor: ({ teacher }) =>
+                    `${teacher.first_name} ${teacher.last_name}`,
             },
             {
                 Header: t("summaryActivity.colLocation"),
                 id: "location",
                 maxWidth: 100,
-                accessor: s => s.location.label,
+                accessor: (s) => s.location.label,
             },
             {
                 Header: t("summaryActivity.colLevel"),
                 id: "level",
                 maxWidth: 150,
-                accessor: s => {
+                accessor: (s) => {
                     const level = TimeIntervalHelpers.levelDisplayForActivity(
                         s,
                         this.props.seasons
                     );
-                    return TimeIntervalHelpers.levelDisplayLabel(level) || t("summaryActivity.noLevel");
+                    return (
+                        TimeIntervalHelpers.levelDisplayLabel(level) ||
+                        t("summaryActivity.noLevel")
+                    );
                 },
             },
             {
                 Header: t("summaryActivity.colAge"),
                 id: "average_age",
                 maxWidth: 50,
-                accessor: s => TimeIntervalHelpers.averageAge(s.users),
-                Cell: props =>
-                    TimeIntervalHelpers.averageAgeDisplay(props.value),
+                // Numeric accessor with no explicit Filter would otherwise get TanStack's
+                // auto-picked `inNumberRange` filterFn, which destructures a typed string like
+                // "14" into a [1, 4] range instead of matching it. Not meaningfully
+                // text-filterable, matching how every other client-mode table in this migration
+                // handles such a column (table-wide/per-column `filterable: false`).
+                filterable: false,
+                accessor: (s) => getAverageAge(s),
+                Cell: ({ original }) =>
+                    TimeIntervalHelpers.averageAgeDisplay(
+                        getAverageAge(original)
+                    ),
             },
             {
                 Header: t("summaryActivity.colOccupied"),
                 id: "occupation",
                 maxWidth: 100,
-                accessor: s => {
-                    let {
-                        validatedHeadCount,
-                        headCountLimit,
-                    } = occupationInfos(s);
+                // Same inNumberRange auto-filterFn problem as average_age above.
+                filterable: false,
+                accessor: (s) => {
+                    let { validatedHeadCount, headCountLimit } =
+                        occupationInfos(s);
 
                     return validatedHeadCount / headCountLimit;
                 },
-                Cell: props => formatActivityHeadcount(props.original),
+                Cell: (props) => formatActivityHeadcount(props.original),
             },
             {
                 Header: t("summaryActivity.colActions"),
@@ -645,7 +873,7 @@ class Activity extends React.Component {
                 style: { textAlign: "right" },
                 filterable: false,
                 maxWidth: 250,
-                Cell: props => {
+                Cell: (props) => {
                     const act = props.original;
 
                     if (props.original.activity_ref.is_work_group) {
@@ -697,8 +925,8 @@ class Activity extends React.Component {
                                         props.original.time_interval
                                     ) ||
                                     act.users.length >=
-                                    act.activity_ref
-                                        .occupation_hard_limit ||
+                                        act.activity_ref
+                                            .occupation_hard_limit ||
                                     !!this.state.submittingId
                                 }
                                 className="btn btn-xs btn-primary m-r-sm"
@@ -712,7 +940,7 @@ class Activity extends React.Component {
                                         )
                                         .then(() => {
                                             this.setState({ submittingId: 0 });
-                                            this.setState(prevState => ({
+                                            this.setState((prevState) => ({
                                                 actUsers: [...act.users],
                                             }));
                                         });
@@ -730,7 +958,7 @@ class Activity extends React.Component {
                             <button
                                 disabled={
                                     act.users.some(
-                                        u => u.id === this.props.userId
+                                        (u) => u.id === this.props.userId
                                     ) || !!this.state.submittingOptionId
                                 }
                                 className="btn btn-xs"
@@ -772,7 +1000,12 @@ class Activity extends React.Component {
             },
         ];
 
-        const suggestions = this.sortSuggestions(this.props.suggestions);
+        // `showPagination` below is intentionally based on `allSuggestions` (matching v6, where it
+        // was computed from the same pre-filter array handed to react-table) rather than the
+        // post-customFilters `suggestions`, so filtering down to a handful of rows doesn't hide
+        // the pagination controls.
+        const allSuggestions = this.sortSuggestions(this.props.suggestions);
+        const suggestions = this.applyCustomFilters(allSuggestions);
 
         let actionLabel = t("summaryActivity.newRequest");
         if (this.props.application.pre_application_activity) {
@@ -794,15 +1027,15 @@ class Activity extends React.Component {
             const previousDesired = _.chain(
                 this.props.application.user.activity_applications
             )
-                .filter(app =>
+                .filter((app) =>
                     moment(app.season.end).isSame(
                         this.props.application.season.start,
                         "year"
                     )
                 )
-                .map(app => app.desired_activities)
+                .map((app) => app.desired_activities)
                 .flatten()
-                .find(des => des.activity_ref.kind === "Enfance")
+                .find((des) => des.activity_ref.kind === "Enfance")
                 .value();
 
             if (previousDesired) {
@@ -887,45 +1120,54 @@ class Activity extends React.Component {
 
         const levelSeason = _.find(
             this.props.application.user.levels,
-            l =>
+            (l) =>
                 l.activity_ref_id === this.props.activityRef.id &&
                 l.season_id === this.props.application.season_id
         );
 
         level =
-            levelSeason !== undefined && levelSeason.evaluation_level_ref !== undefined
+            levelSeason !== undefined &&
+            levelSeason.evaluation_level_ref !== undefined
                 ? _.capitalize(levelSeason.evaluation_level_ref.label)
                 : t("summaryActivity.notIndicated");
 
         const desiredActivities = Array.isArray(this.props.desiredActivities)
-            ? this.props.desiredActivities : Object.values(this.props.desiredActivities);
+            ? this.props.desiredActivities
+            : Object.values(this.props.desiredActivities);
 
         const daIds = desiredActivities
-            .filter(da => da.activity_ref_id !== this.props.activityRef.id)
-            .map(da => da.activity_ref_id);
+            .filter((da) => da.activity_ref_id !== this.props.activityRef.id)
+            .map((da) => da.activity_ref_id);
 
         const refsOptions = _.chain(this.props.activityRefs)
-            .filter(r => !daIds.includes(r.id))
-            .filter(r => this.props.activityRef.kind !== "Enfance" || r.kind === "Enfance")
-            .sortBy(r => r.label)
-            .map(r => <option
-                key={r.id}
-                value={r.id}>
-                {r.label}  {self.displayDuration(r.duration)}
-            </option>)
+            .filter((r) => !daIds.includes(r.id))
+            .filter(
+                (r) =>
+                    this.props.activityRef.kind !== "Enfance" ||
+                    r.kind === "Enfance"
+            )
+            .sortBy((r) => r.label)
+            .map((r) => (
+                <option key={r.id} value={r.id}>
+                    {r.label} {self.displayDuration(r.duration)}
+                </option>
+            ))
             .value();
 
-        const shouldChangeActivityQuestion = this.props.studentEvaluationQuestions.find(q => q.name === "should_change_activity");
-        const shouldChangeActivityAnswer = this.props.detectedEvaluation ?
-            radioValue(
-                shouldChangeActivityQuestion,
-                findAndGet(
-                    this.props.detectedEvaluation.answers,
-                    a => a.question_id === shouldChangeActivityQuestion.id,
-                    "value"
-                ),
-            ) :
-            t("summaryActivity.notSpecifiedShort");
+        const shouldChangeActivityQuestion =
+            this.props.studentEvaluationQuestions.find(
+                (q) => q.name === "should_change_activity"
+            );
+        const shouldChangeActivityAnswer = this.props.detectedEvaluation
+            ? radioValue(
+                  shouldChangeActivityQuestion,
+                  findAndGet(
+                      this.props.detectedEvaluation.answers,
+                      (a) => a.question_id === shouldChangeActivityQuestion.id,
+                      "value"
+                  )
+              )
+            : t("summaryActivity.notSpecifiedShort");
 
         return (
             <React.Fragment>
@@ -936,21 +1178,41 @@ class Activity extends React.Component {
                                 <button
                                     type="button"
                                     className={`btn btn-primary btn-outline ${suggestionsMode === "CUSTOM" ? "active" : ""}`}
-                                    onClick={e => this.handleChangeSuggestionsMode("CUSTOM")}>
+                                    onClick={(e) =>
+                                        this.handleChangeSuggestionsMode(
+                                            "CUSTOM"
+                                        )
+                                    }
+                                >
                                     {t("summaryActivity.suggestedCourses")}
                                 </button>
                                 <button
                                     type="button"
                                     className={`btn btn-primary btn-outline ${suggestionsMode === "ALL" ? "active" : ""}`}
-                                    onClick={e => this.handleChangeSuggestionsMode("ALL")}>
-                                    {t("summaryActivity.allCoursesOf", { name: displayActivityRef(this.props.activityRef) })}
+                                    onClick={(e) =>
+                                        this.handleChangeSuggestionsMode("ALL")
+                                    }
+                                >
+                                    {t("summaryActivity.allCoursesOf", {
+                                        name: displayActivityRef(
+                                            this.props.activityRef
+                                        ),
+                                    })}
                                 </button>
                             </div>
                             <select
                                 className="custom-select m-r"
                                 value={this.props.activityRef.id}
-                                disabled={this.props.desiredActivity.is_validated}
-                                onChange={e => this.props.handleChangeDesiredActivity(this.props.desiredActivity.id, parseInt(e.target.value))}>
+                                disabled={
+                                    this.props.desiredActivity.is_validated
+                                }
+                                onChange={(e) =>
+                                    this.props.handleChangeDesiredActivity(
+                                        this.props.desiredActivity.id,
+                                        parseInt(e.target.value)
+                                    )
+                                }
+                            >
                                 {refsOptions}
                             </select>
                             <span className="badge badge-warning">
@@ -967,9 +1229,14 @@ class Activity extends React.Component {
                                 </p>
                                 <p>
                                     <b>{level}</b>
-                                    <button type="button" onClick={() => this.handleOpenLevelEditModal()}
-                                            className="btn btn-xs btn-primary m-l-sm">
-                                        <i className="fas fa-edit"/>
+                                    <button
+                                        type="button"
+                                        onClick={() =>
+                                            this.handleOpenLevelEditModal()
+                                        }
+                                        className="btn btn-xs btn-primary m-l-sm"
+                                    >
+                                        <i className="fas fa-edit" />
                                     </button>
                                 </p>
                             </div>
@@ -984,7 +1251,11 @@ class Activity extends React.Component {
                             {this.props.desiredActivity.user ? (
                                 <div className="col-xs-2">
                                     <p>
-                                        <i>{t("summaryActivity.accompanyingPerson")}</i>
+                                        <i>
+                                            {t(
+                                                "summaryActivity.accompanyingPerson"
+                                            )}
+                                        </i>
                                     </p>
                                     <p>
                                         <b>
@@ -1003,11 +1274,18 @@ class Activity extends React.Component {
                             {!this.props.instruments.length == 0 ? (
                                 <div className="col-xs-2">
                                     <p>
-                                        <i>{t("summaryActivity.instruments")}</i>
+                                        <i>
+                                            {t("summaryActivity.instruments")}
+                                        </i>
                                     </p>
                                     <p>
                                         <b>
-                                            {this.props.instruments.map(instrument => instrument.label).join(', ')}
+                                            {this.props.instruments
+                                                .map(
+                                                    (instrument) =>
+                                                        instrument.label
+                                                )
+                                                .join(", ")}
                                         </b>
                                     </p>
                                 </div>
@@ -1015,62 +1293,114 @@ class Activity extends React.Component {
 
                             {previousActivity}
 
-                            <div className="col-xs-12 img-rounded p-xs">
-                                <p>
-                                    <i className="fas fa-info-circle"/> {t("summaryActivity.suggestionCriteria")}
+                            <div className="col-xs-12 img-rounded p-xs flex flex-center-aligned">
+                                <p className="m-r-sm">
+                                    <i className="fas fa-info-circle" />{" "}
+                                    {t("summaryActivity.suggestionCriteria")}
                                 </p>
+                                <div className="table-expanders">
+                                    <button
+                                        data-tippy-content={t(
+                                            "summaryActivity.collapseAll"
+                                        )}
+                                        data-tippy-placement="right"
+                                        onClick={() =>
+                                            this.setState({
+                                                tableState: {
+                                                    ...this.state.tableState,
+                                                    expanded: {},
+                                                },
+                                            })
+                                        }
+                                    >
+                                        <i
+                                            className="fas fa-caret-up"
+                                            data-fa-transform="grow-8"
+                                        />
+                                    </button>
+                                    <button
+                                        data-tippy-content={t(
+                                            "summaryActivity.expandAll"
+                                        )}
+                                        data-tippy-placement="right"
+                                        onClick={() =>
+                                            this.setState({
+                                                tableState: {
+                                                    ...this.state.tableState,
+                                                    expanded:
+                                                        createAllExpanded(
+                                                            suggestions
+                                                        ),
+                                                },
+                                            })
+                                        }
+                                    >
+                                        <i
+                                            className="fas fa-caret-down"
+                                            data-fa-transform="grow-8"
+                                        />
+                                    </button>
+                                </div>
                             </div>
                         </div>
-                        <ReactTable
-                            ref={this.tableRef}
+                        <TanStackGrid
+                            tableName="table-activity-suggestions"
+                            manual={false}
+                            getRowId={(row) => String(row.id)}
                             data={suggestions || []}
                             columns={suggestionsColumns}
-                            showPagination={suggestions.length > 10}
+                            pages={null}
+                            showPagination={allSuggestions.length > 10}
                             loading={this.state.loading}
-                            resizable={false}
-                            filterable
-                            previousText={t("common:reactTable.previousText")}
-                            nextText={t("common:reactTable.nextText")}
-                            loadingText={t("common:reactTable.loadingText")}
-                            noDataText={t("common:reactTable.noDataText")}
-                            pageText={t("common:reactTable.pageText")}
-                            ofText={t("common:reactTable.ofText")}
-                            rowsText={t("common:reactTable.rowsText")}
                             minRows={1}
                             expanded={this.state.tableState.expanded}
-                            pageSize={this.state.tableState.pageSize}
-                            onExpandedChange={expanded => this.setState({
-                                tableState: {
-                                    ...this.state.tableState,
-                                    expanded
-                                }
-                            })}
-                            onPageSizeChange={pageSize => this.setState({
-                                tableState: {
-                                    ...this.state.tableState,
-                                    pageSize
-                                }
-                            })}
-                            onPageChange={page => this.setState({
-                                tableState: {
-                                    ...this.state.tableState,
-                                    expanded: {}
-                                }
-                            })} // Reset expanded on page change
-                            onSortedChange={sorted => this.setState({
-                                tableState: {
-                                    ...this.state.tableState,
-                                    sorted
-                                }
-                            })}
-                            getTrProps={(state, rowInfo, column) => {
-                                if (!rowInfo)
-                                    return {};
+                            onExpandedChange={(expanded) =>
+                                this.setState({
+                                    tableState: {
+                                        ...this.state.tableState,
+                                        expanded,
+                                    },
+                                })
+                            }
+                            pageSizeOptions={[5, 10, 20, 25, 50, 100]}
+                            pagination={this.state.tableState.pagination}
+                            onPaginationChange={({ pageIndex, pageSize }) => {
+                                const pageChanged =
+                                    pageIndex !==
+                                    this.state.tableState.pagination.pageIndex;
 
+                                this.setState({
+                                    tableState: {
+                                        ...this.state.tableState,
+                                        pagination: { pageIndex, pageSize },
+                                        // Reset expanded on page change only (not on page-size
+                                        // change) -- same distinction v6's separate
+                                        // onPageChange/onPageSizeChange callbacks made.
+                                        expanded: pageChanged
+                                            ? {}
+                                            : this.state.tableState.expanded,
+                                    },
+                                });
+                            }}
+                            sorting={this.state.tableState.sorted}
+                            onSortingChange={(sorted) =>
+                                this.setState({
+                                    tableState: {
+                                        ...this.state.tableState,
+                                        sorted,
+                                        // v6 reset to page 0 on any (non-additive) sort click;
+                                        // mirror that here so sorting can't strand the user on a
+                                        // now out-of-range page.
+                                        pagination: {
+                                            ...this.state.tableState.pagination,
+                                            pageIndex: 0,
+                                        },
+                                    },
+                                })
+                            }
+                            getRowProps={(original) => {
                                 if (
-                                    this.isDesiredActivityInActivity(
-                                        rowInfo.original
-                                    )
+                                    this.isDesiredActivityInActivity(original)
                                 ) {
                                     return {
                                         style: {
@@ -1078,9 +1408,11 @@ class Activity extends React.Component {
                                             fontWeight: "bold",
                                         },
                                     };
-                                } else if (
+                                }
+
+                                if (
                                     this.isSuggestionInDesiredActivityOptions(
-                                        rowInfo.original
+                                        original
                                     )
                                 ) {
                                     return {
@@ -1091,9 +1423,9 @@ class Activity extends React.Component {
                                     };
                                 }
 
-                                return {};
+                                return undefined;
                             }}
-                            SubComponent={row => {
+                            renderSubComponent={(row) => {
                                 return row.original.activity_ref
                                     .is_work_group ? (
                                     <WorkGroupEditor
@@ -1102,45 +1434,25 @@ class Activity extends React.Component {
                                             this.props.desiredActivity
                                         }
                                         userId={this.props.application.user_id}
-                                        onUpdateActivity={a => {
-                                            /**
-                                             * @type {function([])}
-                                             */
-                                            const sortSuggestions = this.sortSuggestions.bind(this);
+                                        onUpdateActivity={(a) => {
+                                            this.props.handleUpdateSuggestion(
+                                                a
+                                            );
 
-                                            new Promise((resolve, reject) => {
-                                                const news = this.props.handleUpdateSuggestion(a);
-
-                                                const oldSuggestionIndex = suggestions.findIndex(s => s.id === a.id);
-
-                                                let newSuggestions = sortSuggestions(Object.values(news.suggestions)[0]);
-
-                                                const tableSortDatas = this.state.tableState.sorted;
-
-                                                if (tableSortDatas && tableSortDatas.length > 0) {
-                                                    const tableState = {...this.tableRef.current.state};
-
-                                                    tableState.manual = true;
-                                                    tableState.resolvedData = newSuggestions;
-                                                    tableState.sorted = tableSortDatas;
-
-                                                    // sort newSuggestions like react-table
-                                                    newSuggestions = this.tableRef.current.getSortedData(tableState).sortedData;
-                                                }
-
-                                                const newSuggestionIndex = newSuggestions.findIndex(s => s.id === a.id);
-
-                                                this.setState({
-                                                    tableState: {
-                                                        ...this.state.tableState,
-                                                        expanded: {
-                                                            [oldSuggestionIndex]: false,
-                                                            [newSuggestionIndex]: true
-                                                        }
-                                                    }
-                                                });
-
-                                                resolve();
+                                            // The suggestion keeps its own id across the update
+                                            // (handleUpdateSuggestion replaces it in place, doesn't
+                                            // recreate it), and `getRowId` above keys TanStack's
+                                            // expanded state off that same id -- so simply
+                                            // re-expanding `a.id` keeps the row open regardless of
+                                            // where it lands after the refreshed suggestions are
+                                            // re-sorted/re-filtered. No index bookkeeping needed.
+                                            this.setState({
+                                                tableState: {
+                                                    ...this.state.tableState,
+                                                    expanded: {
+                                                        [String(a.id)]: true,
+                                                    },
+                                                },
                                             });
                                         }}
                                     />
@@ -1148,11 +1460,11 @@ class Activity extends React.Component {
                                     <SubStudentList
                                         row={row}
                                         seasons={this.props.seasons}
-                                        desiredActivity={this.props.desiredActivity}
+                                        desiredActivity={
+                                            this.props.desiredActivity
+                                        }
                                         referenceDate={this.props.referenceDate}
-
                                     />
-
                                 );
                             }}
                         />
@@ -1164,34 +1476,60 @@ class Activity extends React.Component {
                     onRequestClose={() => this.handleCloseLevelEditModal()}
                     style={{
                         ...modalStyle,
-                        content: {maxWidth: "300px", position: "static"},
-                        overlay: {justifyContent: "center"}
-                    }}>
+                        content: { maxWidth: "300px", position: "static" },
+                        overlay: { justifyContent: "center" },
+                    }}
+                >
                     <div className="ibox">
                         <div className="ibox-title">
-                            <h3>{t("summaryActivity.editLevelTitle", { label: this.props.activityRef.label })}</h3>
+                            <h3>
+                                {t("summaryActivity.editLevelTitle", {
+                                    label: this.props.activityRef.label,
+                                })}
+                            </h3>
                         </div>
                         <div className="ibox-content">
                             <div className="form-group">
                                 <label>{t("summaryActivity.colLevel")}</label>
                                 <select
                                     className="form-control"
-                                    defaultValue={levelSeason && levelSeason.evaluation_level_ref_id || ""}
-                                    onChange={e => this.handleStudentLevelChange(e.target.value)}>
-                                    <option value="">{t("summaryActivity.notSpecified")}</option>
-                                    {this.props.evaluationLevelRefs.map(optionMapper())}
+                                    defaultValue={
+                                        (levelSeason &&
+                                            levelSeason.evaluation_level_ref_id) ||
+                                        ""
+                                    }
+                                    onChange={(e) =>
+                                        this.handleStudentLevelChange(
+                                            e.target.value
+                                        )
+                                    }
+                                >
+                                    <option value="">
+                                        {t("summaryActivity.notSpecified")}
+                                    </option>
+                                    {this.props.evaluationLevelRefs.map(
+                                        optionMapper()
+                                    )}
                                 </select>
                             </div>
                         </div>
                         <div className="ibox-footer flex flex-space-between-justified">
-                            <button className="btn" style={{marginRight: "auto"}} type="button"
-                                    onClick={() => this.handleCloseLevelEditModal()}>
-                                <i className="fas fa-times m-r-sm"/>
+                            <button
+                                className="btn"
+                                style={{ marginRight: "auto" }}
+                                type="button"
+                                onClick={() => this.handleCloseLevelEditModal()}
+                            >
+                                <i className="fas fa-times m-r-sm" />
                                 {t("common:actions.cancel")}
                             </button>
-                            <button type="button" onClick={() => this.handleSubmitStudentLevel()}
-                                    className="btn btn-primary pull-right">
-                                <i className="fas fa-save m-r-sm"/>{t("common:actions.save")}
+                            <button
+                                type="button"
+                                onClick={() => this.handleSubmitStudentLevel()}
+                                className="btn btn-primary pull-right"
+                            >
+                                <i className="fas fa-save m-r-sm" />
+                                {t("common:actions.save")}
                             </button>
                         </div>
                     </div>
@@ -1206,20 +1544,21 @@ class Activity extends React.Component {
      * @returns {any[]}
      */
     sortSuggestions(suggestions) {
-        return _.sortBy(_.filter(
-            suggestions,
-            s => s.time_interval
-            // filtre initial surcharger par modif sur le tableau (click sur colonne)
-            // les valeurs sont arbitraires
-        ), s => {
-            if(this.isSuggestionInDesiredActivityOptions(s))
-                return -1;
+        return _.sortBy(
+            _.filter(
+                suggestions,
+                (s) => s.time_interval
+                // filtre initial surcharger par modif sur le tableau (click sur colonne)
+                // les valeurs sont arbitraires
+            ),
+            (s) => {
+                if (this.isSuggestionInDesiredActivityOptions(s)) return -1;
 
-            if(this.isDesiredActivityInActivity(s))
-                return -2;
+                if (this.isDesiredActivityInActivity(s)) return -2;
 
-            return 0;
-        });
+                return 0;
+            }
+        );
     }
 }
 
