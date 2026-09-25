@@ -503,7 +503,11 @@ describe("Activity — expand all uses suggestion ids, not row indexes", () => {
         });
     });
 
-    test("expand all only expands the currently-filtered-in suggestions, not filtered-out ones", async () => {
+    // Scoped to the three custom filters (day/type_cour/time) only: `createAllExpanded` is called
+    // with the post-`applyCustomFilters` array, which doesn't account for TanStack's own
+    // column-filter state (teacher/group/location/level/age/occupation's plain text filters).
+    // Harmless today (a page change already clears `expanded`), but worth being precise about.
+    test("expand all only expands suggestions passing the day/type_cour/time custom filters, not filtered-out ones", async () => {
         const piano = workGroupSuggestion(21, {
             activity_ref: { is_work_group: true, label: "Piano" },
         });

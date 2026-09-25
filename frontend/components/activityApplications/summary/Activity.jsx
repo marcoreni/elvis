@@ -288,6 +288,20 @@ const createAllExpanded = (suggestions) =>
         suggestions.map(() => true)
     );
 
+// Shared accessor helpers -- single source for values otherwise duplicated across a column's
+// accessor/Cell and applyCustomFilters below.
+const getSuggestionStart = (suggestion) =>
+    suggestion.closest_lesson || suggestion.time_interval.start;
+
+const getSuggestionEnd = (suggestion) =>
+    suggestion.closest_lesson_end || suggestion.time_interval.end;
+
+const getSuggestionWeekday = (suggestion) =>
+    moment(getSuggestionStart(suggestion)).isoWeekday();
+
+const getAverageAge = (suggestion) =>
+    TimeIntervalHelpers.averageAge(suggestion.users);
+
 // MAIN COMPONENT
 class Activity extends React.Component {
     constructor(props) {
@@ -307,8 +321,12 @@ class Activity extends React.Component {
             loading: false,
             tableState: {
                 expanded: {},
-                page: 0,
-                pageSize: 10,
+                // Kept as one nested object (instead of separate page/pageSize fields spread
+                // fresh into a new object on every render) so the object handed to
+                // TanStackGrid's `pagination` prop stays reference-stable across renders that
+                // don't actually change it -- see render()'s <TanStackGrid pagination={...}>.
+                pagination: { pageIndex: 0, pageSize: 10 },
+                sorted: [],
             },
             // "day"/"type_cour"/"time" columns need exact/range matching TanStack's own
             // auto-picked column filterFns can't express (see the Filter definitions below for
@@ -344,6 +362,38 @@ class Activity extends React.Component {
 
         if (willReloadSuggestions) {
             this.loadSuggestions();
+        }
+
+        // A fresh `suggestions` prop (a reload just completed, e.g. switching between
+        // suggestionsMode CUSTOM/ALL) can return fewer rows than the current pageIndex allows --
+        // TanStackGrid is controlled here and won't clamp on its own. Reset/clamp so the table
+        // never lands on an out-of-range, unrecoverable "no data" page.
+        if (prevProps.suggestions !== this.props.suggestions) {
+            this.clampPageIndex();
+        }
+    }
+
+    // Clamps the current pageIndex to the last valid page for the *effective* (post
+    // applyCustomFilters) row count, if it's now out of range. Called after a fresh suggestions
+    // load; the three custom-filter onChange handlers reset straight to page 0 instead, since a
+    // filter change should always land back on the first page (matches v6's own behavior).
+    clampPageIndex() {
+        const rowCount = this.applyCustomFilters(
+            this.sortSuggestions(this.props.suggestions)
+        ).length;
+        const { pageIndex, pageSize } = this.state.tableState.pagination;
+        const maxPageIndex = Math.max(0, Math.ceil(rowCount / pageSize) - 1);
+
+        if (pageIndex > maxPageIndex) {
+            this.setState((prevState) => ({
+                tableState: {
+                    ...prevState.tableState,
+                    pagination: {
+                        ...prevState.tableState.pagination,
+                        pageIndex: maxPageIndex,
+                    },
+                },
+            }));
         }
     }
 
@@ -528,17 +578,15 @@ class Activity extends React.Component {
 
         return suggestions.filter((s) => {
             if (day !== undefined && day !== "") {
-                const sDay = moment(
-                    s.closest_lesson || s.time_interval.start
-                ).isoWeekday();
+                const sDay = getSuggestionWeekday(s);
                 if (sDay !== day) return false;
             }
 
             if (type_cour && s.activity_ref.label !== type_cour) return false;
 
             if (time) {
-                const rowStart = s.closest_lesson || s.time_interval.start;
-                const rowEnd = s.closest_lesson_end || s.time_interval.end;
+                const rowStart = getSuggestionStart(s);
+                const rowEnd = getSuggestionEnd(s);
 
                 if (time.start && moment(rowStart).format("HH:mm") < time.start)
                     return false;
@@ -580,6 +628,11 @@ class Activity extends React.Component {
                 id: "rank",
                 accessor: "rank",
                 maxWidth: 40,
+                // Numeric accessor with no explicit Filter would otherwise get TanStack's
+                // auto-picked `inNumberRange` filterFn, which destructures a typed string like
+                // "14" into a [1, 4] range instead of matching it -- not meaningfully
+                // text-filterable, same as average_age/occupation below.
+                filterable: false,
                 Cell: ({ original }) =>
                     original.rank === 0 ? null : original.rank,
             });
@@ -601,30 +654,36 @@ class Activity extends React.Component {
                 // filtering is handled separately in JS (see the Filter below and
                 // applyCustomFilters) since TanStack's own auto-picked filterFn for a number
                 // column is a min/max range, not the exact match this needs.
-                accessor: (s) =>
-                    moment(
-                        s.closest_lesson || s.time_interval.start
-                    ).isoWeekday(),
+                accessor: (s) => getSuggestionWeekday(s),
                 Cell: ({ original }) =>
-                    moment(
-                        moment(
-                            original.closest_lesson ||
-                                original.time_interval.start
-                        ).isoWeekday(),
-                        "E"
-                    )
+                    moment(getSuggestionWeekday(original), "E")
                         .format("dddd")
                         .toUpperCase(),
                 // Ignores the `onChange` TanStackGrid would otherwise wire to its own column-filter
                 // state (see the comment on applyCustomFilters) and drives `customFilters` directly.
+                // Controlled (not defaultValue) -- `render()` rebuilds this Filter function fresh
+                // every render (a class component's columns close over `this`), which invalidates
+                // TanStackGrid's columns memo and remounts this <select>; an uncontrolled
+                // defaultValue would then visually reset to blank on every filter change even
+                // though customFilters.day is still applied underneath.
                 Filter: () => (
                     <select
-                        defaultValue=""
+                        value={this.state.customFilters.day ?? ""}
                         onChange={(e) =>
                             this.setState({
                                 customFilters: {
                                     ...this.state.customFilters,
+                                    // Pre-existing bug inherited from v6, not introduced here:
+                                    // Sunday's option value is 0, and `0 || ""` makes it
+                                    // indistinguishable from "no filter selected".
                                     day: parseInt(e.target.value) || "",
+                                },
+                                tableState: {
+                                    ...this.state.tableState,
+                                    pagination: {
+                                        ...this.state.tableState.pagination,
+                                        pageIndex: 0,
+                                    },
                                 },
                             })
                         }
@@ -645,12 +704,19 @@ class Activity extends React.Component {
                 // customFilters/applyCustomFilters instead of TanStack's own column filter state.
                 Filter: () => (
                     <select
-                        defaultValue=""
+                        value={this.state.customFilters.type_cour ?? ""}
                         onChange={(e) =>
                             this.setState({
                                 customFilters: {
                                     ...this.state.customFilters,
                                     type_cour: e.target.value,
+                                },
+                                tableState: {
+                                    ...this.state.tableState,
+                                    pagination: {
+                                        ...this.state.tableState.pagination,
+                                        pageIndex: 0,
+                                    },
                                 },
                             })
                         }
@@ -694,6 +760,14 @@ class Activity extends React.Component {
                                                 start: e.target.value,
                                             },
                                         },
+                                        tableState: {
+                                            ...this.state.tableState,
+                                            pagination: {
+                                                ...this.state.tableState
+                                                    .pagination,
+                                                pageIndex: 0,
+                                            },
+                                        },
                                     })
                                 }
                             />
@@ -709,6 +783,14 @@ class Activity extends React.Component {
                                                 end: e.target.value,
                                             },
                                         },
+                                        tableState: {
+                                            ...this.state.tableState,
+                                            pagination: {
+                                                ...this.state.tableState
+                                                    .pagination,
+                                                pageIndex: 0,
+                                            },
+                                        },
                                     })
                                 }
                             />
@@ -716,13 +798,12 @@ class Activity extends React.Component {
                     );
                 },
                 accessor: (s) => ({
-                    start: s.closest_lesson || s.time_interval.start,
-                    end: s.closest_lesson_end || s.time_interval.end,
+                    start: getSuggestionStart(s),
+                    end: getSuggestionEnd(s),
                 }),
                 Cell: ({ original }) =>
-                    `${moment(original.closest_lesson || original.time_interval.start).format("HH:mm")} ~> ${moment(
-                        original.closest_lesson_end ||
-                            original.time_interval.end
+                    `${moment(getSuggestionStart(original)).format("HH:mm")} ~> ${moment(
+                        getSuggestionEnd(original)
                     ).format("HH:mm")}`,
             },
             {
@@ -760,16 +841,24 @@ class Activity extends React.Component {
                 Header: t("summaryActivity.colAge"),
                 id: "average_age",
                 maxWidth: 50,
-                accessor: (s) => TimeIntervalHelpers.averageAge(s.users),
+                // Numeric accessor with no explicit Filter would otherwise get TanStack's
+                // auto-picked `inNumberRange` filterFn, which destructures a typed string like
+                // "14" into a [1, 4] range instead of matching it. Not meaningfully
+                // text-filterable, matching how every other client-mode table in this migration
+                // handles such a column (table-wide/per-column `filterable: false`).
+                filterable: false,
+                accessor: (s) => getAverageAge(s),
                 Cell: ({ original }) =>
                     TimeIntervalHelpers.averageAgeDisplay(
-                        TimeIntervalHelpers.averageAge(original.users)
+                        getAverageAge(original)
                     ),
             },
             {
                 Header: t("summaryActivity.colOccupied"),
                 id: "occupation",
                 maxWidth: 100,
+                // Same inNumberRange auto-filterFn problem as average_age above.
+                filterable: false,
                 accessor: (s) => {
                     let { validatedHeadCount, headCountLimit } =
                         occupationInfos(s);
@@ -1273,19 +1362,17 @@ class Activity extends React.Component {
                                     },
                                 })
                             }
-                            pagination={{
-                                pageIndex: this.state.tableState.page,
-                                pageSize: this.state.tableState.pageSize,
-                            }}
+                            pageSizeOptions={[5, 10, 20, 25, 50, 100]}
+                            pagination={this.state.tableState.pagination}
                             onPaginationChange={({ pageIndex, pageSize }) => {
                                 const pageChanged =
-                                    pageIndex !== this.state.tableState.page;
+                                    pageIndex !==
+                                    this.state.tableState.pagination.pageIndex;
 
                                 this.setState({
                                     tableState: {
                                         ...this.state.tableState,
-                                        page: pageIndex,
-                                        pageSize,
+                                        pagination: { pageIndex, pageSize },
                                         // Reset expanded on page change only (not on page-size
                                         // change) -- same distinction v6's separate
                                         // onPageChange/onPageSizeChange callbacks made.
@@ -1295,12 +1382,19 @@ class Activity extends React.Component {
                                     },
                                 });
                             }}
-                            sorting={this.state.tableState.sorted || []}
+                            sorting={this.state.tableState.sorted}
                             onSortingChange={(sorted) =>
                                 this.setState({
                                     tableState: {
                                         ...this.state.tableState,
                                         sorted,
+                                        // v6 reset to page 0 on any (non-additive) sort click;
+                                        // mirror that here so sorting can't strand the user on a
+                                        // now out-of-range page.
+                                        pagination: {
+                                            ...this.state.tableState.pagination,
+                                            pageIndex: 0,
+                                        },
                                     },
                                 })
                             }

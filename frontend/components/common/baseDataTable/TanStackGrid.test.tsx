@@ -504,7 +504,7 @@ describe("TanStackGrid — noDataText", () => {
     });
 });
 
-// Batch 4c (docs/Modernization-Roadmap.md item 13, activityApplications/summary/Activity.jsx):
+// item 13, final batch (docs/Modernization-Roadmap.md, activityApplications/summary/Activity.jsx):
 // `getRowId` and controlled `expanded`/`onExpandedChange`, added so that table's suggestion-editor
 // row stays expanded by the suggestion's own id across a reorder, instead of TanStack's default
 // index-keyed row id (which would instead keep "whatever's now at that index" expanded).
