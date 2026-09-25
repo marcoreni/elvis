@@ -8,33 +8,39 @@
 // value `0`), which is always `undefined` — instead of `PRE_APPLICATION_ACTION_LABELS.new`. The
 // unused `PRE_APPLICATION_ACTIONS` import was removed alongside the fix.
 //
-// `react-table` is mocked to capture `props.columns` (same pattern as
-// `activityApplications/summary/Activity.test.jsx`), so the "action" column's `accessor` function
-// — the exact closure built inside `render()`, over the live `PRE_APPLICATION_ACTION_LABELS`
-// binding — can be called directly with a fabricated row, without needing react-table's real grid
-// to render in jsdom.
+// `TanStackGrid` (docs/Modernization-Roadmap.md item 13 -- ActivitiesApplicationsList moved off
+// `react-table` onto it) is mocked to capture `props.columns`, so the "action" column's `accessor`
+// function — the exact closure built inside `render()`, over the live
+// `PRE_APPLICATION_ACTION_LABELS` binding — can be called directly with a fabricated row, without
+// needing the real grid to render in jsdom.
 //
 // `currentUserIsAdmin: false` keeps the render path light (skips
 // ActivitiesApplicationsDashboard / StopList / the admin-only import/export buttons), so the
 // component can be mounted with a minimal prop set.
 
 import React from "react";
-import {render} from "@testing-library/react";
+import { render } from "@testing-library/react";
 import i18n from "../i18n";
 import ActivitiesApplicationsList from "./ActivitiesApplicationsList";
 
 let mockLastColumns = null;
-vi.mock("react-table", () => ({
-    default: props => {
+vi.mock("./common/baseDataTable/TanStackGrid", () => ({
+    default: (props) => {
         mockLastColumns = props.columns;
-        return <div data-testid="react-table" />;
+        return <div data-testid="tanstack-grid" />;
     },
 }));
 
 beforeEach(() => {
     mockLastColumns = null;
     global.fetch = vi.fn().mockResolvedValue({
-        json: () => Promise.resolve({applications: [], pages: 0, total: 0, pending_total: 0}),
+        json: () =>
+            Promise.resolve({
+                applications: [],
+                pages: 0,
+                total: 0,
+                pending_total: 0,
+            }),
     });
 });
 
@@ -55,7 +61,7 @@ const baseProps = () => ({
 });
 
 function getActionColumn() {
-    const col = (mockLastColumns || []).find(c => c.id === "action");
+    const col = (mockLastColumns || []).find((c) => c.id === "action");
     expect(col).toBeDefined();
     return col;
 }
@@ -63,52 +69,65 @@ function getActionColumn() {
 describe("ActivitiesApplicationsList — Action column fallback", () => {
     test.each(["fr", "en"])(
         "a row with neither pre_application_desired_activity nor pre_application_activity falls back to the 'new' label, not undefined (%s)",
-        async lng => {
+        async (lng) => {
             await i18n.changeLanguage(lng);
             render(<ActivitiesApplicationsList {...baseProps()} />);
 
-            const {accessor} = getActionColumn();
-            const expected = lng === "fr" ? "Nouvelle inscription" : "New enrollment";
+            const { accessor } = getActionColumn();
+            const expected =
+                lng === "fr" ? "Nouvelle inscription" : "New enrollment";
 
             // The pre-fix bug returned `undefined` here (indexing with the numeric enum value 0);
             // `.toBe(expected)` below already fails on that, so no separate `.not.toBeUndefined()`.
-            expect(accessor({pre_application_desired_activity: null, pre_application_activity: null})).toBe(
-                expected,
-            );
-        },
+            expect(
+                accessor({
+                    pre_application_desired_activity: null,
+                    pre_application_activity: null,
+                })
+            ).toBe(expected);
+        }
     );
 
     test("prefers pre_application_desired_activity's action over pre_application_activity's", async () => {
         await i18n.changeLanguage("fr");
         render(<ActivitiesApplicationsList {...baseProps()} />);
-        const {accessor} = getActionColumn();
+        const { accessor } = getActionColumn();
 
         expect(
             accessor({
-                pre_application_desired_activity: {action: "renew"},
-                pre_application_activity: {action: "change"},
-            }),
+                pre_application_desired_activity: { action: "renew" },
+                pre_application_activity: { action: "change" },
+            })
         ).toBe("Renouvellement");
     });
 
     test("falls back to pre_application_activity's action when no pre_application_desired_activity", async () => {
         await i18n.changeLanguage("fr");
         render(<ActivitiesApplicationsList {...baseProps()} />);
-        const {accessor} = getActionColumn();
+        const { accessor } = getActionColumn();
 
         expect(
-            accessor({pre_application_desired_activity: null, pre_application_activity: {action: "change"}}),
+            accessor({
+                pre_application_desired_activity: null,
+                pre_application_activity: { action: "change" },
+            })
         ).toBe("Changement");
     });
 
-    test.each(["fr", "en"])("action labels follow the active UI language (%s)", async lng => {
-        await i18n.changeLanguage(lng);
-        render(<ActivitiesApplicationsList {...baseProps()} />);
-        const {accessor} = getActionColumn();
+    test.each(["fr", "en"])(
+        "action labels follow the active UI language (%s)",
+        async (lng) => {
+            await i18n.changeLanguage(lng);
+            render(<ActivitiesApplicationsList {...baseProps()} />);
+            const { accessor } = getActionColumn();
 
-        const expected = lng === "fr" ? "Arrêt" : "Stop";
-        expect(accessor({pre_application_desired_activity: {action: "stop"}, pre_application_activity: null})).toBe(
-            expected,
-        );
-    });
+            const expected = lng === "fr" ? "Arrêt" : "Stop";
+            expect(
+                accessor({
+                    pre_application_desired_activity: { action: "stop" },
+                    pre_application_activity: null,
+                })
+            ).toBe(expected);
+        }
+    );
 });

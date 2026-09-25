@@ -1,7 +1,7 @@
 import React, { Fragment, useEffect, useState } from "react";
 import { csrfToken } from "../../utils";
 import swal from "sweetalert2";
-import ReactTable from "react-table";
+import TanStackGrid from "../../common/baseDataTable/TanStackGrid";
 import AdhesionEditModal from "./AdhesionEditModal";
 import * as api from "../../../tools/api";
 import _ from "lodash";
@@ -13,6 +13,12 @@ export default function AdhesionSettings() {
     const [adhesionPrices, setAdhesionPrices] = useState([]);
     const [seasons, setSeasons] = useState([]);
     const [isInitialized, setIsInitialized] = useState(false);
+    // Controlled, rather than TanStackGrid's own uncontrolled default (pageSize 20), so the
+    // page-size selector below can start at v6's old `defaultPageSize={10}`.
+    const [pagination, setPagination] = useState({
+        pageIndex: 0,
+        pageSize: 10,
+    });
 
     useEffect(() => {
         fetch(`/parameters/payment_parameters/show_adhesion`, {
@@ -165,8 +171,20 @@ export default function AdhesionSettings() {
             {adhesionEnabled && (
                 <div className="row mt-2">
                     <div className="col-sm-12">
-                        <ReactTable
+                        <TanStackGrid
+                            tableName="adhesion-settings"
+                            manual={false}
                             data={adhesionPrices}
+                            loading={false}
+                            pages={null}
+                            // No filter UI existed in the v6 table (no `filterable`/`Filter` set
+                            // on any column); also sidesteps the id/price columns' auto-picked
+                            // client-mode filterFn (numeric/accessor-less) that a real filter row
+                            // would otherwise need explicit `filterable: false` for.
+                            filterable={false}
+                            pagination={pagination}
+                            onPaginationChange={setPagination}
+                            pageSizeOptions={[5, 10, 20, 25, 50, 100]}
                             columns={[
                                 {
                                     id: "id",
@@ -238,15 +256,6 @@ export default function AdhesionSettings() {
                                     ),
                                 },
                             ]}
-                            defaultPageSize={10}
-                            className="-striped -highlight"
-                            previousText={t("common:reactTable.previousText")}
-                            nextText={t("common:reactTable.nextText")}
-                            loadingText={t("common:reactTable.loadingText")}
-                            noDataText={t("common:reactTable.noDataText")}
-                            pageText={t("common:reactTable.pageText")}
-                            ofText={t("common:reactTable.ofText")}
-                            rowsText={t("common:reactTable.rowsText")}
                         />
                     </div>
                 </div>

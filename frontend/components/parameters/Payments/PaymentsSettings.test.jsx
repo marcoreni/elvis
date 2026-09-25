@@ -18,7 +18,7 @@
 //     three `<Field label={t("payments.coupons.form.*")}>`.
 //   - AdhesionSettings — fn `useTranslation`; nested `deleteStatus(adh)` swal
 //     (`payments.adhesion.deleteConfirm` + `common:actions.cancel` / `common:actions.delete`),
-//     checkbox `enableLabel`, ReactTable `payments.adhesion.cols.*` headers.
+//     checkbox `enableLabel`, TanStackGrid `payments.adhesion.cols.*` headers.
 //   - AdhesionEditModal — fn `useTranslation`; `<h2>` edit/new title ternary, the three field
 //     `<label>`s, cancel/save buttons, `initialValues.label` default (`modal.defaultLabel`).
 //   - EditPaymentScheduleOptions — fn `useTranslation`; three `<h4>` headings, checkbox label,
@@ -54,31 +54,6 @@ vi.mock("../../../tools/api", () => ({
         c.del = () => c;
         return c;
     },
-}));
-
-// --- react-table stub: surface every column's string `Header` in order, plus render each
-//     column's `Cell` once against `globalThis.__rtRow` so `Cell`-internal i18n (Oui/Non, the
-//     AdhesionSettings trash button -> `deleteStatus`) is reachable without real table data. ---
-vi.mock("react-table", () => ({
-    default: ({ columns = [] }) => (
-        <div data-testid="react-table">
-            {columns.map((col, i) => (
-                <span key={i} data-testid="col-header">
-                    {typeof col.Header === "string" ? col.Header : ""}
-                </span>
-            ))}
-            {columns.map((col, i) =>
-                col.Cell ? (
-                    <span key={`cell-${i}`} data-testid="col-cell">
-                        {col.Cell({
-                            original: globalThis.__rtRow || {},
-                            value: (globalThis.__rtRow || {}).value,
-                        })}
-                    </span>
-                ) : null
-            )}
-        </div>
-    ),
 }));
 
 // --- sweetalert2 stub -----------------------------------------------------------------------
@@ -182,7 +157,6 @@ beforeEach(() => {
     swal.fire.mockImplementation(() => Promise.resolve({}));
     apiState.lastSuccess = null;
     apiState.lastError = null;
-    globalThis.__rtRow = {};
     global.fetch = vi.fn().mockResolvedValue({
         ok: true,
         status: 200,
@@ -194,7 +168,6 @@ beforeEach(() => {
 afterEach(async () => {
     await i18n.changeLanguage("fr");
     vi.clearAllMocks();
-    delete globalThis.__rtRow;
 });
 
 // ============================================================================================
@@ -592,21 +565,22 @@ describe("AdhesionSettings", () => {
     );
 
     test.each(["fr", "en"])(
-        "ReactTable headers + add button are translated in %s",
+        "TanStackGrid headers + add button are translated in %s",
         async (lng) => {
             await i18n.changeLanguage(lng);
             mockFetchEnabled();
-            render(<AdhesionSettings />);
+            const { container } = render(<AdhesionSettings />);
 
             await waitFor(() =>
                 expect(
                     screen.getByText(tP(lng)("payments.adhesion.cols.labels"))
                 ).toBeInTheDocument()
             );
-            const got = screen
-                .getAllByTestId("col-header")
-                .map((el) => el.textContent)
-                .filter(Boolean);
+            // AdhesionSettings renders a real TanStackGrid (docs/Modernization-Roadmap.md item 13)
+            // -- headers are real <th>s, not the old react-table stub's `col-header` spans.
+            const got = [
+                ...container.querySelectorAll("thead tr:first-child th"),
+            ].map((th) => th.textContent);
             expect(got).toEqual(HEADERS[lng]);
 
             // the "add" AdhesionEditModal trigger carries `common:actions.add`
@@ -621,7 +595,6 @@ describe("AdhesionSettings", () => {
         async (lng) => {
             await i18n.changeLanguage(lng);
             mockFetchEnabled();
-            globalThis.__rtRow = { id: 9, label: "Std", built_in: false };
 
             const { container } = render(<AdhesionSettings />);
             await waitFor(() =>
@@ -630,8 +603,24 @@ describe("AdhesionSettings", () => {
                 ).toBeInTheDocument()
             );
 
-            const trash = container.querySelector("button.btn-warning");
-            expect(trash).toBeTruthy();
+            // Feed a real row through the mocked `api.set().success(...)` chain -- the old
+            // react-table stub used to fake this via a directly-invoked `Cell({original:
+            // globalThis.__rtRow})`, bypassing real data flow entirely; the real TanStackGrid
+            // needs an actual row in state to render the trash button.
+            await waitFor(() =>
+                expect(typeof apiState.lastSuccess).toBe("function")
+            );
+            act(() => {
+                apiState.lastSuccess([
+                    { id: 9, label: "Std", price: 5, built_in: false },
+                ]);
+            });
+
+            const trash = await waitFor(() => {
+                const btn = container.querySelector("button.btn-warning");
+                expect(btn).toBeTruthy();
+                return btn;
+            });
             act(() => {
                 trash.click();
             });

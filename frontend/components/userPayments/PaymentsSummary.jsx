@@ -1,7 +1,7 @@
 import React, { Fragment } from "react";
 import { withTranslation } from "react-i18next";
 import _ from "lodash";
-import ReactTable from "react-table";
+import TanStackGrid from "../common/baseDataTable/TanStackGrid";
 import SelectCoupon from "../utils/SelectCoupon";
 import DataService from "../common/baseDataTable/DataService";
 import CouponFormContent from "../parameters/Payments/CouponFormContent";
@@ -615,78 +615,6 @@ class PaymentsSummary extends React.Component {
                     fontSize: "18px",
                     marginBottom: 0,
                 },
-                Footer: (
-                    <span>
-                        <span style={{ fontSize: "16px" }}>
-                            {t("userPayments.summary.footerTotal")}
-                            <strong>
-                                {` ${
-                                    totalDue == null
-                                        ? "--"
-                                        : totalDue.toLocaleString(
-                                              i18n.language,
-                                              {
-                                                  style: "currency",
-                                                  currency: "EUR",
-                                              }
-                                          )
-                                } `}
-                            </strong>
-                        </span>
-                        <br />
-                        <span style={{ fontSize: "16px" }}>
-                            {t("userPayments.summary.footerScheduleTotal")}
-                            <strong>
-                                {` ${
-                                    previsionalTotal == null
-                                        ? "--"
-                                        : previsionalTotal.toLocaleString(
-                                              i18n.language,
-                                              {
-                                                  style: "currency",
-                                                  currency: "EUR",
-                                              }
-                                          )
-                                } `}
-                            </strong>
-                        </span>
-                        <br />
-                        <span style={{ fontSize: "16px" }}>
-                            {t("userPayments.summary.footerPaidToDate")}
-                            <strong>
-                                {` ${
-                                    totalPaymentsToDay == 0 &&
-                                    previsionalTotal == null
-                                        ? "--"
-                                        : totalPaymentsToDay.toLocaleString(
-                                              i18n.language,
-                                              {
-                                                  style: "currency",
-                                                  currency: "EUR",
-                                              }
-                                          )
-                                } `}
-                            </strong>
-                        </span>
-                        <br />
-                        <span style={{ fontSize: "16px" }}>
-                            {t("userPayments.summary.footerBalance")}
-                            <strong>
-                                {` ${
-                                    totalPayments == 0 &&
-                                    previsionalTotal == null
-                                        ? "--"
-                                        : (
-                                              previsionalTotal - totalPayments
-                                          ).toLocaleString(i18n.language, {
-                                              style: "currency",
-                                              currency: "EUR",
-                                          })
-                                } `}
-                            </strong>
-                        </span>
-                    </span>
-                ),
             },
         ];
 
@@ -741,22 +669,99 @@ class PaymentsSummary extends React.Component {
                     </div>
                 </div>
 
-                <ReactTable
+                <TanStackGrid
+                    tableName="payments-summary"
+                    manual={false}
                     data={data}
+                    loading={false}
+                    pages={null}
                     columns={generalColumns}
                     defaultSorted={[{ id: "activity", desc: false }]}
-                    resizable={false}
-                    previousText={t("common:reactTable.previousText")}
-                    nextText={t("common:reactTable.nextText")}
-                    loadingText={t("common:reactTable.loadingText")}
-                    noDataText={t("common:reactTable.noDataText")}
-                    pageText={t("common:reactTable.pageText")}
-                    ofText={t("common:reactTable.ofText")}
-                    rowsText={t("common:reactTable.rowsText")}
+                    // No filter UI existed in the v6 table (no `filterable`/`Filter` set on any
+                    // column); also sidesteps several columns' JSX-valued accessors, which a real
+                    // client-mode filter row would otherwise mishandle.
+                    filterable={false}
                     minRows={1}
                     showPagination={false}
-                    className="-striped whitebg"
+                    // "-striped" (v6's zebra-striping modifier) has no TanStackGrid equivalent
+                    // (dropped elsewhere in this migration too, e.g. AdhesionSettings); "whitebg"
+                    // approximated with an inline background instead of a className, TanStackGrid's
+                    // only styling hook at the table-root level.
+                    style={{ backgroundColor: "white" }}
                 />
+
+                {/* v6's last column had a `Footer` -- TanStackGrid has no table-footer concept
+                    (headless v8 row models don't build one), so the totals are rendered as their
+                    own block below the table instead of inside a <tfoot>. */}
+                <div className="flex flex-end-justified m-t-sm">
+                    <div className="text-right">
+                        <div style={{ fontSize: "16px" }}>
+                            {t("userPayments.summary.footerTotal")}
+                            <strong>
+                                {` ${
+                                    totalDue == null
+                                        ? "--"
+                                        : totalDue.toLocaleString(
+                                              i18n.language,
+                                              {
+                                                  style: "currency",
+                                                  currency: "EUR",
+                                              }
+                                          )
+                                } `}
+                            </strong>
+                        </div>
+                        <div style={{ fontSize: "16px" }}>
+                            {t("userPayments.summary.footerScheduleTotal")}
+                            <strong>
+                                {` ${
+                                    previsionalTotal == null
+                                        ? "--"
+                                        : previsionalTotal.toLocaleString(
+                                              i18n.language,
+                                              {
+                                                  style: "currency",
+                                                  currency: "EUR",
+                                              }
+                                          )
+                                } `}
+                            </strong>
+                        </div>
+                        <div style={{ fontSize: "16px" }}>
+                            {t("userPayments.summary.footerPaidToDate")}
+                            <strong>
+                                {` ${
+                                    totalPaymentsToDay == 0 &&
+                                    previsionalTotal == null
+                                        ? "--"
+                                        : totalPaymentsToDay.toLocaleString(
+                                              i18n.language,
+                                              {
+                                                  style: "currency",
+                                                  currency: "EUR",
+                                              }
+                                          )
+                                } `}
+                            </strong>
+                        </div>
+                        <div style={{ fontSize: "16px" }}>
+                            {t("userPayments.summary.footerBalance")}
+                            <strong>
+                                {` ${
+                                    totalPayments == 0 &&
+                                    previsionalTotal == null
+                                        ? "--"
+                                        : (
+                                              previsionalTotal - totalPayments
+                                          ).toLocaleString(i18n.language, {
+                                              style: "currency",
+                                              currency: "EUR",
+                                          })
+                                } `}
+                            </strong>
+                        </div>
+                    </div>
+                </div>
 
                 <CreateCouponModal
                     component={CouponFormContent}
