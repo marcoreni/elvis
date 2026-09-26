@@ -411,3 +411,91 @@ describe("ActivitiesApplicationsList — pagination clamp (regression)", () => {
         expect(normalized()).not.toContain(tCommon("reactTable.noDataText"));
     });
 });
+
+// ==================================================================================================
+// Regression: fetchData itself re-fetches a stale out-of-range page instead of committing it
+// ==================================================================================================
+//
+// The above test's mock always returns a row regardless of the requested page, so it never actually
+// exercises a real backend's behaviour for an out-of-range page (an empty `applications` array).
+// This reproduces the persisted-stale-page scenario from the bug report directly: `localStorage`
+// holds `filter.page: 2` from a previous session (e.g. rows were deleted elsewhere, shrinking the
+// list to 1 page), `componentDidMount` fetches page 2 first and gets an empty response, and
+// `fetchData` must re-fetch page 0 itself -- landing `this.state.filter.page` at `0`, not just
+// clamping what's displayed -- rather than committing the stale, empty page.
+describe("ActivitiesApplicationsList — fetchData re-fetches a stale out-of-range page (regression)", () => {
+    const FILTER_STORAGE_KEY = "activities_application_list_filters";
+
+    afterEach(() => {
+        localStorage.removeItem(FILTER_STORAGE_KEY);
+    });
+
+    test("mounting on a persisted stale page recovers onto the real last page, not an empty one", async () => {
+        localStorage.setItem(
+            FILTER_STORAGE_KEY,
+            JSON.stringify({
+                page: 2,
+                pageSize: 16,
+                sorted: [{ id: "date", desc: true }],
+                filtered: [],
+                resized: [],
+                expanded: {},
+            })
+        );
+
+        const requestedPages = [];
+        global.fetch = vi.fn((url, options) => {
+            const u = String(url);
+            if (u.includes("/inscriptions/list")) {
+                const { page } = JSON.parse(options.body);
+                requestedPages.push(page);
+                return Promise.resolve({
+                    json: () =>
+                        Promise.resolve(
+                            page >= 1
+                                ? {
+                                      applications: [],
+                                      pages: 1,
+                                      total: 1,
+                                      pending_total: 0,
+                                  }
+                                : {
+                                      applications: [makeRow(1)],
+                                      pages: 1,
+                                      total: 1,
+                                      pending_total: 0,
+                                  }
+                        ),
+                });
+            }
+            return Promise.resolve({
+                ok: true,
+                headers: { get: () => "application/json" },
+                json: () => Promise.resolve({}),
+            });
+        });
+
+        const tCommon = i18n.getFixedT("fr", "common");
+        const pageOf = (page, of) =>
+            `${tCommon("reactTable.pageText")} ${page} ${tCommon(
+                "reactTable.ofText"
+            )} ${of}`;
+
+        const { container } = render(
+            <ActivitiesApplicationsList {...baseProps()} />
+        );
+        const normalized = () => container.textContent.replace(/\s+/g, " ");
+
+        // Wait for the recovered row itself (not just the "Page 1 sur 1" text, which can already
+        // read that way transiently -- `pages` defaults to 0 and `Math.max(getPageCount(), 1)`
+        // floors the "of" count to 1 -- before the second fetch has actually landed).
+        await waitFor(() => expect(requestedPages).toEqual([2, 0]), {
+            timeout: 2000,
+        });
+        await waitFor(() => expect(normalized()).toContain("A1"), {
+            timeout: 2000,
+        });
+        expect(normalized()).toContain(pageOf(1, 1));
+        expect(normalized()).not.toContain(tCommon("reactTable.noDataText"));
+    });
+});

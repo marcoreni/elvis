@@ -708,7 +708,8 @@ class PaymentsSummary extends React.Component {
                     showPagination={false}
                     // "-striped" (v6's zebra-striping modifier) has no TanStackGrid equivalent
                     // (dropped elsewhere in this migration too, e.g. AdhesionSettings); "whitebg"
-                    // approximated with an inline background instead of a className, TanStackGrid's
+                    // is exactly reproduced by the inline background below (matches
+                    // application.scss's `.whitebg { background-color: white; }`), TanStackGrid's
                     // only styling hook at the table-root level.
                     style={{ backgroundColor: "white" }}
                 />

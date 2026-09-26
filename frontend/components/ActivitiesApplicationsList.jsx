@@ -511,6 +511,11 @@ class ActivitiesApplicationsList extends React.Component {
                     return res;
                 })
                 .then((res) => {
+                    if (res.pages > 0 && filter.page >= res.pages) {
+                        this.fetchData({ ...filter, page: res.pages - 1 });
+                        return;
+                    }
+
                     this.setState({
                         ...res,
                         loading: false,
@@ -1226,7 +1231,6 @@ class ActivitiesApplicationsList extends React.Component {
                             totalCount={this.state.total}
                             loading={this.state.loading}
                             columns={filteredColumns}
-                            defaultSorted={[{ id: "date", desc: true }]}
                             pagination={{
                                 pageIndex:
                                     this.state.pages &&
