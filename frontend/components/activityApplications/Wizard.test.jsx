@@ -337,6 +337,62 @@ describe("wizard.applicationSubtitle.full — oneActivity composition", () => {
     });
 });
 
+// ---------------------------------------------------------------------------
+// 4. prepareForActivityChoice — React 18 batching regression
+// ---------------------------------------------------------------------------
+//
+// `prepareForActivityChoice` is called from an async chain (componentDidMount -> api.post(...)
+// .then() -> handleSelectUser -> prepareForActivityChoice), so under React 18's automatic
+// batching, setState calls made inside it don't apply until the whole method returns. The
+// `skipActivityChoice` calculation at the end of the method used to read the just-set
+// `this.state.selectedActivities` back, getting a stale value in the `cycleActivityRefs.length
+// === 1` branch. Exercised directly on the unwrapped prototype (no react-i18next `t`/mount
+// needed) with a fake `setState` that queues updates instead of applying them synchronously --
+// matching React 18's real deferred timing -- and a `flush()` to apply them afterwards, the way
+// React eventually would.
+
+describe("prepareForActivityChoice — skipActivityChoice reflects the real outcome, not stale state", () => {
+    function makeInstance(props, state) {
+        const instance = Object.create(Wizard.WrappedComponent.prototype);
+        instance.props = { activityRefs: [], activityRefsChildhood: [], packs: {}, ...props };
+        instance.state = { selectedActivities: [], ...state };
+        instance.isInAgeRange = () => true;
+        instance._pending = [];
+        instance.setState = function (update) {
+            this._pending.push(update);
+        };
+        instance.flush = function () {
+            this._pending.forEach(update => {
+                const partial = typeof update === "function" ? update(this.state, this.props) : update;
+                this.state = { ...this.state, ...partial };
+            });
+            this._pending = [];
+        };
+        return instance;
+    }
+
+    test("cycleActivityRefs.length === 1 branch: single activity with no packs skips the choice step", () => {
+        const activityRef = { id: 7, activity_type: "instrument", from_age: 0, to_age: 99 };
+        const instance = makeInstance({ activityRefs: [activityRef] });
+
+        instance.prepareForActivityChoice();
+        instance.flush();
+
+        expect(instance.state.selectedActivities).toEqual([7]);
+        expect(instance.state.skipActivityChoice).toBe(true);
+    });
+
+    test("preSelectedActivityId branch: still skips the choice step without the old direct-state-mutation workaround", () => {
+        const instance = makeInstance({ preSelectedActivityId: 42 });
+
+        instance.prepareForActivityChoice();
+        instance.flush();
+
+        expect(instance.state.selectedActivities).toEqual([42]);
+        expect(instance.state.skipActivityChoice).toBe(true);
+    });
+});
+
 describe("wizard.applicationSubtitle — the deliberate leading/trailing spaces are preserved", () => {
     test.each(["fr", "en"])("%s: allActivities has a LEADING space", lng => {
         const t = i18n.getFixedT(lng, NS);

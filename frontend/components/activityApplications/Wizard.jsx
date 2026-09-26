@@ -553,11 +553,17 @@ class Wizard extends React.Component {
                 "activity.activity_ref.activity_type"
             ) !== "child";
 
+        // Effective selectedActivities value tracked through this method: setState (called from
+        // an async chain here, see componentDidMount) defers under React 18's automatic batching,
+        // so the skipActivityChoice calculation below can't rely on reading it back from
+        // this.state -- it must thread through a local variable instead.
+        let selectedActivities = this.state.selectedActivities;
+
         // Pre select current activity (e.g. guitar) for applications with a change
         if (this.state.isApplicationChange) {
             ////////////////////
 
-            this.state.selectedActivities.push(
+            selectedActivities.push(
                 _.get(
                     this.props.preApplicationActivity,
                     "activity.activity_ref_id"
@@ -567,10 +573,8 @@ class Wizard extends React.Component {
 
         // si on a reçu une activité en présélection, on en tient compte
         if (this.props.preSelectedActivityId) {
-            this.setState({
-                selectedActivities: [this.props.preSelectedActivityId],
-            });
-            this.state.selectedActivities = [this.props.preSelectedActivityId];
+            selectedActivities = [this.props.preSelectedActivityId];
+            this.setState({ selectedActivities });
 
             // sinon on regarde si on peut en déduire une
         } else if (cycleActivityRefs.length) {
@@ -582,9 +586,8 @@ class Wizard extends React.Component {
                 ) &&
                 this.isInAgeRange(cycleActivityRefs[0])
             ) {
-                this.setState({
-                    selectedActivities: [cycleActivityRefs[0].id],
-                });
+                selectedActivities = [cycleActivityRefs[0].id];
+                this.setState({ selectedActivities });
             }
 
             // Otherwise split activities between childhood and not
@@ -600,7 +603,7 @@ class Wizard extends React.Component {
 
         this.setState({
             skipActivityChoice:
-                (this.state.selectedActivities.length === 1 &&
+                (selectedActivities.length === 1 &&
                     Object.keys(this.props.packs || {}).length === 0) ||
                 this.state.isApplicationChange,
         });
