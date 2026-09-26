@@ -661,51 +661,48 @@ class ActivitiesApplicationsList extends React.Component {
                 Header: "",
                 id: "selection",
                 width: 25,
-                // Row-click-to-open (see the TanStackGrid getRowProps below) needs this cell to
-                // stop propagation -- v6's per-cell getTdProps excluded this column by id; the
-                // per-row getRowProps this migrated to has no per-cell equivalent.
+                // Row-click-to-open (see the TanStackGrid getRowProps below) must not fire for
+                // this column -- v6's per-cell getTdProps excluded it by id, covering its whole
+                // <td> box. `stopRowClick` (TanStackGrid meta) is the equivalent here: it stops
+                // propagation on the <td> itself, not just on the Cell's own rendered content, so
+                // a click on the cell's padding (not just the checkbox) is covered too.
+                stopRowClick: true,
                 Filter: () => (
-                    <span onClick={(e) => e.stopPropagation()}>
-                        <input
-                            type="checkbox"
-                            checked={
-                                this.state.bulkTargets === "all" ||
-                                (this.state.bulkTargets.length > 0 &&
-                                    this.state.bulkTargets.length ===
-                                        this.state.data.length)
+                    <input
+                        type="checkbox"
+                        checked={
+                            this.state.bulkTargets === "all" ||
+                            (this.state.bulkTargets.length > 0 &&
+                                this.state.bulkTargets.length ===
+                                    this.state.data.length)
+                        }
+                        onChange={(e) => {
+                            if (e.target.checked) {
+                                this.setState({
+                                    bulkTargets: this.state.data.map(
+                                        (r) => r.id
+                                    ),
+                                });
+                            } else {
+                                this.setState({ bulkTargets: [] });
                             }
-                            onChange={(e) => {
-                                if (e.target.checked) {
-                                    this.setState({
-                                        bulkTargets: this.state.data.map(
-                                            (r) => r.id
-                                        ),
-                                    });
-                                } else {
-                                    this.setState({ bulkTargets: [] });
-                                }
-                            }}
-                        />
-                    </span>
+                        }}
+                    />
                 ),
                 Cell: (props) => (
-                    <span onClick={(e) => e.stopPropagation()}>
-                        <input
-                            type="checkbox"
-                            checked={
-                                this.state.bulkTargets === "all" ||
-                                this.state.bulkTargets.includes(
-                                    props.original.id
-                                )
-                            }
-                            onChange={(e) =>
-                                this.updateBulkTarget(
-                                    props.original.id,
-                                    e.target.checked
-                                )
-                            }
-                        />
-                    </span>
+                    <input
+                        type="checkbox"
+                        checked={
+                            this.state.bulkTargets === "all" ||
+                            this.state.bulkTargets.includes(props.original.id)
+                        }
+                        onChange={(e) =>
+                            this.updateBulkTarget(
+                                props.original.id,
+                                e.target.checked
+                            )
+                        }
+                    />
                 ),
             },
             {
@@ -739,20 +736,13 @@ class ActivitiesApplicationsList extends React.Component {
                 id: "name",
                 Header: t("activityApplications:list.columns.name"),
                 width: 175,
-                accessor: (d) => (
-                    <UserWithInfos userId={d.user_id}>
-                        {`${d.user.first_name} ${d.user.last_name}`}
-                    </UserWithInfos>
-                ),
-                // Wrapped so the row-click-to-open handler (getRowProps below) doesn't also fire
-                // when the user meant to open UserWithInfos's own popover -- same reasoning as the
-                // "selection" column above.
+                // Row-click-to-open (getRowProps below) must not fire when the user meant to open
+                // UserWithInfos's own popover -- see the "selection" column's stopRowClick above.
+                stopRowClick: true,
                 Cell: (props) => (
-                    <span onClick={(e) => e.stopPropagation()}>
-                        <UserWithInfos userId={props.original.user_id}>
-                            {`${props.original.user.first_name} ${props.original.user.last_name}`}
-                        </UserWithInfos>
-                    </span>
+                    <UserWithInfos userId={props.original.user_id}>
+                        {`${props.original.user.first_name} ${props.original.user.last_name}`}
+                    </UserWithInfos>
                 ),
             },
             {
@@ -1268,8 +1258,10 @@ class ActivitiesApplicationsList extends React.Component {
                             // v6's per-cell getTdProps (open the application in a new tab on any
                             // cell except "selection"/"name") has no TanStackGrid equivalent --
                             // only a per-row hook exists. Same effect: attach the open-on-click to
-                            // the row, and stop propagation from the two excluded cells' own
-                            // content (see their Cell/Filter above) instead of scoping by column id.
+                            // the row, and scope the exclusion back to those two columns via
+                            // their own `stopRowClick: true` (see their definitions above), which
+                            // stops propagation at the `<td>` itself -- matching v6's per-column
+                            // `<td>` exclusion, padding included.
                             getRowProps={(original) => ({
                                 onClick: () =>
                                     window.open(`/inscriptions/${original.id}`),

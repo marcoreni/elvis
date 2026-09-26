@@ -207,6 +207,12 @@ class PaymentsSummary extends React.Component {
             {
                 Header: t("userPayments.summary.columns.activity"),
                 id: "activity",
+                // Accessor returns JSX (see below) -- TanStack's default `sortingFns.basic`
+                // treats every row's value as an unequal object and returns -1 for every
+                // comparison, which fully reverses the array instead of the insertion-order
+                // no-op v6 gave this column (v6's own comparator returned 0 for objects, with a
+                // stable index-based tiebreak).
+                sortable: false,
                 accessor: (d) => {
                     return (
                         <div>
@@ -254,6 +260,8 @@ class PaymentsSummary extends React.Component {
             {
                 Header: t("userPayments.summary.columns.formula"),
                 id: "formula",
+                // JSX-valued accessor -- see the "activity" column's comment above.
+                sortable: false,
                 accessor: (d) => {
                     return (
                         <div>
@@ -293,6 +301,8 @@ class PaymentsSummary extends React.Component {
             {
                 Header: t("userPayments.summary.columns.student"),
                 id: "student",
+                // JSX-valued accessor -- see the "activity" column's comment above.
+                sortable: false,
                 accessor: (d) =>
                     d.user ? (
                         <a href={`/users/${d.user.id}`}>
@@ -448,6 +458,8 @@ class PaymentsSummary extends React.Component {
                 Header: t("userPayments.summary.columns.unitPrice"),
                 id: "unitPrice",
                 maxWidth: 75,
+                // JSX-valued accessor -- see the "activity" column's comment above.
+                sortable: false,
                 accessor: (d) => <p>{d.unitPrice + " €"}</p>,
                 style: {
                     textAlign: "right",
@@ -524,6 +536,8 @@ class PaymentsSummary extends React.Component {
                 Header: t("userPayments.summary.columns.totalAmount"),
                 id: "initial_total",
                 maxWidth: 150,
+                // JSX-valued accessor -- see the "activity" column's comment above.
+                sortable: false,
                 accessor: (d) => {
                     let prorataTotal = 0;
                     if (d.id === 0 || d.due_total >= 0) {
@@ -599,6 +613,8 @@ class PaymentsSummary extends React.Component {
                 Header: t("userPayments.summary.columns.discountedTotal"),
                 id: "discounted total",
                 maxWidth: 150,
+                // JSX-valued accessor -- see the "activity" column's comment above.
+                sortable: false,
                 accessor: (d) => {
                     return (
                         <p>
@@ -676,7 +692,14 @@ class PaymentsSummary extends React.Component {
                     loading={false}
                     pages={null}
                     columns={generalColumns}
-                    defaultSorted={[{ id: "activity", desc: false }]}
+                    // No default sort here -- restores v6's actual behavior. v6's
+                    // `defaultSorted={[{ id: "activity", desc: false }]}` was always a no-op:
+                    // the "activity" column's accessor returns JSX, and v6's default comparator
+                    // treated distinct objects as equal (returning 0), falling back to a stable
+                    // index-based tiebreak that preserved insertion order. TanStack's default
+                    // `sortingFns.basic` instead returns -1 for every such comparison, which
+                    // would fully reverse the array -- so keeping `defaultSorted` here would be
+                    // a real (and wrong) default sort, not a no-op.
                     // No filter UI existed in the v6 table (no `filterable`/`Filter` set on any
                     // column); also sidesteps several columns' JSX-valued accessors, which a real
                     // client-mode filter row would otherwise mishandle.

@@ -34,6 +34,12 @@ declare module "@tanstack/react-table" {
          * so header scope is deliberately not replicated here. */
         style?: React.CSSProperties;
         className?: string;
+        /** v6's per-`<td>` `getTdProps` scoping (e.g. excluding one column from a row-wide
+         * click handler) has no per-cell TanStackGrid equivalent otherwise -- only a per-row
+         * `getRowProps` hook exists. When true, stops click propagation at this column's `<td>`
+         * itself (composed with, not replacing, the `<td>`'s own style/className), covering the
+         * cell's full box (padding included), not just whatever content its `Cell` renders. */
+        stopRowClick?: boolean;
     }
 }
 
@@ -86,6 +92,9 @@ export interface LegacyColumn<TRow = any> {
      * scope -- see the ColumnMeta augmentation above). */
     style?: React.CSSProperties;
     className?: string;
+    /** Stops a row-wide click handler (`getRowProps`) from firing when this column's `<td>` is
+     * clicked -- see the `ColumnMeta.stopRowClick` augmentation above. */
+    stopRowClick?: boolean;
 }
 
 // ColumnDef's own type is a discriminated union keyed on how a column identifies itself
@@ -106,6 +115,7 @@ interface MutableColumnDef {
         Filter?: LegacyColumnFilterRenderer;
         style?: React.CSSProperties;
         className?: string;
+        stopRowClick?: boolean;
     };
 }
 
@@ -160,12 +170,19 @@ function toTanStackColumn<TRow>(column: LegacyColumn<TRow>): ColumnDef<TRow> {
             (ctx.getValue() as React.ReactNode) ?? null;
     }
 
-    if (column.width || column.Filter || column.style || column.className) {
+    if (
+        column.width ||
+        column.Filter ||
+        column.style ||
+        column.className ||
+        column.stopRowClick
+    ) {
         tanstackColumn.meta = {
             width: column.width,
             Filter: column.Filter,
             style: column.style,
             className: column.className,
+            stopRowClick: column.stopRowClick,
         };
     }
 
@@ -725,6 +742,14 @@ export default function TanStackGrid<TRow = any>({
                                                             cell.column
                                                                 .columnDef.meta
                                                                 ?.className
+                                                        }
+                                                        onClick={
+                                                            cell.column
+                                                                .columnDef.meta
+                                                                ?.stopRowClick
+                                                                ? (e) =>
+                                                                      e.stopPropagation()
+                                                                : undefined
                                                         }
                                                     >
                                                         {flexRender(

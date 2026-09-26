@@ -269,13 +269,18 @@ describe("ActivitiesApplicationsList — selection checkboxes stay fully control
 });
 
 // ==================================================================================================
-// Regression: row-click-to-open, replicated via getRowProps + per-cell stopPropagation
+// Regression: row-click-to-open, replicated via getRowProps + per-column stopRowClick
 // ==================================================================================================
 //
 // v6's per-cell `getTdProps` excluded the "selection" and "name" columns from the row's
-// open-in-a-new-tab click handler by column id. TanStackGrid only exposes a per-ROW hook
-// (`getRowProps`), so the migration attaches `onClick={() => window.open(...)}` to the row and
-// calls `e.stopPropagation()` from inside those two cells' own content instead.
+// open-in-a-new-tab click handler for their whole `<td>` box, padding included. TanStackGrid only
+// exposes a per-ROW hook (`getRowProps`), so the migration attaches
+// `onClick={() => window.open(...)}` to the row and sets `stopRowClick: true` on those two
+// columns, which makes TanStackGrid itself attach `onClick={(e) => e.stopPropagation()}` directly
+// to their `<td>` elements -- covering the raw `<td>` (its padding included), not just whatever
+// element the column's own `Cell` renders inside it (an earlier version of this fix stopped
+// propagation from a `<span>` wrapping the Cell's content, which left the `<td>`'s own padding
+// unguarded).
 describe("ActivitiesApplicationsList — row click opens the application, excluding selection & name cells (regression)", () => {
     let originalOpen;
 
@@ -317,6 +322,17 @@ describe("ActivitiesApplicationsList — row click opens the application, exclud
         window.open.mockClear();
 
         await userEvent.click(cells[4].querySelector("a"));
+        expect(window.open).not.toHaveBeenCalled();
+        window.open.mockClear();
+
+        // The raw <td> itself (its padding, not the checkbox/link inside it) must also be
+        // excluded -- this is what the stopRowClick fix covers that a Cell-content-only
+        // stopPropagation span didn't.
+        await userEvent.click(cells[0]);
+        expect(window.open).not.toHaveBeenCalled();
+        window.open.mockClear();
+
+        await userEvent.click(cells[4]);
         expect(window.open).not.toHaveBeenCalled();
     });
 });

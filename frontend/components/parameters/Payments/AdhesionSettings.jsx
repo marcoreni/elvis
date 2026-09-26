@@ -20,6 +20,23 @@ export default function AdhesionSettings() {
         pageSize: 10,
     });
 
+    // TanStackGrid's own auto-reset only covers filter changes (see its `handleColumnFiltersChange`),
+    // not a shrinking `data` array -- a non-manual, pagination-controlled table like this one (see
+    // Activity.jsx's clampPageIndex / DuePaymentList.jsx for the same class of fix) needs its own
+    // clamp: deleting a row can drop the page count below the current pageIndex, otherwise stranding
+    // the view on an out-of-range, empty "no data" page.
+    useEffect(() => {
+        setPagination((prev) => {
+            const maxPageIndex = Math.max(
+                0,
+                Math.ceil(adhesionPrices.length / prev.pageSize) - 1
+            );
+            return prev.pageIndex > maxPageIndex
+                ? { ...prev, pageIndex: maxPageIndex }
+                : prev;
+        });
+    }, [adhesionPrices]);
+
     useEffect(() => {
         fetch(`/parameters/payment_parameters/show_adhesion`, {
             method: "POST",
