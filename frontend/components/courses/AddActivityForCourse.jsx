@@ -39,7 +39,6 @@ export default class AddActivityForCourse extends React.Component {
                     };
                 });
                 this.setState({
-                    ...this.state,
                     activityRefKinds: data,
                     activityRefKindOptions: activityRefKindOptions,
                 });
@@ -57,7 +56,6 @@ export default class AddActivityForCourse extends React.Component {
                     };
                 });
                 this.setState({
-                    ...this.state,
                     activityRefs: data,
                     activityRefOptions: activityRefOptions,
                 });
@@ -65,7 +63,7 @@ export default class AddActivityForCourse extends React.Component {
                 if (activityRefOptions.length == 1) {
                     const activityRefId = activityRefOptions[0].value.toString();
                     this.setState({ activityRefId: activityRefId });
-                    this.handleChange(activityRefId);
+                    this.handleChange({ activityRefId }, data);
                 }
             }
         });
@@ -79,10 +77,10 @@ export default class AddActivityForCourse extends React.Component {
         return true;
     }
 
-    handleChange(newValues) {
+    handleChange(newValues, activityRefs = this.state.activityRefs) {
         const update = { ...this.state, ...newValues };
 
-        let selectedActivityRef = this.state.activityRefs.find(
+        let selectedActivityRef = activityRefs.find(
             activityRef => activityRef.id == update.activityRefId
         );
 
@@ -93,7 +91,11 @@ export default class AddActivityForCourse extends React.Component {
                 : undefined,
         };
 
-        this.setState(update);
+        // Only push the fields that actually changed (not the full `update` snapshot): this can
+        // run concurrently with the sibling /activity_ref_kinds and /activity_ref componentDidMount
+        // fetches under React 18 automatic batching, and setState-ing a full `...this.state` spread
+        // captured before those siblings' updates land would clobber them.
+        this.setState({ ...newValues, summary: update.summary });
 
         if (selectedActivityRef) {
             this.props.onChange({
@@ -101,7 +103,7 @@ export default class AddActivityForCourse extends React.Component {
                     id: selectedActivityRef.id,
                     label: selectedActivityRef.label,
                 },
-                activityRefKind: this.state.activityRefKindId,
+                activityRefKind: update.activityRefKindId,
                 summary: { ...update.summary },
             });
         }

@@ -27,14 +27,14 @@ export default class AddLocationForCourse extends React.Component {
                 console.log(error);
             } else {
                 const locationOptions = data.map(location => ({ label: location.label, value: location.id }));
+                const locationId = this.state.locationId || ((data || []).at(0) || {}).id;
 
                 this.setState({
-                    ...this.state,
                     locationOptions: locationOptions,
-                    locationId: this.state.locationId || ((data || []).at(0) || {}).id
+                    locationId: locationId
                 });
 
-                this.handleChange({locationId: this.state.locationId})
+                this.handleChange({ locationId: locationId }, { locationOptions });
             }
         });
 
@@ -51,30 +51,32 @@ export default class AddLocationForCourse extends React.Component {
             if (error) {
                 console.log(error);
             } else {
+                const roomsOptions = data.map(room => ({ label: room.label, value: room.id }));
+                const roomId = this.state.roomId || ((data || []).at(0) || {}).id;
+
                 this.setState({
-                    ...this.state,
                     rooms: data,
-                    roomsOptions: data.map(room => ({ label: room.label, value: room.id })),
-                    roomId: this.state.roomId || ((data || []).at(0) || {}).id
+                    roomsOptions: roomsOptions,
+                    roomId: roomId
                 });
 
-                this.handleChange({roomId: this.state.roomId, locationId: this.state.locationId})
+                this.handleChange({ roomId: roomId, locationId: this.state.locationId }, { rooms: data });
             }
         });
     }
 
-    handleChange(newValues) {
+    handleChange(newValues, { rooms = this.state.rooms, locationOptions = this.state.locationOptions } = {}) {
         const update = { ...this.state, ...newValues };
 
         let selectedRoom;
-        if (this.state.rooms && update.roomId) {
-            selectedRoom = this.state.rooms.find(room => update.roomId === room.id);
+        if (rooms && update.roomId) {
+            selectedRoom = rooms.find(room => update.roomId === room.id);
 
         }
 
         let selectedLocation;
-        if (this.state.locationOptions && update.locationId) {
-            selectedLocation = this.state.locationOptions.find(
+        if (locationOptions && update.locationId) {
+            selectedLocation = locationOptions.find(
                 location => location.value === update.locationId
             );
         }
@@ -85,7 +87,11 @@ export default class AddLocationForCourse extends React.Component {
             room: selectedRoom ? selectedRoom.label : undefined,
         };
 
-        this.setState(update);
+        // Only push the fields that actually changed (not the full `update` snapshot): this can
+        // run concurrently with the sibling /locations and /rooms componentDidMount fetches under
+        // React 18 automatic batching, and setState-ing a full `...this.state` spread captured
+        // before those siblings' updates land would clobber them.
+        this.setState({ ...newValues, summary: update.summary });
 
         this.props.onChange({
             room: {

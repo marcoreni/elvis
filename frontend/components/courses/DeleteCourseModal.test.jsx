@@ -119,7 +119,15 @@ describe("DeleteCourseModal — i18n", () => {
     test("submitting 'delete all' with nothing deletable swals the translated warning", async () => {
         await i18n.changeLanguage("fr");
         render(<DeleteCourseModal {...makeProps()} />);
+
+        // `global.fetch` is called synchronously at mount, so waiting on it alone resolves
+        // before the fetch's promise chain (fetch -> handleResponse -> json() -> component
+        // setState) actually completes -- and under React 18's automatic batching that setState
+        // is deferred further still. Flush the pending microtasks/macrotasks so the mount fetch
+        // has genuinely finished before submitting, matching how a real user would only click
+        // "Valider" once the modal finished loading.
         await waitFor(() => expect(global.fetch).toHaveBeenCalled());
+        await new Promise((resolve) => setTimeout(resolve, 0));
 
         fireEvent.click(
             screen.getByText("Supprimer toutes les récurrences de ce cours.")

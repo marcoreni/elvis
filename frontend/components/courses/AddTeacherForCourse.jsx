@@ -28,24 +28,22 @@ export default class AddTeacherForCourse extends React.Component {
                 if (error) {
                     console.log(error);
                 } else {
-                    this.setState({ ...this.state, teachers: data });
+                    this.setState({ teachers: data });
                 }
                 if (data.length > 0) {
                     if (this.state.summary.teacher) {
                         const teacher = { ...this.state.summary.teacher, id: this.state.teacherId };
                         this.setState({
-                            ...this.state,
                             teacherId: teacher.id,
                             summary: {
                                 ...this.state.summary,
                                 teacher,
                             },
                         });
-                        this.handleChange(teacher.id);
+                        this.handleChange(teacher.id, data);
                     } else {
                         const teacher = data[0];
                         this.setState({
-                            ...this.state,
                             teacherId: teacher.id,
                             summary: {
                                 ...this.state.summary,
@@ -56,7 +54,7 @@ export default class AddTeacherForCourse extends React.Component {
                                 },
                             },
                         });
-                        this.handleChange(teacher.id);
+                        this.handleChange(teacher.id, data);
                     }
                 }
             });
@@ -72,24 +70,24 @@ export default class AddTeacherForCourse extends React.Component {
         return true;
     }
 
-    handleChange(value) {
-        let selected = this.state.teachers.find(teacher => value == teacher.id);
+    handleChange(value, teachers = this.state.teachers) {
+        let selected = teachers.find(teacher => value == teacher.id);
 
         if (selected)
         {
             // set data before call api for instant display without message
+            const summary = {
+                ...this.state.summary,
+                teacher: {
+                    id: selected.id,
+                    last_name: selected.last_name,
+                    first_name: selected.first_name,
+                },
+            };
             this.setState({
-                ...this.state,
                 teacherId: selected.id,
                 selectedTeacher: selected,
-                summary: {
-                    ...this.state.summary,
-                    teacher: {
-                        id: selected.id,
-                        last_name: selected.last_name,
-                        first_name: selected.first_name,
-                    },
-                },
+                summary,
             });
             this.props.onChange({
                 teacher: {
@@ -97,7 +95,7 @@ export default class AddTeacherForCourse extends React.Component {
                     last_name: selected.last_name,
                     first_name: selected.first_name,
                 },
-                summary: this.state.summary,
+                summary,
             });
 
             api.get(`/teachers/${selected.id}/with_overlap?startTime=${this.props.initialValues.firstDayStartTime}&endTime=${this.props.initialValues.firstDayEndTime}&fromDate=${this.props.initialValues.fromDate}&toDate=${this.props.initialValues.toDate}&recurrence=1`)
@@ -108,18 +106,18 @@ export default class AddTeacherForCourse extends React.Component {
                 } else {
                     if (data.length != 0)
                     {
+                        const overlapSummary = {
+                            ...this.state.summary,
+                            teacher: {
+                                id: data.id,
+                                last_name: data.last_name,
+                                first_name: data.first_name,
+                            },
+                        };
                         this.setState({
-                            ...this.state,
                             teacherId: data.id,
                             selectedTeacher: data,
-                            summary: {
-                                ...this.state.summary,
-                                teacher: {
-                                    id: data.id,
-                                    last_name: data.last_name,
-                                    first_name: data.first_name,
-                                },
-                            },
+                            summary: overlapSummary,
                         });
                         this.props.onChange({
                             teacher: {
@@ -127,14 +125,7 @@ export default class AddTeacherForCourse extends React.Component {
                                 last_name: data.last_name,
                                 first_name: data.first_name,
                             },
-                            summary: {
-                                ...this.state.summary,
-                                teacher: {
-                                    id: data.id,
-                                    last_name: data.last_name,
-                                    first_name: data.first_name,
-                                },
-                            }
+                            summary: overlapSummary,
                         });
                     }
                 }

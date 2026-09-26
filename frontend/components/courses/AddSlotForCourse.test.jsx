@@ -111,9 +111,14 @@ test("the 'add season' + button is a relative link, not the server-supplied href
     const {container} = render(
         <AddSlotForCourse {...makeProps()} href_path="http://127.0.0.1:3000" />
     );
-    await waitFor(() => expect(global.fetch).toHaveBeenCalled());
 
-    const plusLink = container.querySelector("a.fa-plus-circle");
-    expect(plusLink).not.toBeNull();
+    // React 18 defers the componentDidMount fetch's setState (automatic batching), so waiting on
+    // the fetch call alone is not enough -- wait for the season <select> (and its "+" link) to
+    // actually be in the DOM.
+    const plusLink = await waitFor(() => {
+        const link = container.querySelector("a.fa-plus-circle");
+        expect(link).not.toBeNull();
+        return link;
+    });
     expect(plusLink.getAttribute("href")).toBe("/seasons/new");
 });
