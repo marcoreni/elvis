@@ -30,6 +30,7 @@
 
 import React from "react";
 import { render, screen, waitFor, act } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { Form } from "react-final-form";
 import i18n from "../../../i18n";
 import fr from "../../../locales/fr/parameters.json";
@@ -706,6 +707,71 @@ describe("AdhesionSettings", () => {
             expect(errCall[0]).not.toHaveProperty("type");
         }
     );
+
+    // Regression: the `pagination` clamp effect (AdhesionSettings.jsx ~line 23-38), added
+    // alongside the TanStackGrid migration -- deleting the last row on the final page must not
+    // strand the view on a now-empty out-of-range page (same class of fix as Activity.jsx's
+    // clampPageIndex / DuePaymentList.jsx).
+    test("deleting the last row on the final page clamps pagination back to a valid page", async () => {
+        mockFetchEnabled();
+
+        render(<AdhesionSettings />);
+        await waitFor(() =>
+            expect(
+                screen.getByText(tP("fr")("payments.adhesion.cols.labels"))
+            ).toBeInTheDocument()
+        );
+        await waitFor(() =>
+            expect(typeof apiState.lastSuccess).toBe("function")
+        );
+
+        // 11 rows at the default pageSize (10) span 2 pages.
+        const rows = Array.from({ length: 11 }, (_, i) => ({
+            id: i + 1,
+            label: `Adh ${i + 1}`,
+            price: 10,
+            built_in: false,
+        }));
+        act(() => {
+            apiState.lastSuccess(rows);
+        });
+
+        await waitFor(() =>
+            expect(screen.getByText("Page 1 sur 2")).toBeInTheDocument()
+        );
+        await userEvent.click(screen.getByRole("button", { name: "Suivant" }));
+        await waitFor(() =>
+            expect(screen.getByText("Page 2 sur 2")).toBeInTheDocument()
+        );
+
+        // Delete the single row stranded on that last page.
+        swal.fire.mockImplementation(() =>
+            Promise.resolve({ isConfirmed: true })
+        );
+        const successBeforeDelete = apiState.lastSuccess;
+        const trash = document.querySelector("button.btn-warning");
+        expect(trash).toBeTruthy();
+        await userEvent.click(trash);
+
+        // deleteStatus's own `api.set()` call replaces the captured success callback with the
+        // delete's own -- wait for that swap before firing it, simulating the DELETE resolving.
+        await waitFor(() =>
+            expect(apiState.lastSuccess).not.toBe(successBeforeDelete)
+        );
+        act(() => {
+            apiState.lastSuccess({ id: 11 });
+        });
+
+        // 10 remaining rows / pageSize 10 = 1 page: the clamp effect must bring pageIndex back
+        // from 1 to 0 instead of stranding the view on the now-empty page 2.
+        await waitFor(() =>
+            expect(screen.getByText("Page 1 sur 1")).toBeInTheDocument()
+        );
+        expect(screen.queryByText("Aucune donnée")).not.toBeInTheDocument();
+        expect(document.querySelectorAll("tbody tr td").length).toBeGreaterThan(
+            0
+        );
+    });
 });
 
 // ============================================================================================
