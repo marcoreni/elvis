@@ -308,3 +308,53 @@ correctness bug (downgraded from an earlier, incorrect diagnosis that this churn
 mutating a shared array in place; fixed at the source in batch 3). Fix, if ever worth it: memoize
 `columns`/`dataService` on whatever they actually depend on instead of rebuilding them inline.
 
+## `Planning.jsx`'s remove-student handlers throw `ReferenceError: int is not defined`
+
+`handleRemoveStudent`/`handleRemoveOptionalStudent` (`frontend/components/planning/Planning.jsx`,
+~line 255-290) both do, in their DELETE response handler:
+```js
+const interval = activity.time_interval;
+// let [int] = TimeIntervalHelpers.momentify([interval]);
+int.activity = activity;
+```
+`int` is never declared — a leftover from a commented-out line. Every call throws immediately,
+before the rest of the handler (removing the student from `selectedIntervals`) ever runs. Found
+during the React 18 batching audit (2026-09-26); confirmed pre-existing and unrelated to that bump
+(no `git blame` connection to any recent change). Fix: restore the commented-out
+`TimeIntervalHelpers.momentify` call (or determine whether `interval` itself already has what's
+needed and drop the `int.activity = activity` line entirely — check what `selectedIntervals[index]`
+is actually expected to look like downstream before choosing).
+
+## `scripts/mergeUsers/UserSearch.jsx`'s search trigger is off by one keystroke
+
+`handleChange` (~line 49-61) calls `this.setState({[evt.target.name]: evt.target.value, ...})` and
+immediately checks `this.state.first_name.length >= 2 || this.state.last_name.length >= 2` to decide
+whether to fire the debounced search — reading the state synchronously right after setting it has
+always been stale in a plain event handler (batched even under React 17, so this is not a React 18
+regression), meaning the 2nd typed character never triggers a search; the 3rd does. Low impact (a
+one-keystroke delay, not a crash), found during the React 18 batching audit while looking for a
+different, related bug class. Fix: read `evt.target.value` directly for the length check instead of
+`this.state`.
+
+## `ConsentDocumentsList.jsx`'s delete replaces the whole list with garbage
+
+`deleteDocument` (`frontend/components/parameters/ActivityApplications/ConsentDocumentsList.jsx`,
+~line 39-51) does `setDocuments(documents.splice(index, index))` after a successful delete.
+`Array.prototype.splice(start, deleteCount)` called this way removes `index` elements starting at
+`index` (not just the one target document) AND **returns the removed elements**, not the remainder —
+so this sets the document list to whatever got spliced out, not the correctly-filtered remaining
+list. Found during the React 18 batching audit; pre-existing, unrelated to that bump. Fix:
+`setDocuments(documents.filter((doc) => doc.id !== documentId))` (immutable, no accidental
+mutation of the `documents` state array either).
+
+## `ActivityDetailsModal.jsx`'s `handleEditActivityInstance()` method is dead code
+
+`frontend/components/planning/ActivityDetailsModal.jsx` (~line 638-646) defines a class method
+`handleEditActivityInstance()`, but nothing in the file ever calls `this.handleEditActivityInstance`
+— every actual call site invokes `this.props.handleEditActivityInstance` instead, a completely
+different function passed down from the parent. Found during the React 18 batching audit (the
+method itself looked superficially like a stale-`this.state`-read bug, but turned out unreachable
+so it doesn't matter either way). Not deleted here — small, isolated, zero risk either way; delete
+next time this file is touched for something else, after confirming with a fresh grep that it's
+still unreferenced.
+
