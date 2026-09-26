@@ -29,8 +29,6 @@
 
 @import "../inspinia/css/select2.min.css";
 
-@import "react-table/react-table.css";
-
 @import 'react-toastify/dist/ReactToastify.css';
 @import '../components/yearly-calendar-style.css';
 
@@ -401,41 +399,6 @@ body {
             ;
         }
     }
-}
-
-/* ========================================================================== */
-/* ReactTable */
-/* ========================================================================== */
-
-.ReactTable .rt-thead .rt-th.-sort-asc,
-.ReactTable .rt-thead .rt-td.-sort-asc {
-    box-shadow: inset 0 3px 0 0 $red;
-}
-
-.ReactTable .rt-thead .rt-th.-sort-desc,
-.ReactTable .rt-thead .rt-td.-sort-desc {
-    box-shadow: inset 0 -3px 0 0 $red;
-}
-
-.ReactTable .rt-tr .rt-td {
-    white-space: normal;
-
-    .btn-wrapper {
-        margin-bottom: -10px;
-    }
-}
-
-.ReactTable .rt-tr:hover .rt-td {
-    background-color: #ececec;
-    //cursor: pointer;
-}
-
-.ReactTable .badge {
-    align-self: flex-start;
-}
-
-.rt-thead.-filters .rt-th {
-    overflow: unset;
 }
 
 /* ========================================================================== */
