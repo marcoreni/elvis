@@ -119,7 +119,7 @@ legacy string refs). Caught and fixed 2 real behavior regressions against upstre
 new tests. `react-stepzilla` fully removed from `package.json`/`yarn.lock`. `KnownIssues.md`'s
 "Exotic dependencies" section (its last entry) removed.
 
-## 13. `react-table` v6 → TanStack Table — batches 1-4d + Activity.jsx merged; 3 files missed by the original scope still remain
+## 13. `react-table` v6 → TanStack Table — batches 1-4d + Activity.jsx merged; final 3-file batch migrated + reviewed, not yet merged
 
 `react-table@^6.8.0` (peer dep `react: ^16.x.x` — doesn't even officially claim React 17 support,
 same pattern as `react-loader-spinner`, item in the "Frontend dependencies" KnownIssues entry) is 4
@@ -511,23 +511,29 @@ was already peer-dep-unverified past React 16 anyway.
      of exact match, and a missing rows-per-page selector. Verified: `vitest run` (1385 tests, was
      1376 pre-batch), `tsc --noEmit` clean, live-checked on `/inscriptions/1` (dev DB) — row
      expansion and the day filter's value-retention fix both confirmed working.
-  7. **Not started — 3 files never included in any batch's file list, found late.** `docs`/
-     `git grep -rl 'from "react-table"' frontend/components/` (run 2026-09-25, right after #130
-     merged, when the user asked why `react-table` still had active references) shows:
-     `ActivitiesApplicationsList.jsx` (1369 lines, server-paginated via `manual`, several `Filter`/
-     `Cell` definitions — similar shape to batch 4b), `parameters/Payments/AdhesionSettings.jsx` (256
-     lines, only 2 `Cell`s, no `Filter`/`manual` visible — looks simple), `userPayments/
-     PaymentsSummary.jsx` (773 lines, 3 `Cell`s, `resizable={false}`, no `manual`/`onFetchData`
-     visible — looks client-mode, similar shape to batch 4a/4c). **How this was missed**: none of
-     these 3 ever appeared in item 13's original "26 files import react-table directly" scope count
-     (batch 1, 2026-09-16) or in any later batch's file list. They surfaced exactly once — a
-     `code-reviewer` pass during batch 4d independently verified "exactly four files still import
-     v6" (these 3 plus `Activity.jsx`, which *was* then migrated in #130) while confirming a
-     different, narrower claim (that they were correctly out of scope for *that specific diff*).
-     That confirmation was true and correctly reported at the time, but it was never escalated into
-     "these need their own future batch" — the roadmap kept treating `Activity.jsx` as "the last
-     file" without re-deriving that claim against an actual grep. Not yet scoped into an actual
-     batch (columns, features, complexity) — do that before starting, same as every batch before it.
+  7. **Migrated + code-reviewed, not yet merged** — `feat/tanstack-table-final-3-files` (2 commits
+     on top of `develop`), covering the 3 files never included in any earlier batch's file list:
+     `ActivitiesApplicationsList.jsx` (`manual` server-paginated, controlled pagination/sorting/
+     columnFilters, matching batch 4b/4c's pattern), `parameters/Payments/AdhesionSettings.jsx`
+     (`manual={false}`, `filterable={false}`, controlled pagination), `userPayments/
+     PaymentsSummary.jsx` (`manual={false}`, `filterable={false}`, v6's `Footer` render prop moved
+     to a sibling block after `<TanStackGrid>`). **How these 3 were missed originally**: none ever
+     appeared in item 13's original "26 files import react-table directly" scope count (batch 1,
+     2026-09-16); they surfaced once, as a side-effect of a batch 4d review confirming a narrower
+     claim ("out of scope for *this diff*"), which was never escalated into its own future batch —
+     see `feedback-verify-completeness-not-batch-tally` (memory). A `code-reviewer` pass on this
+     branch found and all fixes are now applied: (1) HIGH — `PaymentsSummary.jsx` reversed every
+     row's order, because `defaultSorted` on a JSX-valued accessor column, a no-op under v6, became
+     a real (and wrong) sort under TanStack's real client-side row model; fixed by dropping
+     `defaultSorted` and setting `sortable: false` on every JSX-accessor column. (2) MEDIUM —
+     `ActivitiesApplicationsList.jsx`'s row-click-to-open exclusion only stopped propagation from a
+     cell's inner content, not its `<td>`'s own padding; fixed with a new `stopRowClick` `meta` flag
+     on `TanStackGrid.tsx` that stops propagation at the `<td>` itself. (3) LOW-MEDIUM — added a
+     page-index clamp to `AdhesionSettings.jsx` (same bug class as `Activity.jsx`/
+     `DuePaymentList.jsx`). (4) LOW — restored `PaymentsSummary.test.jsx`'s pre-existing
+     `ItemFormModal` translation-coverage test, dropped by an earlier fix-round pass. `tsc`/`vitest`
+     clean throughout. Re-run `git grep -rl 'from "react-table"' frontend/` before merging to
+     confirm it's still empty, then mark this item fully done.
   8. Drop `react-table` from `package.json`/`yarn.lock` and the `KnownIssues.md` entry, once item 7
      is actually done. `ReactTableFullScreen.jsx` (thin v6 wrapper) is already gone — deleted in
      batch 3 once its last 4 consumers migrated off it.
