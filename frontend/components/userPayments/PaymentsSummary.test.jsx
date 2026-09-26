@@ -1,79 +1,162 @@
-// i18n extraction test for userPayments/PaymentsSummary (i18n-06 payments lot 2c-i). Class
-// component; generalColumns + the ibox title are built in render() from t(). Rendered with an
-// empty data set so react-table paints only the column headers.
+// Regression coverage for the item-13 final-3-files migration (docs/Modernization-Roadmap.md) of
+// PaymentsSummary.jsx off react-table v6 onto TanStackGrid.
+//
+// v6's table had a `Footer` render prop building the totals summary (footerTotal /
+// footerScheduleTotal / footerPaidToDate / footerBalance); TanStackGrid has no footer concept, so
+// that content moved to a plain sibling block rendered right after the grid. This file didn't have
+// any test coverage before this migration -- these are basic checks that the moved block still
+// renders the right values from real props, plus a sanity check that the (real, unmocked)
+// TanStackGrid renders actual row data rather than a mocked stub.
+//
+// TanStackGrid is NOT mocked here -- rendered for real, same as the AdhesionSettings coverage in
+// parameters/Payments/PaymentsSettings.test.jsx.
 
 import React from "react";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import i18n from "../../i18n";
 import PaymentsSummary from "./PaymentsSummary";
 
-const props = {
-    data: [],
-    payers: [],
-    schedules: {},
-    locations: [],
-    coupons: [],
-    formulas: [],
-    pricingCategories: [],
-    adhesionPrices: [],
-    seasons: [],
-    season: 1,
-    totalDue: null,
-    previsionalTotal: null,
-    totalPayments: 0,
-    totalPaymentsToDay: 0,
-    isStudentView: false,
-};
+const t = (lng) => i18n.getFixedT(lng, "payments");
 
 afterEach(async () => {
     await i18n.changeLanguage("fr");
 });
 
-describe("userPayments/PaymentsSummary", () => {
-    // The plain "renders the fr / renders the en column headers" pair was a pure string-echo and
-    // has been dropped under the Phase 07 P0 checkpoint strategy — the interaction test below
-    // still renders this component in both locales, and the `userPayments` area locale checkpoint
-    // lives in PaymentsManagement.test.jsx.
+// Minimal props: `isStudentView: true` keeps the "tarif"/"prorata"/"coupon" cells on their
+// simplest branches (no pricing-category <select>, no schedules/locations block above the grid).
+const baseProps = () => ({
+    isStudentView: true,
+    data: [],
+    payers: [],
+    totalDue: 123.4,
+    previsionalTotal: 200,
+    totalPayments: 50,
+    totalPaymentsToDay: 50,
+    adhesionPrices: [],
+    pricingCategories: [],
+    seasons: [],
+    schedules: {},
+    locations: [],
+    coupons: [],
+    formulas: [],
+});
 
-    // ItemFormModal (aliased here as CreateCouponModal) is this component's second real caller,
-    // alongside BaseDataTable.jsx -- and unlike the ItemFormModal.test.jsx suite, this one doesn't
-    // mock it away. Opening the modal for real is the only place that proves this call site
-    // actually resolves ItemFormModal's own translated Cancel/Save buttons, not just the
-    // createTitle prop this component passes explicitly.
-    test.each([
-        ["fr", "Créer un taux de remise", "Annuler", "Enregistrer"],
-        ["en", "Create a discount rate", "Cancel", "Save"],
-    ])(
-        "%s: opening the create-coupon modal resolves ItemFormModal's translated Cancel/Save buttons",
-        async (lng, openButtonText, cancel, save) => {
+describe("PaymentsSummary — totals block (moved out of TanStackGrid's Footer) renders real values", () => {
+    test.each(["fr", "en"])(
+        "footerTotal / footerScheduleTotal / footerPaidToDate / footerBalance show the right EUR amounts (%s)",
+        async (lng) => {
             await i18n.changeLanguage(lng);
+            const props = baseProps();
+
             render(<PaymentsSummary {...props} />);
 
-            fireEvent.click(await screen.findByText(openButtonText));
+            const fmt = (n) =>
+                n.toLocaleString(lng, { style: "currency", currency: "EUR" });
 
-            expect(await screen.findByText(cancel)).toBeInTheDocument();
-            expect(screen.getByText(save)).toBeInTheDocument();
-        }
-    );
+            // Each amount renders inside its own <strong>, padded with a leading/trailing space
+            // (`{` ${amount} `}`) -- `getByText` compares its plain-string matcher against the
+            // node's *unnormalized* text, so the padding survives whitespace-collapsing but the
+            // matcher string doesn't get the same collapsing applied to it, and a locale's
+            // non-breaking space between amount and symbol only compounds that. Matching by
+            // tag + trimmed textContent sidesteps both.
+            const findAmount = (amount) =>
+                screen.getByText(
+                    (_content, element) =>
+                        element.tagName.toLowerCase() === "strong" &&
+                        element.textContent.trim() === amount
+                );
 
-    // Regression for the item-10 fix: the footer totals used to format currency with a hardcoded
-    // "fr-FR" locale regardless of i18n.language -- en rendered French-style grouping/symbol
-    // placement too. fr and en EUR formatting differ enough (symbol position, decimal separator)
-    // that this also catches a regression back to a hardcoded locale, not just "doesn't throw".
-    // A plain space here, not the U+00A0 Intl actually renders before "€" -- getByText's
-    // whitespace normalizer (\s matches NBSP too) collapses it to a regular space either way.
-    test.each([
-        ["fr", "42,50 €"],
-        ["en", "€42.50"],
-    ])(
-        "%s: footer total currency follows the active UI language",
-        async (lng, expectedFormat) => {
-            await i18n.changeLanguage(lng);
-            render(<PaymentsSummary {...props} totalDue={42.5} />);
+            // Each label shares a parent <div> with its <strong> amount (no wrapping element of
+            // its own around just the label). "Total:" is a case-insensitive substring of
+            // "Schedule total:" (en), so `exact: false` here would match both -- use `exact: true`
+            // (the label is the div's whole own text, its <strong> sibling text excluded) instead.
+            expect(
+                screen.getByText(t(lng)("userPayments.summary.footerTotal"), {
+                    exact: true,
+                })
+            ).toBeInTheDocument();
+            expect(findAmount(fmt(props.totalDue))).toBeInTheDocument();
 
             expect(
-                screen.getByText(expectedFormat, { exact: false })
+                screen.getByText(
+                    t(lng)("userPayments.summary.footerScheduleTotal"),
+                    { exact: true }
+                )
+            ).toBeInTheDocument();
+            expect(findAmount(fmt(props.previsionalTotal))).toBeInTheDocument();
+
+            expect(
+                screen.getByText(
+                    t(lng)("userPayments.summary.footerPaidToDate"),
+                    { exact: true }
+                )
+            ).toBeInTheDocument();
+            expect(
+                findAmount(fmt(props.totalPaymentsToDay))
+            ).toBeInTheDocument();
+
+            expect(
+                screen.getByText(t(lng)("userPayments.summary.footerBalance"), {
+                    exact: true,
+                })
+            ).toBeInTheDocument();
+            expect(
+                findAmount(fmt(props.previsionalTotal - props.totalPayments))
             ).toBeInTheDocument();
         }
     );
+
+    test("totalDue == null renders '--' instead of a bogus currency amount", async () => {
+        await i18n.changeLanguage("fr");
+        render(<PaymentsSummary {...baseProps()} totalDue={null} />);
+
+        const totalLine = screen.getByText(
+            t("fr")("userPayments.summary.footerTotal"),
+            { exact: false }
+        );
+        expect(totalLine.textContent).toContain("--");
+    });
+});
+
+describe("PaymentsSummary — the real TanStackGrid renders actual row data (not a stub)", () => {
+    test("a real row's activity, student and discounted total render in the table", async () => {
+        await i18n.changeLanguage("fr");
+        const row = {
+            id: 1,
+            activity: "Piano",
+            user: {
+                id: 5,
+                first_name: "Jean",
+                last_name: "Dupont",
+                adherent_number: "A1",
+            },
+            pricingCategoryId: null,
+            unitPrice: 100,
+            due_total: 90,
+            discountedTotal: 90,
+            coupon: {},
+        };
+
+        render(<PaymentsSummary {...baseProps()} data={[row]} />);
+
+        expect(screen.getByText("Piano")).toBeInTheDocument();
+        expect(screen.getByText("Jean Dupont")).toBeInTheDocument();
+
+        // The "discounted total" cell renders `toLocaleString("fr", {style: "currency", ...})`,
+        // which inserts a non-breaking space between the amount and "€" -- `getByText`'s default
+        // whitespace normalizer only collapses the DOM's own text (turning that NBSP into a
+        // regular space), not the plain-string matcher, so the two never compare equal. Comparing
+        // the raw (unnormalized) textContent directly, via a function matcher, sidesteps that.
+        const discountedTotal = (90).toLocaleString("fr", {
+            style: "currency",
+            currency: "EUR",
+        });
+        expect(
+            screen.getByText(
+                (_content, element) =>
+                    element.tagName.toLowerCase() === "p" &&
+                    element.textContent.trim() === discountedTotal
+            )
+        ).toBeInTheDocument();
+    });
 });
