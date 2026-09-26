@@ -21,7 +21,7 @@ import UserWithInfos from "./common/UserWithInfos";
 import ButtonModal from "./common/ButtonModal";
 import ActivitiesApplicationsDashboard from "./ActivitiesApplicationsDashboard";
 import JobProgress from "./JobProgress";
-import ReactDOM from "react-dom";
+import { createRoot } from "react-dom/client";
 
 import {
     ACTIVITY_ATTRIBUTED_ID,
@@ -107,7 +107,8 @@ class ActivitiesApplicationsList extends React.Component {
     showJobProgressModal(jobId) {
         const { t } = this.props;
         const container = document.createElement("div");
-        ReactDOM.render(
+        const root = createRoot(container);
+        root.render(
             <JobProgress
                 jobId={jobId}
                 onError={(res) =>
@@ -117,8 +118,7 @@ class ActivitiesApplicationsList extends React.Component {
                         icon: "error",
                     })
                 }
-            />,
-            container
+            />
         );
 
         swal.fire({
@@ -127,6 +127,11 @@ class ActivitiesApplicationsList extends React.Component {
             showCloseButton: true,
             focusConfirm: false,
             confirmButtonText: "OK",
+            // JobProgress polls itself via setTimeout (see its componentDidMount/trackProgress);
+            // that loop only stops in componentWillUnmount, which never fires unless the root is
+            // explicitly unmounted -- without this it leaks a polling loop past modal close (this
+            // predates the createRoot migration, ReactDOM.render had the same gap).
+            didClose: () => root.unmount(),
         });
     }
     componentDidMount() {

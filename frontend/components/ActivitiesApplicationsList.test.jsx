@@ -25,6 +25,28 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import i18n from "../i18n";
 import ActivitiesApplicationsList from "./ActivitiesApplicationsList";
+import * as JobProgressModule from "./JobProgress";
+
+// Lifecycle spy standing in for the real JobProgress: it self-polls via setTimeout and only ever
+// stops in componentWillUnmount (see JobProgress.jsx's trackProgress/componentWillUnmount), which
+// only fires on an explicit unmount call -- exactly what showJobProgressModal's createRoot
+// migration adds via swal's `didClose`. A real (unmocked) sweetalert2 modal is used below so that
+// `didClose` actually fires from real DOM interaction, not a mocked stand-in.
+vi.mock("./JobProgress", () => {
+    const state = { mounted: false, unmounted: false };
+    class JobProgressStub extends React.Component {
+        componentDidMount() {
+            state.mounted = true;
+        }
+        componentWillUnmount() {
+            state.unmounted = true;
+        }
+        render() {
+            return <div data-testid="job-progress-stub" />;
+        }
+    }
+    return { default: JobProgressStub, __jobProgressState: state };
+});
 
 let lastGridProps = null;
 vi.mock("./common/baseDataTable/TanStackGrid", async (importOriginal) => {
@@ -614,5 +636,65 @@ describe("ActivitiesApplicationsList — fetchData guards against a superseded s
             freshFilter
         );
         expect(screen.queryByText("A1")).not.toBeNull();
+    });
+});
+
+// ==================================================================================================
+// Regression: showJobProgressModal unmounts its createRoot when the swal closes
+// ==================================================================================================
+//
+// showJobProgressModal used to mount JobProgress via the legacy `ReactDOM.render(...)` API and
+// never unmounted it -- the container was only ever detached from the DOM by sweetalert2 closing,
+// which doesn't run React's unmount lifecycle. JobProgress polls itself via setTimeout and only
+// stops that loop in componentWillUnmount, so this silently leaked a running poll past modal
+// close. Migrating to `createRoot(...).render(...)` plus an explicit `.unmount()` on swal's
+// `didClose` fixes it -- exercised here through a real (unmocked) sweetalert2 modal, closed via
+// its own "OK" button, so `didClose` fires from actual DOM interaction.
+describe("ActivitiesApplicationsList — showJobProgressModal unmounts JobProgress on modal close (regression)", () => {
+    test("closing the job-progress modal calls JobProgress's componentWillUnmount", async () => {
+        global.fetch = vi.fn((url) => {
+            const u = String(url);
+            if (u.includes("/inscriptions/create_import_csv")) {
+                return Promise.resolve({
+                    json: () => Promise.resolve({ jobId: 123 }),
+                });
+            }
+            if (u.includes("/inscriptions/list")) {
+                return Promise.resolve({
+                    json: () =>
+                        Promise.resolve({
+                            applications: [],
+                            pages: 0,
+                            total: 0,
+                            pending_total: 0,
+                        }),
+                });
+            }
+            return Promise.resolve({
+                ok: true,
+                headers: { get: () => "application/json" },
+                json: () => Promise.resolve({}),
+            });
+        });
+
+        const { container } = render(
+            <ActivitiesApplicationsList {...baseProps()} />
+        );
+
+        const fileInput = container.querySelector('input[type="file"]');
+        const file = new File(["a,b,c"], "import.csv", { type: "text/csv" });
+        await userEvent.upload(fileInput, file);
+
+        await waitFor(() =>
+            expect(JobProgressModule.__jobProgressState.mounted).toBe(true)
+        );
+        expect(await screen.findByTestId("job-progress-stub")).toBeInTheDocument();
+        expect(JobProgressModule.__jobProgressState.unmounted).toBe(false);
+
+        await userEvent.click(screen.getByRole("button", { name: "OK" }));
+
+        await waitFor(() =>
+            expect(JobProgressModule.__jobProgressState.unmounted).toBe(true)
+        );
     });
 });
