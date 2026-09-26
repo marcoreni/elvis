@@ -12,8 +12,10 @@
 // search, so the assertions never touch `handleChange` / the bare `debounce` global.
 
 import React from "react";
-import { render, screen, act } from "@testing-library/react";
+import { render, screen, act, waitFor } from "@testing-library/react";
 import { toast } from "react-toastify";
+import swal from "sweetalert2";
+import * as api from "../../tools/api";
 import i18n from "../../i18n";
 import UserSearch from "./UserSearch";
 
@@ -26,15 +28,47 @@ vi.mock("sweetalert2", () => ({ default: { fire: vi.fn() } }));
 vi.mock("react-toastify", () => ({
     toast: Object.assign(vi.fn(), { error: vi.fn() }),
 }));
+// Kept close to the plain inert chain the other tests rely on (before/success/error are no-ops
+// by default), but `post` now actually invokes whatever `.success`/`.error` handler was
+// registered, resolving with a response queued via `__queueResponse`/`__queueError` -- needed to
+// drive UserSearch's real onSubmit -> swal.fire().then() -> api.set().post() chain for the
+// batching regression test below. Calls with nothing queued just resolve with `undefined`, same
+// no-op-ish behavior the rest of this file already depends on.
 vi.mock("../../tools/api", () => {
-    const chain = {
-        before: () => chain,
-        useLoading: () => chain,
-        success: () => chain,
-        error: () => chain,
-        post: vi.fn(() => Promise.resolve()),
+    const queue = [];
+    const makeChain = () => {
+        const chain = {
+            before: (cb) => {
+                chain._before = cb;
+                return chain;
+            },
+            useLoading: () => chain,
+            success: (cb) => {
+                chain._success = cb;
+                return chain;
+            },
+            error: (cb) => {
+                chain._error = cb;
+                return chain;
+            },
+            post: vi.fn(() => {
+                if (chain._before) chain._before();
+                const response = queue.shift() || { data: undefined };
+                return Promise.resolve().then(() => {
+                    if (response.error) {
+                        chain._error && chain._error(response.error);
+                    } else {
+                        chain._success && chain._success(response.data);
+                    }
+                });
+            }),
+        };
+        return chain;
     };
-    return { set: () => chain };
+    return {
+        set: () => makeChain(),
+        __queueResponse: (data) => queue.push({ data }),
+    };
 });
 
 const props = {
@@ -171,6 +205,51 @@ describe("UserSearch — isValidated() toasts the localized MESSAGES.err_must_se
             "Please select a user before continuing.",
             { autoClose: 3000 }
         );
+    });
+});
+
+describe("UserSearch — onSubmit auto-selects the just-created user (React 18 batching regression)", () => {
+    // onSubmit's nested success handler does
+    //   this.setState({ possibleMatches: data, usernotSearched: false });
+    //   this.handleUserSelect(0);
+    // from inside a `.then()` callback (outside a React event handler), so under React 18's
+    // automatic batching the setState hasn't applied yet when handleUserSelect used to read
+    // `this.state.possibleMatches` back -- it picked whatever was there *before* the search,
+    // not the newly created user. Seed a stale possibleMatches, then confirm the auto-selected
+    // user comes from the fresh search results, not that stale state.
+    test("selects from the freshly fetched results, not the stale state.possibleMatches", async () => {
+        swal.fire.mockReturnValue(Promise.resolve());
+        api.__queueResponse({}); // "/users/createStudent" success payload
+        const newMatches = [
+            { id: 99, first_name: "New", last_name: "User", birthday: "2000-01-01" },
+        ];
+        api.__queueResponse(newMatches); // the follow-up search success payload
+
+        const ref = React.createRef();
+        render(<UserSearch ref={ref} {...props} />);
+
+        act(() => {
+            ref.current.setState({
+                possibleMatches: [
+                    { id: 1, first_name: "Old", last_name: "User", birthday: "1990-01-01" },
+                ],
+            });
+        });
+
+        act(() => {
+            ref.current.onSubmit({
+                first_name: "New",
+                last_name: "User",
+                email: "new.user@example.com",
+                birthday: "2000-01-01",
+                sex: "m",
+            });
+        });
+
+        await waitFor(() =>
+            expect(ref.current.state.selectedUser).toEqual(newMatches[0])
+        );
+        expect(ref.current.state.idx).toBe(0);
     });
 });
 

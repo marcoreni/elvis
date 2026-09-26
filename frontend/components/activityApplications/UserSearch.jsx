@@ -54,9 +54,7 @@ class UserSearch extends React.PureComponent {
         return true;
     }
 
-    handleUserSelect(i) {
-        const { possibleMatches } = this.state;
-
+    handleUserSelect(i, possibleMatches = this.state.possibleMatches) {
         const selectedUser = possibleMatches[i];
 
         if (this.props.noValidation) this.props.onSelect(selectedUser);
@@ -138,7 +136,7 @@ class UserSearch extends React.PureComponent {
                                 possibleMatches: data,
                                 usernotSearched: false,
                             });
-                            this.handleUserSelect(0);
+                            this.handleUserSelect(0, data);
                         })
                         .error(() => this.setState({ possibleMatches: [] }))
                         .post(
