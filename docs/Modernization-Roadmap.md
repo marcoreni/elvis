@@ -524,7 +524,7 @@ was already peer-dep-unverified past React 16 anyway.
      confirming a narrower claim ("out of scope for *this diff*"), which was never escalated into its
      own future batch — see `feedback-verify-completeness-not-batch-tally` (memory).
 
-     Two `code-reviewer` rounds on this branch, both fully addressed:
+     Four `code-reviewer` rounds on this branch, all fully addressed:
      - Round 1: (1) HIGH — `PaymentsSummary.jsx` reversed every row's order, because `defaultSorted`
        on a JSX-valued accessor column, a no-op under v6, became a real (and wrong) sort under
        TanStack's real client-side row model; fixed by dropping `defaultSorted` and setting
@@ -546,6 +546,21 @@ was already peer-dep-unverified past React 16 anyway.
        coverage for both the fetch-recovery behavior and, separately, direct contract tests for the
        `AdhesionSettings` clamp and `TanStackGrid`'s `stopRowClick` (previously only exercised
        indirectly through one consumer).
+     - Round 3 (re-reviewing round 2's own fix) found round 2's page-clamp recovery re-fetch in
+       `fetchData` closed over a *stale* `filter` argument with no check it was still current — since
+       `fetchData` shares one debounce timer and commits `state.filter` synchronously on every call,
+       a slow/gated response landing after a newer call (e.g. the user typing a filter while an
+       earlier out-of-range page was still in flight) would resolve using the old filter, silently
+       discarding the user's fresh filter and jumping the page. Fixed with an identity guard
+       (`if (this.state.filter !== filter) return;`) at the top of `fetchData`'s `.then`, bailing out
+       whenever a newer call has already superseded it. Also removed the render-time `pageIndex`
+       clamp ternary, now fully dead once `fetchData` itself keeps `state.filter.page` in range
+       before it's ever rendered.
+     - Round 4: clean pass, no new findings — confirmed the round 3 guard is correct and complete
+       against every `fetchData` call site, confirmed removing the render-time clamp opened no new
+       out-of-range window (this table is `manual`, so an out-of-range `pageIndex` is cosmetic only,
+       never mis-slices rows), and confirmed the round 3 regression test actually fails when the
+       guard is reverted and isn't timing-flaky.
 
      `tsc`/`vitest` clean throughout, independently re-verified after each round (not just taken from
      agent reports). Re-run `git grep -rl 'from "react-table"' frontend/` before merging to confirm
