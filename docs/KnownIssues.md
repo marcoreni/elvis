@@ -39,10 +39,6 @@ left:
   timing enough to surface latent class-component lifecycle bugs. Stage 17→18 first, prove it out,
   then 18→19. `@testing-library/react` is pinned at `^12.1.5` until React moves past 17 (must bump
   to v13+ in the same commit as React itself — see `docs/Modernization-Roadmap.md` item 14).
-- **`react-table` v6 → TanStack Table**: NOT downstream of the React bump — checked against npm
-  directly (2026-09-16), TanStack Table v8 (`react: ">=16.8"`) works under today's React 17; only
-  v9 (`react: ">=18"`) needs the bump. Sequenced *before* item 14 instead — see
-  `docs/Modernization-Roadmap.md` item 13 for the full path-forward writeup.
 - `react-toastify`/`react-autosuggest`/`react-switch` all already declare React 18 support in their
   published peer deps (checked 2026-09-16) — a version bump for these is a separate, whenever-
   convenient task, not blocked on or blocking the React bump either way.

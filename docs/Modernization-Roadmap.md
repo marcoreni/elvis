@@ -119,7 +119,7 @@ legacy string refs). Caught and fixed 2 real behavior regressions against upstre
 new tests. `react-stepzilla` fully removed from `package.json`/`yarn.lock`. `KnownIssues.md`'s
 "Exotic dependencies" section (its last entry) removed.
 
-## 13. `react-table` v6 → TanStack Table — batches 1-4d + Activity.jsx merged; final 3-file batch migrated + reviewed, not yet merged
+## 13. `react-table` v6 → TanStack Table — done, all batches merged, dependency dropped
 
 `react-table@^6.8.0` (peer dep `react: ^16.x.x` — doesn't even officially claim React 17 support,
 same pattern as `react-loader-spinner`, item in the "Frontend dependencies" KnownIssues entry) is 4
@@ -563,11 +563,20 @@ was already peer-dep-unverified past React 16 anyway.
        guard is reverted and isn't timing-flaky.
 
      `tsc`/`vitest` clean throughout, independently re-verified after each round (not just taken from
-     agent reports). Re-run `git grep -rl 'from "react-table"' frontend/` before merging to confirm
-     it's still empty, then mark this item fully done.
-  8. Drop `react-table` from `package.json`/`yarn.lock` and the `KnownIssues.md` entry, once item 7
-     is actually done. `ReactTableFullScreen.jsx` (thin v6 wrapper) is already gone — deleted in
-     batch 3 once its last 4 consumers migrated off it.
+     agent reports). Merged 2026-09-26 (PR #131, `marcoreni/elvis`) — re-ran
+     `git grep -rl 'from "react-table"' frontend/` fresh against merged `develop` (not trusted from
+     the pre-merge branch check) and confirmed it's still empty before starting step 8.
+  8. **Done, 2026-09-26.** Dropped `react-table`/`@types/react-table` from `package.json`, regenerated
+     `yarn.lock` (also dropped their now-unshared transitive deps: `classnames@^2.2.5`,
+     `react-is@^16.8.1`), removed the dead `@import "react-table/react-table.css"` from
+     `application.scss` (TanStackGrid emits no v6 classnames — confirmed by round 4's review) and the
+     now-obsolete `react-table` sequencing entry from `KnownIssues.md`'s dependency-bump list.
+     `ReactTableFullScreen.jsx` (thin v6 wrapper) was already gone — deleted in batch 3 once its last
+     4 consumers migrated off it. Verified: `tsc --noEmit` clean, `vitest run` (113 files/1396 tests,
+     unchanged), `yarn build` clean (pre-existing Sass `@import` deprecation warnings only, unrelated
+     to this change), `node_modules/react-table` confirmed absent after `yarn install`.
+
+**Item 13 is fully done.** Next: item 14 (React 17→18), full pre-check already recorded below.
 
 **Side-by-side migration during the transition — resolved 2026-09-16, no action needed beyond
 adding the new dependency.** The `react-table-6` idea flagged earlier (republishing v6 under an

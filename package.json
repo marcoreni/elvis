@@ -53,7 +53,6 @@
         "react-modal": "^3.6.1",
         "react-select": "^5.0.0",
         "react-switch": "^6.0.0",
-        "react-table": "^6.8.0",
         "react-toastify": "^4.5.2",
         "react_ujs": "^2.4.3",
         "sweetalert2": "^11.26.25"
