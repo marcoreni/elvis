@@ -511,29 +511,45 @@ was already peer-dep-unverified past React 16 anyway.
      of exact match, and a missing rows-per-page selector. Verified: `vitest run` (1385 tests, was
      1376 pre-batch), `tsc --noEmit` clean, live-checked on `/inscriptions/1` (dev DB) — row
      expansion and the day filter's value-retention fix both confirmed working.
-  7. **Migrated + code-reviewed, not yet merged** — `feat/tanstack-table-final-3-files` (2 commits
-     on top of `develop`), covering the 3 files never included in any earlier batch's file list:
-     `ActivitiesApplicationsList.jsx` (`manual` server-paginated, controlled pagination/sorting/
-     columnFilters, matching batch 4b/4c's pattern), `parameters/Payments/AdhesionSettings.jsx`
-     (`manual={false}`, `filterable={false}`, controlled pagination), `userPayments/
-     PaymentsSummary.jsx` (`manual={false}`, `filterable={false}`, v6's `Footer` render prop moved
-     to a sibling block after `<TanStackGrid>`). **How these 3 were missed originally**: none ever
-     appeared in item 13's original "26 files import react-table directly" scope count (batch 1,
-     2026-09-16); they surfaced once, as a side-effect of a batch 4d review confirming a narrower
-     claim ("out of scope for *this diff*"), which was never escalated into its own future batch —
-     see `feedback-verify-completeness-not-batch-tally` (memory). A `code-reviewer` pass on this
-     branch found and all fixes are now applied: (1) HIGH — `PaymentsSummary.jsx` reversed every
-     row's order, because `defaultSorted` on a JSX-valued accessor column, a no-op under v6, became
-     a real (and wrong) sort under TanStack's real client-side row model; fixed by dropping
-     `defaultSorted` and setting `sortable: false` on every JSX-accessor column. (2) MEDIUM —
-     `ActivitiesApplicationsList.jsx`'s row-click-to-open exclusion only stopped propagation from a
-     cell's inner content, not its `<td>`'s own padding; fixed with a new `stopRowClick` `meta` flag
-     on `TanStackGrid.tsx` that stops propagation at the `<td>` itself. (3) LOW-MEDIUM — added a
-     page-index clamp to `AdhesionSettings.jsx` (same bug class as `Activity.jsx`/
-     `DuePaymentList.jsx`). (4) LOW — restored `PaymentsSummary.test.jsx`'s pre-existing
-     `ItemFormModal` translation-coverage test, dropped by an earlier fix-round pass. `tsc`/`vitest`
-     clean throughout. Re-run `git grep -rl 'from "react-table"' frontend/` before merging to
-     confirm it's still empty, then mark this item fully done.
+  7. **Migrated + code-reviewed, not yet merged** — `feat/tanstack-table-final-3-files` (based
+     directly on `develop`; see the branch's own history for the exact commit list, not a count
+     copied here that will just go stale as more fix rounds land), covering the 3 files never
+     included in any earlier batch's file list: `ActivitiesApplicationsList.jsx` (`manual`
+     server-paginated, controlled pagination/sorting/columnFilters, matching batch 4b/4c's pattern),
+     `parameters/Payments/AdhesionSettings.jsx` (`manual={false}`, `filterable={false}`, controlled
+     pagination), `userPayments/PaymentsSummary.jsx` (`manual={false}`, `filterable={false}`, v6's
+     `Footer` render prop moved to a sibling block after `<TanStackGrid>`). **How these 3 were missed
+     originally**: none ever appeared in item 13's original "26 files import react-table directly"
+     scope count (batch 1, 2026-09-16); they surfaced once, as a side-effect of a batch 4d review
+     confirming a narrower claim ("out of scope for *this diff*"), which was never escalated into its
+     own future batch — see `feedback-verify-completeness-not-batch-tally` (memory).
+
+     Two `code-reviewer` rounds on this branch, both fully addressed:
+     - Round 1: (1) HIGH — `PaymentsSummary.jsx` reversed every row's order, because `defaultSorted`
+       on a JSX-valued accessor column, a no-op under v6, became a real (and wrong) sort under
+       TanStack's real client-side row model; fixed by dropping `defaultSorted` and setting
+       `sortable: false` on every JSX-accessor column. (2) MEDIUM — `ActivitiesApplicationsList.jsx`'s
+       row-click-to-open exclusion only stopped propagation from a cell's inner content, not its
+       `<td>`'s own padding; fixed with a new `stopRowClick` `meta` flag on `TanStackGrid.tsx` that
+       stops propagation at the `<td>` itself. (3) LOW-MEDIUM — added a page-index clamp to
+       `AdhesionSettings.jsx` (same bug class as `Activity.jsx`/`DuePaymentList.jsx`). (4) LOW —
+       restored `PaymentsSummary.test.jsx`'s pre-existing `ItemFormModal` translation-coverage test,
+       dropped by an earlier fix-round pass.
+     - Round 2 (re-reviewing round 1's own fix commits) found round 1's `AdhesionSettings`-style page
+       clamp hadn't been applied to `ActivitiesApplicationsList.jsx` itself: its clamp only adjusted
+       the `pageIndex` *displayed* to the grid, leaving `state.filter.page` and the refetch still
+       targeting the stale page — with both pagination buttons disabled once clamped to page 0, this
+       stranded the table on an empty page with no way back. Fixed at the source in `fetchData`: a
+       response reporting fewer pages than requested now re-fetches the clamped page instead of
+       committing the stale one. Also removed a dead `defaultSorted` prop (unreachable once sorting
+       is controlled) and corrected a comment overstating `whitebg`'s CSS fidelity. Added test
+       coverage for both the fetch-recovery behavior and, separately, direct contract tests for the
+       `AdhesionSettings` clamp and `TanStackGrid`'s `stopRowClick` (previously only exercised
+       indirectly through one consumer).
+
+     `tsc`/`vitest` clean throughout, independently re-verified after each round (not just taken from
+     agent reports). Re-run `git grep -rl 'from "react-table"' frontend/` before merging to confirm
+     it's still empty, then mark this item fully done.
   8. Drop `react-table` from `package.json`/`yarn.lock` and the `KnownIssues.md` entry, once item 7
      is actually done. `ReactTableFullScreen.jsx` (thin v6 wrapper) is already gone — deleted in
      batch 3 once its last 4 consumers migrated off it.
