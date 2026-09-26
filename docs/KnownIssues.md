@@ -238,8 +238,8 @@ Verified exact parity with the pre-migration `react-table` v6 behavior (both ren
 25-row test set identically before and after), so not a regression from that migration — but worth
 tracking now that the 20-row default lives inside the shared `TanStackGrid` component rather than
 being an obvious per-table choice a future reader would notice. Fix, if a payer's payment history
-ever needs to show more: either pass `pageSizeOptions`/re-enable pagination, or (per the
-Modernization-Roadmap item 13 batch 4c note) move these two tables to real server-side pagination.
+ever needs to show more: either pass `pageSizeOptions`/re-enable pagination, or move these two
+tables to real server-side pagination (flagged, not built, in PR #128).
 
 ## `LegacyColumn` accessors must not close over mutable component state
 
@@ -296,4 +296,15 @@ enabled elsewhere at negative indices; the table displays "Page 0 sur 1" and `pa
 into `localStorage` across reloads, recoverable only via the reset-filters button or any filter
 change (both set `page: 0`). Fix: floor the recompute at `0`, e.g.
 `Math.max(0, Math.min(this.state.filter.page, newTotalPages - 1))`.
+
+## `ActivityRefBasics.jsx`/`EditFormule.jsx` rebuild `dataService`/`columns` on every render
+
+Both build a fresh `dataService`/`columns` object in `render()`, inside a shared `react-final-form`
+`Form` that re-renders on every field interaction across the whole multi-tab form — so `TanStackGrid`
+recomputes its column defs far more often than the data actually changes. Flagged during the
+`react-table` → TanStack migration (PR #123) as a real but non-blocking inefficiency, not a
+correctness bug (downgraded from an earlier, incorrect diagnosis that this churn caused a real
+`getCoreRowModel()` caching bug — that bug's actual cause, traced later, was two data services
+mutating a shared array in place; fixed at the source in batch 3). Fix, if ever worth it: memoize
+`columns`/`dataService` on whatever they actually depend on instead of rebuilding them inline.
 
