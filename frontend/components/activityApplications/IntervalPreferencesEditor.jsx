@@ -37,12 +37,12 @@ class IntervalPreferencesEditor extends React.PureComponent {
                     if (error) {
                         this.setState({ errors: error });
                     } else {
-                        this.setState({
+                        this.setState((prevState) => ({
                             intervals: {
-                                ...this.state.intervals,
+                                ...prevState.intervals,
                                 [ref.id]: data,
                             },
-                        });
+                        }));
                     }
                 })
         );
