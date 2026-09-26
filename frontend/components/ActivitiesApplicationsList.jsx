@@ -511,6 +511,10 @@ class ActivitiesApplicationsList extends React.Component {
                     return res;
                 })
                 .then((res) => {
+                    if (this.state.filter !== filter) {
+                        return; // a newer fetchData call has already superseded this one
+                    }
+
                     if (res.pages > 0 && filter.page >= res.pages) {
                         this.fetchData({ ...filter, page: res.pages - 1 });
                         return;
@@ -1232,11 +1236,7 @@ class ActivitiesApplicationsList extends React.Component {
                             loading={this.state.loading}
                             columns={filteredColumns}
                             pagination={{
-                                pageIndex:
-                                    this.state.pages &&
-                                    this.state.filter.page >= this.state.pages
-                                        ? Math.max(this.state.pages - 1, 0)
-                                        : this.state.filter.page,
+                                pageIndex: this.state.filter.page,
                                 pageSize: this.state.filter.pageSize,
                             }}
                             onPaginationChange={({ pageIndex, pageSize }) =>

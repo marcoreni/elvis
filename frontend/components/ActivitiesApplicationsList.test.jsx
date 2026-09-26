@@ -342,11 +342,13 @@ describe("ActivitiesApplicationsList — row click opens the application, exclud
 // ==================================================================================================
 //
 // Added during this migration (matching the same fix already applied to Activity.jsx /
-// DuePaymentList.jsx): the `pagination` prop's `pageIndex` clamps to the last real page whenever
-// `this.state.filter.page` is no longer < `this.state.pages`. Exercised here via a reload
-// (the refresh button) that returns fewer pages than before -- unlike a filter change, a plain
-// refresh keeps `filter.page` unchanged, so only this clamp (not the separate `page: 0` reset on
-// filter changes) can keep the table from being stranded.
+// DuePaymentList.jsx): `fetchData` itself re-fetches when a response reports fewer pages than
+// requested (`res.pages > 0 && filter.page >= res.pages`), landing `this.state.filter.page` back
+// in range -- not a render-time clamp on the `pagination` prop (there isn't one; `pageIndex` is
+// just `this.state.filter.page`). Exercised here via a reload (the refresh button) that returns
+// fewer pages than before -- unlike a filter change, a plain refresh keeps `filter.page` unchanged,
+// so only this fetchData-level re-fetch (not the separate `page: 0` reset on filter changes) can
+// keep the table from being stranded.
 describe("ActivitiesApplicationsList — pagination clamp (regression)", () => {
     test("paging forward then reloading with fewer pages clamps back into range", async () => {
         let shrunk = false;
@@ -490,12 +492,127 @@ describe("ActivitiesApplicationsList — fetchData re-fetches a stale out-of-ran
         // read that way transiently -- `pages` defaults to 0 and `Math.max(getPageCount(), 1)`
         // floors the "of" count to 1 -- before the second fetch has actually landed).
         await waitFor(() => expect(requestedPages).toEqual([2, 0]), {
-            timeout: 2000,
+            timeout: 5000,
         });
         await waitFor(() => expect(normalized()).toContain("A1"), {
-            timeout: 2000,
+            timeout: 5000,
         });
         expect(normalized()).toContain(pageOf(1, 1));
         expect(normalized()).not.toContain(tCommon("reactTable.noDataText"));
+    });
+});
+
+// ==================================================================================================
+// Regression: a stale page-clamp recovery re-fetch must not clobber a fresher, superseded request
+// ==================================================================================================
+//
+// Code-review finding on this branch: the recovery branch above (and the plain `setState` path
+// beneath it) closed over the `filter` argument `fetchData` was originally called with, with no
+// check that it was still the *current* one. Since `fetchData` synchronously commits
+// `this.state.filter` on every call, a slow/gated response landing after a newer `fetchData` call
+// (e.g. the user typing a filter) would resolve using the OLD filter -- silently overwriting the
+// user's fresh filter and page with the stale one. `fetchData`'s `.then` now bails out early
+// (`this.state.filter !== filter`) whenever a newer call has already superseded it.
+describe("ActivitiesApplicationsList — fetchData guards against a superseded stale response (regression)", () => {
+    afterEach(() => {
+        localStorage.removeItem("activities_application_list_filters");
+    });
+
+    test("a filter typed while a stale out-of-range page is still in flight is not discarded", async () => {
+        localStorage.setItem(
+            "activities_application_list_filters",
+            JSON.stringify({
+                page: 5,
+                pageSize: 16,
+                sorted: [{ id: "date", desc: true }],
+                filtered: [],
+                resized: [],
+                expanded: {},
+            })
+        );
+
+        let resolveStalePage;
+        const stalePageGate = new Promise((resolve) => {
+            resolveStalePage = resolve;
+        });
+
+        const requestedBodies = [];
+        global.fetch = vi.fn((url, options) => {
+            const u = String(url);
+            if (!u.includes("/inscriptions/list")) {
+                return Promise.resolve({
+                    ok: true,
+                    headers: { get: () => "application/json" },
+                    json: () => Promise.resolve({}),
+                });
+            }
+
+            const body = JSON.parse(options.body);
+            requestedBodies.push(body);
+
+            if (body.page === 5) {
+                // The persisted stale page-5 request: held open until the test releases it,
+                // simulating a slow response landing after the user has already moved on.
+                return stalePageGate.then(() => ({
+                    json: () =>
+                        Promise.resolve({
+                            applications: [],
+                            pages: 3,
+                            total: 40,
+                            pending_total: 0,
+                        }),
+                }));
+            }
+
+            return Promise.resolve({
+                json: () =>
+                    Promise.resolve({
+                        applications: [makeRow(1)],
+                        pages: 2,
+                        total: 20,
+                        pending_total: 0,
+                    }),
+            });
+        });
+
+        render(<ActivitiesApplicationsList {...baseProps()} />);
+
+        // componentDidMount's fetchData({page: 5, ...}) debounces 400ms before the gated request
+        // actually fires.
+        await waitFor(
+            () => expect(requestedBodies.some((b) => b.page === 5)).toBe(true),
+            { timeout: 5000 }
+        );
+
+        // While that request is still in flight, the user types a filter -- the exact
+        // onColumnFiltersChange wiring a real filter box uses, which resets to page 0.
+        const freshFilter = [{ id: "adherent_number", value: "A1" }];
+        lastGridProps.onColumnFiltersChange(freshFilter);
+
+        // Let the fresh request's own debounce/fetch/setState fully land before releasing the
+        // stale one.
+        await waitFor(
+            () => expect(requestedBodies.some((b) => b.page === 0)).toBe(true),
+            { timeout: 5000 }
+        );
+        await waitFor(() => expect(screen.queryByText("A1")).not.toBeNull(), {
+            timeout: 5000,
+        });
+
+        // Now release the earlier, superseded page-5 response and give its guarded `.then` (plus,
+        // if the bug were present, its own 400ms-debounced recovery re-fetch) time to run.
+        resolveStalePage();
+        await new Promise((resolve) => setTimeout(resolve, 800));
+
+        // No recovery re-fetch for `page: res.pages - 1 (2)` using the stale, now-discarded
+        // `filtered: []` should ever have been made.
+        expect(
+            requestedBodies.some((b) => b.page === 2 && b.filtered.length === 0)
+        ).toBe(false);
+        // The fresh filter must still be the last (and current) one in effect.
+        expect(requestedBodies[requestedBodies.length - 1].filtered).toEqual(
+            freshFilter
+        );
+        expect(screen.queryByText("A1")).not.toBeNull();
     });
 });
