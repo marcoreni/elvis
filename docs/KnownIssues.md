@@ -288,3 +288,16 @@ applies late, hasn't been checked). Fix: move the `onChange`/`setState` pair int
 `componentDidUpdate` (this is a class component), keyed off whatever makes `currentAppsSeason`
 become available, instead of the render body.
 
+## `ActivitiesApplicationsList.jsx`'s bulk-delete can persist `page: -1`
+
+`handleBulkDelete`'s page recompute (`Math.min(this.state.filter.page, newTotalPages - 1)`) yields
+`-1` when the delete empties the dataset entirely (`newTotalPages === 0`). Confirmed pre-existing,
+unrelated to the TanStack migration (this function is untouched by that migration's diff, last
+modified by an earlier sweetalert commit). Not a crash — the backend clamps `.page(0)` to page 1 —
+but with `pages: 0` both pagination buttons are disabled (`getCanNextPage()`/`getCanPreviousPage()`
+are both false at `pageIndex -1`, `pageCount 0`), so "Suivant" is NOT a way out despite being
+enabled elsewhere at negative indices; the table displays "Page 0 sur 1" and `page: -1` survives
+into `localStorage` across reloads, recoverable only via the reset-filters button or any filter
+change (both set `page: 0`). Fix: floor the recompute at `0`, e.g.
+`Math.max(0, Math.min(this.state.filter.page, newTotalPages - 1))`.
+

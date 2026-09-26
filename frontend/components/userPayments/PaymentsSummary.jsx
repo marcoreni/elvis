@@ -1,7 +1,7 @@
 import React, { Fragment } from "react";
 import { withTranslation } from "react-i18next";
 import _ from "lodash";
-import ReactTable from "react-table";
+import TanStackGrid from "../common/baseDataTable/TanStackGrid";
 import SelectCoupon from "../utils/SelectCoupon";
 import DataService from "../common/baseDataTable/DataService";
 import CouponFormContent from "../parameters/Payments/CouponFormContent";
@@ -207,6 +207,12 @@ class PaymentsSummary extends React.Component {
             {
                 Header: t("userPayments.summary.columns.activity"),
                 id: "activity",
+                // Accessor returns JSX (see below) -- TanStack's default `sortingFns.basic`
+                // treats every row's value as an unequal object and returns -1 for every
+                // comparison, which fully reverses the array instead of the insertion-order
+                // no-op v6 gave this column (v6's own comparator returned 0 for objects, with a
+                // stable index-based tiebreak).
+                sortable: false,
                 accessor: (d) => {
                     return (
                         <div>
@@ -254,6 +260,8 @@ class PaymentsSummary extends React.Component {
             {
                 Header: t("userPayments.summary.columns.formula"),
                 id: "formula",
+                // JSX-valued accessor -- see the "activity" column's comment above.
+                sortable: false,
                 accessor: (d) => {
                     return (
                         <div>
@@ -293,6 +301,8 @@ class PaymentsSummary extends React.Component {
             {
                 Header: t("userPayments.summary.columns.student"),
                 id: "student",
+                // JSX-valued accessor -- see the "activity" column's comment above.
+                sortable: false,
                 accessor: (d) =>
                     d.user ? (
                         <a href={`/users/${d.user.id}`}>
@@ -448,6 +458,8 @@ class PaymentsSummary extends React.Component {
                 Header: t("userPayments.summary.columns.unitPrice"),
                 id: "unitPrice",
                 maxWidth: 75,
+                // JSX-valued accessor -- see the "activity" column's comment above.
+                sortable: false,
                 accessor: (d) => <p>{d.unitPrice + " €"}</p>,
                 style: {
                     textAlign: "right",
@@ -524,6 +536,8 @@ class PaymentsSummary extends React.Component {
                 Header: t("userPayments.summary.columns.totalAmount"),
                 id: "initial_total",
                 maxWidth: 150,
+                // JSX-valued accessor -- see the "activity" column's comment above.
+                sortable: false,
                 accessor: (d) => {
                     let prorataTotal = 0;
                     if (d.id === 0 || d.due_total >= 0) {
@@ -599,6 +613,8 @@ class PaymentsSummary extends React.Component {
                 Header: t("userPayments.summary.columns.discountedTotal"),
                 id: "discounted total",
                 maxWidth: 150,
+                // JSX-valued accessor -- see the "activity" column's comment above.
+                sortable: false,
                 accessor: (d) => {
                     return (
                         <p>
@@ -615,78 +631,6 @@ class PaymentsSummary extends React.Component {
                     fontSize: "18px",
                     marginBottom: 0,
                 },
-                Footer: (
-                    <span>
-                        <span style={{ fontSize: "16px" }}>
-                            {t("userPayments.summary.footerTotal")}
-                            <strong>
-                                {` ${
-                                    totalDue == null
-                                        ? "--"
-                                        : totalDue.toLocaleString(
-                                              i18n.language,
-                                              {
-                                                  style: "currency",
-                                                  currency: "EUR",
-                                              }
-                                          )
-                                } `}
-                            </strong>
-                        </span>
-                        <br />
-                        <span style={{ fontSize: "16px" }}>
-                            {t("userPayments.summary.footerScheduleTotal")}
-                            <strong>
-                                {` ${
-                                    previsionalTotal == null
-                                        ? "--"
-                                        : previsionalTotal.toLocaleString(
-                                              i18n.language,
-                                              {
-                                                  style: "currency",
-                                                  currency: "EUR",
-                                              }
-                                          )
-                                } `}
-                            </strong>
-                        </span>
-                        <br />
-                        <span style={{ fontSize: "16px" }}>
-                            {t("userPayments.summary.footerPaidToDate")}
-                            <strong>
-                                {` ${
-                                    totalPaymentsToDay == 0 &&
-                                    previsionalTotal == null
-                                        ? "--"
-                                        : totalPaymentsToDay.toLocaleString(
-                                              i18n.language,
-                                              {
-                                                  style: "currency",
-                                                  currency: "EUR",
-                                              }
-                                          )
-                                } `}
-                            </strong>
-                        </span>
-                        <br />
-                        <span style={{ fontSize: "16px" }}>
-                            {t("userPayments.summary.footerBalance")}
-                            <strong>
-                                {` ${
-                                    totalPayments == 0 &&
-                                    previsionalTotal == null
-                                        ? "--"
-                                        : (
-                                              previsionalTotal - totalPayments
-                                          ).toLocaleString(i18n.language, {
-                                              style: "currency",
-                                              currency: "EUR",
-                                          })
-                                } `}
-                            </strong>
-                        </span>
-                    </span>
-                ),
             },
         ];
 
@@ -741,22 +685,107 @@ class PaymentsSummary extends React.Component {
                     </div>
                 </div>
 
-                <ReactTable
+                <TanStackGrid
+                    tableName="payments-summary"
+                    manual={false}
                     data={data}
+                    loading={false}
+                    pages={null}
                     columns={generalColumns}
-                    defaultSorted={[{ id: "activity", desc: false }]}
-                    resizable={false}
-                    previousText={t("common:reactTable.previousText")}
-                    nextText={t("common:reactTable.nextText")}
-                    loadingText={t("common:reactTable.loadingText")}
-                    noDataText={t("common:reactTable.noDataText")}
-                    pageText={t("common:reactTable.pageText")}
-                    ofText={t("common:reactTable.ofText")}
-                    rowsText={t("common:reactTable.rowsText")}
+                    // No default sort here -- restores v6's actual behavior. v6's
+                    // `defaultSorted={[{ id: "activity", desc: false }]}` was always a no-op:
+                    // the "activity" column's accessor returns JSX, and v6's default comparator
+                    // treated distinct objects as equal (returning 0), falling back to a stable
+                    // index-based tiebreak that preserved insertion order. TanStack's default
+                    // `sortingFns.basic` instead returns -1 for every such comparison, which
+                    // would fully reverse the array -- so keeping `defaultSorted` here would be
+                    // a real (and wrong) default sort, not a no-op.
+                    // No filter UI existed in the v6 table (no `filterable`/`Filter` set on any
+                    // column); also sidesteps several columns' JSX-valued accessors, which a real
+                    // client-mode filter row would otherwise mishandle.
+                    filterable={false}
                     minRows={1}
                     showPagination={false}
-                    className="-striped whitebg"
+                    // "-striped" (v6's zebra-striping modifier) has no TanStackGrid equivalent
+                    // (dropped elsewhere in this migration too, e.g. AdhesionSettings); "whitebg"
+                    // is exactly reproduced by the inline background below (matches
+                    // application.scss's `.whitebg { background-color: white; }`), TanStackGrid's
+                    // only styling hook at the table-root level.
+                    style={{ backgroundColor: "white" }}
                 />
+
+                {/* v6's last column had a `Footer` -- TanStackGrid has no table-footer concept
+                    (headless v8 row models don't build one), so the totals are rendered as their
+                    own block below the table instead of inside a <tfoot>. */}
+                <div className="flex flex-end-justified m-t-sm">
+                    <div className="text-right">
+                        <div style={{ fontSize: "16px" }}>
+                            {t("userPayments.summary.footerTotal")}
+                            <strong>
+                                {` ${
+                                    totalDue == null
+                                        ? "--"
+                                        : totalDue.toLocaleString(
+                                              i18n.language,
+                                              {
+                                                  style: "currency",
+                                                  currency: "EUR",
+                                              }
+                                          )
+                                } `}
+                            </strong>
+                        </div>
+                        <div style={{ fontSize: "16px" }}>
+                            {t("userPayments.summary.footerScheduleTotal")}
+                            <strong>
+                                {` ${
+                                    previsionalTotal == null
+                                        ? "--"
+                                        : previsionalTotal.toLocaleString(
+                                              i18n.language,
+                                              {
+                                                  style: "currency",
+                                                  currency: "EUR",
+                                              }
+                                          )
+                                } `}
+                            </strong>
+                        </div>
+                        <div style={{ fontSize: "16px" }}>
+                            {t("userPayments.summary.footerPaidToDate")}
+                            <strong>
+                                {` ${
+                                    totalPaymentsToDay == 0 &&
+                                    previsionalTotal == null
+                                        ? "--"
+                                        : totalPaymentsToDay.toLocaleString(
+                                              i18n.language,
+                                              {
+                                                  style: "currency",
+                                                  currency: "EUR",
+                                              }
+                                          )
+                                } `}
+                            </strong>
+                        </div>
+                        <div style={{ fontSize: "16px" }}>
+                            {t("userPayments.summary.footerBalance")}
+                            <strong>
+                                {` ${
+                                    totalPayments == 0 &&
+                                    previsionalTotal == null
+                                        ? "--"
+                                        : (
+                                              previsionalTotal - totalPayments
+                                          ).toLocaleString(i18n.language, {
+                                              style: "currency",
+                                              currency: "EUR",
+                                          })
+                                } `}
+                            </strong>
+                        </div>
+                    </div>
+                </div>
 
                 <CreateCouponModal
                     component={CouponFormContent}

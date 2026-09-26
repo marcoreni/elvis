@@ -18,7 +18,7 @@
 //     three `<Field label={t("payments.coupons.form.*")}>`.
 //   - AdhesionSettings — fn `useTranslation`; nested `deleteStatus(adh)` swal
 //     (`payments.adhesion.deleteConfirm` + `common:actions.cancel` / `common:actions.delete`),
-//     checkbox `enableLabel`, ReactTable `payments.adhesion.cols.*` headers.
+//     checkbox `enableLabel`, TanStackGrid `payments.adhesion.cols.*` headers.
 //   - AdhesionEditModal — fn `useTranslation`; `<h2>` edit/new title ternary, the three field
 //     `<label>`s, cancel/save buttons, `initialValues.label` default (`modal.defaultLabel`).
 //   - EditPaymentScheduleOptions — fn `useTranslation`; three `<h4>` headings, checkbox label,
@@ -30,6 +30,7 @@
 
 import React from "react";
 import { render, screen, waitFor, act } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { Form } from "react-final-form";
 import i18n from "../../../i18n";
 import fr from "../../../locales/fr/parameters.json";
@@ -54,31 +55,6 @@ vi.mock("../../../tools/api", () => ({
         c.del = () => c;
         return c;
     },
-}));
-
-// --- react-table stub: surface every column's string `Header` in order, plus render each
-//     column's `Cell` once against `globalThis.__rtRow` so `Cell`-internal i18n (Oui/Non, the
-//     AdhesionSettings trash button -> `deleteStatus`) is reachable without real table data. ---
-vi.mock("react-table", () => ({
-    default: ({ columns = [] }) => (
-        <div data-testid="react-table">
-            {columns.map((col, i) => (
-                <span key={i} data-testid="col-header">
-                    {typeof col.Header === "string" ? col.Header : ""}
-                </span>
-            ))}
-            {columns.map((col, i) =>
-                col.Cell ? (
-                    <span key={`cell-${i}`} data-testid="col-cell">
-                        {col.Cell({
-                            original: globalThis.__rtRow || {},
-                            value: (globalThis.__rtRow || {}).value,
-                        })}
-                    </span>
-                ) : null
-            )}
-        </div>
-    ),
 }));
 
 // --- sweetalert2 stub -----------------------------------------------------------------------
@@ -182,7 +158,6 @@ beforeEach(() => {
     swal.fire.mockImplementation(() => Promise.resolve({}));
     apiState.lastSuccess = null;
     apiState.lastError = null;
-    globalThis.__rtRow = {};
     global.fetch = vi.fn().mockResolvedValue({
         ok: true,
         status: 200,
@@ -194,7 +169,6 @@ beforeEach(() => {
 afterEach(async () => {
     await i18n.changeLanguage("fr");
     vi.clearAllMocks();
-    delete globalThis.__rtRow;
 });
 
 // ============================================================================================
@@ -592,21 +566,22 @@ describe("AdhesionSettings", () => {
     );
 
     test.each(["fr", "en"])(
-        "ReactTable headers + add button are translated in %s",
+        "TanStackGrid headers + add button are translated in %s",
         async (lng) => {
             await i18n.changeLanguage(lng);
             mockFetchEnabled();
-            render(<AdhesionSettings />);
+            const { container } = render(<AdhesionSettings />);
 
             await waitFor(() =>
                 expect(
                     screen.getByText(tP(lng)("payments.adhesion.cols.labels"))
                 ).toBeInTheDocument()
             );
-            const got = screen
-                .getAllByTestId("col-header")
-                .map((el) => el.textContent)
-                .filter(Boolean);
+            // AdhesionSettings renders a real TanStackGrid (docs/Modernization-Roadmap.md item 13)
+            // -- headers are real <th>s, not the old react-table stub's `col-header` spans.
+            const got = [
+                ...container.querySelectorAll("thead tr:first-child th"),
+            ].map((th) => th.textContent);
             expect(got).toEqual(HEADERS[lng]);
 
             // the "add" AdhesionEditModal trigger carries `common:actions.add`
@@ -621,7 +596,6 @@ describe("AdhesionSettings", () => {
         async (lng) => {
             await i18n.changeLanguage(lng);
             mockFetchEnabled();
-            globalThis.__rtRow = { id: 9, label: "Std", built_in: false };
 
             const { container } = render(<AdhesionSettings />);
             await waitFor(() =>
@@ -630,8 +604,24 @@ describe("AdhesionSettings", () => {
                 ).toBeInTheDocument()
             );
 
-            const trash = container.querySelector("button.btn-warning");
-            expect(trash).toBeTruthy();
+            // Feed a real row through the mocked `api.set().success(...)` chain -- the old
+            // react-table stub used to fake this via a directly-invoked `Cell({original:
+            // globalThis.__rtRow})`, bypassing real data flow entirely; the real TanStackGrid
+            // needs an actual row in state to render the trash button.
+            await waitFor(() =>
+                expect(typeof apiState.lastSuccess).toBe("function")
+            );
+            act(() => {
+                apiState.lastSuccess([
+                    { id: 9, label: "Std", price: 5, built_in: false },
+                ]);
+            });
+
+            const trash = await waitFor(() => {
+                const btn = container.querySelector("button.btn-warning");
+                expect(btn).toBeTruthy();
+                return btn;
+            });
             act(() => {
                 trash.click();
             });
@@ -717,6 +707,71 @@ describe("AdhesionSettings", () => {
             expect(errCall[0]).not.toHaveProperty("type");
         }
     );
+
+    // Regression: the `pagination` clamp effect (AdhesionSettings.jsx ~line 23-38), added
+    // alongside the TanStackGrid migration -- deleting the last row on the final page must not
+    // strand the view on a now-empty out-of-range page (same class of fix as Activity.jsx's
+    // clampPageIndex / DuePaymentList.jsx).
+    test("deleting the last row on the final page clamps pagination back to a valid page", async () => {
+        mockFetchEnabled();
+
+        render(<AdhesionSettings />);
+        await waitFor(() =>
+            expect(
+                screen.getByText(tP("fr")("payments.adhesion.cols.labels"))
+            ).toBeInTheDocument()
+        );
+        await waitFor(() =>
+            expect(typeof apiState.lastSuccess).toBe("function")
+        );
+
+        // 11 rows at the default pageSize (10) span 2 pages.
+        const rows = Array.from({ length: 11 }, (_, i) => ({
+            id: i + 1,
+            label: `Adh ${i + 1}`,
+            price: 10,
+            built_in: false,
+        }));
+        act(() => {
+            apiState.lastSuccess(rows);
+        });
+
+        await waitFor(() =>
+            expect(screen.getByText("Page 1 sur 2")).toBeInTheDocument()
+        );
+        await userEvent.click(screen.getByRole("button", { name: "Suivant" }));
+        await waitFor(() =>
+            expect(screen.getByText("Page 2 sur 2")).toBeInTheDocument()
+        );
+
+        // Delete the single row stranded on that last page.
+        swal.fire.mockImplementation(() =>
+            Promise.resolve({ isConfirmed: true })
+        );
+        const successBeforeDelete = apiState.lastSuccess;
+        const trash = document.querySelector("button.btn-warning");
+        expect(trash).toBeTruthy();
+        await userEvent.click(trash);
+
+        // deleteStatus's own `api.set()` call replaces the captured success callback with the
+        // delete's own -- wait for that swap before firing it, simulating the DELETE resolving.
+        await waitFor(() =>
+            expect(apiState.lastSuccess).not.toBe(successBeforeDelete)
+        );
+        act(() => {
+            apiState.lastSuccess({ id: 11 });
+        });
+
+        // 10 remaining rows / pageSize 10 = 1 page: the clamp effect must bring pageIndex back
+        // from 1 to 0 instead of stranding the view on the now-empty page 2.
+        await waitFor(() =>
+            expect(screen.getByText("Page 1 sur 1")).toBeInTheDocument()
+        );
+        expect(screen.queryByText("Aucune donnée")).not.toBeInTheDocument();
+        expect(document.querySelectorAll("tbody tr td").length).toBeGreaterThan(
+            0
+        );
+    });
 });
 
 // ============================================================================================

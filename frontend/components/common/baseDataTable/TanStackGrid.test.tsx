@@ -22,7 +22,7 @@
 import React from "react";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, beforeEach, describe, expect, test } from "vitest";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 // vitest.setup.js already imports this at runtime; needed again here so tsc's type-checker (which
 // doesn't process setupFiles) sees jest-dom's matcher augmentation of vitest's `Assertion` type.
 import "@testing-library/jest-dom/vitest";
@@ -615,6 +615,44 @@ describe("TanStackGrid — controlled expanded/onExpandedChange", () => {
         );
 
         expect(screen.getByText("details for Zephyr")).toBeInTheDocument();
+    });
+});
+
+// A per-column `meta.stopRowClick` (set via `LegacyColumn.stopRowClick`) stops a row-wide
+// `getRowProps` click handler from firing when that column's own `<td>` is clicked -- so far only
+// exercised indirectly through ActivitiesApplicationsList.test.jsx's own regression coverage.
+// Direct coverage here, on the shared component itself.
+describe("TanStackGrid — stopRowClick column meta", () => {
+    const columns: LegacyColumn[] = [
+        { id: "id", Header: "#", accessor: "id", stopRowClick: true },
+        { id: "label", Header: "Label", accessor: "label" },
+    ];
+
+    test("clicking a stopRowClick column's <td> does not fire the row's getRowProps click handler, but another column's <td> does", async () => {
+        const onRowClick = vi.fn();
+
+        render(
+            <TanStackGrid
+                tableName="table-stop-row-click"
+                columns={columns}
+                data={[{ id: 1, label: "Zephyr" }]}
+                loading={false}
+                pages={1}
+                onFetchData={noop}
+                getRowProps={() => ({ onClick: onRowClick })}
+            />
+        );
+
+        const cells = screen.getAllByRole("cell");
+        expect(cells).toHaveLength(2);
+
+        // The stopRowClick column's own raw <td> (not just some inner content).
+        await userEvent.click(cells[0]);
+        expect(onRowClick).not.toHaveBeenCalled();
+
+        // A column with no stopRowClick still lets the row handler fire.
+        await userEvent.click(cells[1]);
+        expect(onRowClick).toHaveBeenCalledTimes(1);
     });
 });
 

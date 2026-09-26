@@ -1,8 +1,9 @@
 import React, { Fragment } from "react";
 import { withTranslation, useTranslation } from "react-i18next";
 import _ from "lodash";
-import ReactTable from "react-table";
-import Select from "react-select";
+import TanStackGrid from "./common/baseDataTable/TanStackGrid";
+import FilterSelect from "./common/baseDataTable/FilterSelect";
+import FilterReactSelect from "./common/baseDataTable/FilterReactSelect";
 import Loader from "react-loader-spinner";
 import swal from "sweetalert2";
 
@@ -510,6 +511,15 @@ class ActivitiesApplicationsList extends React.Component {
                     return res;
                 })
                 .then((res) => {
+                    if (this.state.filter !== filter) {
+                        return; // a newer fetchData call has already superseded this one
+                    }
+
+                    if (res.pages > 0 && filter.page >= res.pages) {
+                        this.fetchData({ ...filter, page: res.pages - 1 });
+                        return;
+                    }
+
                     this.setState({
                         ...res,
                         loading: false,
@@ -537,6 +547,7 @@ class ActivitiesApplicationsList extends React.Component {
         this.fetchData({
             ...this.state.filter,
             filtered: newFilter,
+            page: 0,
         });
     }
 
@@ -659,14 +670,20 @@ class ActivitiesApplicationsList extends React.Component {
                 Header: "",
                 id: "selection",
                 width: 25,
-                accessor: (r) => this.state.bulkTargets.includes(r.id),
+                // Row-click-to-open (see the TanStackGrid getRowProps below) must not fire for
+                // this column -- v6's per-cell getTdProps excluded it by id, covering its whole
+                // <td> box. `stopRowClick` (TanStackGrid meta) is the equivalent here: it stops
+                // propagation on the <td> itself, not just on the Cell's own rendered content, so
+                // a click on the cell's padding (not just the checkbox) is covered too.
+                stopRowClick: true,
                 Filter: () => (
                     <input
                         type="checkbox"
-                        defaultChecked={this.state.bulkTargets === "all"}
                         checked={
-                            this.state.bulkTargets.length ===
-                            this.state.data.length
+                            this.state.bulkTargets === "all" ||
+                            (this.state.bulkTargets.length > 0 &&
+                                this.state.bulkTargets.length ===
+                                    this.state.data.length)
                         }
                         onChange={(e) => {
                             if (e.target.checked) {
@@ -681,15 +698,16 @@ class ActivitiesApplicationsList extends React.Component {
                         }}
                     />
                 ),
-                Cell: (d) => (
+                Cell: (props) => (
                     <input
                         type="checkbox"
-                        defaultChecked={
-                            this.state.bulkTargets === "all" || d.value
+                        checked={
+                            this.state.bulkTargets === "all" ||
+                            this.state.bulkTargets.includes(props.original.id)
                         }
-                        onClick={(e) =>
+                        onChange={(e) =>
                             this.updateBulkTarget(
-                                d.original.id,
+                                props.original.id,
                                 e.target.checked
                             )
                         }
@@ -720,15 +738,19 @@ class ActivitiesApplicationsList extends React.Component {
                 width: 100,
                 id: "date",
                 filterable: false,
-                Cell: (d) => d.value.format("DD MMM YYYY"),
+                Cell: (props) =>
+                    moment(props.original.created_at).format("DD MMM YYYY"),
             },
             {
                 id: "name",
                 Header: t("activityApplications:list.columns.name"),
                 width: 175,
-                accessor: (d) => (
-                    <UserWithInfos userId={d.user_id}>
-                        {`${d.user.first_name} ${d.user.last_name}`}
+                // Row-click-to-open (getRowProps below) must not fire when the user meant to open
+                // UserWithInfos's own popover -- see the "selection" column's stopRowClick above.
+                stopRowClick: true,
+                Cell: (props) => (
+                    <UserWithInfos userId={props.original.user_id}>
+                        {`${props.original.user.first_name} ${props.original.user.last_name}`}
                     </UserWithInfos>
                 ),
             },
@@ -744,7 +766,7 @@ class ActivitiesApplicationsList extends React.Component {
                 Header: t("activityApplications:list.columns.level"),
                 width: 130,
                 Filter: ({ filter, onChange }) => (
-                    <select
+                    <FilterSelect
                         onChange={(e) => onChange(e.target.value)}
                         value={filter ? filter.value : ""}
                     >
@@ -754,7 +776,7 @@ class ActivitiesApplicationsList extends React.Component {
                                 {r.label}
                             </option>
                         ))}
-                    </select>
+                    </FilterSelect>
                 ),
                 accessor: (d) =>
                     (d.user &&
@@ -777,7 +799,7 @@ class ActivitiesApplicationsList extends React.Component {
                     return d.activity_refs.map((a) => a.label).join(", ");
                 },
                 Filter: ({ filter, onChange }) => (
-                    <Select
+                    <FilterReactSelect
                         options={activitiesFilterOptions}
                         isMulti={true}
                         isClearable={true}
@@ -817,7 +839,7 @@ class ActivitiesApplicationsList extends React.Component {
                         .join(", ");
                 },
                 Filter: ({ filter, onChange }) => (
-                    <Select
+                    <FilterReactSelect
                         options={activitiesKindsFilterOptions}
                         isMulti={true}
                         isClearable={true}
@@ -864,7 +886,7 @@ class ActivitiesApplicationsList extends React.Component {
                     return PRE_APPLICATION_ACTION_LABELS.new;
                 },
                 Filter: ({ filter, onChange }) => (
-                    <Select
+                    <FilterReactSelect
                         options={applicationActionsFilterOptions}
                         isMulti={true}
                         isClearable={true}
@@ -900,7 +922,7 @@ class ActivitiesApplicationsList extends React.Component {
                       accessor: (d) => (d.season ? d.season.label : "n/a"),
                       sortable: false,
                       Filter: ({ filter, onChange }) => (
-                          <select
+                          <FilterSelect
                               onChange={(event) => onChange(event.target.value)}
                               style={{ width: "100%" }}
                               value={filter ? filter.value : "all"}
@@ -913,7 +935,7 @@ class ActivitiesApplicationsList extends React.Component {
                                       {s.label}
                                   </option>
                               ))}
-                          </select>
+                          </FilterSelect>
                       ),
                   }
                 : null,
@@ -922,23 +944,26 @@ class ActivitiesApplicationsList extends React.Component {
                 Header: t("activityApplications:list.columns.referent"),
                 width: 125,
                 accessor: (d) => d.referent,
-                Cell: (c) =>
-                    (c.value &&
-                        `${c.value.first_name} ${c.value.last_name.charAt(
-                            0
-                        )}.`) ||
-                    "",
+                Cell: (props) => {
+                    const referent = props.original.referent;
+                    return (
+                        (referent &&
+                            `${referent.first_name} ${referent.last_name.charAt(
+                                0
+                            )}.`) ||
+                        ""
+                    );
+                },
                 Filter: ({ filter, onChange }) => (
-                    <select
-                        className="form-control"
-                        defaultValue={(filter && filter.value) || ""}
+                    <FilterSelect
+                        value={(filter && filter.value) || ""}
                         onChange={(e) => onChange(e.target.value)}
                     >
                         <option value=""></option>
                         {_.sortBy(this.props.admins, "first_name").map(
                             optionMapper(USER_OPTIONS_SHORT)
                         )}
-                    </select>
+                    </FilterSelect>
                 ),
             },
             this.props.currentUserIsAdmin
@@ -952,7 +977,7 @@ class ActivitiesApplicationsList extends React.Component {
                               : t("activityApplications:list.no"),
                       sortable: false,
                       Filter: ({ filter, onChange }) => (
-                          <select
+                          <FilterSelect
                               onChange={(event) => onChange(event.target.value)}
                               style={{ width: "100%" }}
                               value={filter ? filter.value : "all"}
@@ -966,7 +991,7 @@ class ActivitiesApplicationsList extends React.Component {
                               <option value="false">
                                   {t("activityApplications:list.no")}
                               </option>
-                          </select>
+                          </FilterSelect>
                       ),
                   }
                 : null,
@@ -975,25 +1000,21 @@ class ActivitiesApplicationsList extends React.Component {
                 Header: t("activityApplications:list.columns.status"),
                 accessor: (d) => d.activity_application_status_id,
                 sortable: false,
-                filterMethod: (filter, row) => {
-                    if (filter.value === "all") {
-                        return true;
-                    }
-
-                    return row.activity_application_status_id == filter.value;
-                },
-                Cell: (row) => {
+                // v6's filterMethod was already dead code: it's only consulted for client-side
+                // filtering, and this table is manual (server-filtered) -- dropped, not ported.
+                Cell: (props) => {
                     let status = _.find(
                         this.props.statuses,
-                        (status) => status.id === row.value
+                        (status) =>
+                            status.id ===
+                            props.original.activity_application_status_id
                     );
-                    const referent = row.original.referent;
                     return (
                         (status &&
                             `${status.label} ${
-                                row.original.status_updated_at
+                                props.original.status_updated_at
                                     ? `(${moment(
-                                          row.original.status_updated_at
+                                          props.original.status_updated_at
                                       ).fromNow()})`
                                     : ""
                             }`) ||
@@ -1001,7 +1022,7 @@ class ActivitiesApplicationsList extends React.Component {
                     );
                 },
                 Filter: ({ filter, onChange }) => (
-                    <Select
+                    <FilterReactSelect
                         options={applicationStatusesFilterOptions}
                         isMulti={true}
                         isClearable={true}
@@ -1207,72 +1228,48 @@ class ActivitiesApplicationsList extends React.Component {
                         </div>
                     </div>
                     <div className="ibox-content no-padding">
-                        <ReactTable
+                        <TanStackGrid
+                            tableName="activities-applications-list"
                             data={this.state.data}
-                            manual
                             pages={this.state.pages}
+                            totalCount={this.state.total}
                             loading={this.state.loading}
                             columns={filteredColumns}
-                            defaultSorted={[{ id: "date", desc: true }]}
-                            filterable={true}
-                            defaultFilterMethod={(filter, row) => {
-                                if (row[filter.id] !== null) {
-                                    return row[filter.id]
-                                        .toString()
-                                        .toLowerCase()
-                                        .startsWith(filter.value.toLowerCase());
-                                }
+                            pagination={{
+                                pageIndex: this.state.filter.page,
+                                pageSize: this.state.filter.pageSize,
                             }}
-                            page={this.state.filter.page}
-                            pageSize={this.state.filter.pageSize}
-                            sorted={this.state.filter.sorted}
-                            filtered={this.state.filter.filtered}
-                            onPageChange={(page) =>
-                                this.fetchData({ ...this.state.filter, page })
-                            }
-                            onPageSizeChange={(pageSize, page) =>
+                            onPaginationChange={({ pageIndex, pageSize }) =>
                                 this.fetchData({
                                     ...this.state.filter,
-                                    page,
+                                    page: pageIndex,
                                     pageSize,
                                 })
                             }
-                            onSortedChange={(sorted) =>
+                            sorting={this.state.filter.sorted}
+                            onSortingChange={(sorted) =>
                                 this.fetchData({ ...this.state.filter, sorted })
                             }
-                            onFilteredChange={(filtered) =>
+                            columnFilters={this.state.filter.filtered}
+                            onColumnFiltersChange={(filtered) =>
                                 this.fetchData({
                                     ...this.state.filter,
                                     filtered,
+                                    page: 0,
                                 })
                             }
-                            previousText={t("common:reactTable.previousText")}
-                            nextText={t("common:reactTable.nextText")}
-                            loadingText={t("common:reactTable.loadingText")}
-                            noDataText={t("common:reactTable.noDataText")}
-                            pageText={t("common:reactTable.pageText")}
-                            ofText={t("common:reactTable.ofText")}
-                            rowsText={t("common:reactTable.rowsText")}
                             pageSizeOptions={[5, 10, 15, 16, 20]}
-                            getTdProps={(state, rowInfo, column, instance) => {
-                                if (
-                                    column.id !== "selection" &&
-                                    column.id !== "name"
-                                )
-                                    return {
-                                        onClick: (e, handleOriginal) => {
-                                            window.open(
-                                                `/inscriptions/${rowInfo.original.id}`
-                                            );
-
-                                            if (handleOriginal) {
-                                                handleOriginal();
-                                            }
-                                        },
-                                    };
-
-                                return {};
-                            }}
+                            // v6's per-cell getTdProps (open the application in a new tab on any
+                            // cell except "selection"/"name") has no TanStackGrid equivalent --
+                            // only a per-row hook exists. Same effect: attach the open-on-click to
+                            // the row, and scope the exclusion back to those two columns via
+                            // their own `stopRowClick: true` (see their definitions above), which
+                            // stops propagation at the `<td>` itself -- matching v6's per-column
+                            // `<td>` exclusion, padding included.
+                            getRowProps={(original) => ({
+                                onClick: () =>
+                                    window.open(`/inscriptions/${original.id}`),
+                            })}
                         />
 
                         <div className="flex flex-center-justified m-t-xs">
