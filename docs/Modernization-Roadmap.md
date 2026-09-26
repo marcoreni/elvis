@@ -147,7 +147,7 @@ caching gotchas, the several real bugs found live via `code-reviewer` passes, th
 reference-identity/mutation pitfalls that recurred across batches) lives in each PR's
 own description and commit messages, not here.
 
-## 14. React 17 → 18 — pre-check done, not started; sequenced after item 13
+## 14. React 17 → 18 — pre-check done, not started; item 13 is now closed, this is next
 
 First stage of the eventual 17→19 jump (19 removes legacy string refs/context, already ahead of
 that since item 12 retired `react-stepzilla`'s). Pre-check (2026-09-16): every React-adjacent
@@ -163,10 +163,10 @@ package's real `peerDependencies` checked against the installed tree, not assume
   `react-draft-wysiwyg`, `@ramonak/react-progress-bar`, `react-toastify`, `react-input-mask`,
   `react-dropzone`, `react-email-editor`, `react-autosuggest` all explicitly support React 18 in
   their published peer deps already.
-- `react-table`/`react-loader-spinner` intentionally not re-checked here — item 13 replaces
-  `react-table` before this lands, and `react-loader-spinner` is separately tracked in
-  KnownIssues.md's "Frontend dependencies" entry as needing its own bump regardless of React's
-  version.
+- `react-table` is gone entirely (item 13, done) — its replacement, `@tanstack/react-table@8.21.3`,
+  already declares `peerDependencies: {react: ">=16.8"}`, covering 18 with no action needed.
+  `react-loader-spinner` is separately tracked in `KnownIssues.md`'s "Frontend dependencies" entry
+  as needing its own bump regardless of React's version.
 
 Once started: bump react/react-dom → 18, `react_ujs`, `@testing-library/react` → v13+, all in one
 commit (per the blocker above), then a real smoke pass — React 18's StrictMode/effect-timing
