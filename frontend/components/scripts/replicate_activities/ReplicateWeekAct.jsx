@@ -4,7 +4,7 @@ import * as api from "../../../tools/api";
 import swal from "sweetalert2";
 import { throttle } from "lodash";
 import JobProgress from "../../JobProgress";
-import ReactDOM from "react-dom";
+import { createRoot } from "react-dom/client";
 
 class ReplicateWeekAct extends React.Component {
     constructor(props) {
@@ -27,18 +27,25 @@ class ReplicateWeekAct extends React.Component {
     showJobProgressModal(jobId) {
         const { t } = this.props;
         const container = document.createElement("div");
-        ReactDOM.render(
+        const root = createRoot(container);
+        root.render(
             <JobProgress
                 jobId={jobId}
-                onError={(res) =>
+                onError={(res) => {
+                    // JobProgress's own trackProgress .error() handler already showed its own
+                    // swal.fire() for this same error just before calling onError -- that second
+                    // fire() supersedes this modal's content without ever closing it, so `didClose`
+                    // below never runs for it and this root is never told to unmount. Do it here
+                    // explicitly instead: root.unmount() runs JobProgress's componentWillUnmount
+                    // synchronously, which is what actually stops its poll loop (see JobProgress.jsx).
+                    root.unmount();
                     swal.fire({
                         title: t("courses:replicateActivities.errorTitle"),
                         text: res,
                         icon: "error",
-                    })
-                }
-            />,
-            container
+                    });
+                }}
+            />
         );
 
         swal.fire({
@@ -47,6 +54,12 @@ class ReplicateWeekAct extends React.Component {
             showCloseButton: true,
             focusConfirm: false,
             confirmButtonText: t("courses:replicateActivities.ok"),
+            // JobProgress polls itself via setTimeout (see its componentDidMount/trackProgress);
+            // that loop only stops in componentWillUnmount. On a normal close (OK/close button),
+            // this didClose is what triggers it. It does NOT cover every path -- see JobProgress's
+            // own `unmounted` guard and this component's `onError` above for the case where
+            // JobProgress's own error handling supersedes this modal before it ever closes.
+            didClose: () => root.unmount(),
         });
     }
 

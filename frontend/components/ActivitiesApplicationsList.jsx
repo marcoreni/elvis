@@ -111,13 +111,20 @@ class ActivitiesApplicationsList extends React.Component {
         root.render(
             <JobProgress
                 jobId={jobId}
-                onError={(res) =>
+                onError={(res) => {
+                    // JobProgress's own trackProgress .error() handler already showed its own
+                    // swal.fire() for this same error just before calling onError -- that second
+                    // fire() supersedes this modal's content without ever closing it, so `didClose`
+                    // below never runs for it and this root is never told to unmount. Do it here
+                    // explicitly instead: root.unmount() runs JobProgress's componentWillUnmount
+                    // synchronously, which is what actually stops its poll loop (see JobProgress.jsx).
+                    root.unmount();
                     swal.fire({
                         title: t("common:jobProgress.errorTitle"),
                         text: res,
                         icon: "error",
-                    })
-                }
+                    });
+                }}
             />
         );
 
@@ -128,9 +135,10 @@ class ActivitiesApplicationsList extends React.Component {
             focusConfirm: false,
             confirmButtonText: "OK",
             // JobProgress polls itself via setTimeout (see its componentDidMount/trackProgress);
-            // that loop only stops in componentWillUnmount, which never fires unless the root is
-            // explicitly unmounted -- without this it leaks a polling loop past modal close (this
-            // predates the createRoot migration, ReactDOM.render had the same gap).
+            // that loop only stops in componentWillUnmount. On a normal close (OK/close button),
+            // this didClose is what triggers it. It does NOT cover every path -- see JobProgress's
+            // own `unmounted` guard and this component's `onError` above for the case where
+            // JobProgress's own error handling supersedes this modal before it ever closes.
             didClose: () => root.unmount(),
         });
     }

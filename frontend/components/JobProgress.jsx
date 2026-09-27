@@ -19,6 +19,12 @@ class JobProgress extends React.Component {
     }
 
     componentWillUnmount() {
+        // Guards trackProgress's success handler below: a /jobs/:id/status request can still be
+        // in flight when the modal closes and this component unmounts. Clearing a *pending*
+        // timeout (below) doesn't help in that case -- the response arrives anyway and, without
+        // this flag, would setState() post-unmount and reschedule another setTimeout, restarting
+        // a poll loop nothing could ever clear again.
+        this.unmounted = true;
         if (this.timeout) {
             clearTimeout(this.timeout);
         }
@@ -28,6 +34,9 @@ class JobProgress extends React.Component {
         const { t } = this.props;
         api.set()
             .success(({ jobStatus }) => {
+                if (this.unmounted) {
+                    return;
+                }
                 this.setState({
                     progressValue: Math.round(
                         (jobStatus.progress / jobStatus.total) * 100
@@ -47,6 +56,9 @@ class JobProgress extends React.Component {
                 }
             })
             .error((res) => {
+                if (this.unmounted) {
+                    return;
+                }
                 swal.fire({
                     title: t("common:jobProgress.errorTitle"),
                     text: res,

@@ -42,7 +42,18 @@ vi.mock("./JobProgress", () => {
             state.unmounted = true;
         }
         render() {
-            return <div data-testid="job-progress-stub" />;
+            return (
+                <div data-testid="job-progress-stub">
+                    {/* Stands in for JobProgress's own trackProgress .error() handler calling
+                        this.props.onError(res) -- see JobProgress.jsx. */}
+                    <button
+                        data-testid="job-progress-stub-trigger-error"
+                        onClick={() => this.props.onError("boom")}
+                    >
+                        trigger error
+                    </button>
+                </div>
+            );
         }
     }
     return { default: JobProgressStub, __jobProgressState: state };
@@ -129,6 +140,8 @@ function makeRow(id, overrides = {}) {
 
 beforeEach(() => {
     lastGridProps = null;
+    JobProgressModule.__jobProgressState.mounted = false;
+    JobProgressModule.__jobProgressState.unmounted = false;
     global.fetch = vi.fn().mockResolvedValue({
         json: () =>
             Promise.resolve({
@@ -681,6 +694,12 @@ describe("ActivitiesApplicationsList — showJobProgressModal unmounts JobProgre
             <ActivitiesApplicationsList {...baseProps()} />
         );
 
+        // componentDidMount's own fetchData debounces its request 400ms out through a
+        // module-level shared timer (see fetchData/tools/inputs.js's makeDebounce) -- waiting for
+        // it to actually fire here, while `global.fetch` is still this test's own mock, keeps it
+        // from surviving past this test's end and firing later against a torn-down environment.
+        await waitFor(() => expect(global.fetch).toHaveBeenCalled());
+
         const fileInput = container.querySelector('input[type="file"]');
         const file = new File(["a,b,c"], "import.csv", { type: "text/csv" });
         await userEvent.upload(fileInput, file);
@@ -688,10 +707,83 @@ describe("ActivitiesApplicationsList — showJobProgressModal unmounts JobProgre
         await waitFor(() =>
             expect(JobProgressModule.__jobProgressState.mounted).toBe(true)
         );
-        expect(await screen.findByTestId("job-progress-stub")).toBeInTheDocument();
+        expect(
+            await screen.findByTestId("job-progress-stub")
+        ).toBeInTheDocument();
         expect(JobProgressModule.__jobProgressState.unmounted).toBe(false);
 
         await userEvent.click(screen.getByRole("button", { name: "OK" }));
+
+        await waitFor(() =>
+            expect(JobProgressModule.__jobProgressState.unmounted).toBe(true)
+        );
+    });
+});
+
+// ==================================================================================================
+// Regression: the self-superseding-modal case -- JobProgress's own error handling calling
+// swal.fire() again while its own progress modal is still showing
+// ==================================================================================================
+//
+// JobProgress's trackProgress .error() handler shows its own swal.fire() for a failed
+// /jobs/:id/status request, then calls this.props.onError(res) (see JobProgress.jsx). Sweetalert2
+// replaces the currently-open popup's content for that second fire() rather than closing and
+// reopening it, so the *original* swal.fire()'s `didClose` (which is what unmounts the createRoot
+// normally, see the describe block above) never runs -- the root is never told to unmount, and
+// JobProgress's own poll-loop guard (componentWillUnmount) never fires either. Fixed by having
+// showJobProgressModal's onError callback call root.unmount() explicitly, before showing its own
+// error swal, rather than relying on didClose. The stub's "trigger error" button stands in for
+// JobProgress calling this.props.onError(res) from its own error handler.
+describe("ActivitiesApplicationsList — showJobProgressModal unmounts JobProgress when its own error handling supersedes the modal (regression)", () => {
+    test("onError unmounts the createRoot even though didClose never fires for the superseded modal", async () => {
+        global.fetch = vi.fn((url) => {
+            const u = String(url);
+            if (u.includes("/inscriptions/create_import_csv")) {
+                return Promise.resolve({
+                    json: () => Promise.resolve({ jobId: 123 }),
+                });
+            }
+            if (u.includes("/inscriptions/list")) {
+                return Promise.resolve({
+                    json: () =>
+                        Promise.resolve({
+                            applications: [],
+                            pages: 0,
+                            total: 0,
+                            pending_total: 0,
+                        }),
+                });
+            }
+            return Promise.resolve({
+                ok: true,
+                headers: { get: () => "application/json" },
+                json: () => Promise.resolve({}),
+            });
+        });
+
+        const { container } = render(
+            <ActivitiesApplicationsList {...baseProps()} />
+        );
+
+        // See the identical comment in the describe block above -- consumes componentDidMount's
+        // debounced fetchData call within this test's own lifetime, so it can't survive as a
+        // stray timer past this (last-in-file) test's teardown.
+        await waitFor(() => expect(global.fetch).toHaveBeenCalled());
+
+        const fileInput = container.querySelector('input[type="file"]');
+        const file = new File(["a,b,c"], "import.csv", { type: "text/csv" });
+        await userEvent.upload(fileInput, file);
+
+        await waitFor(() =>
+            expect(JobProgressModule.__jobProgressState.mounted).toBe(true)
+        );
+        expect(JobProgressModule.__jobProgressState.unmounted).toBe(false);
+
+        // Simulate JobProgress's own error handler calling this.props.onError(res) -- no "OK"
+        // click, no didClose: the original modal's own close path never runs.
+        await userEvent.click(
+            screen.getByTestId("job-progress-stub-trigger-error")
+        );
 
         await waitFor(() =>
             expect(JobProgressModule.__jobProgressState.unmounted).toBe(true)
