@@ -51,9 +51,9 @@ u.save!
   colocated `*.test.js`/`*.test.jsx` files under `frontend/`). Any `.js` file under `frontend/`
   containing JSX must be named `.jsx` — Vite's esbuild/oxc integration only parses JSX in
   `.jsx`/`.tsx` by default, unlike this app's actual Rspack build, which doesn't care about
-  the extension. Component-rendering tests use `@testing-library/react@^12`
+  the extension. Component-rendering tests use `@testing-library/react@^13`
   (`@testing-library/jest-dom@6.9.1`/`@testing-library/user-event@^13`) — pinned below their
-  latest majors for this app's React 17/Node 22, not because of a Vite/Vitest constraint.
+  latest majors for this app's React 18/Node 22, not because of a Vite/Vitest constraint.
 - JS formatting: `.prettierrc` sets 4-space tabs; no lint script is wired up in `package.json`
 
 Note: this repo has **two parallel test frameworks** — RSpec (`spec/`, newer/preferred) and Minitest

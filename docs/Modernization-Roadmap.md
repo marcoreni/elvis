@@ -147,31 +147,44 @@ caching gotchas, the several real bugs found live via `code-reviewer` passes, th
 reference-identity/mutation pitfalls that recurred across batches) lives in each PR's
 own description and commit messages, not here.
 
-## 14. React 17 → 18 — pre-check done, not started; sequenced after item 13
+## 14. React 17 → 18 — IN PROGRESS, `feat/react-18-bump`
 
 First stage of the eventual 17→19 jump (19 removes legacy string refs/context, already ahead of
 that since item 12 retired `react-stepzilla`'s). Pre-check (2026-09-16): every React-adjacent
-package's real `peerDependencies` checked against the installed tree, not assumed.
+package's real `peerDependencies` checked against the installed tree, not assumed —
+`react-select`/`react-hook-form`/`react-final-form`/`react-modal`/`react-switch`/`react-i18next`/
+`@fullcalendar/react`/`react-draft-wysiwyg`/`@ramonak/react-progress-bar`/`react-toastify`/
+`react-input-mask`/`react-dropzone`/`react-email-editor`/`react-autosuggest` all already declared
+real React 18 support; `react-table` is moot (item 13 dropped it entirely before this started, and
+its replacement `@tanstack/react-table@8.21.3` already covers 18); `react-loader-spinner@3.1.14`
+declares only `^16.8.6` but verified working under 18 regardless (see `docs/KnownIssues.md`).
 
-- **Real hard blocker**: `@testing-library/react@^12.1.5` requires `react <18.0.0` — must bump to
-  v13+ in the *same* commit as the React bump itself, not before (nothing breaks yet) or after
-  (breaks every test in between).
-- **Confirmed still true from the original survey**: `react_ujs` (`^2.4.3`) needs bumping in
-  lockstep — `ReactDOM.render` is gone in 18+.
-- **Confirmed clear, no action needed**: `react-select`, `react-hook-form`, `react-final-form`(+
-  arrays), `react-modal`, `react-switch`, `react-i18next`, `@fullcalendar/react`,
-  `react-draft-wysiwyg`, `@ramonak/react-progress-bar`, `react-toastify`, `react-input-mask`,
-  `react-dropzone`, `react-email-editor`, `react-autosuggest` all explicitly support React 18 in
-  their published peer deps already.
-- `react-table`/`react-loader-spinner` intentionally not re-checked here — item 13 replaces
-  `react-table` before this lands, and `react-loader-spinner` is separately tracked in
-  KnownIssues.md's "Frontend dependencies" entry as needing its own bump regardless of React's
-  version.
+**The bump itself** (2026-09-26): `react`/`react-dom` → `18.3.1`, `react_ujs` → `^3.3.1` (its own
+React 18 `createRoot` migration is fully internal — this app's entry packs only ever call
+`ReactRailsUJS.useContext(...)`, no change needed there), `@testing-library/react` → `^13.4.0`, all
+in one commit per the hard blocker (`@testing-library/react@^12` requires `react <18`). The Ruby gem
+`react-rails` was already on `3.3.1` in `Gemfile.lock`, ahead of the npm package — this bump
+resolves a pre-existing version mismatch rather than creating one; no Gemfile change needed. Since
+`react_ujs@3.x` mounts every `react_component` island through `createRoot`, all ~114 of this app's
+mount points became concurrent roots at once, and React 18's automatic batching applies app-wide
+from this single commit.
 
-Once started: bump react/react-dom → 18, `react_ujs`, `@testing-library/react` → v13+, all in one
-commit (per the blocker above), then a real smoke pass — React 18's StrictMode/effect-timing
-changes can surface latent lifecycle bugs across this app's ~118 class components, not caught by
-`tsc`/a green test suite alone.
+**Real regression class found and being fixed, not deferred to a later smoke pass**: automatic
+batching means a `setState` call outside a React event handler (inside `.then()`, after `await`, in
+`setTimeout`) — which applied synchronously under React 17 — now always defers. Several class
+components had code that called `setState({field: computedValue})` and, in the same synchronous
+block, immediately read `this.state.field` (or a sibling field another `setState` in the same async
+callback also just set) expecting the just-applied value. First found in 5 `courses/` components
+(the only ones with test coverage that happened to catch it), then confirmed more broadly via a
+3-pass audit across ~56 more class components with the same `.then()`/`async`/`setTimeout` +
+`setState` shape. Two `code-reviewer` rounds on the fix branch each found the *fix itself*
+reintroducing the same bug class or missing an instance — this item is not being marked done until a
+review round comes back clean. Full narrative belongs in the branch's own commits/PR once merged,
+per this doc's own trim convention — don't duplicate it here.
+
+Still to do once the branch is clean: a live smoke pass across the app (not just the automated
+suite) before considering item 14 fully closed, given React 18's StrictMode/effect-timing changes
+can surface latent class-component lifecycle bugs beyond just the batching class already found.
 
 ## Context this roadmap assumes (don't re-derive, just re-read if needed)
 

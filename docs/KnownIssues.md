@@ -34,17 +34,19 @@ current latest), and `prettier` (3.9.6) are already done; removed from the list 
 left:
 
 - **React 17 → 19**, two majors, real breaking boundaries: legacy string refs/legacy context API are
-  removed in 19 (grep the ~118 class components first); `ReactDOM.render` is gone from 18+
-  (`react_ujs`, currently `^2.4.3`, needs bumping in lockstep); React 18 changes effect/StrictMode
-  timing enough to surface latent class-component lifecycle bugs. Stage 17→18 first, prove it out,
-  then 18→19. `@testing-library/react` is pinned at `^12.1.5` until React moves past 17 (must bump
-  to v13+ in the same commit as React itself — see `docs/Modernization-Roadmap.md` item 14).
+  removed in 19 (grep the ~118 class components first); React 18 changes effect/StrictMode timing
+  enough to surface latent class-component lifecycle bugs. 17→18 is IN PROGRESS (item 14) —
+  `react`/`react-dom` → `18.3.1`, `react_ujs` → `^3.3.1`, `@testing-library/react` → `^13.4.0`, all
+  bumped together on `feat/react-18-bump`; a real regression class did surface (see item 14 in
+  `docs/Modernization-Roadmap.md`) and is being fixed as part of that same branch. 18→19 not started.
 - `react-toastify`/`react-autosuggest`/`react-switch` all already declare React 18 support in their
   published peer deps (checked 2026-09-16) — a version bump for these is a separate, whenever-
   convenient task, not blocked on or blocking the React bump either way.
-- `react-loader-spinner`'s installed version (`^3.1.14`) declares `react: "^16.8.6"` only — doesn't
-  even claim 17 (already silently tolerated). Worth a real bump + verification independent of the
-  React-version work, not assumed to "just work" under 18 either.
+- `react-loader-spinner@3.1.14` declares `react: "^16.8.6"` only — doesn't claim 17 or 18, but
+  verified working under React 18 (rendered directly: spinner shows, only a harmless
+  `defaultProps will be removed from function components` warning) as part of item 14's rollout.
+  Will be a real break at React 19 (`defaultProps` on function components goes away entirely) — bump
+  it for real before that jump, not this one.
 - Independent, real API-surface jumps: `sweetalert2` 7→11 (callback API → promises, dozens of call
   sites to review — see roadmap item 7), `bootstrap` 4→5 (drops jQuery, markup/class changes —
   watch for the transitive `bootstrap@3` pull-in that bit `feat/bump-shakapacker` once already).
