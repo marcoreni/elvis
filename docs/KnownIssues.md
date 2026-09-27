@@ -326,3 +326,22 @@ transaction's local variables are assigned (or restructure to authorize against 
 before creating anything, matching whatever this app's actual intent was — check CanCan's
 conventions elsewhere in this controller for the right pattern).
 
+## `TimePreferencesStep.jsx`'s ref to `AvailabilityManager` never attaches
+
+`frontend/components/activityApplications/TimePreferencesStep.jsx` (~line 46-63) passes
+`ref={availabilityRef}` to `<AvailabilityManager ... />`, then (line 36, inside a `useEffect`'s
+`PLANNING_MODE` auto-fetch-defaults branch) calls `availabilityRef.current.componentDidMount()`
+directly. But `AvailabilityManager` is exported as `withTranslation("planning")(AvailabilityManager)`
+(`frontend/components/availability/AvailabilityManager.jsx`, last line) with no `{withRef: true}`
+option — react-i18next's `withTranslation` only forwards a ref through to the wrapped class when that
+option is passed; without it, the ref attaches to `withTranslation`'s own function-component wrapper
+instead, which logs "Function components cannot be given refs" and leaves `availabilityRef.current`
+permanently `null`. Confirmed reachable: the `PLANNING_MODE` branch with no existing intervals calls
+`.componentDidMount()` on that `null` ref, which throws `TypeError: Cannot read properties of null`.
+Found live during item 14's (React 17→18) smoke pass (a warning surfaced while exercising this step
+in `PREFERENCES_MODE`, tracing it uncovered the same pattern's sharper failure in `PLANNING_MODE`);
+confirmed pre-existing — neither file is touched by the React 18 bump, and `withTranslation`'s ref-
+forwarding behavior is unrelated to the React version. Fix: add `{withRef: true}` to
+`withTranslation("planning", {withRef: true})(AvailabilityManager)`, or drop the imperative ref
+pattern for a prop-driven trigger instead.
+
