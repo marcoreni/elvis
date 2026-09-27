@@ -9,7 +9,7 @@
 // so this file only asserts on AddLocationForCourse's own translated copy.
 
 import React from "react";
-import {render, screen, waitFor} from "@testing-library/react";
+import {fireEvent, render, screen, waitFor} from "@testing-library/react";
 import i18n from "../../i18n";
 import AddLocationForCourse from "./AddLocationForCourse";
 
@@ -167,6 +167,56 @@ describe("AddLocationForCourse — /locations and /rooms resolving in the same t
             const lastCall = onChange.mock.calls.at(-1)[0];
             expect(lastCall.summary.location).toBe("Location A");
             expect(lastCall.summary.room).toBe("Room A");
+        });
+    });
+});
+
+// Regression: computeStateSlice's `locationOptions.find(location => location.value ===
+// update.locationId)` compares a numeric `value` (location.id from the API) against
+// `update.locationId`. Manually picking an option in the <select> feeds a string
+// (e.target.value) straight into that comparison, so the strict `===` never matched and
+// summary.location stayed undefined for a manual pick (auto-selection on mount worked fine,
+// since it never goes through the DOM). Fixed by parseInt-ing the select's onChange value,
+// mirroring the sibling room select's already-correct pattern.
+describe("AddLocationForCourse — manually selecting a location", () => {
+    test("sets summary.location, not undefined", async () => {
+        global.fetch = vi.fn((url) => {
+            const isRooms = String(url).includes("/rooms/index_with_overlap");
+            const body = isRooms
+                ? [
+                      { id: 10, label: "Room A", location_id: 1 },
+                      { id: 11, label: "Room B", location_id: 2 },
+                  ]
+                : [
+                      { id: 1, label: "Location A" },
+                      { id: 2, label: "Location B" },
+                  ];
+            return Promise.resolve({
+                ok: true,
+                headers: {
+                    get: (h) =>
+                        h === "Content-type" ? "application/json" : null,
+                },
+                json: () => Promise.resolve(body),
+            });
+        });
+
+        const onChange = vi.fn();
+        const { container } = render(
+            <AddLocationForCourse {...makeProps()} onChange={onChange} />
+        );
+
+        const select = await waitFor(() => {
+            const el = container.querySelector('select[name="location"]');
+            expect(el).not.toBeNull();
+            return el;
+        });
+
+        fireEvent.change(select, { target: { value: "2" } });
+
+        await waitFor(() => {
+            const lastCall = onChange.mock.calls.at(-1)[0];
+            expect(lastCall.summary.location).toBe("Location B");
         });
     });
 });
