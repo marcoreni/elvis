@@ -358,3 +358,40 @@ so it doesn't matter either way). Not deleted here — small, isolated, zero ris
 next time this file is touched for something else, after confirming with a fresh grep that it's
 still unreferenced.
 
+## `AddLocationForCourse.jsx`'s manual location select never sets `summary.location`
+
+`handleChange`'s (now `computeStateSlice`'s) `selectedLocation = locationOptions.find(location =>
+location.value === update.locationId)` compares a numeric `value` (`location.id` from the
+`/locations` API response) against `update.locationId`, which after a manual `<select>` change is
+always a string (`e.target.value`) — the strict `===` never matches, so `summary.location` stays
+`undefined` whenever the user manually picks a location (auto-selection on mount, which sets
+`locationId` from the API response's own numeric id, works fine). Confirmed pre-existing and
+unrelated to the React 18 batching work: byte-identical comparison exists in the file's state before
+that branch touched it (`git show 7b7978f2:...AddLocationForCourse.jsx`). Found during that branch's
+final review round. Fix: coerce one side before comparing, e.g.
+`location.value === Number(update.locationId)` (or read `locationId` as a number at the `onChange`
+call site instead).
+
+## `AddTeacherForCourse.jsx`'s overlap-check response is used inconsistently as array and object
+
+`frontend/components/courses/AddTeacherForCourse.jsx` (~line 107-120): the `/teachers/:id/with_overlap`
+response handler checks `if (data.length != 0)` (implying `data` is an array) but then reads
+`data.id`/`data.last_name`/`data.first_name` directly off it (implying a single object) to set
+`teacherId`/`selectedTeacher`/`summary.teacher`. If the endpoint genuinely returns an array,
+`data.id` is `undefined` on a real (non-empty) array, and `undefined != 0` is always `true` regardless
+of what `data` actually holds, so the branch always executes. Found during the React 18 batching
+audit's final review round; confirmed pre-existing (byte-identical in `develop` before that branch
+touched this file). Not investigated further (would need to check the actual endpoint's real response
+shape to know which side is wrong); fix once that's confirmed.
+
+## `IntervalPreferencesEditor.jsx`'s parallel-fetch error branch doesn't accumulate
+
+`componentDidMount` (`frontend/components/activityApplications/IntervalPreferencesEditor.jsx`,
+~line 29-48) fires one request per `activityRef` in parallel; the success branch was fixed (batch-18
+migration) to use a functional `setState` updater so concurrent resolutions can't drop each other's
+data, but the sibling error branch still does `this.setState({ errors: error })` — a plain overwrite,
+not merged with any previous error. With more than one ref failing, only the last failure's error
+survives in state. Low impact (multiple simultaneous failures for the same editor instance are
+presumably rare) and pre-existing under the same class of issue the success-branch fix addressed.
+Fix: apply the same functional-updater treatment, accumulating errors instead of overwriting.
+
