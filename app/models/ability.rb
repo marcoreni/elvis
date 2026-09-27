@@ -41,6 +41,7 @@ class Ability
       can :manage, User, id: user.id
       can [:read], User
       can :write, Message
+      can :create, Activity if Parameter.get_value("teachers.teacher_can_manage_courses", default: false)
     end
     # for all users :
     family_ids = user.family.uniq.pluck(:id)

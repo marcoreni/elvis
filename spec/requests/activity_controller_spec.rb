@@ -99,7 +99,16 @@ RSpec.describe "POST /activity (ActivityController#create)", type: :request do
   end
 
   let(:activity_ref_kind) { FactoryBot.create(:activity_ref_kind) }
-  let(:activity_ref) { FactoryBot.create(:activity_ref, activity_ref_kind: activity_ref_kind, label: "Piano") }
+  # 2 instruments so the create action's `instruments: activity_ref.instruments` assignment is
+  # exercised too (it creates ActivitiesInstrument join rows as a side effect of Activity.create!).
+  let(:instruments) do
+    [Instrument.create!(label: "Piano create spec"), Instrument.create!(label: "Violon create spec")]
+  end
+  let(:activity_ref) do
+    FactoryBot.create(:activity_ref, activity_ref_kind: activity_ref_kind, label: "Piano").tap do |ref|
+      ref.instruments = instruments
+    end
+  end
   let(:location) { Location.create!(label: "Batiment create spec") }
   let(:room) { Room.create!(label: "Salle create spec", location: location) }
   let!(:season) do
@@ -133,11 +142,18 @@ RSpec.describe "POST /activity (ActivityController#create)", type: :request do
     post "/activity", params: activity_params, as: :json
   end
 
+  around do |example|
+    Rails.cache.delete("parameter_teachers.teacher_can_manage_courses")
+    example.run
+    Rails.cache.delete("parameter_teachers.teacher_can_manage_courses")
+  end
+
   context "as an admin" do
     before { sign_in admin }
 
     it "creates the activity instead of raising a NameError" do
       expect { post_create_activity }.to change(Activity, :count).by(1)
+                                                                 .and(change(ActivitiesInstrument, :count).by(2))
 
       expect(response).to have_http_status(:ok)
       expect(response.content_type).to include("application/json")
@@ -146,6 +162,7 @@ RSpec.describe "POST /activity (ActivityController#create)", type: :request do
       expect(created.activity_ref).to eq(activity_ref)
       expect(created.room).to eq(room)
       expect(created.teacher).to eq(teacher)
+      expect(created.instruments).to match_array(instruments)
     end
   end
 
@@ -153,9 +170,47 @@ RSpec.describe "POST /activity (ActivityController#create)", type: :request do
     before { sign_in regular_user }
 
     it "is denied and creates nothing (the relocated authorize! still gates creation)" do
-      expect { post_create_activity }.not_to change(Activity, :count)
+      # `change(...).by(0)`, not RSpec's `not_change` -- this RSpec version (3.13) doesn't ship
+      # that matcher (its own docs cite `not_change` only as an example name to avoid when
+      # defining a *custom* negated matcher, e.g. via `define_negated_matcher`).
+      expect { post_create_activity }.to change(Activity, :count).by(0)
+                                                                 .and(change(TimeInterval, :count).by(0))
+                                                                 .and(change(ActivitiesInstrument, :count).by(0))
 
       expect(response).to have_http_status(:forbidden)
+    end
+  end
+
+  context "as a teacher without the manage-courses permission" do
+    before do
+      Parameter.create!(label: "teachers.teacher_can_manage_courses", value_type: "boolean", value: "false")
+      sign_in teacher
+    end
+
+    it "is denied and creates nothing" do
+      expect { post_create_activity }.to change(Activity, :count).by(0)
+                                                                 .and(change(TimeInterval, :count).by(0))
+                                                                 .and(change(ActivitiesInstrument, :count).by(0))
+
+      expect(response).to have_http_status(:forbidden)
+    end
+  end
+
+  context "as a teacher allowed to manage courses" do
+    before do
+      Parameter.create!(label: "teachers.teacher_can_manage_courses", value_type: "boolean", value: "true")
+      sign_in teacher
+    end
+
+    it "creates the activity" do
+      expect { post_create_activity }.to change(Activity, :count).by(1)
+
+      expect(response).to have_http_status(:ok)
+
+      created = Activity.last
+      expect(created.activity_ref).to eq(activity_ref)
+      expect(created.room).to eq(room)
+      expect(created.teacher).to eq(teacher)
     end
   end
 end
