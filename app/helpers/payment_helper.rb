@@ -66,7 +66,7 @@ module PaymentHelper
 
     season_packs = []
 
-    Pack.where(season_id: season_id, user_id: students.map { |a| a.user_id }.uniq).each do |pack|
+    Pack.where(season_id: season.id, user_id: students.map { |a| a.user_id }.uniq).each do |pack|
       season_packs << pack.as_json(include: {
                                      activity_ref: {},
                                      activity_ref_pricing: {

@@ -116,14 +116,6 @@ class ActivityController < ApplicationController
     to_date = params[:toDate]
     intervals = []
 
-    authorize! :create, Activity.new(
-      time_interval: interval,
-      activity_ref: activity_ref,
-      room: room,
-      location: location,
-      instruments: activity_ref.instruments
-    )
-
     # on cherche le jour du 1er cours de la saison
     # on convertit d'abord le 1er jour de la saison (s.start, objet Time) en objet Date
     # start_date = Date.parse(season.start.to_s)
@@ -157,6 +149,14 @@ class ActivityController < ApplicationController
       room = Room.find(params[:activity][:roomId])
       location = room.location
 
+      authorize! :create, Activity.new(
+        time_interval: interval,
+        activity_ref: activity_ref,
+        room: room,
+        location: location,
+        instruments: activity_ref.instruments
+      )
+
       activity = Activity.create!(
         time_interval: interval,
         activity_ref: activity_ref,
@@ -186,7 +186,13 @@ class ActivityController < ApplicationController
       # .execute
     end
 
-    render json: intervals, each_serializer: TimeIntervalSerializer
+    # `include: []`: the app-wide `default_includes = "**"` (config/initializers/active_model_serializer.rb)
+    # would otherwise recurse forever here -- TimeIntervalSerializer's activity_instance ->
+    # ActivityInstanceSerializer's activity -> ActivitySerializer's time_interval is a real cycle in the
+    # data (every created instance's activity_instance points back to this same activity). The frontend
+    # (courses/AddCourse.jsx) only checks the response status, not this body, so dropping the nested
+    # includes here is safe.
+    render json: intervals, each_serializer: TimeIntervalSerializer, include: []
   end
 
   def add_student

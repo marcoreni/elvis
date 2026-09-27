@@ -77,3 +77,85 @@ RSpec.describe "POST /activities.json", type: :request do
     end
   end
 end
+
+# Regression coverage for ActivityController#create (POST /activity): `authorize!` referenced
+# `interval`/`activity_ref`/`room`/`location` before they were assigned (those locals were only
+# defined later, inside the transaction), so every submission raised a NameError before ever
+# reaching the transaction. Exercises the real create flow end-to-end, and confirms the
+# (relocated) authorization check still actually denies a non-admin.
+RSpec.describe "POST /activity (ActivityController#create)", type: :request do
+  include Devise::Test::IntegrationHelpers
+
+  let(:admin) do
+    FactoryBot.create(:user, email: "activity-create-admin@example.com", first_name: "Admin", last_name: "Create",
+                             is_admin: true)
+  end
+  let(:regular_user) do
+    FactoryBot.create(:user, email: "activity-create-user@example.com", first_name: "Regular", last_name: "Create")
+  end
+  let(:teacher) do
+    FactoryBot.create(:user, email: "activity-create-teacher@example.com", first_name: "Teacher", last_name: "Create",
+                             is_teacher: true)
+  end
+
+  let(:activity_ref_kind) { FactoryBot.create(:activity_ref_kind) }
+  let(:activity_ref) { FactoryBot.create(:activity_ref, activity_ref_kind: activity_ref_kind, label: "Piano") }
+  let(:location) { Location.create!(label: "Batiment create spec") }
+  let(:room) { Room.create!(label: "Salle create spec", location: location) }
+  let!(:season) do
+    Season.create!(
+      label: "Saison create spec",
+      start: 3.days.from_now.beginning_of_day,
+      end: 10.days.from_now.end_of_day,
+      opening_date_for_applications: 30.days.ago,
+      opening_date_for_new_applications: 25.days.ago,
+      closing_date_for_applications: 5.days.from_now,
+      is_current: true
+    )
+  end
+
+  def activity_params
+    start_time = (season.start + 1.day).change(hour: 10, min: 0)
+    end_time = start_time + 1.hour
+
+    {
+      activity: {
+        startTime: start_time.iso8601,
+        endTime: end_time.iso8601,
+        teacherId: teacher.id,
+        activityRefId: activity_ref.id,
+        roomId: room.id
+      }
+    }
+  end
+
+  def post_create_activity
+    post "/activity", params: activity_params, as: :json
+  end
+
+  context "as an admin" do
+    before { sign_in admin }
+
+    it "creates the activity instead of raising a NameError" do
+      expect { post_create_activity }.to change(Activity, :count).by(1)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.content_type).to include("application/json")
+
+      created = Activity.last
+      expect(created.activity_ref).to eq(activity_ref)
+      expect(created.room).to eq(room)
+      expect(created.teacher).to eq(teacher)
+    end
+  end
+
+  context "as a non-admin, non-teacher user" do
+    before { sign_in regular_user }
+
+    it "is denied and creates nothing (the relocated authorize! still gates creation)" do
+      expect { post_create_activity }.not_to change(Activity, :count)
+
+      expect(response).to have_http_status(:forbidden)
+    end
+  end
+end

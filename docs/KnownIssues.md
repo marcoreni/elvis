@@ -397,22 +397,6 @@ survives in state. Low impact (multiple simultaneous failures for the same edito
 presumably rare) and pre-existing under the same class of issue the success-branch fix addressed.
 Fix: apply the same functional-updater treatment, accumulating errors instead of overwriting.
 
-## `ActivityController#create` ("Add a course") is completely broken — `NameError` on every submission
-
-`app/controllers/activity_controller.rb#create` (~line 119-125) calls `authorize! :create,
-Activity.new(time_interval: interval, activity_ref: activity_ref, room: room, location: location, ...)`
-*before* any of `interval`/`activity_ref`/`room`/`location` are actually assigned — those locals are
-only defined later, inside the `Activity.transaction do ... end` block starting at line 143. Every
-call raises `NameError: undefined local variable or method 'interval' for an instance of
-ActivityController`, a 500, surfaced to the frontend as a generic "An error occurred" (the JSON
-`.error()` handler receiving an HTML error page instead of JSON). Found live during item 14's
-(React 17→18) smoke pass, submitting the `courses/AddCourse.jsx` wizard end-to-end — confirmed
-unrelated to that work (backend-only, no `.rb` file is touched by any React 18 commit; the frontend
-side populated and submitted a fully correct payload). Fix: move the `authorize!` call to after the
-transaction's local variables are assigned (or restructure to authorize against the params directly
-before creating anything, matching whatever this app's actual intent was — check CanCan's
-conventions elsewhere in this controller for the right pattern).
-
 ## `TimePreferencesStep.jsx`'s ref to `AvailabilityManager` never attaches
 
 `frontend/components/activityApplications/TimePreferencesStep.jsx` (~line 46-63) passes
@@ -431,15 +415,4 @@ confirmed pre-existing — neither file is touched by the React 18 bump, and `wi
 forwarding behavior is unrelated to the React version. Fix: add `{withRef: true}` to
 `withTranslation("planning", {withRef: true})(AvailabilityManager)`, or drop the imperative ref
 pattern for a prop-driven trigger instead.
-
-## `PaymentHelper.generate_payer_payment_summary_data` throws on a real page load
-
-`app/helpers/payment_helper.rb:69`: `Pack.where(season_id: season_id, ...)` references a bare
-`season_id` that doesn't exist in this method's scope — the method's actual parameter is `season`
-(a `Season` object), used correctly everywhere else in the same method (`season.id`, lines 5 and 46).
-Raises `NameError: undefined local variable or method 'season_id' for module PaymentHelper` — a 500,
-surfaced to the user as "An error occurred while retrieving the payment information." Confirmed
-reachable: hit live loading a student's own Payments page (`/users/:id/payments`). Found during item
-14's (React 17→18) smoke pass; confirmed unrelated to that work (backend-only, no `.rb` file is
-touched by any React 18 commit). Fix: `Pack.where(season_id: season.id, ...)`.
 
