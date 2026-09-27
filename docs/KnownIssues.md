@@ -7,6 +7,32 @@ an entire investigation's blow-by-blow here once the fix lands, and don't leave 
 sitting around as history. General i18n extraction conventions/gotchas (not bugs) live in
 `docs/I18n-Extraction-Gotchas.md` instead of here.
 
+## Serializer cycle can `SystemStackError` when rendering a `TimeInterval` with an `activity_instance`
+
+Symptom: rendering a `TimeInterval` (directly or via `include:`) whose `activity_instance` is set can
+raise `SystemStackError` (stack level too deep).
+
+Root cause: the app-wide `default_includes = "**"` (`config/initializers/active_model_serializer.rb`)
+walks includes recursively, and `TimeIntervalSerializer` -> `activity_instance` ->
+`ActivityInstanceSerializer` -> `activity` -> `ActivitySerializer` -> `time_interval` is a real cycle
+in the data once an interval's `activity_instance` points back to an activity that references that
+same interval (see the duplicate-avoidance check in `Activity#create_instances`,
+`app/models/activity.rb` around lines 91-92, which is what makes this cycle close in practice).
+
+Fixed in `ActivityController#create`'s final render (see git history for that fix). Same bug is still
+unpatched at these 4 sites, which serialize an interval/activity through the identical cycle with no
+`include: []` guard (reproduced as a `SystemStackError` on one of them):
+
+- `app/controllers/planning_controller.rb:411`
+- `app/controllers/planning_controller.rb:704`
+- `app/controllers/activity_instance_controller.rb:18`
+- `app/controllers/time_interval_controller.rb:246` (closest analogue to the fixed case — its
+  `create_activity_instances` action is a near-copy of `ActivityController#create`)
+
+Fix pattern: add `include: []` to the render/serializer call at each site (safe wherever the response
+body's nested includes aren't actually consumed by the caller — check each call site's frontend
+consumer before applying).
+
 ## Minitest feature specs (`test/features/`) can't load — Capybara spec DSL, not a browser/asset gap
 
 All three `test/features/*_test.rb` files use Capybara's spec DSL (`feature`/`scenario`) at the top
