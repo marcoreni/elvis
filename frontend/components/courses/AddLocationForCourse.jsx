@@ -26,15 +26,25 @@ export default class AddLocationForCourse extends React.Component {
             if (error) {
                 console.log(error);
             } else {
-                const locationOptions = data.map(location => ({ label: location.label, value: location.id }));
-                const locationId = this.state.locationId || ((data || []).at(0) || {}).id;
+                const locationOptions = data.map((location) => ({
+                    label: location.label,
+                    value: location.id,
+                }));
 
-                this.setState({
-                    locationOptions: locationOptions,
-                    locationId: locationId
-                });
-
-                this.handleChange({ locationId: locationId }, { locationOptions });
+                // newValues is itself derived from prevState (the `|| default` pick) and applied
+                // through applyChange's functional setState updater: this fetch and the sibling
+                // /rooms/index_with_overlap one below are independent and may resolve in the same
+                // React 18 batch, so neither can read `this.state` directly without risking a
+                // stale value if the other's update hasn't committed yet.
+                this.applyChange(
+                    (prevState) => ({
+                        locationId:
+                            prevState.locationId ||
+                            ((data || []).at(0) || {}).id,
+                        locationOptions,
+                    }),
+                    { locationOptions }
+                );
             }
         });
 
@@ -51,59 +61,100 @@ export default class AddLocationForCourse extends React.Component {
             if (error) {
                 console.log(error);
             } else {
-                const roomsOptions = data.map(room => ({ label: room.label, value: room.id }));
-                const roomId = this.state.roomId || ((data || []).at(0) || {}).id;
+                const roomsOptions = data.map((room) => ({
+                    label: room.label,
+                    value: room.id,
+                }));
 
-                this.setState({
-                    rooms: data,
-                    roomsOptions: roomsOptions,
-                    roomId: roomId
-                });
-
-                this.handleChange({ roomId: roomId, locationId: this.state.locationId }, { rooms: data });
+                this.applyChange(
+                    (prevState) => ({
+                        roomId:
+                            prevState.roomId || ((data || []).at(0) || {}).id,
+                        rooms: data,
+                        roomsOptions,
+                    }),
+                    { rooms: data }
+                );
             }
         });
     }
 
-    handleChange(newValues, { rooms = this.state.rooms, locationOptions = this.state.locationOptions } = {}) {
-        const update = { ...this.state, ...newValues };
+    // Pure computation of the next state slice plus the derived room/location/summary values --
+    // shared by handleChange and applyChange below. Has no side effects: it must stay safe to
+    // call from inside a setState updater (see applyChange), which React does not guarantee runs
+    // exactly once per update.
+    computeStateSlice(
+        base,
+        newValues,
+        { rooms = base.rooms, locationOptions = base.locationOptions } = {}
+    ) {
+        const update = { ...base, ...newValues };
 
         let selectedRoom;
         if (rooms && update.roomId) {
-            selectedRoom = rooms.find(room => update.roomId === room.id);
-
+            selectedRoom = rooms.find((room) => update.roomId === room.id);
         }
 
         let selectedLocation;
         if (locationOptions && update.locationId) {
             selectedLocation = locationOptions.find(
-                location => location.value === update.locationId
+                (location) => location.value === update.locationId
             );
         }
 
-        update.summary = {
+        const summary = {
             ...update.summary,
             location: selectedLocation ? selectedLocation.label : undefined,
             room: selectedRoom ? selectedRoom.label : undefined,
         };
 
-        // Only push the fields that actually changed (not the full `update` snapshot): this can
-        // run concurrently with the sibling /locations and /rooms componentDidMount fetches under
-        // React 18 automatic batching, and setState-ing a full `...this.state` spread captured
-        // before those siblings' updates land would clobber them.
-        this.setState({ ...newValues, summary: update.summary });
+        return {
+            // Only the fields that actually changed (not the full `update` snapshot) -- this can
+            // run concurrently with the sibling /locations and /rooms componentDidMount fetches
+            // under React 18 automatic batching, and merging a full `...base` spread captured
+            // before those siblings' updates land would clobber them.
+            stateSlice: { ...newValues, summary },
+            selectedRoom,
+            selectedLocation,
+            summary,
+        };
+    }
 
-        this.props.onChange({
-            room: {
-                id: (selectedRoom || {}).id,
-                label: (selectedRoom || {}).label,
+    // Applies newValues (or a prevState => newValues function, for the componentDidMount fetch
+    // callbacks) via the functional setState-updater form, immune to batching order regardless of
+    // which async source resolves first or if several resolve together. `this.props.onChange` is
+    // fired from setState's own completion callback -- after the update has actually committed --
+    // rather than from inside the updater itself, since an updater isn't guaranteed to run
+    // exactly once for a given update.
+    applyChange(newValuesOrFn, options) {
+        let derived;
+        this.setState(
+            (prevState) => {
+                const newValues =
+                    typeof newValuesOrFn === "function"
+                        ? newValuesOrFn(prevState)
+                        : newValuesOrFn;
+                derived = this.computeStateSlice(prevState, newValues, options);
+                return derived.stateSlice;
             },
-            location: {
-                id: (selectedLocation || {}).value,
-                label: (selectedLocation || {}).label,
-            },
-            summary: { ...update.summary },
-        });
+            () => {
+                this.props.onChange({
+                    room: {
+                        id: (derived.selectedRoom || {}).id,
+                        label: (derived.selectedRoom || {}).label,
+                    },
+                    location: {
+                        id: (derived.selectedLocation || {}).value,
+                        label: (derived.selectedLocation || {}).label,
+                    },
+                    summary: { ...derived.summary },
+                });
+            }
+        );
+    }
+
+    handleChange(newValues, options) {
+        this.applyChange(newValues, options);
     }
 
     isValidated() {

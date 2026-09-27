@@ -112,3 +112,61 @@ test("the 'add location' / 'add room' + buttons are relative links, not the serv
         "/rooms/new",
     ]);
 });
+// Regression: componentDidMount fires /locations and /rooms/index_with_overlap in parallel.
+// The /rooms callback used to read `this.state.locationId` to feed back into handleChange --
+// stale under React 18 automatic batching if both fetches resolve in the same tick, since the
+// /locations callback's own setState (which computes and sets locationId) hasn't committed yet.
+// That stale (undefined) locationId then got written straight back into state via handleChange's
+// setState, leaving the location <select> unselected and summary.location undefined even though
+// /locations resolved successfully. Reproduced here by queuing both fetches' resolvers and firing
+// them back-to-back (no await in between), so their .then() callbacks run as consecutive
+// microtasks in the same tick -- exactly the batching window the reviewer found.
+describe("AddLocationForCourse — /locations and /rooms resolving in the same tick (React 18 batching)", () => {
+    test("the location ends up correctly selected and populated, not empty", async () => {
+        let resolvers = [];
+        global.fetch = vi.fn((url) => {
+            const isRooms = String(url).includes("/rooms/index_with_overlap");
+            const body = isRooms
+                ? [{ id: 10, label: "Room A" }]
+                : [{ id: 20, label: "Location A" }];
+            return new Promise((resolve) => {
+                resolvers.push(() =>
+                    resolve({
+                        ok: true,
+                        headers: {
+                            get: (h) =>
+                                h === "Content-type"
+                                    ? "application/json"
+                                    : null,
+                        },
+                        json: () => Promise.resolve(body),
+                    })
+                );
+            });
+        });
+
+        const onChange = vi.fn();
+        const { container } = render(
+            <AddLocationForCourse {...makeProps()} onChange={onChange} />
+        );
+
+        await waitFor(() => expect(resolvers).toHaveLength(2));
+
+        // Resolve both back-to-back so their .then() callbacks run as consecutive microtasks in
+        // the same tick -- React 18 batches the two resulting setState calls together.
+        resolvers.forEach((resolve) => resolve());
+
+        await screen.findByText("Filtrer par site");
+
+        await waitFor(() => {
+            const select = container.querySelector('select[name="location"]');
+            expect(select.value).toBe("20");
+        });
+
+        await waitFor(() => {
+            const lastCall = onChange.mock.calls.at(-1)[0];
+            expect(lastCall.summary.location).toBe("Location A");
+            expect(lastCall.summary.room).toBe("Room A");
+        });
+    });
+});
