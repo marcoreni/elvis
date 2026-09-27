@@ -152,9 +152,12 @@ class AddCourse extends React.Component {
     }
 
     handleFieldChange(values) {
+        // setState already merges into the existing state -- spreading `...this.state` here too
+        // is redundant, and (unlike a plain object) doesn't fully protect against clobbering a
+        // sibling update that landed in the same React 18 batch, since it's still a snapshot taken
+        // at call time.
         const updatedSummary = { ...this.state.summary, ...values.summary };
         this.setState({
-            ...this.state,
             ...values,
             summary: updatedSummary,
         });

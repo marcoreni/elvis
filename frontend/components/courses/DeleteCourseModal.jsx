@@ -48,7 +48,6 @@ class DeleteCourseModal extends React.Component {
                 });
 
                 this.setState({
-                    ...this.state,
                     activityInstances: data,
                     instanceStatus: instanceStatus,
                 });

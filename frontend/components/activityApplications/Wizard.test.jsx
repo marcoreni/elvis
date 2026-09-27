@@ -391,6 +391,64 @@ describe("prepareForActivityChoice — skipActivityChoice reflects the real outc
         expect(instance.state.selectedActivities).toEqual([42]);
         expect(instance.state.skipActivityChoice).toBe(true);
     });
+
+    // Regression: isApplicationChange branch used to do
+    // `this.state.selectedActivities.push(...)` -- an alias, not a copy -- mutating
+    // this.state.selectedActivities directly instead of going through setState. Proven here by
+    // holding a reference to the original array and checking it's untouched even before flush()
+    // ever applies the queued update.
+    test("isApplicationChange branch: does not mutate the original selectedActivities array in place", () => {
+        const originalSelectedActivities = [];
+        const instance = makeInstance(
+            {
+                preApplicationActivity: {
+                    activity: {
+                        activity_ref: {
+                            activity_type: "instrument",
+                            next_cycles: [],
+                        },
+                        activity_ref_id: 99,
+                    },
+                },
+            },
+            { selectedActivities: originalSelectedActivities }
+        );
+
+        instance.prepareForActivityChoice();
+
+        // Before flush() applies any queued setState, the original array must be untouched.
+        expect(originalSelectedActivities).toEqual([]);
+
+        instance.flush();
+
+        expect(instance.state.selectedActivities).toEqual([99]);
+        expect(instance.state.isApplicationChange).toBe(true);
+    });
+
+    // Regression: `this.state.isApplicationChange = ...` used to assign directly instead of going
+    // through setState. Proven by checking the fake setState queue actually carries it -- a direct
+    // assignment would make it visible on `instance.state` even before flush() runs.
+    test("isApplicationChange is set through setState, not a direct state assignment", () => {
+        const instance = makeInstance({
+            preApplicationActivity: {
+                activity: {
+                    activity_ref: {
+                        activity_type: "instrument",
+                        next_cycles: [],
+                    },
+                    activity_ref_id: 99,
+                },
+            },
+        });
+
+        instance.prepareForActivityChoice();
+
+        expect(instance.state.isApplicationChange).toBeUndefined();
+
+        instance.flush();
+
+        expect(instance.state.isApplicationChange).toBe(true);
+    });
 });
 
 describe("wizard.applicationSubtitle — the deliberate leading/trailing spaces are preserved", () => {

@@ -546,7 +546,7 @@ class Wizard extends React.Component {
         // on considère qu'il y a un changement d'activité
         //      1. s'il y a une préinscription sur une activité
         //  et  2. si ce n'est pas une activité enfance
-        this.state.isApplicationChange =
+        const isApplicationChange =
             this.props.preApplicationActivity &&
             _.get(
                 this.props.preApplicationActivity,
@@ -556,13 +556,12 @@ class Wizard extends React.Component {
         // Effective selectedActivities value tracked through this method: setState (called from
         // an async chain here, see componentDidMount) defers under React 18's automatic batching,
         // so the skipActivityChoice calculation below can't rely on reading it back from
-        // this.state -- it must thread through a local variable instead.
-        let selectedActivities = this.state.selectedActivities;
+        // this.state -- it must thread through a local variable instead. Copied (not aliased) so
+        // that pushing onto it below doesn't mutate this.state.selectedActivities directly.
+        let selectedActivities = [...this.state.selectedActivities];
 
         // Pre select current activity (e.g. guitar) for applications with a change
-        if (this.state.isApplicationChange) {
-            ////////////////////
-
+        if (isApplicationChange) {
             selectedActivities.push(
                 _.get(
                     this.props.preApplicationActivity,
@@ -574,20 +573,16 @@ class Wizard extends React.Component {
         // si on a reçu une activité en présélection, on en tient compte
         if (this.props.preSelectedActivityId) {
             selectedActivities = [this.props.preSelectedActivityId];
-            this.setState({ selectedActivities });
 
             // sinon on regarde si on peut en déduire une
         } else if (cycleActivityRefs.length) {
             // Pre select when there is only one activity to select
             if (
                 cycleActivityRefs.length === 1 &&
-                !this.state.selectedActivities.includes(
-                    cycleActivityRefs[0].id
-                ) &&
+                !selectedActivities.includes(cycleActivityRefs[0].id) &&
                 this.isInAgeRange(cycleActivityRefs[0])
             ) {
                 selectedActivities = [cycleActivityRefs[0].id];
-                this.setState({ selectedActivities });
             }
 
             // Otherwise split activities between childhood and not
@@ -602,10 +597,12 @@ class Wizard extends React.Component {
         }
 
         this.setState({
+            isApplicationChange,
+            selectedActivities,
             skipActivityChoice:
                 (selectedActivities.length === 1 &&
                     Object.keys(this.props.packs || {}).length === 0) ||
-                this.state.isApplicationChange,
+                isApplicationChange,
         });
     }
 
