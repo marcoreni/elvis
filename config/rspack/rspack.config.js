@@ -28,10 +28,6 @@ const customConfig = {
             $: "jquery",
             jQuery: "jquery",
         }),
-        new rspack.IgnorePlugin({
-            // FIXME: remove this after react18 migration
-            resourceRegExp: /^react-dom\/client$/,
-        }),
         // Only register the plugin when RSDOCTOR is true, as the plugin will increase the build time.
         process.env.RSDOCTOR &&
             new RsdoctorRspackPlugin({
