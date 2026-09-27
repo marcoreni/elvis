@@ -345,3 +345,14 @@ forwarding behavior is unrelated to the React version. Fix: add `{withRef: true}
 `withTranslation("planning", {withRef: true})(AvailabilityManager)`, or drop the imperative ref
 pattern for a prop-driven trigger instead.
 
+## `PaymentHelper.generate_payer_payment_summary_data` throws on a real page load
+
+`app/helpers/payment_helper.rb:69`: `Pack.where(season_id: season_id, ...)` references a bare
+`season_id` that doesn't exist in this method's scope — the method's actual parameter is `season`
+(a `Season` object), used correctly everywhere else in the same method (`season.id`, lines 5 and 46).
+Raises `NameError: undefined local variable or method 'season_id' for module PaymentHelper` — a 500,
+surfaced to the user as "An error occurred while retrieving the payment information." Confirmed
+reachable: hit live loading a student's own Payments page (`/users/:id/payments`). Found during item
+14's (React 17→18) smoke pass; confirmed unrelated to that work (backend-only, no `.rb` file is
+touched by any React 18 commit). Fix: `Pack.where(season_id: season.id, ...)`.
+
