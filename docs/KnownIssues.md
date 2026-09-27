@@ -310,3 +310,19 @@ correctness bug (downgraded from an earlier, incorrect diagnosis that this churn
 mutating a shared array in place; fixed at the source in batch 3). Fix, if ever worth it: memoize
 `columns`/`dataService` on whatever they actually depend on instead of rebuilding them inline.
 
+## `ActivityController#create` ("Add a course") is completely broken — `NameError` on every submission
+
+`app/controllers/activity_controller.rb#create` (~line 119-125) calls `authorize! :create,
+Activity.new(time_interval: interval, activity_ref: activity_ref, room: room, location: location, ...)`
+*before* any of `interval`/`activity_ref`/`room`/`location` are actually assigned — those locals are
+only defined later, inside the `Activity.transaction do ... end` block starting at line 143. Every
+call raises `NameError: undefined local variable or method 'interval' for an instance of
+ActivityController`, a 500, surfaced to the frontend as a generic "An error occurred" (the JSON
+`.error()` handler receiving an HTML error page instead of JSON). Found live during item 14's
+(React 17→18) smoke pass, submitting the `courses/AddCourse.jsx` wizard end-to-end — confirmed
+unrelated to that work (backend-only, no `.rb` file is touched by any React 18 commit; the frontend
+side populated and submitted a fully correct payload). Fix: move the `authorize!` call to after the
+transaction's local variables are assigned (or restructure to authorize against the params directly
+before creating anything, matching whatever this app's actual intent was — check CanCan's
+conventions elsewhere in this controller for the right pattern).
+
