@@ -221,7 +221,12 @@ describe("UserSearch — onSubmit auto-selects the just-created user (React 18 b
         swal.fire.mockReturnValue(Promise.resolve());
         api.__queueResponse({}); // "/users/createStudent" success payload
         const newMatches = [
-            { id: 99, first_name: "New", last_name: "User", birthday: "2000-01-01" },
+            {
+                id: 99,
+                first_name: "New",
+                last_name: "User",
+                birthday: "2000-01-01",
+            },
         ];
         api.__queueResponse(newMatches); // the follow-up search success payload
 
@@ -231,7 +236,12 @@ describe("UserSearch — onSubmit auto-selects the just-created user (React 18 b
         act(() => {
             ref.current.setState({
                 possibleMatches: [
-                    { id: 1, first_name: "Old", last_name: "User", birthday: "1990-01-01" },
+                    {
+                        id: 1,
+                        first_name: "Old",
+                        last_name: "User",
+                        birthday: "1990-01-01",
+                    },
                 ],
             });
         });
