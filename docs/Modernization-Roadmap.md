@@ -147,44 +147,25 @@ caching gotchas, the several real bugs found live via `code-reviewer` passes, th
 reference-identity/mutation pitfalls that recurred across batches) lives in each PR's
 own description and commit messages, not here.
 
-## 14. React 17 → 18 — IN PROGRESS, `feat/react-18-bump`
+## 14. React 17 → 18 — done, `feat/react-18-bump` (PR #135, merged)
 
-First stage of the eventual 17→19 jump (19 removes legacy string refs/context, already ahead of
-that since item 12 retired `react-stepzilla`'s). Pre-check (2026-09-16): every React-adjacent
-package's real `peerDependencies` checked against the installed tree, not assumed —
-`react-select`/`react-hook-form`/`react-final-form`/`react-modal`/`react-switch`/`react-i18next`/
-`@fullcalendar/react`/`react-draft-wysiwyg`/`@ramonak/react-progress-bar`/`react-toastify`/
-`react-input-mask`/`react-dropzone`/`react-email-editor`/`react-autosuggest` all already declared
-real React 18 support; `react-table` is moot (item 13 dropped it entirely before this started, and
-its replacement `@tanstack/react-table@8.21.3` already covers 18); `react-loader-spinner@3.1.14`
-declares only `^16.8.6` but verified working under 18 regardless (see `docs/KnownIssues.md`).
+`react`/`react-dom` → `18.3.1`, `react_ujs` → `^3.3.1`, `@testing-library/react` → `^13.4.0`, all in
+one commit (the Ruby gem `react-rails` was already on `3.3.1`, ahead of the npm package — no Gemfile
+change needed). React 18's automatic batching broke several class components that read `this.state`
+right after setting it inside an async callback — found in 5 `courses/` files with test coverage,
+then confirmed more broadly via a 3-pass audit of ~56 more components; all fixed, with regression
+tests. Went through 4 `code-reviewer` rounds (2 of which each caught the previous round's own fix
+reintroducing the bug class or missing a file) plus a live smoke pass, which found one more
+significant bug the automated suite structurally couldn't catch: a leftover `rspack.IgnorePlugin`
+blocking `react-dom/client` at the bundler level (`yarn build`/`vitest` don't exercise rspack's
+runtime resolution, only a live page load does) — fixed, with a static regression test. 7 unrelated
+pre-existing bugs surfaced along the way (2 backend, 5 frontend) — logged in `docs/KnownIssues.md`,
+not fixed here.
 
-**The bump itself** (2026-09-26): `react`/`react-dom` → `18.3.1`, `react_ujs` → `^3.3.1` (its own
-React 18 `createRoot` migration is fully internal — this app's entry packs only ever call
-`ReactRailsUJS.useContext(...)`, no change needed there), `@testing-library/react` → `^13.4.0`, all
-in one commit per the hard blocker (`@testing-library/react@^12` requires `react <18`). The Ruby gem
-`react-rails` was already on `3.3.1` in `Gemfile.lock`, ahead of the npm package — this bump
-resolves a pre-existing version mismatch rather than creating one; no Gemfile change needed. Since
-`react_ujs@3.x` mounts every `react_component` island through `createRoot`, all ~114 of this app's
-mount points became concurrent roots at once, and React 18's automatic batching applies app-wide
-from this single commit.
-
-**Real regression class found and being fixed, not deferred to a later smoke pass**: automatic
-batching means a `setState` call outside a React event handler (inside `.then()`, after `await`, in
-`setTimeout`) — which applied synchronously under React 17 — now always defers. Several class
-components had code that called `setState({field: computedValue})` and, in the same synchronous
-block, immediately read `this.state.field` (or a sibling field another `setState` in the same async
-callback also just set) expecting the just-applied value. First found in 5 `courses/` components
-(the only ones with test coverage that happened to catch it), then confirmed more broadly via a
-3-pass audit across ~56 more class components with the same `.then()`/`async`/`setTimeout` +
-`setState` shape. Two `code-reviewer` rounds on the fix branch each found the *fix itself*
-reintroducing the same bug class or missing an instance — this item is not being marked done until a
-review round comes back clean. Full narrative belongs in the branch's own commits/PR once merged,
-per this doc's own trim convention — don't duplicate it here.
-
-Still to do once the branch is clean: a live smoke pass across the app (not just the automated
-suite) before considering item 14 fully closed, given React 18's StrictMode/effect-timing changes
-can surface latent class-component lifecycle bugs beyond just the batching class already found.
+Not started yet: React 18→19 (the roadmap's own original plan is to stabilize on 18 first — this
+item's own pre-check already flagged `@testing-library/react` needing v13+ and `react-loader-spinner`
+needing a real bump before 19 specifically, since 19 removes `defaultProps` on function components
+and legacy string refs/context entirely).
 
 ## Context this roadmap assumes (don't re-derive, just re-read if needed)
 
