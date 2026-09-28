@@ -1157,6 +1157,7 @@ class ActivitiesApplicationsList extends React.Component {
                                                 {this.state.importOngoing ? (
                                                     <Oval
                                                         color="white"
+                                                        secondaryColor="white"
                                                         height={15}
                                                         width={15}
                                                         ariaLabel="import-loading"
@@ -1177,6 +1178,7 @@ class ActivitiesApplicationsList extends React.Component {
                                                 {this.state.exportOngoing ? (
                                                     <Oval
                                                         color="white"
+                                                        secondaryColor="white"
                                                         height={15}
                                                         width={15}
                                                         ariaLabel="export-loading"

@@ -799,6 +799,23 @@ describe("ActivitiesApplicationsList — showJobProgressModal unmounts JobProgre
 // actually renders while its fetch is in flight and clears once it resolves.
 // ==================================================================================================
 describe("ActivitiesApplicationsList — admin import/export Oval spinner (regression)", () => {
+    // Scoped to this block (not the file-wide afterEach) so a thrown assertion in the export
+    // test can't leave the stub leaking into every later test in the file.
+    let originalCreateObjectURL;
+
+    beforeEach(() => {
+        originalCreateObjectURL = global.URL.createObjectURL;
+        global.URL.createObjectURL = vi.fn(() => "blob:mock-url");
+    });
+
+    afterEach(() => {
+        if (originalCreateObjectURL) {
+            global.URL.createObjectURL = originalCreateObjectURL;
+        } else {
+            delete global.URL.createObjectURL;
+        }
+    });
+
     test("shows the Oval spinner while the CSV import request is in flight", async () => {
         let resolveImport;
         const importResponse = new Promise((resolve) => {
@@ -845,7 +862,10 @@ describe("ActivitiesApplicationsList — admin import/export Oval spinner (regre
             await screen.findByLabelText("import-loading")
         ).toBeInTheDocument();
 
-        resolveImport({ json: () => Promise.resolve({ jobId: null }) });
+        // `{ error: ... }` keeps this on the swal.fire error branch -- the success branch's
+        // `showJobProgressModal` mounts a separate createRoot tree that nothing in this test
+        // closes, and it isn't needed to cover the spinner's own show/hide behavior.
+        resolveImport({ json: () => Promise.resolve({ error: "boom" }) });
 
         await waitFor(() =>
             expect(
@@ -859,9 +879,6 @@ describe("ActivitiesApplicationsList — admin import/export Oval spinner (regre
         const exportResponse = new Promise((resolve) => {
             resolveExport = resolve;
         });
-
-        const originalCreateObjectURL = global.URL.createObjectURL;
-        global.URL.createObjectURL = vi.fn(() => "blob:mock-url");
 
         global.fetch = vi.fn((url) => {
             const u = String(url);
@@ -914,11 +931,5 @@ describe("ActivitiesApplicationsList — admin import/export Oval spinner (regre
                 screen.queryByLabelText("export-loading")
             ).not.toBeInTheDocument()
         );
-
-        if (originalCreateObjectURL) {
-            global.URL.createObjectURL = originalCreateObjectURL;
-        } else {
-            delete global.URL.createObjectURL;
-        }
     });
 });

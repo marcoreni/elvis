@@ -41,6 +41,10 @@ export default function LoadingComponent() {
                         left: "50%",
                     }}
                 >
+                    {/* This overlay has always visually been the Audio equalizer spinner,
+                        never Bars -- v3's default `Loader` export was imported here as `Bars`
+                        but no `type` prop was ever passed, so its `defaultProps.type = "Audio"`
+                        silently won. */}
                     <Audio
                         height="100"
                         width="100"

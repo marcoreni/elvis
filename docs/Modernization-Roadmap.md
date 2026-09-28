@@ -157,7 +157,9 @@ package's real `peerDependencies` checked against the installed tree, not assume
 `react-input-mask`/`react-dropzone`/`react-email-editor`/`react-autosuggest` all already declared
 real React 18 support; `react-table` is moot (item 13 dropped it entirely before this started, and
 its replacement `@tanstack/react-table@8.21.3` already covers 18); `react-loader-spinner@3.1.14`
-declares only `^16.8.6` but verified working under 18 regardless (see `docs/KnownIssues.md`).
+declared only `^16.8.6` but verified working under 18 regardless (see `docs/KnownIssues.md`) — since
+bumped to `8.0.2` on `chore/bump-react-loader-spinner` (2026-09-28), which declares
+`react: ">=17.0.0 <20.0.0"`.
 
 **The bump itself** (2026-09-26): `react`/`react-dom` → `18.3.1`, `react_ujs` → `^3.3.1` (its own
 React 18 `createRoot` migration is fully internal — this app's entry packs only ever call

@@ -42,11 +42,6 @@ left:
 - `react-toastify`/`react-autosuggest`/`react-switch` all already declare React 18 support in their
   published peer deps (checked 2026-09-16) — a version bump for these is a separate, whenever-
   convenient task, not blocked on or blocking the React bump either way.
-- `react-loader-spinner@3.1.14` declares `react: "^16.8.6"` only — doesn't claim 17 or 18, but
-  verified working under React 18 (rendered directly: spinner shows, only a harmless
-  `defaultProps will be removed from function components` warning) as part of item 14's rollout.
-  Will be a real break at React 19 (`defaultProps` on function components goes away entirely) — bump
-  it for real before that jump, not this one.
 - Independent, real API-surface jumps: `sweetalert2` 7→11 (callback API → promises, dozens of call
   sites to review — see roadmap item 7), `bootstrap` 4→5 (drops jQuery, markup/class changes —
   watch for the transitive `bootstrap@3` pull-in that bit `feat/bump-shakapacker` once already).

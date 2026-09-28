@@ -33,10 +33,26 @@ test("shows the Audio spinner on loadingStart and hides it again on loadingEnd",
 });
 
 test("removes its window listeners on unmount", () => {
+    const addSpy = vi.spyOn(window, "addEventListener");
+    const removeSpy = vi.spyOn(window, "removeEventListener");
+
     const { unmount } = render(<LoadingComponent />);
 
-    unmount();
-    window.dispatchEvent(new Event("loadingStart"));
+    const addedHandler = (name) =>
+        addSpy.mock.calls.find((call) => call[0] === name)?.[1];
+    const startHandler = addedHandler("loadingStart");
+    const endHandler = addedHandler("loadingEnd");
+    expect(startHandler).toBeInstanceOf(Function);
+    expect(endHandler).toBeInstanceOf(Function);
 
-    expect(screen.queryByLabelText("audio-loading")).not.toBeInTheDocument();
+    unmount();
+
+    // Same handler references passed to addEventListener must be the ones
+    // passed to removeEventListener -- a mismatched/omitted reference would
+    // silently leak the listener instead of failing loudly.
+    expect(removeSpy).toHaveBeenCalledWith("loadingStart", startHandler);
+    expect(removeSpy).toHaveBeenCalledWith("loadingEnd", endHandler);
+
+    addSpy.mockRestore();
+    removeSpy.mockRestore();
 });
