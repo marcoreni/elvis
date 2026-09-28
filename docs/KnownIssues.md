@@ -376,3 +376,23 @@ reachable: hit live loading a student's own Payments page (`/users/:id/payments`
 14's (React 17→18) smoke pass; confirmed unrelated to that work (backend-only, no `.rb` file is
 touched by any React 18 commit). Fix: `Pack.where(season_id: season.id, ...)`.
 
+## `availabilityRef.current.componentDidMount()` reads stale props under React 18 batching
+
+Two call sites — `frontend/components/activityApplications/TimePreferencesStep.jsx:36` and
+`frontend/components/parameters/Plannings/SchoolAvailabilities.jsx:51-52` — call
+`this.setState`/a parent state update immediately followed by
+`availabilityRef.current.componentDidMount()` on the child `AvailabilityManager`, relying on
+`componentDidMount()` re-reading `this.props.intervals` to sync it into `AvailabilityManager`'s own
+`state.list` (its *only* path from props to state — no `componentDidUpdate`, no
+`getDerivedStateFromProps`). Under React 18's automatic batching, the parent's `setState` hasn't
+committed yet when the imperative `componentDidMount()` call runs, so it reads the still-empty
+`props.intervals` — the freshly-fetched default availabilities never render, even though they're
+correctly in the parent's state moments later. Reproduced directly: DOM never mentions the fetched
+interval, on both call sites, regardless of the `withRef: true` fix (see the entry that used to be
+here — that fix made the ref itself resolve to a real instance instead of `null`, which stopped a
+console warning and a swallowed `TypeError`/silently-shown error alert on
+`SchoolAvailabilities.jsx`, but doesn't touch this deeper timing issue). Fix: replace the imperative
+`componentDidMount()` call with a real `componentDidUpdate(prevProps)` on `AvailabilityManager` that
+syncs `state.list` whenever `props.intervals` actually changes, and drop the manual call entirely (at
+both sites).
+
