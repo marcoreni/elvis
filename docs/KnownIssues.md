@@ -65,9 +65,10 @@ left:
   `react`/`react-dom` → `18.3.1`, `react_ujs` → `^3.3.1`, `@testing-library/react` → `^13.4.0`, all
   bumped together on `feat/react-18-bump`; a real regression class did surface (see item 14 in
   `docs/Modernization-Roadmap.md`) and is being fixed as part of that same branch. 18→19 not started.
-- `react-toastify`/`react-autosuggest`/`react-switch` all already declare React 18 support in their
-  published peer deps (checked 2026-09-16) — a version bump for these is a separate, whenever-
-  convenient task, not blocked on or blocking the React bump either way.
+- `react-toastify`/`react-autosuggest` both already declare React 18 support in their published peer
+  deps (checked 2026-09-16) — a version bump for these is a separate, whenever-convenient task, not
+  blocked on or blocking the React bump either way. (`react-switch` was in this bucket too; bumped to
+  `7.1.0` on `chore/bump-react-switch`.)
 - `react-loader-spinner@3.1.14` declares `react: "^16.8.6"` only — doesn't claim 17 or 18, but
   verified working under React 18 (rendered directly: spinner shows, only a harmless
   `defaultProps will be removed from function components` warning) as part of item 14's rollout.
