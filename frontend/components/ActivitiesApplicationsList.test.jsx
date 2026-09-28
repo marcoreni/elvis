@@ -790,3 +790,135 @@ describe("ActivitiesApplicationsList — showJobProgressModal unmounts JobProgre
         );
     });
 });
+
+// ==================================================================================================
+// react-loader-spinner 3.1.14 -> 8.0.2 bump (chore/bump-react-loader-spinner): the admin-only
+// import/export buttons swapped the old default-exported `<Loader type="Oval" .../>` for the named
+// `<Oval .../>` export. Neither button had any prior coverage (all other tests in this file use
+// `currentUserIsAdmin: false`, which skips this Fragment entirely). These lock down that the spinner
+// actually renders while its fetch is in flight and clears once it resolves.
+// ==================================================================================================
+describe("ActivitiesApplicationsList — admin import/export Oval spinner (regression)", () => {
+    test("shows the Oval spinner while the CSV import request is in flight", async () => {
+        let resolveImport;
+        const importResponse = new Promise((resolve) => {
+            resolveImport = resolve;
+        });
+
+        global.fetch = vi.fn((url) => {
+            const u = String(url);
+            if (u.includes("/inscriptions/create_import_csv")) {
+                return importResponse;
+            }
+            if (u.includes("/inscriptions/list")) {
+                return Promise.resolve({
+                    json: () =>
+                        Promise.resolve({
+                            applications: [],
+                            pages: 0,
+                            total: 0,
+                            pending_total: 0,
+                        }),
+                });
+            }
+            return Promise.resolve({
+                ok: true,
+                headers: { get: () => "application/json" },
+                json: () => Promise.resolve({}),
+            });
+        });
+
+        const { container } = render(
+            <ActivitiesApplicationsList
+                {...baseProps()}
+                currentUserIsAdmin={true}
+            />
+        );
+
+        await waitFor(() => expect(global.fetch).toHaveBeenCalled());
+
+        const fileInput = container.querySelector('input[type="file"]');
+        const file = new File(["a,b,c"], "import.csv", { type: "text/csv" });
+        await userEvent.upload(fileInput, file);
+
+        expect(
+            await screen.findByLabelText("import-loading")
+        ).toBeInTheDocument();
+
+        resolveImport({ json: () => Promise.resolve({ jobId: null }) });
+
+        await waitFor(() =>
+            expect(
+                screen.queryByLabelText("import-loading")
+            ).not.toBeInTheDocument()
+        );
+    });
+
+    test("shows the Oval spinner while the CSV export request is in flight", async () => {
+        let resolveExport;
+        const exportResponse = new Promise((resolve) => {
+            resolveExport = resolve;
+        });
+
+        const originalCreateObjectURL = global.URL.createObjectURL;
+        global.URL.createObjectURL = vi.fn(() => "blob:mock-url");
+
+        global.fetch = vi.fn((url) => {
+            const u = String(url);
+            if (u.includes("/inscriptions/list.csv")) {
+                return exportResponse;
+            }
+            if (u.includes("/inscriptions/list")) {
+                return Promise.resolve({
+                    json: () =>
+                        Promise.resolve({
+                            applications: [],
+                            pages: 0,
+                            total: 0,
+                            pending_total: 0,
+                        }),
+                });
+            }
+            return Promise.resolve({
+                ok: true,
+                headers: { get: () => "application/json" },
+                json: () => Promise.resolve({}),
+            });
+        });
+
+        const { container } = render(
+            <ActivitiesApplicationsList
+                {...baseProps()}
+                currentUserIsAdmin={true}
+            />
+        );
+
+        await waitFor(() => expect(global.fetch).toHaveBeenCalled());
+
+        const exportButton = container
+            .querySelector("i.fa-upload")
+            .closest("button");
+        await userEvent.click(exportButton);
+
+        expect(
+            await screen.findByLabelText("export-loading")
+        ).toBeInTheDocument();
+
+        resolveExport({
+            blob: () =>
+                Promise.resolve(new Blob(["a,b\n1,2"], { type: "text/csv" })),
+        });
+
+        await waitFor(() =>
+            expect(
+                screen.queryByLabelText("export-loading")
+            ).not.toBeInTheDocument()
+        );
+
+        if (originalCreateObjectURL) {
+            global.URL.createObjectURL = originalCreateObjectURL;
+        } else {
+            delete global.URL.createObjectURL;
+        }
+    });
+});

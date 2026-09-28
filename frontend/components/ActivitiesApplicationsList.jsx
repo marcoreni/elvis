@@ -4,7 +4,7 @@ import _ from "lodash";
 import TanStackGrid from "./common/baseDataTable/TanStackGrid";
 import FilterSelect from "./common/baseDataTable/FilterSelect";
 import FilterReactSelect from "./common/baseDataTable/FilterReactSelect";
-import Loader from "react-loader-spinner";
+import { Oval } from "react-loader-spinner";
 import swal from "sweetalert2";
 
 import {
@@ -1155,11 +1155,11 @@ class ActivitiesApplicationsList extends React.Component {
                                                 }
                                             >
                                                 {this.state.importOngoing ? (
-                                                    <Loader
-                                                        type="Oval"
+                                                    <Oval
                                                         color="white"
                                                         height={15}
                                                         width={15}
+                                                        ariaLabel="import-loading"
                                                     />
                                                 ) : (
                                                     <i className="fas fa-download" />
@@ -1175,11 +1175,11 @@ class ActivitiesApplicationsList extends React.Component {
                                                 )}
                                             >
                                                 {this.state.exportOngoing ? (
-                                                    <Loader
-                                                        type="Oval"
+                                                    <Oval
                                                         color="white"
                                                         height={15}
                                                         width={15}
+                                                        ariaLabel="export-loading"
                                                     />
                                                 ) : (
                                                     <i className="fas fa-upload" />
