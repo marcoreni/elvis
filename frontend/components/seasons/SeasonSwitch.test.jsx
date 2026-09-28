@@ -29,7 +29,10 @@ describe("SeasonSwitch", () => {
         expect(handleSwitch).toHaveBeenCalledWith(7);
     });
 
-    test("disabled switch ignores clicks and never calls handleSwitch", async () => {
+    // react-switch itself blocks pointer/change events on a disabled input at the DOM level,
+    // so this asserts react-switch's own disabled behavior, not SeasonSwitch.jsx's
+    // `onChange={disabled ? () => {} : handleChange}` guard specifically.
+    test("disabled switch renders as disabled and never calls handleSwitch", async () => {
         const handleSwitch = vi.fn();
         render(
             <SeasonSwitch

@@ -59,7 +59,7 @@ afterEach(async () => {
 });
 
 describe("CheckList — check_status switch", () => {
-    test("toggling the switch PUTs the new status and flips the switch on", async () => {
+    test("toggling the switch POSTs the new status and flips the switch on", async () => {
         render(<CheckList />);
 
         expect(await screen.findByText("Blin Ana")).toBeInTheDocument();
