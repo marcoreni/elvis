@@ -232,8 +232,9 @@ export default class AddLocationForCourse extends React.Component {
 
                                                     this.handleChange({
                                                         roomsOptions: newOptions,
-                                                        locationId:
-                                                            e.target.value,
+                                                        locationId: parseInt(
+                                                            e.target.value
+                                                        ),
                                                         roomId: roomsAvailable
                                                             ? newOptions[0]
                                                                   .value

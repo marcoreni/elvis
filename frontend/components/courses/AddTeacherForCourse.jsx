@@ -104,30 +104,27 @@ export default class AddTeacherForCourse extends React.Component {
                 if (error) {
                     console.log(error);
                 } else {
-                    if (data.length != 0)
-                    {
-                        const overlapSummary = {
-                            ...this.state.summary,
-                            teacher: {
-                                id: data.id,
-                                last_name: data.last_name,
-                                first_name: data.first_name,
-                            },
-                        };
-                        this.setState({
-                            teacherId: data.id,
-                            selectedTeacher: data,
-                            summary: overlapSummary,
-                        });
-                        this.props.onChange({
-                            teacher: {
-                                id: data.id,
-                                last_name: data.last_name,
-                                first_name: data.first_name,
-                            },
-                            summary: overlapSummary,
-                        });
-                    }
+                    const overlapSummary = {
+                        ...this.state.summary,
+                        teacher: {
+                            id: data.id,
+                            last_name: data.last_name,
+                            first_name: data.first_name,
+                        },
+                    };
+                    this.setState({
+                        teacherId: data.id,
+                        selectedTeacher: data,
+                        summary: overlapSummary,
+                    });
+                    this.props.onChange({
+                        teacher: {
+                            id: data.id,
+                            last_name: data.last_name,
+                            first_name: data.first_name,
+                        },
+                        summary: overlapSummary,
+                    });
                 }
             });
         }

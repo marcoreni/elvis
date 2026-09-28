@@ -145,6 +145,42 @@ describe("AddTeacherForCourse — no teacher teaches the activity", () => {
     });
 });
 
+// Regression coverage for the /teachers/:id/with_overlap success branch: the backend
+// (TeachersController#show_with_overlap) always returns a single teacher object, never an array,
+// so `data.id`/`data.last_name`/`data.first_name` must land in state/summary unconditionally.
+// (The handler used to gate this on `if (data.length != 0)`, a dead check against a single
+// object's always-undefined `.length` -- removing it doesn't change behavior, since that guard was
+// always truthy, but this exercises the branch none of the other tests here reach.)
+describe("AddTeacherForCourse — /with_overlap resolves with overlap data for the auto-selected teacher", () => {
+    test("applies the overlap response's teacher onto state and summary", async () => {
+        const onChange = vi.fn();
+        global.fetch = vi.fn().mockImplementation((url) =>
+            Promise.resolve(
+                jsonResponse(
+                    String(url).includes("with_overlap")
+                        ? {
+                              id: 1,
+                              first_name: "Over",
+                              last_name: "Lap",
+                              has_overlap: true,
+                          }
+                        : [{ id: 1, first_name: "A", last_name: "B" }]
+                )
+            )
+        );
+
+        render(<AddTeacherForCourse {...makeProps()} onChange={onChange} />);
+
+        await waitFor(() => {
+            const lastCall = onChange.mock.calls.at(-1);
+            expect(lastCall).toBeDefined();
+            expect(lastCall[0].teacher.last_name).toBe("Lap");
+            expect(lastCall[0].teacher.first_name).toBe("Over");
+            expect(lastCall[0].summary.teacher.last_name).toBe("Lap");
+        });
+    });
+});
+
 // The two interpolated keys (slotBusy: 4 placeholders, availableInstead: 2) sit in render
 // branches driven by hard-to-fixture date math, but a placeholder rename in the JSON fails
 // silently (i18next substitutes "" for an unknown name, no throw). Guard them at the i18n layer

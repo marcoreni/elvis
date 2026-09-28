@@ -331,4 +331,6 @@ class AvailabilityManager extends PureComponent {
     }
 }
 
-export default withTranslation("planning")(AvailabilityManager);
+export default withTranslation("planning", { withRef: true })(
+    AvailabilityManager
+);

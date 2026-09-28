@@ -353,28 +353,6 @@ during the React 18 batching audit (2026-09-26); confirmed pre-existing and unre
 needed and drop the `int.activity = activity` line entirely — check what `selectedIntervals[index]`
 is actually expected to look like downstream before choosing).
 
-## `scripts/mergeUsers/UserSearch.jsx`'s search trigger is off by one keystroke
-
-`handleChange` (~line 49-61) calls `this.setState({[evt.target.name]: evt.target.value, ...})` and
-immediately checks `this.state.first_name.length >= 2 || this.state.last_name.length >= 2` to decide
-whether to fire the debounced search — reading the state synchronously right after setting it has
-always been stale in a plain event handler (batched even under React 17, so this is not a React 18
-regression), meaning the 2nd typed character never triggers a search; the 3rd does. Low impact (a
-one-keystroke delay, not a crash), found during the React 18 batching audit while looking for a
-different, related bug class. Fix: read `evt.target.value` directly for the length check instead of
-`this.state`.
-
-## `ConsentDocumentsList.jsx`'s delete replaces the whole list with garbage
-
-`deleteDocument` (`frontend/components/parameters/ActivityApplications/ConsentDocumentsList.jsx`,
-~line 39-51) does `setDocuments(documents.splice(index, index))` after a successful delete.
-`Array.prototype.splice(start, deleteCount)` called this way removes `index` elements starting at
-`index` (not just the one target document) AND **returns the removed elements**, not the remainder —
-so this sets the document list to whatever got spliced out, not the correctly-filtered remaining
-list. Found during the React 18 batching audit; pre-existing, unrelated to that bump. Fix:
-`setDocuments(documents.filter((doc) => doc.id !== documentId))` (immutable, no accidental
-mutation of the `documents` state array either).
-
 ## `ActivityDetailsModal.jsx`'s `handleEditActivityInstance()` method is dead code
 
 `frontend/components/planning/ActivityDetailsModal.jsx` (~line 638-646) defines a class method
@@ -385,32 +363,6 @@ method itself looked superficially like a stale-`this.state`-read bug, but turne
 so it doesn't matter either way). Not deleted here — small, isolated, zero risk either way; delete
 next time this file is touched for something else, after confirming with a fresh grep that it's
 still unreferenced.
-
-## `AddLocationForCourse.jsx`'s manual location select never sets `summary.location`
-
-`handleChange`'s (now `computeStateSlice`'s) `selectedLocation = locationOptions.find(location =>
-location.value === update.locationId)` compares a numeric `value` (`location.id` from the
-`/locations` API response) against `update.locationId`, which after a manual `<select>` change is
-always a string (`e.target.value`) — the strict `===` never matches, so `summary.location` stays
-`undefined` whenever the user manually picks a location (auto-selection on mount, which sets
-`locationId` from the API response's own numeric id, works fine). Confirmed pre-existing and
-unrelated to the React 18 batching work: byte-identical comparison exists in the file's state before
-that branch touched it (`git show 7b7978f2:...AddLocationForCourse.jsx`). Found during that branch's
-final review round. Fix: coerce one side before comparing, e.g.
-`location.value === Number(update.locationId)` (or read `locationId` as a number at the `onChange`
-call site instead).
-
-## `AddTeacherForCourse.jsx`'s overlap-check response is used inconsistently as array and object
-
-`frontend/components/courses/AddTeacherForCourse.jsx` (~line 107-120): the `/teachers/:id/with_overlap`
-response handler checks `if (data.length != 0)` (implying `data` is an array) but then reads
-`data.id`/`data.last_name`/`data.first_name` directly off it (implying a single object) to set
-`teacherId`/`selectedTeacher`/`summary.teacher`. If the endpoint genuinely returns an array,
-`data.id` is `undefined` on a real (non-empty) array, and `undefined != 0` is always `true` regardless
-of what `data` actually holds, so the branch always executes. Found during the React 18 batching
-audit's final review round; confirmed pre-existing (byte-identical in `develop` before that branch
-touched this file). Not investigated further (would need to check the actual endpoint's real response
-shape to know which side is wrong); fix once that's confirmed.
 
 ## `IntervalPreferencesEditor.jsx`'s parallel-fetch error branch doesn't accumulate
 
@@ -442,3 +394,23 @@ forwarding behavior is unrelated to the React version. Fix: add `{withRef: true}
 `withTranslation("planning", {withRef: true})(AvailabilityManager)`, or drop the imperative ref
 pattern for a prop-driven trigger instead.
 
+
+## `availabilityRef.current.componentDidMount()` reads stale props under React 18 batching
+
+Two call sites — `frontend/components/activityApplications/TimePreferencesStep.jsx:36` and
+`frontend/components/parameters/Plannings/SchoolAvailabilities.jsx:51-52` — call
+`this.setState`/a parent state update immediately followed by
+`availabilityRef.current.componentDidMount()` on the child `AvailabilityManager`, relying on
+`componentDidMount()` re-reading `this.props.intervals` to sync it into `AvailabilityManager`'s own
+`state.list` (its *only* path from props to state — no `componentDidUpdate`, no
+`getDerivedStateFromProps`). Under React 18's automatic batching, the parent's `setState` hasn't
+committed yet when the imperative `componentDidMount()` call runs, so it reads the still-empty
+`props.intervals` — the freshly-fetched default availabilities never render, even though they're
+correctly in the parent's state moments later. Reproduced directly: DOM never mentions the fetched
+interval, on both call sites, regardless of the `withRef: true` fix (see the entry that used to be
+here — that fix made the ref itself resolve to a real instance instead of `null`, which stopped a
+console warning and a swallowed `TypeError`/silently-shown error alert on
+`SchoolAvailabilities.jsx`, but doesn't touch this deeper timing issue). Fix: replace the imperative
+`componentDidMount()` call with a real `componentDidUpdate(prevProps)` on `AvailabilityManager` that
+syncs `state.list` whenever `props.intervals` actually changes, and drop the manual call entirely (at
+both sites).

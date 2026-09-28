@@ -57,10 +57,16 @@ class UserSearch extends React.PureComponent {
             clearTimeout(debounce);
         }
 
-        if (
-            this.state.first_name.length >= 2 ||
-            this.state.last_name.length >= 2
-        ) {
+        const firstName =
+            evt.target.name === "first_name"
+                ? evt.target.value
+                : this.state.first_name;
+        const lastName =
+            evt.target.name === "last_name"
+                ? evt.target.value
+                : this.state.last_name;
+
+        if (firstName.length >= 2 || lastName.length >= 2) {
             debounce = setTimeout(() => {
                 api.set()
                     .before(() =>
@@ -69,8 +75,8 @@ class UserSearch extends React.PureComponent {
                     .success(data => this.setState({ possibleMatches: data }))
                     .error(() => this.setState({ possibleMatches: [] }))
                     .post("/users/search_for_admin", {
-                        first_name: this.state.first_name,
-                        last_name: this.state.last_name,
+                        first_name: firstName,
+                        last_name: lastName,
                         season_id: this.props.season.id,
                         hideAttachedAccounts: this.props.hideAttachedAccounts,
                     });

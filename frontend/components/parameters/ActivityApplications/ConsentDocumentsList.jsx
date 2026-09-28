@@ -44,10 +44,7 @@ export default function ConsentDocumentsList() {
             .success(() => {
                 setIsFetching(false);
 
-                const index = documents.findIndex(
-                    (doc) => doc.id === documentId
-                );
-                setDocuments(documents.splice(index, index));
+                setDocuments(documents.filter((doc) => doc.id !== documentId));
                 setEditedDocument(null);
                 setDocumentSaved(true);
             })
