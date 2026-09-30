@@ -163,9 +163,10 @@ pre-existing bugs surfaced along the way (2 backend, 5 frontend) — logged in `
 not fixed here.
 
 Not started yet: React 18→19 (the roadmap's own original plan is to stabilize on 18 first — this
-item's own pre-check already flagged `@testing-library/react` needing v13+ and `react-loader-spinner`
-needing a real bump before 19 specifically, since 19 removes `defaultProps` on function components
-and legacy string refs/context entirely).
+item's own pre-check already flagged `@testing-library/react` needing v13+ before that jump, since 19
+removes `defaultProps` on function components and legacy string refs/context entirely;
+`react-loader-spinner` was the other package flagged here for the same reason, but it's since been
+bumped to `8.0.2` on `chore/bump-react-loader-spinner`, PR #140).
 
 ## Context this roadmap assumes (don't re-derive, just re-read if needed)
 

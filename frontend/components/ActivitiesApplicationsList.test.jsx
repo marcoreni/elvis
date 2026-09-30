@@ -790,3 +790,146 @@ describe("ActivitiesApplicationsList — showJobProgressModal unmounts JobProgre
         );
     });
 });
+
+// ==================================================================================================
+// react-loader-spinner 3.1.14 -> 8.0.2 bump (chore/bump-react-loader-spinner): the admin-only
+// import/export buttons swapped the old default-exported `<Loader type="Oval" .../>` for the named
+// `<Oval .../>` export. Neither button had any prior coverage (all other tests in this file use
+// `currentUserIsAdmin: false`, which skips this Fragment entirely). These lock down that the spinner
+// actually renders while its fetch is in flight and clears once it resolves.
+// ==================================================================================================
+describe("ActivitiesApplicationsList — admin import/export Oval spinner (regression)", () => {
+    // Scoped to this block (not the file-wide afterEach) so a thrown assertion in the export
+    // test can't leave the stub leaking into every later test in the file.
+    let originalCreateObjectURL;
+
+    beforeEach(() => {
+        originalCreateObjectURL = global.URL.createObjectURL;
+        global.URL.createObjectURL = vi.fn(() => "blob:mock-url");
+    });
+
+    afterEach(() => {
+        if (originalCreateObjectURL) {
+            global.URL.createObjectURL = originalCreateObjectURL;
+        } else {
+            delete global.URL.createObjectURL;
+        }
+    });
+
+    test("shows the Oval spinner while the CSV import request is in flight", async () => {
+        let resolveImport;
+        const importResponse = new Promise((resolve) => {
+            resolveImport = resolve;
+        });
+
+        global.fetch = vi.fn((url) => {
+            const u = String(url);
+            if (u.includes("/inscriptions/create_import_csv")) {
+                return importResponse;
+            }
+            if (u.includes("/inscriptions/list")) {
+                return Promise.resolve({
+                    json: () =>
+                        Promise.resolve({
+                            applications: [],
+                            pages: 0,
+                            total: 0,
+                            pending_total: 0,
+                        }),
+                });
+            }
+            return Promise.resolve({
+                ok: true,
+                headers: { get: () => "application/json" },
+                json: () => Promise.resolve({}),
+            });
+        });
+
+        const { container } = render(
+            <ActivitiesApplicationsList
+                {...baseProps()}
+                currentUserIsAdmin={true}
+            />
+        );
+
+        await waitFor(() => expect(global.fetch).toHaveBeenCalled());
+
+        const fileInput = container.querySelector('input[type="file"]');
+        const file = new File(["a,b,c"], "import.csv", { type: "text/csv" });
+        await userEvent.upload(fileInput, file);
+
+        expect(
+            await screen.findByLabelText("import-loading")
+        ).toBeInTheDocument();
+
+        // `{ error: ... }` keeps this on the swal.fire error branch -- the success branch's
+        // `showJobProgressModal` mounts a separate createRoot tree that nothing in this test
+        // closes, and it isn't needed to cover the spinner's own show/hide behavior.
+        resolveImport({ json: () => Promise.resolve({ error: "boom" }) });
+
+        await waitFor(() =>
+            expect(
+                screen.queryByLabelText("import-loading")
+            ).not.toBeInTheDocument()
+        );
+    });
+
+    test("shows the Oval spinner while the CSV export request is in flight", async () => {
+        let resolveExport;
+        const exportResponse = new Promise((resolve) => {
+            resolveExport = resolve;
+        });
+
+        global.fetch = vi.fn((url) => {
+            const u = String(url);
+            if (u.includes("/inscriptions/list.csv")) {
+                return exportResponse;
+            }
+            if (u.includes("/inscriptions/list")) {
+                return Promise.resolve({
+                    json: () =>
+                        Promise.resolve({
+                            applications: [],
+                            pages: 0,
+                            total: 0,
+                            pending_total: 0,
+                        }),
+                });
+            }
+            return Promise.resolve({
+                ok: true,
+                headers: { get: () => "application/json" },
+                json: () => Promise.resolve({}),
+            });
+        });
+
+        const { container } = render(
+            <ActivitiesApplicationsList
+                {...baseProps()}
+                currentUserIsAdmin={true}
+            />
+        );
+
+        await waitFor(() => expect(global.fetch).toHaveBeenCalled());
+
+        const exportButton = container
+            .querySelector("i.fa-upload")
+            .closest("button");
+        await userEvent.click(exportButton);
+
+        expect(
+            await screen.findByLabelText("export-loading")
+        ).toBeInTheDocument();
+
+        resolveExport({
+            blob: () =>
+                Promise.resolve(new Blob(["a,b\n1,2"], { type: "text/csv" })),
+        });
+
+        await waitFor(() =>
+            expect(
+                screen.queryByLabelText("export-loading")
+            ).not.toBeInTheDocument()
+        );
+    });
+});
