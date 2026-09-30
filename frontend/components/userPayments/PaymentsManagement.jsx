@@ -1063,7 +1063,7 @@ class PaymentsManagement extends React.Component {
                 );
 
                 toast.success(t("userPayments.management.locationSaved"), {
-                    position: toast.POSITION.BOTTOM_CENTER,
+                    position: "bottom-center",
                     autoClose: 3000,
                 });
                 this.setState({

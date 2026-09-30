@@ -53,7 +53,7 @@
         "react-modal": "^3.6.1",
         "react-select": "^5.0.0",
         "react-switch": "^7.1.0",
-        "react-toastify": "^4.5.2",
+        "react-toastify": "^11.1.0",
         "react_ujs": "^3.3.1",
         "sweetalert2": "^11.26.25"
     },

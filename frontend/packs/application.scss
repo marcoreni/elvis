@@ -1799,7 +1799,12 @@ body {
     }
 }
 
-.toast-container {
+// react-toastify v11 auto-injects its own stylesheet at runtime, appended to
+// <head> after this file's styles, so a same-specificity `.Toastify__toast-container`
+// rule from that stylesheet would win on source order alone. Compounding with
+// `.toast-container` (the element's own second class) raises specificity so
+// these overrides win regardless of load order.
+.Toastify__toast-container.toast-container {
     right: 0;
     left: 220px;
     bottom: 0;
@@ -1809,16 +1814,16 @@ body {
     top: unset;
 }
 
-.Toastify__toast {
+// v11 also dropped the `Toastify__toast-body` wrapper -- content now renders
+// directly inside `.Toastify__toast` -- hence the merge and the same
+// specificity-compounding trick as above.
+.toast-container .Toastify__toast {
     width: 100%;
     height: auto;
     position: absolute;
     bottom: 0;
     margin: 0;
     padding: 15px 20px;
-}
-
-.Toastify__toast-body {
     text-align: center;
 
     p {
