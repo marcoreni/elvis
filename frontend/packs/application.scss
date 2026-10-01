@@ -404,31 +404,6 @@ body {
 }
 
 /* ========================================================================== */
-/* Suggester */
-/* ========================================================================== */
-.suggester-results {
-    position: absolute;
-    width: 88%;
-}
-
-.suggester-results__options {
-    border: 1px solid $red;
-    border-top: 0px;
-    padding: 0;
-    margin: 0;
-    list-style-type: none;
-}
-
-.suggester-results__option {
-    padding: 6px;
-}
-
-.suggester-results__option--highlighted {
-    background-color: $red;
-    color: white;
-}
-
-/* ========================================================================== */
 /* Bordel sans Nom */
 /* ========================================================================== */
 
