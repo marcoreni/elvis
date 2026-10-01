@@ -151,7 +151,7 @@ class Planning extends React.Component {
                 if (e.name !== "AbortError")
                     toast.error(this.props.t("container.toasts.fetchError"), {
                         autoClose: 3000,
-                        position: toast.POSITION.BOTTOM_CENTER,
+                        position: "bottom-center",
                     });
 
                 return [];
@@ -397,7 +397,7 @@ class Planning extends React.Component {
                     <div>
                         <p>{this.props.t("container.toasts.coursesCreated")}</p>
                     </div>,
-                    {position: toast.POSITION.BOTTOM_CENTER, autoClose: 3000}
+                    {position: "bottom-center", autoClose: 3000}
                 );
 
                 this.updateIntervals(this.state.day, this.state.view);
@@ -438,7 +438,7 @@ class Planning extends React.Component {
             <div>
                 <p>{this.props.t("container.toasts.coursesCreated")}</p>
             </div>,
-            {position: toast.POSITION.BOTTOM_CENTER, autoClose: 3000}
+            {position: "bottom-center", autoClose: 3000}
         );
 
         this.setState({
@@ -525,7 +525,7 @@ class Planning extends React.Component {
                         toast.error(
                             `${data.error_message}`,
                             {
-                                position: toast.POSITION.BOTTOM_CENTER,
+                                position: "bottom-center",
                                 autoClose: 3000,
                             }
                         );
@@ -581,7 +581,7 @@ class Planning extends React.Component {
                         toast.success(
                             this.props.t("container.toasts.bulkUpdateResult", {updated: data.result.success, conflicts: data.result.conflicts.length}),
                             {
-                                position: toast.POSITION.BOTTOM_CENTER,
+                                position: "bottom-center",
                                 autoClose: 3000,
                             }
                         );
@@ -589,7 +589,7 @@ class Planning extends React.Component {
                         toast.success(
                             this.props.t("container.toasts.courseUpdated"),
                             {
-                                position: toast.POSITION.BOTTOM_CENTER,
+                                position: "bottom-center",
                                 autoClose: 3000,
                             }
                         );
@@ -639,7 +639,7 @@ class Planning extends React.Component {
                     return toast.success(
                         this.props.t("container.toasts.successConflicts", {success: results.success, conflicts: results.conflicts.length}),
                         {
-                            position: toast.POSITION.BOTTOM_CENTER,
+                            position: "bottom-center",
                             autoClose: 3000,
                         }
                     );
@@ -690,7 +690,7 @@ class Planning extends React.Component {
         );
 
         toast.warning(confirmationToast, {
-            position: toast.POSITION.BOTTOM_CENTER,
+            position: "bottom-center",
             autoClose: null,
         });
     }
@@ -784,12 +784,12 @@ class Planning extends React.Component {
                 this.commitIntervals([interval], "");
                 if (this.props.conflict) {
                     toast.success(conflictResolution, {
-                        position: toast.POSITION.BOTTOM_CENTER,
+                        position: "bottom-center",
                         autoClose: 3000,
                     });
                 } else {
                     toast.success(toastUpdate, {
-                        position: toast.POSITION.BOTTOM_CENTER,
+                        position: "bottom-center",
                         autoClose:
                             event.schedule && event.schedule.activity
                                 ? null
@@ -864,7 +864,7 @@ class Planning extends React.Component {
                 toast.success(
                     this.props.t("container.toasts.activityAndCoursesDeleted"),
                     {
-                        position: toast.POSITION.BOTTOM_CENTER,
+                        position: "bottom-center",
                         autoClose: 3000,
                     }
                 );
@@ -902,7 +902,7 @@ class Planning extends React.Component {
             .then(interval => {
                 this.closeDetailModal();
                 toast.success(toastDelete, {
-                    position: toast.POSITION.BOTTOM_CENTER,
+                    position: "bottom-center",
                 });
                 const intervalStore = {...this.state.intervalStore};
                 // TODO Fix backend so it returns a good interval
@@ -1202,7 +1202,7 @@ class Planning extends React.Component {
                 toast.success(
                     this.props.t("container.toasts.entityChanged", {entity: typeLabel}),
                     {
-                        position: toast.POSITION.BOTTOM_CENTER,
+                        position: "bottom-center",
                         autoClose: 3000,
                     }
                 )
