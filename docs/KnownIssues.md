@@ -410,3 +410,15 @@ console warning and a swallowed `TypeError`/silently-shown error alert on
 `componentDidMount()` call with a real `componentDidUpdate(prevProps)` on `AvailabilityManager` that
 syncs `state.list` whenever `props.intervals` actually changes, and drop the manual call entirely (at
 both sites).
+
+## `react-toastify` 11 bump: minor visual drift, consciously accepted (not a bug)
+
+`chore/bump-react-toastify` (4.5.2 -> 11.1.0) restores the pre-bump *colors*
+(`theme="colored"`) and click-to-dismiss behavior (`closeOnClick`) via explicit props on
+`Toaster.jsx`'s `<ToastContainer>`, and fixes the real layout regressions the version jump
+introduced (bottom-center toasts rendering off-screen; text no longer centered — both in
+`frontend/packs/application.scss`). What's deliberately left as-is: v11's toast box has a
+larger `border-radius` (6px vs 1px), a different `box-shadow`, no longer clips overflow, and
+the progress bar / close button markup changed shape (SVG icon vs a bold `✖` glyph). None of
+this is functionally broken, just a minor "close but not pixel-identical" look versus the
+pre-bump toasts. Not tracked for a fix.

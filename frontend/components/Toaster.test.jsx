@@ -28,4 +28,29 @@ describe("Toaster", () => {
         ).not.toBeInTheDocument();
         expect(toastEl.closest(".toast-container")).toBeInTheDocument();
     });
+
+    // All 14 real call sites (Planning.jsx, PaymentsManagement.jsx) use position:
+    // "bottom-center" specifically -- the variant the application.scss override
+    // targets to keep the container from rendering off-screen (v11 centers it via
+    // `transform: translateX(-50%)`, not v4's `margin-left` trick). jsdom can't
+    // validate the resulting CSS transform/layout itself, but this at least pins
+    // that the container the SCSS fix selects for still carries both classes.
+    it("renders a bottom-center toast under a container that carries both the app's and react-toastify's own position class", async () => {
+        render(<Toaster />);
+
+        act(() => {
+            toast.success("Bottom-center regression toast", {
+                position: "bottom-center",
+            });
+        });
+
+        const toastEl = await screen.findByText(
+            "Bottom-center regression toast"
+        );
+        const container = toastEl.closest(".toast-container");
+        expect(container).toBeInTheDocument();
+        expect(container).toHaveClass(
+            "Toastify__toast-container--bottom-center"
+        );
+    });
 });
