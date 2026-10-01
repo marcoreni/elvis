@@ -123,9 +123,16 @@ either have no route, or have a route/action that never falls through to implici
   `frontend/` or `app/views/**/*.erb` — confirmed via both an import grep and an ERB-mount grep.
   The `.suggester-results`/`.suggester-results__*` CSS block in
   `frontend/packs/application.scss` only styled this component's react-autosuggest class hooks;
-  removed with it.
+  removed with it. The backend half of this same dead feature,
+  `AutosuggestController#cities` (+ its `get "/autosuggest/cities"` route in
+  `config/routes.rb`), is separately confirmed dead too (zero references anywhere in
+  `app/`/`frontend/`/`spec/`/`test/`, and no commit ever referenced `autosuggest/cities` per
+  `git log --all -S`) but is out of scope for this frontend-only branch — left for a
+  backend-scoped cleanup.
 
-**Deliberately NOT touched** (real, live issues — not dead code, don't delete):
+## Deliberately NOT touched (all audits)
+
+Real, live issues — not dead code, don't delete:
 - `app/views/devise/passwords/edit.html.erb` — Devise's own stock route
   (`edit_user_password_url` → `PasswordsController#edit`) still renders this; the app's own
   reset-password *email* just links to a different, custom route instead. Reachable, just
