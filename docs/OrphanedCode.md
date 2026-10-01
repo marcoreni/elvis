@@ -116,6 +116,15 @@ either have no route, or have a route/action that never falls through to implici
   removed with it. Locale key removed with it: `planning:studentModal.title` (its `kinds.*` and
   `common:actions.save` keys are shared with other components, left alone).
 
+## 2026-10-01, dependency-health phase 2
+
+- `frontend/components/Suggester.jsx` (whole file) + the `react-autosuggest` dependency it was the
+  only user of (removed from `package.json`/`yarn.lock`): zero importers/mounts anywhere in
+  `frontend/` or `app/views/**/*.erb` — confirmed via both an import grep and an ERB-mount grep.
+  The `.suggester-results`/`.suggester-results__*` CSS block in
+  `frontend/packs/application.scss` only styled this component's react-autosuggest class hooks;
+  removed with it.
+
 **Deliberately NOT touched** (real, live issues — not dead code, don't delete):
 - `app/views/devise/passwords/edit.html.erb` — Devise's own stock route
   (`edit_user_password_url` → `PasswordsController#edit`) still renders this; the app's own
