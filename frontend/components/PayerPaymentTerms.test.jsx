@@ -2,7 +2,7 @@
 // Both are plain function components using useTranslation("payments").
 
 import React, { useState } from "react";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import i18n from "../i18n";
 import PayerPaymentTerms from "./PayerPaymentTerms";
@@ -12,6 +12,14 @@ import PayerPaymentTermsInfo from "./PayerPaymentTermsInfo";
 // selection state (it polls via setTimeout while focused) -- userEvent.type's
 // default zero-delay firing races that and only the first character "sticks".
 const TYPE_OPTIONS = { delay: 10 };
+
+// @react-input/core's focus listener starts a self-rescheduling setTimeout
+// loop that only `clearTimeout`s on blur, not on unmount. A test that types
+// into the masked input and never blurs it leaves that loop rescheduling
+// past the test's end; if it's still mid-flight when Vitest tears down this
+// file's jsdom window, the next tick throws into a dead environment
+// ("window is not defined"), an unhandled error that can fail the overall
+// `vitest run` exit code. Always blur after typing into a masked input.
 
 // The identification-number field is controlled by the parent (`user.identification_number`
 // passed back through `onChangeIdentificationNumber`), so the harness needs to actually hold
@@ -123,6 +131,7 @@ describe("PayerPaymentTerms identification number mask", () => {
         expect(
             screen.queryByText("Cette information est requise.")
         ).not.toBeInTheDocument();
+        fireEvent.blur(input);
     });
 
     test("typing a full national ID formats it with the mask's literal spaces", async () => {
@@ -134,6 +143,7 @@ describe("PayerPaymentTerms identification number mask", () => {
         await userEvent.type(input, "97012312345", TYPE_OPTIONS);
 
         expect(input.value).toBe("97 01 23 123 45");
+        fireEvent.blur(input);
     });
 
     test("a fully-cleared legacy react-input-mask '_' fill value is still treated as empty", () => {

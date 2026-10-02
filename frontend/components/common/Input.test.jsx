@@ -6,7 +6,7 @@
 // swallowed every literal "9" typed -- see Input.jsx's comment).
 
 import React, { useState } from "react";
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import Input from "./Input";
 import { MESSAGES } from "../../tools/constants";
@@ -15,6 +15,14 @@ import { MESSAGES } from "../../tools/constants";
 // selection state (it polls via setTimeout while focused) -- userEvent.type's
 // default zero-delay firing races that and only the first character "sticks".
 const TYPE_OPTIONS = { delay: 10 };
+
+// @react-input/core's focus listener starts a self-rescheduling setTimeout
+// loop that only `clearTimeout`s on blur, not on unmount. A test that types
+// into the masked input and never blurs it leaves that loop rescheduling
+// past the test's end; if it's still mid-flight when Vitest tears down this
+// file's jsdom window, the next tick throws into a dead environment
+// ("window is not defined"), an unhandled error that can fail the overall
+// `vitest run` exit code. Always blur after typing into a masked input.
 
 const NN_MASK = "## ## ## ### ##";
 
@@ -47,6 +55,7 @@ describe("Input masked branch", () => {
         await userEvent.type(input, "97012312345", TYPE_OPTIONS);
 
         expect(input.value).toBe("97 01 23 123 45");
+        fireEvent.blur(input);
     });
 
     test("an empty/untouched masked input has no placeholder fill characters", () => {
@@ -60,6 +69,7 @@ describe("Input masked branch", () => {
         await userEvent.type(input, "9701", TYPE_OPTIONS);
 
         expect(input.value).toBe("97 01");
+        fireEvent.blur(input);
     });
 
     test("passes maxLength, disabled and placeholder through to the input", () => {

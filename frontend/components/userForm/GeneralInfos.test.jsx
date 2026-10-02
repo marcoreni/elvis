@@ -43,6 +43,7 @@ describe("GeneralInfos identification number mask", () => {
         await userEvent.type(input, "97012312345", TYPE_OPTIONS);
 
         expect(input.value).toBe("97 01 23 123 45");
+        fireEvent.blur(input);
     });
 
     test("a full, correctly formatted national ID passes isValidNN", async () => {
