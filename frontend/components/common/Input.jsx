@@ -1,8 +1,18 @@
 import React from "react";
 import { MESSAGES } from "../../tools/constants";
-import InputMask from "react-input-mask";
+import { InputMask } from "@react-input/mask";
 
-const Input = props => {
+// @react-input/mask has no built-in placeholder token: any mask character
+// not listed here is treated as a literal. These mirror react-input-mask's
+// classic tokens (digit / letter / alphanumeric) for backward compatibility
+// with existing `mask` props across the app.
+const MASK_REPLACEMENT = {
+    9: /\d/,
+    a: /[A-Za-z]/,
+    "*": /[A-Za-z0-9]/,
+};
+
+const Input = (props) => {
     const {
         label,
         input,
@@ -44,6 +54,7 @@ const Input = props => {
                     {...input}
                     {...htmlOptions}
                     mask={mask}
+                    replacement={MASK_REPLACEMENT}
                     maxLength={maxLength}
                     disabled={disabled}
                     placeholder={placeholder}

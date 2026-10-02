@@ -59,7 +59,7 @@ function PayersListEditor({
                                     onChange: e => onChangeIdentificationNumber(user, e.target.value)
                                 }}
                                 meta={{
-                                    error: isMinor && isSelected && isEmpty((user.identification_number || "").replaceAll(/[_ ]/g, "")) ? "err_required" : null,
+                                    error: isMinor && isSelected && isEmpty((user.identification_number || "").replaceAll(" ", "")) ? "err_required" : null,
                                     touched: true
                                 }}
                             />
