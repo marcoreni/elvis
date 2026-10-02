@@ -1,7 +1,9 @@
 // Coverage for Input.jsx's masked branch (react-input-mask -> @react-input/mask migration).
 // No test existed for this branch before; it's exercised indirectly by
 // PayerPaymentTerms.jsx and userForm/GeneralInfos.jsx, both using the Belgian
-// national-ID mask "99 99 99 999 99".
+// national-ID mask "## ## ## ### ##". Fixtures here deliberately include a
+// "9" (MASK_REPLACEMENT's digit token used to be "9" itself, which silently
+// swallowed every literal "9" typed -- see Input.jsx's comment).
 
 import React, { useState } from "react";
 import { render, screen } from "@testing-library/react";
@@ -14,7 +16,7 @@ import { MESSAGES } from "../../tools/constants";
 // default zero-delay firing races that and only the first character "sticks".
 const TYPE_OPTIONS = { delay: 10 };
 
-const NN_MASK = "99 99 99 999 99";
+const NN_MASK = "## ## ## ### ##";
 
 // A controlled Input needs a real onChange that updates state: React resyncs a
 // controlled input's DOM value to its `value` prop right after every change
@@ -42,9 +44,9 @@ function renderMasked(extraProps = {}) {
 describe("Input masked branch", () => {
     test("formats a fully typed national ID with mask literal spaces", async () => {
         const input = renderMasked();
-        await userEvent.type(input, "85073003328", TYPE_OPTIONS);
+        await userEvent.type(input, "97012312345", TYPE_OPTIONS);
 
-        expect(input.value).toBe("85 07 30 033 28");
+        expect(input.value).toBe("97 01 23 123 45");
     });
 
     test("an empty/untouched masked input has no placeholder fill characters", () => {
@@ -55,9 +57,9 @@ describe("Input masked branch", () => {
 
     test("a partially typed value is truncated, not padded with a fill char", async () => {
         const input = renderMasked();
-        await userEvent.type(input, "8507", TYPE_OPTIONS);
+        await userEvent.type(input, "9701", TYPE_OPTIONS);
 
-        expect(input.value).toBe("85 07");
+        expect(input.value).toBe("97 01");
     });
 
     test("passes maxLength, disabled and placeholder through to the input", () => {

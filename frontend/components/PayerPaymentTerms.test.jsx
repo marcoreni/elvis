@@ -129,9 +129,32 @@ describe("PayerPaymentTerms identification number mask", () => {
         render(<ControlledPayerPaymentTerms {...minorProps} />);
 
         const input = screen.getByPlaceholderText("85 07 30 033 28");
-        await userEvent.type(input, "85073003328", TYPE_OPTIONS);
+        // Deliberately contains a "9": MASK_REPLACEMENT's digit token used to
+        // be "9" itself, which silently swallowed every literal "9" typed.
+        await userEvent.type(input, "97012312345", TYPE_OPTIONS);
 
-        expect(input.value).toBe("85 07 30 033 28");
+        expect(input.value).toBe("97 01 23 123 45");
+    });
+
+    test("a fully-cleared legacy react-input-mask '_' fill value is still treated as empty", () => {
+        // A pre-migration row where react-input-mask left its "_" placeholder
+        // fill character behind (a touched-then-cleared field under the old
+        // library). @react-input/mask renders a programmatically-supplied
+        // value verbatim without sanitizing it, so this must still collapse
+        // to "empty" rather than being read as a real, present value.
+        render(
+            <ControlledPayerPaymentTerms
+                {...minorProps}
+                user={{
+                    ...minorProps.user,
+                    identification_number: "__ __ __ ___ __",
+                }}
+            />
+        );
+
+        expect(
+            screen.getByText("Cette information est requise.")
+        ).toBeInTheDocument();
     });
 
     test("not displayed for a non-minor payer", () => {

@@ -53,13 +53,13 @@ function PayersListEditor({
                                 type="text"
                                 className="form-control"
                                 placeholder="85 07 30 033 28"
-                                mask="99 99 99 999 99"
+                                mask="## ## ## ### ##"
                                 htmlOptions={{
                                     value: user.identification_number,
                                     onChange: e => onChangeIdentificationNumber(user, e.target.value)
                                 }}
                                 meta={{
-                                    error: isMinor && isSelected && isEmpty((user.identification_number || "").replaceAll(" ", "")) ? "err_required" : null,
+                                    error: isMinor && isSelected && isEmpty((user.identification_number || "").replaceAll(/[_ ]/g, "")) ? "err_required" : null,
                                     touched: true
                                 }}
                             />

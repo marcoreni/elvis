@@ -37,14 +37,17 @@ function renderForm(props = {}) {
 describe("GeneralInfos identification number mask", () => {
     test("typing a full national ID formats it with the mask's literal spaces", async () => {
         const input = renderForm();
-        await userEvent.type(input, "85073003328", TYPE_OPTIONS);
+        // Deliberately contains a leading "9": MASK_REPLACEMENT's digit token
+        // used to be "9" itself, which silently swallowed every literal "9"
+        // typed (e.g. anyone born in 1979/1989/1999/2009).
+        await userEvent.type(input, "97012312345", TYPE_OPTIONS);
 
-        expect(input.value).toBe("85 07 30 033 28");
+        expect(input.value).toBe("97 01 23 123 45");
     });
 
     test("a full, correctly formatted national ID passes isValidNN", async () => {
         const input = renderForm();
-        await userEvent.type(input, "85073003328", TYPE_OPTIONS);
+        await userEvent.type(input, "97012312345", TYPE_OPTIONS);
         fireEvent.blur(input);
 
         expect(
@@ -54,7 +57,7 @@ describe("GeneralInfos identification number mask", () => {
 
     test("an incomplete national ID fails isValidNN once touched", async () => {
         const input = renderForm();
-        await userEvent.type(input, "8507", TYPE_OPTIONS);
+        await userEvent.type(input, "9701", TYPE_OPTIONS);
         fireEvent.blur(input);
 
         expect(
