@@ -1,8 +1,21 @@
 import React from "react";
 import { MESSAGES } from "../../tools/constants";
-import InputMask from "react-input-mask";
+import { InputMask } from "@react-input/mask";
 
-const Input = props => {
+// @react-input/mask has no built-in placeholder token: any mask character
+// not listed here is treated as a literal, and any TYPED character that
+// matches one of these keys is swallowed as a reserved token rather than
+// treated as literal input. So these keys must be characters that can never
+// appear in real data -- digits/letters are NOT safe choices (e.g. a key of
+// "9" would eat every literal "9" the user types). "#"/"@"/"~" can't appear
+// in any mask's actual input, so they're always safe replacement tokens.
+const MASK_REPLACEMENT = {
+    "#": /\d/,
+    "@": /[A-Za-z]/,
+    "~": /[A-Za-z0-9]/,
+};
+
+const Input = (props) => {
     const {
         label,
         input,
@@ -44,6 +57,7 @@ const Input = props => {
                     {...input}
                     {...htmlOptions}
                     mask={mask}
+                    replacement={MASK_REPLACEMENT}
                     maxLength={maxLength}
                     disabled={disabled}
                     placeholder={placeholder}

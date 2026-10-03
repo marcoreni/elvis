@@ -1,0 +1,68 @@
+// Coverage for GeneralInfos.jsx's national-ID masked field (react-input-mask ->
+// @react-input/mask migration). No test existed for this field before. GeneralInfos needs a
+// react-final-form <Form> context for its <Field>s, so it's rendered inside
+// <Form onSubmit render={() => <GeneralInfos .../>} />, same pattern as
+// activityRef/ActivityRefBasics.test.jsx.
+
+import React from "react";
+import { render, screen, fireEvent } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { Form } from "react-final-form";
+import { MESSAGES } from "../../tools/constants";
+import GeneralInfos from "./GeneralInfos";
+
+// @react-input/mask needs real ticks between keystrokes to validate the input's
+// selection state (it polls via setTimeout while focused) -- userEvent.type's
+// default zero-delay firing races that and only the first character "sticks".
+const TYPE_OPTIONS = { delay: 10 };
+
+const baseProps = {
+    displayIdentificationNumber: true,
+    ignoreValidate: false,
+    mutators: { changeBirthDate: () => {} },
+    formValues: {},
+    formErrors: {},
+};
+
+function renderForm(props = {}) {
+    render(
+        <Form
+            onSubmit={() => {}}
+            render={() => <GeneralInfos {...baseProps} {...props} />}
+        />
+    );
+    return screen.getByPlaceholderText("85 07 30 033 28");
+}
+
+describe("GeneralInfos identification number mask", () => {
+    test("typing a full national ID formats it with the mask's literal spaces", async () => {
+        const input = renderForm();
+        // Deliberately contains a leading "9": MASK_REPLACEMENT's digit token
+        // used to be "9" itself, which silently swallowed every literal "9"
+        // typed (e.g. anyone born in 1979/1989/1999/2009).
+        await userEvent.type(input, "97012312345", TYPE_OPTIONS);
+
+        expect(input.value).toBe("97 01 23 123 45");
+        fireEvent.blur(input);
+    });
+
+    test("a full, correctly formatted national ID passes isValidNN", async () => {
+        const input = renderForm();
+        await userEvent.type(input, "97012312345", TYPE_OPTIONS);
+        fireEvent.blur(input);
+
+        expect(
+            screen.queryByText(MESSAGES["err_invalid_NN"])
+        ).not.toBeInTheDocument();
+    });
+
+    test("an incomplete national ID fails isValidNN once touched", async () => {
+        const input = renderForm();
+        await userEvent.type(input, "9701", TYPE_OPTIONS);
+        fireEvent.blur(input);
+
+        expect(
+            screen.getByText(MESSAGES["err_invalid_NN"])
+        ).toBeInTheDocument();
+    });
+});

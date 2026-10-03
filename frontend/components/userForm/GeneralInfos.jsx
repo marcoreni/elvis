@@ -173,7 +173,7 @@ const GeneralInfos = ({
                             }
                             required={requireIdentificationNumber}
                             placeholder="85 07 30 033 28"
-                            mask="99 99 99 999 99"
+                            mask="## ## ## ### ##"
                             render={Input}
                         />
                     </div>
