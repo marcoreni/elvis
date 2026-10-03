@@ -412,6 +412,19 @@ console warning and a swallowed `TypeError`/silently-shown error alert on
 syncs `state.list` whenever `props.intervals` actually changes, and drop the manual call entirely (at
 both sites).
 
+## `Plugins.jsx`'s restart banner self-dismisses regardless of actual restart status
+
+`Plugins.jsx` reads `res.is_restarting` in both `getPlugins()` (line 56) and `checkRestartStatus()`
+(line 80), but no backend endpoint ever returns that key (`git grep is_restarting -- app/ lib/
+config/` is empty; `PluginsController#index`/`#changed` render only `{ plugins: ... }`/
+`{ restart: ... }`). Found while confirming the `display_text` dead-code removal in this same file
+(`docs/OrphanedCode.md`, phase 4a entry) — same root cause, but this one is live/reachable, not dead:
+toggling a plugin sets `is_restarting: true` from `#changed`'s `restart` flag, `RestartingMessage`
+renders, then the 3-second poll's `res.is_restarting` is always `undefined`, so
+`!res.is_restarting` is always true and the banner dismisses itself on the very next poll — whether
+or not the server has actually finished restarting. Fix: have `PluginsController#index`/`#changed`
+actually report real restart state (e.g. whether `tmp/restart.txt` is still present).
+
 ## `react-toastify` 11 bump: minor visual drift, consciously accepted (not a bug)
 
 `chore/bump-react-toastify` (4.5.2 -> 11.1.0) restores the pre-bump *colors*

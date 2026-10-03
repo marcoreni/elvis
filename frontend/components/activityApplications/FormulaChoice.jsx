@@ -1,7 +1,5 @@
 import React, { Fragment, useState } from "react";
 import { useTranslation } from "react-i18next";
-import _ from "lodash";
-import { toast } from "react-toastify";
 import FormulaActivitiesModal from "./FormulaActivitiesModal";
 
 import moment from "moment-timezone";
