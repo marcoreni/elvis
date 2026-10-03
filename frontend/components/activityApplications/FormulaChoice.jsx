@@ -1,14 +1,12 @@
 import React, { Fragment, useState } from "react";
 import { useTranslation } from "react-i18next";
 import _ from "lodash";
-import WysiwygViewer from "../utils/WysiwygViewer";
 import { toast } from "react-toastify";
 import FormulaActivitiesModal from "./FormulaActivitiesModal";
 
 import moment from "moment-timezone";
 
 const FormulaChoice = ({
-                           infoText,
                            formulas = [],
                            selectedFormulas = [],
                            selectedFormulaActivities = {},
@@ -221,26 +219,6 @@ const FormulaChoice = ({
 
     return (
         <Fragment>
-            <div>
-                {infoText && (
-                    <div
-                        className="alert alert-info col-md-8 d-inline-flex align-items-center p-1"
-                        style={{
-                            border: "1px solid #0079BF",
-                            borderRadius: "5px",
-                            color: "#0079BF",
-                        }}
-                    >
-                        <div className="col-sm-1 p-0 text-center">
-                            <i className="fas fa-info-circle"></i>
-                        </div>
-                        <div className="col-sm p-0">
-                            <WysiwygViewer wysiwygStrData={infoText} />
-                        </div>
-                    </div>
-                )}
-            </div>
-
             <div className="row">
                 <div className="col-xs-12 col-lg-6">
                     <h3 className="mb-4" style={{ color: "#8AA4B1" }}>

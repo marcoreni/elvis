@@ -974,7 +974,6 @@ class Wizard extends React.Component {
                                 )
                             }
                             validation={null}
-                            infoText={this.props.formulaChoiceDisplayText}
                             selectedActivities={this.state.selectedActivities}
                             allActivityRefs={this.props.allActivityRefs}
                         />

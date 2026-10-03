@@ -41,7 +41,6 @@ vi.mock("../../tools/api", () => ({
             successCb({
                 plugins: MOCK_PLUGINS,
                 is_restarting: false,
-                display_text: null,
             });
             return chain;
         };

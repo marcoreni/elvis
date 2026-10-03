@@ -2,9 +2,8 @@
 //
 // FormulaChoice is a function component (`useTranslation("activityApplications")`) wrapped by
 // WrappedFormulaChoice for StepZilla; it is tested directly. Every prop below is read
-// unconditionally in render, so all are supplied. The two non-trivial children
-// (`FormulaActivitiesModal`, `../utils/WysiwygViewer`) are mocked to null — none of the strings
-// under test live in them.
+// unconditionally in render, so all are supplied. The non-trivial child (`FormulaActivitiesModal`)
+// is mocked to null — none of the strings under test live in it.
 //
 // Language is driven through the frontend/i18n singleton (registered via initReactI18next, so no
 // <I18nextProvider> is needed). `afterEach` resets to "fr".
@@ -15,10 +14,8 @@ import i18n from "../../i18n";
 import FormulaChoice from "./FormulaChoice";
 
 vi.mock("./FormulaActivitiesModal", () => ({default: () => null}));
-vi.mock("../utils/WysiwygViewer", () => ({default: () => null}));
 
 const baseProps = {
-    infoText: null,
     formulas: [],
     selectedFormulas: [],
     selectedFormulaActivities: {},
