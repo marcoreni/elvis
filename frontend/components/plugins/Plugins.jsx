@@ -2,12 +2,6 @@ import React, { useEffect } from "react";
 import { useState } from "react";
 import * as api from "../../tools/api";
 import swal from "sweetalert2";
-import {
-    EditorState,
-    convertToRaw,
-    convertFromRaw,
-    ContentState,
-} from "draft-js";
 import PluginsList from "./PluginsList";
 import RestartingMessage from "./RestartingMessage";
 import PluginActivationModal from "./PluginActivationModal";
@@ -60,23 +54,6 @@ export default function Plugins(props) {
             .success((res) => {
                 setPlugins(res.plugins);
                 setIsRestarting(res.is_restarting);
-
-                // Convertir le contenu JSON brut en ContentState
-                let savedContentRaw = null;
-                let savedContentState = null;
-                if (res.display_text != null) {
-                    try {
-                        savedContentRaw = JSON.parse(res.display_text);
-                        savedContentState = convertFromRaw(savedContentRaw);
-                    } catch (e) {
-                        savedContentState = ContentState.createFromText(
-                            res.display_text
-                        );
-                    }
-                    setEditorState(
-                        EditorState.createWithContent(savedContentState)
-                    );
-                }
             })
             .error((res) => {
                 swal.fire({

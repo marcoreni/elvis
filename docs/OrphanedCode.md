@@ -130,6 +130,29 @@ either have no route, or have a route/action that never falls through to implici
   `git log --all -S`) but is out of scope for this frontend-only branch — left for a
   backend-scoped cleanup.
 
+## 2026-10-03, dependency-health phase 4a (draft-js dead-code cleanup)
+
+Scoped prep for the `react-draft-wysiwyg`/`draft-js` → TipTap migration (phase 4): removing dead
+draft-js call sites before touching any live editor/viewer code.
+
+- `frontend/components/plugins/Plugins.jsx`: the draft-js block in `getPlugins()` that parsed
+  `res.display_text` and called `setEditorState(EditorState.createWithContent(...))`, plus the
+  now-unused `draft-js` import (`EditorState`, `convertToRaw`, `convertFromRaw`, `ContentState`).
+  Double-dead: `setEditorState` was never a real state setter (no matching `useState` in the
+  component — it would have thrown `ReferenceError` if ever called), and `display_text` is a key
+  `PluginsController#index` (`app/controllers/plugins_controller.rb`) never returns (it renders
+  only `{ plugins: ... }`), so the branch was also unreachable. `Plugins.jsx` itself is live
+  (mounted at `app/views/plugins/index.html.erb`) — only this block was dead.
+- `frontend/components/activityApplications/FormulaChoice.jsx`: the `infoText` prop and the
+  `WysiwygViewer` block rendering it, plus the now-unused `WysiwygViewer` import. Its only feed,
+  `infoText={this.props.formulaChoiceDisplayText}` in `Wizard.jsx`, is removed with it —
+  `formulaChoiceDisplayText` is never passed by either Rails view that mounts `Wizard.jsx`
+  (`app/views/activities_applications/new.html.erb`, `new_for_existing_user.html.erb`). `WysiwygViewer`
+  itself stays live elsewhere (`ActivityChoice.jsx`, `Validation.jsx`,
+  `WrappedPayerPaymentTerms.jsx`, `availability/AvailabilityManager.jsx`) — not touched.
+  `FormulaChoice.test.jsx` updated to match (dropped the `infoText`/`WysiwygViewer` mock);
+  `Plugins.test.jsx`'s api mock dropped the now-meaningless `display_text: null` fixture key.
+
 ## Deliberately NOT touched (all audits)
 
 Real, live issues — not dead code, don't delete:
