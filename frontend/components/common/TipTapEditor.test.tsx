@@ -1,14 +1,27 @@
 import React, { useState } from "react";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, test, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import "@testing-library/jest-dom/vitest";
+import i18n from "../../i18n";
 import TipTapEditor from "./TipTapEditor";
 
+// Labels come from useTranslation("common") (richTextEditor.*), not hardcoded English -- compute
+// expected strings from the same resources rather than re-typing translated text here.
+const t = i18n.getFixedT("en", "common");
+
+beforeEach(async () => {
+    await i18n.changeLanguage("en");
+});
+
+afterEach(async () => {
+    await i18n.changeLanguage("fr");
+});
+
 // A thin controlled-input wrapper: TipTapEditor's own contract is
-// value/onChange (it doesn't manage content state itself), so tests drive it
-// the same way a real caller would -- through a parent that re-feeds
-// `value` from `onChange`.
+// value/onChange (it doesn't manage content state itself), so most tests
+// drive it the same way a real caller would -- through a parent that
+// re-feeds `value` from `onChange`.
 function ControlledEditor({
     initialValue = "",
     onChange,
@@ -36,21 +49,57 @@ function getEditorContent(container: HTMLElement): HTMLElement {
     return el as HTMLElement;
 }
 
+// Selects the whole document via the editor's own select-all keymap binding
+// (Mod-a), handled by ProseMirror's keydown handler directly -- unlike a
+// native text selection, this doesn't depend on jsdom's (very limited)
+// Selection/Range support.
+async function selectAll(content: HTMLElement) {
+    content.focus();
+    await userEvent.keyboard("{Control>}a{/Control}");
+}
+
 describe("TipTapEditor — render", () => {
     test("renders the toolbar buttons and an empty editor", async () => {
         render(<ControlledEditor />);
 
-        expect(screen.getByLabelText("Bold")).toBeInTheDocument();
-        expect(screen.getByLabelText("Italic")).toBeInTheDocument();
-        expect(screen.getByLabelText("Underline")).toBeInTheDocument();
-        expect(screen.getByLabelText("Strikethrough")).toBeInTheDocument();
-        expect(screen.getByLabelText("Blockquote")).toBeInTheDocument();
-        expect(screen.getByLabelText("Bullet list")).toBeInTheDocument();
-        expect(screen.getByLabelText("Ordered list")).toBeInTheDocument();
-        expect(screen.getByLabelText("Link")).toBeInTheDocument();
-        expect(screen.getByLabelText("Unlink")).toBeInTheDocument();
-        expect(screen.getByLabelText("Emoji")).toBeInTheDocument();
-        expect(screen.getByLabelText("Heading level")).toBeInTheDocument();
+        expect(
+            screen.getByLabelText(t("richTextEditor.bold"))
+        ).toBeInTheDocument();
+        expect(
+            screen.getByLabelText(t("richTextEditor.italic"))
+        ).toBeInTheDocument();
+        expect(
+            screen.getByLabelText(t("richTextEditor.underline"))
+        ).toBeInTheDocument();
+        expect(
+            screen.getByLabelText(t("richTextEditor.strikethrough"))
+        ).toBeInTheDocument();
+        expect(
+            screen.getByLabelText(t("richTextEditor.blockquote"))
+        ).toBeInTheDocument();
+        expect(
+            screen.getByLabelText(t("richTextEditor.bulletList"))
+        ).toBeInTheDocument();
+        expect(
+            screen.getByLabelText(t("richTextEditor.orderedList"))
+        ).toBeInTheDocument();
+        expect(
+            screen.getByLabelText(t("richTextEditor.link"))
+        ).toBeInTheDocument();
+        expect(
+            screen.getByLabelText(t("richTextEditor.unlink"))
+        ).toBeInTheDocument();
+        expect(
+            screen.getByLabelText(t("richTextEditor.emoji"))
+        ).toBeInTheDocument();
+        expect(
+            screen.getByLabelText(t("richTextEditor.headingLevelLabel"))
+        ).toBeInTheDocument();
+        expect(
+            screen.getByRole("toolbar", {
+                name: t("richTextEditor.toolbarLabel"),
+            })
+        ).toBeInTheDocument();
     });
 
     test("renders existing HTML content", async () => {
@@ -64,19 +113,149 @@ describe("TipTapEditor — render", () => {
     });
 });
 
+describe("TipTapEditor — external value changes (not round-tripped through onChange)", () => {
+    test("adopts a value change coming from outside after mount", async () => {
+        const onChange = vi.fn();
+        const { container, rerender } = render(
+            <TipTapEditor value="<p>Initial</p>" onChange={onChange} />
+        );
+
+        await waitFor(() =>
+            expect(getEditorContent(container).textContent).toBe("Initial")
+        );
+
+        // A genuinely external change: re-rendered with a new `value` that
+        // did NOT come from this editor's own onChange (e.g. a reload, a
+        // discard-changes action, or content arriving late from an API
+        // call) -- this is exactly the path a spurious onUpdate at mount
+        // used to break permanently.
+        rerender(
+            <TipTapEditor
+                value="<p>Replaced from outside</p>"
+                onChange={onChange}
+            />
+        );
+
+        await waitFor(() =>
+            expect(getEditorContent(container).textContent).toBe(
+                "Replaced from outside"
+            )
+        );
+    });
+
+    test("mounting does not fire a spurious onChange", async () => {
+        const onChange = vi.fn();
+        render(
+            <TipTapEditor value="<p>Steady state</p>" onChange={onChange} />
+        );
+
+        // Give effects (setEditable, the sync effect) a chance to run.
+        await waitFor(() => {});
+        expect(onChange).not.toHaveBeenCalled();
+    });
+});
+
 describe("TipTapEditor — emoji insertion drives onChange", () => {
     test("clicking an emoji inserts it and reports the new HTML", async () => {
         const onChange = vi.fn();
         const { container } = render(<ControlledEditor onChange={onChange} />);
 
-        await userEvent.click(screen.getByLabelText("Emoji"));
-        await userEvent.click(screen.getByLabelText("Insert 👍"));
+        await userEvent.click(screen.getByLabelText(t("richTextEditor.emoji")));
+        await userEvent.click(
+            screen.getByLabelText(
+                t("richTextEditor.insertEmoji", { emoji: "👍" })
+            )
+        );
 
         await waitFor(() =>
             expect(getEditorContent(container).textContent).toContain("👍")
         );
         expect(onChange).toHaveBeenCalled();
         expect(onChange.mock.calls.at(-1)?.[0]).toContain("👍");
+    });
+
+    test("Escape closes the emoji popover", async () => {
+        render(<ControlledEditor />);
+
+        await userEvent.click(screen.getByLabelText(t("richTextEditor.emoji")));
+        const emojiButton = screen.getByLabelText(
+            t("richTextEditor.insertEmoji", { emoji: "👍" })
+        );
+        expect(emojiButton).toBeInTheDocument();
+
+        await userEvent.keyboard("{Escape}");
+
+        await waitFor(() =>
+            expect(
+                screen.queryByLabelText(
+                    t("richTextEditor.insertEmoji", { emoji: "👍" })
+                )
+            ).not.toBeInTheDocument()
+        );
+    });
+});
+
+describe("TipTapEditor — mark toggle buttons produce real markup", () => {
+    test("Bold wraps the selected text in <strong> and back out again", async () => {
+        const onChange = vi.fn();
+        const { container } = render(
+            <ControlledEditor
+                initialValue="<p>Hello world</p>"
+                onChange={onChange}
+            />
+        );
+
+        await waitFor(() =>
+            expect(getEditorContent(container).textContent).toBe("Hello world")
+        );
+        await selectAll(getEditorContent(container));
+
+        await userEvent.click(screen.getByLabelText(t("richTextEditor.bold")));
+        await waitFor(() =>
+            expect(onChange.mock.calls.at(-1)?.[0]).toContain(
+                "<strong>Hello world</strong>"
+            )
+        );
+        expect(screen.getByLabelText(t("richTextEditor.bold"))).toHaveAttribute(
+            "aria-pressed",
+            "true"
+        );
+
+        await userEvent.click(screen.getByLabelText(t("richTextEditor.bold")));
+        await waitFor(() =>
+            expect(onChange.mock.calls.at(-1)?.[0]).not.toContain("<strong>")
+        );
+    });
+
+    test("Underline and Strikethrough toggle their own tags", async () => {
+        const onChange = vi.fn();
+        const { container } = render(
+            <ControlledEditor
+                initialValue="<p>Hello world</p>"
+                onChange={onChange}
+            />
+        );
+
+        await waitFor(() =>
+            expect(getEditorContent(container).textContent).toBe("Hello world")
+        );
+        await selectAll(getEditorContent(container));
+
+        await userEvent.click(
+            screen.getByLabelText(t("richTextEditor.underline"))
+        );
+        await waitFor(() =>
+            expect(onChange.mock.calls.at(-1)?.[0]).toContain(
+                "<u>Hello world</u>"
+            )
+        );
+
+        await userEvent.click(
+            screen.getByLabelText(t("richTextEditor.strikethrough"))
+        );
+        await waitFor(() =>
+            expect(onChange.mock.calls.at(-1)?.[0]).toContain("<s>")
+        );
     });
 });
 
@@ -85,37 +264,43 @@ describe("TipTapEditor — block-level toolbar buttons", () => {
         const onChange = vi.fn();
         render(<ControlledEditor onChange={onChange} />);
 
-        await userEvent.click(screen.getByLabelText("Blockquote"));
+        await userEvent.click(
+            screen.getByLabelText(t("richTextEditor.blockquote"))
+        );
         await waitFor(() =>
             expect(onChange.mock.calls.at(-1)?.[0]).toContain("<blockquote>")
         );
-        expect(screen.getByLabelText("Blockquote")).toHaveAttribute(
-            "aria-pressed",
-            "true"
-        );
+        expect(
+            screen.getByLabelText(t("richTextEditor.blockquote"))
+        ).toHaveAttribute("aria-pressed", "true");
 
-        await userEvent.click(screen.getByLabelText("Blockquote"));
+        await userEvent.click(
+            screen.getByLabelText(t("richTextEditor.blockquote"))
+        );
         await waitFor(() =>
             expect(onChange.mock.calls.at(-1)?.[0]).not.toContain(
                 "<blockquote>"
             )
         );
-        expect(screen.getByLabelText("Blockquote")).toHaveAttribute(
-            "aria-pressed",
-            "false"
-        );
+        expect(
+            screen.getByLabelText(t("richTextEditor.blockquote"))
+        ).toHaveAttribute("aria-pressed", "false");
     });
 
     test("Bullet list and Ordered list buttons produce the right list markup", async () => {
         const onChange = vi.fn();
         render(<ControlledEditor onChange={onChange} />);
 
-        await userEvent.click(screen.getByLabelText("Bullet list"));
+        await userEvent.click(
+            screen.getByLabelText(t("richTextEditor.bulletList"))
+        );
         await waitFor(() =>
             expect(onChange.mock.calls.at(-1)?.[0]).toContain("<ul>")
         );
 
-        await userEvent.click(screen.getByLabelText("Ordered list"));
+        await userEvent.click(
+            screen.getByLabelText(t("richTextEditor.orderedList"))
+        );
         await waitFor(() => {
             const lastHtml = onChange.mock.calls.at(-1)?.[0];
             expect(lastHtml).toContain("<ol>");
@@ -128,7 +313,7 @@ describe("TipTapEditor — block-level toolbar buttons", () => {
         render(<ControlledEditor onChange={onChange} />);
 
         await userEvent.selectOptions(
-            screen.getByLabelText("Heading level"),
+            screen.getByLabelText(t("richTextEditor.headingLevelLabel")),
             "2"
         );
         await waitFor(() =>
@@ -136,11 +321,42 @@ describe("TipTapEditor — block-level toolbar buttons", () => {
         );
 
         await userEvent.selectOptions(
-            screen.getByLabelText("Heading level"),
+            screen.getByLabelText(t("richTextEditor.headingLevelLabel")),
             "0"
         );
         await waitFor(() =>
             expect(onChange.mock.calls.at(-1)?.[0]).not.toContain("<h2>")
+        );
+    });
+});
+
+describe("TipTapEditor — <ins> is recognized as underline (draftjs-to-html's serialization)", () => {
+    test("loading <ins> content activates the Underline button, and saving keeps it as <u>", async () => {
+        const onChange = vi.fn();
+        const { container } = render(
+            <ControlledEditor
+                initialValue="<p><ins>text</ins></p>"
+                onChange={onChange}
+            />
+        );
+
+        await waitFor(() =>
+            expect(getEditorContent(container).textContent).toBe("text")
+        );
+        await selectAll(getEditorContent(container));
+
+        expect(
+            screen.getByLabelText(t("richTextEditor.underline"))
+        ).toHaveAttribute("aria-pressed", "true");
+
+        // Force a save (toggling Bold on then off leaves the text itself
+        // unchanged but exercises onUpdate/getHTML) and check the underline
+        // survived TipTap's own parse/serialize round-trip.
+        await userEvent.click(screen.getByLabelText(t("richTextEditor.bold")));
+        await userEvent.click(screen.getByLabelText(t("richTextEditor.bold")));
+
+        await waitFor(() =>
+            expect(onChange.mock.calls.at(-1)?.[0]).toContain("<u>text</u>")
         );
     });
 });
@@ -158,34 +374,55 @@ describe("TipTapEditor — link insert and remove", () => {
         await waitFor(() =>
             expect(getEditorContent(container).textContent).toBe("Hello world")
         );
+        await selectAll(getEditorContent(container));
 
-        // Select the whole document via the editor's own select-all keymap
-        // binding (Mod-a), handled by ProseMirror's keydown handler directly
-        // -- unlike a native text selection, this doesn't depend on jsdom's
-        // (very limited) Selection/Range support.
-        const content = getEditorContent(container);
-        content.focus();
-        await userEvent.keyboard("{Control>}a{/Control}");
+        expect(
+            screen.getByLabelText(t("richTextEditor.unlink"))
+        ).toBeDisabled();
 
-        expect(screen.getByLabelText("Unlink")).toBeDisabled();
-
-        await userEvent.click(screen.getByLabelText("Link"));
-        const urlInput = screen.getByLabelText("Link URL");
+        await userEvent.click(screen.getByLabelText(t("richTextEditor.link")));
+        const urlInput = screen.getByLabelText(
+            t("richTextEditor.linkUrlLabel")
+        );
         await userEvent.type(urlInput, "https://example.com");
-        await userEvent.click(screen.getByText("Apply"));
+        await userEvent.click(screen.getByText(t("richTextEditor.apply")));
 
         await waitFor(() => {
             const lastHtml = onChange.mock.calls.at(-1)?.[0];
             expect(lastHtml).toContain('href="https://example.com"');
             expect(lastHtml).toContain("Hello world");
         });
-        expect(screen.getByLabelText("Unlink")).not.toBeDisabled();
+        expect(
+            screen.getByLabelText(t("richTextEditor.unlink"))
+        ).not.toBeDisabled();
 
-        await userEvent.click(screen.getByLabelText("Unlink"));
+        await userEvent.click(
+            screen.getByLabelText(t("richTextEditor.unlink"))
+        );
         await waitFor(() =>
             expect(onChange.mock.calls.at(-1)?.[0]).not.toContain("<a ")
         );
-        expect(screen.getByLabelText("Unlink")).toBeDisabled();
+        expect(
+            screen.getByLabelText(t("richTextEditor.unlink"))
+        ).toBeDisabled();
+    });
+
+    test("applying a link with nothing selected inserts the URL as the link's own text, instead of silently doing nothing", async () => {
+        const onChange = vi.fn();
+        render(<ControlledEditor onChange={onChange} />);
+
+        await userEvent.click(screen.getByLabelText(t("richTextEditor.link")));
+        const urlInput = screen.getByLabelText(
+            t("richTextEditor.linkUrlLabel")
+        );
+        await userEvent.type(urlInput, "https://example.com");
+        await userEvent.click(screen.getByText(t("richTextEditor.apply")));
+
+        await waitFor(() => {
+            const lastHtml = onChange.mock.calls.at(-1)?.[0];
+            expect(lastHtml).toContain('href="https://example.com"');
+            expect(lastHtml).toContain(">https://example.com<");
+        });
     });
 });
 
@@ -199,6 +436,6 @@ describe("TipTapEditor — disabled", () => {
             "contenteditable",
             "false"
         );
-        expect(screen.getByLabelText("Bold")).toBeDisabled();
+        expect(screen.getByLabelText(t("richTextEditor.bold"))).toBeDisabled();
     });
 });

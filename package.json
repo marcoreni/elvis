@@ -25,7 +25,6 @@
         "@react-input/mask": "^2.0.4",
         "@tanstack/react-table": "^8.21.3",
         "@tiptap/core": "^3.31.4",
-        "@tiptap/extension-link": "^3.31.4",
         "@tiptap/extension-underline": "^3.31.4",
         "@tiptap/pm": "^3.31.4",
         "@tiptap/react": "^3.31.4",

@@ -37,6 +37,28 @@ describe("RichTextViewer", () => {
         expect(container.querySelector("p")).toHaveTextContent("Hello world");
     });
 
+    test("degrades gracefully instead of throwing on malformed Draft.js JSON", () => {
+        // Well-formed Draft.js shape (has a `blocks` array) but a block
+        // missing `inlineStyleRanges` -- draftjs-to-html throws a TypeError
+        // on this (confirmed directly: "Cannot read properties of
+        // undefined (reading 'length')"). A throw during render would
+        // unmount the whole island, not just garble the text.
+        const malformed = JSON.stringify({
+            blocks: [{ text: "x", type: "unstyled" }],
+            entityMap: {},
+        });
+
+        expect(() =>
+            render(
+                <RichTextViewer
+                    wysiwygStrData={malformed}
+                    className=""
+                    style={{}}
+                />
+            )
+        ).not.toThrow();
+    });
+
     test("renders an already-HTML string directly", () => {
         const html = "<p>Already <em>HTML</em> content</p>";
         const { container } = render(

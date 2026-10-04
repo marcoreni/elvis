@@ -47,7 +47,17 @@ function toHtml(wysiwygStrData: string | null | undefined): string {
 
     const draftRaw = tryParseDraftRaw(wysiwygStrData);
     if (draftRaw) {
-        return draftToHtml(draftRaw);
+        try {
+            return draftToHtml(draftRaw);
+        } catch (e) {
+            // Well-formed Draft.js JSON shape (has a `blocks` array) but
+            // malformed enough internally (e.g. a block missing
+            // `inlineStyleRanges`) to make draftjs-to-html throw. Degrade to
+            // showing the raw string rather than taking down the whole
+            // island -- matches the old WysiwygViewer's fallback to
+            // ContentState.createFromText on a conversion failure.
+            return wysiwygStrData;
+        }
     }
 
     // Not Draft.js JSON: already HTML (or plain text, which is valid HTML too).

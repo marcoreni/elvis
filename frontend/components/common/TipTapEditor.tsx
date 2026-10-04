@@ -1,6 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import { EditorContent, useEditor, useEditorState } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
+import Underline from "@tiptap/extension-underline";
+import { useTranslation } from "react-i18next";
 
 // A handful of commonly used emojis. TipTap's own emoji picker
 // (`@tiptap-pro/extension-emoji`) is a paid Pro extension, and the only free
@@ -44,13 +46,24 @@ const EMOJI_OPTIONS = [
 
 const HEADING_LEVELS = [1, 2, 3, 4, 5, 6] as const;
 
+// draftjs-to-html (used by RichTextViewer to render legacy Draft.js content,
+// and still relevant here because this editor must round-trip content a user
+// opens for editing) serializes Draft's UNDERLINE style as `<ins>`, not
+// `<u>`. @tiptap/extension-underline's default parseHTML only recognizes
+// `<u>`/`text-decoration: underline`, so without this it would silently
+// drop every underline the first time such content is opened and saved.
+const InsCompatibleUnderline = Underline.extend({
+    parseHTML() {
+        return [...(this.parent?.() ?? []), { tag: "ins" }];
+    },
+});
+
 export interface TipTapEditorProps {
     /** Current content, as an HTML string. */
     value: string;
     /** Called with the new content, as an HTML string, on every edit. */
     onChange: (html: string) => void;
     className?: string;
-    placeholder?: string;
     disabled?: boolean;
 }
 
@@ -63,34 +76,40 @@ export default function TipTapEditor({
     value,
     onChange,
     className,
-    placeholder,
     disabled = false,
 }: TipTapEditorProps): JSX.Element {
+    const { t } = useTranslation("common");
     const [showLinkInput, setShowLinkInput] = useState(false);
     const [linkUrl, setLinkUrl] = useState("");
     const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
-    // Set by onUpdate just before onChange runs; lets the sync effect below
-    // tell its own round-trip (value prop changing because *we* just called
-    // onChange) apart from an external change to `value` (e.g. content
-    // arriving from an API call after mount) that the editor needs to adopt.
-    const isInternalChange = useRef(false);
+    // The exact HTML string we last handed to `onChange`. Lets the sync
+    // effect below tell its own round-trip (a parent re-rendering us with
+    // the same `value` it was just given via onChange) apart from a genuine
+    // external change (a reload, a discard action, content arriving late
+    // from an API call) that the editor needs to adopt -- comparing against
+    // the real string survives a parent that doesn't echo `value` back
+    // synchronously/unchanged, unlike a one-shot "was that us?" boolean.
+    const lastEmittedHtml = useRef<string | null>(null);
 
     const editor = useEditor({
         extensions: [
             StarterKit.configure({
+                underline: false,
                 link: {
                     openOnClick: false,
                     autolink: false,
                     HTMLAttributes: { target: "_self" },
                 },
             }),
+            InsCompatibleUnderline,
         ],
         content: value,
         editable: !disabled,
         onUpdate: ({ editor: currentEditor }) => {
-            isInternalChange.current = true;
-            onChange(currentEditor.getHTML());
+            const html = currentEditor.getHTML();
+            lastEmittedHtml.current = html;
+            onChange(html);
         },
     });
 
@@ -99,8 +118,7 @@ export default function TipTapEditor({
             return;
         }
 
-        if (isInternalChange.current) {
-            isInternalChange.current = false;
+        if (value === lastEmittedHtml.current) {
             return;
         }
 
@@ -111,8 +129,28 @@ export default function TipTapEditor({
     }, [value, editor]);
 
     useEffect(() => {
-        editor?.setEditable(!disabled);
+        // Explicit `false`: setEditable's default `emitUpdate` is `true`,
+        // which would otherwise fire a synthetic onUpdate (and so onChange)
+        // the moment the editor mounts, before any real user edit.
+        editor?.setEditable(!disabled, false);
     }, [disabled, editor]);
+
+    // Document-level (not just the popover's own onKeyDown, like the link
+    // popover uses) because focus stays on the toggle button -- outside the
+    // popover -- right after opening it by clicking that button, so a
+    // keydown there wouldn't otherwise bubble through the popover.
+    useEffect(() => {
+        if (!showEmojiPicker) {
+            return;
+        }
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === "Escape") {
+                setShowEmojiPicker(false);
+            }
+        };
+        document.addEventListener("keydown", handleKeyDown);
+        return () => document.removeEventListener("keydown", handleKeyDown);
+    }, [showEmojiPicker]);
 
     const toolbarState = useEditorState({
         editor,
@@ -131,8 +169,6 @@ export default function TipTapEditor({
                           HEADING_LEVELS.find((level) =>
                               currentEditor.isActive("heading", { level })
                           ) ?? 0,
-                      canUndo: currentEditor.can().undo(),
-                      canRedo: currentEditor.can().redo(),
                   }
                 : null,
     });
@@ -153,15 +189,33 @@ export default function TipTapEditor({
 
     const applyLink = () => {
         const url = linkUrl.trim();
-        if (url) {
+        if (!url) {
+            editor.chain().focus().extendMarkRange("link").unsetLink().run();
+            setShowLinkInput(false);
+            return;
+        }
+
+        if (editor.state.selection.empty && !editor.isActive("link")) {
+            // Nothing selected and no existing link at the caret:
+            // extendMarkRange has no mark range to extend, so setLink alone
+            // would silently no-op. Insert the URL itself as the link's text
+            // instead of pretending the click did nothing.
+            editor
+                .chain()
+                .focus()
+                .insertContent({
+                    type: "text",
+                    text: url,
+                    marks: [{ type: "link", attrs: { href: url } }],
+                })
+                .run();
+        } else {
             editor
                 .chain()
                 .focus()
                 .extendMarkRange("link")
                 .setLink({ href: url })
                 .run();
-        } else {
-            editor.chain().focus().extendMarkRange("link").unsetLink().run();
         }
         setShowLinkInput(false);
     };
@@ -190,14 +244,18 @@ export default function TipTapEditor({
 
     return (
         <div className={`tiptap-editor ${className ?? ""}`}>
-            <div className="tiptap-editor-toolbar" role="toolbar">
+            <div
+                className="tiptap-editor-toolbar"
+                role="toolbar"
+                aria-label={t("richTextEditor.toolbarLabel")}
+            >
                 <select
-                    aria-label="Heading level"
+                    aria-label={t("richTextEditor.headingLevelLabel")}
                     value={toolbarState.headingLevel}
                     disabled={disabled}
                     onChange={(e) => setHeading(Number(e.target.value))}
                 >
-                    <option value={0}>Normal</option>
+                    <option value={0}>{t("richTextEditor.normal")}</option>
                     {HEADING_LEVELS.map((level) => (
                         <option key={level} value={level}>
                             {`H${level}`}
@@ -207,7 +265,7 @@ export default function TipTapEditor({
 
                 <button
                     type="button"
-                    aria-label="Bold"
+                    aria-label={t("richTextEditor.bold")}
                     aria-pressed={toolbarState.bold}
                     disabled={disabled}
                     className={toolbarState.bold ? "is-active" : ""}
@@ -217,7 +275,7 @@ export default function TipTapEditor({
                 </button>
                 <button
                     type="button"
-                    aria-label="Italic"
+                    aria-label={t("richTextEditor.italic")}
                     aria-pressed={toolbarState.italic}
                     disabled={disabled}
                     className={toolbarState.italic ? "is-active" : ""}
@@ -227,7 +285,7 @@ export default function TipTapEditor({
                 </button>
                 <button
                     type="button"
-                    aria-label="Underline"
+                    aria-label={t("richTextEditor.underline")}
                     aria-pressed={toolbarState.underline}
                     disabled={disabled}
                     className={toolbarState.underline ? "is-active" : ""}
@@ -239,7 +297,7 @@ export default function TipTapEditor({
                 </button>
                 <button
                     type="button"
-                    aria-label="Strikethrough"
+                    aria-label={t("richTextEditor.strikethrough")}
                     aria-pressed={toolbarState.strike}
                     disabled={disabled}
                     className={toolbarState.strike ? "is-active" : ""}
@@ -249,7 +307,7 @@ export default function TipTapEditor({
                 </button>
                 <button
                     type="button"
-                    aria-label="Blockquote"
+                    aria-label={t("richTextEditor.blockquote")}
                     aria-pressed={toolbarState.blockquote}
                     disabled={disabled}
                     className={toolbarState.blockquote ? "is-active" : ""}
@@ -261,7 +319,7 @@ export default function TipTapEditor({
                 </button>
                 <button
                     type="button"
-                    aria-label="Bullet list"
+                    aria-label={t("richTextEditor.bulletList")}
                     aria-pressed={toolbarState.bulletList}
                     disabled={disabled}
                     className={toolbarState.bulletList ? "is-active" : ""}
@@ -273,7 +331,7 @@ export default function TipTapEditor({
                 </button>
                 <button
                     type="button"
-                    aria-label="Ordered list"
+                    aria-label={t("richTextEditor.orderedList")}
                     aria-pressed={toolbarState.orderedList}
                     disabled={disabled}
                     className={toolbarState.orderedList ? "is-active" : ""}
@@ -287,7 +345,7 @@ export default function TipTapEditor({
                 <div className="tiptap-editor-link-group">
                     <button
                         type="button"
-                        aria-label="Link"
+                        aria-label={t("richTextEditor.link")}
                         aria-pressed={toolbarState.link}
                         disabled={disabled}
                         className={toolbarState.link ? "is-active" : ""}
@@ -297,7 +355,7 @@ export default function TipTapEditor({
                     </button>
                     <button
                         type="button"
-                        aria-label="Unlink"
+                        aria-label={t("richTextEditor.unlink")}
                         disabled={disabled || !toolbarState.link}
                         onClick={removeLink}
                     >
@@ -308,8 +366,10 @@ export default function TipTapEditor({
                         <span className="tiptap-editor-link-popover">
                             <input
                                 type="text"
-                                aria-label="Link URL"
-                                placeholder="https://..."
+                                aria-label={t("richTextEditor.linkUrlLabel")}
+                                placeholder={t(
+                                    "richTextEditor.linkUrlPlaceholder"
+                                )}
                                 value={linkUrl}
                                 autoFocus
                                 onChange={(e) => setLinkUrl(e.target.value)}
@@ -323,7 +383,7 @@ export default function TipTapEditor({
                                 }}
                             />
                             <button type="button" onClick={applyLink}>
-                                Apply
+                                {t("richTextEditor.apply")}
                             </button>
                         </span>
                     )}
@@ -332,7 +392,7 @@ export default function TipTapEditor({
                 <div className="tiptap-editor-emoji-group">
                     <button
                         type="button"
-                        aria-label="Emoji"
+                        aria-label={t("richTextEditor.emoji")}
                         disabled={disabled}
                         onClick={() => {
                             setShowLinkInput(false);
@@ -346,13 +406,19 @@ export default function TipTapEditor({
                         <span
                             className="tiptap-editor-emoji-popover"
                             role="listbox"
-                            aria-label="Emoji picker"
+                            aria-label={t("richTextEditor.emojiPickerLabel")}
                         >
                             {EMOJI_OPTIONS.map((emoji) => (
                                 <button
                                     key={emoji}
                                     type="button"
-                                    aria-label={`Insert ${emoji}`}
+                                    role="option"
+                                    aria-label={t(
+                                        "richTextEditor.insertEmoji",
+                                        {
+                                            emoji,
+                                        }
+                                    )}
                                     onClick={() => insertEmoji(emoji)}
                                 >
                                     {emoji}
@@ -363,11 +429,7 @@ export default function TipTapEditor({
                 </div>
             </div>
 
-            <EditorContent
-                editor={editor}
-                className="tiptap-editor-content"
-                aria-placeholder={placeholder}
-            />
+            <EditorContent editor={editor} className="tiptap-editor-content" />
         </div>
     );
 }
