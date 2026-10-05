@@ -160,6 +160,8 @@ export default function TipTapEditor({
                       blockquote: currentEditor.isActive("blockquote"),
                       bulletList: currentEditor.isActive("bulletList"),
                       orderedList: currentEditor.isActive("orderedList"),
+                      canIndent: currentEditor.can().sinkListItem("listItem"),
+                      canOutdent: currentEditor.can().liftListItem("listItem"),
                       link: currentEditor.isActive("link"),
                       headingLevel:
                           HEADING_LEVELS.find((level) =>
@@ -340,6 +342,26 @@ export default function TipTapEditor({
                     }
                 >
                     <i className="fas fa-list-ol" />
+                </button>
+                <button
+                    type="button"
+                    aria-label={t("richTextEditor.outdent")}
+                    disabled={disabled || !toolbarState.canOutdent}
+                    onClick={() =>
+                        editor.chain().focus().liftListItem("listItem").run()
+                    }
+                >
+                    <i className="fas fa-outdent" />
+                </button>
+                <button
+                    type="button"
+                    aria-label={t("richTextEditor.indent")}
+                    disabled={disabled || !toolbarState.canIndent}
+                    onClick={() =>
+                        editor.chain().focus().sinkListItem("listItem").run()
+                    }
+                >
+                    <i className="fas fa-indent" />
                 </button>
 
                 <div className="tiptap-editor-link-group">

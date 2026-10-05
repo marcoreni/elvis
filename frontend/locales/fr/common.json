@@ -254,6 +254,8 @@
         "blockquote": "Citation",
         "bulletList": "Liste à puces",
         "orderedList": "Liste numérotée",
+        "indent": "Augmenter le retrait",
+        "outdent": "Diminuer le retrait",
         "link": "Lien",
         "unlink": "Supprimer le lien",
         "linkUrlLabel": "URL du lien",

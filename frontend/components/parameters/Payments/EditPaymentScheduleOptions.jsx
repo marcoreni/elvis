@@ -4,7 +4,7 @@ import swal from "sweetalert2";
 import { toast } from "react-toastify";
 import { useTranslation } from "react-i18next";
 import TipTapEditor from "../../common/TipTapEditor";
-import { wysiwygToHtml } from "../../common/RichTextViewer";
+import { wysiwygToEditableHtml } from "../../common/RichTextViewer";
 
 export default function EditPaymentScheduleOptions() {
     const { t } = useTranslation("parameters");
@@ -25,9 +25,17 @@ export default function EditPaymentScheduleOptions() {
                 setInit(false);
                 setIndexValues(res.index);
 
-                if (res.display_text != null) {
-                    setDisplayText(wysiwygToHtml(res.display_text));
+                const html = wysiwygToEditableHtml(res.display_text);
+                if (html === null) {
+                    swal.fire({
+                        title: t(
+                            "payments.scheduleOptions.errors.contentConversionError"
+                        ),
+                        icon: "error",
+                    });
+                    return;
                 }
+                setDisplayText(html);
             })
             .error((res) => {
                 swal.fire({

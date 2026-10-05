@@ -8,6 +8,7 @@ import React from "react";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import i18n from "../../../i18n";
+import swal from "sweetalert2";
 import EditPaymentScheduleOptions from "./EditPaymentScheduleOptions";
 
 vi.mock("sweetalert2", () => ({
@@ -48,6 +49,7 @@ afterEach(async () => {
     await i18n.changeLanguage("fr");
     apiState.lastSuccess = null;
     apiState.lastPost = null;
+    vi.clearAllMocks();
 });
 
 function getEditorContent(container) {
@@ -115,6 +117,11 @@ test("saving posts plain HTML (not Draft.js JSON) as display_text, even when loa
         expect(getEditorContent(container)).toHaveTextContent("Legacy terms")
     );
 
+    // The mount GET's success handler also sets `paymentScheduleOptionsActivated`, which fires
+    // its own unrelated `/payment_schedule_options/activated` POST -- reset here so the
+    // `waitFor` below actually guards the save POST, not that earlier one.
+    apiState.lastPost = null;
+
     await userEvent.click(
         screen.getByRole("button", {
             name: i18n.t(
@@ -129,4 +136,31 @@ test("saving posts plain HTML (not Draft.js JSON) as display_text, even when loa
     );
     expect(apiState.lastPost.data.display_text).toContain("Legacy terms");
     expect(apiState.lastPost.data.display_text).not.toMatch(/^\s*\{/);
+});
+
+test("a genuinely malformed Draft.js JSON shows an error and does not load garbage into the editor", async () => {
+    const { container } = render(<EditPaymentScheduleOptions />);
+    // Well-formed enough to be *detected* as Draft.js JSON (has a `blocks` array), but
+    // `inlineStyleRanges` is the wrong type -- fails both draftToHtml directly AND after
+    // draft-js's own convertFromRaw/convertToRaw normalization.
+    const malformed = JSON.stringify({
+        blocks: [
+            {
+                text: "x",
+                type: "unstyled",
+                inlineStyleRanges: "not-an-array",
+            },
+        ],
+        entityMap: {},
+    });
+
+    apiState.lastSuccess({ ...baseResponse, display_text: malformed });
+
+    await waitFor(() => expect(swal.fire).toHaveBeenCalled());
+    expect(swal.fire.mock.calls[0][0].title).toBe(
+        i18n.t(
+            "parameters:payments.scheduleOptions.errors.contentConversionError"
+        )
+    );
+    expect(getEditorContent(container)).toHaveTextContent("");
 });

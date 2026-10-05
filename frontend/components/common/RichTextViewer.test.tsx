@@ -2,7 +2,7 @@ import React from "react";
 import { render } from "@testing-library/react";
 import { afterEach, describe, expect, test, vi } from "vitest";
 import "@testing-library/jest-dom/vitest";
-import RichTextViewer from "./RichTextViewer";
+import RichTextViewer, { wysiwygToEditableHtml } from "./RichTextViewer";
 
 // RichTextViewer must keep rendering the OLD Draft.js raw-JSON format (written by the
 // react-draft-wysiwyg editor it replaces) as well as the new TipTap HTML format, since the
@@ -165,5 +165,63 @@ describe("RichTextViewer", () => {
             "col-11",
             "p-0"
         );
+    });
+});
+
+// Editor call sites (TipTapEditor-based) reuse this same format detection via
+// `wysiwygToEditableHtml`, but -- unlike the viewer's own `wysiwygToHtml` degrade-to-raw-string
+// fallback above -- must be able to tell "converted successfully" apart from "total conversion
+// failure", since loading the latter into an editable, savable surface risks a user's first
+// keystroke permanently overwriting the row with mangled JSON-as-text.
+describe("wysiwygToEditableHtml", () => {
+    afterEach(() => {
+        vi.restoreAllMocks();
+    });
+
+    test("converts Draft.js raw JSON to HTML, same as the viewer", () => {
+        const draftRawJson = JSON.stringify({
+            blocks: [
+                {
+                    key: "a",
+                    text: "Hello world",
+                    type: "unstyled",
+                    depth: 0,
+                    inlineStyleRanges: [],
+                    entityRanges: [],
+                    data: {},
+                },
+            ],
+            entityMap: {},
+        });
+
+        expect(wysiwygToEditableHtml(draftRawJson)).toContain("Hello world");
+    });
+
+    test("returns the HTML unchanged for already-HTML content", () => {
+        expect(wysiwygToEditableHtml("<p>Already HTML</p>")).toBe(
+            "<p>Already HTML</p>"
+        );
+    });
+
+    test("returns an empty string for null/undefined/empty content", () => {
+        expect(wysiwygToEditableHtml(null)).toBe("");
+        expect(wysiwygToEditableHtml(undefined)).toBe("");
+        expect(wysiwygToEditableHtml("")).toBe("");
+    });
+
+    test("returns null (not the raw JSON string) on genuine double-conversion-failure", () => {
+        vi.spyOn(console, "warn").mockImplementation(() => {});
+        const malformed = JSON.stringify({
+            blocks: [
+                {
+                    text: "x",
+                    type: "unstyled",
+                    inlineStyleRanges: "not-an-array",
+                },
+            ],
+            entityMap: {},
+        });
+
+        expect(wysiwygToEditableHtml(malformed)).toBeNull();
     });
 });
