@@ -27,7 +27,7 @@ export default function RichTextViewer({
     className?: string;
     style?: React.CSSProperties;
 }): JSX.Element {
-    const html = toHtml(wysiwygStrData);
+    const html = wysiwygToHtml(wysiwygStrData);
 
     // ne pas mettre la configuration de sanitize en props, ce serait une faille de sécurité
     const sanitizedHtml = sanitize(html, { ADD_ATTR: ["target"] });
@@ -41,7 +41,15 @@ export default function RichTextViewer({
     );
 }
 
-function toHtml(wysiwygStrData: string | null | undefined): string {
+/**
+ * Convert a `Parameter`-row string to HTML, handling the Draft.js-JSON /
+ * plain-HTML transition described above. Exported so editor call sites
+ * (TipTapEditor-based) can convert existing content the same way before
+ * loading it, without duplicating the format-detection logic here.
+ */
+export function wysiwygToHtml(
+    wysiwygStrData: string | null | undefined
+): string {
     if (!wysiwygStrData) {
         return "";
     }

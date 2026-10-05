@@ -5,7 +5,7 @@ import TimePreferencesTable from "./TimePreferencesTable";
 import SelectedActivitiesTable from "./SelectedActivitiesTable";
 import EvaluationChoiceTable from "./EvaluationChoiceTable";
 import UserAvatar from "../UserAvatar";
-import WysiwygViewer from "../utils/WysiwygViewer";
+import RichTextViewer from "../common/RichTextViewer";
 
 
 import moment from "moment";
@@ -394,7 +394,7 @@ const Validation = ({
                                 <div className="col-1 p-0 text-center">
                                     <i className="fas fa-info-circle"></i>
                                 </div>
-                                <WysiwygViewer
+                                <RichTextViewer
                                     className="col-11 p-0"
                                     wysiwygStrData={pricingInfo}
                                 />
