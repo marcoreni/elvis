@@ -1,6 +1,6 @@
 import React from "react";
 import { render } from "@testing-library/react";
-import { describe, expect, test } from "vitest";
+import { afterEach, describe, expect, test, vi } from "vitest";
 import "@testing-library/jest-dom/vitest";
 import RichTextViewer from "./RichTextViewer";
 
@@ -24,6 +24,10 @@ const draftRawJson = JSON.stringify({
 });
 
 describe("RichTextViewer", () => {
+    afterEach(() => {
+        vi.restoreAllMocks();
+    });
+
     test("renders Draft.js raw JSON as the equivalent HTML", () => {
         const { container } = render(
             <RichTextViewer
@@ -37,26 +41,60 @@ describe("RichTextViewer", () => {
         expect(container.querySelector("p")).toHaveTextContent("Hello world");
     });
 
-    test("degrades gracefully instead of throwing on malformed Draft.js JSON", () => {
+    test("a block missing inlineStyleRanges renders correctly via draft-js's own normalization", () => {
         // Well-formed Draft.js shape (has a `blocks` array) but a block
         // missing `inlineStyleRanges` -- draftjs-to-html throws a TypeError
-        // on this (confirmed directly: "Cannot read properties of
-        // undefined (reading 'length')"). A throw during render would
-        // unmount the whole island, not just garble the text.
+        // on this directly (confirmed: "Cannot read properties of
+        // undefined (reading 'length')"), but draft-js's own
+        // convertFromRaw/convertToRaw tolerates it fine (fills in `[]`),
+        // same as the old WysiwygViewer (which always went through
+        // convertFromRaw first) did for this exact input -- it never even
+        // reached a fallback for this case, so this must still render the
+        // real content, not just "not throw".
         const malformed = JSON.stringify({
             blocks: [{ text: "x", type: "unstyled" }],
             entityMap: {},
         });
 
-        expect(() =>
-            render(
-                <RichTextViewer
-                    wysiwygStrData={malformed}
-                    className=""
-                    style={{}}
-                />
-            )
-        ).not.toThrow();
+        const { container } = render(
+            <RichTextViewer
+                wysiwygStrData={malformed}
+                className=""
+                style={{}}
+            />
+        );
+
+        expect(container.querySelector("p")).toHaveTextContent("x");
+    });
+
+    test("degrades gracefully (and warns) on Draft.js JSON too malformed for draft-js itself to normalize", () => {
+        // Unlike the above, `inlineStyleRanges` here is the wrong *type*
+        // (not just missing), which draft-js's own convertFromRaw does not
+        // tolerate either -- confirmed this still throws even after going
+        // through convertFromRaw/convertToRaw. A throw during render would
+        // unmount the whole island, not just garble the text.
+        const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+        const malformed = JSON.stringify({
+            blocks: [
+                {
+                    text: "x",
+                    type: "unstyled",
+                    inlineStyleRanges: "not-an-array",
+                },
+            ],
+            entityMap: {},
+        });
+
+        const { container } = render(
+            <RichTextViewer
+                wysiwygStrData={malformed}
+                className=""
+                style={{}}
+            />
+        );
+
+        expect(container.textContent).toContain(malformed);
+        expect(warnSpy).toHaveBeenCalled();
     });
 
     test("renders an already-HTML string directly", () => {

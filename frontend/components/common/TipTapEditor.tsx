@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { EditorContent, useEditor, useEditorState } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
@@ -83,15 +83,6 @@ export default function TipTapEditor({
     const [linkUrl, setLinkUrl] = useState("");
     const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
-    // The exact HTML string we last handed to `onChange`. Lets the sync
-    // effect below tell its own round-trip (a parent re-rendering us with
-    // the same `value` it was just given via onChange) apart from a genuine
-    // external change (a reload, a discard action, content arriving late
-    // from an API call) that the editor needs to adopt -- comparing against
-    // the real string survives a parent that doesn't echo `value` back
-    // synchronously/unchanged, unlike a one-shot "was that us?" boolean.
-    const lastEmittedHtml = useRef<string | null>(null);
-
     const editor = useEditor({
         extensions: [
             StarterKit.configure({
@@ -107,9 +98,7 @@ export default function TipTapEditor({
         content: value,
         editable: !disabled,
         onUpdate: ({ editor: currentEditor }) => {
-            const html = currentEditor.getHTML();
-            lastEmittedHtml.current = html;
-            onChange(html);
+            onChange(currentEditor.getHTML());
         },
     });
 
@@ -118,10 +107,17 @@ export default function TipTapEditor({
             return;
         }
 
-        if (value === lastEmittedHtml.current) {
-            return;
-        }
-
+        // Covers both "this is just our own onUpdate's `onChange` echoing
+        // back unchanged" (editor.getHTML() already equals it) and a
+        // genuine external change (a reload, a discard action, content
+        // arriving late from an API call) -- either way, only touch the
+        // document when `value` actually differs from what's currently in
+        // it, so a real update is never mistaken for an echo (which a
+        // "was that us?" flag, comparing against the last string *we*
+        // emitted rather than the editor's actual current content, could
+        // do: e.g. edit produces A, a parent shows something else (B),
+        // then a later external update legitimately brings it back to A --
+        // that's new content to adopt, not an echo to skip).
         if (value !== editor.getHTML()) {
             editor.commands.setContent(value || "", { emitUpdate: false });
         }
@@ -198,16 +194,20 @@ export default function TipTapEditor({
         if (editor.state.selection.empty && !editor.isActive("link")) {
             // Nothing selected and no existing link at the caret:
             // extendMarkRange has no mark range to extend, so setLink alone
-            // would silently no-op. Insert the URL itself as the link's text
-            // instead of pretending the click did nothing.
+            // would silently no-op. Insert the URL as plain text, select
+            // what was just inserted, then mark that selection as a link
+            // through the same setLink() call the other branch uses below
+            // -- rather than building the link mark by hand -- so this
+            // path gets setLink's own URL validation too, instead of
+            // silently inserting a dead/unvalidated link.
+            const { from } = editor.state.selection;
             editor
                 .chain()
                 .focus()
-                .insertContent({
-                    type: "text",
-                    text: url,
-                    marks: [{ type: "link", attrs: { href: url } }],
-                })
+                .insertContent(url)
+                .setTextSelection({ from, to: from + url.length })
+                .extendMarkRange("link")
+                .setLink({ href: url })
                 .run();
         } else {
             editor
@@ -405,14 +405,14 @@ export default function TipTapEditor({
                     {showEmojiPicker && (
                         <span
                             className="tiptap-editor-emoji-popover"
-                            role="listbox"
+                            role="group"
                             aria-label={t("richTextEditor.emojiPickerLabel")}
                         >
                             {EMOJI_OPTIONS.map((emoji) => (
                                 <button
                                     key={emoji}
                                     type="button"
-                                    role="option"
+                                    disabled={disabled}
                                     aria-label={t(
                                         "richTextEditor.insertEmoji",
                                         {

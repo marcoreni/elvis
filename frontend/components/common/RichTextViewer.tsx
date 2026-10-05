@@ -1,5 +1,6 @@
 import React from "react";
 import draftToHtml from "draftjs-to-html";
+import { convertFromRaw, convertToRaw } from "draft-js";
 import { sanitize } from "isomorphic-dompurify";
 
 /**
@@ -51,12 +52,29 @@ function toHtml(wysiwygStrData: string | null | undefined): string {
             return draftToHtml(draftRaw);
         } catch (e) {
             // Well-formed Draft.js JSON shape (has a `blocks` array) but
-            // malformed enough internally (e.g. a block missing
-            // `inlineStyleRanges`) to make draftjs-to-html throw. Degrade to
-            // showing the raw string rather than taking down the whole
-            // island -- matches the old WysiwygViewer's fallback to
-            // ContentState.createFromText on a conversion failure.
-            return wysiwygStrData;
+            // missing/malformed enough internally (e.g. a block missing
+            // `inlineStyleRanges`) to make draftjs-to-html throw directly.
+            // The old WysiwygViewer never hit this: it always ran raw JSON
+            // through draft-js's own convertFromRaw/convertToRaw first,
+            // which normalizes missing fields (e.g. fills in `[]` for a
+            // missing inlineStyleRanges) -- do the same before giving up.
+            try {
+                return draftToHtml(convertToRaw(convertFromRaw(draftRaw)));
+            } catch (e2) {
+                // Both draft-js's own normalization and draftjs-to-html
+                // still failed -- genuinely malformed content, not just a
+                // missing-field shape draft-js tolerates. Unlike
+                // tryParseDraftRaw's catch below (expected control flow for
+                // "this isn't Draft.js JSON at all"), reaching this is
+                // unexpected, so it's worth a log rather than failing
+                // silently.
+                // eslint-disable-next-line no-console
+                console.warn(
+                    "RichTextViewer: failed to render Draft.js content, even after normalizing via convertFromRaw/convertToRaw",
+                    e2
+                );
+                return wysiwygStrData;
+            }
         }
     }
 

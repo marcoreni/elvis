@@ -153,6 +153,45 @@ describe("TipTapEditor — external value changes (not round-tripped through onC
         await waitFor(() => {});
         expect(onChange).not.toHaveBeenCalled();
     });
+
+    test("re-adopts a value it previously emitted, after the parent has since shown something else (not mistaken for echoing its own onChange)", async () => {
+        // A ref tracking "the last HTML we emitted" (an earlier version of
+        // this component had one) would wrongly treat this as an echo of
+        // our own onUpdate and skip updating -- even though the editor's
+        // *actual current* content has since moved on to something else
+        // via an external value change in between. Comparing against the
+        // editor's real current content (not a remembered string) is what
+        // this test exercises.
+        const onChange = vi.fn();
+        const { container, rerender } = render(
+            <TipTapEditor value="" onChange={onChange} />
+        );
+
+        // 1. A real edit produces content "A" through this editor's own
+        // onUpdate -- not an external change.
+        await userEvent.click(
+            screen.getByLabelText(t("richTextEditor.blockquote"))
+        );
+        const htmlA = onChange.mock.calls.at(-1)?.[0] as string;
+        expect(htmlA).toContain("<blockquote>");
+
+        // 2. The parent independently shows something else ("B"),
+        // unrelated to that edit -- a genuine external change.
+        rerender(<TipTapEditor value="<p>B</p>" onChange={onChange} />);
+        await waitFor(() =>
+            expect(getEditorContent(container).textContent).toBe("B")
+        );
+
+        // 3. A later external update legitimately brings the value back to
+        // "A" (e.g. an undo, or the server echoing back a previously-saved
+        // value) -- the editor must adopt it, not silently keep showing "B".
+        rerender(<TipTapEditor value={htmlA} onChange={onChange} />);
+        await waitFor(() =>
+            expect(
+                getEditorContent(container).querySelector("blockquote")
+            ).not.toBeNull()
+        );
+    });
 });
 
 describe("TipTapEditor — emoji insertion drives onChange", () => {
