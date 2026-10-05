@@ -242,5 +242,25 @@
     "selectMultiple": {
         "confirmClearAll": "Êtes-vous sûr de supprimer toutes les {{title}} ?",
         "addAllLabel": "Ajouter toutes les {{title}}"
+    },
+    "richTextEditor": {
+        "toolbarLabel": "Barre d'outils de mise en forme",
+        "headingLevelLabel": "Niveau de titre",
+        "normal": "Normal",
+        "bold": "Gras",
+        "italic": "Italique",
+        "underline": "Souligné",
+        "strikethrough": "Barré",
+        "blockquote": "Citation",
+        "bulletList": "Liste à puces",
+        "orderedList": "Liste numérotée",
+        "link": "Lien",
+        "unlink": "Supprimer le lien",
+        "linkUrlLabel": "URL du lien",
+        "linkUrlPlaceholder": "https://...",
+        "apply": "Appliquer",
+        "emoji": "Émoji",
+        "emojiPickerLabel": "Sélecteur d'émojis",
+        "insertEmoji": "Insérer {{emoji}}"
     }
 }

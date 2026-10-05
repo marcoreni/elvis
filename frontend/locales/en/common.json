@@ -242,5 +242,25 @@
     "selectMultiple": {
         "confirmClearAll": "Are you sure you want to remove all {{title}}?",
         "addAllLabel": "Add all {{title}}"
+    },
+    "richTextEditor": {
+        "toolbarLabel": "Formatting toolbar",
+        "headingLevelLabel": "Heading level",
+        "normal": "Normal",
+        "bold": "Bold",
+        "italic": "Italic",
+        "underline": "Underline",
+        "strikethrough": "Strikethrough",
+        "blockquote": "Blockquote",
+        "bulletList": "Bullet list",
+        "orderedList": "Ordered list",
+        "link": "Link",
+        "unlink": "Unlink",
+        "linkUrlLabel": "Link URL",
+        "linkUrlPlaceholder": "https://...",
+        "apply": "Apply",
+        "emoji": "Emoji",
+        "emojiPickerLabel": "Emoji picker",
+        "insertEmoji": "Insert {{emoji}}"
     }
 }
