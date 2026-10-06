@@ -58,6 +58,20 @@ async function selectAll(content: HTMLElement) {
     await userEvent.keyboard("{Control>}a{/Control}");
 }
 
+// Places the native DOM selection inside a given node via the (limited but
+// sufficient for this) Selection/Range API directly, then lets ProseMirror
+// pick it up through its own selection-change handling -- used for
+// indent/outdent, which (unlike selectAll's Mod-a) need the cursor inside a
+// *specific* list item rather than the whole document selected.
+function placeCursorIn(el: Element) {
+    const range = document.createRange();
+    range.selectNodeContents(el);
+    const selection = window.getSelection();
+    selection?.removeAllRanges();
+    selection?.addRange(range);
+    document.dispatchEvent(new Event("selectionchange"));
+}
+
 describe("TipTapEditor — render", () => {
     test("renders the toolbar buttons and an empty editor", async () => {
         render(<ControlledEditor />);
@@ -345,6 +359,80 @@ describe("TipTapEditor — block-level toolbar buttons", () => {
             expect(lastHtml).toContain("<ol>");
             expect(lastHtml).not.toContain("<ul>");
         });
+    });
+
+    test("Indent/outdent buttons are disabled outside a list, and when there's no sibling to act on", async () => {
+        render(<ControlledEditor />);
+
+        // Not inside any list yet.
+        expect(
+            screen.getByLabelText(t("richTextEditor.indent"))
+        ).toBeDisabled();
+        expect(
+            screen.getByLabelText(t("richTextEditor.outdent"))
+        ).toBeDisabled();
+
+        await userEvent.click(
+            screen.getByLabelText(t("richTextEditor.bulletList"))
+        );
+
+        // A lone top-level item has no preceding sibling to nest under
+        // (sinkListItem stays disabled), but lifting it back out of the
+        // list -- dissolving the list -- doesn't need one.
+        expect(
+            screen.getByLabelText(t("richTextEditor.indent"))
+        ).toBeDisabled();
+        expect(
+            screen.getByLabelText(t("richTextEditor.outdent"))
+        ).not.toBeDisabled();
+    });
+
+    test("Indent button nests the current list item under its preceding sibling, outdent reverses it", async () => {
+        const onChange = vi.fn();
+        const { container } = render(
+            <ControlledEditor
+                initialValue="<ul><li>One</li><li>Two</li></ul>"
+                onChange={onChange}
+            />
+        );
+        await waitFor(() =>
+            expect(getEditorContent(container).textContent).toBe("OneTwo")
+        );
+
+        // Cursor in the SECOND item: sinking it nests it as a child of the
+        // first (there's nothing to indent the first item itself under).
+        const secondItem = Array.from(
+            getEditorContent(container).querySelectorAll("li")
+        ).find((li) => li.textContent === "Two") as HTMLElement;
+        placeCursorIn(secondItem);
+
+        const indentButton = screen.getByLabelText(t("richTextEditor.indent"));
+        await waitFor(() => expect(indentButton).not.toBeDisabled());
+        await userEvent.click(indentButton);
+
+        await waitFor(() =>
+            expect(
+                getEditorContent(container).querySelector("li > ul li")
+            ).toHaveTextContent("Two")
+        );
+        expect(onChange.mock.calls.at(-1)?.[0]).toContain(
+            "<li><p>One</p><ul><li><p>Two</p></li></ul></li>"
+        );
+
+        const outdentButton = screen.getByLabelText(
+            t("richTextEditor.outdent")
+        );
+        await waitFor(() => expect(outdentButton).not.toBeDisabled());
+        await userEvent.click(outdentButton);
+
+        await waitFor(() =>
+            expect(
+                getEditorContent(container).querySelector("li > ul")
+            ).toBeNull()
+        );
+        expect(onChange.mock.calls.at(-1)?.[0]).toContain(
+            "<ul><li><p>One</p></li><li><p>Two</p></li></ul>"
+        );
     });
 
     test("Heading dropdown sets and clears heading levels", async () => {

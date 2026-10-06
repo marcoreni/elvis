@@ -34,7 +34,8 @@
             "loadError": "Une erreur est survenue lors du chargement des paramètres du parcours d'inscription",
             "saveError": "Une erreur est survenue lors de la sauvegarde des paramètres du parcours d'inscription",
             "saveSuccess": "Les paramètres du parcours d'inscription ont été sauvegardés avec succès.",
-            "showTextLabel": "Afficher le texte"
+            "showTextLabel": "Afficher le texte",
+            "contentConversionError": "Le texte enregistré n'a pas pu être chargé dans l'éditeur car son format est corrompu. Contactez un administrateur avant de modifier ce champ, pour éviter de perdre le contenu existant."
         },
         "consentModal": {
             "requiredError": "requis",
@@ -126,7 +127,8 @@
                 "updateConditions": "Une erreur est survenue lors de la mise à jour des conditions de paiement",
                 "delete": "Une erreur est survenue lors de la suppression de l'option d'échéancier de paiement",
                 "updateDisplayText": "Une erreur est survenue lors de la mise à jour des informations complémentaires",
-                "fetchData": "Erreur lors de la récupération des données"
+                "fetchData": "Erreur lors de la récupération des données",
+                "contentConversionError": "Le texte enregistré n'a pas pu être chargé dans l'éditeur car son format est corrompu. Contactez un administrateur avant de modifier ce champ, pour éviter de perdre le contenu existant."
             },
             "delete": {
                 "text": "La suppression de cette option d'échéancier de paiement est définitive.",

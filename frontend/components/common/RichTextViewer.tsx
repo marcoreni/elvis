@@ -27,7 +27,7 @@ export default function RichTextViewer({
     className?: string;
     style?: React.CSSProperties;
 }): JSX.Element {
-    const html = toHtml(wysiwygStrData);
+    const html = wysiwygToHtml(wysiwygStrData);
 
     // ne pas mettre la configuration de sanitize en props, ce serait une faille de sécurité
     const sanitizedHtml = sanitize(html, { ADD_ATTR: ["target"] });
@@ -41,15 +41,51 @@ export default function RichTextViewer({
     );
 }
 
-function toHtml(wysiwygStrData: string | null | undefined): string {
+/**
+ * Convert a `Parameter`-row string to HTML, handling the Draft.js-JSON /
+ * plain-HTML transition described above. Exported so editor call sites
+ * (TipTapEditor-based) can convert existing content the same way before
+ * loading it, without duplicating the format-detection logic here.
+ *
+ * On genuine double-conversion-failure (see `convertWysiwyg` below), this
+ * degrades to showing the raw string rather than crashing -- correct for a
+ * read-only *viewer*, but NOT safe to reuse as-is for an editable surface
+ * (saving would permanently overwrite the row with that raw string). Editor
+ * call sites must use `wysiwygToEditableHtml` instead, which surfaces that
+ * failure as `null` so the caller can show an error instead of loading it.
+ */
+export function wysiwygToHtml(
+    wysiwygStrData: string | null | undefined
+): string {
+    const result = convertWysiwyg(wysiwygStrData);
+    return result.failed ? (wysiwygStrData as string) : result.html;
+}
+
+/**
+ * Same conversion as `wysiwygToHtml`, for editor call sites: returns `null`
+ * on genuine double-conversion-failure instead of the raw (Draft.js JSON)
+ * string, so the caller can refuse to load it into an editable, savable
+ * surface rather than risk the user's first keystroke permanently
+ * overwriting the row with mangled JSON-as-text.
+ */
+export function wysiwygToEditableHtml(
+    wysiwygStrData: string | null | undefined
+): string | null {
+    const result = convertWysiwyg(wysiwygStrData);
+    return result.failed ? null : result.html;
+}
+
+function convertWysiwyg(
+    wysiwygStrData: string | null | undefined
+): { html: string; failed: false } | { html: null; failed: true } {
     if (!wysiwygStrData) {
-        return "";
+        return { html: "", failed: false };
     }
 
     const draftRaw = tryParseDraftRaw(wysiwygStrData);
     if (draftRaw) {
         try {
-            return draftToHtml(draftRaw);
+            return { html: draftToHtml(draftRaw), failed: false };
         } catch (e) {
             // Well-formed Draft.js JSON shape (has a `blocks` array) but
             // missing/malformed enough internally (e.g. a block missing
@@ -59,7 +95,10 @@ function toHtml(wysiwygStrData: string | null | undefined): string {
             // which normalizes missing fields (e.g. fills in `[]` for a
             // missing inlineStyleRanges) -- do the same before giving up.
             try {
-                return draftToHtml(convertToRaw(convertFromRaw(draftRaw)));
+                return {
+                    html: draftToHtml(convertToRaw(convertFromRaw(draftRaw))),
+                    failed: false,
+                };
             } catch (e2) {
                 // Both draft-js's own normalization and draftjs-to-html
                 // still failed -- genuinely malformed content, not just a
@@ -73,13 +112,13 @@ function toHtml(wysiwygStrData: string | null | undefined): string {
                     "RichTextViewer: failed to render Draft.js content, even after normalizing via convertFromRaw/convertToRaw",
                     e2
                 );
-                return wysiwygStrData;
+                return { html: null, failed: true };
             }
         }
     }
 
     // Not Draft.js JSON: already HTML (or plain text, which is valid HTML too).
-    return wysiwygStrData;
+    return { html: wysiwygStrData, failed: false };
 }
 
 // Draft.js's own raw-content shape is `{ blocks: [...], entityMap: {...} }`.

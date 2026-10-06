@@ -3,13 +3,8 @@ import * as api from "../../../tools/api";
 import swal from "sweetalert2";
 import { toast } from "react-toastify";
 import { useTranslation } from "react-i18next";
-import {
-    EditorState,
-    convertToRaw,
-    convertFromRaw,
-    ContentState,
-} from "draft-js";
-import { Editor } from "react-draft-wysiwyg";
+import TipTapEditor from "../../common/TipTapEditor";
+import { wysiwygToEditableHtml } from "../../common/RichTextViewer";
 
 export default function EditPaymentScheduleOptions() {
     const { t } = useTranslation("parameters");
@@ -20,9 +15,7 @@ export default function EditPaymentScheduleOptions() {
         setPaymentScheduleOptionsActivated,
     ] = useState(false);
     const [init, setInit] = useState(true);
-    const [editorState, setEditorState] = useState(() =>
-        EditorState.createEmpty()
-    );
+    const [displayText, setDisplayText] = useState("");
 
     useEffect(() => {
         api.set()
@@ -32,22 +25,17 @@ export default function EditPaymentScheduleOptions() {
                 setInit(false);
                 setIndexValues(res.index);
 
-                // Convertir le contenu JSON brut en ContentState
-                let savedContentRaw = null;
-                let savedContentState = null;
-                if (res.display_text != null) {
-                    try {
-                        savedContentRaw = JSON.parse(res.display_text);
-                        savedContentState = convertFromRaw(savedContentRaw);
-                    } catch (e) {
-                        savedContentState = ContentState.createFromText(
-                            res.display_text
-                        );
-                    }
-                    setEditorState(
-                        EditorState.createWithContent(savedContentState)
-                    );
+                const html = wysiwygToEditableHtml(res.display_text);
+                if (html === null) {
+                    swal.fire({
+                        title: t(
+                            "payments.scheduleOptions.errors.contentConversionError"
+                        ),
+                        icon: "error",
+                    });
+                    return;
                 }
+                setDisplayText(html);
             })
             .error((res) => {
                 swal.fire({
@@ -125,9 +113,7 @@ export default function EditPaymentScheduleOptions() {
                 });
             })
             .post("/payment_schedule_options/display_text", {
-                display_text: JSON.stringify(
-                    convertToRaw(editorState.getCurrentContent())
-                ),
+                display_text: displayText,
             });
     };
 
@@ -254,53 +240,9 @@ export default function EditPaymentScheduleOptions() {
                     }}
                 >
                     <div className={"col-sm-12"}>
-                        <Editor
-                            wrapperStyle={{
-                                border: "1px solid #e7eaec",
-                                padding: "5px",
-                                borderRadius: "5px",
-                            }}
-                            editorState={editorState}
-                            onEditorStateChange={setEditorState}
-                            toolbarClassName="toolbarClassName"
-                            wrapperClassName="wrapperClassName"
-                            editorClassName="editorClassName"
-                            toolbar={{
-                                options: [
-                                    "inline",
-                                    "blockType",
-                                    "emoji",
-                                    "list",
-                                    "link",
-                                ],
-                                inline: {
-                                    options: [
-                                        "bold",
-                                        "italic",
-                                        "underline",
-                                        "strikethrough",
-                                    ],
-                                },
-                                blockType: {
-                                    inDropdown: true,
-                                    options: [
-                                        "Normal",
-                                        "H1",
-                                        "H2",
-                                        "H3",
-                                        "H4",
-                                        "H5",
-                                        "H6",
-                                        "Blockquote",
-                                    ],
-                                },
-                                link: {
-                                    inDropdown: false,
-                                    showOpenOptionOnHover: true,
-                                    defaultTargetOption: "_self",
-                                    options: ["link", "unlink"],
-                                },
-                            }}
+                        <TipTapEditor
+                            value={displayText}
+                            onChange={setDisplayText}
                         />
                     </div>
 
