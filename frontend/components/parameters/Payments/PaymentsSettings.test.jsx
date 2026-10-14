@@ -121,15 +121,10 @@ vi.mock("react-modal", () => ({
     default: ({ children }) => <div data-testid="react-modal">{children}</div>,
 }));
 
-// --- EditPaymentScheduleOptions' heavy deps ------------------------------------------------
-vi.mock("react-draft-wysiwyg", () => ({
-    Editor: () => <div data-testid="wysiwyg-editor" />,
-}));
-vi.mock("draft-js", () => ({
-    EditorState: { createEmpty: () => ({}), createWithContent: () => ({}) },
-    convertToRaw: () => ({}),
-    convertFromRaw: () => ({}),
-    ContentState: { createFromText: () => ({}) },
+// --- EditPaymentScheduleOptions' heavy dep: TipTapEditor (ProseMirror) is stubbed, not
+//     exercised by this suite --------------------------------------------------------------
+vi.mock("../../common/TipTapEditor", () => ({
+    default: () => <div data-testid="tiptap-editor" />,
 }));
 vi.mock("react-toastify", () => ({
     toast: { success: vi.fn(), error: vi.fn() },

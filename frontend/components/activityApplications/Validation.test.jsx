@@ -6,7 +6,7 @@
 // body but has no lifecycle / mount-time fetch, so a single synchronous render exercises every
 // extracted string.
 //
-// The three child tables + UserAvatar + WysiwygViewer are stubbed to `() => null` so the
+// The three child tables + UserAvatar + RichTextViewer are stubbed to `() => null` so the
 // assertions target Validation's own copy, not a child's. Language is driven through the
 // frontend/i18n singleton (registered via initReactI18next — no <I18nextProvider> needed).
 
@@ -19,7 +19,7 @@ vi.mock("./TimePreferencesTable", () => ({ default: () => null }));
 vi.mock("./SelectedActivitiesTable", () => ({ default: () => null }));
 vi.mock("./EvaluationChoiceTable", () => ({ default: () => null }));
 vi.mock("../UserAvatar", () => ({ default: () => null }));
-vi.mock("../utils/WysiwygViewer", () => ({ default: () => null }));
+vi.mock("../common/RichTextViewer", () => ({ default: () => null }));
 
 const baseApplication = () => ({
     user: { first_name: "Jean", last_name: "Dupont", birthday: "2010-01-01" },

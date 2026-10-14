@@ -2,20 +2,13 @@ import React, { Fragment, useEffect, useState } from "react";
 import * as api from "../../../tools/api";
 import swal from "sweetalert2";
 import { toast } from "react-toastify";
-import {
-    EditorState,
-    convertToRaw,
-    convertFromRaw,
-    ContentState,
-} from "draft-js";
-import { Editor } from "react-draft-wysiwyg";
 import { useTranslation } from "react-i18next";
+import TipTapEditor from "../../common/TipTapEditor";
+import { wysiwygToEditableHtml } from "../../common/RichTextViewer";
 
 export default function ApplicationStepParameters({ parameter_label, desc }) {
     const { t } = useTranslation("parameters");
-    const [editorState, setEditorState] = useState(() =>
-        EditorState.createEmpty()
-    );
+    const [displayText, setDisplayText] = useState("");
     const [visibilityActivated, setVisibilityActivated] = useState(false);
     const [init, setInit] = useState(true);
 
@@ -25,21 +18,17 @@ export default function ApplicationStepParameters({ parameter_label, desc }) {
                 setVisibilityActivated(res.activated);
                 setInit(false);
 
-                let savedContentRaw = null;
-                let savedContentState = null;
-                if (res.display_text !== null) {
-                    try {
-                        savedContentRaw = JSON.parse(res.display_text);
-                        savedContentState = convertFromRaw(savedContentRaw);
-                    } catch (e) {
-                        savedContentState = ContentState.createFromText(
-                            res.display_text
-                        );
-                    }
-                    setEditorState(
-                        EditorState.createWithContent(savedContentState)
-                    );
+                const html = wysiwygToEditableHtml(res.display_text);
+                if (html === null) {
+                    swal.fire({
+                        title: t(
+                            "activityApplications.stepParams.contentConversionError"
+                        ),
+                        icon: "error",
+                    });
+                    return;
                 }
+                setDisplayText(html);
             })
             .error((err) => {
                 swal.fire({
@@ -88,9 +77,7 @@ export default function ApplicationStepParameters({ parameter_label, desc }) {
             })
             .post("activity_application_parameters/change_display_text_param", {
                 parameter_label: parameter_label,
-                display_text: JSON.stringify(
-                    convertToRaw(editorState.getCurrentContent())
-                ),
+                display_text: displayText,
             });
     };
 
@@ -124,47 +111,9 @@ export default function ApplicationStepParameters({ parameter_label, desc }) {
                     }}
                 >
                     <div className="form-group mb-5">
-                        <Editor
-                            wrapperStyle={{
-                                border: "1px solid #e7eaec",
-                                padding: "5px",
-                                borderRadius: "5px",
-                            }}
-                            editorState={editorState}
-                            onEditorStateChange={setEditorState}
-                            toolbarClassName="toolbarClassName"
-                            wrapperClassName="wrapperClassName"
-                            editorClassName="editorClassName"
-                            toolbar={{
-                                options: [
-                                    "inline",
-                                    "blockType",
-                                    "emoji",
-                                    "list",
-                                    "link",
-                                ],
-                                inline: {
-                                    options: [
-                                        "bold",
-                                        "italic",
-                                        "underline",
-                                        "strikethrough",
-                                    ],
-                                },
-                                blockType: {
-                                    inDropdown: true,
-                                    options: [
-                                        "Normal",
-                                        "H1",
-                                        "H2",
-                                        "H3",
-                                        "H4",
-                                        "H5",
-                                        "H6",
-                                        "Blockquote",
-                                    ],
-                                },
-                            }}
+                        <TipTapEditor
+                            value={displayText}
+                            onChange={setDisplayText}
                         />
                     </div>
 

@@ -5,8 +5,7 @@
 // and does `moment(season.start)` / `moment(infos.birthday)` age math on mount, so every prop is
 // supplied with a shape that survives that math. Heavy / irrelevant children are mocked:
 //   - `./../AdditionalStudentSelection` -> null (only mounted in edit mode anyway)
-//   - `../utils/WysiwygViewer`          -> null
-//   - `draft-js`                        -> {} (imported at top of the file but unused in render)
+//   - `../common/RichTextViewer`        -> null
 //
 // Language is driven through the frontend/i18n singleton. `afterEach` resets to "fr".
 
@@ -16,8 +15,7 @@ import i18n from "../../i18n";
 import ActivityChoice from "./ActivityChoice";
 
 vi.mock("./../AdditionalStudentSelection", () => ({default: () => null}));
-vi.mock("../utils/WysiwygViewer", () => ({default: () => null}));
-vi.mock("draft-js", () => ({}));
+vi.mock("../common/RichTextViewer", () => ({default: () => null}));
 
 const baseProps = {
     schoolName: "X",

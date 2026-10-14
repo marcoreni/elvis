@@ -2,10 +2,9 @@ import React, {Fragment} from "react";
 import PayerPaymentTerms from "./PayerPaymentTerms";
 import PropTypes from "prop-types";
 import PayerPaymentTermsInfo from "./PayerPaymentTermsInfo";
-import {Editor, EditorState, convertFromRaw, ContentState} from "draft-js";
 import {toast} from "react-toastify";
 import {MESSAGES} from "../tools/constants";
-import WysiwygViewer from "./utils/WysiwygViewer";
+import RichTextViewer from "./common/RichTextViewer";
 import {isEmpty} from "../tools/validators";
 
 
@@ -108,7 +107,7 @@ class WrappedPayerPaymentTerms extends React.Component {
         return <div className="application-form" style={{margin: 0}}>
 
             <div className="row">
-                {this.props.paymentStepDisplayText && <WysiwygViewer
+                {this.props.paymentStepDisplayText && <RichTextViewer
                     className="alert alert-info w-100 pre-wrap"
                     style={{border: "1px solid #0079BF", borderRadius: "5px", color: "#0079BF"}}
                     wysiwygStrData={this.props.paymentStepDisplayText}

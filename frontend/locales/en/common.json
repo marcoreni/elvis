@@ -254,6 +254,8 @@
         "blockquote": "Blockquote",
         "bulletList": "Bullet list",
         "orderedList": "Ordered list",
+        "indent": "Increase indent",
+        "outdent": "Decrease indent",
         "link": "Link",
         "unlink": "Unlink",
         "linkUrlLabel": "Link URL",

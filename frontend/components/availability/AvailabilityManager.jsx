@@ -9,7 +9,7 @@ import { INTERVAL_KINDS } from "../../tools/constants";
 import AvailabilityCommentModal from "./AvailabilityCommentModal";
 import moment from "moment";
 import _ from "lodash";
-import WysiwygViewer from "../utils/WysiwygViewer";
+import RichTextViewer from "../common/RichTextViewer";
 
 const kindsForSeason = [INTERVAL_KINDS.LESSON, INTERVAL_KINDS.OPTION];
 const kindsForEvaluation = [...kindsForSeason, INTERVAL_KINDS.EVALUATION];
@@ -243,7 +243,7 @@ class AvailabilityManager extends PureComponent {
                             <div className="col-1 p-0 text-center">
                                 <i className="fas fa-info-circle"></i>
                             </div>
-                            <WysiwygViewer
+                            <RichTextViewer
                                 className="col-11 p-0"
                                 wysiwygStrData={this.props.availabilityInfo}
                             />

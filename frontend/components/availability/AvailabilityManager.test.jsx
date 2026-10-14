@@ -6,7 +6,7 @@
 // `TypeError: Cannot read properties of null`.
 
 import React from "react";
-import { render } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import i18n from "../../i18n";
 import AvailabilityManager from "./AvailabilityManager";
 
@@ -59,5 +59,29 @@ describe("AvailabilityManager -- ref forwarding (withTranslation withRef)", () =
 
         expect(() => ref.current.componentDidMount()).not.toThrow();
         expect(ref.current.state.list).toHaveLength(1);
+    });
+});
+
+// Phase 4c: the `availabilityInfo` banner swapped from the old Draft.js-based `WysiwygViewer` to
+// `RichTextViewer` -- a pure prop-compatible swap, not previously exercised by any test here.
+describe("AvailabilityManager -- availabilityInfo banner (RichTextViewer)", () => {
+    test("renders availabilityInfo through RichTextViewer", () => {
+        render(
+            <AvailabilityManager
+                {...baseProps}
+                intervals={[]}
+                availabilityInfo="<p>Please submit by Friday</p>"
+            />
+        );
+
+        expect(screen.getByText("Please submit by Friday")).toBeInTheDocument();
+    });
+
+    test("renders nothing extra when availabilityInfo is absent", () => {
+        const { container } = render(
+            <AvailabilityManager {...baseProps} intervals={[]} />
+        );
+
+        expect(container.querySelector(".wysiwyg-viewer")).toBeNull();
     });
 });

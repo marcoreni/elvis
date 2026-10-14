@@ -34,7 +34,8 @@
             "loadError": "An error occurred while loading the enrollment flow settings",
             "saveError": "An error occurred while saving the enrollment flow settings",
             "saveSuccess": "The enrollment flow settings were saved successfully.",
-            "showTextLabel": "Show the text"
+            "showTextLabel": "Show the text",
+            "contentConversionError": "The saved text could not be loaded into the editor because its format is corrupted. Contact an administrator before editing this field, to avoid losing the existing content."
         },
         "consentModal": {
             "requiredError": "required",
@@ -126,7 +127,8 @@
                 "updateConditions": "An error occurred while updating the payment terms",
                 "delete": "An error occurred while deleting the payment schedule option",
                 "updateDisplayText": "An error occurred while updating the additional information",
-                "fetchData": "Error while fetching data"
+                "fetchData": "Error while fetching data",
+                "contentConversionError": "The saved text could not be loaded into the editor because its format is corrupted. Contact an administrator before editing this field, to avoid losing the existing content."
             },
             "delete": {
                 "text": "Deleting this payment schedule option is permanent.",

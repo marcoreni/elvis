@@ -5,8 +5,7 @@ import _ from "lodash";
 
 import AdditionalStudentSelection from "./../AdditionalStudentSelection";
 import {frenchEnumeration} from "../utils";
-import {Editor, EditorState, convertFromRaw, ContentState} from "draft-js";
-import WysiwygViewer from "../utils/WysiwygViewer";
+import RichTextViewer from "../common/RichTextViewer";
 
 import moment from "moment-timezone";
 
@@ -353,7 +352,7 @@ const ActivityChoice = ({
                         <div className="col-1 p-0 text-center">
                             <i className="fas fa-info-circle"></i>
                         </div>
-                        <WysiwygViewer
+                        <RichTextViewer
                             className="col-11 p-0"
                             wysiwygStrData={pricingInfo}
                         />
