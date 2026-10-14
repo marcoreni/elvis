@@ -101,6 +101,79 @@ namespace :elvis do
     end
   end
 
+  desc "One-time, idempotent conversion of the 3 known Draft.js-era Parameter display_text " \
+       "rows (payment_step, pricing_info_application, availability_info_application) to plain " \
+       "HTML, via the Node CLI bridge in frontend/tools/wysiwygConversionCli.js. Safe to " \
+       "re-run: rows that are already HTML/plain, or already converted, are skipped. Use " \
+       "DRY_RUN=1 to preview without writing to the DB."
+  task migrate_wysiwyg_content: %i[environment] do
+    dry_run = ENV["DRY_RUN"] == "1"
+    prefix = dry_run ? "[DRY RUN] " : ""
+    logger = Logger.new($stdout)
+    logger.formatter = proc { |severity, _datetime, _progname, msg| "#{prefix}#{severity}: #{msg}\n" }
+    task_name = "elvis:migrate_wysiwyg_content"
+
+    dry_run_note = dry_run ? " -- DRY RUN, no DB writes will be made" : ""
+    logger.info "#{task_name} starting#{dry_run_note}"
+
+    begin
+      Elvis::WysiwygConverter.ensure_available!
+    rescue Elvis::WysiwygConverter::BridgeError => e
+      abort "#{prefix}#{task_name}: aborting, the wysiwyg conversion bridge is unavailable: #{e.message}"
+    end
+
+    labels = %w[
+      payment_step.display_text
+      pricing_info_application.display_text
+      availability_info_application.display_text
+    ]
+
+    labels.each do |label|
+      parameter = Parameter.find_by(label: label)
+
+      if parameter.nil?
+        logger.info "#{label}: no row for this label, skipping"
+        next
+      end
+
+      value = parameter.value
+
+      if value.blank?
+        logger.info "#{label}: value is blank, skipping"
+        next
+      end
+
+      begin
+        result = Elvis::WysiwygConverter.convert(value)
+      rescue Elvis::WysiwygConverter::BridgeError => e
+        abort "#{prefix}#{task_name}: aborting, the wysiwyg conversion bridge failed on #{label}: #{e.message}"
+      end
+
+      unless result.is_draft_js
+        logger.info "#{label}: already HTML/plain, skipping"
+        next
+      end
+
+      if result.failed
+        logger.error "#{label}: Draft.js content FAILED to convert -- left untouched, needs human investigation"
+        next
+      end
+
+      old_length = value.length
+      new_length = result.html.length
+
+      if dry_run
+        logger.info "#{label}: would convert Draft.js JSON to HTML (length #{old_length} -> " \
+                    "#{new_length}); no write performed"
+      else
+        parameter.update!(value: result.html)
+        logger.info "#{label}: converted Draft.js JSON to HTML (length #{old_length} -> #{new_length})"
+      end
+    end
+
+    logger.info "elvis:migrate_wysiwyg_content finished"
+  end
+
   namespace :plugins do
     task :logged do
       @logger = Logger.new(STDOUT)

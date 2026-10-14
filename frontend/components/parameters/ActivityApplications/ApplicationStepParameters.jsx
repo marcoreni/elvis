@@ -4,7 +4,7 @@ import swal from "sweetalert2";
 import { toast } from "react-toastify";
 import { useTranslation } from "react-i18next";
 import TipTapEditor from "../../common/TipTapEditor";
-import { wysiwygToEditableHtml } from "../../common/RichTextViewer";
+import { wysiwygToEditableHtml } from "../../../tools/wysiwygConversion";
 
 export default function ApplicationStepParameters({ parameter_label, desc }) {
     const { t } = useTranslation("parameters");
