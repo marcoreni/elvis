@@ -70,6 +70,18 @@ RSpec.describe Elvis::WysiwygConverter do
       expect(result.failed).to be(false)
     end
 
+    it "invokes node with the CLI script and chdir, and actually writes the input to stdin" do
+      stub_node_call(stdout: '{"isDraftJs":true,"html":"<p>hi</p>","failed":false}')
+      allow(stdin).to receive(:write)
+
+      described_class.convert('{"blocks":[]}')
+
+      expect(Open3).to have_received(:popen3)
+        .with("node", Rails.root.join("frontend", "tools", "wysiwygConversionCli.js").to_s,
+              chdir: Rails.root.to_s)
+      expect(stdin).to have_received(:write).with('{"blocks":[]}')
+    end
+
     it "returns a failed Result, carrying stderr, for a genuine conversion failure" do
       stub_node_call(stdout: '{"isDraftJs":true,"failed":true}', stderr: "double conversion failure\n")
 
@@ -168,6 +180,26 @@ RSpec.describe Elvis::WysiwygConverter do
 
       expect { described_class.convert("<p>x</p>") }.to raise_error(described_class::BridgeError, /timed out/)
       expect(Process).to have_received(:kill).with("KILL", wait_thr.pid)
+    end
+
+    it "raises BridgeError (not an uncaught Errno::EPIPE) when the child dies before draining " \
+       "stdin, e.g. a corrupted CLI script that fails to parse" do
+      large_input = "x" * 70_000 # over a pipe buffer (~64KB) so the write doesn't just fit silently
+      status = double("status", success?: false, exitstatus: 1)
+
+      allow(wait_thr).to receive(:join).and_return(wait_thr)
+      allow(wait_thr).to receive(:value).and_return(status)
+      allow(stdout_io).to receive(:read).and_return("")
+      allow(stderr_io).to receive(:read).and_return("SyntaxError: Unexpected token")
+      allow(stdin).to receive(:write).with(large_input).and_raise(Errno::EPIPE)
+
+      allow(Open3).to receive(:popen3) do |*_args, **_opts, &block|
+        block.call(stdin, stdout_io, stderr_io, wait_thr)
+      end
+
+      expect do
+        described_class.convert(large_input)
+      end.to raise_error(described_class::BridgeError, /exited with status 1/)
     end
   end
 

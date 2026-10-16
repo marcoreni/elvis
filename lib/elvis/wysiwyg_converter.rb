@@ -81,6 +81,17 @@ module Elvis
       # fully read), and `wait_thr.join(timeout)` bounds how long we wait for the child to exit.
       # On timeout the child is killed and reaped (never left as a zombie) and BridgeError is
       # raised -- a distinct failure mode from a per-row content failure, which is always exit 0.
+      #
+      # The stdin-writer thread also rescues Errno::EPIPE: a child that dies before draining
+      # stdin (a corrupted checkout, a node version that can't parse the CLI script, an
+      # OOM-killed node) closes its end of the pipe, and writing more than a pipe-buffer's worth
+      # of data (stdin_data over ~64KB -- plausible for a Draft.js row with an embedded base64
+      # image) then raises EPIPE on this thread, which `stdin_writer.join` below would otherwise
+      # re-raise as an uncaught exception instead of the clean BridgeError this bridge promises.
+      # Ruby's own lib/open3.rb wraps capture3's stdin write in the same rescue for the same
+      # reason. The child's death is still surfaced correctly: it exits non-zero, so the
+      # `status.success?` check in #convert raises BridgeError -- this rescue only prevents the
+      # write failure itself from masking that with a raw thread backtrace.
       def capture3_with_timeout(*cmd, stdin_data: nil, chdir: nil, timeout: DEFAULT_TIMEOUT_SECONDS)
         opts = {}
         opts[:chdir] = chdir if chdir
@@ -88,6 +99,9 @@ module Elvis
         Open3.popen3(*cmd, **opts) do |stdin, stdout, stderr, wait_thr|
           stdin_writer = Thread.new do
             stdin.write(stdin_data) if stdin_data
+          rescue Errno::EPIPE
+            # Child exited/crashed before reading all of stdin -- its non-zero exit status is
+            # what reports this as a BridgeError, not this write failure.
           ensure
             stdin.close
           end

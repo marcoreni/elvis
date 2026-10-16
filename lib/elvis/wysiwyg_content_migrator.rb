@@ -24,9 +24,11 @@ module Elvis
     def self.dry_run?(env_value)
       return false if env_value.nil?
 
+      # Only "genuinely unset" (nil, above) means "not dry-run". A present-but-blank value (a
+      # quoting slip like DRY_RUN=" ") must NOT take this shortcut -- it falls through to the
+      # FALSY_VALUES check below like any other value, where an empty/blank string isn't listed
+      # as falsy and so resolves to dry-run, matching the documented preview-biased default.
       value = env_value.to_s.strip
-      return false if value.empty?
-
       !FALSY_VALUES.include?(value.downcase)
     end
 
@@ -130,7 +132,11 @@ module Elvis
     # wysiwyg-shaped row existing via the plugin system or dynamic parameter creation. Read-only
     # in both dry-run and real mode -- never writes.
     def scan_for_unexpected_rows
-      suspects = Parameter.where("value LIKE ?", '%"blocks"%').where.not(label: KNOWN_LABELS)
+      # where.not(label: KNOWN_LABELS) compiles to `label NOT IN (...)`, which is NULL (so it
+      # does not match) for a NULL label -- Parameter#label is nullable, so a rogue row created
+      # without one would silently slip past this exact safety net. Spell it out explicitly.
+      suspects = Parameter.where("value LIKE ?", '%"blocks"%')
+                          .where("label IS NULL OR label NOT IN (?)", KNOWN_LABELS)
 
       if suspects.none?
         logger.info "safety scan: no Draft.js-shaped content found outside the " \

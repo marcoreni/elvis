@@ -223,6 +223,17 @@ RSpec.describe "elvis:migrate_wysiwyg_content rake task" do
       expect(output).to include("safety scan: no Draft.js-shaped content found")
     end
 
+    it "catches a Draft.js-shaped row with a NULL label (NOT IN excludes NULL, so this is the " \
+       "exact gap the scan exists to catch)" do
+      rogue = Parameter.create!(label: nil, value: '{"blocks":[{"key":"z"}],"entityMap":{}}', value_type: "string")
+
+      output = run_task
+
+      expect(output).to include("UNEXPECTED possible Draft.js content")
+      expect(output).to include("id=#{rogue.id}")
+      expect(output).to include("label=nil")
+    end
+
     it "runs (and logs) during dry-run too, without writing anything" do
       rogue = Parameter.create!(label: "some_plugin.weird_field",
                                 value: '{"blocks":[{"key":"z"}],"entityMap":{}}', value_type: "string")
@@ -255,7 +266,7 @@ RSpec.describe "elvis:migrate_wysiwyg_content rake task" do
       end
     end
 
-    (%w[0 false FALSE no NO off OFF] + [""]).each do |falsy_value|
+    %w[0 false FALSE no NO off OFF].each do |falsy_value|
       it "treats DRY_RUN=#{falsy_value.inspect} as disabled (performs a real write)" do
         parameter, _draft_json = create_convertible_row
         ENV["DRY_RUN"] = falsy_value
@@ -265,6 +276,32 @@ RSpec.describe "elvis:migrate_wysiwyg_content rake task" do
         expect(parameter.reload.value).to eq("<p>hi</p>")
         expect(output).not_to include("[DRY RUN]")
       end
+    end
+
+    # A present-but-blank value (a quoting slip, e.g. DRY_RUN=" ") is NOT the same as a
+    # genuinely unset DRY_RUN -- it must keep the documented preview-biased default rather than
+    # falling through to a real write. Only ENV["DRY_RUN"] being literally unset (nil) disables
+    # dry-run.
+    ["", " ", "\t", "  \n  "].each do |blank_value|
+      it "treats DRY_RUN=#{blank_value.inspect} (present but blank) as dry-run, not as disabled" do
+        parameter, draft_json = create_convertible_row
+        ENV["DRY_RUN"] = blank_value
+
+        output = run_task
+
+        expect(parameter.reload.value).to eq(draft_json)
+        expect(output.lines).to all(start_with("[DRY RUN] "))
+      end
+    end
+
+    it "treats a genuinely unset DRY_RUN (nil) as disabled (performs a real write)" do
+      parameter, _draft_json = create_convertible_row
+      ENV.delete("DRY_RUN")
+
+      output = run_task
+
+      expect(parameter.reload.value).to eq("<p>hi</p>")
+      expect(output).not_to include("[DRY RUN]")
     end
   end
 
