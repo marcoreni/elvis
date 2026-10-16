@@ -80,6 +80,27 @@ describe("wysiwygConversionCli", () => {
         expect(JSON.parse(stdout)).toEqual({ isDraftJs: true, failed: true });
     });
 
+    // Draft.js-shaped and recoverable: draftjs-to-html throws directly on a block missing
+    // `inlineStyleRanges` (confirmed: "Cannot read properties of undefined (reading 'length')"),
+    // but convertFromRaw/convertToRaw normalizes it (fills in `[]`) before a second attempt
+    // succeeds -- see wysiwygConversion.js's convertWysiwyg fallback. The jsdom-based
+    // wysiwygConversion.test.js covers this same input, but draft-js is a browser-oriented
+    // library, so that proves nothing about this bare, DOM-less `node` child process, which is
+    // where the rake task actually runs this fallback.
+    test("Draft.js JSON recoverable only via the convertFromRaw/convertToRaw fallback: isDraftJs true, converted html, exit 0", () => {
+        const input = JSON.stringify({
+            blocks: [{ text: "x", type: "unstyled" }],
+            entityMap: {},
+        });
+        const { stdout, status } = runCli(input);
+
+        expect(status).toBe(0);
+        const parsed = JSON.parse(stdout);
+        expect(parsed.isDraftJs).toBe(true);
+        expect(parsed.failed).toBe(false);
+        expect(parsed.html).toContain("x");
+    });
+
     // Regression test: a prior version of this CLI wrote stdout then immediately called
     // process.exit(0). When stdout is a pipe (exactly what Ruby's Open3.capture3 gives it,
     // and what execFileSync's `input` option also uses), that write is asynchronous -- so

@@ -104,10 +104,13 @@ namespace :elvis do
   desc "One-time, idempotent conversion of the 3 known Draft.js-era Parameter display_text " \
        "rows (payment_step, pricing_info_application, availability_info_application) to plain " \
        "HTML, via the Node CLI bridge in frontend/tools/wysiwygConversionCli.js. Safe to " \
-       "re-run: rows that are already HTML/plain, or already converted, are skipped. Use " \
-       "DRY_RUN=1 to preview without writing to the DB."
+       "re-run: rows that are already HTML/plain, or already converted, are skipped. Set " \
+       "DRY_RUN to preview without writing to the DB -- any non-empty value enables it except " \
+       "an explicit falsy one (0, false, no, off, case-insensitive), so a typo like " \
+       "DRY_RUN=true or DRY_RUN=yes still previews instead of silently writing. Also runs a " \
+       "safety scan after the 3 known rows for any other Parameter that looks Draft.js-shaped."
   task migrate_wysiwyg_content: %i[environment] do
-    dry_run = ENV["DRY_RUN"] == "1"
+    dry_run = Elvis::WysiwygContentMigrator.dry_run?(ENV.fetch("DRY_RUN", nil))
     prefix = dry_run ? "[DRY RUN] " : ""
     logger = Logger.new($stdout)
     logger.formatter = proc { |severity, _datetime, _progname, msg| "#{prefix}#{severity}: #{msg}\n" }
@@ -122,56 +125,9 @@ namespace :elvis do
       abort "#{prefix}#{task_name}: aborting, the wysiwyg conversion bridge is unavailable: #{e.message}"
     end
 
-    labels = %w[
-      payment_step.display_text
-      pricing_info_application.display_text
-      availability_info_application.display_text
-    ]
+    Elvis::WysiwygContentMigrator.new(dry_run: dry_run, logger: logger, prefix: prefix, task_name: task_name).run!
 
-    labels.each do |label|
-      parameter = Parameter.find_by(label: label)
-
-      if parameter.nil?
-        logger.info "#{label}: no row for this label, skipping"
-        next
-      end
-
-      value = parameter.value
-
-      if value.blank?
-        logger.info "#{label}: value is blank, skipping"
-        next
-      end
-
-      begin
-        result = Elvis::WysiwygConverter.convert(value)
-      rescue Elvis::WysiwygConverter::BridgeError => e
-        abort "#{prefix}#{task_name}: aborting, the wysiwyg conversion bridge failed on #{label}: #{e.message}"
-      end
-
-      unless result.is_draft_js
-        logger.info "#{label}: already HTML/plain, skipping"
-        next
-      end
-
-      if result.failed
-        logger.error "#{label}: Draft.js content FAILED to convert -- left untouched, needs human investigation"
-        next
-      end
-
-      old_length = value.length
-      new_length = result.html.length
-
-      if dry_run
-        logger.info "#{label}: would convert Draft.js JSON to HTML (length #{old_length} -> " \
-                    "#{new_length}); no write performed"
-      else
-        parameter.update!(value: result.html)
-        logger.info "#{label}: converted Draft.js JSON to HTML (length #{old_length} -> #{new_length})"
-      end
-    end
-
-    logger.info "elvis:migrate_wysiwyg_content finished"
+    logger.info "#{task_name} finished"
   end
 
   namespace :plugins do

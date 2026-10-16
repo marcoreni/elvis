@@ -2,14 +2,6 @@ import React from "react";
 import { sanitize } from "isomorphic-dompurify";
 import { wysiwygToHtml } from "../../tools/wysiwygConversion";
 
-// Re-exported so existing call sites (editors, tests) keep working unchanged after this logic
-// moved to frontend/tools/wysiwygConversion.js (a plain CommonJS module, also loaded directly by
-// a bare-Node CLI for a one-time Rails migration -- see that file's header comment).
-export {
-    wysiwygToHtml,
-    wysiwygToEditableHtml,
-} from "../../tools/wysiwygConversion";
-
 /**
  * Display rich-text content as sanitized HTML.
  *

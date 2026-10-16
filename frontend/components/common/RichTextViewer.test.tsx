@@ -2,7 +2,8 @@ import React from "react";
 import { render } from "@testing-library/react";
 import { afterEach, describe, expect, test, vi } from "vitest";
 import "@testing-library/jest-dom/vitest";
-import RichTextViewer, { wysiwygToEditableHtml } from "./RichTextViewer";
+import RichTextViewer from "./RichTextViewer";
+import { wysiwygToEditableHtml } from "../../tools/wysiwygConversion";
 
 // RichTextViewer must keep rendering the OLD Draft.js raw-JSON format (written by the
 // react-draft-wysiwyg editor it replaces) as well as the new TipTap HTML format, since the

@@ -41,8 +41,8 @@ RSpec.describe "elvis:migrate_wysiwyg_content rake task" do
     Elvis::WysiwygConverter::Result.new(is_draft_js: is_draft_js, html: html, failed: failed)
   end
 
-  def failed_result
-    Elvis::WysiwygConverter::Result.new(is_draft_js: true, html: nil, failed: true)
+  def failed_result(stderr: nil)
+    Elvis::WysiwygConverter::Result.new(is_draft_js: true, html: nil, failed: true, stderr: stderr)
   end
 
   describe "a label with no matching Parameter row" do
@@ -112,6 +112,159 @@ RSpec.describe "elvis:migrate_wysiwyg_content rake task" do
       expect(parameter.reload.value).to eq(bad_json)
       expect(output).to include("ERROR")
       expect(output).to include("#{labels[0]}: Draft.js content FAILED to convert")
+    end
+
+    it "surfaces the bridge's stderr on the console, not just in Rails.logger" do
+      bad_json = '{"blocks":[{"key":"b1","inlineStyleRanges":"not-an-array"}],"entityMap":{}}'
+      parameter = Parameter.create!(label: labels[0], value: bad_json, value_type: "string")
+      stderr_message = "TypeError: Cannot read properties of undefined"
+      allow(Elvis::WysiwygConverter).to receive(:convert)
+        .with(bad_json).and_return(failed_result(stderr: stderr_message))
+
+      output = run_task
+
+      expect(parameter.reload.value).to eq(bad_json)
+      expect(output).to include(stderr_message)
+    end
+
+    it "truncates a very long stderr instead of dumping it wholesale to the console" do
+      bad_json = '{"blocks":[{"key":"b1"}],"entityMap":{}}'
+      Parameter.create!(label: labels[0], value: bad_json, value_type: "string")
+      long_stderr = "x" * 5000
+      allow(Elvis::WysiwygConverter).to receive(:convert).with(bad_json).and_return(failed_result(stderr: long_stderr))
+
+      output = run_task
+
+      expect(output).to include("truncated")
+      expect(output).not_to include(long_stderr)
+    end
+  end
+
+  describe "a parameter whose value_type is not \"string\"" do
+    it "skips it with a warning instead of writing HTML into a non-string column" do
+      parameter = Parameter.create!(label: labels[0], value: '{"blocks":[]}', value_type: "json")
+      expect(Elvis::WysiwygConverter).not_to receive(:convert)
+
+      output = run_task
+
+      expect(output).to include("value_type is \"json\"")
+      expect(parameter.reload.value).to eq('{"blocks":[]}')
+      expect(parameter.reload.value_type).to eq("json")
+    end
+  end
+
+  describe "a label with more than one matching Parameter row" do
+    it "processes every matching row (not just one), naming each by id in the log" do
+      draft_json = '{"blocks":[{"key":"a1","text":"hi"}],"entityMap":{}}'
+      converted_html = "<p>hi</p>"
+      older = Parameter.create!(label: labels[0], value: draft_json, value_type: "string")
+      newer = Parameter.create!(label: labels[0], value: draft_json, value_type: "string")
+      allow(Elvis::WysiwygConverter).to receive(:convert).with(draft_json).and_return(draft_result(converted_html))
+
+      output = run_task
+
+      expect(older.reload.value).to eq(converted_html)
+      expect(newer.reload.value).to eq(converted_html)
+      expect(output).to include("#{labels[0]} (id=#{older.id}): converted Draft.js JSON to HTML")
+      expect(output).to include("#{labels[0]} (id=#{newer.id}): converted Draft.js JSON to HTML")
+    end
+  end
+
+  describe "a concurrent write between the read and the write (lost-update race)" do
+    it "skips the write and logs loudly instead of clobbering a concurrent admin save" do
+      draft_json = '{"blocks":[{"key":"a1","text":"hi"}],"entityMap":{}}'
+      converted_html = "<p>hi</p>"
+      concurrent_value = "<p>someone else's concurrent edit</p>"
+      parameter = Parameter.create!(label: labels[0], value: draft_json, value_type: "string")
+
+      allow(Elvis::WysiwygConverter).to receive(:convert) do |_value|
+        # Simulate an admin saving through the real app between this task's read and its write.
+        Parameter.where(id: parameter.id).update_all(value: concurrent_value)
+        draft_result(converted_html)
+      end
+
+      output = run_task
+
+      expect(parameter.reload.value).to eq(concurrent_value)
+      expect(output).to include("ERROR")
+      expect(output).to include("#{labels[0]}: value changed since it was read")
+    end
+  end
+
+  describe "cache invalidation on a successful write" do
+    it "expires the parameter_<label> cache key so get_value doesn't serve the stale pre-migration value" do
+      draft_json = '{"blocks":[{"key":"a1","text":"hi"}],"entityMap":{}}'
+      converted_html = "<p>hi</p>"
+      Parameter.create!(label: labels[0], value: draft_json, value_type: "string")
+      Parameter.get_value(labels[0]) # warm the cache with the pre-migration Draft.js JSON
+      allow(Elvis::WysiwygConverter).to receive(:convert).with(draft_json).and_return(draft_result(converted_html))
+
+      run_task
+
+      expect(Parameter.get_value(labels[0])).to eq(converted_html)
+    end
+  end
+
+  describe "the end-of-run safety scan for Draft.js content outside the known labels" do
+    it "logs a loud warning naming any unexpected Draft.js-shaped row" do
+      rogue = Parameter.create!(label: "some_plugin.weird_field",
+                                value: '{"blocks":[{"key":"z"}],"entityMap":{}}', value_type: "string")
+
+      output = run_task
+
+      expect(output).to include("UNEXPECTED possible Draft.js content")
+      expect(output).to include("id=#{rogue.id}")
+      expect(output).to include(rogue.label)
+    end
+
+    it "logs a clean result when nothing unexpected is found" do
+      output = run_task
+
+      expect(output).to include("safety scan: no Draft.js-shaped content found")
+    end
+
+    it "runs (and logs) during dry-run too, without writing anything" do
+      rogue = Parameter.create!(label: "some_plugin.weird_field",
+                                value: '{"blocks":[{"key":"z"}],"entityMap":{}}', value_type: "string")
+
+      ENV["DRY_RUN"] = "1"
+      output = run_task
+
+      expect(output).to include("UNEXPECTED possible Draft.js content")
+      expect(rogue.reload.value).to eq('{"blocks":[{"key":"z"}],"entityMap":{}}')
+    end
+  end
+
+  describe "DRY_RUN truthiness" do
+    def create_convertible_row
+      draft_json = '{"blocks":[{"key":"a1","text":"hi"}],"entityMap":{}}'
+      parameter = Parameter.create!(label: labels[0], value: draft_json, value_type: "string")
+      allow(Elvis::WysiwygConverter).to receive(:convert).with(draft_json).and_return(draft_result("<p>hi</p>"))
+      [parameter, draft_json]
+    end
+
+    %w[1 true TRUE yes YES on anything-non-empty].each do |truthy_value|
+      it "treats DRY_RUN=#{truthy_value.inspect} as dry-run (previews, writes nothing)" do
+        parameter, draft_json = create_convertible_row
+        ENV["DRY_RUN"] = truthy_value
+
+        output = run_task
+
+        expect(parameter.reload.value).to eq(draft_json)
+        expect(output.lines).to all(start_with("[DRY RUN] "))
+      end
+    end
+
+    (%w[0 false FALSE no NO off OFF] + [""]).each do |falsy_value|
+      it "treats DRY_RUN=#{falsy_value.inspect} as disabled (performs a real write)" do
+        parameter, _draft_json = create_convertible_row
+        ENV["DRY_RUN"] = falsy_value
+
+        output = run_task
+
+        expect(parameter.reload.value).to eq("<p>hi</p>")
+        expect(output).not_to include("[DRY RUN]")
+      end
     end
   end
 
