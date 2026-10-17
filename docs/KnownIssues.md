@@ -59,17 +59,21 @@ libraries were bumped across majors, and a few unmaintained ones were dropped. R
 current latest), and `prettier` (3.9.6) are already done; removed from the list below. What's
 left:
 
-- **React 17 → 19**, two majors, real breaking boundaries: legacy string refs/legacy context API are
-  removed in 19 (grep the ~118 class components first); React 18 changes effect/StrictMode timing
-  enough to surface latent class-component lifecycle bugs. 17→18 is IN PROGRESS (item 14) —
-  `react`/`react-dom` → `18.3.1`, `react_ujs` → `^3.3.1`, `@testing-library/react` → `^13.4.0`, all
-  bumped together on `feat/react-18-bump`; a real regression class did surface (see item 14 in
-  `docs/Modernization-Roadmap.md`) and is being fixed as part of that same branch. 18→19 not started.
-- `react-toastify` already declares React 18 support in its published peer deps (checked
-  2026-09-16) — a version bump is a separate, whenever-convenient task, not blocked on or blocking
-  the React bump either way. (`react-switch` was in this bucket too; bumped to `7.1.0` on
-  `chore/bump-react-switch`. `react-autosuggest` was also in this bucket, but turned out to be a
-  dead dependency instead — removed outright; see `docs/OrphanedCode.md`.)
+- **React 17 → 19**, two majors, real breaking boundaries. 17→18 is **done** (item 14, PR #135,
+  merged) — `react`/`react-dom` → `18.3.1`, `react_ujs` → `^3.3.1`, `@testing-library/react` →
+  `^13.4.0`. 18→19 not started yet. A pre-bump audit (`chore/react-19-pre-bump-audit`) re-ran the
+  legacy-API grep (legacy string refs, `this.refs`, `React.createClass`, legacy context API,
+  `ReactDOM.render`/`findDOMNode`, function-component `defaultProps`) across all of `frontend/`
+  (122 files containing 128 class components) after the TipTap/`react-draft-wysiwyg` work landed
+  (PRs #144-148) and found zero hits. One real React-19 peer-dep blocker remains:
+  `@testing-library/react@^13.4.0`'s published peer range hard-caps at `react: "^18.0.0"` — it
+  must bump to `^16`+ in the same commit as the version bump itself. See
+  `docs/Modernization-Roadmap.md` item 14 for the actual bump plan/PR trail.
+- `react-switch`/`react-loader-spinner`/`react-toastify` were all in the "pending version bump"
+  bucket — all three now done (`7.1.0` on `chore/bump-react-switch`, `8.0.2` on
+  `chore/bump-react-loader-spinner` PR #140, `11.1.0` on `chore/bump-react-toastify`). `react-
+  autosuggest` was also in this bucket, but turned out to be a dead dependency instead — removed
+  outright; see `docs/OrphanedCode.md`.
 - Independent, real API-surface jumps: `sweetalert2` 7→11 (callback API → promises, dozens of call
   sites to review — see roadmap item 7), `bootstrap` 4→5 (drops jQuery, markup/class changes —
   watch for the transitive `bootstrap@3` pull-in that bit `feat/bump-shakapacker` once already).
