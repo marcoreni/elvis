@@ -46,7 +46,6 @@
         "prop-types": "^15.6.0",
         "react": "18.3.1",
         "react-dom": "18.3.1",
-        "react-draft-wysiwyg": "^1.15.0",
         "react-dropzone": "14.2.3",
         "react-email-editor": "^2.1.2",
         "react-final-form": "7.0.1",

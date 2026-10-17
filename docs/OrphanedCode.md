@@ -153,6 +153,20 @@ draft-js call sites before touching any live editor/viewer code.
   `FormulaChoice.test.jsx` updated to match (dropped the `infoText`/`WysiwygViewer` mock);
   `Plugins.test.jsx`'s api mock dropped the now-meaningless `display_text: null` fixture key.
 
+## 2026-10-15, React 19 prep (remove `react-draft-wysiwyg` npm dependency)
+
+Follow-up to phase 4a: with every real `<Editor>` call site already swapped onto the TipTap-based
+editor, the `react-draft-wysiwyg` package itself had no remaining live import — just the orphaned
+`@import "react-draft-wysiwyg/dist/react-draft-wysiwyg.css";` in `frontend/packs/application.scss`
+and historical comments in `RichTextViewer.tsx`/`RichTextViewer.test.tsx` and two parameter test
+files explaining what it used to be. Removed `"react-draft-wysiwyg"` from `package.json` and the
+`.scss` import; `yarn install` then dropped it and its exclusive transitive deps (`classnames`,
+`draftjs-utils`, `html-to-draftjs`, `linkify-it`, `uc.micro`) from `yarn.lock` — none of those five
+had any other consumer in the tree. `draft-js`/`draftjs-to-html` stay: still a live read-path
+fallback in `RichTextViewer.tsx` for content not yet migrated off the old Draft.js JSON format,
+gated on a separate DB content migration. Prep for the React 18→19 bump —
+`react-draft-wysiwyg`'s peer-dependency range capped React at `^18.x.x`.
+
 ## Deliberately NOT touched (all audits)
 
 Real, live issues — not dead code, don't delete:
