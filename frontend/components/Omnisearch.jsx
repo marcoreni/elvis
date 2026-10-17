@@ -113,9 +113,9 @@ class Omnisearch extends React.Component {
                                             "common:omnisearch.searchNoun"
                                         )}
                                         autoFocus={true}
-                                        ref={input =>
-                                            (this.searchInput = input)
-                                        }
+                                        ref={input => {
+                                            this.searchInput = input;
+                                        }}
                                         autoComplete="off"
                                         autoCorrect="off"
                                         autoCapitalize="off"

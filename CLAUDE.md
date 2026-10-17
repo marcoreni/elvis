@@ -51,9 +51,11 @@ u.save!
   colocated `*.test.js`/`*.test.jsx` files under `frontend/`). Any `.js` file under `frontend/`
   containing JSX must be named `.jsx` — Vite's esbuild/oxc integration only parses JSX in
   `.jsx`/`.tsx` by default, unlike this app's actual Rspack build, which doesn't care about
-  the extension. Component-rendering tests use `@testing-library/react@^13`
-  (`@testing-library/jest-dom@6.9.1`/`@testing-library/user-event@^13`) — pinned below their
-  latest majors for this app's React 18/Node 22, not because of a Vite/Vitest constraint.
+  the extension. Component-rendering tests use `@testing-library/react@^16`
+  (`@testing-library/jest-dom@6.9.1`/`@testing-library/user-event@^13`). `@testing-library/dom` is
+  a direct devDependency because v16 of `@testing-library/react` declares it a non-optional peer
+  and no longer bundles it (yarn 1 does not install peers). `user-event` stays at `^13`
+  deliberately: v14 made the whole API async, which would rewrite every call site.
 - JS formatting: `.prettierrc` sets 4-space tabs; no lint script is wired up in `package.json`
 
 Note: this repo has **two parallel test frameworks** — RSpec (`spec/`, newer/preferred) and Minitest

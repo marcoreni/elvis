@@ -110,7 +110,7 @@ export const Calendar: React.FC<CalendarProps> = (props) => {
     const renderDaysOfWeek = () => {
         const totalDays = forceFullWeeks ? 42 : 37;
 
-        const days: JSX.Element[] = [];
+        const days: React.JSX.Element[] = [];
         range(firstDayOfWeek, totalDays + firstDayOfWeek).forEach((i) => {
             const day = moment().weekday(i).format("dd").charAt(0);
 

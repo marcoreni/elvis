@@ -4,6 +4,7 @@ import Select from "react-select";
 import { MESSAGES } from "../../../tools/constants";
 import { parseValues } from ".";
 import { fullname } from "../../../tools/format";
+import type { JSX } from "react";
 import type { Activity, EntityName, ReferenceData } from "../../utils/entities";
 import type { AnswerValue, SelectQuestion as TSelectQuestion } from "../types";
 

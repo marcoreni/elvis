@@ -1,4 +1,5 @@
 import { Fragment, useState } from "react";
+import type { JSX } from "react";
 import PropTypes from "prop-types";
 import * as api from "../../tools/api";
 import swal from "sweetalert2";
