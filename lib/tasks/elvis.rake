@@ -101,6 +101,35 @@ namespace :elvis do
     end
   end
 
+  desc "One-time, idempotent conversion of the 3 known Draft.js-era Parameter display_text " \
+       "rows (payment_step, pricing_info_application, availability_info_application) to plain " \
+       "HTML, via the Node CLI bridge in frontend/tools/wysiwygConversionCli.js. Safe to " \
+       "re-run: rows that are already HTML/plain, or already converted, are skipped. Set " \
+       "DRY_RUN to preview without writing to the DB -- any non-empty value enables it except " \
+       "an explicit falsy one (0, false, no, off, case-insensitive), so a typo like " \
+       "DRY_RUN=true or DRY_RUN=yes still previews instead of silently writing. Also runs a " \
+       "safety scan after the 3 known rows for any other Parameter that looks Draft.js-shaped."
+  task migrate_wysiwyg_content: %i[environment] do
+    dry_run = Elvis::WysiwygContentMigrator.dry_run?(ENV.fetch("DRY_RUN", nil))
+    prefix = dry_run ? "[DRY RUN] " : ""
+    logger = Logger.new($stdout)
+    logger.formatter = proc { |severity, _datetime, _progname, msg| "#{prefix}#{severity}: #{msg}\n" }
+    task_name = "elvis:migrate_wysiwyg_content"
+
+    dry_run_note = dry_run ? " -- DRY RUN, no DB writes will be made" : ""
+    logger.info "#{task_name} starting#{dry_run_note}"
+
+    begin
+      Elvis::WysiwygConverter.ensure_available!
+    rescue Elvis::WysiwygConverter::BridgeError => e
+      abort "#{prefix}#{task_name}: aborting, the wysiwyg conversion bridge is unavailable: #{e.message}"
+    end
+
+    Elvis::WysiwygContentMigrator.new(dry_run: dry_run, logger: logger, prefix: prefix, task_name: task_name).run!
+
+    logger.info "#{task_name} finished"
+  end
+
   namespace :plugins do
     task :logged do
       @logger = Logger.new(STDOUT)
