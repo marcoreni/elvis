@@ -1,6 +1,5 @@
 import { Fragment, useState } from "react";
 import type { JSX } from "react";
-import PropTypes from "prop-types";
 import * as api from "../../tools/api";
 import swal from "sweetalert2";
 import { useTranslation } from "react-i18next";
@@ -155,10 +154,3 @@ export default function TeachersParameters({
         </Fragment>
     );
 }
-
-TeachersParameters.propTypes = {
-    teacher_can_edit_planning: PropTypes.bool,
-    authorize_teachers: PropTypes.bool,
-    show_teacher_contacts: PropTypes.bool,
-    teacher_can_manage_courses: PropTypes.bool,
-};
