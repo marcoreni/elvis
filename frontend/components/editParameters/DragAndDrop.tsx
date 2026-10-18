@@ -1,6 +1,5 @@
 import { CSSProperties, useCallback, useState } from "react";
 import Dropzone from "react-dropzone";
-import PropTypes from "prop-types";
 import { useTranslation } from "react-i18next";
 
 const baseStyle: CSSProperties = {
@@ -205,13 +204,5 @@ function DragAndDrop(props: {
         </div>
     );
 }
-
-DragAndDrop.propTypes = {
-    acceptedTypes: PropTypes.string.isRequired,
-    textDisplayed: PropTypes.string.isRequired,
-    file_url: PropTypes.string,
-    setFile: PropTypes.func.isRequired,
-    onClearedFile: PropTypes.func,
-};
 
 export default DragAndDrop;
