@@ -370,7 +370,8 @@ Fix: apply the same functional-updater treatment, accumulating errors instead of
 ## `availabilityRef.current.componentDidMount()` reads stale props under automatic batching
 
 Two call sites — `frontend/components/activityApplications/TimePreferencesStep.jsx:36` and
-`frontend/components/parameters/Plannings/SchoolAvailabilities.jsx:51-52` — call
+`frontend/components/parameters/Plannings/SchoolAvailabilities.tsx:62-64` (converted to `.tsx`,
+behavior unchanged) — call
 `this.setState`/a parent state update immediately followed by
 `availabilityRef.current.componentDidMount()` on the child `AvailabilityManager`, relying on
 `componentDidMount()` re-reading `this.props.intervals` to sync it into `AvailabilityManager`'s own
@@ -389,6 +390,12 @@ Fix: replace the imperative
 `componentDidMount()` call with a real `componentDidUpdate(prevProps)` on `AvailabilityManager` that
 syncs `state.list` whenever `props.intervals` actually changes, and drop the manual call entirely (at
 both sites).
+
+`SchoolAvailabilities.tsx`'s `availabilityRef` is typed `useRef<any>(null)` rather than something
+real, since `AvailabilityManager.jsx` (what it refs) is still untyped JS wrapped in
+`withTranslation(..., { withRef: true })` — no real type to point the ref at without migrating that
+file too, which is out of scope for the conversion that introduced this comment. Real fix: migrate
+`AvailabilityManager.jsx` to TypeScript.
 
 ## `Plugins.jsx`'s restart banner self-dismisses regardless of actual restart status
 
@@ -438,6 +445,14 @@ not an error. Fix, when worth it: drop the declarations, or convert the componen
 Note this will NOT remove `prop-types` from the bundle — `react-dropzone`, `react-modal`,
 `react-select`, `react-switch` and `react-transition-group` all hard-depend on it, so the package
 stays regardless of what the app itself declares.
+
+Batch 1 (smallest 6, per `docs/Jsx-To-Tsx-Migration-Playbook.md`) converted: `common/ValidationErrorList.jsx`, `parameters/Plannings/TeacherAvailabilities.jsx`,
+`userForm/ConsentDocItem.jsx`, `parameters/Plannings/SchoolAvailabilities.jsx`,
+`parameters/BaseParameters.jsx`, `utils/ui/tabs.jsx` — now `.tsx`, `propTypes` dropped. Converting
+`BaseParameters` (the only class in the batch) to a function component also forced
+`parameters/{Community,Payments,Practice,Evaluations}/*Parameters.jsx` off `class X extends
+BaseParameters` (JS can't extend a function) onto the same props-based pattern
+`PlanningsParameters`/`ActivitiesParameters` already used. Remaining batches still pending.
 
 ## Two `createRoot`-related tests flake under full-suite load
 

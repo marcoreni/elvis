@@ -1,23 +1,35 @@
-import React, { Component, Fragment, useEffect, useRef, useState } from "react";
+import React, { Fragment, useEffect, useRef, useState } from "react";
 import AvailabilityManager from "../../availability/AvailabilityManager";
-import PropTypes from "prop-types";
 import * as api from "../../../tools/api";
 import swal from "sweetalert2";
 import { useTranslation } from "react-i18next";
+import type { Season, TimeInterval } from "../../utils/entities";
+
+interface SchoolAvailabilitiesProps {
+    planningId?: number;
+    authToken?: string;
+    // `seasons.find(...)` below is called unguarded -- real callers always pass this (the lone
+    // propTypes `PropTypes.array`, with no `.isRequired`, undersold it).
+    seasons: Season[];
+}
 
 export default function SchoolAvailabilities({
     planningId,
     authToken,
     seasons,
-}) {
+}: SchoolAvailabilitiesProps) {
     const { t } = useTranslation("parameters");
-    const [intervals, setIntervals] = useState([]);
-    const [season, setSeason] = useState(
+    const [intervals, setIntervals] = useState<TimeInterval[]>([]);
+    const [season, setSeason] = useState<Partial<Season>>(
         seasons.find((s) => s.is_current) || seasons[0] || {}
     );
-    const availabilityRef = useRef();
+    // AvailabilityManager (frontend/components/availability/AvailabilityManager.jsx) is an
+    // untyped class component wrapped in `withTranslation(..., { withRef: true })`; manually
+    // re-invoking its `componentDidMount()` below is a forced-refresh pattern that predates this
+    // conversion, out of scope to retype here. Logged in docs/KnownIssues.md.
+    const availabilityRef = useRef<any>(null);
 
-    const convertToFirstWeekOfSeason = (seasonStart) => {
+    const convertToFirstWeekOfSeason = (seasonStart?: string) => {
         if (!seasonStart) return null;
 
         const startDate = new Date(seasonStart);
@@ -35,11 +47,11 @@ export default function SchoolAvailabilities({
         return `${monday.getFullYear()}-${month}-${day}`;
     };
 
-    const onAdd = (newIntervals) => {
+    const onAdd = (newIntervals: TimeInterval[]) => {
         setIntervals(intervals.concat(newIntervals));
     };
 
-    const onDelete = (intervals) => {
+    const onDelete = (intervals: TimeInterval[]) => {
         setIntervals(intervals);
     };
 
@@ -47,7 +59,7 @@ export default function SchoolAvailabilities({
         const firstMonday = convertToFirstWeekOfSeason(season.start);
 
         api.set()
-            .success((data) => {
+            .success((data: { intervals: TimeInterval[] }) => {
                 setIntervals(data.intervals);
                 availabilityRef.current.componentDidMount();
             })
@@ -84,9 +96,3 @@ export default function SchoolAvailabilities({
         </Fragment>
     );
 }
-
-SchoolAvailabilities.propTypes = {
-    seasons: PropTypes.array,
-    authToken: PropTypes.string,
-    planningId: PropTypes.number,
-};

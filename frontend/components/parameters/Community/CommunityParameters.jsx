@@ -1,17 +1,18 @@
 import React from "react";
-import {withTranslation} from "react-i18next";
+import { useTranslation } from "react-i18next";
 import MergeUsers from "../../scripts/mergeUsers/MergeUsers";
 import BaseParameters from "../BaseParameters";
 
-class CommunityParameters extends BaseParameters
-{
-    constructor(props)
-    {
-        super(props);
+// Used to `extends BaseParameters` purely to seed its state.tabsNames/divObjects in the
+// constructor -- now that BaseParameters is a function component (can't be `extends`ed), pass
+// them as props directly, matching PlanningsParameters/ActivitiesParameters/etc.
+export default function CommunityParameters({ season }) {
+    const { t } = useTranslation("parameters");
 
-        this.state.tabsNames = [props.t("community.tabs.mergeUsers")];
-        this.state.divObjects = [<MergeUsers season={this.props.season} />];
-    }
+    return (
+        <BaseParameters
+            tabsNames={[t("community.tabs.mergeUsers")]}
+            divObjects={[<MergeUsers season={season} />]}
+        />
+    );
 }
-
-export default withTranslation("parameters")(CommunityParameters);

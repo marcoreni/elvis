@@ -1,12 +1,17 @@
-import React, { Component, Fragment } from "react";
+import React, { useState } from "react";
 import * as api from "../../../tools/api";
 import swal from "sweetalert2";
-import PropTypes from "prop-types";
 import { useTranslation } from "react-i18next";
 
-export default function TeacherAvailabilities({ defaultChecked }) {
+interface TeacherAvailabilitiesProps {
+    defaultChecked?: boolean;
+}
+
+export default function TeacherAvailabilities({
+    defaultChecked,
+}: TeacherAvailabilitiesProps) {
     const { t } = useTranslation("parameters");
-    const [checked, setChecked] = React.useState(defaultChecked || false);
+    const [checked, setChecked] = useState(defaultChecked || false);
 
     const onSubmit = () => {
         api.set()
@@ -58,8 +63,3 @@ export default function TeacherAvailabilities({ defaultChecked }) {
         </div>
     );
 }
-
-TeacherAvailabilities.propTypes = {
-    defaultChecked: PropTypes.bool,
-    planningDefaultChecked: PropTypes.bool,
-};

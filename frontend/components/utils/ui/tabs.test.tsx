@@ -12,10 +12,11 @@
 
 import React from "react";
 import { render, screen } from "@testing-library/react";
+import { afterEach, describe, expect, test, vi } from "vitest";
 import i18n from "../../../i18n";
-import TabbedComponent from "./tabs";
+import TabbedComponent, { Tab } from "./tabs";
 
-const makeTabs = (overrides = {}) => [
+const makeTabs = (overrides: Partial<Tab> = {}): Tab[] => [
     {
         id: "tab_one",
         header: "Premier onglet",
@@ -58,7 +59,10 @@ describe("TabbedComponent", () => {
         render(<TabbedComponent tabs={makeTabs()} />);
 
         const secondTabItem = screen.getByText("Deuxième onglet").closest("li");
-        expect(secondTabItem).toHaveAttribute("title", "This tab is not fully filled in");
+        expect(secondTabItem).toHaveAttribute(
+            "title",
+            "This tab is not fully filled in"
+        );
     });
 
     test("a tab tripped into error via setTabError (not just the isInError prop) also gets the localized tooltip", () => {
@@ -66,13 +70,19 @@ describe("TabbedComponent", () => {
         // `setTabError(true)` (threaded into `body.props` by TabbedComponent itself), independent
         // of the `isInError` prop. Both paths render the same `tabErrorState[tab.id] || tab.isInError`
         // condition, so this exercises the other half of that OR.
-        function ErrorProneBody({ setTabError }) {
+        function ErrorProneBody({
+            setTabError,
+        }: {
+            // Optional: TabbedComponent injects this via cloneElement -- the JSX literal below
+            // mounts <ErrorProneBody /> without it, same as the real tab.body authors do.
+            setTabError?: (isError: boolean) => void;
+        }) {
             // Mount-only: TabbedComponent recreates `setTabError`'s closure identity on every
             // render (it's built inline in the JSX spread passed to `tab.body`), so depending on
             // it here would re-fire this effect every render — an infinite render loop, since
             // calling it triggers the state update that causes the next render.
             React.useEffect(() => {
-                setTabError(true);
+                setTabError?.(true);
                 // eslint-disable-next-line react-hooks/exhaustive-deps
             }, []);
             return <div>Body</div>;
@@ -92,7 +102,10 @@ describe("TabbedComponent", () => {
         );
 
         const tabItem = screen.getByText("Premier onglet").closest("li");
-        expect(tabItem).toHaveAttribute("title", "Cet onglet n'est pas complètement rempli");
+        expect(tabItem).toHaveAttribute(
+            "title",
+            "Cet onglet n'est pas complètement rempli"
+        );
     });
 
     test("a plain DOM element tab body renders without React warning about an unrecognized setTabError prop", () => {
@@ -102,7 +115,9 @@ describe("TabbedComponent", () => {
         // not recognize the `setTabError` prop on a DOM element" because the prop lands on the
         // rendered <div> itself. Only components (function/class, i.e. `typeof type === "function"`)
         // should receive it now.
-        const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+        const consoleError = vi
+            .spyOn(console, "error")
+            .mockImplementation(() => {});
 
         render(
             <TabbedComponent
