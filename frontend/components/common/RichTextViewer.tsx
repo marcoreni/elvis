@@ -15,7 +15,7 @@ import { wysiwygToHtml } from "../../tools/wysiwygConversion";
  * `WysiwygViewer`); otherwise it is treated as already being HTML (or plain
  * text) and rendered as-is. Either way, the result is sanitized before
  * being injected into the DOM.
- * @returns {JSX.Element}
+ * @returns {React.JSX.Element}
  */
 export default function RichTextViewer({
     wysiwygStrData,
@@ -25,7 +25,7 @@ export default function RichTextViewer({
     wysiwygStrData: string | null | undefined;
     className?: string;
     style?: React.CSSProperties;
-}): JSX.Element {
+}): React.JSX.Element {
     const html = wysiwygToHtml(wysiwygStrData);
 
     // ne pas mettre la configuration de sanitize en props, ce serait une faille de sécurité

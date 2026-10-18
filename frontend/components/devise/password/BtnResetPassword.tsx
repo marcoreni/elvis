@@ -1,4 +1,5 @@
 import { useState } from "react";
+import type { JSX } from "react";
 import swal from "sweetalert2";
 import { useTranslation } from "react-i18next";
 import * as api from "../../../tools/api";

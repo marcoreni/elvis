@@ -23,6 +23,32 @@ window.matchMedia =
         };
     };
 
+// jsdom implements getClientRects()/getBoundingClientRect() on Element but not on Range; real
+// browsers implement both. ProseMirror's scroll handling passes a Range to coordsAtPos(), newly
+// reachable under React 19 + @testing-library/react 16, where it surfaces as an intermittent
+// uncaught TypeError. Empty rects are fine: singleRect() falls back to getBoundingClientRect().
+if (typeof Range.prototype.getClientRects !== "function") {
+    Range.prototype.getClientRects = function getClientRectsStub() {
+        return [];
+    };
+}
+if (typeof Range.prototype.getBoundingClientRect !== "function") {
+    Range.prototype.getBoundingClientRect =
+        function getBoundingClientRectStub() {
+            return {
+                x: 0,
+                y: 0,
+                top: 0,
+                left: 0,
+                bottom: 0,
+                right: 0,
+                width: 0,
+                height: 0,
+                toJSON: () => ({}),
+            };
+        };
+}
+
 // A real (unmocked) swal.fire() -- several component tests let one render for real rather than
 // mocking sweetalert2 -- schedules an internal `setTimeout(..., 10)` on popup-open
 // (SHOW_CLASS_TIMEOUT in sweetalert2's source) that it never exposes a handle for, so nothing

@@ -77,7 +77,7 @@ export default function TipTapEditor({
     onChange,
     className,
     disabled = false,
-}: TipTapEditorProps): JSX.Element {
+}: TipTapEditorProps): React.JSX.Element {
     const { t } = useTranslation("common");
     const [showLinkInput, setShowLinkInput] = useState(false);
     const [linkUrl, setLinkUrl] = useState("");

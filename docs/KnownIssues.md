@@ -59,16 +59,7 @@ libraries were bumped across majors, and a few unmaintained ones were dropped. R
 current latest), and `prettier` (3.9.6) are already done; removed from the list below. What's
 left:
 
-- **React 17 → 19**, two majors, real breaking boundaries. 17→18 is **done** (item 14, PR #135,
-  merged) — `react`/`react-dom` → `18.3.1`, `react_ujs` → `^3.3.1`, `@testing-library/react` →
-  `^13.4.0`. 18→19 not started yet. A pre-bump audit (`chore/react-19-pre-bump-audit`) re-ran the
-  legacy-API grep (legacy string refs, `this.refs`, `React.createClass`, legacy context API,
-  `ReactDOM.render`/`findDOMNode`, function-component `defaultProps`) across all of `frontend/`
-  (122 files containing 128 class components) after the TipTap/`react-draft-wysiwyg` work landed
-  (PRs #144-148) and found zero hits. One real React-19 peer-dep blocker remains:
-  `@testing-library/react@^13.4.0`'s published peer range hard-caps at `react: "^18.0.0"` — it
-  must bump to `^16`+ in the same commit as the version bump itself. See
-  `docs/Modernization-Roadmap.md` item 14 for the actual bump plan/PR trail.
+- **React 17 → 19** — both majors now done; see `docs/Modernization-Roadmap.md` items 14 and 15.
 - `react-switch`/`react-loader-spinner`/`react-toastify` were all in the "pending version bump"
   bucket — all three now done (`7.1.0` on `chore/bump-react-switch`, `8.0.2` on
   `chore/bump-react-loader-spinner` PR #140, `11.1.0` on `chore/bump-react-toastify`). `react-
@@ -376,27 +367,7 @@ survives in state. Low impact (multiple simultaneous failures for the same edito
 presumably rare) and pre-existing under the same class of issue the success-branch fix addressed.
 Fix: apply the same functional-updater treatment, accumulating errors instead of overwriting.
 
-## `TimePreferencesStep.jsx`'s ref to `AvailabilityManager` never attaches
-
-`frontend/components/activityApplications/TimePreferencesStep.jsx` (~line 46-63) passes
-`ref={availabilityRef}` to `<AvailabilityManager ... />`, then (line 36, inside a `useEffect`'s
-`PLANNING_MODE` auto-fetch-defaults branch) calls `availabilityRef.current.componentDidMount()`
-directly. But `AvailabilityManager` is exported as `withTranslation("planning")(AvailabilityManager)`
-(`frontend/components/availability/AvailabilityManager.jsx`, last line) with no `{withRef: true}`
-option — react-i18next's `withTranslation` only forwards a ref through to the wrapped class when that
-option is passed; without it, the ref attaches to `withTranslation`'s own function-component wrapper
-instead, which logs "Function components cannot be given refs" and leaves `availabilityRef.current`
-permanently `null`. Confirmed reachable: the `PLANNING_MODE` branch with no existing intervals calls
-`.componentDidMount()` on that `null` ref, which throws `TypeError: Cannot read properties of null`.
-Found live during item 14's (React 17→18) smoke pass (a warning surfaced while exercising this step
-in `PREFERENCES_MODE`, tracing it uncovered the same pattern's sharper failure in `PLANNING_MODE`);
-confirmed pre-existing — neither file is touched by the React 18 bump, and `withTranslation`'s ref-
-forwarding behavior is unrelated to the React version. Fix: add `{withRef: true}` to
-`withTranslation("planning", {withRef: true})(AvailabilityManager)`, or drop the imperative ref
-pattern for a prop-driven trigger instead.
-
-
-## `availabilityRef.current.componentDidMount()` reads stale props under React 18 batching
+## `availabilityRef.current.componentDidMount()` reads stale props under automatic batching
 
 Two call sites — `frontend/components/activityApplications/TimePreferencesStep.jsx:36` and
 `frontend/components/parameters/Plannings/SchoolAvailabilities.jsx:51-52` — call
@@ -408,10 +379,13 @@ Two call sites — `frontend/components/activityApplications/TimePreferencesStep
 committed yet when the imperative `componentDidMount()` call runs, so it reads the still-empty
 `props.intervals` — the freshly-fetched default availabilities never render, even though they're
 correctly in the parent's state moments later. Reproduced directly: DOM never mentions the fetched
-interval, on both call sites, regardless of the `withRef: true` fix (see the entry that used to be
-here — that fix made the ref itself resolve to a real instance instead of `null`, which stopped a
-console warning and a swallowed `TypeError`/silently-shown error alert on
-`SchoolAvailabilities.jsx`, but doesn't touch this deeper timing issue). Fix: replace the imperative
+interval, on both call sites, regardless of the `withRef: true` fix already applied at
+`AvailabilityManager.jsx:334` (that fix made the ref resolve to a real instance instead of `null`,
+which stopped a console warning and a swallowed `TypeError`/silently-shown error alert on
+`SchoolAvailabilities.jsx`, but doesn't touch this deeper timing issue). Still reproduces
+identically under React 19 — re-verified during the 18→19 bump's smoke pass, clicking "Créer la
+disponibilité" on `/parameters/planning_parameters` still silently no-ops with no console error.
+Fix: replace the imperative
 `componentDidMount()` call with a real `componentDidUpdate(prevProps)` on `AvailabilityManager` that
 syncs `state.list` whenever `props.intervals` actually changes, and drop the manual call entirely (at
 both sites).
@@ -440,3 +414,62 @@ larger `border-radius` (6px vs 1px), a different `box-shadow`, no longer clips o
 the progress bar / close button markup changed shape (SVG icon vs a bold `✖` glyph). None of
 this is functionally broken, just a minor "close but not pixel-identical" look versus the
 pre-bump toasts. Not tracked for a fix.
+
+## `/plannings/all_rooms` crashes: `show_all_rooms.html.erb` never passes `season`
+
+`app/views/planning/show_all_rooms.html.erb` mounts `planning/Planning` without a `season:` prop,
+but `frontend/components/planning/Planning.jsx:83` reads `this.props.season.holidays.length` in the
+constructor, so the component throws `TypeError: Cannot read properties of undefined (reading
+'holidays')` and the page renders an empty shell. `show_for_room.html.erb` (`/rooms/:id/planning`)
+does pass `season:`/`nextSeason:`/`seasons:` and works fine. Found during the React 19 bump's live
+smoke pass; confirmed pre-existing and React-version-independent (reproduced identically on 18 and
+19). Fix: pass the season props from `PlanningController#show_all_rooms` the way `show_for_room`
+does, or guard the constructor read.
+
+## `propTypes` declarations are dead weight under React 19
+
+React 19 removed `propTypes` validation entirely — declarations are now ignored rather than
+erroring, so nothing breaks, but ~20 of them across `frontend/` (e.g.
+`WrappedPayerPaymentTerms.jsx`, `PayerPaymentTerms.jsx`, `RemoveComponent.jsx`,
+`editParameters/TeachersParameters.tsx`, `editParameters/DragAndDrop.tsx`) no longer do anything.
+Not a bug — logged so nobody assumes those declarations are still validating anything. A
+grep-for-removed-patterns audit does not surface this, because under 19 `propTypes` is an ignore,
+not an error. Fix, when worth it: drop the declarations, or convert the components to TypeScript.
+Note this will NOT remove `prop-types` from the bundle — `react-dropzone`, `react-modal`,
+`react-select`, `react-switch` and `react-transition-group` all hard-depend on it, so the package
+stays regardless of what the app itself declares.
+
+## Two `createRoot`-related tests flake under full-suite load
+
+Both pass reliably in isolation and fail only occasionally in a full `yarn vitest run`, both on a
+`waitFor` whose default budget is 1s:
+
+- `frontend/components/scripts/replicate_activities/ReplicateWeekAct.test.jsx` — "closing the
+  job-progress modal calls JobProgress's componentWillUnmount" (the `createRoot`/unmount regression
+  test from the React 17→18 bump), on `waitFor(... unmounted === true)`.
+- `frontend/components/ActivitiesApplicationsList.test.jsx:708` — on
+  `expect(...__jobProgressState.mounted).toBe(true)`. This one chains a 400ms module-level debounce,
+  a real `userEvent.upload`, an unmocked sweetalert2 and a `createRoot` render inside that same 1s
+  budget.
+
+Measured during the 18→19 bump: the first failed 1 of 12 full runs on React 19 and 0 of 6 on React
+18 with the identical 1502 tests. Don't over-read that A/B — at a 1/12 rate, 6 clean runs are
+~60% likely by chance, so 0/6 carries essentially no information either way. The load argument is
+the real evidence: both pass in isolation, two independent files with the same machinery fail the
+same way, and the failing run showed that file taking 3744ms.
+
+What this does rule out is a *semantic* break (a real `root.unmount()` regression would be
+deterministic). It does not rule out a React 19 *timing* shift — 19 changed scheduling, and a
+slower-but-correct flush would present identically. The remedy is the same either way: give both an
+explicit `waitFor(..., { timeout: 5000 })` rather than chasing a component bug.
+
+## React 19 reports uncaught render errors more quietly than React 18
+
+React 19 routes uncaught render errors to `window.reportError` and drops both the `"Warning: "`
+prefix and the companion `"The above error occurred in the <X> component ... Consider adding an
+error boundary"` message with its component stack. Measured on the `/plannings/all_rooms` crash
+above: 4 console entries under React 18 (two of them duplicated by `invokeGuardedCallback`), 1
+under React 19. The error is still printed, so a developer still sees it — but there is less to go
+on, and this app has no error boundaries, no `window.onerror` and no Sentry, so nothing captures
+the component stack that 18 used to print. Relevant when triaging a blank React island: check the
+console carefully rather than expecting the old two-part output.

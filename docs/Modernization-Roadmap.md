@@ -162,21 +162,42 @@ runtime resolution, only a live page load does) — fixed, with a static regress
 pre-existing bugs surfaced along the way (2 backend, 5 frontend) — logged in `docs/KnownIssues.md`,
 not fixed here.
 
-Not started yet: React 18→19 (the roadmap's own original plan is to stabilize on 18 first — this
-item's own pre-check already flagged `@testing-library/react` needing v16+ before that jump, since 19
-removes `defaultProps` on function components and legacy string refs/context entirely;
+React 18→19 is now done too — see item 15 below. (This item's own pre-check correctly flagged
+`@testing-library/react` needing v16+ before that jump, since 19 removes `defaultProps` on function
+components and legacy string refs/context entirely;
 `react-loader-spinner` was the other package flagged here for the same reason, but it's since been
 bumped to `8.0.2` on `chore/bump-react-loader-spinner`, PR #140). `react-draft-wysiwyg` is also gone
 now: its editor call sites were swapped onto `TipTapEditor`/`RichTextViewer` (PR #146, built in
 PR #145), then the now-unused dependency itself removed (PR #147), alongside the one-time
-Draft.js-to-HTML content migration task (PR #148). `@testing-library/react` is still pinned at
-`^13.4.0`, whose published peer range hard-caps at `react: "^18.0.0"` — this is now the ONLY
-remaining React-19-blocking peer dependency found across the installed tree; it must be bumped to
-`^16`+ in the same commit as the `react`/`react-dom` version bump itself (the same lockstep
-constraint that applied to the 17→18 jump). A pre-bump confirmation pass
+Draft.js-to-HTML content migration task (PR #148). A pre-bump confirmation pass
 (`chore/react-19-pre-bump-audit`) re-ran the legacy-API grep across all of `frontend/` (122 files
-containing 128 class components) and confirmed it's still clean; the version bump itself still
-hasn't started.
+containing 128 class components) and confirmed it's still clean.
+
+## 15. React 18 → 19 — done, `feat/react-19-bump`
+
+`react`/`react-dom` → `19.3.1`, with the forced lockstep `@testing-library/react` → `^16.3.3`, plus
+new explicit `@types/react`/`@types/react-dom` `^19.3.0` and `@testing-library/dom` `^10.4.2`
+devDependencies. The Ruby side needed no change (`react-rails` 3.3.1 is React-major-agnostic).
+
+Two lessons worth carrying forward, both of which the automated suite passed straight through:
+
+- **The `resolutions` block must stay top-level, not scoped to `react_ujs/`.** `react_ujs@3.3.1`
+  declares `react`/`react-dom` as hard *dependencies*, not peers, so without it the tree splits and
+  a nested React 18 mounts every island in the app. Scoping it to `react_ujs/` isn't enough:
+  `Dockerfile:67` runs the plugin `yarn add` (`lib/tasks/elvis.rake:250`) *before* `yarn install`,
+  re-resolving the whole tree, so any plugin repeating the same mistake gets its own nested React.
+- **A duplicate `@types/react` can make `tsc` lie.** `@types/react-modal` requests
+  `@types/react@*`; that second copy kept supplying the global `JSX` namespace `@types/react@19`
+  removed, so `tsc` reported clean while 9 real `TS2503` errors sat hidden behind it. The same
+  block collapses it. Pin `@types/*` explicitly when bumping a major.
+
+Footgun to know about when next bumping React: `react`/`react-dom` are pinned *exactly* in both
+`dependencies` and `resolutions`, and a `resolutions` entry always wins — yarn only prints a
+warning on a mismatch. So bumping `dependencies.react` without also editing `resolutions` silently
+installs the old version. Change both, together.
+
+See `docs/KnownIssues.md` for React 19's quieter error reporting, `propTypes` going inert, and the
+two `createRoot` tests that flake under load.
 
 ## Context this roadmap assumes (don't re-derive, just re-read if needed)
 

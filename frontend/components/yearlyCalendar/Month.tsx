@@ -61,7 +61,7 @@ const Month: React.FC<MonthProps> = ({
         // 37 (max days in a month + 6) or 42 (if user prefers weeks closing with Sunday)
         const totalDays = forceFullWeeks ? 42 : 37;
 
-        const days: JSX.Element[] = [];
+        const days: React.JSX.Element[] = [];
         range(firstDayOfWeek + 1, totalDays + firstDayOfWeek + 1).forEach(
             (i) => {
                 const day = moment([year, month - 1, i - prevMonthDaysCount]);

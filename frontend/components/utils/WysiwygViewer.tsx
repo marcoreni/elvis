@@ -10,7 +10,7 @@ import {
 
 /**
  * Display a WYSIWYG content in HTML format converted from a JSON string. HTML is sanitized.
- * @returns {JSX.Element}
+ * @returns {React.JSX.Element}
  */
 export default function WysiwygViewer({
     wysiwygStrData,
@@ -20,7 +20,7 @@ export default function WysiwygViewer({
     wysiwygStrData: string;
     className: string;
     style: React.CSSProperties;
-}): JSX.Element {
+}): React.JSX.Element {
     let savedContentState;
 
     try {
