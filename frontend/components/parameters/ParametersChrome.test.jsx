@@ -18,7 +18,7 @@
 //     `ActivityApplicationsParameters` threads `desc={t("activityApplications.stepDesc.*")}` into
 //     two `ApplicationStepParameters`.
 //
-// Every heavy tab-content child is mocked — they hit `fetch` / react-table / draft-js and are
+// Every heavy tab-content child is mocked — they hit `fetch` / react-table / TipTap and are
 // not under test here. We assert only the chrome's own translated copy.
 
 import React from "react";

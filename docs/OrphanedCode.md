@@ -167,6 +167,54 @@ fallback in `RichTextViewer.tsx` for content not yet migrated off the old Draft.
 gated on a separate DB content migration. Prep for the React 18→19 bump —
 `react-draft-wysiwyg`'s peer-dependency range capped React at `^18.x.x`.
 
+## 2026-10-19, dependency-health phase 4e (remove `draft-js`/`draftjs-to-html`)
+
+Closes out phase 4. The one-time Draft.js-to-HTML `Parameter` content migration (PR #148) has now
+been run against every real environment, so no stored value can be Draft.js JSON any more — which
+made both the format-detection layer and the migration tooling itself unreachable.
+
+- `frontend/tools/wysiwygConversion.js` + `wysiwygConversion.test.js` (whole files): the
+  `convertWysiwyg` / `tryParseDraftRaw` / `isDraftJsRaw` / `wysiwygToHtml` / `wysiwygToEditableHtml`
+  module. With no format left to detect, every export collapsed to `x ?? ""` — not worth a named
+  module, so its 3 call sites inline the null-coalescing instead: `common/RichTextViewer.tsx`,
+  `parameters/ActivityApplications/ApplicationStepParameters.jsx`,
+  `parameters/Payments/EditPaymentScheduleOptions.jsx`. The two parameter editors'
+  now-unreachable "conversion failed" `swal` branch went with it, and with that its locale keys
+  `parameters:activityApplications.stepParams.contentConversionError` and
+  `parameters:payments.scheduleOptions.errors.contentConversionError` (fr + en).
+- `frontend/tools/wysiwygConversionCli.js` + `wysiwygConversionCli.test.js`,
+  `lib/elvis/wysiwyg_converter.rb`, `lib/elvis/wysiwyg_content_migrator.rb`, the
+  `elvis:migrate_wysiwyg_content` task in `lib/tasks/elvis.rake` (its `desc` + task block), and
+  their specs `spec/lib/elvis/wysiwyg_converter_spec.rb` /
+  `spec/lib/migrate_wysiwyg_content_rake_task_spec.rb`: the whole one-time Node-CLI-bridge
+  migration tool (stdin raw UTF-8 → stdout `{isDraftJs, html, failed}`). Deleted rather than kept
+  for reference — there is nothing left to migrate. The rake task was its only caller; confirmed no
+  other invoker in `Dockerfile`, `docker-compose.yml`, `Procfile`, `.github/`, `bin/`, `config/`,
+  `db/`, `app/` or `test/`.
+- `frontend/components/utils/WysiwygViewer.tsx` (whole file): the original Draft.js-based viewer,
+  superseded by `common/RichTextViewer.tsx`. Zero importers and zero
+  `react_component("...WysiwygViewer"...)` mounts in `app/views/` — every former call site
+  (`ActivityChoice.jsx`, `Validation.jsx`, `WrappedPayerPaymentTerms.jsx`,
+  `availability/AvailabilityManager.jsx`, `FormulaChoice.jsx`) had already moved to
+  `RichTextViewer`. It imported both packages directly, so it was also a hard blocker for dropping
+  them.
+
+Removed `"draft-js"` and `"draftjs-to-html"` from `package.json`; `yarn install` then dropped them
+and their exclusively-owned transitive deps from `yarn.lock` (97 lines removed, 0 added): `asap`,
+`core-js@^3.6.4`, `cross-fetch`, `fbjs`, `fbjs-css-vars`, `immutable@~3.7.4`, `node-fetch@^2.6.12`,
+`promise@^7.1.1`, `setimmediate@^1.0.5`, `tr46@~0.0.3`, `ua-parser-js@^0.7.18`,
+`webidl-conversions@^3.0.0`, `whatwg-url@^5.0.0`. Verified afterwards with `yarn why`: `fbjs` is
+gone entirely, while `immutable` (now `5.1.9`, via `sass`) and `object-assign` (via `prop-types`,
+`@rsdoctor/*`, `i18next-parser`) survive on unrelated consumers.
+
+**Deliberately KEPT — do not "clean up" later:** `InsCompatibleUnderline` in
+`frontend/components/common/TipTapEditor.tsx` and its `TipTapEditor.test.tsx` coverage. The
+migration converted content *through* `draftjs-to-html`, which serializes Draft's UNDERLINE as
+`<ins>` rather than `<u>`, so `<ins>` tags are now permanently baked into the migrated HTML in the
+DB. That `parseHTML` extension is therefore *more* necessary after the migration, not less —
+removing it would silently drop every underline the first time such content is opened and saved.
+Remaining `draft`/`draftjs` mentions under `frontend/` are accurate historical comments only.
+
 ## Deliberately NOT touched (all audits)
 
 Real, live issues — not dead code, don't delete:
