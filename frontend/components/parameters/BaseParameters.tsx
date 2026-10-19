@@ -17,7 +17,12 @@ export default function BaseParameters({
     divObjects: divObjectsProp,
 }: BaseParametersProps) {
     const [activeTab, setActiveTab] = useState(-1);
-    const [divObjects, setDivObjects] = useState(divObjectsProp);
+    // The class only had `componentDidUpdate` as a way to notice `props.divObjects` changing, so
+    // it mirrored it into state. A function component can just read the prop fresh every render
+    // instead -- behaviorally identical, one fewer render per prop change, no stale-frame window.
+    // (Still deliberately asymmetric with `tabsNamesRef` below -- see docs/KnownIssues.md's
+    // "Translated UI frozen at construct/mount time" entry.)
+    const divObjects = divObjectsProp;
 
     // tabsNames was only ever read from props in the constructor, never re-synced on prop
     // changes (componentDidUpdate only reacted to divObjects) -- a `useRef` initializer
@@ -28,10 +33,6 @@ export default function BaseParameters({
     // not in state because it's not a react variable && it's not a variable that we want to
     // manually update
     const showedTabsRef = useRef<number[]>([]);
-
-    useEffect(() => {
-        setDivObjects(divObjectsProp);
-    }, [divObjectsProp]);
 
     useEffect(() => {
         for (let i = 0; i < tabsNamesRef.current.length; i++) {

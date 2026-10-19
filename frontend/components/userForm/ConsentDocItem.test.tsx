@@ -37,9 +37,12 @@ describe("ConsentDocItem", () => {
             "href",
             "https://example.org/reglement.pdf"
         );
-        expect(
-            screen.getByRole("checkbox", { hidden: true })
-        ).toBeInTheDocument();
+        const checkbox = screen.getByRole("checkbox", { hidden: true });
+        expect(checkbox).toBeInTheDocument();
+        // Regression guard: this Field+AlertCheckbox call was missing `alertType="info"` (same
+        // bug as the AlertYesNoRadio branch below) -- see docs/KnownIssues.md's note on this
+        // being an intentional visual fix, not an oversight.
+        expect(checkbox.closest("label")).toHaveClass("alert-info");
     });
 
     test("without an attached file: renders the content with its URLs turned into links and {schoolName} substituted", () => {
@@ -67,7 +70,11 @@ describe("ConsentDocItem", () => {
             expected_answer: false,
         });
 
-        expect(screen.getAllByRole("radio", { hidden: true })).toHaveLength(2);
+        const radios = screen.getAllByRole("radio", { hidden: true });
+        expect(radios).toHaveLength(2);
         expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
+        // Regression guard: this AlertYesNoRadio call was missing `alertType="info"` -- see
+        // docs/KnownIssues.md's note on this being an intentional visual fix, not an oversight.
+        expect(radios[0].closest(".alert")).toHaveClass("alert-info");
     });
 });

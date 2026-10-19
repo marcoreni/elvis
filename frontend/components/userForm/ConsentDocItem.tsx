@@ -66,12 +66,13 @@ export default function ConsentDocItem({
         <Fragment>
             {docItem.expected_answer ? (
                 <Fragment>
-                    {/* checkbox case. AlertCheckbox also destructures `alertType` for its
-                        `alert-${alertType}` class (see common/AlertCheckbox.jsx); every other
-                        real Field+AlertCheckbox call site (GDPR.jsx) passes "info" -- this one
-                        was missing it too (same `alert-undefined` bug as the AlertYesNoRadio
-                        branch below), just not caught by tsc since <Field component={...}> is
-                        typed loosely enough not to flag it. Fixed to match. */}
+                    {/* checkbox case. AlertCheckbox destructures `alertType` for its
+                        `alert-${alertType}` class (see common/AlertCheckbox.jsx). GDPR.jsx's
+                        Field+AlertCheckbox already passes "info"; this call and
+                        CreateOrganizationModal.jsx's were both missing it (same `alert-undefined`
+                        bug as the AlertYesNoRadio branch below) -- not caught by tsc since
+                        <Field component={...}> is typed loosely enough not to flag it. Both
+                        fixed to match; see docs/KnownIssues.md for the visual-change note. */}
                     <Field
                         name={`consent_docs[id_${docItem.id}].agreement`}
                         type="checkbox"

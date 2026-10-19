@@ -1,4 +1,4 @@
-// Component test for TabbedComponent (frontend/components/utils/ui/tabs.jsx). Its "tab is in
+// Component test for TabbedComponent (frontend/components/utils/ui/tabs.tsx). Its "tab is in
 // error" tooltip used to be a hardcoded French literal ("Cet onglet n'est pas complètement
 // rempli") — see docs/KnownIssues.md's former "components/utils/ui/tabs.jsx" entry. Now sourced
 // from `common:tabs.incomplete` via `useTranslation("common")`. TabbedComponent is a plain

@@ -130,6 +130,7 @@ const CreateOrganizationModal = ({ urlRedirect }) => {
                                                             )}
                                                             name="openInputTVA"
                                                             type="checkbox"
+                                                            alertType="info"
                                                             render={
                                                                 AlertCheckbox
                                                             }

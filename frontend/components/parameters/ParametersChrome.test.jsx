@@ -8,12 +8,15 @@
 //     (`previousText`/`nextText`/`loadingText`/`noDataText`/`pageText`/`ofText`/`rowsText`) ->
 //     `i18n.t("common:reactTable.*")`.
 //   - the tab-list wrappers over `BaseParameters` whose `tabsNames` are now built from `t(...)`:
-//       * class wrappers, `withTranslation("parameters")(X)`, `props.t` read in the constructor:
-//         Practice + Payments are rendered in section C (the `props.t`-in-constructor regression
-//         guard — a missing HOC wrap throws there); Community/Rooms/Evaluations share the exact
-//         same one-line shape and are covered at the i18n-layer + fr/en-parity level.
-//       * fn wrappers, `useTranslation("parameters")`:
-//         Plannings / Activities / ActivityApplications
+//       * ALL of them are now plain functions calling `useTranslation("parameters")` directly --
+//         Practice/Payments/Community/Evaluations used to be `withTranslation("parameters")(X)`
+//         classes (`props.t` read in the constructor) until the jsx-to-tsx batch-1 conversion
+//         took `BaseParameters` itself off a class (JS can't `extends` a function component),
+//         which forced those 4 off the class+HOC shape onto the same props-based pattern
+//         Plannings/Activities/ActivityApplications already used. Practice + Payments are
+//         rendered in section C below (kept as a regression guard against the conversion rather
+//         than the old HOC-wrap-missing one); Community/Evaluations are covered at the
+//         i18n-layer + fr/en-parity level only.
 //     `ActivitiesParameters` also renders an `<h2>{t("activities.heading")}</h2>`.
 //     `ActivityApplicationsParameters` threads `desc={t("activityApplications.stepDesc.*")}` into
 //     two `ApplicationStepParameters`.
@@ -83,12 +86,19 @@ vi.mock("./Payments/EditPaymentScheduleOptions", () =>
 );
 vi.mock("./Payments/Coupons", () => stub("coupons"));
 
+vi.mock("../scripts/mergeUsers/MergeUsers", () => stub("merge-users"));
+
+vi.mock("./Evaluations/EvaluationLevels", () => stub("evaluation-levels"));
+vi.mock("./Evaluations/EvaluationSlot", () => stub("evaluation-slot"));
+
 import BaseDataTable from "./BaseDataTable";
 import PracticeParameters from "./Practice/PracticeParameters";
 import PaymentsParameters from "./Payments/PaymentsParameters";
 import PlanningsParameters from "./Plannings/PlanningsParameters";
 import ActivityApplicationsParameters from "./ActivityApplications/ActivityApplicationsParameters";
 import ActivitiesParameters from "./Activities/ActivitiesParameters";
+import CommunityParameters from "./Community/CommunityParameters";
+import EvaluationsParameters from "./Evaluations/EvaluationsParameters";
 
 afterEach(async () => {
     await i18n.changeLanguage("fr");
@@ -99,7 +109,7 @@ afterEach(async () => {
 // resolves", the common:actions.create / common:reactTable.* resolution loops) was pure pipeline
 // coverage — now redundant with frontend/i18n/index.test.js's cross-namespace parity guard and
 // `bin/i18n-tasks health`. Removed. The behaviour sections below (BaseDataTable chrome, tab-list
-// wrappers, the props.t-in-constructor regression guard) stay.
+// wrappers, the class+HOC -> fn conversion regression guard) stay.
 
 // ============================================================================================
 // B. BaseDataTable — the "+ Créer" link + TanStackGrid's i18n'd pagination chrome
@@ -166,10 +176,10 @@ describe("BaseDataTable — singleton-driven chrome", () => {
 // C. Tab-list wrappers — the translated tab-link text rendered by BaseParameters
 // ============================================================================================
 describe("parameters tab wrappers — translated tab links", () => {
-    // ordered list of parameters.* key paths, per wrapper, matching the constructor / render order
+    // ordered list of parameters.* key paths, per wrapper, matching the render order
     const CASES = [
         {
-            name: "PracticeParameters (class wrapper, props.t in constructor)",
+            name: "PracticeParameters (post jsx-to-tsx-batch-1: fn wrapper, useTranslation; regression guard for the class+HOC -> fn conversion)",
             Component: PracticeParameters,
             props: {},
             keys: [
@@ -183,7 +193,7 @@ describe("parameters tab wrappers — translated tab links", () => {
             ],
         },
         {
-            name: "PaymentsParameters (class wrapper, props.t in constructor)",
+            name: "PaymentsParameters (post jsx-to-tsx-batch-1: fn wrapper, useTranslation; regression guard for the class+HOC -> fn conversion)",
             Component: PaymentsParameters,
             props: {},
             keys: [
@@ -226,6 +236,18 @@ describe("parameters tab wrappers — translated tab links", () => {
             Component: ActivitiesParameters,
             props: {},
             keys: ["activities.tabs.pricingCategories"],
+        },
+        {
+            name: "CommunityParameters (post jsx-to-tsx-batch-1: fn wrapper, useTranslation; was a class extending BaseParameters)",
+            Component: CommunityParameters,
+            props: { season: {} },
+            keys: ["community.tabs.mergeUsers"],
+        },
+        {
+            name: "EvaluationsParameters (post jsx-to-tsx-batch-1: fn wrapper, useTranslation; was a class extending BaseParameters)",
+            Component: EvaluationsParameters,
+            props: {},
+            keys: ["evaluations.tabs.levels", "evaluations.tabs.slot"],
         },
     ];
 

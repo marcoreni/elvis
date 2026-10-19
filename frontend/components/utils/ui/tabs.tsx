@@ -13,11 +13,18 @@ export interface Tab {
     // clones it with an extra `setTabError` prop below -- there's no single real prop shape to
     // name, so this is the same kind of permissive library-boundary typing React's own
     // `cloneElement` overloads expect for that pattern.
-    body: React.ReactElement<any>;
+    // Nullable: ActivityDetailsModal.jsx builds `attendancesPanelContent` as a plain
+    // `cond ? <X /> : null` and passes it straight through as `body` (no wrapper) -- a real,
+    // currently-active tab can have a null body.
+    body: React.ReactElement<any> | null;
 }
 
 interface TabbedComponentProps {
-    tabs: Tab[];
+    // Real callers build this array with conditional entries -- UserEdit.jsx ends ternaries
+    // with `: undefined` for tabs gated on admin/teacher role -- which is exactly what the
+    // `tabsProps.filter(...)` below exists to strip. Don't tighten this back to `Tab[]`; that
+    // would make the filter look like dead code when it's load-bearing.
+    tabs: (Tab | null | undefined | false)[];
     mode?: "classic" | "buttons";
     defaultActiveTab?: number;
 }
@@ -28,7 +35,11 @@ export default function TabbedComponent({
     defaultActiveTab = 0,
 }: TabbedComponentProps) {
     const { t } = useTranslation("common");
-    const tabs = tabsProps.filter((tab) => tab != undefined);
+    // `!= undefined` (loose) already drops `null` too; `!== false` additionally drops a
+    // `cond && {...}`-style falsy entry, matching the widened prop type above.
+    const tabs = tabsProps.filter(
+        (tab): tab is Tab => tab != undefined && tab !== false
+    );
 
     const [active, setActive] = useState(defaultActiveTab);
 
@@ -99,7 +110,8 @@ export default function TabbedComponent({
                                 className={`panel-body ${mode === "classic" ? "" : "no-padding"}`}
                             >
                                 {active === i &&
-                                    (typeof tab.body.type === "function"
+                                    (tab.body &&
+                                    typeof tab.body.type === "function"
                                         ? React.cloneElement(tab.body, {
                                               setTabError: (isError: boolean) =>
                                                   setTabErrorState(

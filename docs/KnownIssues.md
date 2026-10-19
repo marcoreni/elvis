@@ -122,10 +122,27 @@ the same page at once. Fix (if it ever matters) is mechanical: move the string r
 Affected, for whoever eventually does that pass:
 - `DuePaymentList.jsx`, `PaymentList.jsx`, `PaymentScheduleList`, `activities/ActivityRefKind.jsx`,
   `activities/Instruments.jsx`, `parameters/BaseDataTable.jsx` (can't be `withTranslation`-wrapped,
-  ~15 CRUD tables extend it), the 5 `*Parameters.jsx` tab wrappers, the 7
-  `parameters/Practice/*.jsx` CRUD tables, `parameters/Payments/{PaymentsMethods,PaymentsStatus}.jsx`,
+  ~15 CRUD tables extend it), the 7 `parameters/Practice/*.jsx` CRUD tables,
+  `parameters/Payments/{PaymentsMethods,PaymentsStatus}.jsx`,
   `parameters/Evaluations/EvaluationLevels.jsx`, `parameters/Rooms/Localisations.jsx` — all build
-  react-table `columns`/tab names/messages with the constructor's `t`.
+  react-table `columns`/messages with the constructor's `t`.
+- The 5 `*Parameters.jsx` tab wrappers (`Community`/`Payments`/`Practice`/`Plannings`/
+  `Evaluations`/`Activities`/`ActivityApplications` — all of `parameters/<Domain>/<Domain>Parameters.jsx`)
+  used to freeze their tab names at whatever read `t(...)` once: either the wrapper's own
+  constructor (`Community`/`Payments`/`Practice`/`Evaluations`, before the jsx-to-tsx batch 1
+  conversion) or `BaseParameters`'s own `componentDidMount`-era constructor read of
+  `props.tabsNames`. Since that conversion (`parameters/BaseParameters.tsx`), the wrapper side of
+  that is gone — all 5 are now plain functions calling `useTranslation` live, with only
+  `PlanningsParameters.jsx` still built as one (it never had a constructor; it already passed
+  `tabsNames` as a prop before the conversion). The freeze itself didn't go away, though — it's
+  now fully centralized in `BaseParameters.tsx`'s `tabsNamesRef = useRef(tabsNames)`, which still
+  only reads its `tabsNames` prop once, deliberately (see the playbook's "componentDidMount-only"
+  trap). This leaves `BaseParameters.tsx` internally inconsistent: `tabsNames` is frozen via that
+  `useRef`, while `divObjects` is kept live (plain prop read / a prop-sync effect, depending on
+  which lands first). A hypothetical in-page language change would show stale tab labels over
+  fresh panes. Not fixed here — the freeze is the playbook's deliberate trade-off, preserving the
+  original class's "once-only" semantics; this bullet is just updated to describe where the
+  staleness actually lives now.
 - `courses/LessonList.jsx`'s `message.title` default (constructor-evaluated); its 12 react-table
   column headers are already rebuilt in `render()`.
 - `frontend/components/common/baseDataTable/BaseDataTable.jsx` — a fetch-error message is resolved
@@ -248,6 +265,15 @@ Not deleted per this repo's standing policy on unused-looking code — logged in
   props (dropped along with the v6-only column `Filter` render props during the TanStack
   migration, since table-level `filterable={false}` already disabled them regardless). Its one
   caller, `DuePaymentList.jsx` (`:1163-1164`), still passes both — harmless, just now inert.
+- `frontend/components/parameters/BaseParameters.module.css` (`.test { margin-top: 400px }`) is
+  imported by nothing — found adjacent to `BaseParameters.tsx` during jsx-to-tsx batch 1, predates
+  that conversion.
+- `frontend/components/parameters/Plannings/SchoolAvailabilities.tsx`'s `setSeason` is declared
+  (`const [season, setSeason] = useState(...)`) but never called anywhere in the file — `season`
+  is set once at mount and never changes, so the `useEffect` that depends on it (the
+  interval-fetch effect) can never re-fire after mount either. Preserved faithfully from the
+  original `.jsx` during the batch-1 conversion (not a new behavior, just more visible now that
+  the file is typed); not fixed here.
 
 ## `PaymentsList`/`DuePaymentsList` cap at 20 visible rows, no way to see more
 
@@ -453,6 +479,37 @@ Batch 1 (smallest 6, per `docs/Jsx-To-Tsx-Migration-Playbook.md`) converted: `co
 `parameters/{Community,Payments,Practice,Evaluations}/*Parameters.jsx` off `class X extends
 BaseParameters` (JS can't extend a function) onto the same props-based pattern
 `PlanningsParameters`/`ActivitiesParameters` already used. Remaining batches still pending.
+
+Two intentional, user-visible restyles shipped as part of that conversion, not oversights:
+`ConsentDocItem.tsx`'s checkbox (`Field`+`AlertCheckbox`) and yes/no (`AlertYesNoRadio`) cases were
+both missing `alertType="info"` (every destructured use of `alertType` renders an
+`alert-${alertType}` class; these rendered a bare `alert-undefined`) — found while typing the
+conversion, since TypeScript inferred the untyped `AlertYesNoRadio`'s destructured params as
+required. Fixed both to `alertType="info"`, matching `GDPR.jsx`/`NewsLetter.jsx`/`ImageRight.jsx`.
+The same gap existed at a 4th call site, `userForm/CreateOrganizationModal.jsx`'s
+`Field`+`AlertCheckbox` for `openInputTVA` — fixed alongside it. All 3 fixes turn an unstyled (or
+bare-undefined-class) box into a blue Bootstrap `alert-info` box. `ConsentDocItem.test.tsx` now
+asserts the `alert-info` class directly as a regression guard.
+
+## `UserForm.jsx` never pre-fills a user's existing consent-doc answers
+
+Found while converting `ConsentDocItem.jsx` to TypeScript (jsx-to-tsx batch 1) and tracing why its
+`defaultValue` prop was unused (it is -- dropped from `ConsentDocItemProps`, see the batch-1 note
+above). `UserForm.jsx:405-419` still computes a real `defaultValue` per doc (a `.find()` over
+`initialValues.consent_document_users` for that doc's `has_consented`) and passes it to
+`ConsentDocItem`, but `ConsentDocItem` has never read it (confirmed back to before this
+conversion) and nothing else makes it reach the `Field`s it renders either:
+`UserForm.jsx`'s `formattedInitialValues` (`:283-293`, what actually feeds the enclosing
+`<Form initialValues={...}>`) only ever formats `YES_NO_FIELDS`
+(`checked_image_right`/`checked_newsletter`) -- it never builds the
+`consent_docs.id_<N>.agreement` key that would need to exist for react-final-form to pre-fill
+`ConsentDocItem`'s `Field name={consent_docs[id_${docItem.id}].agreement}`. Net effect: a user
+re-opening their profile always sees every consent checkbox/radio unanswered, even if they
+already answered it. Not fixed here -- `UserForm.jsx` is out of scope for this batch. Whoever
+converts it should either wire up the real pre-fill (build that `consent_docs.id_<N>.agreement`
+key into `formattedInitialValues` from `consent_document_users`) or, if the pre-fill is
+intentionally not wanted, drop the now-pointless `defaultValue` prop pass-through at the call site
+instead of reintroducing it.
 
 ## Two `createRoot`-related tests flake under full-suite load
 
