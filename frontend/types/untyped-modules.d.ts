@@ -1,7 +1,4 @@
 // Ambient declarations for JS deps with no @types package. Loosely typed (any) on purpose —
-// replace with real types if/when these get properly typed (draft-js migration is tracked
-// separately, see docs/Modernization-Roadmap.md).
+// replace with real types if/when these get properly typed.
 
-declare module "draft-js";
-declare module "draftjs-to-html";
 declare module "fscreen";

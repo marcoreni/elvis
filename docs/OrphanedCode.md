@@ -167,6 +167,63 @@ fallback in `RichTextViewer.tsx` for content not yet migrated off the old Draft.
 gated on a separate DB content migration. Prep for the React 18→19 bump —
 `react-draft-wysiwyg`'s peer-dependency range capped React at `^18.x.x`.
 
+## 2026-10-19, dependency-health phase 4e (remove `draft-js`/`draftjs-to-html`)
+
+Closes out phase 4. The Draft.js-to-HTML `Parameter` content migration (PR #148) has now been run
+against every real environment known to us, so no stored value can be Draft.js JSON any more — which
+made the frontend's format-detection layer unreachable. The Ruby-side migration tooling is kept
+(rewritten, see below) rather than deleted, as a permanent safety net for any environment this
+doesn't hold true for.
+
+- `frontend/tools/wysiwygConversion.js` + `wysiwygConversion.test.js` (whole files): the
+  `convertWysiwyg` / `tryParseDraftRaw` / `isDraftJsRaw` / `wysiwygToHtml` / `wysiwygToEditableHtml`
+  module. With no format left to detect, every export collapsed to `x ?? ""` — not worth a named
+  module, so its 3 call sites inline the null-coalescing instead: `common/RichTextViewer.tsx`,
+  `parameters/ActivityApplications/ApplicationStepParameters.jsx`,
+  `parameters/Payments/EditPaymentScheduleOptions.jsx`. The two parameter editors'
+  now-unreachable "conversion failed" `swal` branch went with it, and with that its locale keys
+  `parameters:activityApplications.stepParams.contentConversionError` and
+  `parameters:payments.scheduleOptions.errors.contentConversionError` (fr + en).
+- `frontend/tools/wysiwygConversionCli.js` + `wysiwygConversionCli.test.js`: the Node-CLI-bridge
+  half of the migration tool (stdin raw UTF-8 → stdout `{isDraftJs, html, failed}`), deleted along
+  with `draft-js`/`draftjs-to-html` themselves. Confirmed no other invoker of the CLI script in
+  `Dockerfile`, `docker-compose.yml`, `Procfile`, `.github/`, `bin/`, `config/`, `db/`, `app/` or
+  `test/` besides the rake task below.
+- `lib/elvis/wysiwyg_converter.rb`, `lib/elvis/wysiwyg_content_migrator.rb` and the
+  `elvis:migrate_wysiwyg_content` task in `lib/tasks/elvis.rake` are **not** deleted — they were
+  rewritten as a pure-Ruby port of draftjs-to-html's output (no Node/npm involved at all) and kept
+  permanently as a safety net, in case some environment's `Parameter` rows were never actually
+  migrated. Safe to leave wired up indefinitely: it only touches the 3 known labels
+  (`payment_step.display_text`, `pricing_info_application.display_text`,
+  `availability_info_application.display_text`), is a clean no-op on a blank or already-HTML
+  value, and has no dependency to go stale. `spec/lib/elvis/wysiwyg_converter_spec.rb` pins its
+  output against golden fixtures captured once from real `draftjs-to-html@0.9.1`/`draft-js@0.11.7`
+  (in a disposable scratch project, not part of this repo);
+  `spec/lib/migrate_wysiwyg_content_rake_task_spec.rb` covers the task's DB/idempotency logic.
+- `frontend/components/utils/WysiwygViewer.tsx` (whole file): the original Draft.js-based viewer,
+  superseded by `common/RichTextViewer.tsx`. Zero importers and zero
+  `react_component("...WysiwygViewer"...)` mounts in `app/views/` — every former call site
+  (`ActivityChoice.jsx`, `Validation.jsx`, `WrappedPayerPaymentTerms.jsx`,
+  `availability/AvailabilityManager.jsx`, `FormulaChoice.jsx`) had already moved to
+  `RichTextViewer`. It imported both packages directly, so it was also a hard blocker for dropping
+  them.
+
+Removed `"draft-js"` and `"draftjs-to-html"` from `package.json`; `yarn install` then dropped them
+and their exclusively-owned transitive deps from `yarn.lock` (97 lines removed, 0 added): `asap`,
+`core-js@^3.6.4`, `cross-fetch`, `fbjs`, `fbjs-css-vars`, `immutable@~3.7.4`, `node-fetch@^2.6.12`,
+`promise@^7.1.1`, `setimmediate@^1.0.5`, `tr46@~0.0.3`, `ua-parser-js@^0.7.18`,
+`webidl-conversions@^3.0.0`, `whatwg-url@^5.0.0`. Verified afterwards with `yarn why`: `fbjs` is
+gone entirely, while `immutable` (now `5.1.9`, via `sass`) and `object-assign` (via `prop-types`,
+`@rsdoctor/*`, `i18next-parser`) survive on unrelated consumers.
+
+**Deliberately KEPT — do not "clean up" later:** `InsCompatibleUnderline` in
+`frontend/components/common/TipTapEditor.tsx` and its `TipTapEditor.test.tsx` coverage. The
+migration converted content *through* `draftjs-to-html`, which serializes Draft's UNDERLINE as
+`<ins>` rather than `<u>`, so `<ins>` tags are now permanently baked into the migrated HTML in the
+DB. That `parseHTML` extension is therefore *more* necessary after the migration, not less —
+removing it would silently drop every underline the first time such content is opened and saved.
+Remaining `draft`/`draftjs` mentions under `frontend/` are accurate historical comments only.
+
 ## Deliberately NOT touched (all audits)
 
 Real, live issues — not dead code, don't delete:

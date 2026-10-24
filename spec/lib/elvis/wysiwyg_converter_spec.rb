@@ -2,226 +2,355 @@
 
 require "rails_helper"
 
-# Direct coverage for Elvis::WysiwygConverter's own strict stdout-contract validation and its
-# node-invocation plumbing (timeout, ENOENT). The rake-task spec
-# (spec/lib/migrate_wysiwyg_content_rake_task_spec.rb) stubs this whole class instead, so none
-# of this is covered there. Every example here stubs Open3.popen3 directly -- the primitive
-# capture3_with_timeout is built on (Open3.capture3 itself has no timeout option) -- so these
-# specs are deterministic, exercise the timeout path, and never actually invoke `node`.
+# Coverage for the pure-Ruby Elvis::WysiwygConverter.
+#
+# The golden-fixture section below (from "Golden fixtures" to "Graceful degradation") uses
+# `expected_html` strings that were NOT hand-written: they were captured by running the real
+# `draftjs-to-html@0.9.1` (with `draft-js@0.11.7`'s convertFromRaw/convertToRaw normalization
+# fallback, matching the now-deleted frontend/tools/wysiwygConversion.js's `convertWysiwyg`) against
+# each `raw` input, in a disposable scratch Node project (not part of this repo, discarded after
+# each capture). Treat those strings as ground truth for draftjs-to-html's exact output shape, not
+# as arbitrary expectations. The "Graceful degradation" examples further down are a DELIBERATE
+# exception to that -- see the comment on that section for what the real library actually does
+# there and why this port diverges on purpose.
 RSpec.describe Elvis::WysiwygConverter do
-  let(:wait_thr) { double("wait_thr", pid: 4242) }
-  let(:stdin) { double("stdin", write: nil, close: nil) }
-  let(:stdout_io) { double("stdout_io") }
-  let(:stderr_io) { double("stderr_io") }
-
-  def stub_node_call(stdout:, stderr: "", exitstatus: 0)
-    status = double("status", success?: exitstatus.zero?, exitstatus: exitstatus)
-    allow(wait_thr).to receive(:join).and_return(wait_thr)
-    allow(wait_thr).to receive(:value).and_return(status)
-    allow(stdout_io).to receive(:read).and_return(stdout)
-    allow(stderr_io).to receive(:read).and_return(stderr)
-
-    allow(Open3).to receive(:popen3) do |*_args, **_opts, &block|
-      block.call(stdin, stdout_io, stderr_io, wait_thr)
-    end
+  def raw(blocks:, entity_map: {})
+    { "blocks" => blocks, "entityMap" => entity_map }.to_json
   end
 
-  def stub_node_timeout
-    # First #join call (with the timeout) reports "not finished"; the bare #join used to reap
-    # the process after it's killed succeeds.
-    allow(wait_thr).to receive(:join).and_return(nil, wait_thr)
-    allow(stdout_io).to receive(:read).and_return("")
-    allow(stderr_io).to receive(:read).and_return("")
-    allow(Process).to receive(:kill)
+  def block(key:, text:, type: "unstyled", depth: 0, inline_style_ranges: [], entity_ranges: [])
+    {
+      "key" => key, "text" => text, "type" => type, "depth" => depth,
+      "inlineStyleRanges" => inline_style_ranges, "entityRanges" => entity_ranges, "data" => {}
+    }
+  end
 
-    allow(Open3).to receive(:popen3) do |*_args, **_opts, &block|
-      block.call(stdin, stdout_io, stderr_io, wait_thr)
+  describe ".looks_like_draft_js_raw?" do
+    it "is true for a Draft.js raw-content object (has an Array `blocks` key)" do
+      expect(described_class.looks_like_draft_js_raw?(raw(blocks: []))).to be(true)
+    end
+
+    it "is false for plain HTML" do
+      expect(described_class.looks_like_draft_js_raw?("<p>hello</p>")).to be(false)
+    end
+
+    it "is false for JSON that isn't Draft.js-shaped (no Array `blocks`)" do
+      expect(described_class.looks_like_draft_js_raw?('{"foo":"bar"}')).to be(false)
+      expect(described_class.looks_like_draft_js_raw?('{"blocks":"not-an-array"}')).to be(false)
+    end
+
+    it "is false for other valid-JSON-but-not-an-object values (a bare string/number)" do
+      expect(described_class.looks_like_draft_js_raw?('"just a string"')).to be(false)
+      expect(described_class.looks_like_draft_js_raw?("42")).to be(false)
+    end
+
+    it "is false for nil/blank" do
+      expect(described_class.looks_like_draft_js_raw?(nil)).to be(false)
+      expect(described_class.looks_like_draft_js_raw?("")).to be(false)
     end
   end
 
   describe ".convert" do
-    it "raises ArgumentError for nil input, without touching the bridge" do
-      expect(Open3).not_to receive(:popen3)
+    it "raises ArgumentError for nil input" do
       expect { described_class.convert(nil) }.to raise_error(ArgumentError, /must not be blank/)
     end
 
-    it "raises ArgumentError for an empty string, without touching the bridge" do
-      expect(Open3).not_to receive(:popen3)
+    it "raises ArgumentError for an empty string" do
       expect { described_class.convert("") }.to raise_error(ArgumentError, /must not be blank/)
     end
 
-    it "returns a non-failed, non-Draft.js Result for already-HTML content" do
-      stub_node_call(stdout: '{"isDraftJs":false,"html":"<p>x</p>","failed":false}')
-
-      result = described_class.convert("<p>x</p>")
+    it "returns a non-failed, non-Draft.js Result echoing already-HTML content back as-is" do
+      html = "<p>Already migrated <em>HTML</em>.</p>"
+      result = described_class.convert(html)
 
       expect(result.is_draft_js).to be(false)
-      expect(result.html).to eq("<p>x</p>")
+      expect(result.html).to eq(html)
       expect(result.failed).to be(false)
     end
 
-    it "returns a non-failed, Draft.js Result for content that converts successfully" do
-      stub_node_call(stdout: '{"isDraftJs":true,"html":"<p>hi</p>","failed":false}')
+    it "returns a non-failed Result for plain text (also not Draft.js JSON)" do
+      result = described_class.convert("just plain text, not even HTML")
 
-      result = described_class.convert('{"blocks":[]}')
-
-      expect(result.is_draft_js).to be(true)
-      expect(result.html).to eq("<p>hi</p>")
-      expect(result.failed).to be(false)
+      expect(result.is_draft_js).to be(false)
+      expect(result.html).to eq("just plain text, not even HTML")
     end
 
-    it "invokes node with the CLI script and chdir, and actually writes the input to stdin" do
-      stub_node_call(stdout: '{"isDraftJs":true,"html":"<p>hi</p>","failed":false}')
-      allow(stdin).to receive(:write)
+    it "returns a failed Result, carrying an error_message, when the raw JSON is Draft.js-shaped " \
+       "but genuinely malformed (a block field with the wrong type)" do
+      bad = '{"blocks":[{"key":"b1","text":"hi","inlineStyleRanges":"not-an-array","entityRanges":[]}],"entityMap":{}}'
 
-      described_class.convert('{"blocks":[]}')
-
-      expect(Open3).to have_received(:popen3)
-        .with("node", Rails.root.join("frontend", "tools", "wysiwygConversionCli.js").to_s,
-              chdir: Rails.root.to_s)
-      expect(stdin).to have_received(:write).with('{"blocks":[]}')
-    end
-
-    it "returns a failed Result, carrying stderr, for a genuine conversion failure" do
-      stub_node_call(stdout: '{"isDraftJs":true,"failed":true}', stderr: "double conversion failure\n")
-
-      result = described_class.convert('{"blocks":"broken"}')
+      result = described_class.convert(bad)
 
       expect(result.is_draft_js).to be(true)
       expect(result.html).to be_nil
       expect(result.failed).to be(true)
-      expect(result.stderr).to eq("double conversion failure\n")
+      expect(result.error_message).to be_present
     end
 
-    it "raises BridgeError for a non-zero exit code" do
-      stub_node_call(stdout: "", stderr: "boom", exitstatus: 1)
+    # --- Golden fixtures, captured from real draftjs-to-html@0.9.1 / draft-js@0.11.7 output ---
 
-      expect do
-        described_class.convert("<p>x</p>")
-      end.to raise_error(described_class::BridgeError, /exited with status 1/)
+    it "renders BOLD alone as <strong>" do
+      input = raw(blocks: [block(key: "a1", text: "Hello",
+                                 inline_style_ranges: [{ "offset" => 0, "length" => 5, "style" => "BOLD" }])])
+      expect(described_class.convert(input).html).to eq("<p><strong>Hello</strong></p>\n")
     end
 
-    it "raises BridgeError for unparseable stdout" do
-      stub_node_call(stdout: "not json")
-
-      expect { described_class.convert("<p>x</p>") }.to raise_error(described_class::BridgeError, /unparseable stdout/)
+    it "renders ITALIC alone as <em>" do
+      input = raw(blocks: [block(key: "a2", text: "Hello",
+                                 inline_style_ranges: [{ "offset" => 0, "length" => 5, "style" => "ITALIC" }])])
+      expect(described_class.convert(input).html).to eq("<p><em>Hello</em></p>\n")
     end
 
-    it "raises BridgeError when stdout JSON is not an object" do
-      stub_node_call(stdout: "[1,2,3]")
-
-      expect { described_class.convert("<p>x</p>") }.to raise_error(described_class::BridgeError, /not a JSON object/)
+    it "renders UNDERLINE alone as <ins>, NOT <u> (the TipTapEditor compatibility quirk)" do
+      input = raw(blocks: [block(key: "a3", text: "Hello",
+                                 inline_style_ranges: [{ "offset" => 0, "length" => 5, "style" => "UNDERLINE" }])])
+      expect(described_class.convert(input).html).to eq("<p><ins>Hello</ins></p>\n")
     end
 
-    it "raises BridgeError when 'failed' is missing" do
-      stub_node_call(stdout: '{"isDraftJs":false,"html":"<p>x</p>"}')
-
-      expect do
-        described_class.convert("<p>x</p>")
-      end.to raise_error(described_class::BridgeError, /missing boolean 'failed'/)
+    it "renders STRIKETHROUGH alone as <del>" do
+      input = raw(blocks: [block(key: "a4", text: "Hello",
+                                 inline_style_ranges: [{ "offset" => 0, "length" => 5, "style" => "STRIKETHROUGH" }])])
+      expect(described_class.convert(input).html).to eq("<p><del>Hello</del></p>\n")
     end
 
-    it "raises BridgeError when 'failed' is not a boolean" do
-      stub_node_call(stdout: '{"isDraftJs":false,"html":"<p>x</p>","failed":"no"}')
-
-      expect do
-        described_class.convert("<p>x</p>")
-      end.to raise_error(described_class::BridgeError, /missing boolean 'failed'/)
+    it "nests overlapping BOLD+ITALIC+UNDERLINE in draftjs-to-html's fixed order regardless of " \
+       "the order the ranges were given in" do
+      input = raw(blocks: [block(key: "b1", text: "Hello", inline_style_ranges: [
+                                   { "offset" => 0, "length" => 5, "style" => "BOLD" },
+                                   { "offset" => 0, "length" => 5, "style" => "ITALIC" },
+                                   { "offset" => 0, "length" => 5, "style" => "UNDERLINE" }
+                                 ])])
+      expect(described_class.convert(input).html).to eq("<p><strong><em><ins>Hello</ins></em></strong></p>\n")
     end
 
-    it "raises BridgeError when 'isDraftJs' is missing" do
-      stub_node_call(stdout: '{"html":"<p>x</p>","failed":false}')
-
-      expect do
-        described_class.convert("<p>x</p>")
-      end.to raise_error(described_class::BridgeError, /missing boolean 'isDraftJs'/)
+    it "nests all 4 overlapping styles outer-to-inner as STRIKETHROUGH > BOLD > ITALIC > UNDERLINE, " \
+       "even when the ranges are given in a different order" do
+      input = raw(blocks: [block(key: "x1", text: "Hello", inline_style_ranges: [
+                                   { "offset" => 0, "length" => 5, "style" => "UNDERLINE" },
+                                   { "offset" => 0, "length" => 5, "style" => "STRIKETHROUGH" },
+                                   { "offset" => 0, "length" => 5, "style" => "BOLD" },
+                                   { "offset" => 0, "length" => 5, "style" => "ITALIC" }
+                                 ])])
+      expect(described_class.convert(input).html).to eq(
+        "<p><del><strong><em><ins>Hello</ins></em></strong></del></p>\n"
+      )
     end
 
-    it "raises BridgeError when 'isDraftJs' is not a boolean" do
-      stub_node_call(stdout: '{"isDraftJs":"yes","html":"<p>x</p>","failed":false}')
-
-      expect do
-        described_class.convert("<p>x</p>")
-      end.to raise_error(described_class::BridgeError, /missing boolean 'isDraftJs'/)
+    it "applies a style to only part of a block's text (partial range)" do
+      input = raw(blocks: [block(key: "c1", text: "Hello world",
+                                 inline_style_ranges: [{ "offset" => 0, "length" => 5, "style" => "BOLD" }])])
+      expect(described_class.convert(input).html).to eq("<p><strong>Hello</strong> world</p>\n")
     end
 
-    it "raises BridgeError for the contract-forbidden failed:true + isDraftJs:false combination" do
-      stub_node_call(stdout: '{"isDraftJs":false,"failed":true}')
-
-      expect { described_class.convert("<p>x</p>") }.to raise_error(described_class::BridgeError, /contract forbids/)
-    end
-
-    it "raises BridgeError when 'html' is missing on a non-failed result" do
-      stub_node_call(stdout: '{"isDraftJs":false,"failed":false}')
-
-      expect do
-        described_class.convert("<p>x</p>")
-      end.to raise_error(described_class::BridgeError, /missing string 'html'/)
-    end
-
-    it "raises BridgeError when 'html' is not a String on a non-failed result" do
-      stub_node_call(stdout: '{"isDraftJs":false,"html":123,"failed":false}')
-
-      expect do
-        described_class.convert("<p>x</p>")
-      end.to raise_error(described_class::BridgeError, /missing string 'html'/)
-    end
-
-    it "raises BridgeError when node itself is not found" do
-      allow(Open3).to receive(:popen3).and_raise(Errno::ENOENT, "No such file or directory - node")
-
-      expect do
-        described_class.convert("<p>x</p>")
-      end.to raise_error(described_class::BridgeError, /failed to invoke node/)
-    end
-
-    it "kills and reaps a wedged child and raises BridgeError instead of hanging forever" do
-      stub_node_timeout
-
-      expect { described_class.convert("<p>x</p>") }.to raise_error(described_class::BridgeError, /timed out/)
-      expect(Process).to have_received(:kill).with("KILL", wait_thr.pid)
-    end
-
-    it "raises BridgeError (not an uncaught Errno::EPIPE) when the child dies before draining " \
-       "stdin, e.g. a corrupted CLI script that fails to parse" do
-      large_input = "x" * 70_000 # over a pipe buffer (~64KB) so the write doesn't just fit silently
-      status = double("status", success?: false, exitstatus: 1)
-
-      allow(wait_thr).to receive(:join).and_return(wait_thr)
-      allow(wait_thr).to receive(:value).and_return(status)
-      allow(stdout_io).to receive(:read).and_return("")
-      allow(stderr_io).to receive(:read).and_return("SyntaxError: Unexpected token")
-      allow(stdin).to receive(:write).with(large_input).and_raise(Errno::EPIPE)
-
-      allow(Open3).to receive(:popen3) do |*_args, **_opts, &block|
-        block.call(stdin, stdout_io, stderr_io, wait_thr)
+    {
+      "unstyled" => "<p>Some text</p>\n",
+      "header-one" => "<h1>Some text</h1>\n",
+      "header-two" => "<h2>Some text</h2>\n",
+      "header-three" => "<h3>Some text</h3>\n",
+      "header-four" => "<h4>Some text</h4>\n",
+      "header-five" => "<h5>Some text</h5>\n",
+      "header-six" => "<h6>Some text</h6>\n",
+      "blockquote" => "<blockquote>Some text</blockquote>\n"
+    }.each do |type, expected_html|
+      it "renders block type #{type.inspect} as #{expected_html.inspect}" do
+        input = raw(blocks: [block(key: "d", text: "Some text", type: type)])
+        expect(described_class.convert(input).html).to eq(expected_html)
       end
-
-      expect do
-        described_class.convert(large_input)
-      end.to raise_error(described_class::BridgeError, /exited with status 1/)
-    end
-  end
-
-  describe ".ensure_available!" do
-    it "does not raise when the script exists and the canary round-trips per contract" do
-      stub_node_call(stdout: '{"isDraftJs":false,"html":"<p>x</p>","failed":false}')
-
-      expect { described_class.ensure_available! }.not_to raise_error
     end
 
-    it "raises BridgeError when the script file is missing" do
-      allow(File).to receive(:exist?).and_wrap_original do |original, path|
-        path.to_s.end_with?("wysiwygConversionCli.js") ? false : original.call(path)
-      end
-
-      expect { described_class.ensure_available! }.to raise_error(described_class::BridgeError, /script not found/)
+    it "wraps a single unordered-list-item block in <ul><li>" do
+      input = raw(blocks: [block(key: "e1", text: "Item one", type: "unordered-list-item")])
+      expect(described_class.convert(input).html).to eq("<ul>\n<li>Item one</li>\n</ul>\n")
     end
 
-    it "raises BridgeError when the canary does not round-trip per contract" do
-      stub_node_call(stdout: '{"isDraftJs":true,"html":"<p>x</p>","failed":false}')
+    it "wraps a single ordered-list-item block in <ol><li>" do
+      input = raw(blocks: [block(key: "e2", text: "Item one", type: "ordered-list-item")])
+      expect(described_class.convert(input).html).to eq("<ol>\n<li>Item one</li>\n</ol>\n")
+    end
 
-      expect { described_class.ensure_available! }.to raise_error(described_class::BridgeError, /canary check failed/)
+    it "groups 3 consecutive unordered-list-item blocks into one <ul> with 3 <li>s" do
+      input = raw(blocks: [
+                    block(key: "f1", text: "First", type: "unordered-list-item"),
+                    block(key: "f2", text: "Second", type: "unordered-list-item"),
+                    block(key: "f3", text: "Third", type: "unordered-list-item")
+                  ])
+      expect(described_class.convert(input).html).to eq(
+        "<ul>\n<li>First</li>\n<li>Second</li>\n<li>Third</li>\n</ul>\n"
+      )
+    end
+
+    it "groups 3 consecutive ordered-list-item blocks into one <ol> with 3 <li>s" do
+      input = raw(blocks: [
+                    block(key: "g1", text: "First", type: "ordered-list-item"),
+                    block(key: "g2", text: "Second", type: "ordered-list-item"),
+                    block(key: "g3", text: "Third", type: "ordered-list-item")
+                  ])
+      expect(described_class.convert(input).html).to eq(
+        "<ol>\n<li>First</li>\n<li>Second</li>\n<li>Third</li>\n</ol>\n"
+      )
+    end
+
+    it "splits two unordered-list-item groups into separate <ul>s when a paragraph interrupts them" do
+      input = raw(blocks: [
+                    block(key: "h1", text: "A", type: "unordered-list-item"),
+                    block(key: "h2", text: "B", type: "unordered-list-item"),
+                    block(key: "h3", text: "Between"),
+                    block(key: "h4", text: "C", type: "unordered-list-item")
+                  ])
+      expect(described_class.convert(input).html).to eq(
+        "<ul>\n<li>A</li>\n<li>B</li>\n</ul>\n<p>Between</p>\n<ul>\n<li>C</li>\n</ul>\n"
+      )
+    end
+
+    it "switches tag mid-run when unordered/ordered list items are adjacent with no separator block" do
+      input = raw(blocks: [
+                    block(key: "m1", text: "U1", type: "unordered-list-item"),
+                    block(key: "m2", text: "U2", type: "unordered-list-item"),
+                    block(key: "m3", text: "O1", type: "ordered-list-item"),
+                    block(key: "m4", text: "O2", type: "ordered-list-item")
+                  ])
+      expect(described_class.convert(input).html).to eq(
+        "<ul>\n<li>U1</li>\n<li>U2</li>\n</ul>\n<ol>\n<li>O1</li>\n<li>O2</li>\n</ol>\n"
+      )
+    end
+
+    it "groups a run of mixed-depth unordered-list-item blocks (indent/outdent) into a nested " \
+       "<ul>, recursing one sub-list per depth increase -- both old editor toolbars left " \
+       "react-draft-wysiwyg's indent/outdent buttons enabled, so depth > 0 is real, reachable data" do
+      input = raw(blocks: [
+                    block(key: "n1", text: "Top", type: "unordered-list-item", depth: 0),
+                    block(key: "n2", text: "Nested", type: "unordered-list-item", depth: 1),
+                    block(key: "n3", text: "Top2", type: "unordered-list-item", depth: 0)
+                  ])
+      expect(described_class.convert(input).html).to eq(
+        "<ul>\n<li>Top</li>\n<ul>\n<li>Nested</li>\n</ul>\n<li>Top2</li>\n</ul>\n"
+      )
+    end
+
+    it "handles multiple levels of nesting (depth 0/1/2/1/0), recursing one sub-list per level" do
+      input = raw(blocks: [
+                    block(key: "d0", text: "L0a", type: "unordered-list-item", depth: 0),
+                    block(key: "d1", text: "L1a", type: "unordered-list-item", depth: 1),
+                    block(key: "d2", text: "L2", type: "unordered-list-item", depth: 2),
+                    block(key: "d3", text: "L1b", type: "unordered-list-item", depth: 1),
+                    block(key: "d4", text: "L0b", type: "unordered-list-item", depth: 0)
+                  ])
+      expect(described_class.convert(input).html).to eq(
+        "<ul>\n<li>L0a</li>\n<ul>\n<li>L1a</li>\n<ul>\n<li>L2</li>\n</ul>\n<li>L1b</li>\n</ul>\n<li>L0b</li>\n</ul>\n"
+      )
+    end
+
+    it "sorts entity ranges by offset before building sections, regardless of the order they " \
+       "appear in `entityRanges` (both links point correctly even though the 2nd range -- Beta " \
+       "-- is listed first in the input)" do
+      input = raw(
+        blocks: [block(key: "e1", text: "Alpha Beta", entity_ranges: [
+                         { "offset" => 6, "length" => 4, "key" => 1 },
+                         { "offset" => 0, "length" => 5, "key" => 0 }
+                       ])],
+        entity_map: {
+          "0" => { "type" => "LINK", "data" => { "url" => "https://alpha.example" } },
+          "1" => { "type" => "LINK", "data" => { "url" => "https://beta.example" } }
+        }
+      )
+      expect(described_class.convert(input).html).to eq(
+        "<p><a href=\"https://alpha.example\" target=\"_self\">Alpha</a> " \
+        "<a href=\"https://beta.example\" target=\"_self\">Beta</a></p>\n"
+      )
+    end
+
+    it "renders a LINK entity as <a href=... target=\"_self\">, defaulting target to _self" do
+      input = raw(
+        blocks: [block(key: "i1", text: "Click here", entity_ranges: [{ "offset" => 0, "length" => 10, "key" => 0 }])],
+        entity_map: { "0" => { "type" => "LINK", "mutability" => "MUTABLE", "data" => { "url" => "https://example.com" } } }
+      )
+      expect(described_class.convert(input).html).to eq(
+        "<p><a href=\"https://example.com\" target=\"_self\">Click here</a></p>\n"
+      )
+    end
+
+    it "renders inline styles applied partially inside a LINK entity's range, nested inside the <a>" do
+      input = raw(
+        blocks: [block(
+          key: "p1", text: "Click here",
+          inline_style_ranges: [{ "offset" => 0, "length" => 5, "style" => "BOLD" }],
+          entity_ranges: [{ "offset" => 0, "length" => 10, "key" => 0 }]
+        )],
+        entity_map: { "0" => { "type" => "LINK", "mutability" => "MUTABLE", "data" => { "url" => "https://example.com" } } }
+      )
+      expect(described_class.convert(input).html).to eq(
+        "<p><a href=\"https://example.com\" target=\"_self\"><strong>Click</strong> here</a></p>\n"
+      )
+    end
+
+    it "renders a blank block as an empty paragraph" do
+      input = raw(blocks: [block(key: "j1", text: "")])
+      expect(described_class.convert(input).html).to eq("<p></p>\n")
+    end
+
+    it "renders a plain unstyled paragraph with no styles or entities" do
+      input = raw(blocks: [block(key: "k1", text: "Just plain text.")])
+      expect(described_class.convert(input).html).to eq("<p>Just plain text.</p>\n")
+    end
+
+    it "HTML-escapes &, <, > and converts an embedded newline to <br>" do
+      input = raw(blocks: [block(key: "n1", text: "A & B <tag>\nnext line")])
+      expect(described_class.convert(input).html).to eq("<p>A &amp; B &lt;tag&gt;<br>next line</p>\n")
+    end
+
+    it "replaces leading and trailing literal spaces with &nbsp;" do
+      input = raw(blocks: [block(key: "o1", text: "  padded  ")])
+      expect(described_class.convert(input).html).to eq("<p>&nbsp;&nbsp;padded&nbsp;&nbsp;</p>\n")
+    end
+
+    # --- Graceful degradation outside the supported subset ---
+    #
+    # None of these 3 cases are reachable with this app's actual toolbar config (no "atomic"
+    # block type, no IMAGE/MENTION/etc entities, no CODE/SUPERSCRIPT/SUBSCRIPT/color- inline
+    # styles were ever offered), so unlike the golden-fixture section above, the expectations
+    # here are NOT what the real draftjs-to-html@0.9.1 library does -- this port deliberately
+    # diverges, on purpose, rather than replicating real behavior that's unreachable anyway:
+    #   - atomic block type: the real library renders NOTHING for the block's text (it expects
+    #     an entity to supply the content, e.g. an image) -- this port renders it as a plain
+    #     paragraph instead of silently dropping the text.
+    #   - IMAGE entity: the real library renders a (broken, since no real `src`/`alt`/dimensions
+    #     were supplied) `<img>`/`<div>` -- this port renders the entity's plain text with no
+    #     entity markup instead of emitting a broken image tag.
+    #   - CODE inline style: the real library wraps it in `<code>` -- this port ignores the style
+    #     and renders plain text, since no toolbar in this app ever offered CODE.
+    # Each case also logs a warning (surfaced both via Rails.logger and via Result#warnings, so
+    # whoever is running the rake task sees it on stdout too) -- if one of these ever fires on
+    # real data, that's the signal something assumed-unreachable just became reachable.
+
+    it "degrades an unrecognized block type to a plain paragraph instead of the real library's " \
+       "behavior (dropping the text entirely), with a warning on both Rails.logger and Result#warnings" do
+      input = raw(blocks: [block(key: "q1", text: "Weird", type: "atomic")])
+      expect(Rails.logger).to receive(:warn).with(/unrecognized block type/)
+      result = described_class.convert(input)
+      expect(result.html).to eq("<p>Weird</p>\n")
+      expect(result.warnings).to include(/unrecognized block type/)
+    end
+
+    it "degrades an unrecognized entity type by skipping its markup instead of the real " \
+       "library's broken <img> output, with a warning on both Rails.logger and Result#warnings" do
+      input = raw(
+        blocks: [block(key: "r1", text: "An image", entity_ranges: [{ "offset" => 0, "length" => 8, "key" => 0 }])],
+        entity_map: { "0" => { "type" => "IMAGE", "data" => { "src" => "x.png" } } }
+      )
+      expect(Rails.logger).to receive(:warn).with(/unrecognized entity type/)
+      result = described_class.convert(input)
+      expect(result.html).to eq("<p>An image</p>\n")
+      expect(result.warnings).to include(/unrecognized entity type/)
+    end
+
+    it "degrades an unrecognized inline style by ignoring it instead of the real library's " \
+       "<code> wrapping, with a warning on both Rails.logger and Result#warnings" do
+      input = raw(blocks: [block(key: "s1", text: "Hello",
+                                 inline_style_ranges: [{ "offset" => 0, "length" => 5, "style" => "CODE" }])])
+      expect(Rails.logger).to receive(:warn).with(/unrecognized inline style/)
+      result = described_class.convert(input)
+      expect(result.html).to eq("<p>Hello</p>\n")
+      expect(result.warnings).to include(/unrecognized inline style/)
     end
   end
 end

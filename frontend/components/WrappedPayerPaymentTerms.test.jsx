@@ -31,32 +31,6 @@ test("renders paymentStepDisplayText (plain HTML) through RichTextViewer", () =>
     expect(screen.getByText("Please pay on time")).toBeInTheDocument();
 });
 
-test("renders paymentStepDisplayText (legacy Draft.js JSON) through RichTextViewer", () => {
-    const draftRawJson = JSON.stringify({
-        blocks: [
-            {
-                key: "a",
-                text: "Legacy content",
-                type: "unstyled",
-                depth: 0,
-                inlineStyleRanges: [],
-                entityRanges: [],
-                data: {},
-            },
-        ],
-        entityMap: {},
-    });
-
-    render(
-        <WrappedPayerPaymentTerms
-            {...baseProps}
-            paymentStepDisplayText={draftRawJson}
-        />
-    );
-
-    expect(screen.getByText("Legacy content")).toBeInTheDocument();
-});
-
 test("renders nothing extra when paymentStepDisplayText is absent", () => {
     const { container } = render(
         <WrappedPayerPaymentTerms

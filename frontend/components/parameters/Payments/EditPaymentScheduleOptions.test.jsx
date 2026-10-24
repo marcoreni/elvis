@@ -1,14 +1,10 @@
 // Phase 4c: EditPaymentScheduleOptions swapped its react-draft-wysiwyg `Editor` for
-// `TipTapEditor`. The `Parameter` row it loads from (`display_text`) may still hold OLD Draft.js
-// raw JSON (Phase 4d's DB migration hasn't run everywhere yet), so loading must go through
-// `wysiwygToHtml` -- covered here by (a) a Draft.js-JSON response, (b) an already-migrated
-// plain-HTML response. Saving must POST plain HTML, not Draft.js JSON.
+// `TipTapEditor`. `display_text` is plain HTML; saving must POST plain HTML back.
 
 import React from "react";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import i18n from "../../../i18n";
-import swal from "sweetalert2";
 import EditPaymentScheduleOptions from "./EditPaymentScheduleOptions";
 
 vi.mock("sweetalert2", () => ({
@@ -58,31 +54,7 @@ function getEditorContent(container) {
 
 const baseResponse = { data: [], activated: true, index: [] };
 
-test("loads a Draft.js-JSON display_text and renders it as HTML in the editor", async () => {
-    const { container } = render(<EditPaymentScheduleOptions />);
-
-    const draftRawJson = JSON.stringify({
-        blocks: [
-            {
-                key: "a",
-                text: "Legacy terms",
-                type: "unstyled",
-                depth: 0,
-                inlineStyleRanges: [],
-                entityRanges: [],
-                data: {},
-            },
-        ],
-        entityMap: {},
-    });
-    apiState.lastSuccess({ ...baseResponse, display_text: draftRawJson });
-
-    await waitFor(() =>
-        expect(getEditorContent(container)).toHaveTextContent("Legacy terms")
-    );
-});
-
-test("loads an already-migrated plain-HTML display_text correctly", async () => {
+test("loads an existing HTML display_text into the editor", async () => {
     const { container } = render(<EditPaymentScheduleOptions />);
 
     apiState.lastSuccess({
@@ -95,26 +67,15 @@ test("loads an already-migrated plain-HTML display_text correctly", async () => 
     );
 });
 
-test("saving posts plain HTML (not Draft.js JSON) as display_text, even when loaded from legacy Draft.js JSON", async () => {
+test("saving posts the edited HTML as display_text", async () => {
     const { container } = render(<EditPaymentScheduleOptions />);
-    const draftRawJson = JSON.stringify({
-        blocks: [
-            {
-                key: "a",
-                text: "Legacy terms",
-                type: "unstyled",
-                depth: 0,
-                inlineStyleRanges: [],
-                entityRanges: [],
-                data: {},
-            },
-        ],
-        entityMap: {},
+    apiState.lastSuccess({
+        ...baseResponse,
+        display_text: "<p>Existing terms</p>",
     });
-    apiState.lastSuccess({ ...baseResponse, display_text: draftRawJson });
 
     await waitFor(() =>
-        expect(getEditorContent(container)).toHaveTextContent("Legacy terms")
+        expect(getEditorContent(container)).toHaveTextContent("Existing terms")
     );
 
     // The mount GET's success handler also sets `paymentScheduleOptionsActivated`, which fires
@@ -134,33 +95,5 @@ test("saving posts plain HTML (not Draft.js JSON) as display_text, even when loa
     expect(apiState.lastPost.url).toBe(
         "/payment_schedule_options/display_text"
     );
-    expect(apiState.lastPost.data.display_text).toContain("Legacy terms");
-    expect(apiState.lastPost.data.display_text).not.toMatch(/^\s*\{/);
-});
-
-test("a genuinely malformed Draft.js JSON shows an error and does not load garbage into the editor", async () => {
-    const { container } = render(<EditPaymentScheduleOptions />);
-    // Well-formed enough to be *detected* as Draft.js JSON (has a `blocks` array), but
-    // `inlineStyleRanges` is the wrong type -- fails both draftToHtml directly AND after
-    // draft-js's own convertFromRaw/convertToRaw normalization.
-    const malformed = JSON.stringify({
-        blocks: [
-            {
-                text: "x",
-                type: "unstyled",
-                inlineStyleRanges: "not-an-array",
-            },
-        ],
-        entityMap: {},
-    });
-
-    apiState.lastSuccess({ ...baseResponse, display_text: malformed });
-
-    await waitFor(() => expect(swal.fire).toHaveBeenCalled());
-    expect(swal.fire.mock.calls[0][0].title).toBe(
-        i18n.t(
-            "parameters:payments.scheduleOptions.errors.contentConversionError"
-        )
-    );
-    expect(getEditorContent(container)).toHaveTextContent("");
+    expect(apiState.lastPost.data.display_text).toContain("Existing terms");
 });

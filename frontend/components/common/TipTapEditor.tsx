@@ -46,12 +46,12 @@ const EMOJI_OPTIONS = [
 
 const HEADING_LEVELS = [1, 2, 3, 4, 5, 6] as const;
 
-// draftjs-to-html (used by RichTextViewer to render legacy Draft.js content,
-// and still relevant here because this editor must round-trip content a user
-// opens for editing) serializes Draft's UNDERLINE style as `<ins>`, not
-// `<u>`. @tiptap/extension-underline's default parseHTML only recognizes
-// `<u>`/`text-decoration: underline`, so without this it would silently
-// drop every underline the first time such content is opened and saved.
+// Legacy content migrated from Draft.js (via draftjs-to-html, now removed)
+// serialized its UNDERLINE style as `<ins>`, not `<u>`, and that HTML is
+// permanently stored as-is. @tiptap/extension-underline's default parseHTML
+// only recognizes `<u>`/`text-decoration: underline`, so without this it
+// would silently drop every underline the first time such content is
+// opened and saved.
 const InsCompatibleUnderline = Underline.extend({
     parseHTML() {
         return [...(this.parent?.() ?? []), { tag: "ins" }];

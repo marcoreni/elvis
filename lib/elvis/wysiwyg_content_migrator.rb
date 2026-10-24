@@ -1,11 +1,15 @@
 # frozen_string_literal: true
 
 module Elvis
-  # Owns the DB reads/writes/logging for the one-time `elvis:migrate_wysiwyg_content` rake task
+  # Owns the DB reads/writes/logging for the `elvis:migrate_wysiwyg_content` rake task
   # (lib/tasks/elvis.rake) -- the task itself only sets up ENV/logger and calls #run!. Pulled out
   # so this logic (DRY_RUN parsing, duplicate-label handling, the lost-update guard, the
   # value_type guard, the end-of-run safety scan) gets normal RSpec coverage instead of only
   # Rake::Task#invoke coverage.
+  #
+  # Kept permanently as a safety net (not a one-time migration run once and deleted): it is pure
+  # Ruby (Elvis::WysiwygConverter has no Node/npm dependency) and a clean no-op on any environment
+  # where every row has already been converted -- see docs/OrphanedCode.md.
   class WysiwygContentMigrator
     KNOWN_LABELS = %w[
       payment_step.display_text
@@ -15,11 +19,11 @@ module Elvis
 
     # Values that, despite being non-empty, must NOT enable dry-run -- everything else non-empty
     # does. This deliberately biases towards "accidentally previewed" over "accidentally wrote":
-    # on a one-time production migration, a DRY_RUN=true/yes/on typo must still preview, not
-    # silently fall through to a real write.
+    # on a production run, a DRY_RUN=true/yes/on typo must still preview, not silently fall
+    # through to a real write.
     FALSY_VALUES = %w[0 false no off].freeze
 
-    STDERR_LOG_LIMIT = 2000
+    ERROR_MESSAGE_LOG_LIMIT = 2000
 
     def self.dry_run?(env_value)
       return false if env_value.nil?
@@ -32,11 +36,9 @@ module Elvis
       !FALSY_VALUES.include?(value.downcase)
     end
 
-    def initialize(dry_run:, logger:, prefix: "", task_name: "elvis:migrate_wysiwyg_content")
+    def initialize(dry_run:, logger:)
       @dry_run = dry_run
       @logger = logger
-      @prefix = prefix
-      @task_name = task_name
     end
 
     def run!
@@ -46,7 +48,7 @@ module Elvis
 
     private
 
-    attr_reader :dry_run, :logger, :prefix, :task_name
+    attr_reader :dry_run, :logger
 
     def process_label(label)
       parameters = Parameter.where(label: label).order(:id).to_a
@@ -76,7 +78,8 @@ module Elvis
         return
       end
 
-      result = convert_or_abort(value, name: name)
+      result = Elvis::WysiwygConverter.convert(value)
+      result.warnings.each { |warning| logger.warn "#{name}: #{warning}" }
 
       unless result.is_draft_js
         logger.info "#{name}: already HTML/plain, skipping"
@@ -84,7 +87,7 @@ module Elvis
       end
 
       if result.failed
-        reason = result.stderr.present? ? " -- #{truncate(result.stderr)}" : ""
+        reason = result.error_message.present? ? " -- #{truncate(result.error_message)}" : ""
         logger.error "#{name}: Draft.js content FAILED to convert#{reason} -- left untouched, " \
                      "needs human investigation"
         return
@@ -100,12 +103,6 @@ module Elvis
       end
 
       write_converted_value(parameter, name: name, original_value: value, result: result)
-    end
-
-    def convert_or_abort(value, name:)
-      Elvis::WysiwygConverter.convert(value)
-    rescue Elvis::WysiwygConverter::BridgeError => e
-      abort "#{prefix}#{task_name}: aborting, the wysiwyg conversion bridge failed on #{name}: #{e.message}"
     end
 
     # Guards against a lost update: `parameter.value` was read tens of ms ago, so an admin save
@@ -150,7 +147,7 @@ module Elvis
       end
     end
 
-    def truncate(text, limit: STDERR_LOG_LIMIT)
+    def truncate(text, limit: ERROR_MESSAGE_LOG_LIMIT)
       text = text.strip
       text.length > limit ? "#{text[0, limit]}... (truncated, #{text.length} bytes total)" : text
     end

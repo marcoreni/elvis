@@ -1,166 +1,316 @@
 # frozen_string_literal: true
 
-require "open3"
+require "json"
 
 module Elvis
-  # Bridges to the Node CLI (frontend/tools/wysiwygConversionCli.js) that performs the
-  # Draft.js-raw-JSON -> HTML conversion already reviewed/tested on the frontend side (see
-  # frontend/tools/wysiwygConversion.js's `convertWysiwyg`). This class deliberately does not
-  # reimplement that conversion, or its Draft.js-format detection, in Ruby -- see the seam
-  # contract documented at the top of the CLI script and in
-  # lib/tasks/elvis.rake's `elvis:migrate_wysiwyg_content` task, the only caller.
+  # Pure-Ruby Draft.js-raw-JSON -> HTML converter, restricted to the subset of Draft.js that this
+  # app's (now removed) WYSIWYG toolbars ever produced: inline styles BOLD/ITALIC/UNDERLINE/
+  # STRIKETHROUGH, block types unstyled/header-one..six/blockquote/unordered-list-item/
+  # ordered-list-item (including indented/nested list items -- both old toolbars left
+  # react-draft-wysiwyg's indent/outdent buttons enabled), and LINK entities only. No Node/npm
+  # dependency -- this replaces the old Node-bridge version (which shelled out to
+  # draftjs-to-html/draft-js) now that those packages are gone; see docs/OrphanedCode.md.
+  #
+  # The exact markup shape (tag names, nesting order for overlapping inline styles, `<ins>` for
+  # UNDERLINE, list grouping/nesting, leading/trailing-space -> &nbsp;, entity `target` default)
+  # was ported from reading draftjs-to-html@0.9.1's source and cross-checked against real output
+  # from draft-js@0.11.7 + draftjs-to-html@0.9.1 in a disposable scratch project (see
+  # spec/lib/elvis/wysiwyg_converter_spec.rb for the captured golden fixtures and provenance
+  # comment). Anything outside the supported subset degrades gracefully (unrecognized block type
+  # -> plain paragraph, unrecognized entity type -> text without entity markup, unrecognized
+  # inline style -> ignored) rather than raising -- real data should never hit those paths, but if
+  # it ever does, `Result#warnings` surfaces it to whoever is watching the rake task's own stdout,
+  # not just `Rails.logger`.
   class WysiwygConverter
-    # Raised only when the bridge itself is broken: node/the CLI script missing, a non-zero
-    # exit code, a timeout, or stdout that doesn't match one of the contract's 3 known shapes.
-    # Never raised for "this one row's content failed to convert" -- that's Result#failed, a
-    # legitimate exit-0 verdict.
-    class BridgeError < StandardError; end
+    Result = Struct.new(:is_draft_js, :html, :failed, :error_message, :warnings, keyword_init: true)
 
-    Result = Struct.new(:is_draft_js, :html, :failed, :stderr, keyword_init: true)
+    BLOCK_TAGS = {
+      "unstyled" => "p",
+      "header-one" => "h1",
+      "header-two" => "h2",
+      "header-three" => "h3",
+      "header-four" => "h4",
+      "header-five" => "h5",
+      "header-six" => "h6",
+      "blockquote" => "blockquote"
+    }.freeze
 
-    CLI_SCRIPT_RELATIVE_PATH = File.join("frontend", "tools", "wysiwygConversionCli.js")
+    LIST_BLOCK_TAGS = {
+      "unordered-list-item" => "ul",
+      "ordered-list-item" => "ol"
+    }.freeze
 
-    # Non-Draft.js, non-blank input (the contract forbids blank stdin) used by #ensure_available!
-    # to push a real round-trip through the CLI rather than just checking that `node` exists.
-    CANARY_INPUT = "<p>x</p>"
+    INLINE_STYLE_TAGS = {
+      "BOLD" => "strong",
+      "ITALIC" => "em",
+      "UNDERLINE" => "ins", # deliberate: draftjs-to-html serializes UNDERLINE as <ins>, not <u> --
+      # see frontend/components/common/TipTapEditor.tsx's InsCompatibleUnderline, which exists to
+      # keep reading that already-migrated markup. Must stay <ins> for byte-compatibility.
+      "STRIKETHROUGH" => "del"
+    }.freeze
 
-    # A wedged/hung `node` child would otherwise block the migration rake task forever with no
-    # output. 30s is generous for a single-row conversion -- real rows are a handful of KB.
-    DEFAULT_TIMEOUT_SECONDS = 30
+    # draftjs-to-html wraps overlapping inline styles in this fixed order regardless of the order
+    # they appear in `inlineStyleRanges` -- first entry becomes the innermost tag.
+    INLINE_STYLE_NEST_ORDER = %w[UNDERLINE ITALIC BOLD STRIKETHROUGH].freeze
 
     class << self
-      # Fails loudly and early (call once, before looping over rows) if the bridge can't
-      # possibly run, rather than discovering that per-row. Pushes a real canary value through
-      # the full CLI contract (not just `node --version`) so a broken `node_modules` on a
-      # precompiled-assets-only deploy host is caught here too.
-      # @raise [BridgeError]
-      def ensure_available!
-        script_path = cli_script_path
-        raise BridgeError, "wysiwygConversionCli script not found at #{script_path}" unless File.exist?(script_path)
-
-        result = convert(CANARY_INPUT)
-        return if result.is_draft_js == false && result.failed == false && result.html == CANARY_INPUT
-
-        raise BridgeError, "wysiwygConversionCli canary check failed (expected isDraftJs:false, " \
-                           "failed:false, html==#{CANARY_INPUT.inspect}): got #{result.to_h.inspect}"
+      # @param value [String, nil]
+      # @return [Boolean] does `value` parse as Draft.js raw-content JSON (an object with an
+      #   Array `blocks` key)?
+      def looks_like_draft_js_raw?(value)
+        !try_parse_draft_raw(value).nil?
       end
 
       # @param raw_value [String] the Parameter row's raw `value`. Must not be blank/nil --
-      #   callers must skip blank values without invoking the bridge (per the seam contract).
-      # @return [Result]
-      # @raise [BridgeError] if the bridge itself is broken.
+      #   callers must skip blank values themselves (matching the old bridge's contract).
+      # @return [Result] `warnings` is always an Array (possibly empty) of messages for any
+      #   graceful-degradation path hit during rendering -- already logged to Rails.logger by the
+      #   time this returns, but also handed back so a caller with its own stdout-visible logger
+      #   (the migrator/rake task) can surface them there too.
       def convert(raw_value)
         raise ArgumentError, "raw_value must not be blank" if raw_value.nil? || raw_value.empty?
 
-        stdout, stderr, status =
-          begin
-            capture3_with_timeout("node", cli_script_path, stdin_data: raw_value, chdir: Rails.root.to_s)
-          rescue Errno::ENOENT => e
-            raise BridgeError, "failed to invoke node: #{e.message}"
-          end
+        parsed = try_parse_draft_raw(raw_value)
+        return Result.new(is_draft_js: false, html: raw_value, failed: false, warnings: []) if parsed.nil?
 
-        unless status.success?
-          detail = stderr.present? ? " (stderr: #{stderr.strip})" : ""
-          raise BridgeError, "wysiwygConversionCli exited with status #{status.exitstatus}#{detail}"
+        warnings = []
+
+        begin
+          html = render(parsed, warnings)
+          warnings.each { |w| Rails.logger.warn("[Elvis::WysiwygConverter] #{w}") }
+          Result.new(is_draft_js: true, html: html, failed: false, warnings: warnings)
+        rescue StandardError => e
+          Rails.logger.error("[Elvis::WysiwygConverter] failed to convert Draft.js content: #{e.class}: #{e.message}")
+          Result.new(is_draft_js: true, html: nil, failed: true, error_message: "#{e.class}: #{e.message}",
+                     warnings: warnings)
         end
-
-        Rails.logger.warn("[Elvis::WysiwygConverter] wysiwygConversionCli stderr: #{stderr.strip}") if stderr.present?
-
-        parse_result(stdout, stderr)
       end
 
       private
 
-      def cli_script_path
-        Rails.root.join(CLI_SCRIPT_RELATIVE_PATH).to_s
+      def try_parse_draft_raw(value)
+        return nil if value.nil? || value.empty?
+
+        parsed = JSON.parse(value)
+        return nil unless parsed.is_a?(Hash) && parsed["blocks"].is_a?(Array)
+
+        parsed
+      rescue JSON::ParserError
+        nil
       end
 
-      # Open3.capture3 has no timeout option, so this drives Open3.popen3 directly: stdin is
-      # written and stdout/stderr are read on their own threads (same reason Open3.capture3
-      # itself uses threads -- avoids a deadlock if the child fills a pipe buffer before being
-      # fully read), and `wait_thr.join(timeout)` bounds how long we wait for the child to exit.
-      # On timeout the child is killed and reaped (never left as a zombie) and BridgeError is
-      # raised -- a distinct failure mode from a per-row content failure, which is always exit 0.
-      #
-      # The stdin-writer thread also rescues Errno::EPIPE: a child that dies before draining
-      # stdin (a corrupted checkout, a node version that can't parse the CLI script, an
-      # OOM-killed node) closes its end of the pipe, and writing more than a pipe-buffer's worth
-      # of data (stdin_data over ~64KB -- plausible for a Draft.js row with an embedded base64
-      # image) then raises EPIPE on this thread, which `stdin_writer.join` below would otherwise
-      # re-raise as an uncaught exception instead of the clean BridgeError this bridge promises.
-      # Ruby's own lib/open3.rb wraps capture3's stdin write in the same rescue for the same
-      # reason. The child's death is still surfaced correctly: it exits non-zero, so the
-      # `status.success?` check in #convert raises BridgeError -- this rescue only prevents the
-      # write failure itself from masking that with a raw thread backtrace.
-      def capture3_with_timeout(*cmd, stdin_data: nil, chdir: nil, timeout: DEFAULT_TIMEOUT_SECONDS)
-        opts = {}
-        opts[:chdir] = chdir if chdir
+      def render(parsed, warnings)
+        blocks = parsed["blocks"] || []
+        entity_map = parsed["entityMap"] || {}
+        html = +""
+        pending_list = []
 
-        Open3.popen3(*cmd, **opts) do |stdin, stdout, stderr, wait_thr|
-          stdin_writer = Thread.new do
-            stdin.write(stdin_data) if stdin_data
-          rescue Errno::EPIPE
-            # Child exited/crashed before reading all of stdin -- its non-zero exit status is
-            # what reports this as a BridgeError, not this write failure.
-          ensure
-            stdin.close
-          end
-          stdout_reader = Thread.new { stdout.read }
-          stderr_reader = Thread.new { stderr.read }
-
-          if wait_thr.join(timeout)
-            stdin_writer.join
-            return [stdout_reader.value, stderr_reader.value, wait_thr.value]
+        blocks.each do |block|
+          if LIST_BLOCK_TAGS.key?(block["type"])
+            pending_list << block
+            next
           end
 
-          kill_and_reap(wait_thr)
-          [stdin_writer, stdout_reader, stderr_reader].each(&:kill)
-          raise BridgeError, "wysiwygConversionCli timed out after #{timeout}s and was killed"
+          unless pending_list.empty?
+            html << list_markup(pending_list, entity_map, warnings)
+            pending_list = []
+          end
+          html << block_markup(block, entity_map, warnings)
         end
+
+        html << list_markup(pending_list, entity_map, warnings) unless pending_list.empty?
+        html
       end
 
-      def kill_and_reap(wait_thr)
-        Process.kill("KILL", wait_thr.pid)
-      rescue Errno::ESRCH
-        # Already exited between the join timeout and the kill attempt -- nothing to do.
-      ensure
-        wait_thr.join
+      def block_markup(block, entity_map, warnings)
+        type = block["type"]
+        tag = BLOCK_TAGS[type]
+        if tag.nil?
+          warnings << "unrecognized block type #{type.inspect}; rendering as a plain paragraph"
+          tag = "p"
+        end
+
+        "<#{tag}>#{block_inner_markup(block, entity_map, warnings)}</#{tag}>\n"
       end
 
-      def parse_result(stdout, stderr)
-        parsed = JSON.parse(stdout)
-        unless parsed.is_a?(Hash)
-          raise BridgeError, "wysiwygConversionCli stdout was not a JSON object: #{stdout.inspect}"
-        end
+      # Groups a run of consecutive list-type blocks (no non-list block between them) into
+      # <ul>/<ol>, recursing into a sub-list for any run of deeper `depth` blocks (indent/outdent)
+      # and switching tag whenever the item type changes -- a straight port of draftjs-to-html's
+      # getListMarkup, including its nesting algorithm.
+      def list_markup(list_blocks, entity_map, warnings)
+        html = +""
+        nested_list_block = []
+        previous_block = nil
 
-        failed = parsed["failed"]
-        unless [true, false].include?(failed)
-          raise BridgeError, "wysiwygConversionCli stdout missing boolean 'failed': #{stdout.inspect}"
-        end
+        list_blocks.each do |block|
+          nested_block = false
+          type = block["type"]
 
-        is_draft_js = parsed["isDraftJs"]
-        unless [true, false].include?(is_draft_js)
-          raise BridgeError, "wysiwygConversionCli stdout missing boolean 'isDraftJs': #{stdout.inspect}"
-        end
-
-        if failed
-          unless is_draft_js
-            raise BridgeError, "wysiwygConversionCli reported failed:true but isDraftJs:false, " \
-                               "which the contract forbids: #{stdout.inspect}"
+          if previous_block.nil?
+            html << "<#{LIST_BLOCK_TAGS.fetch(type, 'ul')}>\n"
+          elsif previous_block["type"] != type
+            html << "</#{LIST_BLOCK_TAGS.fetch(previous_block['type'], 'ul')}>\n"
+            html << "<#{LIST_BLOCK_TAGS.fetch(type, 'ul')}>\n"
+          elsif (previous_block["depth"] || 0) == (block["depth"] || 0)
+            unless nested_list_block.empty?
+              html << list_markup(nested_list_block, entity_map, warnings)
+              nested_list_block = []
+            end
+          else
+            nested_block = true
+            nested_list_block << block
           end
 
-          Result.new(is_draft_js: true, html: nil, failed: true, stderr: stderr.presence)
-        else
-          html = parsed["html"]
-          unless html.is_a?(String)
-            raise BridgeError, "wysiwygConversionCli stdout missing string 'html' for a " \
-                               "non-failed result: #{stdout.inspect}"
+          next if nested_block
+
+          html << "<li>#{block_inner_markup(block, entity_map, warnings)}</li>\n"
+          previous_block = block
+        end
+
+        html << list_markup(nested_list_block, entity_map, warnings) unless nested_list_block.empty?
+        html << "</#{LIST_BLOCK_TAGS.fetch(previous_block['type'], 'ul')}>\n"
+        html
+      end
+
+      def block_inner_markup(block, entity_map, warnings)
+        chars = (block["text"] || "").chars
+        style_array = style_array_for_block(block, chars, warnings)
+        sections = sections_for_block(block, chars.length)
+
+        sections.each_with_index.map do |section, index|
+          text = section_markup(section, chars, style_array, entity_map, warnings)
+          text = trim_leading_nbsp(text) if index.zero?
+          text = trim_trailing_nbsp(text) if index == sections.length - 1
+          text
+        end.join
+      end
+
+      # Per-character map of which of our 4 supported inline styles apply at each offset.
+      # Anything outside BOLD/ITALIC/UNDERLINE/STRIKETHROUGH (color-/bgcolor-/fontsize-/
+      # fontfamily- ranges, or any other unrecognized style) is dropped, with a warning --
+      # this app's toolbars never produced them.
+      def style_array_for_block(block, chars, warnings)
+        styles = INLINE_STYLE_TAGS.keys.index_with { Array.new(chars.length, false) }
+
+        (block["inlineStyleRanges"] || []).each do |range|
+          style = range["style"]
+          unless styles.key?(style)
+            warnings << "unrecognized inline style #{style.inspect}; ignoring"
+            next
           end
 
-          Result.new(is_draft_js: is_draft_js, html: html, failed: false, stderr: stderr.presence)
+          offset = range["offset"] || 0
+          length = range["length"] || 0
+          (offset...(offset + length)).each do |i|
+            styles[style][i] = true if i >= 0 && i < chars.length
+          end
         end
-      rescue JSON::ParserError => e
-        raise BridgeError, "wysiwygConversionCli produced unparseable stdout (#{e.message}): #{stdout.inspect}"
+
+        styles
+      end
+
+      # Splits a block into entity/plain-text sections, mirroring draftjs-to-html's getSections
+      # (hashtag support omitted -- unreachable, this app never enabled it).
+      def sections_for_block(block, text_length)
+        ranges = (block["entityRanges"] || [])
+                 .map { |r| { offset: r["offset"], length: r["length"], key: r["key"] } }
+                 .sort_by { |r| r[:offset] }
+
+        sections = []
+        last_offset = 0
+
+        ranges.each do |r|
+          sections << { start: last_offset, end: r[:offset] } if r[:offset] > last_offset
+          sections << { start: r[:offset], end: r[:offset] + r[:length], entity_key: r[:key], type: "ENTITY" }
+          last_offset = r[:offset] + r[:length]
+        end
+        sections << { start: last_offset, end: text_length } if last_offset < text_length
+
+        sections
+      end
+
+      def section_markup(section, chars, style_array, entity_map, warnings)
+        inner = inline_style_sections(style_array, chars, section[:start], section[:end])
+                .map { |sub| style_tag_markup(sub) }
+                .join
+
+        return inner unless section[:type] == "ENTITY"
+
+        entity = entity_map[section[:entity_key].to_s]
+        entity_type = entity && entity["type"]
+
+        unless entity_type == "LINK"
+          warnings << "unrecognized entity type #{entity_type.inspect}; rendering its text without entity markup"
+          return inner
+        end
+
+        href = entity.dig("data", "url")
+        target = entity.dig("data", "targetOption") || "_self"
+        "<a href=\"#{href}\" target=\"#{target}\">#{inner}</a>"
+      end
+
+      # Splits [start_idx, end_idx) into runs where the set of active inline styles is constant.
+      def inline_style_sections(style_array, chars, start_idx, end_idx)
+        sections = []
+        current = nil
+
+        (start_idx...end_idx).each do |i|
+          styles_here = INLINE_STYLE_NEST_ORDER.select { |s| style_array[s][i] }
+
+          if current && current[:styles] == styles_here
+            current[:text] << chars[i]
+          else
+            current = { styles: styles_here, text: [chars[i]] }
+            sections << current
+          end
+        end
+
+        sections
+      end
+
+      def style_tag_markup(sub_section)
+        content = escape_text(sub_section[:text])
+        sub_section[:styles].each do |style|
+          tag = INLINE_STYLE_TAGS[style]
+          content = "<#{tag}>#{content}</#{tag}>"
+        end
+        content
+      end
+
+      def escape_text(chars)
+        chars.map do |ch|
+          case ch
+          when "\n" then "<br>"
+          when "&" then "&amp;"
+          when "<" then "&lt;"
+          when ">" then "&gt;"
+          else ch
+          end
+        end.join
+      end
+
+      def trim_leading_nbsp(text)
+        return text if text.nil? || text.empty?
+
+        chars = text.chars
+        i = 0
+        while i < chars.length && chars[i] == " "
+          chars[i] = "&nbsp;"
+          i += 1
+        end
+        chars.join
+      end
+
+      def trim_trailing_nbsp(text)
+        return text if text.nil? || text.empty?
+
+        chars = text.chars
+        i = chars.length - 1
+        while i >= 0 && chars[i] == " "
+          chars[i] = "&nbsp;"
+          i -= 1
+        end
+        chars.join
       end
     end
   end

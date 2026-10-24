@@ -1,14 +1,10 @@
 // Phase 4c: ApplicationStepParameters swapped its react-draft-wysiwyg `Editor` for `TipTapEditor`.
-// The `Parameter` row it loads from (`display_text`) may still hold OLD Draft.js raw JSON (Phase
-// 4d's DB migration hasn't run everywhere yet), so loading must go through `wysiwygToHtml` --
-// covered here by (a) a Draft.js-JSON response, (b) an already-migrated plain-HTML response.
-// Saving must POST plain HTML, not Draft.js JSON.
+// `display_text` is plain HTML; saving must POST plain HTML back.
 
 import React from "react";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import i18n from "../../../i18n";
-import swal from "sweetalert2";
 import ApplicationStepParameters from "./ApplicationStepParameters";
 
 vi.mock("sweetalert2", () => ({
@@ -56,33 +52,7 @@ function getEditorContent(container) {
     return container.querySelector(".tiptap-editor-content .ProseMirror");
 }
 
-test("loads a Draft.js-JSON display_text and renders it as HTML in the editor", async () => {
-    const { container } = render(
-        <ApplicationStepParameters parameter_label="x" desc="desc" />
-    );
-
-    const draftRawJson = JSON.stringify({
-        blocks: [
-            {
-                key: "a",
-                text: "Legacy content",
-                type: "unstyled",
-                depth: 0,
-                inlineStyleRanges: [],
-                entityRanges: [],
-                data: {},
-            },
-        ],
-        entityMap: {},
-    });
-    apiState.lastSuccess({ activated: true, display_text: draftRawJson });
-
-    await waitFor(() =>
-        expect(getEditorContent(container)).toHaveTextContent("Legacy content")
-    );
-});
-
-test("loads an already-migrated plain-HTML display_text correctly", async () => {
+test("loads an existing HTML display_text into the editor", async () => {
     const { container } = render(
         <ApplicationStepParameters parameter_label="x" desc="desc" />
     );
@@ -97,28 +67,19 @@ test("loads an already-migrated plain-HTML display_text correctly", async () => 
     );
 });
 
-test("saving posts plain HTML (not Draft.js JSON) as display_text, even when loaded from legacy Draft.js JSON", async () => {
+test("saving posts the edited HTML as display_text", async () => {
     const { container } = render(
         <ApplicationStepParameters parameter_label="x" desc="desc" />
     );
-    const draftRawJson = JSON.stringify({
-        blocks: [
-            {
-                key: "a",
-                text: "Legacy content",
-                type: "unstyled",
-                depth: 0,
-                inlineStyleRanges: [],
-                entityRanges: [],
-                data: {},
-            },
-        ],
-        entityMap: {},
+    apiState.lastSuccess({
+        activated: true,
+        display_text: "<p>Existing content</p>",
     });
-    apiState.lastSuccess({ activated: true, display_text: draftRawJson });
 
     await waitFor(() =>
-        expect(getEditorContent(container)).toHaveTextContent("Legacy content")
+        expect(getEditorContent(container)).toHaveTextContent(
+            "Existing content"
+        )
     );
 
     // The mount GET's success handler also sets `visibilityActivated`, which fires its own
@@ -134,36 +95,5 @@ test("saving posts plain HTML (not Draft.js JSON) as display_text, even when loa
     expect(apiState.lastPost.url).toBe(
         "activity_application_parameters/change_display_text_param"
     );
-    expect(apiState.lastPost.data.display_text).toContain("Legacy content");
-    expect(apiState.lastPost.data.display_text).not.toMatch(/^\s*\{/);
-});
-
-test("a genuinely malformed Draft.js JSON shows an error and does not load garbage into the editor", async () => {
-    const { container } = render(
-        <ApplicationStepParameters parameter_label="x" desc="desc" />
-    );
-    // Well-formed enough to be *detected* as Draft.js JSON (has a `blocks` array), but
-    // `inlineStyleRanges` is the wrong type -- fails both draftToHtml directly AND after
-    // draft-js's own convertFromRaw/convertToRaw normalization (see RichTextViewer.test.tsx's
-    // equivalent case).
-    const malformed = JSON.stringify({
-        blocks: [
-            {
-                text: "x",
-                type: "unstyled",
-                inlineStyleRanges: "not-an-array",
-            },
-        ],
-        entityMap: {},
-    });
-
-    apiState.lastSuccess({ activated: true, display_text: malformed });
-
-    await waitFor(() => expect(swal.fire).toHaveBeenCalled());
-    expect(swal.fire.mock.calls[0][0].title).toBe(
-        i18n.t(
-            "parameters:activityApplications.stepParams.contentConversionError"
-        )
-    );
-    expect(getEditorContent(container)).toHaveTextContent("");
+    expect(apiState.lastPost.data.display_text).toContain("Existing content");
 });

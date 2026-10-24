@@ -3,11 +3,14 @@
 require "rails_helper"
 require "rake"
 
-# Coverage for the Ruby-side behavior of the one-time `elvis:migrate_wysiwyg_content` rake task
-# (lib/tasks/elvis.rake): DB lookup/skip/write/idempotency logic and the hard-abort path. The
-# Draft.js-to-HTML conversion logic itself (Node, frontend/tools/wysiwygConversion.js) is NOT
-# re-tested here -- every example stubs the Ruby bridge (Elvis::WysiwygConverter) so these specs
-# are deterministic and don't depend on `node`/`node_modules` being present.
+# Coverage for the Ruby-side behavior of the `elvis:migrate_wysiwyg_content` rake task
+# (lib/tasks/elvis.rake): DB lookup/skip/write/idempotency logic. The Draft.js-to-HTML conversion
+# logic itself has its own direct coverage in spec/lib/elvis/wysiwyg_converter_spec.rb -- every
+# example here stubs Elvis::WysiwygConverter so these specs stay focused on the migrator's own
+# DB/logging behavior.
+#
+# This task is a permanent safety net (not a one-time migration), so idempotency -- a second run
+# after everything converted being a clean no-op -- is the most important property it has.
 RSpec.describe "elvis:migrate_wysiwyg_content rake task" do
   before(:all) do
     Rails.application.load_tasks unless Rake::Task.task_defined?("elvis:migrate_wysiwyg_content")
@@ -23,10 +26,7 @@ RSpec.describe "elvis:migrate_wysiwyg_content rake task" do
     ]
   end
 
-  before do
-    ENV.delete("DRY_RUN")
-    allow(Elvis::WysiwygConverter).to receive(:ensure_available!)
-  end
+  before { ENV.delete("DRY_RUN") }
 
   after do
     task.reenable
@@ -37,12 +37,13 @@ RSpec.describe "elvis:migrate_wysiwyg_content rake task" do
     capture_stdout { task.invoke }
   end
 
-  def draft_result(html, is_draft_js: true, failed: false)
-    Elvis::WysiwygConverter::Result.new(is_draft_js: is_draft_js, html: html, failed: failed)
+  def draft_result(html, is_draft_js: true, failed: false, warnings: [])
+    Elvis::WysiwygConverter::Result.new(is_draft_js: is_draft_js, html: html, failed: failed, warnings: warnings)
   end
 
-  def failed_result(stderr: nil)
-    Elvis::WysiwygConverter::Result.new(is_draft_js: true, html: nil, failed: true, stderr: stderr)
+  def failed_result(error_message: nil, warnings: [])
+    Elvis::WysiwygConverter::Result.new(is_draft_js: true, html: nil, failed: true, error_message: error_message,
+                                        warnings: warnings)
   end
 
   describe "a label with no matching Parameter row" do
@@ -59,7 +60,7 @@ RSpec.describe "elvis:migrate_wysiwyg_content rake task" do
   end
 
   describe "a blank value" do
-    it "skips without invoking the bridge, for both nil and empty string" do
+    it "skips without invoking the converter, for both nil and empty string" do
       Parameter.create!(label: labels[0], value: nil, value_type: "string")
       Parameter.create!(label: labels[1], value: "", value_type: "string")
 
@@ -88,7 +89,7 @@ RSpec.describe "elvis:migrate_wysiwyg_content rake task" do
   describe "a value that is Draft.js JSON and converts successfully" do
     it "writes the converted HTML back and logs the label plus old/new length" do
       draft_json = '{"blocks":[{"key":"a1","text":"hi"}],"entityMap":{}}'
-      converted_html = "<p>hi</p>"
+      converted_html = "<p>hi</p>\n"
       parameter = Parameter.create!(label: labels[0], value: draft_json, value_type: "string")
       allow(Elvis::WysiwygConverter).to receive(:convert).with(draft_json).and_return(draft_result(converted_html))
 
@@ -98,6 +99,21 @@ RSpec.describe "elvis:migrate_wysiwyg_content rake task" do
       expect(parameter.value_type).to eq("string")
       expect(output).to include("#{labels[0]}: converted Draft.js JSON to HTML")
       expect(output).to include("#{draft_json.length} -> #{converted_html.length}")
+    end
+  end
+
+  describe "a converter result carrying graceful-degradation warnings" do
+    it "surfaces them on the task's own stdout output, prefixed by the parameter name, not just Rails.logger" do
+      draft_json = '{"blocks":[{"key":"a1","text":"hi"}],"entityMap":{}}'
+      Parameter.create!(label: labels[0], value: draft_json, value_type: "string")
+      allow(Elvis::WysiwygConverter).to receive(:convert).with(draft_json).and_return(
+        draft_result("<p>hi</p>\n",
+                     warnings: ["unrecognized entity type \"IMAGE\"; rendering its text without entity markup"])
+      )
+
+      output = run_task
+
+      expect(output).to include("#{labels[0]}: unrecognized entity type \"IMAGE\"")
     end
   end
 
@@ -114,29 +130,30 @@ RSpec.describe "elvis:migrate_wysiwyg_content rake task" do
       expect(output).to include("#{labels[0]}: Draft.js content FAILED to convert")
     end
 
-    it "surfaces the bridge's stderr on the console, not just in Rails.logger" do
+    it "surfaces the converter's error_message on the console, not just in Rails.logger" do
       bad_json = '{"blocks":[{"key":"b1","inlineStyleRanges":"not-an-array"}],"entityMap":{}}'
       parameter = Parameter.create!(label: labels[0], value: bad_json, value_type: "string")
-      stderr_message = "TypeError: Cannot read properties of undefined"
+      error_message = "TypeError: Cannot read properties of undefined"
       allow(Elvis::WysiwygConverter).to receive(:convert)
-        .with(bad_json).and_return(failed_result(stderr: stderr_message))
+        .with(bad_json).and_return(failed_result(error_message: error_message))
 
       output = run_task
 
       expect(parameter.reload.value).to eq(bad_json)
-      expect(output).to include(stderr_message)
+      expect(output).to include(error_message)
     end
 
-    it "truncates a very long stderr instead of dumping it wholesale to the console" do
+    it "truncates a very long error_message instead of dumping it wholesale to the console" do
       bad_json = '{"blocks":[{"key":"b1"}],"entityMap":{}}'
       Parameter.create!(label: labels[0], value: bad_json, value_type: "string")
-      long_stderr = "x" * 5000
-      allow(Elvis::WysiwygConverter).to receive(:convert).with(bad_json).and_return(failed_result(stderr: long_stderr))
+      long_message = "x" * 5000
+      allow(Elvis::WysiwygConverter).to receive(:convert)
+        .with(bad_json).and_return(failed_result(error_message: long_message))
 
       output = run_task
 
       expect(output).to include("truncated")
-      expect(output).not_to include(long_stderr)
+      expect(output).not_to include(long_message)
     end
   end
 
@@ -156,7 +173,7 @@ RSpec.describe "elvis:migrate_wysiwyg_content rake task" do
   describe "a label with more than one matching Parameter row" do
     it "processes every matching row (not just one), naming each by id in the log" do
       draft_json = '{"blocks":[{"key":"a1","text":"hi"}],"entityMap":{}}'
-      converted_html = "<p>hi</p>"
+      converted_html = "<p>hi</p>\n"
       older = Parameter.create!(label: labels[0], value: draft_json, value_type: "string")
       newer = Parameter.create!(label: labels[0], value: draft_json, value_type: "string")
       allow(Elvis::WysiwygConverter).to receive(:convert).with(draft_json).and_return(draft_result(converted_html))
@@ -173,7 +190,7 @@ RSpec.describe "elvis:migrate_wysiwyg_content rake task" do
   describe "a concurrent write between the read and the write (lost-update race)" do
     it "skips the write and logs loudly instead of clobbering a concurrent admin save" do
       draft_json = '{"blocks":[{"key":"a1","text":"hi"}],"entityMap":{}}'
-      converted_html = "<p>hi</p>"
+      converted_html = "<p>hi</p>\n"
       concurrent_value = "<p>someone else's concurrent edit</p>"
       parameter = Parameter.create!(label: labels[0], value: draft_json, value_type: "string")
 
@@ -194,7 +211,7 @@ RSpec.describe "elvis:migrate_wysiwyg_content rake task" do
   describe "cache invalidation on a successful write" do
     it "expires the parameter_<label> cache key so get_value doesn't serve the stale pre-migration value" do
       draft_json = '{"blocks":[{"key":"a1","text":"hi"}],"entityMap":{}}'
-      converted_html = "<p>hi</p>"
+      converted_html = "<p>hi</p>\n"
       Parameter.create!(label: labels[0], value: draft_json, value_type: "string")
       Parameter.get_value(labels[0]) # warm the cache with the pre-migration Draft.js JSON
       allow(Elvis::WysiwygConverter).to receive(:convert).with(draft_json).and_return(draft_result(converted_html))
@@ -250,7 +267,7 @@ RSpec.describe "elvis:migrate_wysiwyg_content rake task" do
     def create_convertible_row
       draft_json = '{"blocks":[{"key":"a1","text":"hi"}],"entityMap":{}}'
       parameter = Parameter.create!(label: labels[0], value: draft_json, value_type: "string")
-      allow(Elvis::WysiwygConverter).to receive(:convert).with(draft_json).and_return(draft_result("<p>hi</p>"))
+      allow(Elvis::WysiwygConverter).to receive(:convert).with(draft_json).and_return(draft_result("<p>hi</p>\n"))
       [parameter, draft_json]
     end
 
@@ -273,7 +290,7 @@ RSpec.describe "elvis:migrate_wysiwyg_content rake task" do
 
         output = run_task
 
-        expect(parameter.reload.value).to eq("<p>hi</p>")
+        expect(parameter.reload.value).to eq("<p>hi</p>\n")
         expect(output).not_to include("[DRY RUN]")
       end
     end
@@ -300,7 +317,7 @@ RSpec.describe "elvis:migrate_wysiwyg_content rake task" do
 
       output = run_task
 
-      expect(parameter.reload.value).to eq("<p>hi</p>")
+      expect(parameter.reload.value).to eq("<p>hi</p>\n")
       expect(output).not_to include("[DRY RUN]")
     end
   end
@@ -308,7 +325,7 @@ RSpec.describe "elvis:migrate_wysiwyg_content rake task" do
   describe "dry-run mode" do
     it "performs zero DB writes for a row that would otherwise be converted, and marks every line" do
       draft_json = '{"blocks":[{"key":"a1","text":"hi"}],"entityMap":{}}'
-      converted_html = "<p>hi</p>"
+      converted_html = "<p>hi</p>\n"
       parameter = Parameter.create!(label: labels[0], value: draft_json, value_type: "string")
       allow(Elvis::WysiwygConverter).to receive(:convert).with(draft_json).and_return(draft_result(converted_html))
 
@@ -338,14 +355,14 @@ RSpec.describe "elvis:migrate_wysiwyg_content rake task" do
     end
   end
 
-  describe "idempotency" do
+  describe "idempotency (this task is a permanent safety net, run repeatedly)" do
     it "converts on the first real run, then skips on a second run with zero further changes" do
       draft_json = '{"blocks":[{"key":"a1","text":"hi"}],"entityMap":{}}'
-      converted_html = "<p>hi</p>"
+      converted_html = "<p>hi</p>\n"
       parameter = Parameter.create!(label: labels[0], value: draft_json, value_type: "string")
 
       # Faithful-to-contract stub: Draft.js JSON converts; anything else reports isDraftJs:false
-      # and echoes its input back unchanged, exactly like the real CLI bridge would.
+      # and echoes its input back unchanged, exactly like the real converter would.
       allow(Elvis::WysiwygConverter).to receive(:convert) do |value|
         value == draft_json ? draft_result(converted_html) : draft_result(value, is_draft_js: false)
       end
@@ -360,25 +377,21 @@ RSpec.describe "elvis:migrate_wysiwyg_content rake task" do
       expect { second_output = run_task }.not_to(change { parameter.reload.value })
       expect(second_output).to include("#{labels[0]}: already HTML/plain, skipping")
     end
-  end
 
-  describe "the hard-abort path" do
-    it "aborts loudly when the bridge itself is unavailable, before processing any label" do
-      allow(Elvis::WysiwygConverter).to receive(:ensure_available!)
-        .and_raise(Elvis::WysiwygConverter::BridgeError, "node executable not found")
-      expect(Elvis::WysiwygConverter).not_to receive(:convert)
+    it "is a clean no-op end to end using the real (non-stubbed) converter, across many runs" do
+      draft_json = '{"blocks":[{"key":"a1","text":"hi",' \
+                   '"inlineStyleRanges":[{"offset":0,"length":2,"style":"BOLD"}]}],"entityMap":{}}'
+      parameter = Parameter.create!(label: labels[0], value: draft_json, value_type: "string")
 
-      expect { task.invoke }.to raise_error(SystemExit)
-    end
+      run_task
+      converted = parameter.reload.value
+      expect(converted).to eq("<p><strong>hi</strong></p>\n")
 
-    it "aborts loudly when the bridge returns a non-zero exit or unparseable stdout for a row" do
-      draft_json = '{"blocks":[{"key":"a1","text":"hi"}],"entityMap":{}}'
-      Parameter.create!(label: labels[0], value: draft_json, value_type: "string")
-      allow(Elvis::WysiwygConverter).to receive(:convert).with(draft_json)
-                                                         .and_raise(Elvis::WysiwygConverter::BridgeError,
-                                                                    "wysiwygConversionCli exited with status 1")
+      task.reenable
+      expect { run_task }.not_to(change { parameter.reload.value })
 
-      expect { task.invoke }.to raise_error(SystemExit)
+      task.reenable
+      expect { run_task }.not_to(change { parameter.reload.value })
     end
   end
 end

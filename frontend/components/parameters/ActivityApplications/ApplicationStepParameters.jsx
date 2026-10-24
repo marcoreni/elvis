@@ -4,7 +4,6 @@ import swal from "sweetalert2";
 import { toast } from "react-toastify";
 import { useTranslation } from "react-i18next";
 import TipTapEditor from "../../common/TipTapEditor";
-import { wysiwygToEditableHtml } from "../../../tools/wysiwygConversion";
 
 export default function ApplicationStepParameters({ parameter_label, desc }) {
     const { t } = useTranslation("parameters");
@@ -18,17 +17,7 @@ export default function ApplicationStepParameters({ parameter_label, desc }) {
                 setVisibilityActivated(res.activated);
                 setInit(false);
 
-                const html = wysiwygToEditableHtml(res.display_text);
-                if (html === null) {
-                    swal.fire({
-                        title: t(
-                            "activityApplications.stepParams.contentConversionError"
-                        ),
-                        icon: "error",
-                    });
-                    return;
-                }
-                setDisplayText(html);
+                setDisplayText(res.display_text ?? "");
             })
             .error((err) => {
                 swal.fire({
