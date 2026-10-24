@@ -450,6 +450,123 @@ describe("ActivitiesApplicationsList — pagination clamp (regression)", () => {
 });
 
 // ==================================================================================================
+// Regression: handleBulkDelete must not persist a negative page when the delete empties the data
+// ==================================================================================================
+//
+// `handleBulkDelete`'s page recompute used `Math.min(this.state.filter.page, newTotalPages - 1)`
+// with no floor, which yields `-1` once `newTotalPages` hits 0 (every row on the current page was
+// deleted). That negative `filter.page` is handed straight to `TanStackGrid` as `pagination.
+// pageIndex`, displaying "Page 0 sur 1" and persisting into `localStorage`. Floored at `0` via
+// `Math.max(0, ...)`.
+describe("ActivitiesApplicationsList — bulk-delete page clamp (regression)", () => {
+    test("bulk-deleting every row on the last page lands on page 0, not -1", async () => {
+        let deleted = false;
+        global.fetch = vi.fn((url, options) => {
+            const u = String(url);
+            if (options?.method === "DELETE" && u === "/inscriptions") {
+                deleted = true;
+                return Promise.resolve({ ok: true });
+            }
+            if (u.includes("/inscriptions/list")) {
+                return Promise.resolve({
+                    json: () =>
+                        Promise.resolve(
+                            deleted
+                                ? {
+                                      applications: [],
+                                      pages: 0,
+                                      total: 0,
+                                      pending_total: 0,
+                                  }
+                                : {
+                                      applications: [makeRow(1)],
+                                      pages: 1,
+                                      total: 1,
+                                      pending_total: 0,
+                                  }
+                        ),
+                });
+            }
+            return Promise.resolve({
+                ok: true,
+                headers: { get: () => "application/json" },
+                json: () => Promise.resolve({}),
+            });
+        });
+
+        const tCommon = i18n.getFixedT("fr", "common");
+        const tApp = i18n.getFixedT("fr", "activityApplications");
+        const pageOf = (page, of) =>
+            `${tCommon("reactTable.pageText")} ${page} ${tCommon(
+                "reactTable.ofText"
+            )} ${of}`;
+
+        const { container } = render(
+            <ActivitiesApplicationsList
+                {...baseProps()}
+                currentUserIsAdmin={true}
+            />
+        );
+        const normalized = () => container.textContent.replace(/\s+/g, " ");
+
+        // Wait for the actual fetched row, not just the (trivially-already-true-pre-fetch)
+        // "Page 1 sur 1" text -- `pages` defaults to 0 and `Math.max(getPageCount(), 1)` floors
+        // the "of" count to 1 even before the mount fetch has landed.
+        await waitFor(() => expect(normalized()).toContain("A1"), {
+            timeout: 5000,
+        });
+        expect(normalized()).toContain(pageOf(1, 1));
+
+        // The "selection" column's header checkbox selects every currently-loaded row -- with a
+        // single row loaded, this selects it alone.
+        const selectAllCheckbox = container.querySelectorAll(
+            'input[type="checkbox"]'
+        )[0];
+        await userEvent.click(selectAllCheckbox);
+
+        const deleteButton = await screen.findByRole("button", {
+            name: tCommon("actions.delete"),
+        });
+        await userEvent.click(deleteButton);
+
+        // The swal2 confirmation popup's own confirm button also reads "Supprimer" (with a
+        // leading icon), so it can't be told apart from the trigger button above by accessible
+        // name alone -- target it by sweetalert2's own class instead.
+        const confirmButton = await waitFor(() => {
+            const btn = document.querySelector(".swal2-confirm");
+            expect(btn).toBeTruthy();
+            return btn;
+        });
+        await userEvent.click(confirmButton);
+
+        await waitFor(() => expect(deleted).toBe(true), { timeout: 5000 });
+
+        // With the fix, the recompute floors at page 0 -- displayed as "Page 1 sur 1", not
+        // "Page 0 sur 1" (what a persisted `page: -1` would render).
+        await waitFor(() => expect(normalized()).toContain(pageOf(1, 1)), {
+            timeout: 5000,
+        });
+        expect(normalized()).not.toContain(pageOf(0, 1));
+
+        // Pagination controls stay reachable (no permanently-negative pageIndex locking the
+        // table): the reset-filters/refresh path still works, re-requesting the real page 0.
+        const refreshButton = container.querySelector(
+            `[data-tippy-content="${tApp("list.tooltips.refreshData")}"]`
+        );
+        await userEvent.click(refreshButton);
+        await waitFor(
+            () =>
+                expect(
+                    global.fetch.mock.calls.filter(([u]) =>
+                        String(u).includes("/inscriptions/list")
+                    ).length
+                ).toBeGreaterThan(1),
+            { timeout: 5000 }
+        );
+    });
+});
+
+// ==================================================================================================
 // Regression: fetchData itself re-fetches a stale out-of-range page instead of committing it
 // ==================================================================================================
 //
@@ -704,8 +821,10 @@ describe("ActivitiesApplicationsList — showJobProgressModal unmounts JobProgre
         const file = new File(["a,b,c"], "import.csv", { type: "text/csv" });
         await userEvent.upload(fileInput, file);
 
-        await waitFor(() =>
-            expect(JobProgressModule.__jobProgressState.mounted).toBe(true)
+        await waitFor(
+            () =>
+                expect(JobProgressModule.__jobProgressState.mounted).toBe(true),
+            { timeout: 5000 }
         );
         expect(
             await screen.findByTestId("job-progress-stub")

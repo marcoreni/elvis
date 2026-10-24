@@ -330,19 +330,6 @@ applies late, hasn't been checked). Fix: move the `onChange`/`setState` pair int
 `componentDidUpdate` (this is a class component), keyed off whatever makes `currentAppsSeason`
 become available, instead of the render body.
 
-## `ActivitiesApplicationsList.jsx`'s bulk-delete can persist `page: -1`
-
-`handleBulkDelete`'s page recompute (`Math.min(this.state.filter.page, newTotalPages - 1)`) yields
-`-1` when the delete empties the dataset entirely (`newTotalPages === 0`). Confirmed pre-existing,
-unrelated to the TanStack migration (this function is untouched by that migration's diff, last
-modified by an earlier sweetalert commit). Not a crash — the backend clamps `.page(0)` to page 1 —
-but with `pages: 0` both pagination buttons are disabled (`getCanNextPage()`/`getCanPreviousPage()`
-are both false at `pageIndex -1`, `pageCount 0`), so "Suivant" is NOT a way out despite being
-enabled elsewhere at negative indices; the table displays "Page 0 sur 1" and `page: -1` survives
-into `localStorage` across reloads, recoverable only via the reset-filters button or any filter
-change (both set `page: 0`). Fix: floor the recompute at `0`, e.g.
-`Math.max(0, Math.min(this.state.filter.page, newTotalPages - 1))`.
-
 ## `ActivityRefBasics.jsx`/`EditFormule.jsx` rebuild `dataService`/`columns` on every render
 
 Both build a fresh `dataService`/`columns` object in `render()`, inside a shared `react-final-form`
@@ -554,30 +541,6 @@ converts it should either wire up the real pre-fill (build that `consent_docs.id
 key into `formattedInitialValues` from `consent_document_users`) or, if the pre-fill is
 intentionally not wanted, drop the now-pointless `defaultValue` prop pass-through at the call site
 instead of reintroducing it.
-
-## Two `createRoot`-related tests flake under full-suite load
-
-Both pass reliably in isolation and fail only occasionally in a full `yarn vitest run`, both on a
-`waitFor` whose default budget is 1s:
-
-- `frontend/components/scripts/replicate_activities/ReplicateWeekAct.test.jsx` — "closing the
-  job-progress modal calls JobProgress's componentWillUnmount" (the `createRoot`/unmount regression
-  test from the React 17→18 bump), on `waitFor(... unmounted === true)`.
-- `frontend/components/ActivitiesApplicationsList.test.jsx:708` — on
-  `expect(...__jobProgressState.mounted).toBe(true)`. This one chains a 400ms module-level debounce,
-  a real `userEvent.upload`, an unmocked sweetalert2 and a `createRoot` render inside that same 1s
-  budget.
-
-Measured during the 18→19 bump: the first failed 1 of 12 full runs on React 19 and 0 of 6 on React
-18 with the identical 1502 tests. Don't over-read that A/B — at a 1/12 rate, 6 clean runs are
-~60% likely by chance, so 0/6 carries essentially no information either way. The load argument is
-the real evidence: both pass in isolation, two independent files with the same machinery fail the
-same way, and the failing run showed that file taking 3744ms.
-
-What this does rule out is a *semantic* break (a real `root.unmount()` regression would be
-deterministic). It does not rule out a React 19 *timing* shift — 19 changed scheduling, and a
-slower-but-correct flush would present identically. The remedy is the same either way: give both an
-explicit `waitFor(..., { timeout: 5000 })` rather than chasing a component bug.
 
 ## React 19 reports uncaught render errors more quietly than React 18
 

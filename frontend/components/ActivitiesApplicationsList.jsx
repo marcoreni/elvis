@@ -354,9 +354,12 @@ class ActivitiesApplicationsList extends React.Component {
                             remainingItems / this.state.filter.pageSize
                         );
 
-                        const newPage = Math.min(
-                            this.state.filter.page, // Page actuelle
-                            newTotalPages - 1 // Dernière page disponible
+                        const newPage = Math.max(
+                            0,
+                            Math.min(
+                                this.state.filter.page, // Page actuelle
+                                newTotalPages - 1 // Dernière page disponible
+                            )
                         );
 
                         this.setState(
