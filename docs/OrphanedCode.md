@@ -169,9 +169,11 @@ gated on a separate DB content migration. Prep for the React 18→19 bump —
 
 ## 2026-10-19, dependency-health phase 4e (remove `draft-js`/`draftjs-to-html`)
 
-Closes out phase 4. The one-time Draft.js-to-HTML `Parameter` content migration (PR #148) has now
-been run against every real environment, so no stored value can be Draft.js JSON any more — which
-made both the format-detection layer and the migration tooling itself unreachable.
+Closes out phase 4. The Draft.js-to-HTML `Parameter` content migration (PR #148) has now been run
+against every real environment known to us, so no stored value can be Draft.js JSON any more — which
+made the frontend's format-detection layer unreachable. The Ruby-side migration tooling is kept
+(rewritten, see below) rather than deleted, as a permanent safety net for any environment this
+doesn't hold true for.
 
 - `frontend/tools/wysiwygConversion.js` + `wysiwygConversion.test.js` (whole files): the
   `convertWysiwyg` / `tryParseDraftRaw` / `isDraftJsRaw` / `wysiwygToHtml` / `wysiwygToEditableHtml`
@@ -182,15 +184,22 @@ made both the format-detection layer and the migration tooling itself unreachabl
   now-unreachable "conversion failed" `swal` branch went with it, and with that its locale keys
   `parameters:activityApplications.stepParams.contentConversionError` and
   `parameters:payments.scheduleOptions.errors.contentConversionError` (fr + en).
-- `frontend/tools/wysiwygConversionCli.js` + `wysiwygConversionCli.test.js`,
-  `lib/elvis/wysiwyg_converter.rb`, `lib/elvis/wysiwyg_content_migrator.rb`, the
-  `elvis:migrate_wysiwyg_content` task in `lib/tasks/elvis.rake` (its `desc` + task block), and
-  their specs `spec/lib/elvis/wysiwyg_converter_spec.rb` /
-  `spec/lib/migrate_wysiwyg_content_rake_task_spec.rb`: the whole one-time Node-CLI-bridge
-  migration tool (stdin raw UTF-8 → stdout `{isDraftJs, html, failed}`). Deleted rather than kept
-  for reference — there is nothing left to migrate. The rake task was its only caller; confirmed no
-  other invoker in `Dockerfile`, `docker-compose.yml`, `Procfile`, `.github/`, `bin/`, `config/`,
-  `db/`, `app/` or `test/`.
+- `frontend/tools/wysiwygConversionCli.js` + `wysiwygConversionCli.test.js`: the Node-CLI-bridge
+  half of the migration tool (stdin raw UTF-8 → stdout `{isDraftJs, html, failed}`), deleted along
+  with `draft-js`/`draftjs-to-html` themselves. Confirmed no other invoker of the CLI script in
+  `Dockerfile`, `docker-compose.yml`, `Procfile`, `.github/`, `bin/`, `config/`, `db/`, `app/` or
+  `test/` besides the rake task below.
+- `lib/elvis/wysiwyg_converter.rb`, `lib/elvis/wysiwyg_content_migrator.rb` and the
+  `elvis:migrate_wysiwyg_content` task in `lib/tasks/elvis.rake` are **not** deleted — they were
+  rewritten as a pure-Ruby port of draftjs-to-html's output (no Node/npm involved at all) and kept
+  permanently as a safety net, in case some environment's `Parameter` rows were never actually
+  migrated. Safe to leave wired up indefinitely: it only touches the 3 known labels
+  (`payment_step.display_text`, `pricing_info_application.display_text`,
+  `availability_info_application.display_text`), is a clean no-op on a blank or already-HTML
+  value, and has no dependency to go stale. `spec/lib/elvis/wysiwyg_converter_spec.rb` pins its
+  output against golden fixtures captured once from real `draftjs-to-html@0.9.1`/`draft-js@0.11.7`
+  (in a disposable scratch project, not part of this repo);
+  `spec/lib/migrate_wysiwyg_content_rake_task_spec.rb` covers the task's DB/idempotency logic.
 - `frontend/components/utils/WysiwygViewer.tsx` (whole file): the original Draft.js-based viewer,
   superseded by `common/RichTextViewer.tsx`. Zero importers and zero
   `react_component("...WysiwygViewer"...)` mounts in `app/views/` — every former call site

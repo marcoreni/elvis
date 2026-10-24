@@ -101,6 +101,23 @@ namespace :elvis do
     end
   end
 
+  desc "Convert any remaining Draft.js-raw-JSON Parameter rows to HTML (safe to run repeatedly -- " \
+       "a clean no-op once every row is already HTML). DRY_RUN=1 previews without writing."
+  task migrate_wysiwyg_content: %i[environment] do
+    dry_run = Elvis::WysiwygContentMigrator.dry_run?(ENV.fetch("DRY_RUN", nil))
+    prefix = dry_run ? "[DRY RUN] " : ""
+    logger = Logger.new($stdout)
+    logger.formatter = proc { |severity, _datetime, _progname, msg| "#{prefix}#{severity}: #{msg}\n" }
+    task_name = "elvis:migrate_wysiwyg_content"
+
+    dry_run_note = dry_run ? " -- DRY RUN, no DB writes will be made" : ""
+    logger.info "#{task_name} starting#{dry_run_note}"
+
+    Elvis::WysiwygContentMigrator.new(dry_run: dry_run, logger: logger, prefix: prefix, task_name: task_name).run!
+
+    logger.info "#{task_name} finished"
+  end
+
   namespace :plugins do
     task :logged do
       @logger = Logger.new(STDOUT)

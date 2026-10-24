@@ -170,12 +170,18 @@ bumped to `8.0.2` on `chore/bump-react-loader-spinner`, PR #140). `react-draft-w
 now: its editor call sites were swapped onto `TipTapEditor`/`RichTextViewer` (PR #146, built in
 PR #145), then the now-unused dependency itself removed (PR #147), alongside the one-time
 Draft.js-to-HTML content migration task (PR #148). That migration has since been run against every
-real environment, so `draft-js`/`draftjs-to-html`, the format-detection layer in
-`frontend/tools/wysiwygConversion.js` and the whole migration tooling (CLI bridge, Ruby bridge
-classes, rake task) are gone too — phase 4e, `chore/remove-draft-js-dependencies`, see
-`docs/OrphanedCode.md`. One deliberate remnant: `TipTapEditor`'s `<ins>`-as-underline `parseHTML`
-extension stays, because the migration baked `draftjs-to-html`'s `<ins>` serialization permanently
-into the stored HTML. A pre-bump confirmation pass
+real environment known to us, so `draft-js`/`draftjs-to-html` and the frontend's format-detection
+layer (`frontend/tools/wysiwygConversion.js`, the Node CLI bridge it shelled out to) are gone —
+phase 4e, `chore/remove-draft-js-dependencies`, see `docs/OrphanedCode.md`. The editor/viewer are
+fully on `TipTapEditor`/`RichTextViewer` now, with no Draft.js read path left in the frontend. The
+Ruby-side migration tooling (`Elvis::WysiwygConverter`, `Elvis::WysiwygContentMigrator`, the
+`elvis:migrate_wysiwyg_content` rake task) was rewritten as a pure-Ruby, zero-npm-dependency port
+of draftjs-to-html's output and kept permanently as a safety net for any environment where the
+migration was never actually run — safe to leave wired up indefinitely since it's a no-op once
+every row is HTML. One deliberate remnant: `TipTapEditor`'s `<ins>`-as-underline `parseHTML`
+extension stays, because the migration (JS-side originally, Ruby-side now) bakes
+`draftjs-to-html`'s `<ins>` serialization for UNDERLINE permanently into the stored HTML. A
+pre-bump confirmation pass
 (`chore/react-19-pre-bump-audit`) re-ran the legacy-API grep across all of `frontend/` (122 files
 containing 128 class components) and confirmed it's still clean.
 
