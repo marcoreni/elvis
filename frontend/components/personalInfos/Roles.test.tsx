@@ -14,8 +14,19 @@ vi.mock("sweetalert2", () => ({
 }));
 
 import Roles from "./Roles";
+import type { User } from "../utils/entities";
 
-const user = { id: 1, is_teacher: true, is_admin: false };
+// `Roles`'s `user` prop is the real `User` entity (see Roles.tsx) -- a full fixture, not the
+// narrower `{id, is_teacher, is_admin}` shape this file used before that was corrected.
+const user: User = {
+    id: 1,
+    first_name: "Jean",
+    last_name: "Dupont",
+    birthday: "1990-01-01",
+    levels: [],
+    is_teacher: true,
+    is_admin: false,
+};
 
 beforeEach(async () => {
     await i18n.changeLanguage("fr");
@@ -132,12 +143,13 @@ describe("Roles", () => {
 
     test("clicking save calls onSubmit with the current (possibly toggled) role flags", async () => {
         const onSubmit = vi.fn();
+        const startingUser: User = {
+            ...user,
+            is_teacher: false,
+            is_admin: false,
+        };
         render(
-            <Roles
-                user={{ id: 1, is_teacher: false, is_admin: false }}
-                lessonsPlanned={0}
-                onSubmit={onSubmit}
-            />
+            <Roles user={startingUser} lessonsPlanned={0} onSubmit={onSubmit} />
         );
 
         await userEvent.click(
@@ -147,8 +159,10 @@ describe("Roles", () => {
             screen.getByRole("button", { name: "Enregistrer" })
         );
 
+        // onSubmit spreads the ENTIRE user object back through (not just the 2 toggled flags) --
+        // see Roles.tsx.
         expect(onSubmit).toHaveBeenCalledWith({
-            id: 1,
+            ...startingUser,
             is_teacher: false,
             is_admin: true,
         });

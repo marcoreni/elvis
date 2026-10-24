@@ -4,35 +4,33 @@ import Checkbox from "../common/Checkbox";
 import * as api from "../../tools/api";
 import swal from "sweetalert2";
 import moment from "moment";
-
-interface RolesUser {
-    id: number;
-    is_teacher: boolean;
-    is_admin: boolean;
-}
-
-interface TeacherLesson {
-    time_interval: { start: string; end: string };
-    activity_ref: { label: string };
-}
+import type { Activity, User } from "../utils/entities";
 
 interface RolesProps {
-    // Every real caller (UserEdit.jsx) passes this unconditionally -- `user.is_teacher`/
-    // `user.is_admin` are read straight into useState below with no guard. The old
-    // `PropTypes.shape(...)` also marked both fields (but not `user` itself) `.isRequired`.
-    user: RolesUser;
+    // The real `User` entity, not an ad-hoc `{id, is_teacher, is_admin}` slice: `onSubmit`
+    // below spreads the ENTIRE `user` object back through (`{...user, is_teacher, is_admin}`),
+    // so the prop has always genuinely been a full `User` -- the real caller (UserEdit.jsx:181,
+    // `user={this.props.user}`) passes the full object. `is_admin` was missing from `User` in
+    // entities.ts (a real `is_admin` column, app/models/user.rb) -- added there instead of
+    // reinventing a narrower local type here (see docs/Jsx-To-Tsx-Migration-Playbook.md section 3).
+    user: User;
     lessonsPlanned: number;
-    onSubmit: (user: RolesUser) => void;
+    onSubmit: (user: User) => void;
 }
 
 // Dropped from the old propTypes.user.shape: `adhesions` (declared but never read anywhere in
 // this file -- confirmed by grep) and `validity_start_date`/`validity_end_date` that lived under
-// it. Added `id`, which propTypes never declared despite being used unconditionally below.
+// it (both still absent from `User` in entities.ts, which is correct -- they're genuinely unread
+// here).
 
 export default function Roles({ user, lessonsPlanned, onSubmit }: RolesProps) {
     const { t } = useTranslation("users");
-    const [isTeacher, setIsTeacher] = useState(user.is_teacher);
-    const [isAdmin, setIsAdmin] = useState(user.is_admin);
+    // `User.is_teacher`/`.is_admin` are optional on the entity (not every serializer context
+    // includes them) even though the real DB columns default to `false`, never `null` -- `??
+    // false` keeps local state a plain `boolean`, matching the old (narrower) prop type's
+    // `.isRequired` without reintroducing it.
+    const [isTeacher, setIsTeacher] = useState(user.is_teacher ?? false);
+    const [isAdmin, setIsAdmin] = useState(user.is_admin ?? false);
 
     function removeLessons() {
         api.set()
@@ -57,7 +55,7 @@ export default function Roles({ user, lessonsPlanned, onSubmit }: RolesProps) {
             .del(`/teachers/${user.id}/activity_instances`);
     }
 
-    function formatActivity(a: TeacherLesson) {
+    function formatActivity(a: Activity) {
         const day = moment(a.time_interval.start).format("dddd");
         const startsAt = moment(a.time_interval.start).format("HH:mm");
         const endsAt = moment(a.time_interval.end).format("HH:mm");
@@ -74,7 +72,7 @@ export default function Roles({ user, lessonsPlanned, onSubmit }: RolesProps) {
     function getActivitiesList() {
         return api
             .set()
-            .success((activities: TeacherLesson[]) => {
+            .success((activities: Activity[]) => {
                 const htmlText =
                     t("users:roles.coursesListIntro", { n: lessonsPlanned }) +
                     "<br/><br/>" +

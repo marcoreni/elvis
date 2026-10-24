@@ -4,22 +4,21 @@ import { useTranslation } from "react-i18next";
 import TanStackGrid, {
     LegacyColumn,
 } from "./common/baseDataTable/TanStackGrid";
-
-interface RoomPlanning {
-    id: number;
-    label: string;
-}
+import type { Room } from "./utils/entities";
 
 interface PlanningListRoomsProps {
     // The table is the whole point of this component -- rendered unconditionally against
-    // `this.props.plannings` with no guard, same reasoning as other batches' tightenings.
-    plannings: RoomPlanning[];
+    // `this.props.plannings` with no guard, same reasoning as other batches' tightenings. Each
+    // row is a real `Room` (id + label, the only two fields read here; `kind`/`location_id` are
+    // unused but harmless) -- reuses the entity instead of redeclaring the same two fields
+    // (docs/Jsx-To-Tsx-Migration-Playbook.md section 3).
+    plannings: Room[];
 }
 
 function PlanningListRooms({ plannings }: PlanningListRoomsProps) {
     const { t } = useTranslation("planning");
 
-    const columns: LegacyColumn<RoomPlanning>[] = [
+    const columns: LegacyColumn<Room>[] = [
         {
             Header: "#",
             accessor: "id",

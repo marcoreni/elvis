@@ -5,20 +5,21 @@ import { useTranslation } from "react-i18next";
 import TanStackGrid, {
     LegacyColumn,
 } from "./common/baseDataTable/TanStackGrid";
+import type { Planning, User } from "./utils/entities";
 
-interface TeacherPlanning {
-    id: number;
+// A planning-list row isn't itself a 1:1 entity (no single serializer sends exactly this shape),
+// so it's composed FROM the real entities it's built out of, same as Calendar.tsx's `Schedule`
+// interface (docs/Jsx-To-Tsx-Migration-Playbook.md section 3) -- not redeclared as a parallel,
+// disconnected set of fields. `updated_at` isn't on entities.ts's `Planning` (genuinely absent
+// from that entity, not an oversight) and `user` only ever needs 3 fields here.
+interface TeacherPlanningRow extends Pick<Planning, "id"> {
     updated_at: string;
-    user: {
-        id: number;
-        first_name: string;
-        last_name: string;
-    };
+    user: Pick<User, "id" | "first_name" | "last_name">;
 }
 
 interface PlanningListTeachersProps {
     // Rendered unconditionally against `this.props.plannings`, same as PlanningListRooms.
-    plannings: TeacherPlanning[];
+    plannings: TeacherPlanningRow[];
 }
 
 // Dropped: `durationToString` (defined but never called from any column -- confirmed by grep) and
@@ -27,7 +28,7 @@ interface PlanningListTeachersProps {
 function PlanningListTeachers({ plannings }: PlanningListTeachersProps) {
     const { t } = useTranslation("planning");
 
-    const columns: LegacyColumn<TeacherPlanning>[] = [
+    const columns: LegacyColumn<TeacherPlanningRow>[] = [
         {
             Header: "#",
             accessor: "id",
