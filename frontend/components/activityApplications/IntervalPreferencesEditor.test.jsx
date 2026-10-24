@@ -7,21 +7,21 @@
 // are mocked; the test waits for the mount fetch to resolve before asserting the title.
 
 import React from "react";
-import {render, screen, waitFor} from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import i18n from "../../i18n";
 import * as api from "../../tools/api";
 import IntervalPreferencesEditor from "./IntervalPreferencesEditor";
 
 vi.mock("../../tools/api", () => ({
-    get: vi.fn(() => Promise.resolve({data: [], error: null})),
+    get: vi.fn(() => Promise.resolve({ data: [], error: null })),
 }));
 
-vi.mock("./TimeIntervalPreferencesEditor", () => ({default: () => null}));
+vi.mock("./TimeIntervalPreferencesEditor", () => ({ default: () => null }));
 
 const props = {
     preferences: {},
-    activityRefs: [{id: 1, label: "Piano"}],
-    season: {id: 1},
+    activityRefs: [{ id: 1, label: "Piano" }],
+    season: { id: 1 },
     onUpdate: () => {},
 };
 
@@ -40,10 +40,14 @@ describe("IntervalPreferencesEditor", () => {
         render(<IntervalPreferencesEditor {...props} />);
 
         await waitFor(() =>
-            expect(api.get).toHaveBeenCalledWith("/time_interval_preferences/1/1")
+            expect(api.get).toHaveBeenCalledWith(
+                "/time_interval_preferences/1/1"
+            )
         );
         expect(
-            await screen.findByText("Préférences horaires pour l'activité (Piano)")
+            await screen.findByText(
+                "Préférences horaires pour l'activité (Piano)"
+            )
         ).toBeInTheDocument();
     });
 
@@ -77,12 +81,7 @@ describe("IntervalPreferencesEditor — parallel activityRefs both keep their da
                 })
         );
 
-        render(
-            <IntervalPreferencesEditor
-                {...props}
-                activityRefs={refs}
-            />
-        );
+        render(<IntervalPreferencesEditor {...props} activityRefs={refs} />);
 
         await waitFor(() => expect(resolvers).toHaveLength(2));
 
@@ -92,6 +91,62 @@ describe("IntervalPreferencesEditor — parallel activityRefs both keep their da
         resolvers.forEach((resolve) => resolve());
 
         await screen.findByText("Préférences horaires pour l'activité (Piano)");
-        await screen.findByText("Préférences horaires pour l'activité (Guitare)");
+        await screen.findByText(
+            "Préférences horaires pour l'activité (Guitare)"
+        );
+    });
+});
+
+// Regression: the error branch's sibling to the fix above. componentDidMount's error branch did
+// a plain `this.setState({ errors: error })`, overwriting rather than accumulating -- with 2+
+// simultaneous rejected requests, only the last one's error survived in state. Fixed with the same
+// functional-updater pattern as the success branch, keyed by `ref.id` (matching how `intervals`
+// itself is keyed) so each ref's own error is kept independently. Rendered via
+// `IntervalPreferencesEditor.WrappedComponent` (the raw class react-i18next's `withTranslation`
+// HOC exposes under that static, same technique as `planning/Planning.test.jsx`'s remove-student
+// regression tests) with a ref, so `state.errors` can be inspected directly.
+describe("IntervalPreferencesEditor — parallel activityRefs both keep their error (regression)", () => {
+    const RawEditor = IntervalPreferencesEditor.WrappedComponent;
+
+    test("neither ref's error is dropped when both requests reject together", async () => {
+        const refs = [
+            { id: 1, label: "Piano" },
+            { id: 2, label: "Guitare" },
+        ];
+        let resolvers = [];
+        api.get.mockImplementation(
+            (url) =>
+                new Promise((resolve) => {
+                    resolvers.push(() =>
+                        resolve({ data: null, error: `boom for ${url}` })
+                    );
+                })
+        );
+
+        const ref = React.createRef();
+        render(
+            <RawEditor
+                {...props}
+                activityRefs={refs}
+                t={i18n.getFixedT("fr", "activityApplications")}
+                ref={ref}
+            />
+        );
+
+        await waitFor(() => expect(resolvers).toHaveLength(2));
+
+        // Resolve both back-to-back, same as the success-branch regression above, so their
+        // .then() error callbacks run as consecutive microtasks in the same React 18 batch.
+        resolvers.forEach((resolve) => resolve());
+
+        await waitFor(() => {
+            expect(Object.keys(ref.current.state.errors)).toHaveLength(2);
+        });
+        expect(ref.current.state.errors[1]).toBe(
+            "boom for /time_interval_preferences/1/1"
+        );
+        expect(ref.current.state.errors[2]).toBe(
+            "boom for /time_interval_preferences/1/2"
+        );
     });
 });

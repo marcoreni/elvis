@@ -522,7 +522,11 @@ class ActivityDetailsModal extends React.Component {
         const users = this.state.activity.users;
         _.remove(users, s);
 
-        this.props.handleRemoveStudent(this.state.activity, s);
+        this.props.handleRemoveStudent(
+            this.state.activity,
+            s,
+            this.props.interval.id
+        );
 
         this.setState({ activity: { ...this.state.activity, users } });
     }
@@ -531,7 +535,11 @@ class ActivityDetailsModal extends React.Component {
         const options = this.state.activity.options;
         _.remove(options, option);
 
-        this.props.handleRemoveOptionalStudent(this.state.activity, option);
+        this.props.handleRemoveOptionalStudent(
+            this.state.activity,
+            option,
+            this.props.interval.id
+        );
 
         this.setState({ activity: { ...this.state.activity, options } });
     }
@@ -633,18 +641,6 @@ class ActivityDetailsModal extends React.Component {
                 }
             }
         );
-    }
-
-    handleEditActivityInstance() {
-        this.setState({ editionMode: false });
-
-        const instance = Object.assign({}, this.state, this.props.interval);
-        instance.startTime = instance.startTime.toDate();
-        instance.endTime = instance.endTime.toDate();
-
-        this.props.handleEditActivityInstance(instance);
-
-        this.props.closeModal();
     }
 
     handleRemove() {

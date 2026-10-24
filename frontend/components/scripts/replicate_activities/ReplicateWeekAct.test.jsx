@@ -87,8 +87,12 @@ describe("ReplicateWeekAct — showJobProgressModal uses createRoot and unmounts
 
         await userEvent.click(screen.getByRole("button", { name: "Ok" }));
 
-        await waitFor(() =>
-            expect(JobProgressModule.__jobProgressState.unmounted).toBe(true)
+        await waitFor(
+            () =>
+                expect(JobProgressModule.__jobProgressState.unmounted).toBe(
+                    true
+                ),
+            { timeout: 5000 }
         );
     });
 

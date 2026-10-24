@@ -330,19 +330,6 @@ applies late, hasn't been checked). Fix: move the `onChange`/`setState` pair int
 `componentDidUpdate` (this is a class component), keyed off whatever makes `currentAppsSeason`
 become available, instead of the render body.
 
-## `ActivitiesApplicationsList.jsx`'s bulk-delete can persist `page: -1`
-
-`handleBulkDelete`'s page recompute (`Math.min(this.state.filter.page, newTotalPages - 1)`) yields
-`-1` when the delete empties the dataset entirely (`newTotalPages === 0`). Confirmed pre-existing,
-unrelated to the TanStack migration (this function is untouched by that migration's diff, last
-modified by an earlier sweetalert commit). Not a crash — the backend clamps `.page(0)` to page 1 —
-but with `pages: 0` both pagination buttons are disabled (`getCanNextPage()`/`getCanPreviousPage()`
-are both false at `pageIndex -1`, `pageCount 0`), so "Suivant" is NOT a way out despite being
-enabled elsewhere at negative indices; the table displays "Page 0 sur 1" and `page: -1` survives
-into `localStorage` across reloads, recoverable only via the reset-filters button or any filter
-change (both set `page: 0`). Fix: floor the recompute at `0`, e.g.
-`Math.max(0, Math.min(this.state.filter.page, newTotalPages - 1))`.
-
 ## `ActivityRefBasics.jsx`/`EditFormule.jsx` rebuild `dataService`/`columns` on every render
 
 Both build a fresh `dataService`/`columns` object in `render()`, inside a shared `react-final-form`
@@ -353,45 +340,6 @@ correctness bug (downgraded from an earlier, incorrect diagnosis that this churn
 `getCoreRowModel()` caching bug — that bug's actual cause, traced later, was two data services
 mutating a shared array in place; fixed at the source in batch 3). Fix, if ever worth it: memoize
 `columns`/`dataService` on whatever they actually depend on instead of rebuilding them inline.
-
-## `Planning.jsx`'s remove-student handlers throw `ReferenceError: int is not defined`
-
-`handleRemoveStudent`/`handleRemoveOptionalStudent` (`frontend/components/planning/Planning.jsx`,
-~line 255-290) both do, in their DELETE response handler:
-```js
-const interval = activity.time_interval;
-// let [int] = TimeIntervalHelpers.momentify([interval]);
-int.activity = activity;
-```
-`int` is never declared — a leftover from a commented-out line. Every call throws immediately,
-before the rest of the handler (removing the student from `selectedIntervals`) ever runs. Found
-during the React 18 batching audit (2026-09-26); confirmed pre-existing and unrelated to that bump
-(no `git blame` connection to any recent change). Fix: restore the commented-out
-`TimeIntervalHelpers.momentify` call (or determine whether `interval` itself already has what's
-needed and drop the `int.activity = activity` line entirely — check what `selectedIntervals[index]`
-is actually expected to look like downstream before choosing).
-
-## `ActivityDetailsModal.jsx`'s `handleEditActivityInstance()` method is dead code
-
-`frontend/components/planning/ActivityDetailsModal.jsx` (~line 638-646) defines a class method
-`handleEditActivityInstance()`, but nothing in the file ever calls `this.handleEditActivityInstance`
-— every actual call site invokes `this.props.handleEditActivityInstance` instead, a completely
-different function passed down from the parent. Found during the React 18 batching audit (the
-method itself looked superficially like a stale-`this.state`-read bug, but turned out unreachable
-so it doesn't matter either way). Not deleted here — small, isolated, zero risk either way; delete
-next time this file is touched for something else, after confirming with a fresh grep that it's
-still unreferenced.
-
-## `IntervalPreferencesEditor.jsx`'s parallel-fetch error branch doesn't accumulate
-
-`componentDidMount` (`frontend/components/activityApplications/IntervalPreferencesEditor.jsx`,
-~line 29-48) fires one request per `activityRef` in parallel; the success branch was fixed (batch-18
-migration) to use a functional `setState` updater so concurrent resolutions can't drop each other's
-data, but the sibling error branch still does `this.setState({ errors: error })` — a plain overwrite,
-not merged with any previous error. With more than one ref failing, only the last failure's error
-survives in state. Low impact (multiple simultaneous failures for the same editor instance are
-presumably rare) and pre-existing under the same class of issue the success-branch fix addressed.
-Fix: apply the same functional-updater treatment, accumulating errors instead of overwriting.
 
 ## `availabilityRef.current.componentDidMount()` reads stale props under automatic batching
 
@@ -555,30 +503,6 @@ key into `formattedInitialValues` from `consent_document_users`) or, if the pre-
 intentionally not wanted, drop the now-pointless `defaultValue` prop pass-through at the call site
 instead of reintroducing it.
 
-## Two `createRoot`-related tests flake under full-suite load
-
-Both pass reliably in isolation and fail only occasionally in a full `yarn vitest run`, both on a
-`waitFor` whose default budget is 1s:
-
-- `frontend/components/scripts/replicate_activities/ReplicateWeekAct.test.jsx` — "closing the
-  job-progress modal calls JobProgress's componentWillUnmount" (the `createRoot`/unmount regression
-  test from the React 17→18 bump), on `waitFor(... unmounted === true)`.
-- `frontend/components/ActivitiesApplicationsList.test.jsx:708` — on
-  `expect(...__jobProgressState.mounted).toBe(true)`. This one chains a 400ms module-level debounce,
-  a real `userEvent.upload`, an unmocked sweetalert2 and a `createRoot` render inside that same 1s
-  budget.
-
-Measured during the 18→19 bump: the first failed 1 of 12 full runs on React 19 and 0 of 6 on React
-18 with the identical 1502 tests. Don't over-read that A/B — at a 1/12 rate, 6 clean runs are
-~60% likely by chance, so 0/6 carries essentially no information either way. The load argument is
-the real evidence: both pass in isolation, two independent files with the same machinery fail the
-same way, and the failing run showed that file taking 3744ms.
-
-What this does rule out is a *semantic* break (a real `root.unmount()` regression would be
-deterministic). It does not rule out a React 19 *timing* shift — 19 changed scheduling, and a
-slower-but-correct flush would present identically. The remedy is the same either way: give both an
-explicit `waitFor(..., { timeout: 5000 })` rather than chasing a component bug.
-
 ## React 19 reports uncaught render errors more quietly than React 18
 
 React 19 routes uncaught render errors to `window.reportError` and drops both the `"Warning: "`
@@ -589,3 +513,43 @@ under React 19. The error is still printed, so a developer still sees it — but
 on, and this app has no error boundaries, no `window.onerror` and no Sentry, so nothing captures
 the component stack that 18 used to print. Relevant when triaging a blank React island: check the
 console carefully rather than expecting the old two-part output.
+
+## `Planning.jsx`'s remove-student handlers update `selectedIntervals` but not `intervalStore`
+
+`handleRemoveStudent`/`handleRemoveOptionalStudent` (`frontend/components/planning/Planning.jsx`)
+splice the freshly-fetched interval into `this.state.selectedIntervals` by index, in place, but
+never rebuild `this.state.intervalStore` (the separate id-keyed object `ActivityDetailsModal`'s
+`interval` prop actually reads from, via `this.state.intervalStore[this.state.intervalDetail]`,
+see `:1671`). Re-opening the detail modal for that same interval right after a remove-student
+action would show the stale cached version from `intervalStore`, not the just-fetched one.
+Pre-existing in this exact shape even in the original (broken) code this replaced -- not a new
+regression, just not fixed now (the established-safer pattern already used by `handleOpenDetail`
+is to rebuild both via `this.setState({...this.getIntervals(newIntervals), ...})` instead of
+mutating `selectedIntervals` alone). Fix: switch both handlers to the same `getIntervals(...)`
+pattern.
+
+## `ActivityDetailsModal.jsx`'s `editionMode` is a one-way switch
+
+`handleEditionMode()` sets `this.state.editionMode = true`; the only code that ever set it back to
+`false` was `handleEditActivityInstance()` (removed as dead code -- see the fix for "dead code"
+above). Since `this.handleEditActivityInstance`'s only call site was itself unreachable
+(commented-out JSX), `editionMode` was already effectively one-way before that deletion -- the
+removal didn't change runtime behavior, just made the fact more visible. Once a user enters edit
+mode on a validated interval's details (`:732`'s render branch), it stays in edit mode for the
+rest of that modal instance; only closing and reopening the modal (a fresh `constructor`) resets
+it. Not clearly a bug (closing-then-reopening may be the intended way out), but worth a product
+call on whether edit mode should have an explicit "done editing" action.
+
+## `ActivityDetailsModal.jsx`'s `verifyTimeOverlap()` always sends `time_interval_id: undefined`
+
+`verifyTimeOverlap()` (`frontend/components/planning/ActivityDetailsModal.jsx:553`) reads
+`const time_interval_id = this.props.id;`, but `id` is never a prop `Planning.jsx` passes to
+`<ActivityDetailsModal>` (confirmed by reading its full prop list, `:1667-1770`) -- every other
+place in this file reads `this.props.interval.id` instead. `POST /planning/overlap` has always
+received `time_interval_id: undefined` as a result. Found while threading a real interval id
+through `handleRemoveStudent`/`handleRemoveOptionalStudent` (which needed to resolve the same
+question for a different method) and confirmed via grep, not fixed here -- unrelated to that
+change and not investigated further (unclear whether the backend's overlap check actually needs
+this id to exclude the interval being edited from its own overlap check, which would make this a
+real "editing a validated slot's own room/teacher trips a false positive overlap" bug, or whether
+it's unused server-side). Fix, if it matters: `this.props.id` -> `this.props.interval.id`.
