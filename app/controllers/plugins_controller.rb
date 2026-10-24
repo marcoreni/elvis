@@ -8,7 +8,8 @@ class PluginsController < ApplicationController
       format.html
       format.json do
         render json: {
-          plugins: Plugin.where(hidden: false)
+          plugins: Plugin.where(hidden: false),
+          is_restarting: File.exist?(Rails.root.join("tmp", "restart.txt"))
         }
       end
     end
