@@ -243,17 +243,6 @@ itself having no types to cast *from* — real fix is migrating that file to `.t
 other caller, `ActivityDetailsModal.jsx`, unaffected either way since that caller is also untyped
 JS) or giving `omitInactiveStudents` an explicit typed signature.
 
-## `Activity#teacher` is N+1-prone independent of `.includes()`
-
-`Activity#teacher` (`app/models/activity.rb`) is a plain Ruby method
-(`teachers_activities.where(is_main: true).map(&:teacher).first`), not an AR association — calling
-`.where` on an already-preloaded `has_many` bypasses the preloaded array and issues a fresh query
-every time, regardless of any `.includes()` upstream. `ActivitySerializer`'s per-activity `teacher`
-lookup (used by `season_activities`/`evaluate`) hits this on every activity in a collection. Real,
-pre-existing, not introduced by any recent change. Fixing it means changing `Activity#teacher` itself
-to read from an already-loaded `teachers_activities` array in Ruby — a model-behavior change, not
-attempted as part of unrelated work.
-
 ## Orphaned code left in place after the TanStack migration (batch 4b, item 13)
 
 Not deleted per this repo's standing policy on unused-looking code — logged instead:
@@ -371,19 +360,6 @@ real, since `AvailabilityManager.jsx` (what it refs) is still untyped JS wrapped
 file too, which is out of scope for the conversion that introduced this comment. Real fix: migrate
 `AvailabilityManager.jsx` to TypeScript.
 
-## `Plugins.jsx`'s restart banner self-dismisses regardless of actual restart status
-
-`Plugins.jsx` reads `res.is_restarting` in both `getPlugins()` (line 56) and `checkRestartStatus()`
-(line 80), but no backend endpoint ever returns that key (`git grep is_restarting -- app/ lib/
-config/` is empty; `PluginsController#index`/`#changed` render only `{ plugins: ... }`/
-`{ restart: ... }`). Found while confirming the `display_text` dead-code removal in this same file
-(`docs/OrphanedCode.md`, phase 4a entry) — same root cause, but this one is live/reachable, not dead:
-toggling a plugin sets `is_restarting: true` from `#changed`'s `restart` flag, `RestartingMessage`
-renders, then the 3-second poll's `res.is_restarting` is always `undefined`, so
-`!res.is_restarting` is always true and the banner dismisses itself on the very next poll — whether
-or not the server has actually finished restarting. Fix: have `PluginsController#index`/`#changed`
-actually report real restart state (e.g. whether `tmp/restart.txt` is still present).
-
 ## `react-toastify` 11 bump: minor visual drift, consciously accepted (not a bug)
 
 `chore/bump-react-toastify` (4.5.2 -> 11.1.0) restores the pre-bump *colors*
@@ -395,17 +371,6 @@ larger `border-radius` (6px vs 1px), a different `box-shadow`, no longer clips o
 the progress bar / close button markup changed shape (SVG icon vs a bold `✖` glyph). None of
 this is functionally broken, just a minor "close but not pixel-identical" look versus the
 pre-bump toasts. Not tracked for a fix.
-
-## `/plannings/all_rooms` crashes: `show_all_rooms.html.erb` never passes `season`
-
-`app/views/planning/show_all_rooms.html.erb` mounts `planning/Planning` without a `season:` prop,
-but `frontend/components/planning/Planning.jsx:83` reads `this.props.season.holidays.length` in the
-constructor, so the component throws `TypeError: Cannot read properties of undefined (reading
-'holidays')` and the page renders an empty shell. `show_for_room.html.erb` (`/rooms/:id/planning`)
-does pass `season:`/`nextSeason:`/`seasons:` and works fine. Found during the React 19 bump's live
-smoke pass; confirmed pre-existing and React-version-independent (reproduced identically on 18 and
-19). Fix: pass the season props from `PlanningController#show_all_rooms` the way `show_for_room`
-does, or guard the constructor read.
 
 ## `propTypes` declarations are dead weight under React 19
 
