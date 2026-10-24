@@ -459,7 +459,13 @@ describe("ActivitiesApplicationsList — pagination clamp (regression)", () => {
 // pageIndex`, displaying "Page 0 sur 1" and persisting into `localStorage`. Floored at `0` via
 // `Math.max(0, ...)`.
 describe("ActivitiesApplicationsList — bulk-delete page clamp (regression)", () => {
+    // This test chains several `waitFor(..., { timeout: 5000 })` calls -- if the fix regresses
+    // and one of them has to run out its own budget, vitest's default 5000ms *test*-level timeout
+    // would otherwise fire first and report a generic "Test timed out" pointing at the `test(...)`
+    // declaration, not the specific assertion that actually failed. Give the test itself a longer
+    // budget so a real regression surfaces its own readable `waitFor` assertion message instead.
     test("bulk-deleting every row on the last page lands on page 0, not -1", async () => {
+        await i18n.changeLanguage("fr");
         let deleted = false;
         global.fetch = vi.fn((url, options) => {
             const u = String(url);
@@ -563,7 +569,7 @@ describe("ActivitiesApplicationsList — bulk-delete page clamp (regression)", (
                 ).toBeGreaterThan(1),
             { timeout: 5000 }
         );
-    });
+    }, 20000);
 });
 
 // ==================================================================================================

@@ -513,3 +513,43 @@ under React 19. The error is still printed, so a developer still sees it — but
 on, and this app has no error boundaries, no `window.onerror` and no Sentry, so nothing captures
 the component stack that 18 used to print. Relevant when triaging a blank React island: check the
 console carefully rather than expecting the old two-part output.
+
+## `Planning.jsx`'s remove-student handlers update `selectedIntervals` but not `intervalStore`
+
+`handleRemoveStudent`/`handleRemoveOptionalStudent` (`frontend/components/planning/Planning.jsx`)
+splice the freshly-fetched interval into `this.state.selectedIntervals` by index, in place, but
+never rebuild `this.state.intervalStore` (the separate id-keyed object `ActivityDetailsModal`'s
+`interval` prop actually reads from, via `this.state.intervalStore[this.state.intervalDetail]`,
+see `:1671`). Re-opening the detail modal for that same interval right after a remove-student
+action would show the stale cached version from `intervalStore`, not the just-fetched one.
+Pre-existing in this exact shape even in the original (broken) code this replaced -- not a new
+regression, just not fixed now (the established-safer pattern already used by `handleOpenDetail`
+is to rebuild both via `this.setState({...this.getIntervals(newIntervals), ...})` instead of
+mutating `selectedIntervals` alone). Fix: switch both handlers to the same `getIntervals(...)`
+pattern.
+
+## `ActivityDetailsModal.jsx`'s `editionMode` is a one-way switch
+
+`handleEditionMode()` sets `this.state.editionMode = true`; the only code that ever set it back to
+`false` was `handleEditActivityInstance()` (removed as dead code -- see the fix for "dead code"
+above). Since `this.handleEditActivityInstance`'s only call site was itself unreachable
+(commented-out JSX), `editionMode` was already effectively one-way before that deletion -- the
+removal didn't change runtime behavior, just made the fact more visible. Once a user enters edit
+mode on a validated interval's details (`:732`'s render branch), it stays in edit mode for the
+rest of that modal instance; only closing and reopening the modal (a fresh `constructor`) resets
+it. Not clearly a bug (closing-then-reopening may be the intended way out), but worth a product
+call on whether edit mode should have an explicit "done editing" action.
+
+## `ActivityDetailsModal.jsx`'s `verifyTimeOverlap()` always sends `time_interval_id: undefined`
+
+`verifyTimeOverlap()` (`frontend/components/planning/ActivityDetailsModal.jsx:553`) reads
+`const time_interval_id = this.props.id;`, but `id` is never a prop `Planning.jsx` passes to
+`<ActivityDetailsModal>` (confirmed by reading its full prop list, `:1667-1770`) -- every other
+place in this file reads `this.props.interval.id` instead. `POST /planning/overlap` has always
+received `time_interval_id: undefined` as a result. Found while threading a real interval id
+through `handleRemoveStudent`/`handleRemoveOptionalStudent` (which needed to resolve the same
+question for a different method) and confirmed via grep, not fixed here -- unrelated to that
+change and not investigated further (unclear whether the backend's overlap check actually needs
+this id to exclude the interval being edited from its own overlap check, which would make this a
+real "editing a validated slot's own room/teacher trips a false positive overlap" bug, or whether
+it's unused server-side). Fix, if it matters: `this.props.id` -> `this.props.interval.id`.

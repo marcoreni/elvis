@@ -92,14 +92,33 @@ describe.each(["fr", "en"])("planning area — bilingual smoke (%s)", (lng) => {
 // Regression: handleRemoveStudent/handleRemoveOptionalStudent's DELETE response handler used to
 // read an undeclared `int` (a leftover from a commented-out `TimeIntervalHelpers.momentify` call)
 // instead of the `interval` it just computed, throwing `ReferenceError: int is not defined` on
-// every call before the matching entry in `selectedIntervals` was ever updated. Both handlers are
-// normally invoked by ActivityDetailsModal, but that's only mounted once `isDetailModalOpen` is
-// true (it lives inside a react-modal `<Modal>`, which doesn't render its children at all while
-// closed) -- reaching it through the UI would mean also driving `handleOpenDetail`'s own fetch.
-// Simpler and just as faithful to call the handlers directly on the real class instance, grabbed
-// via `Planning.WrappedComponent` (react-i18next's `withTranslation` HOC exposes the wrapped,
-// un-decorated class under that static, same as the `withTranslation()` HOC check elsewhere in
-// this repo's tests) rendered with a ref and a real `t`.
+// every call before the matching entry in `selectedIntervals` was ever updated.
+//
+// Code review caught that the first fix attempt (`interval.activity = activity`) just swapped one
+// crash for another: the DELETE responses these handlers actually receive don't carry a usable
+// `time_interval`.
+// - `ActivityController#remove_student`'s response is
+//   `{ activity: Utils.format_for_suggestion(...), status, status_updated_at, referent }` -- the
+//   top-level body has no `time_interval` key at all (it's nested one level deeper, inside
+//   `.activity.time_interval`, and even that doesn't carry `activity_instance`).
+// - `ActivityController#remove_student_option`'s response is a serialized `DesiredActivity`
+//   (`render json: desired_activity, include: { options: {...} }`) -- `desired_activities` has no
+//   `time_interval` column at all (checked db/schema.rb).
+// The real fix (mirroring handleOpenDetail/handleUpdateActivityInstance's own established pattern
+// elsewhere in this file) is to re-fetch the real, current interval via
+// `TimeIntervalHelpers.fetchInterval` after the DELETE settles, rather than trying to extract
+// interval data from either response -- which means both handlers now need the interval's id,
+// threaded through as a 3rd argument from ActivityDetailsModal (`this.props.interval.id` there,
+// not `this.props.id`, which ActivityDetailsModal reads in one unrelated, already-broken spot but
+// is never actually passed as a prop by Planning.jsx).
+//
+// Both handlers are normally invoked by ActivityDetailsModal, but that's only mounted once
+// `isDetailModalOpen` is true (it lives inside a react-modal `<Modal>`, which doesn't render its
+// children at all while closed) -- reaching it through the UI would mean also driving
+// `handleOpenDetail`'s own fetch. Simpler and just as faithful to call the handlers directly on
+// the real class instance, grabbed via `Planning.WrappedComponent` (react-i18next's
+// `withTranslation` HOC exposes the wrapped, un-decorated class under that static, same as the
+// `withTranslation()` HOC check elsewhere in this repo's tests) rendered with a ref and a real `t`.
 describe("Planning — remove-student handlers don't throw ReferenceError (regression)", () => {
     const RawPlanningComponent = Planning.WrappedComponent;
 
@@ -116,25 +135,55 @@ describe("Planning — remove-student handlers don't throw ReferenceError (regre
         return ref;
     }
 
-    test("handleRemoveStudent replaces the matching interval, now carrying .activity", async () => {
+    // Shape TimeIntervalController#details/`TimeIntervalHelpers.fetchInterval`'s `GET
+    // /time_interval/:id` actually returns (see app/controllers/time_interval_controller.rb) --
+    // the same shape handleOpenDetail already splices into selectedIntervals elsewhere in this
+    // file, so it's known-safe for every selectedIntervals consumer (formatIntervalsForSchedule,
+    // RawPlanning, Calendar.tsx).
+    function makeFetchedInterval(id) {
+        return {
+            id,
+            start: "2024-01-01T10:00:00.000Z",
+            end: "2024-01-01T11:00:00.000Z",
+            kind: "c",
+            is_validated: true,
+            comment: null,
+            activity_instance: null,
+        };
+    }
+
+    test("handleRemoveStudent re-fetches and replaces the matching interval instead of crashing", async () => {
         const interval = {
             id: 42,
             start: "2024-01-01T10:00:00.000Z",
             end: "2024-01-01T11:00:00.000Z",
         };
-        const returnedActivity = {
-            id: 7,
-            label: "Piano",
-            activity_ref: { label: "Piano" },
-            time_interval: {
-                id: 42,
-                start: "2024-01-01T10:00:00.000Z",
-                end: "2024-01-01T11:00:00.000Z",
-            },
+
+        // Realistic ActivityController#remove_student response -- a `format_for_suggestion`
+        // result wrapped in a `{ activity, status, status_updated_at, referent }` envelope, no
+        // usable `time_interval` anywhere the old code looked for one.
+        const removeStudentResponse = {
+            activity: { id: 7, label: "Piano" },
+            status: "En attente de traitement",
+            status_updated_at: "2024-01-01T09:00:00.000Z",
+            referent: null,
         };
-        global.fetch = vi.fn(() =>
-            Promise.resolve({ json: () => Promise.resolve(returnedActivity) })
-        );
+        const fetchedInterval = makeFetchedInterval(42);
+
+        global.fetch = vi.fn((url) => {
+            const u = String(url);
+            if (u === "/activity/7/desired/501") {
+                return Promise.resolve({
+                    json: () => Promise.resolve(removeStudentResponse),
+                });
+            }
+            if (u === "/time_interval/42") {
+                return Promise.resolve({
+                    json: () => Promise.resolve(fetchedInterval),
+                });
+            }
+            return Promise.reject(new Error(`unexpected fetch: ${u}`));
+        });
 
         const ref = renderRaw({ intervals: [interval] });
 
@@ -144,10 +193,12 @@ describe("Planning — remove-student handlers don't throw ReferenceError (regre
             },
         };
 
-        // Before the fix, the fetch's `.then()` callback threw `ReferenceError: int is not
-        // defined` here, so `selectedIntervals` was never updated.
+        // Before either fix, the fetch's `.then()` callback threw synchronously here (first
+        // `ReferenceError: int is not defined`, then, after the first fix attempt,
+        // `TypeError: Cannot set properties of undefined` reading `activity.time_interval`), so
+        // `selectedIntervals` was never updated.
         act(() => {
-            ref.current.handleRemoveStudent({ id: 7 }, student);
+            ref.current.handleRemoveStudent({ id: 7 }, student, 42);
         });
 
         await waitFor(() =>
@@ -156,41 +207,63 @@ describe("Planning — remove-student handlers don't throw ReferenceError (regre
                 expect.objectContaining({ method: "DELETE" })
             )
         );
+        await waitFor(() =>
+            expect(global.fetch).toHaveBeenCalledWith(
+                "/time_interval/42",
+                expect.anything()
+            )
+        );
 
         await waitFor(() => {
             const updated = ref.current.state.selectedIntervals.find(
                 (i) => i.id === 42
             );
-            expect(updated?.activity).toEqual(returnedActivity);
+            expect(updated).toEqual(fetchedInterval);
         });
     });
 
-    test("handleRemoveOptionalStudent replaces the matching interval the same way", async () => {
+    test("handleRemoveOptionalStudent re-fetches and replaces the matching interval the same way", async () => {
         const interval = {
             id: 43,
             start: "2024-01-01T10:00:00.000Z",
             end: "2024-01-01T11:00:00.000Z",
         };
-        const returnedActivity = {
-            id: 8,
-            label: "Guitare",
-            activity_ref: { label: "Guitare" },
-            time_interval: {
-                id: 43,
-                start: "2024-01-01T10:00:00.000Z",
-                end: "2024-01-01T11:00:00.000Z",
-            },
+
+        // Realistic ActivityController#remove_student_option response -- a serialized
+        // `DesiredActivity`, which has no `time_interval` column at all.
+        const removeStudentOptionResponse = {
+            id: 501,
+            activity_ref_id: 12,
+            activity_id: 8,
+            options: [],
         };
-        global.fetch = vi.fn(() =>
-            Promise.resolve({ json: () => Promise.resolve(returnedActivity) })
-        );
+        const fetchedInterval = makeFetchedInterval(43);
+
+        global.fetch = vi.fn((url) => {
+            const u = String(url);
+            if (u === "/activity/8/desired_option/777") {
+                return Promise.resolve({
+                    json: () => Promise.resolve(removeStudentOptionResponse),
+                });
+            }
+            if (u === "/time_interval/43") {
+                return Promise.resolve({
+                    json: () => Promise.resolve(fetchedInterval),
+                });
+            }
+            return Promise.reject(new Error(`unexpected fetch: ${u}`));
+        });
 
         const ref = renderRaw({ intervals: [interval] });
 
         const optionalStudent = { desired_activity_id: 777 };
 
         act(() => {
-            ref.current.handleRemoveOptionalStudent({ id: 8 }, optionalStudent);
+            ref.current.handleRemoveOptionalStudent(
+                { id: 8 },
+                optionalStudent,
+                43
+            );
         });
 
         await waitFor(() =>
@@ -199,12 +272,18 @@ describe("Planning — remove-student handlers don't throw ReferenceError (regre
                 expect.objectContaining({ method: "DELETE" })
             )
         );
+        await waitFor(() =>
+            expect(global.fetch).toHaveBeenCalledWith(
+                "/time_interval/43",
+                expect.anything()
+            )
+        );
 
         await waitFor(() => {
             const updated = ref.current.state.selectedIntervals.find(
                 (i) => i.id === 43
             );
-            expect(updated?.activity).toEqual(returnedActivity);
+            expect(updated).toEqual(fetchedInterval);
         });
     });
 });

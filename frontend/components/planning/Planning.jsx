@@ -234,7 +234,7 @@ class Planning extends React.Component {
     // ====================================
     // HANDLERS FOR STUDENT MANAGEMENT
     // ====================================
-    handleRemoveStudent(activity, student) {
+    handleRemoveStudent(activity, student, intervalId) {
         const desiredActivityId = _.chain(
             student.activity_application.desired_activities
         )
@@ -251,24 +251,32 @@ class Planning extends React.Component {
                 Accept: "application/json",
             },
         })
-            .then(response => response.json())
-            .then(activity => {
-                const interval = activity.time_interval;
-                interval.activity = activity;
+            // `remove_student`'s response (ActivityController#remove_student) is
+            // `{ activity: Utils.format_for_suggestion(...), status, status_updated_at, referent }`
+            // -- this top-level body has no `time_interval` key (it's nested one level deeper,
+            // inside `.activity.time_interval`, via format_for_suggestion's own `as_json`
+            // include -- and even that doesn't carry `activity_instance`, which
+            // formatIntervalsForSchedule needs). Re-fetch the real, current interval instead (same
+            // pattern as handleOpenDetail above) rather than trying to extract it from this
+            // response.
+            .then(() => {
+                TimeIntervalHelpers.fetchInterval(csrfToken, intervalId).then(
+                    newInterval => {
+                        const {selectedIntervals} = this.state;
+                        const index = selectedIntervals.findIndex(i => {
+                            return i.id === newInterval.id;
+                        });
 
-                const {selectedIntervals} = this.state;
-                const index = this.state.selectedIntervals.findIndex(i => {
-                    return i.id === interval.id;
-                });
-
-                if (index > -1) {
-                    selectedIntervals[index] = interval;
-                    this.setState({selectedIntervals});
-                }
+                        if (index > -1) {
+                            selectedIntervals[index] = newInterval;
+                            this.setState({selectedIntervals});
+                        }
+                    }
+                );
             });
     }
 
-    handleRemoveOptionalStudent(activity, optionalStudent) {
+    handleRemoveOptionalStudent(activity, optionalStudent, intervalId) {
         const desiredActivityId = optionalStudent.desired_activity_id;
 
         fetch(`/activity/${activity.id}/desired_option/${desiredActivityId}`, {
@@ -280,20 +288,23 @@ class Planning extends React.Component {
                 Accept: "application/json",
             },
         })
-            .then(response => response.json())
-            .then(activity => {
-                const interval = activity.time_interval;
-                interval.activity = activity;
+            // `remove_student_option`'s response (ActivityController#remove_student_option) is a
+            // `DesiredActivity` -- `desired_activities` has no `time_interval` column at all. Same
+            // fix as handleRemoveStudent above: re-fetch the real, current interval.
+            .then(() => {
+                TimeIntervalHelpers.fetchInterval(csrfToken, intervalId).then(
+                    newInterval => {
+                        const {selectedIntervals} = this.state;
+                        const index = selectedIntervals.findIndex(i => {
+                            return i.id === newInterval.id;
+                        });
 
-                const {selectedIntervals} = this.state;
-                const index = this.state.selectedIntervals.findIndex(i => {
-                    return i.id === interval.id;
-                });
-
-                if (index > -1) {
-                    selectedIntervals[index] = interval;
-                    this.setState({selectedIntervals});
-                }
+                        if (index > -1) {
+                            selectedIntervals[index] = newInterval;
+                            this.setState({selectedIntervals});
+                        }
+                    }
+                );
             });
     }
 
@@ -1724,16 +1735,22 @@ class Planning extends React.Component {
                                 activityId
                             )
                         }
-                        handleRemoveStudent={(activity, student) =>
-                            this.handleRemoveStudent(activity, student)
+                        handleRemoveStudent={(activity, student, intervalId) =>
+                            this.handleRemoveStudent(
+                                activity,
+                                student,
+                                intervalId
+                            )
                         }
                         handleRemoveOptionalStudent={(
                             activity,
-                            optionalStudent
+                            optionalStudent,
+                            intervalId
                         ) =>
                             this.handleRemoveOptionalStudent(
                                 activity,
-                                optionalStudent
+                                optionalStudent,
+                                intervalId
                             )
                         }
                         handleUpdateInstance={(k, v) =>
