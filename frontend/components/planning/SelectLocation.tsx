@@ -21,14 +21,21 @@ function resolveModeTarget(
 ): { elements: Room[]; locationKey: LocationKey | null } {
     switch (mode) {
         case "room":
-            return { elements: rooms ?? [], locationKey: "location_id" };
+            // `Array.isArray` (not `??`) -- a non-array truthy `rooms` (unexpected, but not
+            // provably unreachable given `react_component` callers aren't statically checked)
+            // must still fall back to `[]`, same as the original's `Array.isArray(elements)`
+            // guard before this was factored out.
+            return {
+                elements: Array.isArray(rooms) ? rooms : [],
+                locationKey: "location_id",
+            };
         default:
             return { elements: [], locationKey: null };
     }
 }
 
 /**
- * Find all teachers having the given activities
+ * Find the ids of every room located in one of the given `locations`.
  */
 export const findElementsByLocation = (
     { rooms }: { rooms?: Room[] },
@@ -66,15 +73,18 @@ export const formatOptions = (
 ): LocationOption[] => {
     const { elements, locationKey } = resolveModeTarget(mode, rooms);
 
-    return Array.isArray(locations)
+    return Array.isArray(elements) && Array.isArray(locations)
         ? elements.reduce<LocationOption[]>((acc, elt) => {
               // Check if element has a location at all
               if (!locationKey || !Boolean(elt[locationKey])) {
-                  // `.splice()` with no arguments deletes (and returns) every item in `acc`,
-                  // which is a plain copy of `acc`'s previous contents -- equivalent to
-                  // `.slice()` here, just a more roundabout way to say "skip this element,
-                  // keep the accumulator as-is". `.splice(0)` (TS requires the explicit `0` --
-                  // runtime JS treats a missing `deleteCount` the same either way).
+                  // BEHAVIOR FIX, not a mechanical rewrite -- see docs/KnownIssues.md. The
+                  // original was `return acc.splice();` (zero arguments): per spec, a 0-arg
+                  // `splice()` call deletes nothing and returns `[]`, so that line actually
+                  // reset the whole accumulator to empty every time a location-less room was
+                  // hit mid-iteration, silently discarding every option built up before it.
+                  // `acc.splice(0)` (one argument: `start`) deletes *every* item in `acc` and
+                  // returns them -- i.e. returns a copy of what `acc` held, which is what
+                  // "skip this element, keep the accumulator as-is" actually requires.
                   return acc.splice(0);
               }
 
@@ -129,10 +139,14 @@ function SelectLocation({
     onChange,
 }: SelectLocationProps) {
     // `options` was only ever computed once, in the constructor, from the initial props --
-    // componentDidUpdate only ever reset `values`, never recomputed `options`. A `useRef`
-    // initializer preserves that "computed once, ignores later prop changes" semantics; a
-    // `useMemo` keyed on rooms/locations/mode would (incorrectly) recompute on every change.
-    const optionsRef = useRef<LocationOption[]>(
+    // componentDidUpdate only ever reset `values`, never recomputed `options`. `useState`'s
+    // lazy initializer (a function, not a call result) preserves that "computed once, ignores
+    // later prop changes" semantics AND guarantees `formatOptions` itself only ever runs once --
+    // React only invokes the initializer on the very first render. `useRef(formatOptions(...))`
+    // would still only *keep* the first call's result past mount, but would re-run
+    // `formatOptions` as a wasted computation on every render feeding that ref assignment; a
+    // `useMemo` keyed on rooms/locations/mode would (incorrectly) recompute the kept value too.
+    const [options] = useState<LocationOption[]>(() =>
         formatOptions({ rooms }, locations, mode)
     );
     const [values, setValues] = useState<LocationOption[]>([]);
@@ -175,7 +189,7 @@ function SelectLocation({
             isMulti
             isClearable
             hideSelectedOptions
-            options={optionsRef.current}
+            options={options}
             value={values}
             onChange={handleSelect}
         />

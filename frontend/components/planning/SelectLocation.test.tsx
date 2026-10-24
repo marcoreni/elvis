@@ -11,11 +11,20 @@
 // plain stub that exposes each option as a button and calls the real `onChange` prop, so this
 // tests SelectLocation's own wiring (options computed once, componentDidUpdate -> useEffect
 // reset behavior, the onChange/dedup contract) without fighting react-select's positioning.
+//
+// The mock also records every render via `selectRenderSpy`, specifically so the mount-vs-update
+// test below can prove something: `values` starts at `[]`, so a stray mount-time `setValues([])`
+// would be unobservable through rendered content alone (it was previously asserted that way and
+// passed even against a deliberately-wrong unguarded `useEffect` -- see docs/KnownIssues.md). An
+// unwanted extra `setValues` call schedules a second render, which the spy's call count exposes
+// even though the rendered content doesn't change.
 
 import React from "react";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, test, vi } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vitest";
+
+const { selectRenderSpy } = vi.hoisted(() => ({ selectRenderSpy: vi.fn() }));
 
 vi.mock("react-select", () => ({
     default: ({
@@ -26,19 +35,25 @@ vi.mock("react-select", () => ({
         options: { id: number; label: string }[];
         value: { id: number; label: string }[];
         onChange: (next: { id: number; label: string }[]) => void;
-    }) => (
-        <div>
-            <div data-testid="selected-count">{value.length}</div>
-            {options.map((opt) => (
-                <button key={opt.id} onClick={() => onChange([...value, opt])}>
-                    {opt.label}
+    }) => {
+        selectRenderSpy();
+        return (
+            <div>
+                <div data-testid="selected-count">{value.length}</div>
+                {options.map((opt) => (
+                    <button
+                        key={opt.id}
+                        onClick={() => onChange([...value, opt])}
+                    >
+                        {opt.label}
+                    </button>
+                ))}
+                <button data-testid="clear" onClick={() => onChange([])}>
+                    clear
                 </button>
-            ))}
-            <button data-testid="clear" onClick={() => onChange([])}>
-                clear
-            </button>
-        </div>
-    ),
+            </div>
+        );
+    },
 }));
 
 import SelectLocation, {
@@ -46,6 +61,13 @@ import SelectLocation, {
     findElementsByLocation,
 } from "./SelectLocation";
 
+// Room #4 (no `location_id`) is deliberately LAST: it's the one that triggers the
+// skip-this-element branch in `formatOptions`. If that branch ever regresses back to resetting
+// the accumulator (the original file's actual bug -- `acc.splice()` with zero arguments returns
+// `[]` and wipes out everything accumulated before it, see docs/KnownIssues.md), having it last
+// means nothing runs afterward to rebuild the accumulator, and the dedup test below goes from
+// `[{10},{20}]` to `[]`. Putting it anywhere earlier would let later rooms silently "fix" the
+// wipe and hide the regression -- don't reorder this fixture.
 const rooms = [
     { id: 1, label: "Salle A", location_id: 10 },
     { id: 2, label: "Salle B", location_id: 10 },
@@ -56,6 +78,10 @@ const locations = [
     { id: 10, label: "Site Nord" },
     { id: 20, label: "Site Sud" },
 ];
+
+beforeEach(() => {
+    selectRenderSpy.mockClear();
+});
 
 describe("formatOptions", () => {
     test("builds one deduplicated option per distinct location actually used by a room", () => {
@@ -130,7 +156,13 @@ describe("SelectLocation", () => {
         expect(onChange).toHaveBeenLastCalledWith([99]);
     });
 
-    test("mounting does not reset the (already-empty) selection, regardless of lastReinitialize", () => {
+    test("mounting with a defined lastReinitialize does not fire an extra render (the reset effect must not fire on mount)", () => {
+        // `values` starts at `[]`, so asserting selected-count stays "0" here would pass even
+        // against a naive `useEffect(() => setValues([]), [lastReinitialize])` that (wrongly)
+        // also resets on mount -- see the file-header comment. Asserting the render count
+        // instead actually distinguishes "the effect didn't fire" from "it fired but had no
+        // visible effect": an unwanted mount-time `setValues([])` call schedules a second
+        // render, which would push this past 1.
         render(
             <SelectLocation
                 rooms={rooms}
@@ -141,6 +173,7 @@ describe("SelectLocation", () => {
             />
         );
 
+        expect(selectRenderSpy).toHaveBeenCalledTimes(1);
         expect(screen.getByTestId("selected-count")).toHaveTextContent("0");
     });
 

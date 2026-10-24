@@ -130,6 +130,41 @@ describe("RemoveComponent", () => {
         expect(globalThis.fetch).not.toHaveBeenCalled();
     });
 
+    test("without onSuccess, redirects past the trailing numeric id after a successful delete", async () => {
+        globalThis.fetch = vi.fn().mockResolvedValue({
+            ok: true,
+            status: 200,
+            headers: { get: () => "application/json" },
+            json: () => Promise.resolve({ success: true, message: "Supprimé" }),
+        });
+
+        // `window.location` isn't configurable enough in jsdom to just set `.href` on the real
+        // object here (it logs/throws on an attempted real navigation) -- swap it for a plain
+        // writable stub for the duration of this test only, restored in `finally` so no other
+        // test sees it.
+        const originalLocation = window.location;
+        Object.defineProperty(window, "location", {
+            writable: true,
+            value: { href: "http://localhost/users/42" },
+        });
+
+        try {
+            render(<RemoveComponent classname="User" id={42} />);
+            await userEvent.click(screen.getByRole("button"));
+
+            // Confirm dialog, then (no onSuccess) the default success notice -- both resolve via
+            // the shared fireMock -- then the redirect runs in that notice's `.then()`.
+            await vi.waitFor(() =>
+                expect(window.location.href).toBe("http://localhost/users")
+            );
+        } finally {
+            Object.defineProperty(window, "location", {
+                writable: true,
+                value: originalLocation,
+            });
+        }
+    });
+
     test("confirmation popup uses validationText/additionalMessage when provided", async () => {
         // Default beforeEach mock resolves isConfirmed: true, so onSubmit does go on to call
         // fetch -- give it a resolved value so that call doesn't reject unhandled.
