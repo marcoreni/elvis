@@ -341,17 +341,6 @@ correctness bug (downgraded from an earlier, incorrect diagnosis that this churn
 mutating a shared array in place; fixed at the source in batch 3). Fix, if ever worth it: memoize
 `columns`/`dataService` on whatever they actually depend on instead of rebuilding them inline.
 
-## `ActivityDetailsModal.jsx`'s `handleEditActivityInstance()` method is dead code
-
-`frontend/components/planning/ActivityDetailsModal.jsx` (~line 638-646) defines a class method
-`handleEditActivityInstance()`, but nothing in the file ever calls `this.handleEditActivityInstance`
-— every actual call site invokes `this.props.handleEditActivityInstance` instead, a completely
-different function passed down from the parent. Found during the React 18 batching audit (the
-method itself looked superficially like a stale-`this.state`-read bug, but turned out unreachable
-so it doesn't matter either way). Not deleted here — small, isolated, zero risk either way; delete
-next time this file is touched for something else, after confirming with a fresh grep that it's
-still unreferenced.
-
 ## `IntervalPreferencesEditor.jsx`'s parallel-fetch error branch doesn't accumulate
 
 `componentDidMount` (`frontend/components/activityApplications/IntervalPreferencesEditor.jsx`,

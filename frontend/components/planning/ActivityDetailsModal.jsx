@@ -635,18 +635,6 @@ class ActivityDetailsModal extends React.Component {
         );
     }
 
-    handleEditActivityInstance() {
-        this.setState({ editionMode: false });
-
-        const instance = Object.assign({}, this.state, this.props.interval);
-        instance.startTime = instance.startTime.toDate();
-        instance.endTime = instance.endTime.toDate();
-
-        this.props.handleEditActivityInstance(instance);
-
-        this.props.closeModal();
-    }
-
     handleRemove() {
         this.props.onRemove();
     }
