@@ -1,20 +1,39 @@
 import React, { Fragment } from "react";
 import * as api from "../tools/api";
 import swal from "sweetalert2";
-import PropTypes from "prop-types";
 import { useTranslation } from "react-i18next";
 
+// Shape of the JSON returned by the `generic_destroy` route (app/controllers/remove_controller.rb
+// #destroy): always `{ message, success }`, whether destruction succeeded or not.
+export interface RemoveComponentResult {
+    success: boolean;
+    message?: string;
+}
+
+interface RemoveComponentProps {
+    /** Ruby class name, used in the destroy URL (e.g. "User", "season", "activity_ref"). */
+    classname: string;
+    /** Id of the object to remove. */
+    id: number;
+    /** Text shown in the confirmation popup. */
+    validationText?: string;
+    /** Extra text shown under the confirmation popup's title. */
+    additionalMessage?: string;
+    /** Text shown in the button. Not used if `children` is set. */
+    text?: string;
+    /** Props to pass to the button. */
+    btnProps?: React.ButtonHTMLAttributes<HTMLButtonElement>;
+    /** Callback on success. Leave unset for the default redirect-with-swal behavior. */
+    onSuccess?: (data: RemoveComponentResult) => void;
+    /** Callback on failure. Leave unset to just show a swal. */
+    onFailed?: (data: RemoveComponentResult) => void;
+    /** Children to display in the button. */
+    children?: React.ReactNode;
+}
+
 /**
- * @param classname ruby class
- * @param id id of the object to remove
- * @param validationText text to display in the validation popup
- * @param text  text to display in the button. Is not used if children is set
- * @param btnProps props to pass to the button
- * @param onSuccess callback on success. Ne rien mettre pour une redirection par défaut avec un swal. (possible 404)
- * @param onFailed callback on failed. Ne rien mettre pour juste afficher un swal
- * @param children children to display in the button
- * @returns {JSX.Element}
- * @constructor
+ * Standard UI entry point for destroying a record with dependencies -- pairs with
+ * app/jobs/destroy_job.rb and the `generic_destroy` route. See docs/RemoveController.md.
  */
 export default function RemoveComponent({
     classname,
@@ -26,10 +45,10 @@ export default function RemoveComponent({
     onFailed,
     children,
     additionalMessage,
-}) {
+}: RemoveComponentProps) {
     const { t } = useTranslation("common");
 
-    const localOnSuccess = (data) => {
+    const localOnSuccess = (data: RemoveComponentResult) => {
         if (typeof onSuccess === "function") {
             onSuccess(data);
         } else {
@@ -50,12 +69,12 @@ export default function RemoveComponent({
                     tabParams.pop(); // remove id
                 }
 
-                window.location = tabParams.join("/");
+                window.location.href = tabParams.join("/");
             });
         }
     };
 
-    const localOnFailed = (data) => {
+    const localOnFailed = (data: RemoveComponentResult) => {
         if (typeof onFailed === "function") {
             onFailed(data);
         } else {
@@ -78,14 +97,14 @@ export default function RemoveComponent({
         }).then((result) => {
             if (result.isConfirmed) {
                 api.set()
-                    .success((data) => {
+                    .success((data: RemoveComponentResult) => {
                         if (data.success) {
                             localOnSuccess(data);
                         } else {
                             localOnFailed(data);
                         }
                     })
-                    .error((data) => {
+                    .error((data: RemoveComponentResult) => {
                         localOnFailed(data);
                     })
                     .del(`/destroy/${classname}/${id}`, undefined);
@@ -93,11 +112,13 @@ export default function RemoveComponent({
         });
     };
 
-    btnProps = btnProps || {};
-    btnProps.className = btnProps.className || "btn btn-danger";
+    const resolvedBtnProps: React.ButtonHTMLAttributes<HTMLButtonElement> = {
+        ...btnProps,
+        className: btnProps?.className || "btn btn-danger",
+    };
 
     return (
-        <button {...btnProps} onClick={onSubmit}>
+        <button {...resolvedBtnProps} onClick={onSubmit}>
             {children ? (
                 children
             ) : (
@@ -109,13 +130,3 @@ export default function RemoveComponent({
         </button>
     );
 }
-
-RemoveComponent.propTypes = {
-    classname: PropTypes.string.isRequired,
-    id: PropTypes.number.isRequired,
-    text: PropTypes.string,
-    btnProps: PropTypes.object,
-    onSuccess: PropTypes.func,
-    onFailed: PropTypes.func,
-    validationText: PropTypes.string,
-};

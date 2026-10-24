@@ -491,6 +491,31 @@ The same gap existed at a 4th call site, `userForm/CreateOrganizationModal.jsx`'
 bare-undefined-class) box into a blue Bootstrap `alert-info` box. `ConsentDocItem.test.tsx` now
 asserts the `alert-info` class directly as a regression guard.
 
+Batch 2 converted: `activityApplications/PersonChoice.jsx`, `PlanningListRooms.jsx`,
+`PlanningListTeachers.jsx`, `RemoveComponent.jsx`, `planning/SelectLocation.jsx`,
+`personalInfos/Roles.jsx` — now `.tsx`, `propTypes` dropped. `PlanningListRooms`/
+`PlanningListTeachers` (`withTranslation("planning")`-wrapped classes) and `SelectLocation`
+(constructor + `componentDidUpdate`) all moved to hooks; `SelectLocation`'s `options` state is a
+`useRef` initializer (computed once from mount props, exactly like the class's constructor-only
+computation — a `useMemo` would have incorrectly recomputed it on later prop changes), and its
+`componentDidUpdate(prevProps)` reset became a `useEffect` with an explicit prev-value ref check
+so it doesn't also fire on mount (a plain `useEffect([dep])` would, unlike `componentDidUpdate`).
+
+Found no real call site anywhere in `app/views` or `frontend/` for `PersonChoice.jsx`,
+`PlanningListRooms.jsx`, or `planning/SelectLocation.jsx` (confirmed by grep across both trees,
+beyond their own files/tests) — may be reachable only through a plugin's own (gem-side, not in
+this repo) ERB views, which this repo's grep can't see. Converted and typed as given rather than
+deleted, per this repo's "don't delete on 500 / looks dead" convention.
+
+Dead code dropped during the batch 2 rewrite (confirmed by grep, not assumed):
+`PlanningListRooms.jsx`'s unused `moment`/`PropTypes` imports; `PlanningListTeachers.jsx`'s
+`durationToString` function (defined, never called) and its `lodash` import; `SelectLocation.jsx`'s
+`activities` prop (declared in `propTypes`, never read); `personalInfos/Roles.jsx`'s `adhesions`
+field of the `user` prop's old `PropTypes.shape` (declared, never read). Also fixed two propTypes/
+usage mismatches predating this conversion: `RemoveComponent.jsx` used `additionalMessage` without
+ever declaring it in `propTypes`; `SelectLocation.jsx` used `locations`/`mode` the same way — both
+now in their respective `.tsx` prop interfaces.
+
 ## `UserForm.jsx` never pre-fills a user's existing consent-doc answers
 
 Found while converting `ConsentDocItem.jsx` to TypeScript (jsx-to-tsx batch 1) and tracing why its

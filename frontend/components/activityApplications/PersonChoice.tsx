@@ -1,8 +1,15 @@
 import React from "react";
-import PropTypes from "prop-types";
 import { useTranslation } from "react-i18next";
 
-const PersonChoice = ({ personSelection, handleSelectPerson }) => {
+interface PersonChoiceProps {
+    personSelection?: "myself" | "other" | null;
+    handleSelectPerson: (person: "myself" | "other") => void;
+}
+
+const PersonChoice = ({
+    personSelection,
+    handleSelectPerson,
+}: PersonChoiceProps) => {
     const { t } = useTranslation("activityApplications");
 
     return (

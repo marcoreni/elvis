@@ -1,19 +1,35 @@
 import React, { useState, Fragment } from "react";
-import _ from "lodash";
 import { useTranslation } from "react-i18next";
 import Checkbox from "../common/Checkbox";
-import PropTypes from "prop-types";
 import * as api from "../../tools/api";
 import swal from "sweetalert2";
 import moment from "moment";
 
-/**
- * @param {{is_teacher: boolean, is_admin: boolean, adhesions: []}} user
- * @param {({}) => void} onSubmit
- * @returns {JSX.Element}
- * @constructor
- */
-export default function Roles({ user, lessonsPlanned, onSubmit }) {
+interface RolesUser {
+    id: number;
+    is_teacher: boolean;
+    is_admin: boolean;
+}
+
+interface TeacherLesson {
+    time_interval: { start: string; end: string };
+    activity_ref: { label: string };
+}
+
+interface RolesProps {
+    // Every real caller (UserEdit.jsx) passes this unconditionally -- `user.is_teacher`/
+    // `user.is_admin` are read straight into useState below with no guard. The old
+    // `PropTypes.shape(...)` also marked both fields (but not `user` itself) `.isRequired`.
+    user: RolesUser;
+    lessonsPlanned: number;
+    onSubmit: (user: RolesUser) => void;
+}
+
+// Dropped from the old propTypes.user.shape: `adhesions` (declared but never read anywhere in
+// this file -- confirmed by grep) and `validity_start_date`/`validity_end_date` that lived under
+// it. Added `id`, which propTypes never declared despite being used unconditionally below.
+
+export default function Roles({ user, lessonsPlanned, onSubmit }: RolesProps) {
     const { t } = useTranslation("users");
     const [isTeacher, setIsTeacher] = useState(user.is_teacher);
     const [isAdmin, setIsAdmin] = useState(user.is_admin);
@@ -31,7 +47,7 @@ export default function Roles({ user, lessonsPlanned, onSubmit }) {
                     setIsTeacher(false);
                 });
             })
-            .error((errorMsg) => {
+            .error((errorMsg: unknown) => {
                 console.error("error deleting activity instances : ", errorMsg);
                 swal.fire({
                     icon: "error",
@@ -41,7 +57,7 @@ export default function Roles({ user, lessonsPlanned, onSubmit }) {
             .del(`/teachers/${user.id}/activity_instances`);
     }
 
-    function formatActivity(a) {
+    function formatActivity(a: TeacherLesson) {
         const day = moment(a.time_interval.start).format("dddd");
         const startsAt = moment(a.time_interval.start).format("HH:mm");
         const endsAt = moment(a.time_interval.end).format("HH:mm");
@@ -58,15 +74,13 @@ export default function Roles({ user, lessonsPlanned, onSubmit }) {
     function getActivitiesList() {
         return api
             .set()
-            .success((activities) => {
-                let res = "";
+            .success((activities: TeacherLesson[]) => {
                 const htmlText =
                     t("users:roles.coursesListIntro", { n: lessonsPlanned }) +
                     "<br/><br/>" +
-                    _.reduce(
-                        activities,
+                    activities.reduce(
                         (res, activity) => res + formatActivity(activity),
-                        res
+                        ""
                     );
 
                 swal.fire({
@@ -77,7 +91,7 @@ export default function Roles({ user, lessonsPlanned, onSubmit }) {
                     width: 600,
                 });
             })
-            .error((errorMsg) => {
+            .error((errorMsg: unknown) => {
                 console.error("error fetching lessons : ", errorMsg);
                 swal.fire({
                     icon: "error",
@@ -87,7 +101,7 @@ export default function Roles({ user, lessonsPlanned, onSubmit }) {
             .get(`/teachers/${user.id}/activities/`);
     }
 
-    function onChangeIsTeacher(isTeacher) {
+    function onChangeIsTeacher(isTeacher: boolean) {
         // dans le cas où on cherche à désactiver le rôle professeur, on doit prendre quelques précautions
         if (isTeacher && lessonsPlanned > 0) {
             swal.fire({
@@ -151,18 +165,3 @@ export default function Roles({ user, lessonsPlanned, onSubmit }) {
         </div>
     );
 }
-
-Roles.propTypes = {
-    user: PropTypes.shape({
-        is_admin: PropTypes.bool.isRequired,
-        is_teacher: PropTypes.bool.isRequired,
-        adhesions: PropTypes.arrayOf(
-            PropTypes.shape({
-                is_active: PropTypes.bool.isRequired,
-                season_id: PropTypes.number.isRequired,
-                validity_start_date: PropTypes.string,
-                validity_end_date: PropTypes.string,
-            })
-        ),
-    }),
-};
