@@ -540,16 +540,3 @@ rest of that modal instance; only closing and reopening the modal (a fresh `cons
 it. Not clearly a bug (closing-then-reopening may be the intended way out), but worth a product
 call on whether edit mode should have an explicit "done editing" action.
 
-## `ActivityDetailsModal.jsx`'s `verifyTimeOverlap()` always sends `time_interval_id: undefined`
-
-`verifyTimeOverlap()` (`frontend/components/planning/ActivityDetailsModal.jsx:553`) reads
-`const time_interval_id = this.props.id;`, but `id` is never a prop `Planning.jsx` passes to
-`<ActivityDetailsModal>` (confirmed by reading its full prop list, `:1667-1770`) -- every other
-place in this file reads `this.props.interval.id` instead. `POST /planning/overlap` has always
-received `time_interval_id: undefined` as a result. Found while threading a real interval id
-through `handleRemoveStudent`/`handleRemoveOptionalStudent` (which needed to resolve the same
-question for a different method) and confirmed via grep, not fixed here -- unrelated to that
-change and not investigated further (unclear whether the backend's overlap check actually needs
-this id to exclude the interval being edited from its own overlap check, which would make this a
-real "editing a validated slot's own room/teacher trips a false positive overlap" bug, or whether
-it's unused server-side). Fix, if it matters: `this.props.id` -> `this.props.interval.id`.

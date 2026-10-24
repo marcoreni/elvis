@@ -10,7 +10,7 @@
 // the real translated copy.
 
 import React from "react";
-import {render, screen, fireEvent, waitFor} from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import moment from "moment";
 import i18n from "../../i18n";
 
@@ -25,7 +25,7 @@ import {
     ActivityDetailsModal,
 } from "./ActivityDetailsModal";
 
-const apiState = vi.hoisted(() => ({post: vi.fn()}));
+const apiState = vi.hoisted(() => ({ post: vi.fn() }));
 vi.mock("../../tools/api", () => ({
     post: (...args) => apiState.post(...args),
 }));
@@ -41,66 +41,94 @@ afterEach(async () => {
 // translated copy plus the absence of a "translation missing" marker. The behaviour-carrying
 // blocks below (TeacherCoveringEditor's conditional hours-counted question, EditGroupNameInput's
 // `t`-prop reactivity) are kept.
-describe.each(["fr", "en"])("ActivityDetailsModal sub-selectors — bilingual smoke (%s)", lng => {
-    const REPRESENTATIVE = {
-        fr: {time: ["Début", "Fin"], location: "Choisir un Lieu", room: "Choisir une salle", activity: "Choisir une activité", groupName: "Nom du groupe"},
-        en: {time: ["Start", "End"], location: "Choose a location", room: "Choose a room", activity: "Choose an activity", groupName: "Group name"},
-    };
+describe.each(["fr", "en"])(
+    "ActivityDetailsModal sub-selectors — bilingual smoke (%s)",
+    (lng) => {
+        const REPRESENTATIVE = {
+            fr: {
+                time: ["Début", "Fin"],
+                location: "Choisir un Lieu",
+                room: "Choisir une salle",
+                activity: "Choisir une activité",
+                groupName: "Nom du groupe",
+            },
+            en: {
+                time: ["Start", "End"],
+                location: "Choose a location",
+                room: "Choose a room",
+                activity: "Choose an activity",
+                groupName: "Group name",
+            },
+        };
 
-    test("TimeSelection / LocationSelection / RoomSelection / ActivitySelection / GroupNameInput render translated copy", async () => {
-        await i18n.changeLanguage(lng);
-        const rep = REPRESENTATIVE[lng];
+        test("TimeSelection / LocationSelection / RoomSelection / ActivitySelection / GroupNameInput render translated copy", async () => {
+            await i18n.changeLanguage(lng);
+            const rep = REPRESENTATIVE[lng];
 
-        const {unmount: u1} = render(
-            <TimeSelection
-                startTime={moment("2026-09-01T10:00:00")}
-                endTime={moment("2026-09-01T11:30:00")}
-                handleSelectTime={() => {}}
-            />,
-        );
-        for (const label of rep.time) expect(screen.getByText(label)).toBeInTheDocument();
-        u1();
+            const { unmount: u1 } = render(
+                <TimeSelection
+                    startTime={moment("2026-09-01T10:00:00")}
+                    endTime={moment("2026-09-01T11:30:00")}
+                    handleSelectTime={() => {}}
+                />
+            );
+            for (const label of rep.time)
+                expect(screen.getByText(label)).toBeInTheDocument();
+            u1();
 
-        const {unmount: u2} = render(
-            <LocationSelection
-                locations={[{id: 1, label: "Conservatoire"}, {id: 2, label: "Annexe"}]}
-                locationId={null}
-                handleSelectLocation={() => {}}
-            />,
-        );
-        expect(screen.getByText(rep.location)).toBeInTheDocument();
-        u2();
+            const { unmount: u2 } = render(
+                <LocationSelection
+                    locations={[
+                        { id: 1, label: "Conservatoire" },
+                        { id: 2, label: "Annexe" },
+                    ]}
+                    locationId={null}
+                    handleSelectLocation={() => {}}
+                />
+            );
+            expect(screen.getByText(rep.location)).toBeInTheDocument();
+            u2();
 
-        const {unmount: u3} = render(
-            <RoomSelection
-                roomsConstrained={[]}
-                roomId={null}
-                roomRefs={[{id: 10, label: "Salle Debussy"}, {id: 11, label: "Salle Ravel"}]}
-                handleSelectRoom={() => {}}
-            />,
-        );
-        expect(screen.getByText(rep.room)).toBeInTheDocument();
-        u3();
+            const { unmount: u3 } = render(
+                <RoomSelection
+                    roomsConstrained={[]}
+                    roomId={null}
+                    roomRefs={[
+                        { id: 10, label: "Salle Debussy" },
+                        { id: 11, label: "Salle Ravel" },
+                    ]}
+                    handleSelectRoom={() => {}}
+                />
+            );
+            expect(screen.getByText(rep.room)).toBeInTheDocument();
+            u3();
 
-        const {unmount: u4} = render(
-            <ActivitySelection activities={[]} activityId={0} handleSelectActivity={() => {}} />,
-        );
-        expect(screen.getByText(rep.activity)).toBeInTheDocument();
-        u4();
+            const { unmount: u4 } = render(
+                <ActivitySelection
+                    activities={[]}
+                    activityId={0}
+                    handleSelectActivity={() => {}}
+                />
+            );
+            expect(screen.getByText(rep.activity)).toBeInTheDocument();
+            u4();
 
-        // RESTORED BY CODE REVIEW: the trailing comment in this file claimed GroupNameInput was
-        // "still mounted per locale by the smoke describe above", but the prune removed it from
-        // the import list and never rendered it — it was left with zero coverage.
-        render(<GroupNameInput value="" onChange={() => {}} />);
-        expect(screen.getByText(rep.groupName)).toBeInTheDocument();
+            // RESTORED BY CODE REVIEW: the trailing comment in this file claimed GroupNameInput was
+            // "still mounted per locale by the smoke describe above", but the prune removed it from
+            // the import list and never rendered it — it was left with zero coverage.
+            render(<GroupNameInput value="" onChange={() => {}} />);
+            expect(screen.getByText(rep.groupName)).toBeInTheDocument();
 
-        expect(document.body.textContent).not.toMatch(/translation missing/i);
-    });
-});
+            expect(document.body.textContent).not.toMatch(
+                /translation missing/i
+            );
+        });
+    }
+);
 
 describe("TeacherCoveringEditor", () => {
     const baseProps = {
-        teacher: {id: 1, first_name: "Ada", last_name: "Lovelace"},
+        teacher: { id: 1, first_name: "Ada", last_name: "Lovelace" },
         areHoursCounted: false,
         potentialCoveringTeachers: [],
         teachers: [],
@@ -112,43 +140,51 @@ describe("TeacherCoveringEditor", () => {
     // translated label in both locales. fr/en merged into one rerender under Phase 07 P0.
     test("interpolates the covered teacher's name into the substitute-for label (fr + en)", async () => {
         await i18n.changeLanguage("fr");
-        const {rerender} = render(<TeacherCoveringEditor {...baseProps} coverTeacherId={null} />);
-        expect(screen.getByText("Ada", {exact: false})).toHaveTextContent("Remplaçant de Ada Lovelace");
+        const { rerender } = render(
+            <TeacherCoveringEditor {...baseProps} coverTeacherId={null} />
+        );
+        expect(screen.getByText("Ada", { exact: false })).toHaveTextContent(
+            "Remplaçant de Ada Lovelace"
+        );
         expect(screen.getByText("PAS DE REMPLAÇANT")).toBeInTheDocument();
 
         await i18n.changeLanguage("en");
-        rerender(<TeacherCoveringEditor {...baseProps} coverTeacherId={null} />);
-        expect(screen.getByText("Ada", {exact: false})).toHaveTextContent("Substitute for Ada Lovelace");
+        rerender(
+            <TeacherCoveringEditor {...baseProps} coverTeacherId={null} />
+        );
+        expect(screen.getByText("Ada", { exact: false })).toHaveTextContent(
+            "Substitute for Ada Lovelace"
+        );
         expect(screen.getByText("NO SUBSTITUTE")).toBeInTheDocument();
     });
 
     test("shows the hours-counted question only once a covering teacher is picked (French)", async () => {
         await i18n.changeLanguage("fr");
-        const {rerender} = render(
-            <TeacherCoveringEditor {...baseProps} coverTeacherId={null} />,
+        const { rerender } = render(
+            <TeacherCoveringEditor {...baseProps} coverTeacherId={null} />
         );
         expect(
-            screen.queryByText("Heures comptées pour le professeur absent ?"),
+            screen.queryByText("Heures comptées pour le professeur absent ?")
         ).not.toBeInTheDocument();
 
         rerender(<TeacherCoveringEditor {...baseProps} coverTeacherId={42} />);
         expect(
-            screen.getByText("Heures comptées pour le professeur absent ?"),
+            screen.getByText("Heures comptées pour le professeur absent ?")
         ).toBeInTheDocument();
     });
 
     test("shows the hours-counted question only once a covering teacher is picked (English)", async () => {
         await i18n.changeLanguage("en");
-        const {rerender} = render(
-            <TeacherCoveringEditor {...baseProps} coverTeacherId={null} />,
+        const { rerender } = render(
+            <TeacherCoveringEditor {...baseProps} coverTeacherId={null} />
         );
         expect(
-            screen.queryByText("Hours counted for the absent teacher?"),
+            screen.queryByText("Hours counted for the absent teacher?")
         ).not.toBeInTheDocument();
 
         rerender(<TeacherCoveringEditor {...baseProps} coverTeacherId={42} />);
         expect(
-            screen.getByText("Hours counted for the absent teacher?"),
+            screen.getByText("Hours counted for the absent teacher?")
         ).toBeInTheDocument();
     });
 });
@@ -168,14 +204,22 @@ describe("EditGroupNameInput", () => {
     // from props rather than useTranslation, so a stale prop would silently keep the old locale).
     test("picks up a fresh t prop when the language changes", async () => {
         await i18n.changeLanguage("fr");
-        const {rerender} = render(
-            <EditGroupNameInput {...baseProps} t={i18n.getFixedT(null, "planning")} />,
+        const { rerender } = render(
+            <EditGroupNameInput
+                {...baseProps}
+                t={i18n.getFixedT(null, "planning")}
+            />
         );
         expect(screen.getByText("Nom du groupe")).toBeInTheDocument();
         expect(screen.getByText("Enregistrer")).toBeInTheDocument();
 
         await i18n.changeLanguage("en");
-        rerender(<EditGroupNameInput {...baseProps} t={i18n.getFixedT(null, "planning")} />);
+        rerender(
+            <EditGroupNameInput
+                {...baseProps}
+                t={i18n.getFixedT(null, "planning")}
+            />
+        );
         expect(screen.queryByText("Nom du groupe")).not.toBeInTheDocument();
         expect(screen.getByText("Group name")).toBeInTheDocument();
         expect(screen.getByText("Save")).toBeInTheDocument();
@@ -197,7 +241,7 @@ describe("ActivityDetailsModal — group name edit regression", () => {
     const activity = {
         id: 999,
         group_name: "Original Group",
-        activity_ref: {label: "Guitare", occupation_limit: 10},
+        activity_ref: { label: "Guitare", occupation_limit: 10 },
         users: [],
         options: [],
         teachers_activities: [],
@@ -210,8 +254,15 @@ describe("ActivityDetailsModal — group name edit regression", () => {
         generic: true, // skip componentDidMount's verifyTimeOverlap fetch
         isAdmin: false,
         isTeacher: false,
-        room_refs: [{id: 10, location_id: 100, label: "Salle A", location: {id: 100}}],
-        rooms: [{id: 10, location_id: 100, label: "Salle A"}],
+        room_refs: [
+            {
+                id: 10,
+                location_id: 100,
+                label: "Salle A",
+                location: { id: 100 },
+            },
+        ],
+        rooms: [{ id: 10, location_id: 100, label: "Salle A" }],
         teachers: [],
         seasons: [],
         closeModal: () => {},
@@ -224,7 +275,7 @@ describe("ActivityDetailsModal — group name edit regression", () => {
             comment: null,
             activity_instance: {
                 id: 55,
-                room: {id: 10},
+                room: { id: 10 },
                 student_attendances: [],
                 inactive_students: [],
                 potential_covering_teachers: [],
@@ -237,7 +288,7 @@ describe("ActivityDetailsModal — group name edit regression", () => {
     beforeEach(async () => {
         await i18n.changeLanguage("fr");
         apiState.post.mockReset();
-        apiState.post.mockResolvedValue({data: activity, error: null});
+        apiState.post.mockResolvedValue({ data: activity, error: null });
     });
 
     test("saving right after opening edit mode keeps the existing group name (does not send null)", async () => {
@@ -246,18 +297,117 @@ describe("ActivityDetailsModal — group name edit regression", () => {
         expect(screen.getByText("Original Group")).toBeInTheDocument();
 
         fireEvent.click(
-            screen.getByTitle("Éditer le nom du groupe de cette activité"),
+            screen.getByTitle("Éditer le nom du groupe de cette activité")
         );
 
         // The input should already show the current name, not be blank.
         expect(screen.getByRole("textbox")).toHaveValue("Original Group");
 
-        fireEvent.click(screen.getByRole("button", {name: "Enregistrer"}));
+        fireEvent.click(screen.getByRole("button", { name: "Enregistrer" }));
 
         await waitFor(() => expect(apiState.post).toHaveBeenCalledTimes(1));
         expect(apiState.post).toHaveBeenCalledWith("/activity/999", {
-            activity: {id: 999, group_name: "Original Group"},
+            activity: { id: 999, group_name: "Original Group" },
         });
+    });
+});
+
+describe("ActivityDetailsModal — verifyTimeOverlap", () => {
+    // Regression for the bug fixed here: verifyTimeOverlap() read `this.props.id`, which
+    // Planning.jsx never passes, so `/planning/overlap` was always POSTed with
+    // `time_interval_id: undefined` — Postgres's `!= NULL` then excludes every row, so the
+    // overlap check silently found zero conflicts for every interval. Fixed to read
+    // `this.props.interval.id` instead.
+    const activity = {
+        id: 999,
+        group_name: "Original Group",
+        activity_ref: { label: "Guitare", occupation_limit: 10 },
+        users: [],
+        options: [],
+        teachers_activities: [],
+        teacher: null,
+        evaluation_level_ref_id: null,
+    };
+
+    const baseProps = {
+        t: i18n.getFixedT(null, "planning"),
+        isAdmin: false,
+        isTeacher: false,
+        room_refs: [
+            {
+                id: 10,
+                location_id: 100,
+                label: "Salle A",
+                location: { id: 100 },
+            },
+        ],
+        rooms: [{ id: 10, location_id: 100, label: "Salle A" }],
+        teachers: [],
+        seasons: [],
+        closeModal: () => {},
+        handleUpdateActivityInInstances: () => {},
+        interval: {
+            id: 777,
+            is_validated: true,
+            start: "2026-09-01T10:00:00",
+            end: "2026-09-01T11:00:00",
+            comment: null,
+            activity_instance: {
+                id: 55,
+                room: { id: 10 },
+                student_attendances: [],
+                inactive_students: [],
+                potential_covering_teachers: [],
+                teachers_activity_instances: [],
+                activity,
+            },
+        },
+    };
+
+    beforeEach(async () => {
+        await i18n.changeLanguage("fr");
+    });
+
+    afterEach(() => {
+        delete global.fetch;
+    });
+
+    // `generic` is omitted (falsy), so componentDidMount's `if (!this.props.generic)
+    // this.verifyTimeOverlap();` fires on mount, same as the real Planning.jsx flow.
+    test("POSTs the real interval id as time_interval_id, not undefined", async () => {
+        global.fetch = vi.fn().mockResolvedValue({
+            json: () => Promise.resolve({ teacher: null, room: null }),
+        });
+
+        render(<ActivityDetailsModal {...baseProps} />);
+
+        await waitFor(() => expect(global.fetch).toHaveBeenCalledTimes(1));
+
+        const [url, options] = global.fetch.mock.calls[0];
+        expect(url).toBe("/planning/overlap");
+        expect(JSON.parse(options.body).time_interval_id).toBe(777);
+    });
+
+    test("populates conflicting_interval / conflicting_interval_teacher from a non-empty overlap response", async () => {
+        const conflictingRoom = { id: 42 };
+        const conflictingTeacher = { id: 43 };
+        global.fetch = vi.fn().mockResolvedValue({
+            json: () =>
+                Promise.resolve({
+                    teacher: conflictingTeacher,
+                    room: conflictingRoom,
+                }),
+        });
+
+        const ref = React.createRef();
+        render(<ActivityDetailsModal {...baseProps} ref={ref} />);
+
+        await waitFor(() =>
+            expect(ref.current.state.conflicting_interval_teacher).toEqual(
+                conflictingTeacher
+            )
+        );
+        expect(ref.current.state.conflicting_interval).toEqual(conflictingRoom);
     });
 });
 

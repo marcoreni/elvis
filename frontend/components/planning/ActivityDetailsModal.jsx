@@ -558,7 +558,7 @@ class ActivityDetailsModal extends React.Component {
         const endTime = moment(this.state.endTime);
         const room_id = this.state.room_id;
         const teacher_id = this.state.teacher_id;
-        const time_interval_id = this.props.id;
+        const time_interval_id = this.props.interval.id;
 
         fetch(`/planning/overlap`, {
             method: "POST",
