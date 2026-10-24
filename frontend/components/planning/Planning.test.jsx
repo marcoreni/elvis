@@ -8,11 +8,15 @@
 // componentDidMount skips its network fetch.
 
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor, act } from "@testing-library/react";
 import i18n from "../../i18n";
 
-vi.mock("./Calendar", () => ({ default: () => <div data-testid="calendar-stub" /> }));
-vi.mock("./ActivityDetailsModal", () => ({ default: () => <div data-testid="adm-stub" /> }));
+vi.mock("./Calendar", () => ({
+    default: () => <div data-testid="calendar-stub" />,
+}));
+vi.mock("./ActivityDetailsModal", () => ({
+    default: () => <div data-testid="adm-stub" />,
+}));
 
 import Planning from "./Planning";
 
@@ -34,6 +38,7 @@ const props = {
 };
 
 afterEach(async () => {
+    delete global.fetch;
     await i18n.changeLanguage("fr");
 });
 
@@ -61,19 +66,145 @@ const REPRESENTATIVE = {
     },
 };
 
-describe.each(["fr", "en"])("planning area — bilingual smoke (%s)", lng => {
+describe.each(["fr", "en"])("planning area — bilingual smoke (%s)", (lng) => {
     test("renders Planning chrome with real translated copy, no missing-key markers", async () => {
         await i18n.changeLanguage(lng);
         render(<Planning {...props} />);
 
         expect(screen.getByText(REPRESENTATIVE[lng].alert)).toBeInTheDocument();
-        expect(screen.getByText(REPRESENTATIVE[lng].manage)).toBeInTheDocument();
         expect(
-            document.querySelector(`[data-tippy-content="${REPRESENTATIVE[lng].tooltip}"]`)
+            screen.getByText(REPRESENTATIVE[lng].manage)
+        ).toBeInTheDocument();
+        expect(
+            document.querySelector(
+                `[data-tippy-content="${REPRESENTATIVE[lng].tooltip}"]`
+            )
         ).toBeTruthy();
         expect(
-            screen.getByRole("heading", { name: REPRESENTATIVE[lng].otherRooms })
+            screen.getByRole("heading", {
+                name: REPRESENTATIVE[lng].otherRooms,
+            })
         ).toBeInTheDocument();
         expect(document.body.textContent).not.toMatch(/translation missing/i);
+    });
+});
+
+// Regression: handleRemoveStudent/handleRemoveOptionalStudent's DELETE response handler used to
+// read an undeclared `int` (a leftover from a commented-out `TimeIntervalHelpers.momentify` call)
+// instead of the `interval` it just computed, throwing `ReferenceError: int is not defined` on
+// every call before the matching entry in `selectedIntervals` was ever updated. Both handlers are
+// normally invoked by ActivityDetailsModal, but that's only mounted once `isDetailModalOpen` is
+// true (it lives inside a react-modal `<Modal>`, which doesn't render its children at all while
+// closed) -- reaching it through the UI would mean also driving `handleOpenDetail`'s own fetch.
+// Simpler and just as faithful to call the handlers directly on the real class instance, grabbed
+// via `Planning.WrappedComponent` (react-i18next's `withTranslation` HOC exposes the wrapped,
+// un-decorated class under that static, same as the `withTranslation()` HOC check elsewhere in
+// this repo's tests) rendered with a ref and a real `t`.
+describe("Planning — remove-student handlers don't throw ReferenceError (regression)", () => {
+    const RawPlanningComponent = Planning.WrappedComponent;
+
+    function renderRaw(extraProps) {
+        const ref = React.createRef();
+        render(
+            <RawPlanningComponent
+                {...props}
+                {...extraProps}
+                t={i18n.getFixedT("fr", "planning")}
+                ref={ref}
+            />
+        );
+        return ref;
+    }
+
+    test("handleRemoveStudent replaces the matching interval, now carrying .activity", async () => {
+        const interval = {
+            id: 42,
+            start: "2024-01-01T10:00:00.000Z",
+            end: "2024-01-01T11:00:00.000Z",
+        };
+        const returnedActivity = {
+            id: 7,
+            label: "Piano",
+            activity_ref: { label: "Piano" },
+            time_interval: {
+                id: 42,
+                start: "2024-01-01T10:00:00.000Z",
+                end: "2024-01-01T11:00:00.000Z",
+            },
+        };
+        global.fetch = vi.fn(() =>
+            Promise.resolve({ json: () => Promise.resolve(returnedActivity) })
+        );
+
+        const ref = renderRaw({ intervals: [interval] });
+
+        const student = {
+            activity_application: {
+                desired_activities: [{ id: 501, activity_id: 7 }],
+            },
+        };
+
+        // Before the fix, the fetch's `.then()` callback threw `ReferenceError: int is not
+        // defined` here, so `selectedIntervals` was never updated.
+        act(() => {
+            ref.current.handleRemoveStudent({ id: 7 }, student);
+        });
+
+        await waitFor(() =>
+            expect(global.fetch).toHaveBeenCalledWith(
+                "/activity/7/desired/501",
+                expect.objectContaining({ method: "DELETE" })
+            )
+        );
+
+        await waitFor(() => {
+            const updated = ref.current.state.selectedIntervals.find(
+                (i) => i.id === 42
+            );
+            expect(updated?.activity).toEqual(returnedActivity);
+        });
+    });
+
+    test("handleRemoveOptionalStudent replaces the matching interval the same way", async () => {
+        const interval = {
+            id: 43,
+            start: "2024-01-01T10:00:00.000Z",
+            end: "2024-01-01T11:00:00.000Z",
+        };
+        const returnedActivity = {
+            id: 8,
+            label: "Guitare",
+            activity_ref: { label: "Guitare" },
+            time_interval: {
+                id: 43,
+                start: "2024-01-01T10:00:00.000Z",
+                end: "2024-01-01T11:00:00.000Z",
+            },
+        };
+        global.fetch = vi.fn(() =>
+            Promise.resolve({ json: () => Promise.resolve(returnedActivity) })
+        );
+
+        const ref = renderRaw({ intervals: [interval] });
+
+        const optionalStudent = { desired_activity_id: 777 };
+
+        act(() => {
+            ref.current.handleRemoveOptionalStudent({ id: 8 }, optionalStudent);
+        });
+
+        await waitFor(() =>
+            expect(global.fetch).toHaveBeenCalledWith(
+                "/activity/8/desired_option/777",
+                expect.objectContaining({ method: "DELETE" })
+            )
+        );
+
+        await waitFor(() => {
+            const updated = ref.current.state.selectedIntervals.find(
+                (i) => i.id === 43
+            );
+            expect(updated?.activity).toEqual(returnedActivity);
+        });
     });
 });

@@ -254,8 +254,7 @@ class Planning extends React.Component {
             .then(response => response.json())
             .then(activity => {
                 const interval = activity.time_interval;
-                // let [int] = TimeIntervalHelpers.momentify([interval]);
-                int.activity = activity;
+                interval.activity = activity;
 
                 const {selectedIntervals} = this.state;
                 const index = this.state.selectedIntervals.findIndex(i => {
@@ -263,7 +262,7 @@ class Planning extends React.Component {
                 });
 
                 if (index > -1) {
-                    selectedIntervals[index] = int;
+                    selectedIntervals[index] = interval;
                     this.setState({selectedIntervals});
                 }
             });
@@ -284,8 +283,7 @@ class Planning extends React.Component {
             .then(response => response.json())
             .then(activity => {
                 const interval = activity.time_interval;
-                // let [int] = TimeIntervalHelpers.momentify([interval]);
-                int.activity = activity;
+                interval.activity = activity;
 
                 const {selectedIntervals} = this.state;
                 const index = this.state.selectedIntervals.findIndex(i => {
@@ -293,7 +291,7 @@ class Planning extends React.Component {
                 });
 
                 if (index > -1) {
-                    selectedIntervals[index] = int;
+                    selectedIntervals[index] = interval;
                     this.setState({selectedIntervals});
                 }
             });

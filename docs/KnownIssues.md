@@ -341,23 +341,6 @@ correctness bug (downgraded from an earlier, incorrect diagnosis that this churn
 mutating a shared array in place; fixed at the source in batch 3). Fix, if ever worth it: memoize
 `columns`/`dataService` on whatever they actually depend on instead of rebuilding them inline.
 
-## `Planning.jsx`'s remove-student handlers throw `ReferenceError: int is not defined`
-
-`handleRemoveStudent`/`handleRemoveOptionalStudent` (`frontend/components/planning/Planning.jsx`,
-~line 255-290) both do, in their DELETE response handler:
-```js
-const interval = activity.time_interval;
-// let [int] = TimeIntervalHelpers.momentify([interval]);
-int.activity = activity;
-```
-`int` is never declared — a leftover from a commented-out line. Every call throws immediately,
-before the rest of the handler (removing the student from `selectedIntervals`) ever runs. Found
-during the React 18 batching audit (2026-09-26); confirmed pre-existing and unrelated to that bump
-(no `git blame` connection to any recent change). Fix: restore the commented-out
-`TimeIntervalHelpers.momentify` call (or determine whether `interval` itself already has what's
-needed and drop the `int.activity = activity` line entirely — check what `selectedIntervals[index]`
-is actually expected to look like downstream before choosing).
-
 ## `ActivityDetailsModal.jsx`'s `handleEditActivityInstance()` method is dead code
 
 `frontend/components/planning/ActivityDetailsModal.jsx` (~line 638-646) defines a class method
