@@ -36,11 +36,9 @@ module Elvis
       !FALSY_VALUES.include?(value.downcase)
     end
 
-    def initialize(dry_run:, logger:, prefix: "", task_name: "elvis:migrate_wysiwyg_content")
+    def initialize(dry_run:, logger:)
       @dry_run = dry_run
       @logger = logger
-      @prefix = prefix
-      @task_name = task_name
     end
 
     def run!
@@ -50,7 +48,7 @@ module Elvis
 
     private
 
-    attr_reader :dry_run, :logger, :prefix, :task_name
+    attr_reader :dry_run, :logger
 
     def process_label(label)
       parameters = Parameter.where(label: label).order(:id).to_a
@@ -81,6 +79,7 @@ module Elvis
       end
 
       result = Elvis::WysiwygConverter.convert(value)
+      result.warnings.each { |warning| logger.warn "#{name}: #{warning}" }
 
       unless result.is_draft_js
         logger.info "#{name}: already HTML/plain, skipping"

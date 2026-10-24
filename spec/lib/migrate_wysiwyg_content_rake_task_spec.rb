@@ -37,12 +37,13 @@ RSpec.describe "elvis:migrate_wysiwyg_content rake task" do
     capture_stdout { task.invoke }
   end
 
-  def draft_result(html, is_draft_js: true, failed: false)
-    Elvis::WysiwygConverter::Result.new(is_draft_js: is_draft_js, html: html, failed: failed)
+  def draft_result(html, is_draft_js: true, failed: false, warnings: [])
+    Elvis::WysiwygConverter::Result.new(is_draft_js: is_draft_js, html: html, failed: failed, warnings: warnings)
   end
 
-  def failed_result(error_message: nil)
-    Elvis::WysiwygConverter::Result.new(is_draft_js: true, html: nil, failed: true, error_message: error_message)
+  def failed_result(error_message: nil, warnings: [])
+    Elvis::WysiwygConverter::Result.new(is_draft_js: true, html: nil, failed: true, error_message: error_message,
+                                        warnings: warnings)
   end
 
   describe "a label with no matching Parameter row" do
@@ -98,6 +99,21 @@ RSpec.describe "elvis:migrate_wysiwyg_content rake task" do
       expect(parameter.value_type).to eq("string")
       expect(output).to include("#{labels[0]}: converted Draft.js JSON to HTML")
       expect(output).to include("#{draft_json.length} -> #{converted_html.length}")
+    end
+  end
+
+  describe "a converter result carrying graceful-degradation warnings" do
+    it "surfaces them on the task's own stdout output, prefixed by the parameter name, not just Rails.logger" do
+      draft_json = '{"blocks":[{"key":"a1","text":"hi"}],"entityMap":{}}'
+      Parameter.create!(label: labels[0], value: draft_json, value_type: "string")
+      allow(Elvis::WysiwygConverter).to receive(:convert).with(draft_json).and_return(
+        draft_result("<p>hi</p>\n",
+                     warnings: ["unrecognized entity type \"IMAGE\"; rendering its text without entity markup"])
+      )
+
+      output = run_task
+
+      expect(output).to include("#{labels[0]}: unrecognized entity type \"IMAGE\"")
     end
   end
 

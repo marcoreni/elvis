@@ -113,7 +113,7 @@ namespace :elvis do
     dry_run_note = dry_run ? " -- DRY RUN, no DB writes will be made" : ""
     logger.info "#{task_name} starting#{dry_run_note}"
 
-    Elvis::WysiwygContentMigrator.new(dry_run: dry_run, logger: logger, prefix: prefix, task_name: task_name).run!
+    Elvis::WysiwygContentMigrator.new(dry_run: dry_run, logger: logger).run!
 
     logger.info "#{task_name} finished"
   end

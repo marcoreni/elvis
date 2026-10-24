@@ -6,20 +6,23 @@ module Elvis
   # Pure-Ruby Draft.js-raw-JSON -> HTML converter, restricted to the subset of Draft.js that this
   # app's (now removed) WYSIWYG toolbars ever produced: inline styles BOLD/ITALIC/UNDERLINE/
   # STRIKETHROUGH, block types unstyled/header-one..six/blockquote/unordered-list-item/
-  # ordered-list-item, and LINK entities only. No Node/npm dependency -- this replaces the old
-  # Node-bridge version (which shelled out to draftjs-to-html/draft-js) now that those packages
-  # are gone; see docs/OrphanedCode.md.
+  # ordered-list-item (including indented/nested list items -- both old toolbars left
+  # react-draft-wysiwyg's indent/outdent buttons enabled), and LINK entities only. No Node/npm
+  # dependency -- this replaces the old Node-bridge version (which shelled out to
+  # draftjs-to-html/draft-js) now that those packages are gone; see docs/OrphanedCode.md.
   #
   # The exact markup shape (tag names, nesting order for overlapping inline styles, `<ins>` for
-  # UNDERLINE, list grouping, leading/trailing-space -> &nbsp;, entity `target` default) was
-  # ported from reading draftjs-to-html@0.9.1's source and cross-checked against real output from
-  # draft-js@0.11.7 + draftjs-to-html@0.9.1 in a disposable scratch project (see
+  # UNDERLINE, list grouping/nesting, leading/trailing-space -> &nbsp;, entity `target` default)
+  # was ported from reading draftjs-to-html@0.9.1's source and cross-checked against real output
+  # from draft-js@0.11.7 + draftjs-to-html@0.9.1 in a disposable scratch project (see
   # spec/lib/elvis/wysiwyg_converter_spec.rb for the captured golden fixtures and provenance
   # comment). Anything outside the supported subset degrades gracefully (unrecognized block type
-  # -> plain paragraph, unrecognized entity type -> text without entity markup) with a logged
-  # warning, rather than raising -- real data should never hit those paths.
+  # -> plain paragraph, unrecognized entity type -> text without entity markup, unrecognized
+  # inline style -> ignored) rather than raising -- real data should never hit those paths, but if
+  # it ever does, `Result#warnings` surfaces it to whoever is watching the rake task's own stdout,
+  # not just `Rails.logger`.
   class WysiwygConverter
-    Result = Struct.new(:is_draft_js, :html, :failed, :error_message, keyword_init: true)
+    Result = Struct.new(:is_draft_js, :html, :failed, :error_message, :warnings, keyword_init: true)
 
     BLOCK_TAGS = {
       "unstyled" => "p",
@@ -60,18 +63,26 @@ module Elvis
 
       # @param raw_value [String] the Parameter row's raw `value`. Must not be blank/nil --
       #   callers must skip blank values themselves (matching the old bridge's contract).
-      # @return [Result]
+      # @return [Result] `warnings` is always an Array (possibly empty) of messages for any
+      #   graceful-degradation path hit during rendering -- already logged to Rails.logger by the
+      #   time this returns, but also handed back so a caller with its own stdout-visible logger
+      #   (the migrator/rake task) can surface them there too.
       def convert(raw_value)
         raise ArgumentError, "raw_value must not be blank" if raw_value.nil? || raw_value.empty?
 
         parsed = try_parse_draft_raw(raw_value)
-        return Result.new(is_draft_js: false, html: raw_value, failed: false) if parsed.nil?
+        return Result.new(is_draft_js: false, html: raw_value, failed: false, warnings: []) if parsed.nil?
+
+        warnings = []
 
         begin
-          Result.new(is_draft_js: true, html: render(parsed), failed: false)
+          html = render(parsed, warnings)
+          warnings.each { |w| Rails.logger.warn("[Elvis::WysiwygConverter] #{w}") }
+          Result.new(is_draft_js: true, html: html, failed: false, warnings: warnings)
         rescue StandardError => e
           Rails.logger.error("[Elvis::WysiwygConverter] failed to convert Draft.js content: #{e.class}: #{e.message}")
-          Result.new(is_draft_js: true, html: nil, failed: true, error_message: "#{e.class}: #{e.message}")
+          Result.new(is_draft_js: true, html: nil, failed: true, error_message: "#{e.class}: #{e.message}",
+                     warnings: warnings)
         end
       end
 
@@ -88,7 +99,7 @@ module Elvis
         nil
       end
 
-      def render(parsed)
+      def render(parsed, warnings)
         blocks = parsed["blocks"] || []
         entity_map = parsed["entityMap"] || {}
         html = +""
@@ -101,67 +112,73 @@ module Elvis
           end
 
           unless pending_list.empty?
-            html << list_markup(pending_list, entity_map)
+            html << list_markup(pending_list, entity_map, warnings)
             pending_list = []
           end
-          html << block_markup(block, entity_map)
+          html << block_markup(block, entity_map, warnings)
         end
 
-        html << list_markup(pending_list, entity_map) unless pending_list.empty?
+        html << list_markup(pending_list, entity_map, warnings) unless pending_list.empty?
         html
       end
 
-      def block_markup(block, entity_map)
+      def block_markup(block, entity_map, warnings)
         type = block["type"]
         tag = BLOCK_TAGS[type]
         if tag.nil?
-          Rails.logger.warn("[Elvis::WysiwygConverter] unrecognized block type #{type.inspect}; " \
-                            "rendering as a plain paragraph")
+          warnings << "unrecognized block type #{type.inspect}; rendering as a plain paragraph"
           tag = "p"
         end
 
-        "<#{tag}>#{block_inner_markup(block, entity_map)}</#{tag}>\n"
+        "<#{tag}>#{block_inner_markup(block, entity_map, warnings)}</#{tag}>\n"
       end
 
       # Groups a run of consecutive list-type blocks (no non-list block between them) into
-      # <ul>/<ol>, switching tag whenever the item type changes mid-run -- matches
-      # draftjs-to-html's getListMarkup. Flat only: this app's editor toolbars never offered list
-      # indentation, so nested (depth > 0) list markup is intentionally not implemented --
-      # a stray depth is logged and otherwise ignored rather than raising.
-      def list_markup(list_blocks, entity_map)
-        if list_blocks.any? { |b| b["depth"].to_i.positive? }
-          Rails.logger.warn("[Elvis::WysiwygConverter] list block with depth > 0 encountered; nested lists " \
-                            "are not supported, rendering flat")
-        end
-
+      # <ul>/<ol>, recursing into a sub-list for any run of deeper `depth` blocks (indent/outdent)
+      # and switching tag whenever the item type changes -- a straight port of draftjs-to-html's
+      # getListMarkup, including its nesting algorithm.
+      def list_markup(list_blocks, entity_map, warnings)
         html = +""
-        previous_type = nil
+        nested_list_block = []
+        previous_block = nil
 
         list_blocks.each do |block|
+          nested_block = false
           type = block["type"]
-          tag = LIST_BLOCK_TAGS.fetch(type, "ul")
 
-          if previous_type.nil?
-            html << "<#{tag}>\n"
-          elsif previous_type != type
-            html << "</#{LIST_BLOCK_TAGS.fetch(previous_type, 'ul')}>\n<#{tag}>\n"
+          if previous_block.nil?
+            html << "<#{LIST_BLOCK_TAGS.fetch(type, 'ul')}>\n"
+          elsif previous_block["type"] != type
+            html << "</#{LIST_BLOCK_TAGS.fetch(previous_block['type'], 'ul')}>\n"
+            html << "<#{LIST_BLOCK_TAGS.fetch(type, 'ul')}>\n"
+          elsif (previous_block["depth"] || 0) == (block["depth"] || 0)
+            unless nested_list_block.empty?
+              html << list_markup(nested_list_block, entity_map, warnings)
+              nested_list_block = []
+            end
+          else
+            nested_block = true
+            nested_list_block << block
           end
 
-          html << "<li>#{block_inner_markup(block, entity_map)}</li>\n"
-          previous_type = type
+          next if nested_block
+
+          html << "<li>#{block_inner_markup(block, entity_map, warnings)}</li>\n"
+          previous_block = block
         end
 
-        html << "</#{LIST_BLOCK_TAGS.fetch(previous_type, 'ul')}>\n"
+        html << list_markup(nested_list_block, entity_map, warnings) unless nested_list_block.empty?
+        html << "</#{LIST_BLOCK_TAGS.fetch(previous_block['type'], 'ul')}>\n"
         html
       end
 
-      def block_inner_markup(block, entity_map)
+      def block_inner_markup(block, entity_map, warnings)
         chars = (block["text"] || "").chars
-        style_array = style_array_for_block(block, chars)
+        style_array = style_array_for_block(block, chars, warnings)
         sections = sections_for_block(block, chars.length)
 
         sections.each_with_index.map do |section, index|
-          text = section_markup(section, chars, style_array, entity_map)
+          text = section_markup(section, chars, style_array, entity_map, warnings)
           text = trim_leading_nbsp(text) if index.zero?
           text = trim_trailing_nbsp(text) if index == sections.length - 1
           text
@@ -172,13 +189,13 @@ module Elvis
       # Anything outside BOLD/ITALIC/UNDERLINE/STRIKETHROUGH (color-/bgcolor-/fontsize-/
       # fontfamily- ranges, or any other unrecognized style) is dropped, with a warning --
       # this app's toolbars never produced them.
-      def style_array_for_block(block, chars)
+      def style_array_for_block(block, chars, warnings)
         styles = INLINE_STYLE_TAGS.keys.index_with { Array.new(chars.length, false) }
 
         (block["inlineStyleRanges"] || []).each do |range|
           style = range["style"]
           unless styles.key?(style)
-            Rails.logger.warn("[Elvis::WysiwygConverter] unrecognized inline style #{style.inspect}; ignoring")
+            warnings << "unrecognized inline style #{style.inspect}; ignoring"
             next
           end
 
@@ -212,7 +229,7 @@ module Elvis
         sections
       end
 
-      def section_markup(section, chars, style_array, entity_map)
+      def section_markup(section, chars, style_array, entity_map, warnings)
         inner = inline_style_sections(style_array, chars, section[:start], section[:end])
                 .map { |sub| style_tag_markup(sub) }
                 .join
@@ -223,8 +240,7 @@ module Elvis
         entity_type = entity && entity["type"]
 
         unless entity_type == "LINK"
-          Rails.logger.warn("[Elvis::WysiwygConverter] unrecognized entity type #{entity_type.inspect}; " \
-                            "rendering its text without entity markup")
+          warnings << "unrecognized entity type #{entity_type.inspect}; rendering its text without entity markup"
           return inner
         end
 

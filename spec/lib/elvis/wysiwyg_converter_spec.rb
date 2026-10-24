@@ -2,22 +2,25 @@
 
 require "rails_helper"
 
-# Golden-fixture coverage for the pure-Ruby Elvis::WysiwygConverter.
+# Coverage for the pure-Ruby Elvis::WysiwygConverter.
 #
-# Every `expected_html` string below was NOT hand-written: it was captured by running the real
+# The golden-fixture section below (from "Golden fixtures" to "Graceful degradation") uses
+# `expected_html` strings that were NOT hand-written: they were captured by running the real
 # `draftjs-to-html@0.9.1` (with `draft-js@0.11.7`'s convertFromRaw/convertToRaw normalization
 # fallback, matching the now-deleted frontend/tools/wysiwygConversion.js's `convertWysiwyg`) against
-# each `raw` input below, in a disposable scratch Node project (not part of this repo, discarded
-# after capture). Treat these strings as ground truth for draftjs-to-html's exact output shape,
-# not as arbitrary expectations.
+# each `raw` input, in a disposable scratch Node project (not part of this repo, discarded after
+# each capture). Treat those strings as ground truth for draftjs-to-html's exact output shape, not
+# as arbitrary expectations. The "Graceful degradation" examples further down are a DELIBERATE
+# exception to that -- see the comment on that section for what the real library actually does
+# there and why this port diverges on purpose.
 RSpec.describe Elvis::WysiwygConverter do
   def raw(blocks:, entity_map: {})
     { "blocks" => blocks, "entityMap" => entity_map }.to_json
   end
 
-  def block(key:, text:, type: "unstyled", inline_style_ranges: [], entity_ranges: [])
+  def block(key:, text:, type: "unstyled", depth: 0, inline_style_ranges: [], entity_ranges: [])
     {
-      "key" => key, "text" => text, "type" => type, "depth" => 0,
+      "key" => key, "text" => text, "type" => type, "depth" => depth,
       "inlineStyleRanges" => inline_style_ranges, "entityRanges" => entity_ranges, "data" => {}
     }
   end
@@ -211,6 +214,51 @@ RSpec.describe Elvis::WysiwygConverter do
       )
     end
 
+    it "groups a run of mixed-depth unordered-list-item blocks (indent/outdent) into a nested " \
+       "<ul>, recursing one sub-list per depth increase -- both old editor toolbars left " \
+       "react-draft-wysiwyg's indent/outdent buttons enabled, so depth > 0 is real, reachable data" do
+      input = raw(blocks: [
+                    block(key: "n1", text: "Top", type: "unordered-list-item", depth: 0),
+                    block(key: "n2", text: "Nested", type: "unordered-list-item", depth: 1),
+                    block(key: "n3", text: "Top2", type: "unordered-list-item", depth: 0)
+                  ])
+      expect(described_class.convert(input).html).to eq(
+        "<ul>\n<li>Top</li>\n<ul>\n<li>Nested</li>\n</ul>\n<li>Top2</li>\n</ul>\n"
+      )
+    end
+
+    it "handles multiple levels of nesting (depth 0/1/2/1/0), recursing one sub-list per level" do
+      input = raw(blocks: [
+                    block(key: "d0", text: "L0a", type: "unordered-list-item", depth: 0),
+                    block(key: "d1", text: "L1a", type: "unordered-list-item", depth: 1),
+                    block(key: "d2", text: "L2", type: "unordered-list-item", depth: 2),
+                    block(key: "d3", text: "L1b", type: "unordered-list-item", depth: 1),
+                    block(key: "d4", text: "L0b", type: "unordered-list-item", depth: 0)
+                  ])
+      expect(described_class.convert(input).html).to eq(
+        "<ul>\n<li>L0a</li>\n<ul>\n<li>L1a</li>\n<ul>\n<li>L2</li>\n</ul>\n<li>L1b</li>\n</ul>\n<li>L0b</li>\n</ul>\n"
+      )
+    end
+
+    it "sorts entity ranges by offset before building sections, regardless of the order they " \
+       "appear in `entityRanges` (both links point correctly even though the 2nd range -- Beta " \
+       "-- is listed first in the input)" do
+      input = raw(
+        blocks: [block(key: "e1", text: "Alpha Beta", entity_ranges: [
+                         { "offset" => 6, "length" => 4, "key" => 1 },
+                         { "offset" => 0, "length" => 5, "key" => 0 }
+                       ])],
+        entity_map: {
+          "0" => { "type" => "LINK", "data" => { "url" => "https://alpha.example" } },
+          "1" => { "type" => "LINK", "data" => { "url" => "https://beta.example" } }
+        }
+      )
+      expect(described_class.convert(input).html).to eq(
+        "<p><a href=\"https://alpha.example\" target=\"_self\">Alpha</a> " \
+        "<a href=\"https://beta.example\" target=\"_self\">Beta</a></p>\n"
+      )
+    end
+
     it "renders a LINK entity as <a href=... target=\"_self\">, defaulting target to _self" do
       input = raw(
         blocks: [block(key: "i1", text: "Click here", entity_ranges: [{ "offset" => 0, "length" => 10, "key" => 0 }])],
@@ -255,28 +303,54 @@ RSpec.describe Elvis::WysiwygConverter do
       expect(described_class.convert(input).html).to eq("<p>&nbsp;&nbsp;padded&nbsp;&nbsp;</p>\n")
     end
 
-    # --- Graceful degradation outside the supported subset (should never occur in real data) ---
+    # --- Graceful degradation outside the supported subset ---
+    #
+    # None of these 3 cases are reachable with this app's actual toolbar config (no "atomic"
+    # block type, no IMAGE/MENTION/etc entities, no CODE/SUPERSCRIPT/SUBSCRIPT/color- inline
+    # styles were ever offered), so unlike the golden-fixture section above, the expectations
+    # here are NOT what the real draftjs-to-html@0.9.1 library does -- this port deliberately
+    # diverges, on purpose, rather than replicating real behavior that's unreachable anyway:
+    #   - atomic block type: the real library renders NOTHING for the block's text (it expects
+    #     an entity to supply the content, e.g. an image) -- this port renders it as a plain
+    #     paragraph instead of silently dropping the text.
+    #   - IMAGE entity: the real library renders a (broken, since no real `src`/`alt`/dimensions
+    #     were supplied) `<img>`/`<div>` -- this port renders the entity's plain text with no
+    #     entity markup instead of emitting a broken image tag.
+    #   - CODE inline style: the real library wraps it in `<code>` -- this port ignores the style
+    #     and renders plain text, since no toolbar in this app ever offered CODE.
+    # Each case also logs a warning (surfaced both via Rails.logger and via Result#warnings, so
+    # whoever is running the rake task sees it on stdout too) -- if one of these ever fires on
+    # real data, that's the signal something assumed-unreachable just became reachable.
 
-    it "degrades an unrecognized block type to a plain paragraph, with a logged warning" do
+    it "degrades an unrecognized block type to a plain paragraph instead of the real library's " \
+       "behavior (dropping the text entirely), with a warning on both Rails.logger and Result#warnings" do
       input = raw(blocks: [block(key: "q1", text: "Weird", type: "atomic")])
       expect(Rails.logger).to receive(:warn).with(/unrecognized block type/)
-      expect(described_class.convert(input).html).to eq("<p>Weird</p>\n")
+      result = described_class.convert(input)
+      expect(result.html).to eq("<p>Weird</p>\n")
+      expect(result.warnings).to include(/unrecognized block type/)
     end
 
-    it "degrades an unrecognized entity type by skipping its markup, with a logged warning" do
+    it "degrades an unrecognized entity type by skipping its markup instead of the real " \
+       "library's broken <img> output, with a warning on both Rails.logger and Result#warnings" do
       input = raw(
         blocks: [block(key: "r1", text: "An image", entity_ranges: [{ "offset" => 0, "length" => 8, "key" => 0 }])],
         entity_map: { "0" => { "type" => "IMAGE", "data" => { "src" => "x.png" } } }
       )
       expect(Rails.logger).to receive(:warn).with(/unrecognized entity type/)
-      expect(described_class.convert(input).html).to eq("<p>An image</p>\n")
+      result = described_class.convert(input)
+      expect(result.html).to eq("<p>An image</p>\n")
+      expect(result.warnings).to include(/unrecognized entity type/)
     end
 
-    it "degrades an unrecognized inline style by ignoring it, with a logged warning" do
+    it "degrades an unrecognized inline style by ignoring it instead of the real library's " \
+       "<code> wrapping, with a warning on both Rails.logger and Result#warnings" do
       input = raw(blocks: [block(key: "s1", text: "Hello",
                                  inline_style_ranges: [{ "offset" => 0, "length" => 5, "style" => "CODE" }])])
       expect(Rails.logger).to receive(:warn).with(/unrecognized inline style/)
-      expect(described_class.convert(input).html).to eq("<p>Hello</p>\n")
+      result = described_class.convert(input)
+      expect(result.html).to eq("<p>Hello</p>\n")
+      expect(result.warnings).to include(/unrecognized inline style/)
     end
   end
 end
