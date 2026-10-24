@@ -2,10 +2,13 @@
 // client-side (manual=false) mode (docs/Modernization-Roadmap.md item 13 batch 4a). No prior test
 // file existed for this component.
 //
-// `withTranslation("planning")` wraps the class; render() reads `t` from props via the HOC.
+// Was `withTranslation("planning")`-wrapped; now a plain functional component using
+// `useTranslation` directly (docs/KnownIssues.md's propTypes-removal batch 2) -- no change needed
+// to these assertions.
 
 import React from "react";
 import { render, screen } from "@testing-library/react";
+import { afterEach, beforeEach, expect, test } from "vitest";
 import i18n from "../i18n";
 import PlanningListTeachers from "./PlanningListTeachers";
 

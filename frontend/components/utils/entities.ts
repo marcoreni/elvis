@@ -56,6 +56,7 @@ export interface User extends Entity {
     last_name: string;
     birthday: string;
     is_teacher?: boolean;
+    is_admin?: boolean;
     adherent_number?: number;
     begin_at?: string;
     stopped_at?: string;

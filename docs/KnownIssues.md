@@ -491,6 +491,50 @@ The same gap existed at a 4th call site, `userForm/CreateOrganizationModal.jsx`'
 bare-undefined-class) box into a blue Bootstrap `alert-info` box. `ConsentDocItem.test.tsx` now
 asserts the `alert-info` class directly as a regression guard.
 
+Batch 2 converted: `activityApplications/PersonChoice.jsx`, `PlanningListRooms.jsx`,
+`PlanningListTeachers.jsx`, `RemoveComponent.jsx`, `planning/SelectLocation.jsx`,
+`personalInfos/Roles.jsx` — now `.tsx`, `propTypes` dropped. `PlanningListRooms`/
+`PlanningListTeachers` (`withTranslation("planning")`-wrapped classes) and `SelectLocation`
+(constructor + `componentDidUpdate`) all moved to hooks; `SelectLocation`'s `options` state is a
+`useState` lazy initializer (a function, not a call result, so `formatOptions` itself only runs
+once too — React only invokes it on the very first render, matching the class's constructor-only
+computation; a plain `useRef(formatOptions(...))` would still re-run `formatOptions` as wasted
+work on every render, and a `useMemo` would incorrectly recompute the kept value on later prop
+changes), and its `componentDidUpdate(prevProps)` reset became a `useEffect` with an explicit
+prev-value ref check so it doesn't also fire on mount (a plain `useEffect([dep])` would, unlike
+`componentDidUpdate`).
+
+Found no real call site anywhere in `app/views` or `frontend/` for `PersonChoice.jsx`,
+`PlanningListRooms.jsx`, or `planning/SelectLocation.jsx` (confirmed by grep across both trees,
+beyond their own files/tests) — may be reachable only through a plugin's own (gem-side, not in
+this repo) ERB views, which this repo's grep can't see. Converted and typed as given rather than
+deleted, per this repo's "don't delete on 500 / looks dead" convention.
+
+Dead code dropped during the batch 2 rewrite (confirmed by grep, not assumed):
+`PlanningListRooms.jsx`'s unused `moment`/`PropTypes` imports; `PlanningListTeachers.jsx`'s
+`durationToString` function (defined, never called -- it used `moment.isDuration`, nothing to do
+with lodash) and, separately and unrelatedly, that same file's unused `lodash` import (zero `_.`
+usage anywhere in the old file); `SelectLocation.jsx`'s `activities` prop (declared in
+`propTypes`, never read); `personalInfos/Roles.jsx`'s `adhesions` field of the `user` prop's old
+`PropTypes.shape` (declared, never read). Also fixed two propTypes/usage mismatches predating this
+conversion: `RemoveComponent.jsx` used `additionalMessage` without ever declaring it in
+`propTypes`; `SelectLocation.jsx` used `locations`/`mode` the same way — both
+now in their respective `.tsx` prop interfaces.
+
+**Real behavior fix, not a mechanical rewrite:** `SelectLocation.jsx`'s `formatOptions` had
+`return acc.splice();` (zero arguments) on the "this room has no location" branch of its
+`reduce`. Per spec, a 0-argument `splice()` call deletes nothing and returns `[]` — so that line
+actually reset the whole accumulator to empty every time a location-less room was hit
+mid-iteration, silently discarding every option already built up before it (only "fixed" by
+coincidence when a later room happened to rebuild the same options afterward — order-dependent,
+and genuinely broken whenever a location-less room came last). Found and fixed during this
+conversion: changed to `acc.splice(0)` (one argument — `start`), which deletes *every* item in
+`acc` and returns them, i.e. returns a copy of what `acc` held, correctly preserving it while
+skipping the current element. `SelectLocation.test.tsx`'s room fixture deliberately keeps its
+location-less room last, so this is covered by a real regression test (reverting to the original
+`acc.splice()` makes `formatOptions`'s dedup test return `[]` instead of the expected two
+options).
+
 ## `UserForm.jsx` never pre-fills a user's existing consent-doc answers
 
 Found while converting `ConsentDocItem.jsx` to TypeScript (jsx-to-tsx batch 1) and tracing why its

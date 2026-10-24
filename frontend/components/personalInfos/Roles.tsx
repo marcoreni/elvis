@@ -1,22 +1,36 @@
 import React, { useState, Fragment } from "react";
-import _ from "lodash";
 import { useTranslation } from "react-i18next";
 import Checkbox from "../common/Checkbox";
-import PropTypes from "prop-types";
 import * as api from "../../tools/api";
 import swal from "sweetalert2";
 import moment from "moment";
+import type { Activity, User } from "../utils/entities";
 
-/**
- * @param {{is_teacher: boolean, is_admin: boolean, adhesions: []}} user
- * @param {({}) => void} onSubmit
- * @returns {JSX.Element}
- * @constructor
- */
-export default function Roles({ user, lessonsPlanned, onSubmit }) {
+interface RolesProps {
+    // The real `User` entity, not an ad-hoc `{id, is_teacher, is_admin}` slice: `onSubmit`
+    // below spreads the ENTIRE `user` object back through (`{...user, is_teacher, is_admin}`),
+    // so the prop has always genuinely been a full `User` -- the real caller (UserEdit.jsx:181,
+    // `user={this.props.user}`) passes the full object. `is_admin` was missing from `User` in
+    // entities.ts (a real `is_admin` column, app/models/user.rb) -- added there instead of
+    // reinventing a narrower local type here (see docs/Jsx-To-Tsx-Migration-Playbook.md section 3).
+    user: User;
+    lessonsPlanned: number;
+    onSubmit: (user: User) => void;
+}
+
+// Dropped from the old propTypes.user.shape: `adhesions` (declared but never read anywhere in
+// this file -- confirmed by grep) and `validity_start_date`/`validity_end_date` that lived under
+// it (both still absent from `User` in entities.ts, which is correct -- they're genuinely unread
+// here).
+
+export default function Roles({ user, lessonsPlanned, onSubmit }: RolesProps) {
     const { t } = useTranslation("users");
-    const [isTeacher, setIsTeacher] = useState(user.is_teacher);
-    const [isAdmin, setIsAdmin] = useState(user.is_admin);
+    // `User.is_teacher`/`.is_admin` are optional on the entity (not every serializer context
+    // includes them) even though the real DB columns default to `false`, never `null` -- `??
+    // false` keeps local state a plain `boolean`, matching the old (narrower) prop type's
+    // `.isRequired` without reintroducing it.
+    const [isTeacher, setIsTeacher] = useState(user.is_teacher ?? false);
+    const [isAdmin, setIsAdmin] = useState(user.is_admin ?? false);
 
     function removeLessons() {
         api.set()
@@ -31,7 +45,7 @@ export default function Roles({ user, lessonsPlanned, onSubmit }) {
                     setIsTeacher(false);
                 });
             })
-            .error((errorMsg) => {
+            .error((errorMsg: unknown) => {
                 console.error("error deleting activity instances : ", errorMsg);
                 swal.fire({
                     icon: "error",
@@ -41,7 +55,7 @@ export default function Roles({ user, lessonsPlanned, onSubmit }) {
             .del(`/teachers/${user.id}/activity_instances`);
     }
 
-    function formatActivity(a) {
+    function formatActivity(a: Activity) {
         const day = moment(a.time_interval.start).format("dddd");
         const startsAt = moment(a.time_interval.start).format("HH:mm");
         const endsAt = moment(a.time_interval.end).format("HH:mm");
@@ -58,15 +72,13 @@ export default function Roles({ user, lessonsPlanned, onSubmit }) {
     function getActivitiesList() {
         return api
             .set()
-            .success((activities) => {
-                let res = "";
+            .success((activities: Activity[]) => {
                 const htmlText =
                     t("users:roles.coursesListIntro", { n: lessonsPlanned }) +
                     "<br/><br/>" +
-                    _.reduce(
-                        activities,
+                    activities.reduce(
                         (res, activity) => res + formatActivity(activity),
-                        res
+                        ""
                     );
 
                 swal.fire({
@@ -77,7 +89,7 @@ export default function Roles({ user, lessonsPlanned, onSubmit }) {
                     width: 600,
                 });
             })
-            .error((errorMsg) => {
+            .error((errorMsg: unknown) => {
                 console.error("error fetching lessons : ", errorMsg);
                 swal.fire({
                     icon: "error",
@@ -87,7 +99,7 @@ export default function Roles({ user, lessonsPlanned, onSubmit }) {
             .get(`/teachers/${user.id}/activities/`);
     }
 
-    function onChangeIsTeacher(isTeacher) {
+    function onChangeIsTeacher(isTeacher: boolean) {
         // dans le cas où on cherche à désactiver le rôle professeur, on doit prendre quelques précautions
         if (isTeacher && lessonsPlanned > 0) {
             swal.fire({
@@ -151,18 +163,3 @@ export default function Roles({ user, lessonsPlanned, onSubmit }) {
         </div>
     );
 }
-
-Roles.propTypes = {
-    user: PropTypes.shape({
-        is_admin: PropTypes.bool.isRequired,
-        is_teacher: PropTypes.bool.isRequired,
-        adhesions: PropTypes.arrayOf(
-            PropTypes.shape({
-                is_active: PropTypes.bool.isRequired,
-                season_id: PropTypes.number.isRequired,
-                validity_start_date: PropTypes.string,
-                validity_end_date: PropTypes.string,
-            })
-        ),
-    }),
-};
