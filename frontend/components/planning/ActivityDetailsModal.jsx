@@ -579,10 +579,9 @@ class ActivityDetailsModal extends React.Component {
             .then((response) => response.json())
             .then((conflicting_intervals) => {
                 this.setState({
-                    isValidated: !(
-                        conflicting_intervals.teacher == null ||
-                        conflicting_intervals.room == null
-                    ),
+                    isValidated:
+                        conflicting_intervals.teacher == null &&
+                        conflicting_intervals.room == null,
                     conflicting_interval: conflicting_intervals.room,
                     conflicting_interval_teacher: conflicting_intervals.teacher,
                 });
@@ -1236,7 +1235,15 @@ class ActivityDetailsModal extends React.Component {
                             <div className="alert alert-danger">
                                 <p>
                                     {t("activityModal.teacherBusy", {
-                                        name: `${this.props.planning.user.first_name} ${this.props.planning.user.last_name}`,
+                                        name: `${_.get(
+                                            this.props.planning,
+                                            "user.first_name",
+                                            "?"
+                                        )} ${_.get(
+                                            this.props.planning,
+                                            "user.last_name",
+                                            "?"
+                                        )}`,
                                         from: moment(
                                             this.state
                                                 .conflicting_interval_teacher

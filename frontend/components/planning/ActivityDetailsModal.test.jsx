@@ -409,6 +409,67 @@ describe("ActivityDetailsModal — verifyTimeOverlap", () => {
         );
         expect(ref.current.state.conflicting_interval).toEqual(conflictingRoom);
     });
+
+    // Regression for a crash this fix makes reachable for the first time: the teacherBusy alert
+    // (render(), `this.props.planning.user.first_name`) was unguarded, unlike every other
+    // `this.props.planning` read in this file (`:887`, `:916`, `:939`, `:1089`), which all go
+    // through `_.get(this.props.planning, "user.id")`. Before this fix, `/planning/overlap`
+    // always returned `teacher: null`, so `conflicting_interval_teacher != null` was never true
+    // and this line never ran. Now that a real conflict can come back, it does -- and crashes,
+    // because `planning` is never actually a single planning-with-user object: real ERB views
+    // pass either an array of time intervals (show_for_room.html.erb/show_all_rooms.html.erb,
+    // `planning: @intervals` / `planning: time_intervals`) or omit the prop entirely
+    // (show_for_conflict.html.erb passes `plannings:`, plural, instead). This test uses the
+    // array shape. Render must reach the un-validated branch (`:1203`) where the alert lives,
+    // which requires `interval.is_validated: false` and `isAdmin`/`isTeacher` true.
+    //
+    // Confirmed this fails (TypeError: Cannot read properties of undefined (reading
+    // 'first_name')) against the unguarded `this.props.planning.user.first_name` this fix
+    // replaces, before applying the `_.get(..., "user.first_name", "?")` guard.
+    test("does not crash rendering the teacherBusy alert when `planning` is a plain array (show_for_room.html.erb shape), not a planning-with-user object", async () => {
+        global.fetch = vi.fn().mockResolvedValue({
+            json: () =>
+                Promise.resolve({
+                    teacher: {
+                        id: 88,
+                        start: "2026-09-01T09:00:00",
+                        end: "2026-09-01T10:00:00",
+                        activity: { id: 5, room: { id: 10 } },
+                        plannings: [
+                            {
+                                id: 1,
+                                user: {
+                                    id: 7,
+                                    first_name: "Jean",
+                                    last_name: "Dupont",
+                                },
+                            },
+                        ],
+                    },
+                    room: null,
+                }),
+        });
+
+        render(
+            <ActivityDetailsModal
+                {...baseProps}
+                isAdmin
+                userActivities={[]}
+                locations={[]}
+                planning={[
+                    {
+                        id: 1,
+                        start: "2026-09-01T08:00:00",
+                        end: "2026-09-01T09:00:00",
+                    },
+                ]}
+                interval={{ ...baseProps.interval, is_validated: false }}
+            />
+        );
+
+        const alert = await screen.findByText(/est déjà occupé/);
+        expect(alert).toHaveTextContent('"? ?"');
+    });
 });
 
 // GroupNameInput and ActivitySelection had fr/en "renders the label" string-echo pairs only —
