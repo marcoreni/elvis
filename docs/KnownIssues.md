@@ -341,17 +341,6 @@ correctness bug (downgraded from an earlier, incorrect diagnosis that this churn
 mutating a shared array in place; fixed at the source in batch 3). Fix, if ever worth it: memoize
 `columns`/`dataService` on whatever they actually depend on instead of rebuilding them inline.
 
-## `IntervalPreferencesEditor.jsx`'s parallel-fetch error branch doesn't accumulate
-
-`componentDidMount` (`frontend/components/activityApplications/IntervalPreferencesEditor.jsx`,
-~line 29-48) fires one request per `activityRef` in parallel; the success branch was fixed (batch-18
-migration) to use a functional `setState` updater so concurrent resolutions can't drop each other's
-data, but the sibling error branch still does `this.setState({ errors: error })` — a plain overwrite,
-not merged with any previous error. With more than one ref failing, only the last failure's error
-survives in state. Low impact (multiple simultaneous failures for the same editor instance are
-presumably rare) and pre-existing under the same class of issue the success-branch fix addressed.
-Fix: apply the same functional-updater treatment, accumulating errors instead of overwriting.
-
 ## `availabilityRef.current.componentDidMount()` reads stale props under automatic batching
 
 Two call sites — `frontend/components/activityApplications/TimePreferencesStep.jsx:36` and

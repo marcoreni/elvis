@@ -18,7 +18,7 @@ class IntervalPreferencesEditor extends React.PureComponent {
         this.state = {
             intervals: {},
             selectedIntervals,
-            errors: [],
+            errors: {},
         };
 
         this.handleSelectInterval = this.handleSelectInterval.bind(this);
@@ -35,7 +35,12 @@ class IntervalPreferencesEditor extends React.PureComponent {
                 )
                 .then(({ data, error }) => {
                     if (error) {
-                        this.setState({ errors: error });
+                        this.setState((prevState) => ({
+                            errors: {
+                                ...prevState.errors,
+                                [ref.id]: error,
+                            },
+                        }));
                     } else {
                         this.setState((prevState) => ({
                             intervals: {
