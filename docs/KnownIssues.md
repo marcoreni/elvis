@@ -513,3 +513,25 @@ work for a room planning with no assigned teacher. Pre-existing, unrelated to th
 `time_interval_id` fix above (same behavior before and after). Not fixed here -- cross-cutting a
 Rails controller/model fix.
 
+## `Season.next` crashes with `NoMethodError` when no season is flagged `is_current`
+
+`Season.next` (`app/models/season.rb:120-124`) is `includes(:holidays).where(id: current.next_season_id).first`
+-- `current` has no nil guard, so with zero `Season` rows flagged `is_current`, `Season.current` is
+`nil` and `.next_season_id` raises. `ApplicationController#verify_season`'s bootstrap
+(`append_before_action :verify_season, only: [:index]`) doesn't cover this: it only redirects to
+season setup when there are zero `Season` rows total, not when rows exist but none is current, and
+`PlanningController` has no `index` action for the hook to run on anyway.
+
+Pre-existing, not introduced by the `show_all_rooms` season-prop fix (PR fixing
+`/plannings/all_rooms`'s missing `season:` prop) -- that fix mirrored `show_for_room`'s
+`Season.next.as_json(...)` line exactly, which already had this same crash, so it now also
+reaches `show_all_rooms`. At least 19 other call sites share the same unguarded pattern (`grep -rn
+"Season\.next" app/ lib/`), including `PlanningController#show`/`#show_generic`/`#show_for_room`/
+`#show_availabilities_for_date`, `ActivitiesApplicationsController`, `ActivityController`,
+`UsersController`, `EvaluationAppointmentsController`. Also note: even once the backend is
+guarded, `frontend/components/planning/Planning.jsx:83`'s `this.props.season.holidays.length` in
+the constructor still assumes a non-null `season` prop -- a full fix needs both a nil-safe
+`Season.next` (or call-site guards) and a frontend guard for the "no current season" case. Fix,
+narrowly: `next_id = current&.next_season_id` and have callers handle a possible `nil` result;
+broadly: decide whether "no current season" should even be reachable in a properly bootstrapped
+instance, or whether every caller needs defensive handling.

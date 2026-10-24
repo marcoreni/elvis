@@ -9,7 +9,7 @@ class PluginsController < ApplicationController
       format.json do
         render json: {
           plugins: Plugin.where(hidden: false),
-          is_restarting: File.exist?(Rails.root.join("tmp", "restart.txt"))
+          is_restarting: RestartStatus.restarting?
         }
       end
     end
@@ -49,9 +49,7 @@ class PluginsController < ApplicationController
 
       PluginInitJob.migrate_plugins
 
-      restart = File.open(File.join(Rails.root, "tmp", "restart.txt"), "w")
-      restart.write "restart"
-      restart.close
+      File.write(RestartStatus.file_path, "restart")
     end
 
     respond_to do |format|
