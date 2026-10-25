@@ -63,6 +63,10 @@ export interface User extends Entity {
     planning?: Planning;
     levels: Level[];
     activity_refs?: UserActivityRefSummary[];
+    // Real `users` table column (db/schema.rb) and a real strong-params/JSON field
+    // (users_controller.rb) -- the Belgian national-ID mask field in PayerPaymentTerms.tsx reads
+    // it off the activity-application `user`/family-member payload.
+    identification_number?: string | null;
 }
 export interface Teacher extends User {}
 
@@ -169,6 +173,8 @@ export interface Activity extends Entity {
     activity_ref: ActivityRef;
     student_evaluations: StudentEvaluation[];
     teacher?: Teacher;
+    // Real `has_one :room` association (app/serializers/activity_serializer.rb).
+    room?: Room;
 }
 
 export interface Season extends Entity {

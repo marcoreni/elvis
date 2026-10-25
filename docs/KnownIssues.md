@@ -483,6 +483,90 @@ location-less room last, so this is covered by a real regression test (reverting
 `acc.splice()` makes `formatOptions`'s dedup test return `[]` instead of the expected two
 options).
 
+Batch 3 converted: `common/SelectMultiple.jsx`, `PayerPaymentTerms.jsx`,
+`planning/CreateActivityModal.jsx`, `planning/RawPlanning.jsx`, `planning/SelectActivity.jsx`,
+`planning/SimplePlanning.jsx`, `planning/TimeInterval.jsx`, `WrappedPayerPaymentTerms.jsx` — now
+`.tsx`, `propTypes` dropped. All 6 class components moved to hooks; `PayerPaymentTerms.jsx` was
+already functional and only needed typing. `SelectActivity`'s `componentDidUpdate` (resetting
+`values` when `lastReinitialize` changes) became a `useEffect` with the same explicit
+prev-value-ref guard as batch 2's `SelectLocation`, so it doesn't also fire on mount.
+`SimplePlanning`'s `SimpleEvaluation` was a `React.PureComponent` -- wrapped in `React.memo`
+instead of a plain function to keep its shallow-prop-comparison skip-render behavior.
+
+**`WrappedPayerPaymentTerms` needed a `forwardRef`, not a plain function, and so did a fix to
+`utils/ui/StepZilla.tsx`.** The wizard (`Wizard.jsx`) renders payment-terms as a StepZilla step
+and calls its `isValidated()` to gate the "Next" button; StepZilla only attaches a ref to a step
+whose component type satisfies `componentType.prototype instanceof React.Component` (an ES6-class
+check). Converting `WrappedPayerPaymentTerms` to a plain function component would have made that
+check silently false, StepZilla would stop attaching a ref at all, and `isValidated()` would never
+fire again -- removing the payment-step validation gate from production with no error, just a
+step that always "passes" via StepZilla's own no-ref-means-always-valid fallback. Fixed two ways
+together: `WrappedPayerPaymentTerms` is now `forwardRef(...)` + `useImperativeHandle` exposing
+`isValidated()`, and `StepZilla.tsx`'s ref-attachment check (`stepAcceptsRef`) was widened to also
+recognize a `forwardRef`-wrapped component (checking its `$$typeof` against
+`Symbol.for("react.forward_ref")`, not the `react-is` package, since that's only a transitive,
+unpinned dependency here). Covered by a new regression test in `StepZilla.test.jsx`
+(`ForwardRefValidatingStep`) mirroring the existing class-based `ValidatingStep` test, plus direct
+ref-based `isValidated()` tests in `WrappedPayerPaymentTerms.test.tsx`.
+
+**Real bug found, not a mechanical rewrite: `SelectMultiple.jsx`'s constructor never actually
+deduplicated pre-selected features.** `_.remove(this.state.features, this.state.selectedFeatures)`
+was meant to drop every already-selected feature from the list of choices still offered (the same
+intent as the single-item `_.remove(this.state.features, newFeature)` a few lines down in
+`handleChange`, which does work). But lodash's iteratee shorthand treats an *array* predicate as
+`_.matchesProperty(value[0], value[1])`, not "remove every element present in this array" --
+verified empirically (`_.remove(copy, selectedArray)` left `copy` completely unchanged). Net
+effect: a caller that pre-selects more than one feature (`Payers.jsx`, `ActivityRefTeachers.jsx`
+both do) got every one of those features duplicated in the still-offered dropdown list, letting a
+user select the same payer/teacher twice. Fixed to a plain `.filter(...)` exclusion.
+`SelectMultiple.test.tsx`'s "every pre-selected feature (not just the first) is dropped" test is a
+real regression guard (reverting to the original lodash call makes it fail).
+
+Dead code dropped during the batch 3 rewrite (confirmed by grep, not assumed):
+`SelectMultiple.jsx`'s unused `Field`/`AlertCheckbox`/`Input` imports (none of the 3 were ever
+referenced in the render); `CreateActivityModal.jsx`'s `onSave` prop (declared `.isRequired` in
+the old `propTypes`, never read anywhere in the file -- `Planning.jsx`'s real `onSave` pass-through
+is simply ignored, same as before, and out of scope to touch here); a dead `this.state.payers`
+write in `WrappedPayerPaymentTerms.jsx`'s old `handleChangePayers` (set, never read -- the real
+state update happens one level up, in `PayerPaymentTerms`). Also fixed propTypes/usage mismatches
+predating this conversion, all in the "declared but never used, or used but never declared"
+direction: `RawPlanning.jsx` read `evaluations_level_refs` without ever declaring it;
+`SelectActivity.jsx` read `rooms`/`mode`/`locations` the same way; `SimplePlanning.jsx` read
+`day`/`selectedPlanning`/`currentPlanning`/`listTeachers`/`selectedName` the same way (its old
+`propTypes` only covered `data`/`seasons`) -- all now in their respective `.tsx` prop interfaces.
+Tightened `CreateActivityModal`'s `handleCloseAndOpenDetails` and `SelectActivity`'s `onChange`
+from optional (no `.isRequired`) to required -- both are called unconditionally with no guard from
+multiple call sites, so every real caller already supplies them.
+
+**Untyped-JS-boundary fixes needed to make `PayerPaymentTerms.tsx` compile, not behavior
+changes:** `ToggleButtonGroup.jsx` (still untyped JS) had a JSDoc comment with one `@param` tag
+per destructured prop field; TypeScript's allowJs JSDoc inference matched those tags positionally
+against the function's one real (destructured-object) parameter and inferred it as plain `number`
+(the first tag's type) instead of an object -- harmless until a `.tsx` file actually imported it
+(this conversion was the first). Replaced the misleading per-field JSDoc with a plain comment, and
+changed `maxSelected`'s "default via `||` in the function body" into a real destructuring default
+(`{maxSelected = 1, ...}`) so TypeScript infers it as optional -- behaviorally identical except for
+the already-unreachable `maxSelected === 0` edge case (no real caller passes `0`, confirmed by
+grep). Also dropped `PayerPaymentTerms.tsx`'s `multiSelect={false}` prop to `ToggleButtonGroup`,
+which never reads a `multiSelect` field at all (dead at the call site, same as before this batch).
+
+`entities.ts` gained `User.identification_number` (real `users` table column + a real
+strong-params/serialized field, `db/schema.rb`/`users_controller.rb`) and `Activity.room` (real
+`has_one :room` association, `app/serializers/activity_serializer.rb`) -- both read by components
+in this batch but missing from the shared entity before. Separately, `RawPlanning.tsx`'s
+`activity.evaluation_level_ref_id` check is likely dead in practice:
+`activity_serializer.rb`'s schema-info comment lists the column, but its real `attributes` list
+is just `:id, :group_name, :activity_ref_id` -- the field is never actually serialized, so the
+`!== null` check is always true (the field is `undefined`, not `null`) and the component always
+falls through to the `levelDisplay(...)` branch instead. Not fixed here -- unverified without a
+backend look, and out of scope for a frontend-only batch; flagged instead of silently added to
+`entities.ts` as if it were real.
+
+No real call site was found anywhere in `app/views` or `frontend/` for `planning/TimeInterval.jsx`
+(confirmed by grep across both trees, beyond its own new test file) -- same situation as a few
+batch-2 components. Converted and tested as given rather than deleted, per this repo's "don't
+delete on 500 / looks dead" convention.
+
 ## `UserForm.jsx` never pre-fills a user's existing consent-doc answers
 
 Found while converting `ConsentDocItem.jsx` to TypeScript (jsx-to-tsx batch 1) and tracing why its
