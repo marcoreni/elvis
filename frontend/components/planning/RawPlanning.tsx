@@ -134,18 +134,24 @@ const RawActivity = ({
         last_name: "",
     };
 
-    // `evaluation_level_ref_id` is listed in ActivitySerializer's schema-info comment but not in
-    // its real `attributes`/association list, so it's always `undefined`, never `null`, in the
-    // real payload -- this `!== null` check is therefore always true in practice (confirmed
-    // against app/serializers/activity_serializer.rb; not fixed here, see docs/KnownIssues.md).
+    // `evaluation_level_ref_id` isn't on entities.ts's shared `Activity` interface (which models
+    // `ActivitySerializer`'s attribute list, where this field is absent) because this component
+    // isn't fed by that serializer at all: it's fed by `PlanningController#get_intervals`'s
+    // `as_json(include: {...})` call (app/controllers/planning_controller.rb:258-292), which --
+    // with no `only`/`except` restricting it -- emits every real `activities` column, this one
+    // included (`null` when unset, a real id otherwise). So this `!== null` check is genuinely
+    // reachable and correct as written, not dead code.
     const activityWithLevelRef = activity as Activity & {
         evaluation_level_ref_id?: number | null;
     };
+    // No new optional-chaining guard here either (matches `OptionItems`'s stated policy above)
+    // -- the original was `evaluationsLevelRefs.find(...).label` with no guard, trusting the
+    // level ref to always be found when `evaluation_level_ref_id` is set.
     const studentsGlobalLevel =
         activityWithLevelRef.evaluation_level_ref_id !== null
             ? evaluationsLevelRefs.find(
                   (e) => e.id === activityWithLevelRef.evaluation_level_ref_id
-              )?.label
+              )!.label
             : levelDisplay(
                   students,
                   activity.activity_ref_id,
@@ -166,7 +172,7 @@ const RawActivity = ({
                         {toHourMin(toDate(timeInterval.start))} -{" "}
                         {toHourMin(toDate(timeInterval.end))}{" "}
                         {activity.activity_ref.label}{" "}
-                        {isTeacher ? activity.room?.label : null}
+                        {isTeacher ? activity.room!.label : null}
                     </h5>
 
                     {isTeacher ? null : <p>{fullname(teacher as User)}</p>}

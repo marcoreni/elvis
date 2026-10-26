@@ -11,10 +11,11 @@
 // actually be driven to true.
 
 import React, { createRef } from "react";
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, expect, test, vi } from "vitest";
+import { afterEach, describe, expect, test, vi } from "vitest";
 import WrappedPayerPaymentTerms from "./WrappedPayerPaymentTerms";
+import StepZilla from "./utils/ui/StepZilla";
 import type { StepZillaStepInstance } from "./utils/ui/StepZilla";
 
 const { toastError } = vi.hoisted(() => ({ toastError: vi.fn() }));
@@ -193,4 +194,63 @@ test("isValidated() blocks a minor payer with a missing identification number", 
     );
 
     expect(ref.current?.isValidated?.()).toBe(false);
+});
+
+// Coverage gap closed per code-reviewer: `isValidated()` is proven in isolation above (via a
+// direct ref), and `StepZilla.test.jsx` separately proves its ref-attachment check works for a
+// generic forwardRef step -- but nothing tied the 2 halves together through the real wizard
+// mechanism. This mounts `WrappedPayerPaymentTerms` as an actual `StepZilla` step and drives the
+// "Next" button, the same path `Wizard.jsx` uses.
+describe("WrappedPayerPaymentTerms as a real StepZilla step", () => {
+    test("StepZilla's Next button is blocked while no payer is selected, and proceeds once one is", async () => {
+        const steps = () => [
+            {
+                name: "Paiement",
+                component: (
+                    <WrappedPayerPaymentTerms
+                        {...baseProps}
+                        informationalStepOnly={false}
+                        initialSelectedPayers={[]}
+                        availPaymentMethods={[]}
+                        availPaymentScheduleOptions={[]}
+                    />
+                ),
+            },
+            { name: "Suivant", component: <div>Next step reached</div> },
+        ];
+
+        const { rerender } = render(<StepZilla steps={steps()} />);
+
+        await userEvent.click(screen.getByText("Next"));
+        await waitFor(() => expect(toastError).toHaveBeenCalled());
+        expect(screen.queryByText("Next step reached")).not.toBeInTheDocument();
+
+        rerender(
+            <StepZilla
+                steps={[
+                    {
+                        name: "Paiement",
+                        component: (
+                            <WrappedPayerPaymentTerms
+                                {...baseProps}
+                                informationalStepOnly={false}
+                                initialSelectedPayers={[1]}
+                                availPaymentMethods={[]}
+                                availPaymentScheduleOptions={[]}
+                            />
+                        ),
+                    },
+                    {
+                        name: "Suivant",
+                        component: <div>Next step reached</div>,
+                    },
+                ]}
+            />
+        );
+
+        await userEvent.click(screen.getByText("Next"));
+        await waitFor(() =>
+            expect(screen.getByText("Next step reached")).toBeInTheDocument()
+        );
+    });
 });

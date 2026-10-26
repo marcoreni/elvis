@@ -107,7 +107,13 @@ describe("SelectMultiple -- single-select mode", () => {
         expect(screen.getByTestId("selected-count")).toHaveTextContent("1");
     });
 
-    test("pre-selects the feature given in the `features` prop", () => {
+    // Regression guard (code-reviewer finding): an earlier version of the batch-3 dedup fix
+    // excluded the pre-selected feature from the menu unconditionally, breaking
+    // app/views/rooms/edit.html.erb's/rooms/new.html.erb's single-select location dropdown --
+    // with no `isClearable`, the pre-selected location became permanently unreachable once
+    // another one was picked. react-select's own `shouldHideSelectedOptions` default is
+    // `isMulti`, so single-select must keep the pre-selected option visible/selectable.
+    test("keeps the pre-selected feature visible and selectable in the menu (single-select)", async () => {
         render(
             <SelectMultiple
                 title="Lieu"
@@ -118,9 +124,13 @@ describe("SelectMultiple -- single-select mode", () => {
         );
 
         expect(screen.getByTestId("selected-count")).toHaveTextContent("1");
-        // The pre-selected option must not still be offered among the choices.
-        expect(screen.queryByText("Bob")).not.toBeInTheDocument();
-        expect(screen.getByText("Alice")).toBeInTheDocument();
+        // Still offered, unlike multi-select's dedup behavior.
+        const bobOption = screen.getByText("Bob");
+        expect(bobOption).toBeInTheDocument();
+
+        // And still genuinely selectable -- clicking it re-selects it rather than being inert.
+        await userEvent.click(bobOption);
+        expect(screen.getByTestId("selected-count")).toHaveTextContent("1");
     });
 });
 
@@ -225,6 +235,38 @@ describe("SelectMultiple -- multi-select mode", () => {
         await userEvent.click(screen.getByText("Ajouter toutes les profs"));
 
         expect(screen.getByTestId("selected-count")).toHaveTextContent("3");
+    });
+
+    // Regression guard for the real bug this batch found (see docs/KnownIssues.md): on an
+    // existing room (app/views/rooms/edit.html.erb:47 -- isMulti + allowSelectAll + pre-selected
+    // activity refs), `selectAll()` used to duplicate every already-selected feature because the
+    // old lodash dedup was a no-op. With Alice pre-selected, "select all" must land on exactly
+    // the 3 distinct features, not 4 (Alice counted twice).
+    test("selectAll with a pre-selected feature produces no duplicate ids", async () => {
+        const mutators = { update: vi.fn(), remove: vi.fn(), pop: vi.fn() };
+        render(
+            <SelectMultiple
+                title="Activités"
+                name="room[activity_refs]"
+                all_features={allFeatures}
+                features={[1]}
+                mutators={mutators}
+                isMulti
+                allowSelectAll
+            />
+        );
+
+        await i18n.changeLanguage("fr");
+        await userEvent.click(screen.getByText("Ajouter toutes les activités"));
+
+        expect(screen.getByTestId("selected-count")).toHaveTextContent("3");
+
+        const updatedIds = mutators.update.mock.calls
+            .filter((call) => call[0] === "room[activity_refs]")
+            .map((call) => call[2]);
+        const lastThree = updatedIds.slice(-3);
+        expect(new Set(lastThree).size).toBe(3);
+        expect(new Set(lastThree)).toEqual(new Set([1, 2, 3]));
     });
 });
 

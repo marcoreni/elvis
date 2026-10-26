@@ -491,7 +491,12 @@ already functional and only needed typing. `SelectActivity`'s `componentDidUpdat
 `values` when `lastReinitialize` changes) became a `useEffect` with the same explicit
 prev-value-ref guard as batch 2's `SelectLocation`, so it doesn't also fire on mount.
 `SimplePlanning`'s `SimpleEvaluation` was a `React.PureComponent` -- wrapped in `React.memo`
-instead of a plain function to keep its shallow-prop-comparison skip-render behavior.
+instead of a plain function to keep its shallow-prop-comparison skip-render behavior. That only
+actually works because the 2 callback props `memo` compares (`toggleModal`, `setQuestionnaire`)
+are `useCallback`s with an empty dependency array in `SimplePlanning`, not plain function
+declarations (caught by code-reviewer: an earlier version of this conversion used plain functions,
+which `memo` would have seen as new on every `SimplePlanning` render, silently making the `memo`
+wrapper inert).
 
 **`WrappedPayerPaymentTerms` needed a `forwardRef`, not a plain function, and so did a fix to
 `utils/ui/StepZilla.tsx`.** The wizard (`Wizard.jsx`) renders payment-terms as a StepZilla step
@@ -506,21 +511,51 @@ together: `WrappedPayerPaymentTerms` is now `forwardRef(...)` + `useImperativeHa
 recognize a `forwardRef`-wrapped component (checking its `$$typeof` against
 `Symbol.for("react.forward_ref")`, not the `react-is` package, since that's only a transitive,
 unpinned dependency here). Covered by a new regression test in `StepZilla.test.jsx`
-(`ForwardRefValidatingStep`) mirroring the existing class-based `ValidatingStep` test, plus direct
-ref-based `isValidated()` tests in `WrappedPayerPaymentTerms.test.tsx`.
+(`ForwardRefValidatingStep`) mirroring the existing class-based `ValidatingStep` test, direct
+ref-based `isValidated()` tests in `WrappedPayerPaymentTerms.test.tsx`, and (closing a coverage
+gap code-reviewer flagged -- the first two prove each half in isolation, nothing tied them
+together) an end-to-end `WrappedPayerPaymentTerms.test.tsx` test mounting it as a real `StepZilla`
+step and driving the actual "Next" button, the same path `Wizard.jsx` uses.
 
 **Real bug found, not a mechanical rewrite: `SelectMultiple.jsx`'s constructor never actually
-deduplicated pre-selected features.** `_.remove(this.state.features, this.state.selectedFeatures)`
-was meant to drop every already-selected feature from the list of choices still offered (the same
-intent as the single-item `_.remove(this.state.features, newFeature)` a few lines down in
-`handleChange`, which does work). But lodash's iteratee shorthand treats an *array* predicate as
+deduplicated pre-selected features, which broke `allowSelectAll` on an existing room's
+activities.** `_.remove(this.state.features, this.state.selectedFeatures)` was meant to drop every
+already-selected feature from the list of choices still offered (the same intent as the
+single-item `_.remove(this.state.features, newFeature)` a few lines down in `handleChange`, which
+does work). But lodash's iteratee shorthand treats an *array* predicate as
 `_.matchesProperty(value[0], value[1])`, not "remove every element present in this array" --
-verified empirically (`_.remove(copy, selectedArray)` left `copy` completely unchanged). Net
-effect: a caller that pre-selects more than one feature (`Payers.jsx`, `ActivityRefTeachers.jsx`
-both do) got every one of those features duplicated in the still-offered dropdown list, letting a
-user select the same payer/teacher twice. Fixed to a plain `.filter(...)` exclusion.
-`SelectMultiple.test.tsx`'s "every pre-selected feature (not just the first) is dropped" test is a
-real regression guard (reverting to the original lodash call makes it fail).
+verified empirically (`_.remove(copy, selectedArray)` left `copy` completely unchanged).
+
+This is harmless for a plain multi-select with pre-selected features and no `allowSelectAll`
+(`userForm/Payers.jsx`, `activityRef/ActivityRefTeachers.jsx` both pass `isMulti` with no
+`allowSelectAll` -- react-select's own option matching already keeps a selected feature from
+being re-selectable from the menu regardless of whether this component's own `availableFeatures`
+list still (wrongly) contains it, so nothing was actually duplicated or re-selectable there,
+before or after this fix -- correcting an earlier, incorrect version of this note that named
+these two as the affected callers). The real, live-reachable bug is
+`app/views/rooms/edit.html.erb:47`'s `react_component("common/SelectMultiple", { isMulti: true,
+allowSelectAll: true, features: @room.activity_refs.collect(&:id), ... })`: `selectAll()` builds
+`[...selectedFeatures, ...availableFeatures]`, and since the already-selected activity refs were
+never actually removed from `availableFeatures`, clicking "select all" on an existing room
+produced duplicate chips and duplicate ids in the hidden `room[activity_refs]` form input. Fixed
+to a plain `.filter(...)` exclusion, gated on `isMulti` (see the single-select note below).
+`SelectMultiple.test.tsx` covers both: "every pre-selected feature (not just the first) is
+dropped" is a regression guard for the dedup fix itself (reverting to the original lodash call
+makes it fail), and "selectAll with pre-selected features produces no duplicate ids" exercises the
+`allowSelectAll` path directly.
+
+**Single-select must keep its pre-selected option visible, unlike multi-select.** The dedup fix
+above was initially applied unconditionally (multi- and single-select alike), which broke
+`app/views/rooms/edit.html.erb:13`/`rooms/new.html.erb:22`'s single-select location dropdown
+(`isMulti: false`, `features: [@location_id]`, no `isClearable`): the pre-selected location was
+excluded from `availableFeatures` on mount, so it vanished from the menu, and with no
+`isClearable` there was no way back to it once another location was picked (confirmed by
+code-reviewer, caught before merge). react-select's own `shouldHideSelectedOptions` default is
+`isMulti` -- i.e. single-select is supposed to keep the selected option visible/reachable in the
+list -- so the exclusion is now gated on `isMulti`, matching the symmetric `isMulti`-gated removal
+already present in `handleChange`'s "select-option" branch. Covered by a
+`SelectMultiple.test.tsx` test asserting the pre-selected option stays visible/selectable in
+single-select mode.
 
 Dead code dropped during the batch 3 rewrite (confirmed by grep, not assumed):
 `SelectMultiple.jsx`'s unused `Field`/`AlertCheckbox`/`Input` imports (none of the 3 were ever
@@ -538,6 +573,46 @@ Tightened `CreateActivityModal`'s `handleCloseAndOpenDetails` and `SelectActivit
 from optional (no `.isRequired`) to required -- both are called unconditionally with no guard from
 multiple call sites, so every real caller already supplies them.
 
+**Real behavior fix in `SelectActivity.formatOptions`, not a mechanical rewrite (caught by
+code-reviewer -- this one shipped without the writeup the `_.remove`/`SelectMultiple` fix got,
+inconsistently with this batch's own stated policy).** Same bug pattern as batch 2's
+`SelectLocation`: the original was `return acc.splice();` (zero-arg `splice()`) on the "this
+room/teacher has no activity refs" branch of the `reduce` -- per spec, a 0-arg `splice()` call
+deletes nothing and returns `[]`, so it reset the whole accumulator to empty every time an
+element with no activity refs was hit mid-iteration, discarding every option already built up
+before it (only "fixed" by coincidence when a later element happened to rebuild the same options
+afterward). Changed to `return acc` (keep the accumulator, this element contributes nothing).
+`SelectActivity.test.tsx`'s "a room with no activity refs at all does not wipe out options
+already built from earlier rooms" test deliberately keeps that room last, so this is covered by a
+real regression test (reverting to `acc.splice()` makes it return `[]` instead of the 2 expected
+options).
+
+**Inconsistent optional-chaining policy, caught by code-reviewer.** `RawPlanning.tsx`'s
+`OptionItems` carries an explicit comment that this file's policy is "no new optional-chaining
+guards added... rather than silently swallowing a shape the original code never defended against
+either" -- but 3 spots initially violated that same policy within this batch:
+`RawPlanning.tsx`'s `evaluationsLevelRefs.find(...)` result and `activity.room` (both originally
+accessed with no guard, `.find(...).label`/`activity.room.label`), and `SimplePlanning.tsx`'s
+`timeInterval.students.active`/`.options` (also originally unguarded). All 3 had picked up a `?.`
++ fallback during typing, turning a would-be crash into a silently-wrong empty/undefined value --
+a bigger behavioral risk than keeping the original's "trust the data" crash for a shape that
+should be structurally guaranteed. Reverted to `!` non-null assertions at all 3, matching the
+stated policy and the original's actual behavior.
+`RawPlanning.test.tsx`'s fixture had to be fixed alongside this: it omitted
+`evaluation_level_ref_id` entirely instead of setting it to `null` (the shape the real payload
+always sends, per the entry above), which the removed `?.` had been silently papering over --
+the fixture now matches the real payload shape, and a new test exercises the
+`evaluation_level_ref_id` branch set (not just the `null`/fallback one).
+
+**`SimplePlanning.tsx`'s `SimpleTimeInterval` repeated the batch-2 ad-hoc-type mistake, caught by
+code-reviewer.** It redeclared `id`/`start`/`end`/`kind`/`is_validated` instead of `extends
+TimeInterval` (which `RawPlanning.tsx`, converted in the same batch, does correctly), and inlined
+3 shapes that are already real entities in `entities.ts`: `activity_ref` -> `ActivityRef`, `room`
+-> `Room`, `evaluation_level_ref` -> `EvaluationLevelRef`. Fixed to match the pattern the rest of
+this batch already established. `SimplePlanning.test.tsx`'s fixtures needed the extra fields
+`ActivityRef`/`Room` actually require (`is_work_group`, `activity_ref_kind_id`,
+`activity_ref_kind`, `room.id`) that the old ad-hoc shapes didn't.
+
 **Untyped-JS-boundary fixes needed to make `PayerPaymentTerms.tsx` compile, not behavior
 changes:** `ToggleButtonGroup.jsx` (still untyped JS) had a JSDoc comment with one `@param` tag
 per destructured prop field; TypeScript's allowJs JSDoc inference matched those tags positionally
@@ -553,14 +628,21 @@ which never reads a `multiSelect` field at all (dead at the call site, same as b
 `entities.ts` gained `User.identification_number` (real `users` table column + a real
 strong-params/serialized field, `db/schema.rb`/`users_controller.rb`) and `Activity.room` (real
 `has_one :room` association, `app/serializers/activity_serializer.rb`) -- both read by components
-in this batch but missing from the shared entity before. Separately, `RawPlanning.tsx`'s
-`activity.evaluation_level_ref_id` check is likely dead in practice:
-`activity_serializer.rb`'s schema-info comment lists the column, but its real `attributes` list
-is just `:id, :group_name, :activity_ref_id` -- the field is never actually serialized, so the
-`!== null` check is always true (the field is `undefined`, not `null`) and the component always
-falls through to the `levelDisplay(...)` branch instead. Not fixed here -- unverified without a
-backend look, and out of scope for a frontend-only batch; flagged instead of silently added to
-`entities.ts` as if it were real.
+in this batch but missing from the shared entity before.
+
+Correction to an earlier version of this entry (caught by code-reviewer before merge):
+`RawPlanning.tsx`'s `activity.evaluation_level_ref_id` check was first flagged here as likely
+dead code, reasoning from `ActivitySerializer`'s attribute list (which really doesn't include it).
+That reasoning doesn't apply to this call site: `RawPlanning` isn't fed by `ActivitySerializer` at
+all, it's fed by `PlanningController#get_intervals`'s `as_json(include: {...})` call
+(`app/controllers/planning_controller.rb:258-292`), which -- with no `only`/`except` restricting
+it -- emits every real `activities` column, `evaluation_level_ref_id` included (`null` when unset,
+the real id otherwise). So the `!== null` check is genuinely reachable and correct as written, not
+dead code -- the original flag was also self-refuting on its own terms (if the field really were
+always `undefined`, the pre-conversion unguarded `.find(...).label` call would have crashed on
+every validated activity, which it doesn't). Not added to `entities.ts`'s shared `Activity`
+interface regardless, since that field genuinely isn't part of every `Activity` payload (just this
+one raw-`as_json` endpoint) -- kept as a local cast in `RawPlanning.tsx` instead.
 
 No real call site was found anywhere in `app/views` or `frontend/` for `planning/TimeInterval.jsx`
 (confirmed by grep across both trees, beyond its own new test file) -- same situation as a few

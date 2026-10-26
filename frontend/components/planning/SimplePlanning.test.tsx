@@ -61,8 +61,11 @@ const dayData = {
                             id: 1,
                             label: "Guitare",
                             occupation_limit: 8,
+                            is_work_group: false,
+                            activity_ref_kind_id: 1,
+                            activity_ref_kind: { id: 1, name: "cours" },
                         },
-                        room: { label: "Salle 1" },
+                        room: { id: 1, label: "Salle 1" },
                     },
                 },
                 students: { active: [], options: [] },
@@ -75,7 +78,13 @@ const dayData = {
                 end: "2026-09-01T15:00:00",
                 evaluation_appointment: {
                     id: 1,
-                    activity_ref: { label: "Éveil musical" },
+                    activity_ref: {
+                        id: 2,
+                        label: "Éveil musical",
+                        is_work_group: false,
+                        activity_ref_kind_id: 1,
+                        activity_ref_kind: { id: 1, name: "cours" },
+                    },
                     student: {
                         id: 42,
                         first_name: "Bob",

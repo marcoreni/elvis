@@ -1,4 +1,4 @@
-import React, { Fragment, memo, useState } from "react";
+import React, { Fragment, memo, useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import moment from "moment";
 
@@ -17,7 +17,15 @@ import KindLegend from "../common/KindLegend";
 import QuestionnaireModal from "./QuestionnaireModal";
 import SelectTeachers from "./SelectTeachers";
 import type { Question } from "../evaluation/types";
-import type { ReferenceData, Season, User } from "../utils/entities";
+import type {
+    ActivityRef,
+    EvaluationLevelRef,
+    ReferenceData,
+    Room,
+    Season,
+    TimeInterval,
+    User,
+} from "../utils/entities";
 
 type TFunction = (key: string, options?: Record<string, unknown>) => string;
 
@@ -26,26 +34,27 @@ const debounceModal = makeDebounce();
 
 // The planning endpoint's per-day interval shape: a validated slot is either a lesson/option
 // (`activity_instance` populated) or an evaluation appointment (`evaluation_appointment`
-// populated), never both.
-interface SimpleTimeInterval {
+// populated), never both. Extends the shared `TimeInterval` (narrowing a few fields this
+// endpoint always sends to required) instead of redeclaring them, and reuses `ActivityRef`/
+// `Room`/`EvaluationLevelRef` for the nested shapes rather than inlining ad-hoc ones (same
+// pattern planning/RawPlanning.tsx already follows in this batch).
+interface SimpleTimeInterval extends TimeInterval {
     id: number;
-    start: string;
-    end: string;
     kind: string;
     is_validated: boolean;
     activity_instance?: {
         activity: {
             group_name?: string;
-            activity_ref: { label: string; occupation_limit?: number };
-            room: { label: string };
-            evaluation_level_ref?: { label: string };
+            activity_ref: ActivityRef;
+            room: Room;
+            evaluation_level_ref?: EvaluationLevelRef;
             time_interval?: unknown;
         };
     };
     students?: { active: User[]; options: User[] };
     evaluation_appointment?: {
         id: number;
-        activity_ref: { label: string };
+        activity_ref: ActivityRef;
         student: User;
     };
 }
@@ -134,8 +143,11 @@ const SimpleActivity = ({
     // Vars
     const activity = timeInterval.activity_instance.activity;
 
-    const students = timeInterval.students?.active ?? [];
-    const options = timeInterval.students?.options ?? [];
+    // No optional-chaining guard here (same policy as planning/RawPlanning.tsx's OptionItems) --
+    // the original was `timeInterval.students.active`/`.options` with no guard, trusting
+    // `students` to always be populated once `activity_instance` is (checked just above).
+    const students = timeInterval.students!.active;
+    const options = timeInterval.students!.options;
 
     // Render
     return (
@@ -396,25 +408,34 @@ function SimplePlanning({
         }, 600);
     }
 
-    function setQuestionnaire(
-        nextStudent: User,
-        nextQuestions: Question[],
-        nextQuestionnaire: { answers: any },
-        nextReferenceData: ReferenceData
-    ) {
-        setStudent(nextStudent);
-        setQuestions(nextQuestions);
-        setQuestionnaireState(nextQuestionnaire);
-        setReferenceData(nextReferenceData);
-    }
+    // `useCallback` with an empty dependency array (not plain function declarations) -- these 2
+    // are passed straight through to `SimpleEvaluation`, which is wrapped in `React.memo` to
+    // keep the old `PureComponent`'s shallow-prop-comparison skip-render behavior. Every setState
+    // setter below is itself referentially stable across renders, so these callbacks' own
+    // identities stay stable too; without this, `memo` would see a new function on every
+    // `SimplePlanning` render and never actually skip re-rendering `SimpleEvaluation`.
+    const setQuestionnaire = useCallback(
+        (
+            nextStudent: User,
+            nextQuestions: Question[],
+            nextQuestionnaire: { answers: any },
+            nextReferenceData: ReferenceData
+        ) => {
+            setStudent(nextStudent);
+            setQuestions(nextQuestions);
+            setQuestionnaireState(nextQuestionnaire);
+            setReferenceData(nextReferenceData);
+        },
+        []
+    );
 
-    function toggleEvalModal() {
+    const toggleEvalModal = useCallback(() => {
         setEvalModalIsOpen((prev) => !prev);
         setQuestions(null);
         setQuestionnaireState(null);
         setReferenceData(null);
         setStudent(null);
-    }
+    }, []);
 
     const sortedData = Object.keys(data).sort();
 

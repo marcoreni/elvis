@@ -104,6 +104,32 @@ describe("formatOptions", () => {
         ]);
     });
 
+    // Regression guard for a real bug caught by code-reviewer (same pattern as batch 2's
+    // SelectLocation, see docs/KnownIssues.md): the original was `return acc.splice();`
+    // (zero-arg `splice()`, which deletes nothing and returns `[]`), resetting the whole
+    // accumulator to empty every time a room with no activity refs was hit mid-iteration. The
+    // room with no `room_activities` at all is deliberately placed LAST so that nothing runs
+    // afterward to rebuild the accumulator -- reverting to the original `acc.splice()` makes
+    // this return `[]` instead of the 2 expected options.
+    test("a room with no activity refs at all does not wipe out options already built from earlier rooms", () => {
+        const roomsWithATrailingBareRoom = [
+            { id: 10, room_activities: [{ activity_ref_id: 1 }] },
+            { id: 11, room_activities: [{ activity_ref_id: 2 }] },
+            { id: 13 }, // no `room_activities` key at all
+        ];
+
+        expect(
+            formatOptions(
+                roomsWithATrailingBareRoom as never,
+                activities as never,
+                "room"
+            )
+        ).toEqual([
+            { id: 1, value: 1, label: "Guitare" },
+            { id: 2, value: 2, label: "Piano" },
+        ]);
+    });
+
     test("returns [] for an unrecognized mode", () => {
         expect(
             formatOptions(rooms as never, activities as never, undefined)

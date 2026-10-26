@@ -46,6 +46,11 @@ function makeInterval(overrides: Record<string, unknown> = {}) {
             activity_ref: activityRef,
             activity_ref_kind_id: 1,
             room: { id: 1, label: "Salle 1" },
+            // The real payload (PlanningController#get_intervals's as_json) always sends this
+            // column, `null` rather than omitted when no level ref is assigned -- matches that
+            // shape so the test actually exercises the `levelDisplay(...)` fallback branch, not
+            // an unrealistic "field missing entirely" shape.
+            evaluation_level_ref_id: null,
             teacher: {
                 id: 9,
                 first_name: "Jean",
@@ -67,6 +72,31 @@ function makeInterval(overrides: Record<string, unknown> = {}) {
 }
 
 describe("RawPlanning", () => {
+    // `evaluation_level_ref_id` is genuinely reachable (not dead code -- see the comment in
+    // RawPlanning.tsx and docs/KnownIssues.md): when an activity has one set, this looks it up in
+    // `evaluations_level_refs` and shows that label instead of the computed level display.
+    test("shows the evaluation level ref's own label when the activity has one assigned", () => {
+        render(
+            <RawPlanning
+                data={{
+                    "1": [
+                        makeInterval({
+                            activity: {
+                                ...makeInterval().activity,
+                                evaluation_level_ref_id: 7,
+                            },
+                        }),
+                    ],
+                }}
+                seasons={[]}
+                isTeacher={false}
+                evaluations_level_refs={[{ id: 7, label: "Niveau avancé" }]}
+            />
+        );
+
+        expect(screen.getByText(/Niveau avancé/)).toBeInTheDocument();
+    });
+
     test("renders a validated, non-evaluation interval's activity card", () => {
         render(
             <RawPlanning

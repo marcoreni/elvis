@@ -100,7 +100,14 @@ function SelectMultiple({
                 value,
             }));
 
-            if (features === undefined || features.length === 0) {
+            // Single-select must NOT drop the pre-selected option from the menu: react-select's
+            // own `shouldHideSelectedOptions` default is `isMulti` (verified in
+            // react-select/dist/Select-*.js) -- i.e. single-select is supposed to keep the
+            // selected option visible/reachable in the list. Only multi-select drops
+            // already-selected options from the remaining choices (see the BEHAVIOR FIX comment
+            // below, and the symmetric `isMulti`-gated removal in `handleChange`'s
+            // "select-option" branch).
+            if (!isMulti || features === undefined || features.length === 0) {
                 return allOptions;
             }
 
@@ -111,7 +118,13 @@ function SelectMultiple({
             // `selectedFeatures` array removed nothing at all (verified empirically). The intent,
             // matching the single-item `_.remove(this.state.features, newFeature)` call a few lines
             // down in `handleChange`, is to drop every already-selected option from the list of
-            // choices still offered.
+            // choices still offered. Concretely, this broke `allowSelectAll` for a room's
+            // activities (`app/views/rooms/edit.html.erb:47`, `isMulti: true, allowSelectAll:
+            // true, features: @room.activity_refs...`): `selectAll()` builds
+            // `[...selectedFeatures, ...availableFeatures]`, and since the already-selected refs
+            // were never actually removed from `availableFeatures`, clicking "select all" on an
+            // existing room produced duplicate chips and duplicate ids in the hidden
+            // `room[activity_refs]` input.
             const selected = allOptions.filter((f) =>
                 features.includes(f.value)
             );

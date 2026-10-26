@@ -98,7 +98,15 @@ export const formatOptions = (
         ? elements.reduce<ActivityOption[]>((acc, elt) => {
               const eltActivities = getEltActivityRefs(elt, mode);
 
-              // Check if element has activity refs
+              // Check if element has activity refs.
+              //
+              // BEHAVIOR FIX, not a mechanical rewrite -- same bug pattern as batch 2's
+              // SelectLocation (see docs/KnownIssues.md). The original was `return
+              // acc.splice();` (zero-arg `splice()`), which deletes nothing and returns `[]` per
+              // spec -- so it reset the whole accumulator to empty every time an element with no
+              // activity refs was hit mid-iteration, silently discarding every option already
+              // built up before it. `return acc` (this element contributes nothing, keep the
+              // accumulator as-is) is what "skip this element" actually requires.
               if (!Array.isArray(eltActivities)) {
                   return acc;
               }
