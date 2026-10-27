@@ -292,6 +292,35 @@ class UserForm extends React.PureComponent {
             )
         );
 
+        // Pre-fill each consent doc's existing answer, keyed the same way ConsentDocItem's
+        // Field/AlertYesNoRadio names it (`consent_docs[id_<N>].agreement`). No matching
+        // consent_document_users entry (a doc the user has never seen) leaves `hasConsented`
+        // undefined -- left unset here too, rather than coerced to a "no" answer, so an
+        // unanswered doc doesn't render as an explicit refusal.
+        if (this.props.consent_docs) {
+            this.props.consent_docs.forEach(doc => {
+                const consentDocUser = (
+                    initialValues.consent_document_users || []
+                ).find(cdu => cdu.consent_document_id === doc.id);
+                const hasConsented = consentDocUser
+                    ? consentDocUser.has_consented
+                    : undefined;
+
+                // Checkbox case (expected_answer: true) binds to a real boolean; the yes/no
+                // radio case (expected_answer: false) needs the same "true"/"false" string
+                // conversion as YES_NO_FIELDS above.
+                const value = doc.expected_answer
+                    ? hasConsented
+                    : formatRadioValue(hasConsented);
+
+                _.set(
+                    formattedInitialValues,
+                    `consent_docs.id_${doc.id}.agreement`,
+                    value
+                );
+            });
+        }
+
         return (
             <div className="application-form" style={{ margin: 0 }}>
                 <div>
@@ -405,18 +434,6 @@ class UserForm extends React.PureComponent {
                                                         schoolName={
                                                             this.props
                                                                 .schoolName
-                                                        }
-                                                        defaultValue={
-                                                            (
-                                                                (
-                                                                    initialValues.consent_document_users ||
-                                                                    []
-                                                                ).find(
-                                                                    cdu =>
-                                                                        cdu.consent_document_id ===
-                                                                        doc.id
-                                                                ) || {}
-                                                            ).has_consented
                                                         }
                                                     />
                                                 </div>
