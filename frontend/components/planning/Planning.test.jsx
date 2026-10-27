@@ -109,8 +109,8 @@ describe.each(["fr", "en"])("planning area — bilingual smoke (%s)", (lng) => {
 // `TimeIntervalHelpers.fetchInterval` after the DELETE settles, rather than trying to extract
 // interval data from either response -- which means both handlers now need the interval's id,
 // threaded through as a 3rd argument from ActivityDetailsModal (`this.props.interval.id` there,
-// not `this.props.id`, which ActivityDetailsModal reads in one unrelated, already-broken spot but
-// is never actually passed as a prop by Planning.jsx).
+// same prop verifyTimeOverlap() was fixed to read instead of the never-passed `this.props.id`,
+// see docs/KnownIssues.md history and ActivityDetailsModal.test.jsx).
 //
 // Both handlers are normally invoked by ActivityDetailsModal, but that's only mounted once
 // `isDetailModalOpen` is true (it lives inside a react-modal `<Modal>`, which doesn't render its

@@ -528,28 +528,23 @@ is to rebuild both via `this.setState({...this.getIntervals(newIntervals), ...})
 mutating `selectedIntervals` alone). Fix: switch both handlers to the same `getIntervals(...)`
 pattern.
 
-## `ActivityDetailsModal.jsx`'s `editionMode` is a one-way switch
+## `ActivityDetailsModal.jsx`'s `editionMode` is dead code, not a live one-way switch
 
-`handleEditionMode()` sets `this.state.editionMode = true`; the only code that ever set it back to
-`false` was `handleEditActivityInstance()` (removed as dead code -- see the fix for "dead code"
-above). Since `this.handleEditActivityInstance`'s only call site was itself unreachable
-(commented-out JSX), `editionMode` was already effectively one-way before that deletion -- the
-removal didn't change runtime behavior, just made the fact more visible. Once a user enters edit
-mode on a validated interval's details (`:732`'s render branch), it stays in edit mode for the
-rest of that modal instance; only closing and reopening the modal (a fresh `constructor`) resets
-it. Not clearly a bug (closing-then-reopening may be the intended way out), but worth a product
-call on whether edit mode should have an explicit "done editing" action.
+`handleEditionMode()` (`frontend/components/planning/ActivityDetailsModal.jsx:650`), the only
+method that ever sets `this.state.editionMode = true`, has zero call sites anywhere in the file
+or the rest of the repo -- not even commented-out JSX. The earlier framing of this as a one-way
+switch worth a product call was wrong: nothing can enter edit mode today, so there's no UX gap to
+resolve. Logged for awareness in case a future change wires up a real entry point; not deleted per
+this repo's don't-delete-on-looks-dead convention.
 
-## `ActivityDetailsModal.jsx`'s `verifyTimeOverlap()` always sends `time_interval_id: undefined`
+## `PlanningController#overlap`'s teacher conflict check 404s for a `teacher_id` of `0`
 
-`verifyTimeOverlap()` (`frontend/components/planning/ActivityDetailsModal.jsx:553`) reads
-`const time_interval_id = this.props.id;`, but `id` is never a prop `Planning.jsx` passes to
-`<ActivityDetailsModal>` (confirmed by reading its full prop list, `:1667-1770`) -- every other
-place in this file reads `this.props.interval.id` instead. `POST /planning/overlap` has always
-received `time_interval_id: undefined` as a result. Found while threading a real interval id
-through `handleRemoveStudent`/`handleRemoveOptionalStudent` (which needed to resolve the same
-question for a different method) and confirmed via grep, not fixed here -- unrelated to that
-change and not investigated further (unclear whether the backend's overlap check actually needs
-this id to exclude the interval being edited from its own overlap check, which would make this a
-real "editing a validated slot's own room/teacher trips a false positive overlap" bug, or whether
-it's unused server-side). Fix, if it matters: `this.props.id` -> `this.props.interval.id`.
+`TimeInterval.with_teacher` (`app/models/time_interval.rb:49`) does
+`User.find(teacher_id)`, which raises `ActiveRecord::RecordNotFound` for `teacher_id: 0` -- a real
+fallback value (`ActivityDetailsModal.jsx`'s constructor: `(props.user && props.user.id) || 0`).
+`PlanningController#overlap` has no rescue for it, and the frontend's `verifyTimeOverlap()` fetch
+has no `.catch`, so the promise just rejects silently. Net effect: the overlap check still doesn't
+work for a room planning with no assigned teacher. Pre-existing, unrelated to the
+`time_interval_id` fix above (same behavior before and after). Not fixed here -- cross-cutting a
+Rails controller/model fix.
+
