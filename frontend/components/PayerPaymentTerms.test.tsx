@@ -4,8 +4,10 @@
 import React, { useState } from "react";
 import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import i18n from "../i18n";
 import PayerPaymentTerms from "./PayerPaymentTerms";
+import type { PayerPaymentTermsProps } from "./PayerPaymentTerms";
 import PayerPaymentTermsInfo from "./PayerPaymentTermsInfo";
 
 // @react-input/mask needs real ticks between keystrokes to validate the input's
@@ -24,7 +26,7 @@ const TYPE_OPTIONS = { delay: 10 };
 // The identification-number field is controlled by the parent (`user.identification_number`
 // passed back through `onChangeIdentificationNumber`), so the harness needs to actually hold
 // that state and feed it back in, like the real caller does, instead of a static prop.
-function ControlledPayerPaymentTerms(props) {
+function ControlledPayerPaymentTerms(props: PayerPaymentTermsProps) {
     const [identificationNumber, setIdentificationNumber] = useState(
         props.user.identification_number
     );
@@ -46,9 +48,11 @@ const scheduleOptions = [
     {
         id: 1,
         label: "Mensuel",
-        available_payments_days: [5, 15],
         payments_number: 10,
         payments_months: [],
+        // Was a duplicate key in the original .jsx fixture ([5, 15] followed by [5]) -- a
+        // silent last-wins overwrite in plain JS, promoted to a real TS1117 compile error now
+        // that this file is checked. Kept the value that was actually in effect at runtime.
         available_payments_days: [5],
     },
 ];
@@ -137,7 +141,8 @@ describe("PayerPaymentTerms identification number mask", () => {
     test("typing a full national ID formats it with the mask's literal spaces", async () => {
         render(<ControlledPayerPaymentTerms {...minorProps} />);
 
-        const input = screen.getByPlaceholderText("85 07 30 033 28");
+        const input =
+            screen.getByPlaceholderText<HTMLInputElement>("85 07 30 033 28");
         // Deliberately contains a "9": MASK_REPLACEMENT's digit token used to
         // be "9" itself, which silently swallowed every literal "9" typed.
         await userEvent.type(input, "97012312345", TYPE_OPTIONS);

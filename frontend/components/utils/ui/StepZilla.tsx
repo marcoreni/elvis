@@ -22,11 +22,32 @@ export interface StepZillaStep {
     component: ReactElement;
 }
 
-// The shape StepZilla expects a step's mounted class-component instance to (optionally) expose.
-// Only class-component steps get a ref at all (see the instanceof check in renderStep below) --
-// a step without isValidated() is treated as always-valid, same as upstream.
+// The shape StepZilla expects a step's mounted instance to (optionally) expose. Only
+// ref-capable steps get a ref at all (see stepAcceptsRef below) -- a step without isValidated()
+// is treated as always-valid, same as upstream.
 export interface StepZillaStepInstance {
     isValidated?: () => boolean;
+}
+
+// react.forward_ref's well-known Symbol (stable across React versions since 16) -- used instead
+// of importing `react-is` (an unpinned transitive dependency here, not a direct one) to detect a
+// forwardRef-wrapped functional step below.
+const REACT_FORWARD_REF_TYPE = Symbol.for("react.forward_ref");
+
+// A step only gets a ref (and so only gets its isValidated() called) if its component type can
+// actually accept one: either a real ES6 class (checked the upstream way, via the prototype
+// chain) or a function component wrapped in `React.forwardRef` (jsx-to-tsx batch 3 converted
+// WrappedPayerPaymentTerms off a class without losing its isValidated() gate this way -- see
+// docs/KnownIssues.md). A plain function component still correctly gets no ref.
+function stepAcceptsRef(componentType: unknown): boolean {
+    const pointerType = componentType as {
+        prototype?: unknown;
+        $$typeof?: symbol;
+    };
+    return (
+        pointerType?.prototype instanceof React.Component ||
+        pointerType?.$$typeof === REACT_FORWARD_REF_TYPE
+    );
 }
 
 interface StepZillaProps {
@@ -288,8 +309,7 @@ export default function StepZilla(props: StepZillaProps) {
         ref?: React.Ref<StepZillaStepInstance>;
     } = {};
 
-    const pointerType = componentPointer.type as { prototype?: unknown };
-    if (pointerType?.prototype instanceof React.Component) {
+    if (stepAcceptsRef(componentPointer.type)) {
         cloneExtensions.ref = activeComponentRef as React.Ref<StepZillaStepInstance>;
     }
 

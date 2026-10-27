@@ -11,7 +11,7 @@
 // microtask flush before asserting, not a bare fireEvent.click(); `await waitFor(...)` below
 // isn't defensive boilerplate, it's required.
 
-import React, { Component } from "react";
+import React, { Component, forwardRef, useImperativeHandle } from "react";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import StepZilla from "./StepZilla";
 
@@ -34,6 +34,19 @@ class ValidatingStep extends Component {
 function FunctionStep({ label }) {
     return <div>Function step {label}</div>;
 }
+
+// A function-component step exposing isValidated() through forwardRef + useImperativeHandle --
+// the pattern jsx-to-tsx batch 3 moved WrappedPayerPaymentTerms to once it stopped being a
+// class. StepZilla's ref-attachment check (stepAcceptsRef in StepZilla.tsx) was widened
+// specifically so this case still gets gated, not silently treated as always-valid like a plain
+// FunctionStep above -- see docs/KnownIssues.md.
+const ForwardRefValidatingStep = forwardRef(function ForwardRefValidatingStep(
+    { label, valid },
+    ref
+) {
+    useImperativeHandle(ref, () => ({ isValidated: () => valid }), [valid]);
+    return <div>ForwardRef step {label}</div>;
+});
 
 const steps = () => [
     { name: "Step 1", component: <PlainStep label="1" /> },
@@ -79,6 +92,35 @@ test("Next is blocked while isValidated() returns false, and proceeds once it re
     stepList[0] = {
         ...stepList[0],
         component: <ValidatingStep label="1" valid={true} />,
+    };
+    rerender(<StepZilla steps={stepList} />);
+
+    fireEvent.click(screen.getByText("Next"));
+    await waitFor(() =>
+        expect(screen.getByText("Plain step 2")).toBeInTheDocument()
+    );
+});
+
+test("Next is blocked by a forwardRef function-component step's isValidated(), same as a class step", async () => {
+    const stepList = [
+        {
+            name: "Step 1",
+            component: <ForwardRefValidatingStep label="1" valid={false} />,
+        },
+        { name: "Step 2", component: <PlainStep label="2" /> },
+    ];
+
+    const { rerender } = render(<StepZilla steps={stepList} />);
+
+    fireEvent.click(screen.getByText("Next"));
+    await waitFor(() =>
+        expect(screen.getByText("ForwardRef step 1")).toBeInTheDocument()
+    );
+    expect(screen.queryByText("Plain step 2")).not.toBeInTheDocument();
+
+    stepList[0] = {
+        ...stepList[0],
+        component: <ForwardRefValidatingStep label="1" valid={true} />,
     };
     rerender(<StepZilla steps={stepList} />);
 
