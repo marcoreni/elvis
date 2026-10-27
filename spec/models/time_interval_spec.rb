@@ -3,6 +3,32 @@
 require "rails_helper"
 
 RSpec.describe TimeInterval, type: :model do
+  describe ".with_teacher" do
+    let(:teacher) { FactoryBot.create(:user, email: "time-interval-with-teacher@example.com", is_teacher: true) }
+    let(:planning) { Planning.create!(user: teacher) }
+    let!(:time_interval) do
+      TimeInterval.create!(start: 1.day.from_now.change(hour: 9), end: 1.day.from_now.change(hour: 10)).tap do |ti|
+        planning.time_intervals << ti
+      end
+    end
+
+    it "returns the intervals linked to the teacher's plannings" do
+      expect(TimeInterval.with_teacher(teacher.id)).to include(time_interval)
+    end
+
+    # Regression for the KnownIssues.md entry: `0` is the real fallback `teacher_id` sent by
+    # ActivityDetailsModal.jsx's constructor when no teacher is assigned. The scope used to call
+    # `User.find(teacher_id)`, raising `ActiveRecord::RecordNotFound` instead of matching nothing.
+    it "returns an empty relation for a teacher_id of 0 instead of raising" do
+      expect { TimeInterval.with_teacher(0) }.not_to raise_error
+      expect(TimeInterval.with_teacher(0)).to be_empty
+    end
+
+    it "returns an empty relation for any teacher_id with no matching planning" do
+      expect(TimeInterval.with_teacher(teacher.id + 1)).to be_empty
+    end
+  end
+
   context "when the season begins on Monday and the time interval is the first day of the season" do
     describe "#convert_to_first_week_of_season" do
       let(:season) do
