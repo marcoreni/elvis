@@ -168,7 +168,7 @@ class Activity < ApplicationRecord
   # return  the teacher of the activity or nil if none
   # @return [NilClass, User]
   def teacher
-    teachers_activities.where(is_main: true).map(&:teacher).first
+    teachers_activities.find(&:is_main)&.teacher
   end
 
   def season

@@ -455,6 +455,10 @@ class PlanningController < ApplicationController
                                                                                            teachers_activity_refs planning
                                                                                          ])
 
+    @season = Season.current.as_json({ include: [:holidays] })
+    @next_season = Season.next.as_json({ include: [:holidays] })
+    @seasons = Season.all.as_json({ include: [:holidays] })
+
     room_activities = Activity.includes(
       room: {},
       time_interval: {

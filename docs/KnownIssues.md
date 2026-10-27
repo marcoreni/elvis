@@ -243,17 +243,6 @@ itself having no types to cast *from* — real fix is migrating that file to `.t
 other caller, `ActivityDetailsModal.jsx`, unaffected either way since that caller is also untyped
 JS) or giving `omitInactiveStudents` an explicit typed signature.
 
-## `Activity#teacher` is N+1-prone independent of `.includes()`
-
-`Activity#teacher` (`app/models/activity.rb`) is a plain Ruby method
-(`teachers_activities.where(is_main: true).map(&:teacher).first`), not an AR association — calling
-`.where` on an already-preloaded `has_many` bypasses the preloaded array and issues a fresh query
-every time, regardless of any `.includes()` upstream. `ActivitySerializer`'s per-activity `teacher`
-lookup (used by `season_activities`/`evaluate`) hits this on every activity in a collection. Real,
-pre-existing, not introduced by any recent change. Fixing it means changing `Activity#teacher` itself
-to read from an already-loaded `teachers_activities` array in Ruby — a model-behavior change, not
-attempted as part of unrelated work.
-
 ## Orphaned code left in place after the TanStack migration (batch 4b, item 13)
 
 Not deleted per this repo's standing policy on unused-looking code — logged instead:
@@ -371,19 +360,6 @@ real, since `AvailabilityManager.jsx` (what it refs) is still untyped JS wrapped
 file too, which is out of scope for the conversion that introduced this comment. Real fix: migrate
 `AvailabilityManager.jsx` to TypeScript.
 
-## `Plugins.jsx`'s restart banner self-dismisses regardless of actual restart status
-
-`Plugins.jsx` reads `res.is_restarting` in both `getPlugins()` (line 56) and `checkRestartStatus()`
-(line 80), but no backend endpoint ever returns that key (`git grep is_restarting -- app/ lib/
-config/` is empty; `PluginsController#index`/`#changed` render only `{ plugins: ... }`/
-`{ restart: ... }`). Found while confirming the `display_text` dead-code removal in this same file
-(`docs/OrphanedCode.md`, phase 4a entry) — same root cause, but this one is live/reachable, not dead:
-toggling a plugin sets `is_restarting: true` from `#changed`'s `restart` flag, `RestartingMessage`
-renders, then the 3-second poll's `res.is_restarting` is always `undefined`, so
-`!res.is_restarting` is always true and the banner dismisses itself on the very next poll — whether
-or not the server has actually finished restarting. Fix: have `PluginsController#index`/`#changed`
-actually report real restart state (e.g. whether `tmp/restart.txt` is still present).
-
 ## `react-toastify` 11 bump: minor visual drift, consciously accepted (not a bug)
 
 `chore/bump-react-toastify` (4.5.2 -> 11.1.0) restores the pre-bump *colors*
@@ -395,17 +371,6 @@ larger `border-radius` (6px vs 1px), a different `box-shadow`, no longer clips o
 the progress bar / close button markup changed shape (SVG icon vs a bold `✖` glyph). None of
 this is functionally broken, just a minor "close but not pixel-identical" look versus the
 pre-bump toasts. Not tracked for a fix.
-
-## `/plannings/all_rooms` crashes: `show_all_rooms.html.erb` never passes `season`
-
-`app/views/planning/show_all_rooms.html.erb` mounts `planning/Planning` without a `season:` prop,
-but `frontend/components/planning/Planning.jsx:83` reads `this.props.season.holidays.length` in the
-constructor, so the component throws `TypeError: Cannot read properties of undefined (reading
-'holidays')` and the page renders an empty shell. `show_for_room.html.erb` (`/rooms/:id/planning`)
-does pass `season:`/`nextSeason:`/`seasons:` and works fine. Found during the React 19 bump's live
-smoke pass; confirmed pre-existing and React-version-independent (reproduced identically on 18 and
-19). Fix: pass the season props from `PlanningController#show_all_rooms` the way `show_for_room`
-does, or guard the constructor read.
 
 ## `propTypes` declarations are dead weight under React 19
 
@@ -714,3 +679,25 @@ work for a room planning with no assigned teacher. Pre-existing, unrelated to th
 `time_interval_id` fix above (same behavior before and after). Not fixed here -- cross-cutting a
 Rails controller/model fix.
 
+## `Season.next` crashes with `NoMethodError` when no season is flagged `is_current`
+
+`Season.next` (`app/models/season.rb:120-124`) is `includes(:holidays).where(id: current.next_season_id).first`
+-- `current` has no nil guard, so with zero `Season` rows flagged `is_current`, `Season.current` is
+`nil` and `.next_season_id` raises. `ApplicationController#verify_season`'s bootstrap
+(`append_before_action :verify_season, only: [:index]`) doesn't cover this: it only redirects to
+season setup when there are zero `Season` rows total, not when rows exist but none is current, and
+`PlanningController` has no `index` action for the hook to run on anyway.
+
+Pre-existing, not introduced by the `show_all_rooms` season-prop fix (PR fixing
+`/plannings/all_rooms`'s missing `season:` prop) -- that fix mirrored `show_for_room`'s
+`Season.next.as_json(...)` line exactly, which already had this same crash, so it now also
+reaches `show_all_rooms`. At least 19 other call sites share the same unguarded pattern (`grep -rn
+"Season\.next" app/ lib/`), including `PlanningController#show`/`#show_generic`/`#show_for_room`/
+`#show_availabilities_for_date`, `ActivitiesApplicationsController`, `ActivityController`,
+`UsersController`, `EvaluationAppointmentsController`. Also note: even once the backend is
+guarded, `frontend/components/planning/Planning.jsx:83`'s `this.props.season.holidays.length` in
+the constructor still assumes a non-null `season` prop -- a full fix needs both a nil-safe
+`Season.next` (or call-site guards) and a frontend guard for the "no current season" case. Fix,
+narrowly: `next_id = current&.next_season_id` and have callers handle a possible `nil` result;
+broadly: decide whether "no current season" should even be reachable in a properly bootstrapped
+instance, or whether every caller needs defensive handling.
