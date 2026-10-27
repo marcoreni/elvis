@@ -614,26 +614,6 @@ No real call site was found anywhere in `app/views` or `frontend/` for `planning
 batch-2 components. Converted and tested as given rather than deleted, per this repo's "don't
 delete on 500 / looks dead" convention.
 
-## `UserForm.jsx` never pre-fills a user's existing consent-doc answers
-
-Found while converting `ConsentDocItem.jsx` to TypeScript (jsx-to-tsx batch 1) and tracing why its
-`defaultValue` prop was unused (it is -- dropped from `ConsentDocItemProps`, see the batch-1 note
-above). `UserForm.jsx:405-419` still computes a real `defaultValue` per doc (a `.find()` over
-`initialValues.consent_document_users` for that doc's `has_consented`) and passes it to
-`ConsentDocItem`, but `ConsentDocItem` has never read it (confirmed back to before this
-conversion) and nothing else makes it reach the `Field`s it renders either:
-`UserForm.jsx`'s `formattedInitialValues` (`:283-293`, what actually feeds the enclosing
-`<Form initialValues={...}>`) only ever formats `YES_NO_FIELDS`
-(`checked_image_right`/`checked_newsletter`) -- it never builds the
-`consent_docs.id_<N>.agreement` key that would need to exist for react-final-form to pre-fill
-`ConsentDocItem`'s `Field name={consent_docs[id_${docItem.id}].agreement}`. Net effect: a user
-re-opening their profile always sees every consent checkbox/radio unanswered, even if they
-already answered it. Not fixed here -- `UserForm.jsx` is out of scope for this batch. Whoever
-converts it should either wire up the real pre-fill (build that `consent_docs.id_<N>.agreement`
-key into `formattedInitialValues` from `consent_document_users`) or, if the pre-fill is
-intentionally not wanted, drop the now-pointless `defaultValue` prop pass-through at the call site
-instead of reintroducing it.
-
 ## React 19 reports uncaught render errors more quietly than React 18
 
 React 19 routes uncaught render errors to `window.reportError` and drops both the `"Warning: "`
@@ -644,20 +624,6 @@ under React 19. The error is still printed, so a developer still sees it — but
 on, and this app has no error boundaries, no `window.onerror` and no Sentry, so nothing captures
 the component stack that 18 used to print. Relevant when triaging a blank React island: check the
 console carefully rather than expecting the old two-part output.
-
-## `Planning.jsx`'s remove-student handlers update `selectedIntervals` but not `intervalStore`
-
-`handleRemoveStudent`/`handleRemoveOptionalStudent` (`frontend/components/planning/Planning.jsx`)
-splice the freshly-fetched interval into `this.state.selectedIntervals` by index, in place, but
-never rebuild `this.state.intervalStore` (the separate id-keyed object `ActivityDetailsModal`'s
-`interval` prop actually reads from, via `this.state.intervalStore[this.state.intervalDetail]`,
-see `:1671`). Re-opening the detail modal for that same interval right after a remove-student
-action would show the stale cached version from `intervalStore`, not the just-fetched one.
-Pre-existing in this exact shape even in the original (broken) code this replaced -- not a new
-regression, just not fixed now (the established-safer pattern already used by `handleOpenDetail`
-is to rebuild both via `this.setState({...this.getIntervals(newIntervals), ...})` instead of
-mutating `selectedIntervals` alone). Fix: switch both handlers to the same `getIntervals(...)`
-pattern.
 
 ## `ActivityDetailsModal.jsx`'s `editionMode` is dead code, not a live one-way switch
 
