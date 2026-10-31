@@ -83,12 +83,14 @@ export interface Planning extends Entity {
     is_locked?: boolean;
 }
 
-// UNVERIFIED: no serializer/model named ActivityInstrument found; ActivitySerializer's matching
-// association (`activity_instances`) is commented out, so it's never sent on that path either.
-// Confirm the real source or drop this interface.
+// Verified against ActivityController#activities_list_json's raw `as_json` (not
+// ActivitySerializer -- that association really is commented out there, which is what the old
+// UNVERIFIED note above was keying off): its `activities_instruments: { include: :instrument }`
+// sends exactly this shape, consumed by courses/LessonList.tsx.
 export interface ActivityInstrument extends Entity {
     user_id: number | undefined;
     is_validated: boolean;
+    instrument?: Entity;
 }
 
 // UNVERIFIED: no call site in this file's import graph was found producing this shape.
@@ -100,9 +102,10 @@ export interface DesiredActivity extends Entity {
     activity_application?: ActivityApplication;
 }
 
-// UNRESOLVED: OptionSerializer only sends `id` -- `user`/`desired_activity` aren't in it and no
-// producing call site was found. `user` is marked required but format.tsx defends against it
-// being absent -- confirm the real call site before trusting this.
+// `user`/`desired_activity` confirmed sent by ActivityController#activities_list_json's raw
+// `as_json` (`options: { include: { user: {...}, desired_activity: { include: :activity_application } } }`),
+// consumed by courses/LessonList.tsx -- a different path from OptionSerializer (which the old
+// UNRESOLVED note above was about, and which genuinely only sends `id`).
 export interface Option extends Entity {
     user: User;
     desired_activity?: DesiredActivity;
