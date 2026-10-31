@@ -668,16 +668,13 @@ switch worth a product call was wrong: nothing can enter edit mode today, so the
 resolve. Logged for awareness in case a future change wires up a real entry point; not deleted per
 this repo's don't-delete-on-looks-dead convention.
 
-## `PlanningController#overlap`'s teacher conflict check 404s for a `teacher_id` of `0`
+## `verifyTimeOverlap()` has no error handling for a non-200 response
 
-`TimeInterval.with_teacher` (`app/models/time_interval.rb:49`) does
-`User.find(teacher_id)`, which raises `ActiveRecord::RecordNotFound` for `teacher_id: 0` -- a real
-fallback value (`ActivityDetailsModal.jsx`'s constructor: `(props.user && props.user.id) || 0`).
-`PlanningController#overlap` has no rescue for it, and the frontend's `verifyTimeOverlap()` fetch
-has no `.catch`, so the promise just rejects silently. Net effect: the overlap check still doesn't
-work for a room planning with no assigned teacher. Pre-existing, unrelated to the
-`time_interval_id` fix above (same behavior before and after). Not fixed here -- cross-cutting a
-Rails controller/model fix.
+`ActivityDetailsModal.jsx:562-589`'s `verifyTimeOverlap()` is a `.then().then()` fetch chain with
+no `.catch`. Any non-200 from `POST /planning/overlap` (or a JSON parse failure) leaves an
+unhandled rejection and `isValidated` stuck at its stale value, with no user-visible feedback.
+The `teacher_id: 0` 404 case this used to trigger is fixed, but the gap itself -- the endpoint
+has no rescue and the caller has no catch -- is still open for any other failure mode.
 
 ## `Season.next` crashes with `NoMethodError` when no season is flagged `is_current`
 

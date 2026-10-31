@@ -46,7 +46,7 @@ class TimeInterval < ApplicationRecord
   has_many :time_interval_preferences, dependent: :destroy
 
   scope :in_room, ->(room_id) { joins(:activity_instance).where("activity_instances.room_id = ?", room_id) }
-  scope :with_teacher, ->(teacher_id) { joins(:plannings).where(plannings: { user: User.find(teacher_id) }) }
+  scope :with_teacher, ->(teacher_id) { joins(:plannings).where(plannings: { user_id: teacher_id.to_i }) }
 
   # renvoie les time_interval qui concernent la saison passée en argument
   scope :for_season, lambda { |season|
