@@ -292,33 +292,49 @@ class UserForm extends React.PureComponent {
             )
         );
 
-        // Pre-fill each consent doc's existing answer, keyed the same way ConsentDocItem's
-        // Field/AlertYesNoRadio names it (`consent_docs[id_<N>].agreement`). No matching
-        // consent_document_users entry (a doc the user has never seen) leaves `hasConsented`
-        // undefined -- left unset here too, rather than coerced to a "no" answer, so an
-        // unanswered doc doesn't render as an explicit refusal.
+        // Fix up each consent doc's existing answer, keyed the same way ConsentDocItem's
+        // Field/AlertYesNoRadio names it (`consent_docs[id_<N>].agreement`).
+        //
+        // `tools/obj.js`'s infosFromUser already builds this key for every doc with a
+        // consent_document_users row, but gets the value wrong (see docs/KnownIssues.md):
+        // it reads `expected_answer` off the consent_document_user, which never has that
+        // column, so it always falls through to `has_consented.toString()` -- a checkbox
+        // doc answered "false" pre-fills the STRING "false", and `!!"false"` is `true` in
+        // JS, so an explicit refusal renders checked. Recompute it correctly here instead,
+        // using the real `expected_answer` off `this.props.consent_docs`.
+        //
+        // A doc with no consent_document_users entry (never shown to this user) is left
+        // alone entirely -- not given a key at all. Writing one (even with an undefined
+        // `agreement`) would reach UsersController#update's `params[:user][:consent_docs]`
+        // loop, which find_or_create_bys a real row and sets `has_consented = nil` for it;
+        // reloading that profile then crashes in `obj.js` (`null.toString()`) -- a crash
+        // this fix must not make reachable for the first time.
         if (this.props.consent_docs) {
+            // `formattedInitialValues.consent_docs` is still the same object reference as
+            // `initialValues.consent_docs` (only the top level was spread above) -- copy it
+            // before writing into it, so this doesn't mutate the parent's state during render.
+            const consentDocs = {
+                ...(formattedInitialValues.consent_docs || {}),
+            };
+
             this.props.consent_docs.forEach(doc => {
                 const consentDocUser = (
                     initialValues.consent_document_users || []
                 ).find(cdu => cdu.consent_document_id === doc.id);
-                const hasConsented = consentDocUser
-                    ? consentDocUser.has_consented
-                    : undefined;
+
+                if (!consentDocUser) return;
 
                 // Checkbox case (expected_answer: true) binds to a real boolean; the yes/no
                 // radio case (expected_answer: false) needs the same "true"/"false" string
                 // conversion as YES_NO_FIELDS above.
                 const value = doc.expected_answer
-                    ? hasConsented
-                    : formatRadioValue(hasConsented);
+                    ? consentDocUser.has_consented
+                    : formatRadioValue(consentDocUser.has_consented);
 
-                _.set(
-                    formattedInitialValues,
-                    `consent_docs.id_${doc.id}.agreement`,
-                    value
-                );
+                consentDocs[`id_${doc.id}`] = { agreement: value };
             });
+
+            formattedInitialValues.consent_docs = consentDocs;
         }
 
         return (

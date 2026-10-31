@@ -1,8 +1,15 @@
-// Regression coverage for the consent-doc pre-fill fix (docs/KnownIssues.md's
-// "UserForm.jsx never pre-fills a user's existing consent-doc answers"). formattedInitialValues
-// used to only format YES_NO_FIELDS, never building the `consent_docs.id_<N>.agreement` key
-// ConsentDocItem's Field/AlertYesNoRadio read for pre-fill -- so a user re-opening their profile
-// always saw every consent checkbox/radio unanswered, even if they'd already answered it.
+// Regression coverage for the consent-doc pre-fill fix. `tools/obj.js`'s infosFromUser already
+// builds the `consent_docs.id_<N>.agreement` key ConsentDocItem's Field/AlertYesNoRadio read for
+// pre-fill, but gets the value wrong: it reads `expected_answer` off the consent_document_user
+// (which never has that column), so it always falls through to `has_consented.toString()` -- a
+// checkbox doc explicitly answered "false" pre-filled the STRING "false", and `!!"false"` is
+// `true` in JS, so an explicit refusal rendered as checked (see docs/KnownIssues.md's entry on
+// `obj.js`'s broken expected_answer/.toString() logic -- pre-existing, not fixed here).
+// UserForm.jsx now recomputes that key itself using the real `expected_answer` off its own
+// `consent_docs` prop, correctly distinguishing checkbox vs. yes/no-radio docs and leaving a
+// never-answered doc's key unset entirely (not coerced to a falsy value) -- both so it renders as
+// unanswered rather than a false "no", and so it doesn't make UsersController#update create a
+// `has_consented: nil` row that would crash this same re-fetch next time.
 //
 // GeneralInfos/ContactInfos/HandicapInfos/Payers are heavy, unrelated form sections (national-ID
 // masking, family member management, etc. -- each already covered by its own test file) stubbed
@@ -10,7 +17,7 @@
 // Planning.test.jsx stubbing Calendar/ActivityDetailsModal.
 
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 
 vi.mock("./GeneralInfos", () => ({
     default: () => <div data-testid="general-infos-stub" />,
@@ -108,5 +115,68 @@ describe("UserForm consent-doc pre-fill", () => {
         const [yes, no] = screen.getAllByRole("radio", { hidden: true });
         expect(yes).not.toBeChecked();
         expect(no).not.toBeChecked();
+    });
+
+    test("does not mutate the shared initialValues.consent_docs object during render", () => {
+        // Simulates obj.js's infosFromUser already having built this key -- both real call
+        // sites (UserEdit.jsx, Wizard.jsx) pass the SAME object as both `initialValues` and
+        // their own component state, so writing into it during render would mutate the
+        // parent's state. `agreement: true` deliberately disagrees with the real
+        // has_consented: false below -- the recomputed value differs from what's already
+        // there, so an in-place write (mutating the shared object instead of a copy) would
+        // be directly observable as this object changing after render.
+        const sharedConsentDocs = { id_1: { agreement: true } };
+        const snapshotBefore = JSON.parse(JSON.stringify(sharedConsentDocs));
+
+        render(
+            <UserForm
+                initialValues={{
+                    id: 1,
+                    first_name: "Jean",
+                    consent_document_users: [
+                        { consent_document_id: 1, has_consented: false },
+                    ],
+                    consent_docs: sharedConsentDocs,
+                }}
+                consent_docs={[CHECKBOX_DOC, RADIO_DOC]}
+                schoolName="My School"
+                hidePayers={true}
+                displaySubmit={false}
+                onSubmit={() => {}}
+            />
+        );
+
+        expect(sharedConsentDocs).toEqual(snapshotBefore);
+    });
+
+    test("an unanswered doc is never submitted, so UsersController#update can't create a has_consented: nil row", () => {
+        // UserForm.jsx's own validate() skips all consent/payer/rules checks when the acting
+        // user is_admin (see validate()'s early return) -- the real path an admin editing
+        // someone else's profile can hit without ever answering every doc.
+        const onSubmit = vi.fn();
+        render(
+            <UserForm
+                initialValues={{
+                    id: 1,
+                    first_name: "Jean",
+                    consent_document_users: [
+                        { consent_document_id: 1, has_consented: true },
+                    ],
+                }}
+                consent_docs={[CHECKBOX_DOC, RADIO_DOC]}
+                schoolName="My School"
+                hidePayers={true}
+                displaySubmit={true}
+                user={{ is_admin: true }}
+                onSubmit={onSubmit}
+            />
+        );
+
+        fireEvent.click(screen.getByRole("button", { name: /.*/ }));
+
+        expect(onSubmit).toHaveBeenCalledTimes(1);
+        const submitted = onSubmit.mock.calls[0][0];
+        expect(submitted.consent_docs.id_1).toEqual({ agreement: true });
+        expect(submitted.consent_docs.id_2).toBeUndefined();
     });
 });

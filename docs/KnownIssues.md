@@ -625,6 +625,60 @@ on, and this app has no error boundaries, no `window.onerror` and no Sentry, so 
 the component stack that 18 used to print. Relevant when triaging a blank React island: check the
 console carefully rather than expecting the old two-part output.
 
+## `tools/obj.js`'s `infosFromUser` mis-derives a consent doc's `agreement` type
+
+`infosFromUser` (`frontend/tools/obj.js:70-87`) builds each consent doc's pre-filled
+`consent_docs.id_<N>.agreement` value as
+`doc.expected_answer ? doc.has_consented : doc.has_consented.toString()`, where `doc` is a
+`consent_document_user` — but that record's `as_json` (`UsersController#edit`,
+`consent_document_users: {}` with no `only`) never includes an `expected_answer` column (that
+lives on the `consent_document` itself). So `doc.expected_answer` is always `undefined`, and the
+ternary always takes the `.toString()` branch regardless of the doc's real type:
+- For a checkbox-type doc (`has_consented: false`, an explicit refusal), this pre-fills the
+  *string* `"false"` as the checkbox field's value. `AlertCheckbox`'s `input.checked` is
+  `Boolean(value)`, and `Boolean("false")` is `true` in JS — so an explicit refusal rendered as a
+  **checked** box.
+- For `has_consented: null` (reachable via `UserForm.jsx`'s submit payload before the fix in the
+  same PR that added this entry — see the `UserForm.jsx` consent-doc pre-fill fix), `.toString()`
+  on `null` throws `TypeError`, crashing the whole `UserEdit`/`Wizard` island on the next load of
+  that profile.
+
+Not fixed here (`UserForm.jsx` now recomputes the correct value itself from the real
+`expected_answer` off its own `consent_docs` prop, rather than trusting this derivation — see that
+fix's commit — which also stopped feeding this code the `null` that would crash it). `obj.js`'s own
+computation is therefore currently dead-but-still-executed: nothing crashes through it today, but
+the broken logic is still there and still reachable if anything else starts trusting
+`consent_document_user.expected_answer`. Fix, if ever worth it: read `expected_answer` off the
+matching `consent_document` (not the `consent_document_user`), or just drop this derivation in
+favor of whatever recomputes it correctly.
+
+## `Planning.jsx`'s `handleUpdateActivityInstance` has the same intervalStore/selectedIntervals divergence `handleRemoveStudent`/`handleRemoveOptionalStudent` had
+
+`handleUpdateActivityInstance` (`frontend/components/planning/Planning.jsx:570-590`) builds
+`newState` via `this.getIntervals(...)` (so `newState.intervalStore` is derived) *before* its
+`TimeIntervalHelpers.fetchInterval(...)` call resolves, then in the `.then()` only reassigns
+`newState.selectedIntervals` — never rebuilding `newState.intervalStore` from the fresh array —
+before `this.setState({...newState})`. Same class of bug as the one fixed in
+`handleRemoveStudent`/`handleRemoveOptionalStudent` (see git history): `intervalStore[id]` ends up
+stale (the pre-fetch value) while `selectedIntervals` holds the freshly-fetched one. Not fixed here
+— out of scope for that batch's "minimal change in a 1800-line file" constraint. Fix: rebuild
+`intervalStore` from the post-fetch `selectedIntervals` inside the `.then()` (e.g. re-run
+`this.getIntervals(...)` on the updated array) instead of patching `selectedIntervals` alone.
+
+## `Planning.jsx`'s `handleRemoveStudent`/`handleRemoveOptionalStudent` have no live call site today
+
+Found while investigating whether their `intervalStore`/`selectedIntervals` sync fix (see git
+history) is reachable under `updateTimePreferences`/wizard mode. Both are passed down to
+`ActivityDetailsModal` as `handleRemoveStudent`/`handleRemoveOptionalStudent` props
+(`Planning.jsx:1742-1754`), which wraps them in its own same-named methods
+(`ActivityDetailsModal.jsx:521-540`) — but `this.handleRemoveOptionalStudent` has zero call sites
+anywhere in that file (not even commented out), and `this.handleRemoveStudent`'s only reference
+(`:1535`) is inside a commented-out JSX block. So, as of this entry, there is no live button or UI
+path anywhere that triggers either of Planning's handlers, in any mode. Not deleted per this
+repo's don't-delete-on-looks-dead convention; logged so a future reader doesn't assume these are
+exercised by real usage, and so nobody needs to re-derive this when reasoning about either
+handler's behavior under a specific Planning mode.
+
 ## `ActivityDetailsModal.jsx`'s `editionMode` is dead code, not a live one-way switch
 
 `handleEditionMode()` (`frontend/components/planning/ActivityDetailsModal.jsx:650`), the only
