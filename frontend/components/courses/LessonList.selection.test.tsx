@@ -1,25 +1,25 @@
 // Regression test for the "selection" column's row-checkbox going stale (item 13 batch 4d part
-// 1, docs/Modernization-Roadmap.md). LessonList.test.jsx mocks `TanStackGrid` entirely (see its
+// 1, docs/Modernization-Roadmap.md). LessonList.test.tsx mocks `TanStackGrid` entirely (see its
 // own header comment), which hides this bug -- it only reproduces with the real grid, since it's
 // TanStack's own per-row `_valuesCache` (keyed on `data`'s reference, not on unrelated component
 // state) that goes stale. This file mounts LessonList with the real TanStackGrid instead, so it
-// stays separate from LessonList.test.jsx rather than un-mocking the grid for one test there.
+// stays separate from LessonList.test.tsx rather than un-mocking the grid for one test there.
 //
-// The "selection" column's `accessor` (`isTargeted`) reads `this.state.targets` -- clicking a
-// row's own checkbox only `setState`s `targets`, not `data`, so the cache never recomputed that
-// accessor. Before this commit the Cell displayed the cached `value` from that accessor; now it
-// reads `isTargeted(d.original)` straight off `this.state.targets` inside `Cell`, bypassing the
-// stale cache entirely. The header "select all" checkbox (in the column's `Filter`) was never
-// affected -- it already read `this.state.targets` directly -- so this test specifically drives
-// a single row's own checkbox, not the header.
+// The "selection" column's `accessor` (`isTargeted`) reads `targets` state -- clicking a row's
+// own checkbox only updates `targets`, not `data`, so the cache never recomputed that accessor.
+// Before this fix the Cell displayed the cached `value` from that accessor; now it reads
+// `isTargeted(d.original)` directly, bypassing the stale cache entirely. The header "select all"
+// checkbox (in the column's `Filter`) was never affected -- it already read `targets` directly --
+// so this test specifically drives a single row's own checkbox, not the header.
 
 import React from "react";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import i18n from "../../i18n";
 import LessonList from "./LessonList";
 
-const makeLesson = (id, groupName) => ({
+const makeLesson = (id: number, groupName: string) => ({
     id,
     group_name: groupName,
     activity_ref_id: 3,
@@ -51,7 +51,15 @@ const makeProps = () => ({
             end: "2026-06-30",
         },
     ],
-    activityRefs: [{ id: 3, label: "Piano" }],
+    activityRefs: [
+        {
+            id: 3,
+            label: "Piano",
+            is_work_group: false,
+            activity_ref_kind_id: 1,
+            activity_ref_kind: { id: 1, name: "course" },
+        },
+    ],
     teachers: [],
     rooms: [],
     locations: [],
@@ -71,7 +79,7 @@ afterEach(async () => {
 });
 
 test("clicking a lesson row's own checkbox visually checks that row, without affecting the other row or the header", async () => {
-    global.fetch = vi.fn().mockResolvedValue({
+    globalThis.fetch = vi.fn().mockResolvedValue({
         ok: true,
         headers: { get: () => null },
         json: () =>

@@ -142,7 +142,7 @@ export function DownloadButton({
     format?: string;
     fileName?: string;
     children: React.ReactNode;
-}) {
+} & Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, "onClick">) {
     return (
         <button
             className="btn btn-sm btn-primary"
