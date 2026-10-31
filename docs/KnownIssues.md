@@ -614,26 +614,6 @@ No real call site was found anywhere in `app/views` or `frontend/` for `planning
 batch-2 components. Converted and tested as given rather than deleted, per this repo's "don't
 delete on 500 / looks dead" convention.
 
-## `UserForm.jsx` never pre-fills a user's existing consent-doc answers
-
-Found while converting `ConsentDocItem.jsx` to TypeScript (jsx-to-tsx batch 1) and tracing why its
-`defaultValue` prop was unused (it is -- dropped from `ConsentDocItemProps`, see the batch-1 note
-above). `UserForm.jsx:405-419` still computes a real `defaultValue` per doc (a `.find()` over
-`initialValues.consent_document_users` for that doc's `has_consented`) and passes it to
-`ConsentDocItem`, but `ConsentDocItem` has never read it (confirmed back to before this
-conversion) and nothing else makes it reach the `Field`s it renders either:
-`UserForm.jsx`'s `formattedInitialValues` (`:283-293`, what actually feeds the enclosing
-`<Form initialValues={...}>`) only ever formats `YES_NO_FIELDS`
-(`checked_image_right`/`checked_newsletter`) -- it never builds the
-`consent_docs.id_<N>.agreement` key that would need to exist for react-final-form to pre-fill
-`ConsentDocItem`'s `Field name={consent_docs[id_${docItem.id}].agreement}`. Net effect: a user
-re-opening their profile always sees every consent checkbox/radio unanswered, even if they
-already answered it. Not fixed here -- `UserForm.jsx` is out of scope for this batch. Whoever
-converts it should either wire up the real pre-fill (build that `consent_docs.id_<N>.agreement`
-key into `formattedInitialValues` from `consent_document_users`) or, if the pre-fill is
-intentionally not wanted, drop the now-pointless `defaultValue` prop pass-through at the call site
-instead of reintroducing it.
-
 ## React 19 reports uncaught render errors more quietly than React 18
 
 React 19 routes uncaught render errors to `window.reportError` and drops both the `"Warning: "`
@@ -645,19 +625,59 @@ on, and this app has no error boundaries, no `window.onerror` and no Sentry, so 
 the component stack that 18 used to print. Relevant when triaging a blank React island: check the
 console carefully rather than expecting the old two-part output.
 
-## `Planning.jsx`'s remove-student handlers update `selectedIntervals` but not `intervalStore`
+## `tools/obj.js`'s `infosFromUser` mis-derives a consent doc's `agreement` type
 
-`handleRemoveStudent`/`handleRemoveOptionalStudent` (`frontend/components/planning/Planning.jsx`)
-splice the freshly-fetched interval into `this.state.selectedIntervals` by index, in place, but
-never rebuild `this.state.intervalStore` (the separate id-keyed object `ActivityDetailsModal`'s
-`interval` prop actually reads from, via `this.state.intervalStore[this.state.intervalDetail]`,
-see `:1671`). Re-opening the detail modal for that same interval right after a remove-student
-action would show the stale cached version from `intervalStore`, not the just-fetched one.
-Pre-existing in this exact shape even in the original (broken) code this replaced -- not a new
-regression, just not fixed now (the established-safer pattern already used by `handleOpenDetail`
-is to rebuild both via `this.setState({...this.getIntervals(newIntervals), ...})` instead of
-mutating `selectedIntervals` alone). Fix: switch both handlers to the same `getIntervals(...)`
-pattern.
+`infosFromUser` (`frontend/tools/obj.js:70-87`) builds each consent doc's pre-filled
+`consent_docs.id_<N>.agreement` value as
+`doc.expected_answer ? doc.has_consented : doc.has_consented.toString()`, where `doc` is a
+`consent_document_user` — but that record's `as_json` (`UsersController#edit`,
+`consent_document_users: {}` with no `only`) never includes an `expected_answer` column (that
+lives on the `consent_document` itself). So `doc.expected_answer` is always `undefined`, and the
+ternary always takes the `.toString()` branch regardless of the doc's real type:
+- For a checkbox-type doc (`has_consented: false`, an explicit refusal), this pre-fills the
+  *string* `"false"` as the checkbox field's value. `AlertCheckbox`'s `input.checked` is
+  `Boolean(value)`, and `Boolean("false")` is `true` in JS — so an explicit refusal rendered as a
+  **checked** box.
+- For `has_consented: null` (reachable via `UserForm.jsx`'s submit payload before the fix in the
+  same PR that added this entry — see the `UserForm.jsx` consent-doc pre-fill fix), `.toString()`
+  on `null` throws `TypeError`, crashing the whole `UserEdit`/`Wizard` island on the next load of
+  that profile.
+
+Not fixed here (`UserForm.jsx` now recomputes the correct value itself from the real
+`expected_answer` off its own `consent_docs` prop, rather than trusting this derivation — see that
+fix's commit — which also stopped feeding this code the `null` that would crash it). `obj.js`'s own
+computation is therefore currently dead-but-still-executed: nothing crashes through it today, but
+the broken logic is still there and still reachable if anything else starts trusting
+`consent_document_user.expected_answer`. Fix, if ever worth it: read `expected_answer` off the
+matching `consent_document` (not the `consent_document_user`), or just drop this derivation in
+favor of whatever recomputes it correctly.
+
+## `Planning.jsx`'s `handleUpdateActivityInstance` has the same intervalStore/selectedIntervals divergence `handleRemoveStudent`/`handleRemoveOptionalStudent` had
+
+`handleUpdateActivityInstance` (`frontend/components/planning/Planning.jsx:570-590`) builds
+`newState` via `this.getIntervals(...)` (so `newState.intervalStore` is derived) *before* its
+`TimeIntervalHelpers.fetchInterval(...)` call resolves, then in the `.then()` only reassigns
+`newState.selectedIntervals` — never rebuilding `newState.intervalStore` from the fresh array —
+before `this.setState({...newState})`. Same class of bug as the one fixed in
+`handleRemoveStudent`/`handleRemoveOptionalStudent` (see git history): `intervalStore[id]` ends up
+stale (the pre-fetch value) while `selectedIntervals` holds the freshly-fetched one. Not fixed here
+— out of scope for that batch's "minimal change in a 1800-line file" constraint. Fix: rebuild
+`intervalStore` from the post-fetch `selectedIntervals` inside the `.then()` (e.g. re-run
+`this.getIntervals(...)` on the updated array) instead of patching `selectedIntervals` alone.
+
+## `Planning.jsx`'s `handleRemoveStudent`/`handleRemoveOptionalStudent` have no live call site today
+
+Found while investigating whether their `intervalStore`/`selectedIntervals` sync fix (see git
+history) is reachable under `updateTimePreferences`/wizard mode. Both are passed down to
+`ActivityDetailsModal` as `handleRemoveStudent`/`handleRemoveOptionalStudent` props
+(`Planning.jsx:1742-1754`), which wraps them in its own same-named methods
+(`ActivityDetailsModal.jsx:521-540`) — but `this.handleRemoveOptionalStudent` has zero call sites
+anywhere in that file (not even commented out), and `this.handleRemoveStudent`'s only reference
+(`:1535`) is inside a commented-out JSX block. So, as of this entry, there is no live button or UI
+path anywhere that triggers either of Planning's handlers, in any mode. Not deleted per this
+repo's don't-delete-on-looks-dead convention; logged so a future reader doesn't assume these are
+exercised by real usage, and so nobody needs to re-derive this when reasoning about either
+handler's behavior under a specific Planning mode.
 
 ## `ActivityDetailsModal.jsx`'s `editionMode` is dead code, not a live one-way switch
 
