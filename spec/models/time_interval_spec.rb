@@ -27,6 +27,19 @@ RSpec.describe TimeInterval, type: :model do
     it "returns an empty relation for any teacher_id with no matching planning" do
       expect(TimeInterval.with_teacher(teacher.id + 1)).to be_empty
     end
+
+    # Regression for a footgun spotted in review: `where(user_id: nil)` would otherwise match
+    # every planning with no assigned user at all, rather than matching nothing for a `nil`
+    # teacher_id. Coercing with `.to_i` routes `nil` through the same "no real teacher" path as
+    # the `0` fallback above instead of accidentally becoming a `user_id IS NULL` lookup.
+    it "returns an empty relation for a nil teacher_id, even when a planning has no user" do
+      unassigned_planning = Planning.create!(user: nil)
+      unassigned_interval = TimeInterval.create!(start: 1.day.from_now.change(hour: 14),
+                                                 end: 1.day.from_now.change(hour: 15))
+      unassigned_planning.time_intervals << unassigned_interval
+
+      expect(TimeInterval.with_teacher(nil)).to be_empty
+    end
   end
 
   context "when the season begins on Monday and the time interval is the first day of the season" do

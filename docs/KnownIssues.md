@@ -668,6 +668,14 @@ switch worth a product call was wrong: nothing can enter edit mode today, so the
 resolve. Logged for awareness in case a future change wires up a real entry point; not deleted per
 this repo's don't-delete-on-looks-dead convention.
 
+## `verifyTimeOverlap()` has no error handling for a non-200 response
+
+`ActivityDetailsModal.jsx:562-589`'s `verifyTimeOverlap()` is a `.then().then()` fetch chain with
+no `.catch`. Any non-200 from `POST /planning/overlap` (or a JSON parse failure) leaves an
+unhandled rejection and `isValidated` stuck at its stale value, with no user-visible feedback.
+The `teacher_id: 0` 404 case this used to trigger is fixed, but the gap itself -- the endpoint
+has no rescue and the caller has no catch -- is still open for any other failure mode.
+
 ## `Season.next` crashes with `NoMethodError` when no season is flagged `is_current`
 
 `Season.next` (`app/models/season.rb:120-124`) is `includes(:holidays).where(id: current.next_season_id).first`

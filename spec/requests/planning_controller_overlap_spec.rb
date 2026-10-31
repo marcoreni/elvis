@@ -17,13 +17,18 @@ RSpec.describe "POST /planning/overlap", type: :request do
 
   before { sign_in admin }
 
-  def post_overlap(teacher_id:)
+  # time_interval_id defaults to 0 (never a real id), not nil: the controller excludes candidates
+  # via `time_intervals.id != ?`, and in Postgres that comparison against a literal NULL is NULL
+  # (falsy) for every row, which would vacuously exclude everything regardless of whether
+  # `with_teacher`/`in_room` work at all.
+  def post_overlap(teacher_id:, start_time: 1.day.from_now.change(hour: 10), end_time: 1.day.from_now.change(hour: 11),
+                   time_interval_id: 0)
     post "/planning/overlap", params: {
       teacher_id: teacher_id,
       room_id: nil,
-      startTime: 1.day.from_now.change(hour: 10),
-      endTime: 1.day.from_now.change(hour: 11),
-      time_interval_id: nil
+      startTime: start_time,
+      endTime: end_time,
+      time_interval_id: time_interval_id
     }
   end
 
@@ -44,5 +49,28 @@ RSpec.describe "POST /planning/overlap", type: :request do
 
     expect(response).to have_http_status(:ok)
     expect(JSON.parse(response.body)).to eq("teacher" => nil, "room" => nil)
+  end
+
+  it "returns a non-nil teacher when a real conflicting interval exists on the teacher's planning" do
+    teacher = FactoryBot.create(
+      :user, email: "planning-overlap-teacher-conflict@example.com", first_name: "TeacherConflict",
+             last_name: "Overlap", is_teacher: true
+    )
+    planning = Planning.create!(user: teacher)
+    conflicting_interval = TimeInterval.create!(
+      start: 1.day.from_now.change(hour: 10), end: 1.day.from_now.change(hour: 11)
+    )
+    planning.time_intervals << conflicting_interval
+
+    post_overlap(
+      teacher_id: teacher.id,
+      start_time: 1.day.from_now.change(hour: 10, min: 30),
+      end_time: 1.day.from_now.change(hour: 11, min: 30)
+    )
+
+    expect(response).to have_http_status(:ok)
+    body = JSON.parse(response.body)
+    expect(body["teacher"]).not_to be_nil
+    expect(body["teacher"]["id"]).to eq(conflicting_interval.id)
   end
 end
