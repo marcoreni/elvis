@@ -220,6 +220,14 @@ describe("Planning — remove-student handlers don't throw ReferenceError (regre
             );
             expect(updated).toEqual(fetchedInterval);
         });
+
+        // Regression: intervalStore (what ActivityDetailsModal's `interval` prop actually reads,
+        // via state.intervalStore[state.intervalDetail]) must be rebuilt alongside
+        // selectedIntervals, not left stale from before the fetch.
+        expect(ref.current.state.intervalStore[42]).toEqual(
+            ref.current.state.selectedIntervals.find((i) => i.id === 42)
+        );
+        expect(ref.current.state.intervalStore[42]).toEqual(fetchedInterval);
     });
 
     test("handleRemoveOptionalStudent re-fetches and replaces the matching interval the same way", async () => {
@@ -285,5 +293,12 @@ describe("Planning — remove-student handlers don't throw ReferenceError (regre
             );
             expect(updated).toEqual(fetchedInterval);
         });
+
+        // Regression: same intervalStore/selectedIntervals sync check as above, for the optional-
+        // student removal path.
+        expect(ref.current.state.intervalStore[43]).toEqual(
+            ref.current.state.selectedIntervals.find((i) => i.id === 43)
+        );
+        expect(ref.current.state.intervalStore[43]).toEqual(fetchedInterval);
     });
 });

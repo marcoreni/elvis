@@ -262,14 +262,16 @@ class Planning extends React.Component {
             .then(() => {
                 TimeIntervalHelpers.fetchInterval(csrfToken, intervalId).then(
                     newInterval => {
-                        const {selectedIntervals} = this.state;
-                        const index = selectedIntervals.findIndex(i => {
+                        const newIntervals = [...this.state.selectedIntervals];
+                        const index = newIntervals.findIndex(i => {
                             return i.id === newInterval.id;
                         });
 
                         if (index > -1) {
-                            selectedIntervals[index] = newInterval;
-                            this.setState({selectedIntervals});
+                            newIntervals[index] = newInterval;
+                            this.setState({
+                                ...this.getIntervals(newIntervals),
+                            });
                         }
                     }
                 );
@@ -294,14 +296,16 @@ class Planning extends React.Component {
             .then(() => {
                 TimeIntervalHelpers.fetchInterval(csrfToken, intervalId).then(
                     newInterval => {
-                        const {selectedIntervals} = this.state;
-                        const index = selectedIntervals.findIndex(i => {
+                        const newIntervals = [...this.state.selectedIntervals];
+                        const index = newIntervals.findIndex(i => {
                             return i.id === newInterval.id;
                         });
 
                         if (index > -1) {
-                            selectedIntervals[index] = newInterval;
-                            this.setState({selectedIntervals});
+                            newIntervals[index] = newInterval;
+                            this.setState({
+                                ...this.getIntervals(newIntervals),
+                            });
                         }
                     }
                 );
