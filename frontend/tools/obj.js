@@ -77,8 +77,11 @@ export const infosFromUser = user => ({
         const docs = {};
 
         for (const doc of (user.consent_document_users || [])) {
+            // `doc.has_consented` can be null (an unanswered doc whose row already exists --
+            // see docs/KnownIssues.md) -- `?.toString()` leaves `agreement` undefined for that
+            // case instead of throwing, so it renders as unanswered rather than crashing.
             docs[`id_${doc.consent_document_id}`] = {
-                agreement: doc.expected_answer ? doc.has_consented : doc.has_consented.toString()
+                agreement: doc.expected_answer ? doc.has_consented : doc.has_consented?.toString()
             };
         }
 

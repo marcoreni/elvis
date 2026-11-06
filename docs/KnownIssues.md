@@ -629,28 +629,33 @@ console carefully rather than expecting the old two-part output.
 
 `infosFromUser` (`frontend/tools/obj.js:70-87`) builds each consent doc's pre-filled
 `consent_docs.id_<N>.agreement` value as
-`doc.expected_answer ? doc.has_consented : doc.has_consented.toString()`, where `doc` is a
+`doc.expected_answer ? doc.has_consented : doc.has_consented?.toString()`, where `doc` is a
 `consent_document_user` — but that record's `as_json` (`UsersController#edit`,
 `consent_document_users: {}` with no `only`) never includes an `expected_answer` column (that
 lives on the `consent_document` itself). So `doc.expected_answer` is always `undefined`, and the
-ternary always takes the `.toString()` branch regardless of the doc's real type:
-- For a checkbox-type doc (`has_consented: false`, an explicit refusal), this pre-fills the
-  *string* `"false"` as the checkbox field's value. `AlertCheckbox`'s `input.checked` is
-  `Boolean(value)`, and `Boolean("false")` is `true` in JS — so an explicit refusal rendered as a
-  **checked** box.
-- For `has_consented: null` (reachable via `UserForm.jsx`'s submit payload before the fix in the
-  same PR that added this entry — see the `UserForm.jsx` consent-doc pre-fill fix), `.toString()`
-  on `null` throws `TypeError`, crashing the whole `UserEdit`/`Wizard` island on the next load of
-  that profile.
-
-Not fixed here (`UserForm.jsx` now recomputes the correct value itself from the real
-`expected_answer` off its own `consent_docs` prop, rather than trusting this derivation — see that
-fix's commit — which also stopped feeding this code the `null` that would crash it). `obj.js`'s own
-computation is therefore currently dead-but-still-executed: nothing crashes through it today, but
-the broken logic is still there and still reachable if anything else starts trusting
+ternary always takes the `.toString()` branch regardless of the doc's real type. For a
+checkbox-type doc (`has_consented: false`, an explicit refusal), this pre-fills the *string*
+`"false"` as the checkbox field's value. `AlertCheckbox`'s `input.checked` is `Boolean(value)`,
+and `Boolean("false")` is `true` in JS — so an explicit refusal rendered as a **checked** box. Not
+fixed here (`UserForm.jsx` now recomputes the correct value itself from the real `expected_answer`
+off its own `consent_docs` prop, rather than trusting this derivation — see that fix's commit).
+`obj.js`'s own computation is therefore currently dead-but-still-executed: nothing crashes through
+it today, but the broken logic is still there and still reachable if anything else starts trusting
 `consent_document_user.expected_answer`. Fix, if ever worth it: read `expected_answer` off the
 matching `consent_document` (not the `consent_document_user`), or just drop this derivation in
 favor of whatever recomputes it correctly.
+
+The crash this used to cause for `has_consented: null` (reachable via a `UsersController#update`
+or `ActivitiesApplicationsController#create` submission that persists a nil row — see
+`UserForm.jsx`'s consent-doc pre-fill fix, and the still-open backend item below) *is* fixed: the
+`.toString()` call is now `?.toString()`, so a `null` `has_consented` leaves `agreement`
+`undefined` (renders unanswered) instead of throwing and crashing the whole `UserEdit`/`Wizard`
+island on page load. This guard matters independently of the frontend fix that stopped *creating*
+new nil rows via `UserForm.jsx`'s submit path — `ActivitiesApplicationsController#create`'s own
+consent-doc-saving loop (`app/controllers/activities_applications_controller.rb:805-812`) has no
+nil guard at all (backend work, out of scope for this fix — see `UsersController#update`'s own
+dead length-check guard, same file area, for the sibling gap), so a nil row is still reachable
+through that path until the backend is fixed too.
 
 ## `Planning.jsx`'s `handleUpdateActivityInstance` has the same intervalStore/selectedIntervals divergence `handleRemoveStudent`/`handleRemoveOptionalStudent` had
 
@@ -671,7 +676,7 @@ Found while investigating whether their `intervalStore`/`selectedIntervals` sync
 history) is reachable under `updateTimePreferences`/wizard mode. Both are passed down to
 `ActivityDetailsModal` as `handleRemoveStudent`/`handleRemoveOptionalStudent` props
 (`Planning.jsx:1742-1754`), which wraps them in its own same-named methods
-(`ActivityDetailsModal.jsx:521-540`) — but `this.handleRemoveOptionalStudent` has zero call sites
+(`ActivityDetailsModal.jsx:521-545`) — but `this.handleRemoveOptionalStudent` has zero call sites
 anywhere in that file (not even commented out), and `this.handleRemoveStudent`'s only reference
 (`:1535`) is inside a commented-out JSX block. So, as of this entry, there is no live button or UI
 path anywhere that triggers either of Planning's handlers, in any mode. Not deleted per this
