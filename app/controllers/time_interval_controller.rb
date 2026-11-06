@@ -243,7 +243,13 @@ class TimeIntervalController < ApplicationController
       .new(User.find(teacher_id), Season.from_interval(availability).first)
       .execute
 
-    render json: intervals, each_serializer: TimeIntervalSerializer
+    # `include: []`: same cycle as ActivityController#create (see docs/KnownIssues.md history) --
+    # TimeIntervalSerializer's activity_instance -> ActivityInstanceSerializer's activity ->
+    # ActivitySerializer's time_interval loops forever under the app-wide `default_includes = "**"`
+    # (every created instance's activity_instance points back to this same activity). The frontend
+    # (planning/Planning.jsx's handleCreateActivityInstances) only checks the response status, not
+    # this body, so dropping the nested includes here is safe.
+    render json: intervals, each_serializer: TimeIntervalSerializer, include: []
   end
 
   private
