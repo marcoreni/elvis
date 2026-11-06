@@ -224,6 +224,24 @@ DB. That `parseHTML` extension is therefore *more* necessary after the migration
 removing it would silently drop every underline the first time such content is opened and saved.
 Remaining `draft`/`draftjs` mentions under `frontend/` are accurate historical comments only.
 
+## 2026-10-28, courses/LessonList.jsx -> .tsx conversion
+
+- `frontend/components/courses/LessonList.tsx`: the `bulkDelete()` method. Its only call site was
+  already commented out in the render tree before this conversion, and even if invoked it would
+  404 — no `DELETE /lessons/bulkdelete` route exists in `config/routes.rb` (only
+  `/payments/bulkdelete`, `/due_payments/bulkdelete`, `/activity_instances`,
+  `/payments/failed_imports/many` have `bulkdelete` routes). Confirmed via both greps before
+  removing. 7 now-orphaned locale keys removed with it from both `frontend/locales/fr/courses.json`
+  and `en/courses.json`: `lessonList.{bulkDeleteConfirm,confirmationTitle,deleteFailedRetry,
+  deleteFailedTitle,selectedCoursesDeleted,serverError,yesDelete}` (confirmed zero remaining
+  references anywhere in `frontend/` for each). `lessonList.errorTitle` looks similar but is kept
+  — still read by `onSubmit`'s delete-confirmation flow, a live, reachable path.
+- Also dropped (not part of the same `bulkDelete` cleanup, but from the same conversion): the
+  `formatOccupationRate`/`filterUserWithDate`/`filterUser` module-level functions (zero call sites
+  anywhere in the file), the unused `UserWithInfos` import, and the inert `resized`/`expanded` keys
+  on the filter object persisted to `localStorage` (never read by `TanStackGrid` or anything else
+  in the file).
+
 ## Deliberately NOT touched (all audits)
 
 Real, live issues — not dead code, don't delete:

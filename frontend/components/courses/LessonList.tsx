@@ -239,8 +239,9 @@ function LessonList({
                     .add(1, "week")
                     .format(ISO_DATE_FORMAT);
             // Trusts the data the same way the original class did (always finds a
-            // reference_date entry here) -- see docs/Jsx-To-Tsx-Migration-Playbook.md's
-            // "no new optional-chaining guards" policy.
+            // reference_date entry here) -- see docs/KnownIssues.md's "Inconsistent
+            // optional-chaining policy" entry (RawPlanning.tsx's "no new optional-chaining
+            // guards" file-local comment) for why a `!` beats a silently-wrong `?.` here.
             else refDateFilter!.value = moment().format(ISO_DATE_FORMAT);
         }
 
@@ -311,13 +312,23 @@ function LessonList({
         localStorage.setItem(FILTER_STORAGE_KEY, JSON.stringify(filter));
     }, [filter]);
 
+    // Same "is this column currently shown" check filteredColumns (below) uses to decide whether
+    // to render the season column at all. The old render-time hack lived inside that column's own
+    // Filter render prop, so it only ever ran when the column was actually rendered -- hiding the
+    // column via ListPreferences implicitly suppressed it too. The effect below has to recreate
+    // that condition explicitly, since it no longer runs inside the column's own render path.
+    const isSeasonColumnEnabled =
+        !listPreferences ||
+        Boolean(_.find(listPreferences, { id: "season_id", disabled: false }));
+
     // Fix for the former render-time setState documented in docs/KnownIssues.md ("courses/
     // LessonList.jsx's 'season' filter calls setState during render"): the season column's Filter
     // used to call onChange()/this.setState() unconditionally from its own render body. Moved
     // here, keyed off currentAppsSeason becoming available (the same dependency
-    // componentDidMount already established) plus filterApplied so it only ever fires once.
+    // componentDidMount already established) plus filterApplied so it only ever fires once -- and
+    // only while the season column is actually visible, matching the original's implicit gate.
     useEffect(() => {
-        if (currentAppsSeason && !filterApplied) {
+        if (currentAppsSeason && !filterApplied && isSeasonColumnEnabled) {
             const indexFiltered = _.keyBy(filter.filtered, "id");
             indexFiltered.season_id = {
                 id: "season_id",
@@ -331,7 +342,7 @@ function LessonList({
             });
             setFilterApplied(true);
         }
-    }, [currentAppsSeason, filterApplied]);
+    }, [currentAppsSeason, filterApplied, isSeasonColumnEnabled]);
 
     const toggleModal = () => setIsModalOpen((prev) => !prev);
 
@@ -766,7 +777,7 @@ function LessonList({
                         {
                             activityRefs.find(
                                 (r) => r.id === c.original.activity_ref_id
-                            )?.label
+                            )!.label
                         }
                     </span>
                 );
@@ -788,7 +799,7 @@ function LessonList({
                       id: "teacher_id",
                       accessor: (d: LessonActivity) => d.teacher,
                       Cell: (c: { original: LessonActivity }) =>
-                          `${c.original.teacher?.first_name} ${c.original.teacher?.last_name}`,
+                          `${c.original.teacher!.first_name} ${c.original.teacher!.last_name}`,
                       Filter: ({
                           filter: f,
                           onChange,
@@ -819,7 +830,7 @@ function LessonList({
                 // affiche le nom de la salle de la première instance ou le nom de la salle enregistré dans l'activité sinon. (pas la bonne dans certains cas)
                 return matchingRooms.length > 0
                     ? matchingRooms[0].label
-                    : a.room?.label;
+                    : a.room!.label;
             },
             Filter: ({ filter: f, onChange }) => (
                 <FilterSelect
@@ -1016,7 +1027,7 @@ function LessonList({
                         href={
                             c.original.time_interval
                                 ? `/planning/${
-                                      c.original.teacher?.planning?.id
+                                      c.original.teacher!.planning!.id
                                   }/${moment(
                                       c.original.time_interval.start
                                   ).format(ISO_DATE_FORMAT)}`
@@ -1185,10 +1196,7 @@ function LessonList({
                                                 referenceDate))
                             ).length > 0;
 
-                        if (
-                            hasUser ||
-                            (row.original.options?.length || 0) > 0
-                        ) {
+                        if (hasUser || row.original.options!.length > 0) {
                             return (
                                 <UserList
                                     activity={row.original}
@@ -1280,7 +1288,7 @@ const UserList = ({
                 </h3>
                 <a
                     className="btn btn-primary"
-                    href={`/users/${activity.teacher?.id}/activity/${activity.id}/evaluate`}
+                    href={`/users/${activity.teacher!.id}/activity/${activity.id}/evaluate`}
                 >
                     {t("lessonList.userList.viewEvaluations")}
                 </a>
@@ -1365,8 +1373,8 @@ const UserRow = ({
 
     const userInstrument =
         (isWorkGroup &&
-            (activity.activities_instruments || [])
-                .filter((ai) => ai.user_id === user.id)
+            activity
+                .activities_instruments!.filter((ai) => ai.user_id === user.id)
                 .map((ai) => ai.instrument?.label)
                 .join(", ")) ||
         t("lessonList.userRow.notAssigned");

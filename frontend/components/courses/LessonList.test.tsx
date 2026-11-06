@@ -232,51 +232,48 @@ describe("LessonList — column header row (i18n)", () => {
 
 // Regression for the render-time setState documented in docs/KnownIssues.md's former "courses/
 // LessonList.jsx's 'season' filter calls setState during render" entry: the season column's
-// Filter used to call onChange()/this.setState() unconditionally from its own render body,
-// producing a real React console warning ("Cannot update during an existing state transition").
-// The fix moves that into a useEffect keyed off currentAppsSeason becoming available (mirroring
-// componentDidMount's own dependency) -- assert both that the warning is gone AND that the season
-// filter still ends up applied, since removing a side effect from render is only a real fix if
-// the resulting behavior is unchanged.
-describe("season filter applies without a render-time setState warning", () => {
-    test("no console.error is logged while the current season's filter is applied", async () => {
-        const consoleError = vi
-            .spyOn(console, "error")
-            .mockImplementation(() => {});
-
+// Filter used to call onChange()/this.setState() unconditionally from its own render body. The
+// fix moves that into a useEffect keyed off currentAppsSeason becoming available (mirroring
+// componentDidMount's own dependency), so it's no longer tied to that column's own render path.
+//
+// Not a console.error/console-warning assertion here, deliberately: this file's TanStackGrid
+// mock (see the header comment above) never invokes any column's Filter render prop, so the old
+// render-body bug could never have fired in this test regardless of the fix either way -- a
+// console.error spy here would pass against both the fixed and the broken code, no real signal.
+// What the fix must still get right is the resulting *behavior*, not just a quieter console: the
+// season filter has to keep landing in the grid's controlled columnFilters state exactly once.
+describe("season filter is applied via an effect, not a render-time side effect", () => {
+    test("the current season's filter lands in columnFilters after mount", async () => {
         render(<LessonList {...makeProps()} />);
 
         // Drain both the mount effect's fetch and the season-filter effect's fetch (both go
         // through the same debounced fetchInstancesList; only the season-filter one actually
         // reaches fetch(), since lodash's trailing-edge debounce drops the earlier call).
         await waitFor(() => expect(globalThis.fetch).toHaveBeenCalled());
-        // Give the effect pass that applies the season filter a tick to run and settle.
-        await act(async () => {
-            await new Promise((resolve) => setTimeout(resolve, 0));
-        });
-
-        expect(consoleError).not.toHaveBeenCalled();
 
         // The season filter actually landed in the grid's controlled columnFilters state —
         // proves the useEffect replacement still produces the same real outcome the old
-        // render-time hack did, not just a quieter console.
-        expect(lastGridProps.columnFilters).toEqual(
-            expect.arrayContaining([{ id: "season_id", value: 1 }])
+        // render-time hack did.
+        await waitFor(() =>
+            expect(lastGridProps.columnFilters).toEqual(
+                expect.arrayContaining([{ id: "season_id", value: 1 }])
+            )
         );
-
-        consoleError.mockRestore();
     });
 
-    test("does not reapply the season filter on a later unrelated re-render", async () => {
-        const consoleError = vi
-            .spyOn(console, "error")
-            .mockImplementation(() => {});
-
+    // The debounced fetchInstancesList only actually calls fetch() ~400ms after the triggering
+    // fetchData() call -- waiting less than that (an earlier version of this test waited only
+    // 50ms) can't tell "the effect didn't refire" apart from "the effect refired but its debounced
+    // fetch hasn't landed yet", so it would pass even against a regression. Wait past the
+    // debounce window before asserting silence.
+    test("does not reapply the season filter (or refetch) on a later unrelated re-render", async () => {
         const { rerender } = render(<LessonList {...makeProps()} />);
         await waitFor(() => expect(globalThis.fetch).toHaveBeenCalled());
-        await act(async () => {
-            await new Promise((resolve) => setTimeout(resolve, 0));
-        });
+        await waitFor(() =>
+            expect(lastGridProps.columnFilters).toEqual(
+                expect.arrayContaining([{ id: "season_id", value: 1 }])
+            )
+        );
 
         (globalThis.fetch as any).mockClear();
 
@@ -284,13 +281,77 @@ describe("season filter applies without a render-time setState warning", () => {
         // true, so the season effect must not fire fetchData again.
         rerender(<LessonList {...makeProps()} />);
         await act(async () => {
-            await new Promise((resolve) => setTimeout(resolve, 50));
+            await new Promise((resolve) => setTimeout(resolve, 500));
         });
 
         expect(globalThis.fetch).not.toHaveBeenCalled();
-        expect(consoleError).not.toHaveBeenCalled();
+    });
+});
 
-        consoleError.mockRestore();
+// Regression for the moment.locale("fr") global side effect (see docs/KnownIssues.md's former
+// "courses/LessonList.jsx" entry): the component used to force moment's process-wide locale to
+// French at module scope *and* on every render(), clobbering the active-language sync that
+// frontend/i18n/index.js otherwise maintains -- so the day column's Cell/Filter (and any other
+// component rendered after LessonList on the same page) stayed French regardless of the UI
+// language. Both forced calls are removed; moment now just follows whatever frontend/i18n/index.js
+// already set. Reached via the "day" column's Cell/Filter, extracted from the stashed react-table
+// stub props (same technique as the SubComponent reach below).
+describe("day column follows the active UI language (moment locale no longer forced to fr)", () => {
+    const dayColumn = () =>
+        lastGridProps.columns.find((c: any) => c.id === "day");
+
+    test("Cell renders the weekday in French by default", async () => {
+        await i18n.changeLanguage("fr");
+        render(<LessonList {...makeProps()} />);
+
+        // 2026-01-12 is a Monday.
+        expect(
+            dayColumn().Cell({
+                original: {
+                    time_interval: { start: "2026-01-12T10:00:00" },
+                },
+            })
+        ).toBe("lundi");
+    });
+
+    test("Cell renders the weekday in English when the active language is en", async () => {
+        await i18n.changeLanguage("en");
+        render(<LessonList {...makeProps()} />);
+
+        expect(
+            dayColumn().Cell({
+                original: {
+                    time_interval: { start: "2026-01-12T10:00:00" },
+                },
+            })
+        ).toBe("Monday");
+    });
+
+    test("Filter's day options render in the active language", async () => {
+        // daysOptions is built once per LessonList render() call (closure), using whichever
+        // moment locale is active *at that render* -- so each language needs its own fresh mount,
+        // not just a fresh <Filter> render off a stale closure.
+        await i18n.changeLanguage("en");
+        const enList = render(<LessonList {...makeProps()} />);
+        const enFilter = render(
+            <>{dayColumn().Filter({ filter: null, onChange: () => {} })}</>
+        );
+        expect(
+            enFilter.getByRole("option", { name: "Monday" })
+        ).toBeInTheDocument();
+        enFilter.unmount();
+        enList.unmount();
+
+        await i18n.changeLanguage("fr");
+        const frList = render(<LessonList {...makeProps()} />);
+        const frFilter = render(
+            <>{dayColumn().Filter({ filter: null, onChange: () => {} })}</>
+        );
+        expect(
+            frFilter.getByRole("option", { name: "Lundi" })
+        ).toBeInTheDocument();
+        frFilter.unmount();
+        frList.unmount();
     });
 });
 
