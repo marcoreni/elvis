@@ -143,8 +143,9 @@ Affected, for whoever eventually does that pass:
   fresh panes. Not fixed here — the freeze is the playbook's deliberate trade-off, preserving the
   original class's "once-only" semantics; this bullet is just updated to describe where the
   staleness actually lives now.
-- `courses/LessonList.jsx`'s `message.title` default (constructor-evaluated); its 12 react-table
-  column headers are already rebuilt in `render()`.
+- `courses/LessonList.tsx`'s `message.title` default (resolved once in a `useState` lazy
+  initializer, mirroring its former constructor); its 12 table column headers are already
+  rebuilt on every render.
 - `frontend/components/common/baseDataTable/BaseDataTable.jsx` — a fetch-error message is resolved
   once and stored in state, so it can show the previous language's text until the next fetch.
 
@@ -283,41 +284,17 @@ TanStack caches each row's `accessor` result in `row._valuesCache`, keyed only o
 `accessor: (d) => this.state.selected.includes(d.id)`) will show a stale value until something else
 happens to change `data`'s own reference; a `setState` that only touches the state the accessor
 reads (not `data`) does not invalidate the cache. This bit three real columns during item 13 batch
-4d part 1 (`UserList.jsx`, `courses/LessonList.jsx`, `generalPayments/PaymentScheduleList.jsx` — a
-selection checkbox stayed visually unchecked after being clicked, since only the selection state,
-not `data`, changed) and was fixed by having their `Cell` read straight from `original` instead of
-the cached `value`. 8 other accessor-only columns (no custom `Cell`, so they still render via
-TanStack's own default path, which does use the cache) exist across `generalPayments/
-{DuePaymentList,PaymentList,SubPaymentList}.jsx`, `courses/LessonList.jsx`, and `userPayments/
-{PaymentsList,DuePaymentsList}.jsx` — all currently read only `this.props.*`/a closured `t`, never
-mutable state, so none is a live bug today. Keep this invariant in mind before adding a new
-`LegacyColumn` accessor that reads component state: either avoid it, or give that column its own
-`Cell` reading `original` directly instead of relying on the cached accessor result.
-
-## `courses/LessonList.jsx`'s "season" filter calls `setState` during render — React console warning
-
-`LessonList.jsx`'s season-column `Filter` (`Filter: ({filter, onChange}) => {...}`, the last column
-before "action") does, in its render body, unconditionally on the render where `currentAppsSeason`
-is set but `filterApplied` isn't yet:
-```js
-if (currentAppsSeason && !filterApplied) {
-    onChange(currentAppsSeason?.id || "");
-    this.setState({ filterApplied: true });
-}
-```
-Both `onChange` (which itself triggers a `TanStackGrid` column-filter state update) and
-`this.setState` are called synchronously from inside a render function, not an event handler or
-effect — React's real, correct response is the console warning "Cannot update during an existing
-state transition (such as within `render`). Render methods should be a pure function of props and
-state," observed repeatedly in this browser session's console history at `Filter → th → tr → thead
-→ table → div → TanStackGrid → ... → LessonList`. Confirmed pre-existing on `develop`, unrelated to
-any TanStack migration batch — `LessonList.jsx` predates and is untouched by later batches (verified
-via `git diff develop..<later-batch-branch> --stat` showing no changes to this file). Not
-investigated further (root cause of the warning is clear from reading the code above; whether it
-causes any *user-visible* symptom beyond the console warning, e.g. a double-render or a filter that
-applies late, hasn't been checked). Fix: move the `onChange`/`setState` pair into a
-`componentDidUpdate` (this is a class component), keyed off whatever makes `currentAppsSeason`
-become available, instead of the render body.
+4d part 1 (`UserList.jsx`, `courses/LessonList.jsx` (now `.tsx`), `generalPayments/
+PaymentScheduleList.jsx` — a selection checkbox stayed visually unchecked after being clicked,
+since only the selection state, not `data`, changed) and was fixed by having their `Cell` read
+straight from `original` instead of the cached `value`. 8 other accessor-only columns (no custom
+`Cell`, so they still render via TanStack's own default path, which does use the cache) exist
+across `generalPayments/{DuePaymentList,PaymentList,SubPaymentList}.jsx`, `courses/LessonList.tsx`,
+and `userPayments/{PaymentsList,DuePaymentsList}.jsx` — all currently read only
+`this.props.*`/a closured `t`, never mutable state, so none is a live bug today. Keep this
+invariant in mind before adding a new `LegacyColumn` accessor that reads component state: either
+avoid it, or give that column its own `Cell` reading `original` directly instead of relying on the
+cached accessor result.
 
 ## `ActivityRefBasics.jsx`/`EditFormule.jsx` rebuild `dataService`/`columns` on every render
 

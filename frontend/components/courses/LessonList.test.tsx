@@ -1,9 +1,8 @@
-// Component tests for the i18n extraction on the "courses" domain lot 4 — LessonList.jsx.
-//
-// The default export is a large `withTranslation("courses")`-wrapped react-table class. `render`
-// reads `t` from the HOC, so no `t` prop is threaded — render it directly and drive language
-// through the frontend/i18n singleton (no <I18nextProvider> needed; the initReactI18next wiring
-// covers it).
+// Component tests for courses/LessonList.tsx (converted from a class to a typed functional
+// component -- see docs/KnownIssues.md's former "courses/LessonList.jsx's 'season' filter calls
+// setState during render" entry for why). `render` reads `t` from a live `useTranslation("courses")`
+// call now instead of a `withTranslation` HOC prop, so language is still driven through the
+// frontend/i18n singleton (no <I18nextProvider> needed; the initReactI18next wiring covers it).
 //
 // What is mocked and why:
 //  - `common/baseDataTable/TanStackGrid` (the real grid since item 13 batch 3) is headless and
@@ -18,30 +17,31 @@
 //  - `sweetalert2` / `react-toastify` — only used in event handlers (not render); stubbed so the
 //    import graph stays light.
 //
-// `componentDidMount` -> `fetchData` -> module fn `fetchInstancesList` does
+// The mount effect -> fetchData -> module fn `fetchInstancesList` does
 // `fetch("/activities.json", {POST})`, but behind a module-level `_.debounce(fn, 400)`, so the
-// fetch fires ~400ms after mount. `global.fetch` is stubbed to resolve
+// fetch fires ~400ms after mount. `globalThis.fetch` is stubbed to resolve
 // `{ data: [], pages: 1, total: 7 }`; a trailing `waitFor(fetch called)` drains that pending
 // update. Assertions target the synchronously-rendered header row and the `courseCount` <h2>
 // (state.total starts at 0).
 //
-// UserList / UserRow are module-local `const`s (not exported) — unreachable from a test. Their
+// UserList / UserRow are module-local functions (not exported) — unreachable from a test. Their
 // interpolated + plural keys are guarded at the i18n layer instead (see the last describe block).
 
 import React from "react";
 import { act, render, screen, waitFor } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import i18n from "../../i18n";
 import LessonList from "./LessonList";
 
 // Stashes the live grid props so a test can invoke the raw `Cell`/`Filter`/`renderSubComponent`
 // functions LessonList builds, and reach the otherwise-unexported UserList / UserRow.
-let lastGridProps = null;
+let lastGridProps: any = null;
 vi.mock("../common/baseDataTable/TanStackGrid", () => ({
-    default: (props) => {
+    default: (props: any) => {
         lastGridProps = props;
         return (
             <div data-testid="tanstack-grid-stub">
-                {(props.columns || []).map((c, i) => (
+                {(props.columns || []).map((c: any, i: number) => (
                     <span key={i} data-testid="rt-header">
                         {typeof c.Header === "string" ? c.Header : ""}
                     </span>
@@ -61,22 +61,22 @@ vi.mock("../common/baseDataTable/TanStackGrid", () => ({
 // Caveat found by a retroactive code-reviewer audit: this is ONE shared `chain` object reused by
 // every `api.set()` call in the module under test, unlike the real tools/api (which returns a
 // fresh chain per call). `lastApiSuccess` therefore means "the last .success() registered by
-// ANYTHING in this render", not "the studentLevel fetch's callback" -- LessonList.jsx itself
+// ANYTHING in this render", not "the studentLevel fetch's callback" -- LessonList.tsx itself
 // registers two more `.success()` handlers (onSubmit's delete-all/delete-selected branches), which
 // don't fire today only because nothing in these tests clicks the buttons that would trigger them.
 // Resetting both in beforeEach + asserting the captured URL keeps a future test from silently
 // asserting against the wrong callback if that ever changes.
-let lastApiSuccess = null;
-let lastApiSuccessUrl = null;
+let lastApiSuccess: ((data: any) => void) | null = null;
+let lastApiSuccessUrl: string | null = null;
 vi.mock("../../tools/api", () => {
-    const chain = {};
+    const chain: any = {};
     chain.set = () => chain;
-    chain.success = (cb) => {
+    chain.success = (cb: any) => {
         lastApiSuccess = cb;
         return chain;
     };
     chain.error = () => chain;
-    chain.get = (url) => {
+    chain.get = (url: string) => {
         lastApiSuccessUrl = url;
         return chain;
     };
@@ -88,13 +88,16 @@ vi.mock("../../tools/api", () => {
 // Partial mock: keep every real helper except force levelDisplayForActivity to return the French
 // "NON INDIQUÉ" sentinel (its real no-level-rows return) so the English row must still show the
 // translated placeholder, not the raw sentinel.
-vi.mock("../planning/TimeIntervalHelpers", async (importOriginal) => {
-    const actual = await importOriginal();
-    return {
-        ...actual,
-        levelDisplayForActivity: () => "NON INDIQUÉ",
-    };
-});
+vi.mock(
+    "../planning/TimeIntervalHelpers",
+    async (importOriginal: () => Promise<object>) => {
+        const actual = await importOriginal();
+        return {
+            ...actual,
+            levelDisplayForActivity: () => "NON INDIQUÉ",
+        };
+    }
+);
 
 vi.mock("../generalPayments/MessageModal", () => ({
     default: () => <div data-testid="message-modal-stub" />,
@@ -116,7 +119,7 @@ vi.mock("react-toastify", () => ({
     toast: { error: vi.fn(), success: vi.fn(), info: vi.fn() },
 }));
 
-const fetchOk = (body) =>
+const fetchOk = (body: unknown) =>
     vi.fn().mockResolvedValue({
         ok: true,
         headers: { get: () => null },
@@ -125,9 +128,10 @@ const fetchOk = (body) =>
 
 beforeEach(() => {
     localStorage.clear();
-    global.fetch = fetchOk({ data: [], pages: 1, total: 7 });
+    globalThis.fetch = fetchOk({ data: [], pages: 1, total: 7 });
     lastApiSuccess = null;
     lastApiSuccessUrl = null;
+    lastGridProps = null;
 });
 
 afterEach(async () => {
@@ -154,14 +158,12 @@ const makeProps = () => ({
     isTeacherView: false,
 });
 
-// This component IS withTranslation()-wrapped (opposite of the StepZilla AddXForCourse steps),
-// so react-i18next exposes the inner class as `.WrappedComponent`. render() reads `t` from
-// props — if the HOC is ever dropped that call breaks. Keep it wrapped.
-test("is exported as a withTranslation-wrapped class (.WrappedComponent is a React.Component)", () => {
-    expect(LessonList.WrappedComponent).toBeDefined();
-    expect(
-        LessonList.WrappedComponent.prototype instanceof React.Component
-    ).toBe(true);
+// Converted from a withTranslation-wrapped class to a plain functional component (the fix for the
+// render-time setState below required real hooks). Replaces the old ".WrappedComponent is a
+// React.Component" assertion, which tested exactly the implementation this conversion removes.
+test("is a plain function component (no class, no withTranslation HOC)", () => {
+    expect(LessonList.prototype instanceof React.Component).toBe(false);
+    expect((LessonList as any).WrappedComponent).toBeUndefined();
 });
 
 describe("LessonList — column header row (i18n)", () => {
@@ -188,7 +190,7 @@ describe("LessonList — column header row (i18n)", () => {
             screen.getByRole("heading", { name: "0 cours" })
         ).toBeInTheDocument();
 
-        await waitFor(() => expect(global.fetch).toHaveBeenCalled());
+        await waitFor(() => expect(globalThis.fetch).toHaveBeenCalled());
     });
 
     test("renders the English column headers and react-table i18n props", async () => {
@@ -211,7 +213,7 @@ describe("LessonList — column header row (i18n)", () => {
             screen.getByRole("heading", { name: "0 courses" })
         ).toBeInTheDocument();
 
-        await waitFor(() => expect(global.fetch).toHaveBeenCalled());
+        await waitFor(() => expect(globalThis.fetch).toHaveBeenCalled());
     });
 
     // isTeacherView hides the teacher column — proves the conditional column spread still keys
@@ -224,7 +226,65 @@ describe("LessonList — column header row (i18n)", () => {
         expect(headers).toEqual(expect.arrayContaining(["Jour", "Horaires"]));
         expect(headers).not.toContain("Professeur");
 
-        await waitFor(() => expect(global.fetch).toHaveBeenCalled());
+        await waitFor(() => expect(globalThis.fetch).toHaveBeenCalled());
+    });
+});
+
+// Regression for the render-time setState documented in docs/KnownIssues.md's former "courses/
+// LessonList.jsx's 'season' filter calls setState during render" entry: the season column's
+// Filter used to call onChange()/this.setState() unconditionally from its own render body. The
+// fix moves that into a useEffect keyed off currentAppsSeason becoming available (mirroring
+// componentDidMount's own dependency), so it's no longer tied to that column's own render path.
+//
+// Not a console.error/console-warning assertion here, deliberately: this file's TanStackGrid
+// mock (see the header comment above) never invokes any column's Filter render prop, so the old
+// render-body bug could never have fired in this test regardless of the fix either way -- a
+// console.error spy here would pass against both the fixed and the broken code, no real signal.
+// What the fix must still get right is the resulting *behavior*, not just a quieter console: the
+// season filter has to keep landing in the grid's controlled columnFilters state exactly once.
+describe("season filter is applied via an effect, not a render-time side effect", () => {
+    test("the current season's filter lands in columnFilters after mount", async () => {
+        render(<LessonList {...makeProps()} />);
+
+        // Drain both the mount effect's fetch and the season-filter effect's fetch (both go
+        // through the same debounced fetchInstancesList; only the season-filter one actually
+        // reaches fetch(), since lodash's trailing-edge debounce drops the earlier call).
+        await waitFor(() => expect(globalThis.fetch).toHaveBeenCalled());
+
+        // The season filter actually landed in the grid's controlled columnFilters state —
+        // proves the useEffect replacement still produces the same real outcome the old
+        // render-time hack did.
+        await waitFor(() =>
+            expect(lastGridProps.columnFilters).toEqual(
+                expect.arrayContaining([{ id: "season_id", value: 1 }])
+            )
+        );
+    });
+
+    // The debounced fetchInstancesList only actually calls fetch() ~400ms after the triggering
+    // fetchData() call -- waiting less than that (an earlier version of this test waited only
+    // 50ms) can't tell "the effect didn't refire" apart from "the effect refired but its debounced
+    // fetch hasn't landed yet", so it would pass even against a regression. Wait past the
+    // debounce window before asserting silence.
+    test("does not reapply the season filter (or refetch) on a later unrelated re-render", async () => {
+        const { rerender } = render(<LessonList {...makeProps()} />);
+        await waitFor(() => expect(globalThis.fetch).toHaveBeenCalled());
+        await waitFor(() =>
+            expect(lastGridProps.columnFilters).toEqual(
+                expect.arrayContaining([{ id: "season_id", value: 1 }])
+            )
+        );
+
+        (globalThis.fetch as any).mockClear();
+
+        // Re-render with the same props (e.g. a parent re-render) — filterApplied is already
+        // true, so the season effect must not fire fetchData again.
+        rerender(<LessonList {...makeProps()} />);
+        await act(async () => {
+            await new Promise((resolve) => setTimeout(resolve, 500));
+        });
+
+        expect(globalThis.fetch).not.toHaveBeenCalled();
     });
 });
 
@@ -237,7 +297,8 @@ describe("LessonList — column header row (i18n)", () => {
 // already set. Reached via the "day" column's Cell/Filter, extracted from the stashed react-table
 // stub props (same technique as the SubComponent reach below).
 describe("day column follows the active UI language (moment locale no longer forced to fr)", () => {
-    const dayColumn = () => lastGridProps.columns.find((c) => c.id === "day");
+    const dayColumn = () =>
+        lastGridProps.columns.find((c: any) => c.id === "day");
 
     test("Cell renders the weekday in French by default", async () => {
         await i18n.changeLanguage("fr");
@@ -318,12 +379,12 @@ describe("row expander (UserList / UserRow) — i18n", () => {
                 // begin_at must be <= the reference date (≈ today) or SubComponent filters the
                 // user out and renders null.
                 begin_at: "2020-01-01",
-                stopped_at: undefined,
+                stopped_at: undefined as string | undefined,
             },
         ],
     });
 
-    const renderSubRow = async (lng) => {
+    const renderSubRow = async (lng: string) => {
         await i18n.changeLanguage(lng);
         render(<LessonList {...makeProps()} />);
         await waitFor(() => expect(lastGridProps).not.toBeNull());
@@ -435,7 +496,7 @@ describe("row expander (UserList / UserRow) — i18n", () => {
             /^\/desired_activities\/user\/\d+\/activity\/\d+\/ref\/\d+\/time\/\d+$/
         );
         act(() => {
-            lastApiSuccess({
+            lastApiSuccess!({
                 id: 1,
                 evaluation_level_ref: "Débutant",
                 activity_application_id: 5,
@@ -452,7 +513,7 @@ describe("row expander (UserList / UserRow) — i18n", () => {
 // throw), and a dropped plural form falls back to the key. Guard them at the i18n layer against
 // the exact args the component passes at its call sites.
 describe("interpolated & plural keys resolve with the component's call-site args", () => {
-    const cases = [
+    const cases: [string, Record<string, unknown>][] = [
         // sendReminderMail: t("lessonList.httpError", { status, statusText })
         ["lessonList.httpError", { status: 500, statusText: "Boom" }],
         // UserList: t("lessonList.userList.evaluationsFilled", { done, total })
