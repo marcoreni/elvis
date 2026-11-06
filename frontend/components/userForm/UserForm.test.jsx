@@ -118,13 +118,17 @@ describe("UserForm consent-doc pre-fill", () => {
     });
 
     test("does not mutate the shared initialValues.consent_docs object during render", () => {
-        // Simulates obj.js's infosFromUser already having built this key -- both real call
-        // sites (UserEdit.jsx, Wizard.jsx) pass the SAME object as both `initialValues` and
-        // their own component state, so writing into it during render would mutate the
-        // parent's state. `agreement: true` deliberately disagrees with the real
-        // has_consented: false below -- the recomputed value differs from what's already
-        // there, so an in-place write (mutating the shared object instead of a copy) would
-        // be directly observable as this object changing after render.
+        // Simulates obj.js's infosFromUser already having built this key. UserEdit.jsx passes
+        // `initialValues={this.state.infos}` directly -- the exact same object as its own
+        // component state. Wizard.jsx shallow-copies one level first
+        // (`{...this.state.infos, handicap_description: ""}`), so its top-level `initialValues`
+        // is a fresh object, but that copy is shallow: `consent_docs` is still the SAME nested
+        // object reference as `this.state.infos.consent_docs` in both cases. Either way, writing
+        // into `consent_docs` two levels deep without copying it first mutates the parent's
+        // state. `agreement: true` deliberately disagrees with the real has_consented: false
+        // below -- the recomputed value differs from what's already there, so an in-place write
+        // (mutating the shared object instead of a copy) would be directly observable as this
+        // object changing after render.
         const sharedConsentDocs = { id_1: { agreement: true } };
         const snapshotBefore = JSON.parse(JSON.stringify(sharedConsentDocs));
 
@@ -172,7 +176,11 @@ describe("UserForm consent-doc pre-fill", () => {
             />
         );
 
-        fireEvent.click(screen.getByRole("button", { name: /.*/ }));
+        // getAllByRole(...)[0] rather than getByRole (no name filter): this form renders only
+        // one button (the submit button, since displaySubmit is true and every other section is
+        // stubbed), but anchoring to a specific accessible name here would be brittle against
+        // locale/copy changes.
+        fireEvent.click(screen.getAllByRole("button")[0]);
 
         expect(onSubmit).toHaveBeenCalledTimes(1);
         const submitted = onSubmit.mock.calls[0][0];

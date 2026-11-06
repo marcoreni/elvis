@@ -331,6 +331,9 @@ class UserForm extends React.PureComponent {
                     ? consentDocUser.has_consented
                     : formatRadioValue(consentDocUser.has_consented);
 
+                // Replaces the whole id_<N> entry rather than merging into it -- fine today
+                // since `agreement` is the only field ever read off it, but would silently
+                // drop any other field a future caller adds there.
                 consentDocs[`id_${doc.id}`] = { agreement: value };
             });
 
