@@ -622,17 +622,13 @@ it today, but the broken logic is still there and still reachable if anything el
 matching `consent_document` (not the `consent_document_user`), or just drop this derivation in
 favor of whatever recomputes it correctly.
 
-The crash this used to cause for `has_consented: null` (reachable via a `UsersController#update`
-or `ActivitiesApplicationsController#create` submission that persists a nil row — see
-`UserForm.jsx`'s consent-doc pre-fill fix, and the still-open backend item below) *is* fixed: the
-`.toString()` call is now `?.toString()`, so a `null` `has_consented` leaves `agreement`
-`undefined` (renders unanswered) instead of throwing and crashing the whole `UserEdit`/`Wizard`
-island on page load. This guard matters independently of the frontend fix that stopped *creating*
-new nil rows via `UserForm.jsx`'s submit path — `ActivitiesApplicationsController#create`'s own
-consent-doc-saving loop (`app/controllers/activities_applications_controller.rb:805-812`) has no
-nil guard at all (backend work, out of scope for this fix — see `UsersController#update`'s own
-dead length-check guard, same file area, for the sibling gap), so a nil row is still reachable
-through that path until the backend is fixed too.
+The crash this used to cause for `has_consented: null` is fixed: the `.toString()` call is now
+`?.toString()`, so a `null` `has_consented` leaves `agreement` `undefined` (renders unanswered)
+instead of throwing and crashing the whole `UserEdit`/`Wizard` island on page load. Both backend
+producers of a nil row are also closed now — `UsersController#update`'s dead length-check guard
+and `ActivitiesApplicationsController#create`'s missing guard were both fixed to
+`next if doc[1][:agreement].nil?` — so nothing should be able to create a fresh nil row anymore
+either. This frontend guard stays in place regardless, as defense against any future producer.
 
 ## `Planning.jsx`'s `handleUpdateActivityInstance` has the same intervalStore/selectedIntervals divergence `handleRemoveStudent`/`handleRemoveOptionalStudent` had
 
