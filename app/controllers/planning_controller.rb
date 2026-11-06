@@ -256,55 +256,7 @@ class PlanningController < ApplicationController
                                target_date: params[:date]
                              })
 
-    @intervals = intervals.as_json({
-                                     include: {
-                                       comment: {},
-                                       activity_instance: {
-                                         include: {
-                                           student_attendances: {},
-                                           activity: {
-                                             include: {
-                                               activity_ref: {},
-                                               students: {},
-                                               options: {
-                                                 include: {
-                                                   desired_activity: {
-                                                     include: {
-                                                       activity_application: {
-                                                         include: {
-                                                           user: {}
-                                                         }
-                                                       }
-                                                     }
-                                                   }
-                                                 }
-                                               },
-                                               users: {
-                                                 include: {
-                                                   levels: {
-                                                     include: %i[activity_ref evaluation_level_ref]
-                                                   }
-                                                 }
-                                               },
-                                               room: {},
-                                               location: {},
-                                               teacher: {}
-                                             }
-                                           },
-                                           room: {},
-                                           cover_teacher: {}
-                                         },
-                                         methods: :inactive_students
-                                       },
-                                       evaluation_appointment: {
-                                         include: {
-                                           student: {},
-                                           teacher: {},
-                                           activity_ref: {}
-                                         }
-                                       }
-                                     }
-                                   })
+    @intervals = intervals.as_json(include: TimeInterval.planning_include_tree)
 
     render json: { intervals: @intervals, holidays: holidays }
   end
@@ -408,7 +360,11 @@ class PlanningController < ApplicationController
 
     # @plannings = ActiveModelSerializers::SerializableResource.new(plannings, each_serializer: PlanningSerializer)
     @plannings = plannings.as_json(except: [:time_intervals])
-    @intervals = ActiveModelSerializers::SerializableResource.new(intervals, each_serializer: TimeIntervalSerializer)
+    # Plain `as_json(include:)` rather than the AMS serializer: see TimeInterval.planning_include_tree
+    # for why (same TimeInterval/activity_instance/Activity cycle as elsewhere; this view mounts the
+    # same planning/Planning component as PlanningController#get_intervals, which does need the
+    # nested activity/room/teacher/options data, so a blank `include: []` isn't an option here).
+    @intervals = intervals.as_json(include: TimeInterval.planning_include_tree)
     @conflict = conflict.as_json(include: [:activity_instance])
     @season = Season.current.as_json({ include: [:holidays] })
     @show_activity_code = Parameter.get_value("planning.card.show_activity_code", default: false)
@@ -704,11 +660,14 @@ class PlanningController < ApplicationController
       interval.activity_instance ? interval.activity_instance.check_for_conflict : nil
     end
 
-    intervals_json = ActiveModelSerializers::SerializableResource.new(intervals,
-                                                                      each_serializer: TimeIntervalSerializer)
+    # Plain `as_json(include:)` rather than the AMS serializer: see TimeInterval.planning_include_tree
+    # for why (same TimeInterval/activity_instance/Activity cycle as elsewhere). Planning.jsx's
+    # commitIntervals reads the nested activity/room/teacher/options data from this response to
+    # update its intervalStore, so a blank `include: []` isn't an option here.
+    intervals_json = intervals.as_json(include: TimeInterval.planning_include_tree)
 
     render json: {
-      intervals: intervals_json.as_json,
+      intervals: intervals_json,
       conflicts: conflicts
     }
   end
