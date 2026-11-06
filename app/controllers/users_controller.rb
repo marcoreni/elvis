@@ -858,7 +858,7 @@ class UsersController < ApplicationController
         @user.update_is_paying_of_family_links(payers, Season.current, false)
 
         params.dig(:user, :consent_docs)&.each do |doc|
-          next if doc.nil? || (doc.class == Array && doc.length < 2)
+          next if doc[1][:agreement].nil?
 
           consentement = @user.consent_document_users.find_or_create_by(consent_document_id: "#{doc[0]}".gsub("id_",
                                                                                                               ""))

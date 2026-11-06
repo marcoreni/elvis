@@ -804,6 +804,8 @@ class ActivitiesApplicationsController < ApplicationController
 
         # enregistrement des consentements de l'élève
         params.dig(:application, :infos, :consent_docs)&.each do |doc|
+          next if doc[1][:agreement].nil?
+
           consentement = @user.consent_document_users.find_or_create_by(consent_document_id: "#{doc[0]}".gsub("id_",
                                                                                                               ""))
 
