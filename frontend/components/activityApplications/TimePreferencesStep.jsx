@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import _ from "lodash";
 import IntervalPreferencesEditor from "./IntervalPreferencesEditor";
 import AvailabilityManager from "../availability/AvailabilityManager";
@@ -26,7 +26,6 @@ export default function TimePreferencesStep({
     availabilityMessage,
     availabilityInfo,
 }) {
-    const availabilityRef = useRef();
     const [defaultFetched, setDefaultFetched] = useState(false);
 
     useEffect(() => {
@@ -56,7 +55,6 @@ export default function TimePreferencesStep({
             return (
                 <AvailabilityManager
                     selectionLabels={selectionLabels}
-                    ref={availabilityRef}
                     day={season.start}
                     intervals={intervals}
                     authToken={authToken}
@@ -93,7 +91,6 @@ export default function TimePreferencesStep({
                     />
                     <AvailabilityManager
                         selectionLabels={selectionLabels}
-                        ref={availabilityRef}
                         day={season.start}
                         seasonId={season.id}
                         intervals={intervals}

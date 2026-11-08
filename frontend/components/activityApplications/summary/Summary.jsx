@@ -101,6 +101,32 @@ class Summary extends React.Component {
         this.handleAlertProposal();
     }
 
+    // Manual memoization (this class has no hooks): `render()` passes the result of this as
+    // `AvailabilityManager`'s `intervals` prop. `AvailabilityManager.componentDidUpdate` now
+    // resyncs its own `state.list` from that prop by reference check (see
+    // frontend/components/availability/AvailabilityManager.jsx) -- calling
+    // `Summary.filterTimeIntervals(...).value()` straight in `render()` would have handed it a
+    // brand-new array on every one of this component's many `setState` calls, even ones
+    // unrelated to availabilities, reverting any local-only add/delete the user just made inside
+    // that still-open modal back to the last-known server state. Cached on `time_intervals`
+    // and `season`'s own references, so the identity only actually changes when one of them does.
+    getAvailabilityIntervals(time_intervals, season) {
+        const deps = [time_intervals, season];
+        const depsUnchanged =
+            this._availabilityIntervalsDeps &&
+            deps.every((d, i) => d === this._availabilityIntervalsDeps[i]);
+
+        if (!depsUnchanged) {
+            this._availabilityIntervalsDeps = deps;
+            this._availabilityIntervals = Summary.filterTimeIntervals(
+                time_intervals,
+                season
+            ).value();
+        }
+
+        return this._availabilityIntervals;
+    }
+
     isAlreadyBusy(timeInterval) {
         return _.chain(this.state.suggestions)
             .reduce((result, value, key) => _.concat(result, value), [])
@@ -1787,11 +1813,11 @@ class Summary extends React.Component {
                                                     this.props.application.user
                                                         .planning.id
                                                 }
-                                                intervals={Summary.filterTimeIntervals(
+                                                intervals={this.getAvailabilityIntervals(
                                                     application.user.planning
                                                         .time_intervals,
                                                     application.season
-                                                ).value()}
+                                                )}
                                                 season={
                                                     this.state.application
                                                         .season

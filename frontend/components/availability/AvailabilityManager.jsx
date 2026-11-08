@@ -60,7 +60,12 @@ class AvailabilityManager extends PureComponent {
 
     buildListFromIntervals(intervals) {
         return (intervals || []).map((interval) => {
-            if (!interval.id && !interval.tabId) {
+            // `== null` (not `!interval.id`/`!interval.tabId`): a wizard-mode interval's first
+            // `tabId` is a real `0` (see `getNewTabId` above), which is falsy but very much
+            // "present" -- a falsy-based check would regenerate a fresh random tabId for it
+            // every time this runs, silently losing the original tabId and breaking anything
+            // that keys off of it later (deletes, `getNewTabId`'s own `Math.max`).
+            if (interval.id == null && interval.tabId == null) {
                 return {
                     ...interval,
                     tabId: `temp-${Date.now()}-${Math.random()

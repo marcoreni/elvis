@@ -289,12 +289,28 @@ invariant in mind before adding a new `LegacyColumn` accessor that reads compone
 avoid it, or give that column its own `Cell` reading `original` directly instead of relying on the
 cached accessor result.
 
-## `SchoolAvailabilities.tsx`'s `availabilityRef` is typed `useRef<any>`
+## `EditFormule.jsx`'s `NewFormulePricingDataService` can still collide temp ids
 
-Rather than something real, since `AvailabilityManager.jsx` (what it refs) is still untyped JS
-wrapped in `withTranslation(..., { withRef: true })` — no real type to point the ref at without
-migrating that file too, which is out of scope for the conversion that introduced this comment.
-Real fix: migrate `AvailabilityManager.jsx` to TypeScript.
+Fixing `ActivityRefBasics.jsx`/`EditFormule.jsx` rebuilding `dataService`/`columns` on every render
+(see commit history) incidentally also fixed a pre-existing bug in `ActivityRefBasics.jsx`'s
+`NewActivityRefDataService`: its `tempIdCounter` (used for new-pricing temp ids on a brand-new,
+unsaved activity) used to reset to 1 on every render because a fresh service instance was built
+each time — so two new pricings on the same new activity both got temp id 1, and editing/deleting
+the second one actually hit the first. Memoizing `getDataService()` makes the instance persist
+across renders when its deps (`activityRef.id`, `packs`, `activityRefPricings`,
+`pricingCategories`) are unchanged, which they are for the lifetime of a new, unsaved activity —
+so `tempIdCounter` is now monotonic there.
+
+`EditFormule.jsx`'s equivalent `NewFormulePricingDataService` did **not** get the same fix: its
+`pricingDataService` `useMemo` deps include `selectedPricings`, which necessarily gets a new
+reference on every real pricing add (it's the state driving the pricings table's own re-render,
+unlike `ActivityRefBasics.jsx`'s `activityRefPricings`, which is only ever set once from the
+initial fetch and never updated via `setState` again) — so a fresh `NewFormulePricingDataService`
+instance, with a reset `tempIdCounter`, is still built on every add. The same duplicate-temp-id
+risk therefore still exists for a brand-new (unsaved) formule with 2+ new pricings. Real fix, if
+ever worth it: decouple the pricings array `NewFormulePricingDataService` mutates from the state
+that drives the table's re-render (e.g. a ref updated out-of-band instead of closing over
+`selectedPricings`) — not attempted here to keep that memoization fix surgical.
 
 ## `react-toastify` 11 bump: minor visual drift, consciously accepted (not a bug)
 

@@ -131,6 +131,43 @@ describe("AvailabilityManager -- componentDidUpdate syncs state.list from props.
         );
         expect(ref.current.state.list).toHaveLength(0);
     });
+
+    // Regression: `buildListFromIntervals` used to check `!interval.tabId`/`!interval.id`, which
+    // treats the real value `0` (a wizard-mode interval's first tabId, see `getNewTabId`) as
+    // absent and regenerates a fresh random tabId for it -- silently losing the original tabId
+    // every time this resync runs. Pre-existing, just exercised a lot more now that it also runs
+    // on every props.intervals change, not only at mount.
+    test("an interval with tabId: 0 (falsy, but present) keeps that tabId across a props-driven resync", () => {
+        const ref = React.createRef();
+        const intervals = [
+            {
+                tabId: 0,
+                start: "2024-01-01T10:00:00Z",
+                end: "2024-01-01T11:00:00Z",
+                kind: "p",
+            },
+        ];
+
+        const { rerender } = render(
+            <AvailabilityManager
+                {...baseProps}
+                ref={ref}
+                intervals={intervals}
+            />
+        );
+        expect(ref.current.state.list[0].tabId).toBe(0);
+
+        // A props-driven resync (new `intervals` reference, same tabId: 0 content) must not
+        // regenerate the tabId.
+        rerender(
+            <AvailabilityManager
+                {...baseProps}
+                ref={ref}
+                intervals={[{ ...intervals[0] }]}
+            />
+        );
+        expect(ref.current.state.list[0].tabId).toBe(0);
+    });
 });
 
 // Phase 4c: the `availabilityInfo` banner swapped from the old Draft.js-based `WysiwygViewer` to

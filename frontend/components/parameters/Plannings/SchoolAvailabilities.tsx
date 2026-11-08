@@ -1,4 +1,4 @@
-import React, { Fragment, useEffect, useRef, useState } from "react";
+import React, { Fragment, useEffect, useState } from "react";
 import AvailabilityManager from "../../availability/AvailabilityManager";
 import * as api from "../../../tools/api";
 import swal from "sweetalert2";
@@ -23,14 +23,6 @@ export default function SchoolAvailabilities({
     const [season, setSeason] = useState<Partial<Season>>(
         seasons.find((s) => s.is_current) || seasons[0] || {}
     );
-    // AvailabilityManager (frontend/components/availability/AvailabilityManager.jsx) is an
-    // untyped class component wrapped in `withTranslation(..., { withRef: true })`; `useRef<any>`
-    // is a stopgap since there's no real type to point this ref at without migrating that file
-    // too (out of scope here, logged in docs/KnownIssues.md). AvailabilityManager now syncs its
-    // own `state.list` from `props.intervals` via `componentDidUpdate`, so nothing here calls
-    // into the ref imperatively any more.
-    const availabilityRef = useRef<any>(null);
-
     const convertToFirstWeekOfSeason = (seasonStart?: string) => {
         if (!seasonStart) return null;
 
@@ -80,7 +72,6 @@ export default function SchoolAvailabilities({
 
             <div style={{ margin: "-30px" }}>
                 <AvailabilityManager
-                    ref={availabilityRef}
                     locked={false}
                     isTeacher={false}
                     authToken={authToken}

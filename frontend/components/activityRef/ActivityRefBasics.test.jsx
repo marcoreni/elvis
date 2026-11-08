@@ -400,6 +400,47 @@ describe("ActivityRefBasics", () => {
             expect(second).toBe(first);
         });
 
+        // Side effect of the fix above, not a separate change: before memoization, every render
+        // built a brand-new NewActivityRefDataService, resetting its tempIdCounter to 1 -- so two
+        // new pricings added to a brand-new (unsaved) activity both got temp id 1, and editing/
+        // deleting the second one actually hit the first. Since getDataService() now returns the
+        // *same* instance across renders (deps unchanged), tempIdCounter is monotonic instead.
+        // NOT fixed for EditFormule.jsx's equivalent NewFormulePricingDataService: there,
+        // `selectedPricings` (one of pricingDataService's useMemo deps) necessarily changes on
+        // every real add, so a fresh instance -- and a reset tempIdCounter -- is still built each
+        // time. See docs/KnownIssues.md.
+        test("getDataService() (new-activity branch) keeps tempIdCounter monotonic across saves (regression: used to collide at id 1)", () => {
+            const pricingCategories = [{ id: 10, name: "Standard" }];
+            const instance = makeInstance({ activityRef: { id: null } });
+            instance.state = {
+                ...instance.state,
+                packs: [],
+                activityRefPricings: [],
+                pricingCategories,
+            };
+
+            const newPricing = (price) => ({
+                name: { label: "Standard" },
+                price,
+                fromSeason: { value: 1 },
+                toSeason: null,
+            });
+
+            const dataService = instance.getDataService();
+            dataService.createData(newPricing(50));
+
+            // A second render with unchanged deps (the save above mutates
+            // state.activityRefPricings' contents in place, not its reference) must reuse the
+            // same instance -- that's what keeps tempIdCounter from resetting.
+            const sameDataService = instance.getDataService();
+            expect(sameDataService).toBe(dataService);
+            sameDataService.createData(newPricing(60));
+
+            expect(dataService.activityRefPricings.map((p) => p.id)).toEqual([
+                1, 2,
+            ]);
+        });
+
         test("getDataService() rebuilds when a dependency (pricingCategories) actually changes", () => {
             const instance = makeInstance({ activityRef: { id: null } });
             instance.state = {
