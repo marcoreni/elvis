@@ -355,6 +355,85 @@ describe("ActivityRefBasics", () => {
         });
     });
 
+    // KnownIssues "rebuild dataService/columns on every render" fix: ActivityRefBasics is a
+    // class (no hooks), so `getColumns()`/`getDataService()` do their own useMemo-equivalent
+    // caching on the instance. Unit-tested directly against the unwrapped class (bypassing
+    // react-i18next/react-final-form) rather than via a full render + re-render, since neither
+    // exposes a ref to the class instance.
+    describe("getColumns()/getDataService() memoization", () => {
+        function makeInstance(overrides = {}) {
+            return new ActivityRefBasics.WrappedComponent({
+                ...props,
+                t: (key) => key,
+                ...overrides,
+            });
+        }
+
+        test("getColumns() is referentially stable across calls when t is unchanged", () => {
+            const instance = makeInstance();
+            const first = instance.getColumns();
+            const second = instance.getColumns();
+            expect(second).toBe(first);
+        });
+
+        test("getColumns() rebuilds when t changes", () => {
+            const instance = makeInstance();
+            const first = instance.getColumns();
+            instance.props = { ...instance.props, t: (key) => `other:${key}` };
+            const second = instance.getColumns();
+            expect(second).not.toBe(first);
+            expect(second[0].Header).toBe(
+                "other:activityRefBasics.pricingColumns.name"
+            );
+        });
+
+        test("getDataService() (new-activity branch) is referentially stable when its deps are unchanged", () => {
+            const instance = makeInstance({ activityRef: { id: null } });
+            instance.state = {
+                ...instance.state,
+                packs: [],
+                activityRefPricings: [],
+                pricingCategories: [],
+            };
+            const first = instance.getDataService();
+            const second = instance.getDataService();
+            expect(second).toBe(first);
+        });
+
+        test("getDataService() rebuilds when a dependency (pricingCategories) actually changes", () => {
+            const instance = makeInstance({ activityRef: { id: null } });
+            instance.state = {
+                ...instance.state,
+                packs: [],
+                activityRefPricings: [],
+                pricingCategories: [],
+            };
+            const first = instance.getDataService();
+
+            instance.state = {
+                ...instance.state,
+                pricingCategories: [{ id: 1, name: "Standard" }],
+            };
+            const second = instance.getDataService();
+            expect(second).not.toBe(first);
+        });
+
+        test("getDataService() (existing-activity branch) switches dataService when activityRef.id changes", () => {
+            const instance = makeInstance({ activityRef: { id: 1 } });
+            instance.state = {
+                ...instance.state,
+                packs: [],
+                activityRefPricings: [],
+                pricingCategories: [],
+            };
+            const first = instance.getDataService();
+
+            instance.props = { ...instance.props, activityRef: { id: 2 } };
+            const second = instance.getDataService();
+            expect(second).not.toBe(first);
+        });
+    });
+
     describe("fetchSeasonsAndPricings error path", () => {
         test("fires the translated fetchError swal", async () => {
             await i18n.changeLanguage("fr");

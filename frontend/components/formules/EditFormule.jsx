@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import * as api from "../../tools/api";
 import swal from "sweetalert2";
@@ -374,64 +374,94 @@ export default function EditFormule({ formule }) {
         }
     }
 
-    function handleSavePricingForNewFormule(pricing) {
-        setSelectedPricings(_.uniqBy([...selectedPricings, pricing], "id"));
-    }
-
-    function handleUpdatePricingForNewFormule(pricing) {
-        setSelectedPricings(
-            selectedPricings.map((p) => (p.id === pricing.id ? pricing : p))
-        );
-    }
-
-    function handleDeletePricingForNewFormule(pricing) {
-        setSelectedPricings(
-            selectedPricings.filter((p) => p.id !== pricing.id)
-        );
-    }
-
-    const pricingColumns = [
-        {
-            id: "pricing_name",
-            Header: t("form.pricing.columns.name"),
-            accessor: "pricing_category.name",
+    // useCallback (not a plain function) so these stay stable across unrelated re-renders
+    // (e.g. typing in the name field) whenever `selectedPricings` -- the only thing they close
+    // over -- hasn't changed; pricingDataService below depends on their identity.
+    const handleSavePricingForNewFormule = useCallback(
+        (pricing) => {
+            setSelectedPricings(_.uniqBy([...selectedPricings, pricing], "id"));
         },
-        {
-            id: "amount",
-            Header: t("form.pricing.columns.amount"),
-            accessor: "price",
+        [selectedPricings]
+    );
+
+    const handleUpdatePricingForNewFormule = useCallback(
+        (pricing) => {
+            setSelectedPricings(
+                selectedPricings.map((p) => (p.id === pricing.id ? pricing : p))
+            );
         },
-        {
-            id: "selectedSeasons",
-            Header: t("form.pricing.columns.seasons"),
-            Cell: (row) => {
-                const seasonStart = allSeasons.find(
-                    (s) => s.id === row.original.from_season_id
-                );
-                const seasonEnd =
-                    row.original.to_season_id !== undefined
-                        ? allSeasons.find(
-                              (s) => s.id === row.original.to_season_id
-                          )
-                        : null;
-                const seasonStartLabel =
-                    seasonStart != null ? seasonStart.label : "...";
-                return seasonEnd != null
-                    ? seasonStartLabel + " > " + seasonEnd.label
-                    : seasonStartLabel + " > ...";
+        [selectedPricings]
+    );
+
+    const handleDeletePricingForNewFormule = useCallback(
+        (pricing) => {
+            setSelectedPricings(
+                selectedPricings.filter((p) => p.id !== pricing.id)
+            );
+        },
+        [selectedPricings]
+    );
+
+    // Memoized: previously rebuilt on every render (every keystroke in name/description, every
+    // selected-activity change, etc.) despite only depending on `t` and `allSeasons`.
+    const pricingColumns = useMemo(
+        () => [
+            {
+                id: "pricing_name",
+                Header: t("form.pricing.columns.name"),
+                accessor: "pricing_category.name",
             },
-        },
-    ];
+            {
+                id: "amount",
+                Header: t("form.pricing.columns.amount"),
+                accessor: "price",
+            },
+            {
+                id: "selectedSeasons",
+                Header: t("form.pricing.columns.seasons"),
+                Cell: (row) => {
+                    const seasonStart = allSeasons.find(
+                        (s) => s.id === row.original.from_season_id
+                    );
+                    const seasonEnd =
+                        row.original.to_season_id !== undefined
+                            ? allSeasons.find(
+                                  (s) => s.id === row.original.to_season_id
+                              )
+                            : null;
+                    const seasonStartLabel =
+                        seasonStart != null ? seasonStart.label : "...";
+                    return seasonEnd != null
+                        ? seasonStartLabel + " > " + seasonEnd.label
+                        : seasonStartLabel + " > ...";
+                },
+            },
+        ],
+        [t, allSeasons]
+    );
 
-    const pricingDataService = formule.id
-        ? new FormulePricingDataService(formule.id)
-        : new NewFormulePricingDataService(
-              handleSavePricingForNewFormule,
-              handleUpdatePricingForNewFormule,
-              handleDeletePricingForNewFormule,
-              selectedPricings,
-              allPricingCategories
-          );
+    // Memoized on what it actually depends on, instead of rebuilding (and for the "new formule"
+    // branch, re-wrapping the same pricings array in a fresh DataService instance) every render.
+    const pricingDataService = useMemo(
+        () =>
+            formule.id
+                ? new FormulePricingDataService(formule.id)
+                : new NewFormulePricingDataService(
+                      handleSavePricingForNewFormule,
+                      handleUpdatePricingForNewFormule,
+                      handleDeletePricingForNewFormule,
+                      selectedPricings,
+                      allPricingCategories
+                  ),
+        [
+            formule.id,
+            selectedPricings,
+            allPricingCategories,
+            handleSavePricingForNewFormule,
+            handleUpdatePricingForNewFormule,
+            handleDeletePricingForNewFormule,
+        ]
+    );
 
     const Option = (props) => {
         const { data, isSelected } = props;
@@ -638,7 +668,9 @@ export default function EditFormule({ formule }) {
                                         pricingCategories={allPricingCategories}
                                     />
                                 )}
-                                labellizer={(item) => item.pricing_category.name}
+                                labellizer={(item) =>
+                                    item.pricing_category.name
+                                }
                                 showFullScreenButton={false}
                                 oneResourceTypeName={t(
                                     "form.pricing.oneResourceTypeName"

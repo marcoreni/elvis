@@ -155,6 +155,92 @@ class ActivityRefBasics extends React.Component {
         );
     }
 
+    // Manual memoization equivalent to `useMemo(() => [...], [t])`: class components have no
+    // hooks, so this caches on the instance and only rebuilds when `t` actually changes (never,
+    // in practice -- see docs/KnownIssues.md's "translated UI frozen" entry). The `Cell` closure
+    // reads `this.state.seasons` live via `this`, so caching the array doesn't freeze that value.
+    getColumns() {
+        const { t } = this.props;
+        if (this._columns && this._columnsT === t) return this._columns;
+
+        this._columnsT = t;
+        this._columns = [
+            {
+                id: "pricing_name",
+                Header: t("activityRefBasics.pricingColumns.name"),
+                accessor: "pricing_category.name",
+            },
+            {
+                id: "activity_quantity",
+                Header: t("activityRefBasics.pricingColumns.lessonCount"),
+                accessor: "pricing_category.number_lessons",
+            },
+            {
+                id: "amount",
+                Header: t("activityRefBasics.pricingColumns.price"),
+                accessor: "price",
+            },
+            {
+                id: "selectedSeasons",
+                Header: t("activityRefBasics.pricingColumns.seasons"),
+                Cell: (row) => {
+                    const seasonStart = this.state.seasons.find(
+                        (s) => s.id === row.original.from_season_id
+                    );
+                    const seasonEnd =
+                        row.original.to_season_id !== undefined
+                            ? this.state.seasons.find(
+                                  (s) => s.id === row.original.to_season_id
+                              )
+                            : null;
+                    const seasonStartLabel =
+                        seasonStart != null ? seasonStart.label : "...";
+                    return seasonEnd != null
+                        ? seasonStartLabel + " > " + seasonEnd.label
+                        : seasonStartLabel + " > ...";
+                },
+            },
+        ];
+        return this._columns;
+    }
+
+    // Manual memoization equivalent to `useMemo(() => ..., [activityRef.id, packs,
+    // activityRefPricings, pricingCategories])`: recomputes only when one of those actually
+    // changes (e.g. once, when fetchSeasonsAndPricings' response lands) instead of on every
+    // render of the shared react-final-form `Form` (every field edit anywhere in the multi-tab
+    // form).
+    getDataService() {
+        const { activityRef } = this.props;
+        const { packs, activityRefPricings, pricingCategories } = this.state;
+        const deps = [
+            activityRef.id,
+            packs,
+            activityRefPricings,
+            pricingCategories,
+        ];
+        const depsUnchanged =
+            this._dataServiceDeps &&
+            deps.every((d, i) => d === this._dataServiceDeps[i]);
+
+        if (!depsUnchanged) {
+            this._dataServiceDeps = deps;
+            this._dataService =
+                activityRef.id !== null
+                    ? // si l'activité existe déjà, on utilise le dataService classique
+                      new ActivityRefDataService(activityRef.id, packs)
+                    : // sinon, on utilise le dataService pour les nouvelles activités
+                      new NewActivityRefDataService(
+                          this.handleSaveForNewActivity,
+                          this.handleUpdateForNewActivity,
+                          this.handleDeleteForNewActivity,
+                          activityRefPricings,
+                          pricingCategories
+                      );
+        }
+
+        return this._dataService;
+    }
+
     render() {
         const { t } = this.props;
         if (this.state.seasons.length === 0) {
@@ -164,62 +250,8 @@ class ActivityRefBasics extends React.Component {
                 </div>
             );
         } else {
-            const columns = [
-                {
-                    id: "pricing_name",
-                    Header: t("activityRefBasics.pricingColumns.name"),
-                    accessor: "pricing_category.name",
-                },
-                {
-                    id: "activity_quantity",
-                    Header: t("activityRefBasics.pricingColumns.lessonCount"),
-                    accessor: "pricing_category.number_lessons",
-                },
-                {
-                    id: "amount",
-                    Header: t("activityRefBasics.pricingColumns.price"),
-                    accessor: "price",
-                },
-                {
-                    id: "selectedSeasons",
-                    Header: t("activityRefBasics.pricingColumns.seasons"),
-                    Cell: (row) => {
-                        const seasonStart = this.state.seasons.find(
-                            (s) => s.id === row.original.from_season_id
-                        );
-                        const seasonEnd =
-                            row.original.to_season_id !== undefined
-                                ? this.state.seasons.find(
-                                      (s) => s.id === row.original.to_season_id
-                                  )
-                                : null;
-                        const seasonStartLabel =
-                            seasonStart != null ? seasonStart.label : "...";
-                        return seasonEnd != null
-                            ? seasonStartLabel + " > " + seasonEnd.label
-                            : seasonStartLabel + " > ...";
-                    },
-                },
-            ];
-
-            const { activityRef } = this.props;
-            let dataService = null;
-
-            if (activityRef.id !== null)
-                // si l'activité existe déjà, on utilise le dataService classique
-                dataService = new ActivityRefDataService(
-                    activityRef.id,
-                    this.state.packs
-                );
-            else
-                // sinon, on utilise le dataService pour les nouvelles activités
-                dataService = new NewActivityRefDataService(
-                    this.handleSaveForNewActivity,
-                    this.handleUpdateForNewActivity,
-                    this.handleDeleteForNewActivity,
-                    this.state.activityRefPricings,
-                    this.state.pricingCategories
-                );
+            const columns = this.getColumns();
+            const dataService = this.getDataService();
 
             return (
                 <div>
@@ -417,7 +449,9 @@ class ActivityRefBasics extends React.Component {
                                         }
                                     />
                                 )}
-                                labellizer={(item) => item.pricing_category.name}
+                                labellizer={(item) =>
+                                    item.pricing_category.name
+                                }
                                 showFullScreenButton={false}
                                 oneResourceTypeName={t(
                                     "activityRefBasics.pricing.oneResourceTypeName"
