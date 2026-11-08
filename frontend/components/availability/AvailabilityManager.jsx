@@ -40,7 +40,26 @@ class AvailabilityManager extends PureComponent {
     }
 
     componentDidMount() {
-        const fixedIntervals = (this.props.intervals || []).map(interval => {
+        this.setState({
+            list: this.buildListFromIntervals(this.props.intervals),
+        });
+    }
+
+    // `props.intervals` is this component's only path from props to state (no
+    // `getDerivedStateFromProps`), and the parent occasionally replaces it well after mount
+    // (e.g. a default-availabilities fetch, or a week change). Re-sync `state.list` whenever it
+    // actually changes -- a reference check, not a deep compare, since every real caller only
+    // ever replaces this array via its own setState (never mutates it in place).
+    componentDidUpdate(prevProps) {
+        if (prevProps.intervals !== this.props.intervals) {
+            this.setState({
+                list: this.buildListFromIntervals(this.props.intervals),
+            });
+        }
+    }
+
+    buildListFromIntervals(intervals) {
+        return (intervals || []).map((interval) => {
             if (!interval.id && !interval.tabId) {
                 return {
                     ...interval,
@@ -51,10 +70,6 @@ class AvailabilityManager extends PureComponent {
             }
             return interval;
         });
-
-        this.setState({
-            list: fixedIntervals,
-        });
     }
 
     toggleFetching() {
@@ -62,10 +77,10 @@ class AvailabilityManager extends PureComponent {
     }
 
     handleAdd(interval) {
-        const getNewTabId = list =>
+        const getNewTabId = (list) =>
             list.length > 0
                 ? Math.max(
-                      ...list.map(i => (i.tabId !== undefined ? i.tabId : -1))
+                      ...list.map((i) => (i.tabId !== undefined ? i.tabId : -1))
                   ) + 1
                 : 0;
 
@@ -87,7 +102,7 @@ class AvailabilityManager extends PureComponent {
             };
 
             this.setState(
-                prevState => ({
+                (prevState) => ({
                     list: prevState.list.concat([newInterval]),
                     isFetching: false,
                 }),
@@ -98,14 +113,14 @@ class AvailabilityManager extends PureComponent {
         } else {
             api.set()
                 .before(this.toggleFetching)
-                .success(data => {
+                .success((data) => {
                     if (this.props.onAdd) {
                         this.props.onAdd(data.intervals);
                     }
 
-                    this.setState(prevState => ({
+                    this.setState((prevState) => ({
                         list: prevState.list.concat(
-                            data.intervals.map(interval => ({
+                            data.intervals.map((interval) => ({
                                 ...interval,
                                 tabId:
                                     interval.id || getNewTabId(prevState.list),
@@ -114,7 +129,7 @@ class AvailabilityManager extends PureComponent {
                         isFetching: false,
                     }));
                 })
-                .error(errors => this.setState({ errors, isFetching: false }))
+                .error((errors) => this.setState({ errors, isFetching: false }))
                 .patch(
                     addToken(
                         `/plannings/availabilities/${this.props.planningId}${
@@ -138,8 +153,10 @@ class AvailabilityManager extends PureComponent {
         if (this.props.disableLiveReload) {
             const list = [...this.state.list];
 
-            intervalIds.forEach(id => {
-                const index = list.findIndex(interval => interval.tabId === id);
+            intervalIds.forEach((id) => {
+                const index = list.findIndex(
+                    (interval) => interval.tabId === id
+                );
                 if (index !== -1) {
                     list.splice(index, 1);
                 }
@@ -149,23 +166,23 @@ class AvailabilityManager extends PureComponent {
             this.setState({ list, isFetching: false });
         } else {
             Promise.all(
-                intervalIds.map(id =>
+                intervalIds.map((id) =>
                     api.del(
                         addToken(`/time_intervals/${id}`, this.props.authToken)
                     )
                 )
-            ).then(responses => {
+            ).then((responses) => {
                 // Error handling
                 const errors = [];
                 const list = [...this.state.list];
 
-                responses.forEach(resp => {
+                responses.forEach((resp) => {
                     if (resp.error) {
                         errors.push(resp.error);
                     } else if (resp.data) {
                         list.splice(
                             list.findIndex(
-                                interval => interval.id === resp.data.id
+                                (interval) => interval.id === resp.data.id
                             ),
                             1
                         );
@@ -214,16 +231,12 @@ class AvailabilityManager extends PureComponent {
             kinds,
         } = this.props;
 
-        const {
-            list,
-            errors,
-            isFetching,
-            selectedIntervalIdForComment,
-        } = this.state;
+        const { list, errors, isFetching, selectedIntervalIdForComment } =
+            this.state;
 
         const selectedIntervalForComment =
             selectedIntervalIdForComment &&
-            this.state.list.find(i => i.id === selectedIntervalIdForComment);
+            this.state.list.find((i) => i.id === selectedIntervalIdForComment);
 
         return (
             <Fragment>
@@ -322,7 +335,7 @@ class AvailabilityManager extends PureComponent {
                             user={user}
                             availability={selectedIntervalForComment}
                             onClose={() => this.updateCommentIntervalId(null)}
-                            onSaved={i => this.updateInterval(i)}
+                            onSaved={(i) => this.updateInterval(i)}
                         />
                     )}
                 </div>

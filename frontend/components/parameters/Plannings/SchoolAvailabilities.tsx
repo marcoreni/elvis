@@ -24,9 +24,11 @@ export default function SchoolAvailabilities({
         seasons.find((s) => s.is_current) || seasons[0] || {}
     );
     // AvailabilityManager (frontend/components/availability/AvailabilityManager.jsx) is an
-    // untyped class component wrapped in `withTranslation(..., { withRef: true })`; manually
-    // re-invoking its `componentDidMount()` below is a forced-refresh pattern that predates this
-    // conversion, out of scope to retype here. Logged in docs/KnownIssues.md.
+    // untyped class component wrapped in `withTranslation(..., { withRef: true })`; `useRef<any>`
+    // is a stopgap since there's no real type to point this ref at without migrating that file
+    // too (out of scope here, logged in docs/KnownIssues.md). AvailabilityManager now syncs its
+    // own `state.list` from `props.intervals` via `componentDidUpdate`, so nothing here calls
+    // into the ref imperatively any more.
     const availabilityRef = useRef<any>(null);
 
     const convertToFirstWeekOfSeason = (seasonStart?: string) => {
@@ -61,7 +63,6 @@ export default function SchoolAvailabilities({
         api.set()
             .success((data: { intervals: TimeInterval[] }) => {
                 setIntervals(data.intervals);
-                availabilityRef.current.componentDidMount();
             })
             .error(() => {
                 swal.fire({
