@@ -334,6 +334,11 @@
             "coursesHeading": "Liste des cours",
             "coursesLabel": "Le professeur peut gérer la liste de ses cours"
         },
+        "formules": {
+            "checkboxLabel": "Activer l'affichage des formules",
+            "saveSuccessText": "Les paramètres ont été sauvegardés",
+            "saveErrorText": "Une erreur est survenue lors de la sauvegarde des paramètres"
+        },
         "school": {
             "siretRnaError": "La saisie ne correspond ni à un RNA ni au siret de votre pays ({{country}})",
             "schoolInfoHeading": "Informations de l'école",
