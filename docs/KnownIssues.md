@@ -78,13 +78,6 @@ left:
 (`edit_password_url` → `UsersController#edit_password`) instead. Not dead code — just unlinked
 from the one email flow that would normally lead there. Unclear if intentional; not touched.
 
-## `editParameters/FormulesParameters` component missing
-
-`app/views/parameters/formules_parameters_edit.html.erb` calls
-`react_component("editParameters/FormulesParameters", ...)`, but
-`frontend/components/editParameters/FormulesParameters.jsx` doesn't exist — a live route with no
-implementation (the opposite of dead code). Needs its own investigation.
-
 ## Rubocop backlog
 
 `rubocop` was added 2026-08-26; a safe-autocorrect pass plus a case-by-case triage of
@@ -296,46 +289,12 @@ invariant in mind before adding a new `LegacyColumn` accessor that reads compone
 avoid it, or give that column its own `Cell` reading `original` directly instead of relying on the
 cached accessor result.
 
-## `ActivityRefBasics.jsx`/`EditFormule.jsx` rebuild `dataService`/`columns` on every render
+## `SchoolAvailabilities.tsx`'s `availabilityRef` is typed `useRef<any>`
 
-Both build a fresh `dataService`/`columns` object in `render()`, inside a shared `react-final-form`
-`Form` that re-renders on every field interaction across the whole multi-tab form — so `TanStackGrid`
-recomputes its column defs far more often than the data actually changes. Flagged during the
-`react-table` → TanStack migration (PR #123) as a real but non-blocking inefficiency, not a
-correctness bug (downgraded from an earlier, incorrect diagnosis that this churn caused a real
-`getCoreRowModel()` caching bug — that bug's actual cause, traced later, was two data services
-mutating a shared array in place; fixed at the source in batch 3). Fix, if ever worth it: memoize
-`columns`/`dataService` on whatever they actually depend on instead of rebuilding them inline.
-
-## `availabilityRef.current.componentDidMount()` reads stale props under automatic batching
-
-Two call sites — `frontend/components/activityApplications/TimePreferencesStep.jsx:36` and
-`frontend/components/parameters/Plannings/SchoolAvailabilities.tsx:62-64` (converted to `.tsx`,
-behavior unchanged) — call
-`this.setState`/a parent state update immediately followed by
-`availabilityRef.current.componentDidMount()` on the child `AvailabilityManager`, relying on
-`componentDidMount()` re-reading `this.props.intervals` to sync it into `AvailabilityManager`'s own
-`state.list` (its *only* path from props to state — no `componentDidUpdate`, no
-`getDerivedStateFromProps`). Under React 18's automatic batching, the parent's `setState` hasn't
-committed yet when the imperative `componentDidMount()` call runs, so it reads the still-empty
-`props.intervals` — the freshly-fetched default availabilities never render, even though they're
-correctly in the parent's state moments later. Reproduced directly: DOM never mentions the fetched
-interval, on both call sites, regardless of the `withRef: true` fix already applied at
-`AvailabilityManager.jsx:334` (that fix made the ref resolve to a real instance instead of `null`,
-which stopped a console warning and a swallowed `TypeError`/silently-shown error alert on
-`SchoolAvailabilities.jsx`, but doesn't touch this deeper timing issue). Still reproduces
-identically under React 19 — re-verified during the 18→19 bump's smoke pass, clicking "Créer la
-disponibilité" on `/parameters/planning_parameters` still silently no-ops with no console error.
-Fix: replace the imperative
-`componentDidMount()` call with a real `componentDidUpdate(prevProps)` on `AvailabilityManager` that
-syncs `state.list` whenever `props.intervals` actually changes, and drop the manual call entirely (at
-both sites).
-
-`SchoolAvailabilities.tsx`'s `availabilityRef` is typed `useRef<any>(null)` rather than something
-real, since `AvailabilityManager.jsx` (what it refs) is still untyped JS wrapped in
-`withTranslation(..., { withRef: true })` — no real type to point the ref at without migrating that
-file too, which is out of scope for the conversion that introduced this comment. Real fix: migrate
-`AvailabilityManager.jsx` to TypeScript.
+Rather than something real, since `AvailabilityManager.jsx` (what it refs) is still untyped JS
+wrapped in `withTranslation(..., { withRef: true })` — no real type to point the ref at without
+migrating that file too, which is out of scope for the conversion that introduced this comment.
+Real fix: migrate `AvailabilityManager.jsx` to TypeScript.
 
 ## `react-toastify` 11 bump: minor visual drift, consciously accepted (not a bug)
 
