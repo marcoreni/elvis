@@ -74,4 +74,13 @@ RSpec.describe "GET /plannings/conflict/:conflict_id", type: :request do
 
     expect(react_props_body).to include(activity_ref.label)
   end
+
+  it "does not leak the teacher's authentication_token (a live session credential) into the page" do
+    get "/plannings/conflict/#{conflict.id}"
+
+    expect(react_props_body).not_to include(teacher.authentication_token)
+    expect(react_props_body).not_to include("authentication_token")
+    # but the safe fields the mounted component reads are still there
+    expect(react_props_body).to include(teacher.first_name)
+  end
 end

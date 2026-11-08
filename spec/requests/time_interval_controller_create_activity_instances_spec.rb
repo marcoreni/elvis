@@ -12,7 +12,7 @@ require "rails_helper"
 # duplicate-avoidance check, which reuses the activity's own time_interval as one of the created
 # instances whenever a requested instance falls on the same date).
 RSpec.describe "PATCH /time_interval/:id/validate (TimeIntervalController#create_activity_instances)",
-              type: :request do
+               type: :request do
   include Devise::Test::IntegrationHelpers
 
   let(:admin) do

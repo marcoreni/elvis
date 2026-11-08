@@ -85,4 +85,16 @@ RSpec.describe "PATCH /activity_instance/:id/update_all/:time_interval_id", type
 
     expect(returned_interval.dig("activity_instance", "activity", "activity_ref", "label")).to eq(activity_ref.label)
   end
+
+  it "does not leak the teacher's authentication_token (a live session credential) in the JSON response" do
+    patch_update_all
+
+    body = JSON.parse(response.body)
+    returned_interval = body["intervals"].find { |i| i["id"] == cyclic_interval.id }
+    teacher_json = returned_interval.dig("activity_instance", "activity", "teacher")
+
+    expect(teacher_json).not_to be_nil
+    expect(teacher_json).not_to have_key("authentication_token")
+    expect(teacher_json["first_name"]).to eq(teacher.first_name)
+  end
 end

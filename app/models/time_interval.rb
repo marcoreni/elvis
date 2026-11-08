@@ -69,6 +69,18 @@ class TimeInterval < ApplicationRecord
     :M
   end
 
+  # Safe field allowlist for a `User` nested anywhere inside `planning_include_tree`. Plain
+  # `as_json` (unlike `UserSerializer`, which this tree deliberately bypasses to reach real
+  # associations AMS doesn't model -- see `planning_include_tree`'s own comment) has no built-in
+  # field curation: with no `only:`/`except:` it dumps every column, including
+  # `authentication_token` (a live, always-populated session credential --
+  # `User#ensure_authentication_token`, `SessionsController#create`) plus other PII
+  # (`email`, `is_admin`, `handicap_description`, ...). Mirrors `UserSerializer`'s own attribute
+  # list (minus its computed `activity_refs`, not needed by any consumer of this tree) and the
+  # `except:` pattern already used wherever else this codebase serializes a raw `User` (e.g.
+  # `rooms_controller.rb`, `teachers_controller.rb`, `find_students.rb`).
+  PLANNING_SAFE_USER_FIELDS = %i[id first_name last_name adherent_number birthday is_teacher].freeze
+
   # Nested `as_json(include:)` tree for the planning calendar (PlanningController#get_intervals and
   # the sibling actions/controllers that feed the same planning/Planning React component --
   # ActivityDetailsModal, TimeInterval, TimeIntervalHelpers read this exact shape). Deliberately
@@ -77,7 +89,9 @@ class TimeInterval < ApplicationRecord
   # the same record as its activity's own time_interval -- see Activity#create_instances's
   # duplicate-avoidance check), which recurses forever under the app-wide
   # `default_includes = "**"` (config/initializers/active_model_serializer.rb) if serialized via
-  # ActiveModelSerializers, or infinitely nests under plain `as_json` with no explicit `include:`.
+  # ActiveModelSerializers.
+  #
+  # Every nested `User` node is scoped to PLANNING_SAFE_USER_FIELDS -- see that constant's comment.
   def self.planning_include_tree
     {
       comment: {},
@@ -93,13 +107,14 @@ class TimeInterval < ApplicationRecord
                   desired_activity: {
                     include: {
                       activity_application: {
-                        include: { user: {} }
+                        include: { user: { only: PLANNING_SAFE_USER_FIELDS } }
                       }
                     }
                   }
                 }
               },
               users: {
+                only: PLANNING_SAFE_USER_FIELDS,
                 include: {
                   levels: {
                     include: %i[activity_ref evaluation_level_ref]
@@ -108,18 +123,18 @@ class TimeInterval < ApplicationRecord
               },
               room: {},
               location: {},
-              teacher: {}
+              teacher: { only: PLANNING_SAFE_USER_FIELDS }
             }
           },
           room: {},
-          cover_teacher: {}
+          cover_teacher: { only: PLANNING_SAFE_USER_FIELDS }
         },
         methods: :inactive_students
       },
       evaluation_appointment: {
         include: {
-          student: {},
-          teacher: {},
+          student: { only: PLANNING_SAFE_USER_FIELDS },
+          teacher: { only: PLANNING_SAFE_USER_FIELDS },
           activity_ref: {}
         }
       }

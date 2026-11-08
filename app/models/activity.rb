@@ -64,6 +64,28 @@ class Activity < ApplicationRecord
     :M
   end
 
+  # AMS `include:` directive for serializing an Activity via ActivitySerializer in the student
+  # evaluation flow (UsersController#season_activities/#evaluate, feeding
+  # frontend/components/evaluation/{EvaluationMenu,Evaluation}.tsx). With no `include:` at all,
+  # the app-wide `default_includes = "**"` (config/initializers/active_model_serializer.rb) walks
+  # ActivitySerializer's own `has_one :time_interval` into TimeIntervalSerializer's
+  # `activity_instance` back into ActivityInstanceSerializer's `activity` -- the same
+  # TimeInterval/activity_instance/Activity cycle as TimeInterval.planning_include_tree, just
+  # entered from the other end. Includes `time_interval` itself (formatActivityForDisplay in
+  # frontend/tools/format.tsx reads `activity.time_interval.start`/`.end`) but, by not listing
+  # `activity_instance` under it, stops short of the cyclic edge. `users`/`student_evaluations`
+  # stay on AMS's own serializers (UserSerializer, StudentEvaluationSerializer), so no separate
+  # field curation is needed here the way TimeInterval.planning_include_tree needed for its raw
+  # `as_json` nodes.
+  def self.evaluation_include_tree
+    {
+      time_interval: {},
+      activity_ref: :activity_ref_kind,
+      users: {},
+      student_evaluations: :answers
+    }
+  end
+
   # crée les instances (ActivityInstance) de l'Activity
   # autrement dit les séances du cours
   # **Paramètres**
