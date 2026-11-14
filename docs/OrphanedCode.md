@@ -252,7 +252,3 @@ Real, live issues — not dead code, don't delete:
 - `RemoveController#get_references` — a real, tested method (bypassing HTTP entirely is how the
   regression spec exercises it) whose HTTP action never calls `render`, always falling through to
   `204 No Content`. A gap to potentially fix (add a `render json:`), not dead code to delete.
-- `app/views/parameters/formules_parameters_edit.html.erb` references
-  `react_component("editParameters/FormulesParameters", ...)`, but
-  `frontend/components/editParameters/FormulesParameters.jsx` doesn't exist — the opposite of dead
-  code (a live route with a missing implementation). Worth its own investigation.
