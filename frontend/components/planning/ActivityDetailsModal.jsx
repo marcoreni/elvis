@@ -554,6 +554,7 @@ class ActivityDetailsModal extends React.Component {
     }
 
     verifyTimeOverlap() {
+        const { t } = this.props;
         const startTime = moment(this.state.startTime);
         const endTime = moment(this.state.endTime);
         const room_id = this.state.room_id;
@@ -576,7 +577,14 @@ class ActivityDetailsModal extends React.Component {
                 time_interval_id,
             }),
         })
-            .then((response) => response.json())
+            .then((response) => {
+                if (!response.ok) {
+                    throw new Error(
+                        `/planning/overlap responded ${response.status}`
+                    );
+                }
+                return response.json();
+            })
             .then((conflicting_intervals) => {
                 this.setState({
                     isValidated:
@@ -584,6 +592,20 @@ class ActivityDetailsModal extends React.Component {
                         conflicting_intervals.room == null,
                     conflicting_interval: conflicting_intervals.room,
                     conflicting_interval_teacher: conflicting_intervals.teacher,
+                });
+            })
+            .catch((error) => {
+                // A non-200 response or a JSON parse failure used to leave this as an unhandled
+                // rejection with isValidated stuck at its stale value. Force isValidated false (the
+                // safer default -- we genuinely don't know whether there's a conflict) and surface
+                // the failure the same way this component reports other errors (swal, see
+                // handleSaveActivityInstances' onSave above).
+                console.error("verifyTimeOverlap failed", error);
+                this.setState({ isValidated: false });
+                swal.fire({
+                    title: t("activityModal.errorTitle"),
+                    text: t("activityModal.overlapCheckError"),
+                    icon: "error",
                 });
             });
     }
