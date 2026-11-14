@@ -956,8 +956,10 @@ class UsersController < ApplicationController
     # "activities" target are served from ActivitySerializer -- see docs/KnownIssues.md for why
     # this replaced two separate raw Activity.as_json(include: {...}) trees that had drifted from
     # the ActiveModel::Serializer used for the same models elsewhere in the app.
+    # `include:` guards the TimeInterval/activity_instance/Activity serializer cycle -- see
+    # Activity.evaluation_include_tree.
     @activities_json = ActiveModelSerializers::SerializableResource.new(
-      @activities, each_serializer: ActivitySerializer
+      @activities, each_serializer: ActivitySerializer, include: Activity.evaluation_include_tree
     ).as_json
     @activities = @activities_json
   end
@@ -986,8 +988,10 @@ class UsersController < ApplicationController
                                }
                              }
                            })
+    # `include:` guards the TimeInterval/activity_instance/Activity serializer cycle -- see
+    # Activity.evaluation_include_tree.
     @activities = ActiveModelSerializers::SerializableResource.new(
-      activities, each_serializer: ActivitySerializer
+      activities, each_serializer: ActivitySerializer, include: Activity.evaluation_include_tree
     ).as_json
     @questions = Question.student_evaluation_questions.all
 
@@ -1009,8 +1013,10 @@ class UsersController < ApplicationController
     ).as_json
 
     # @activity_ref is an Activity despite its name (see the `.find(params[:activity_id])` above) --
-    # served from ActivitySerializer for the same reason as @activities_json above.
-    @activity_json = ActivitySerializer.new(@activity_ref).as_json
+    # served from ActivitySerializer for the same reason as @activities_json above. `include:`
+    # guards the TimeInterval/activity_instance/Activity serializer cycle -- see
+    # Activity.evaluation_include_tree.
+    @activity_json = ActivitySerializer.new(@activity_ref).as_json(include: Activity.evaluation_include_tree)
   end
 
   def previsional_groups

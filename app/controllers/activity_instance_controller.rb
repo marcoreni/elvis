@@ -14,8 +14,17 @@ class ActivityInstanceController < ApplicationController
 
     tis = instances_to_check.map { |instance| instance.time_interval }
 
+    # Plain `as_json(include:)` rather than the AMS serializer: see TimeInterval.planning_include_tree
+    # for why (TimeInterval -> activity_instance -> Activity -> time_interval is a real cycle in the
+    # data -- see docs/KnownIssues.md history). Planning.jsx's handleUpdateAllActivityInstances reads
+    # the nested activity/room/teacher/options data from this response, so a blank `include: []`
+    # isn't an option here.
     #  Return results
-    render json: { intervals: ActiveModel::SerializableResource.new(tis, each_serializer: TimeIntervalSerializer), success: results[:success], conflicts: results[:conflicts] }
+    render json: {
+      intervals: tis.as_json(include: TimeInterval.planning_include_tree),
+      success: results[:success],
+      conflicts: results[:conflicts]
+    }
   end
 
   def change_teacher
