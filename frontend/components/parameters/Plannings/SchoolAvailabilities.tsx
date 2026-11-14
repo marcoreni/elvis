@@ -1,4 +1,4 @@
-import React, { Fragment, useEffect, useRef, useState } from "react";
+import React, { Fragment, useEffect, useState } from "react";
 import AvailabilityManager from "../../availability/AvailabilityManager";
 import * as api from "../../../tools/api";
 import swal from "sweetalert2";
@@ -23,12 +23,6 @@ export default function SchoolAvailabilities({
     const [season, setSeason] = useState<Partial<Season>>(
         seasons.find((s) => s.is_current) || seasons[0] || {}
     );
-    // AvailabilityManager (frontend/components/availability/AvailabilityManager.jsx) is an
-    // untyped class component wrapped in `withTranslation(..., { withRef: true })`; manually
-    // re-invoking its `componentDidMount()` below is a forced-refresh pattern that predates this
-    // conversion, out of scope to retype here. Logged in docs/KnownIssues.md.
-    const availabilityRef = useRef<any>(null);
-
     const convertToFirstWeekOfSeason = (seasonStart?: string) => {
         if (!seasonStart) return null;
 
@@ -61,7 +55,6 @@ export default function SchoolAvailabilities({
         api.set()
             .success((data: { intervals: TimeInterval[] }) => {
                 setIntervals(data.intervals);
-                availabilityRef.current.componentDidMount();
             })
             .error(() => {
                 swal.fire({
@@ -79,7 +72,6 @@ export default function SchoolAvailabilities({
 
             <div style={{ margin: "-30px" }}>
                 <AvailabilityManager
-                    ref={availabilityRef}
                     locked={false}
                     isTeacher={false}
                     authToken={authToken}

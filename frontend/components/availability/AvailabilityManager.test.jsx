@@ -6,7 +6,7 @@
 // `TypeError: Cannot read properties of null`.
 
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { render, screen, act } from "@testing-library/react";
 import i18n from "../../i18n";
 import AvailabilityManager from "./AvailabilityManager";
 
@@ -59,6 +59,114 @@ describe("AvailabilityManager -- ref forwarding (withTranslation withRef)", () =
 
         expect(() => ref.current.componentDidMount()).not.toThrow();
         expect(ref.current.state.list).toHaveLength(1);
+    });
+});
+
+// KnownIssues "availabilityRef.current.componentDidMount() reads stale props under automatic
+// batching" fix: AvailabilityManager now has a real `componentDidUpdate` syncing `state.list`
+// from `props.intervals` whenever that reference actually changes, instead of relying solely on
+// `componentDidMount` (its only previous props->state path) plus an external, timing-sensitive
+// imperative re-invocation of that same method.
+describe("AvailabilityManager -- componentDidUpdate syncs state.list from props.intervals", () => {
+    test("a new `intervals` reference on rerender updates state.list (the real automatic-batching bug this fixes)", () => {
+        const ref = React.createRef();
+        const { rerender } = render(
+            <AvailabilityManager {...baseProps} ref={ref} intervals={[]} />
+        );
+        expect(ref.current.state.list).toHaveLength(0);
+
+        const newIntervals = [
+            {
+                id: 1,
+                start: "2024-01-01T10:00:00Z",
+                end: "2024-01-01T11:00:00Z",
+                kind: "p",
+            },
+        ];
+        rerender(
+            <AvailabilityManager
+                {...baseProps}
+                ref={ref}
+                intervals={newIntervals}
+            />
+        );
+
+        expect(ref.current.state.list).toHaveLength(1);
+        expect(ref.current.state.list[0].id).toBe(1);
+    });
+
+    test("rerendering with the same `intervals` reference does not clobber unrelated state changes", () => {
+        const ref = React.createRef();
+        const intervals = [
+            {
+                id: 1,
+                start: "2024-01-01T10:00:00Z",
+                end: "2024-01-01T11:00:00Z",
+                kind: "p",
+            },
+        ];
+        const { rerender } = render(
+            <AvailabilityManager
+                {...baseProps}
+                ref={ref}
+                intervals={intervals}
+            />
+        );
+        expect(ref.current.state.list).toHaveLength(1);
+
+        // Simulate a local-only change (e.g. a delete) that doesn't come from props.
+        act(() => {
+            ref.current.setState({ list: [] });
+        });
+        expect(ref.current.state.list).toHaveLength(0);
+
+        // An unrelated parent rerender with the identical `intervals` reference must NOT
+        // re-sync state.list from props and undo the local change.
+        rerender(
+            <AvailabilityManager
+                {...baseProps}
+                ref={ref}
+                intervals={intervals}
+            />
+        );
+        expect(ref.current.state.list).toHaveLength(0);
+    });
+
+    // Regression: `buildListFromIntervals` used to check `!interval.tabId`/`!interval.id`, which
+    // treats the real value `0` (a wizard-mode interval's first tabId, see `getNewTabId`) as
+    // absent and regenerates a fresh random tabId for it -- silently losing the original tabId
+    // every time this resync runs. Pre-existing, just exercised a lot more now that it also runs
+    // on every props.intervals change, not only at mount.
+    test("an interval with tabId: 0 (falsy, but present) keeps that tabId across a props-driven resync", () => {
+        const ref = React.createRef();
+        const intervals = [
+            {
+                tabId: 0,
+                start: "2024-01-01T10:00:00Z",
+                end: "2024-01-01T11:00:00Z",
+                kind: "p",
+            },
+        ];
+
+        const { rerender } = render(
+            <AvailabilityManager
+                {...baseProps}
+                ref={ref}
+                intervals={intervals}
+            />
+        );
+        expect(ref.current.state.list[0].tabId).toBe(0);
+
+        // A props-driven resync (new `intervals` reference, same tabId: 0 content) must not
+        // regenerate the tabId.
+        rerender(
+            <AvailabilityManager
+                {...baseProps}
+                ref={ref}
+                intervals={[{ ...intervals[0] }]}
+            />
+        );
+        expect(ref.current.state.list[0].tabId).toBe(0);
     });
 });
 

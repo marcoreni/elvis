@@ -355,6 +355,126 @@ describe("ActivityRefBasics", () => {
         });
     });
 
+    // KnownIssues "rebuild dataService/columns on every render" fix: ActivityRefBasics is a
+    // class (no hooks), so `getColumns()`/`getDataService()` do their own useMemo-equivalent
+    // caching on the instance. Unit-tested directly against the unwrapped class (bypassing
+    // react-i18next/react-final-form) rather than via a full render + re-render, since neither
+    // exposes a ref to the class instance.
+    describe("getColumns()/getDataService() memoization", () => {
+        function makeInstance(overrides = {}) {
+            return new ActivityRefBasics.WrappedComponent({
+                ...props,
+                t: (key) => key,
+                ...overrides,
+            });
+        }
+
+        test("getColumns() is referentially stable across calls when t is unchanged", () => {
+            const instance = makeInstance();
+            const first = instance.getColumns();
+            const second = instance.getColumns();
+            expect(second).toBe(first);
+        });
+
+        test("getColumns() rebuilds when t changes", () => {
+            const instance = makeInstance();
+            const first = instance.getColumns();
+            instance.props = { ...instance.props, t: (key) => `other:${key}` };
+            const second = instance.getColumns();
+            expect(second).not.toBe(first);
+            expect(second[0].Header).toBe(
+                "other:activityRefBasics.pricingColumns.name"
+            );
+        });
+
+        test("getDataService() (new-activity branch) is referentially stable when its deps are unchanged", () => {
+            const instance = makeInstance({ activityRef: { id: null } });
+            instance.state = {
+                ...instance.state,
+                packs: [],
+                activityRefPricings: [],
+                pricingCategories: [],
+            };
+            const first = instance.getDataService();
+            const second = instance.getDataService();
+            expect(second).toBe(first);
+        });
+
+        // Side effect of the fix above, not a separate change: before memoization, every render
+        // built a brand-new NewActivityRefDataService, resetting its tempIdCounter to 1 -- so two
+        // new pricings added to a brand-new (unsaved) activity both got temp id 1, and editing/
+        // deleting the second one actually hit the first. Since getDataService() now returns the
+        // *same* instance across renders (deps unchanged), tempIdCounter is monotonic instead.
+        // NOT fixed for EditFormule.jsx's equivalent NewFormulePricingDataService: there,
+        // `selectedPricings` (one of pricingDataService's useMemo deps) necessarily changes on
+        // every real add, so a fresh instance -- and a reset tempIdCounter -- is still built each
+        // time. See docs/KnownIssues.md.
+        test("getDataService() (new-activity branch) keeps tempIdCounter monotonic across saves (regression: used to collide at id 1)", () => {
+            const pricingCategories = [{ id: 10, name: "Standard" }];
+            const instance = makeInstance({ activityRef: { id: null } });
+            instance.state = {
+                ...instance.state,
+                packs: [],
+                activityRefPricings: [],
+                pricingCategories,
+            };
+
+            const newPricing = (price) => ({
+                name: { label: "Standard" },
+                price,
+                fromSeason: { value: 1 },
+                toSeason: null,
+            });
+
+            const dataService = instance.getDataService();
+            dataService.createData(newPricing(50));
+
+            // A second render with unchanged deps (the save above mutates
+            // state.activityRefPricings' contents in place, not its reference) must reuse the
+            // same instance -- that's what keeps tempIdCounter from resetting.
+            const sameDataService = instance.getDataService();
+            expect(sameDataService).toBe(dataService);
+            sameDataService.createData(newPricing(60));
+
+            expect(dataService.activityRefPricings.map((p) => p.id)).toEqual([
+                1, 2,
+            ]);
+        });
+
+        test("getDataService() rebuilds when a dependency (pricingCategories) actually changes", () => {
+            const instance = makeInstance({ activityRef: { id: null } });
+            instance.state = {
+                ...instance.state,
+                packs: [],
+                activityRefPricings: [],
+                pricingCategories: [],
+            };
+            const first = instance.getDataService();
+
+            instance.state = {
+                ...instance.state,
+                pricingCategories: [{ id: 1, name: "Standard" }],
+            };
+            const second = instance.getDataService();
+            expect(second).not.toBe(first);
+        });
+
+        test("getDataService() (existing-activity branch) switches dataService when activityRef.id changes", () => {
+            const instance = makeInstance({ activityRef: { id: 1 } });
+            instance.state = {
+                ...instance.state,
+                packs: [],
+                activityRefPricings: [],
+                pricingCategories: [],
+            };
+            const first = instance.getDataService();
+
+            instance.props = { ...instance.props, activityRef: { id: 2 } };
+            const second = instance.getDataService();
+            expect(second).not.toBe(first);
+        });
+    });
+
     describe("fetchSeasonsAndPricings error path", () => {
         test("fires the translated fetchError swal", async () => {
             await i18n.changeLanguage("fr");

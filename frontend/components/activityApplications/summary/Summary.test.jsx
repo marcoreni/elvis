@@ -620,3 +620,58 @@ describe("Summary — courseOption label resolves the activityRef via activity_r
         }
     );
 });
+
+// ==============================================================================================
+// G. getAvailabilityIntervals memoization -- regression guard for the AvailabilityManager
+//    componentDidUpdate fix (docs/KnownIssues.md / PR #166 review): this is the only
+//    AvailabilityManager caller that doesn't own `intervals` via its own setState (no
+//    onAvailabilityAdd/onAvailabilityDelete passed), so a fresh array reference on every one of
+//    Summary's many unrelated setState-triggered renders would make AvailabilityManager's new
+//    `componentDidUpdate` resync `state.list` from stale props and silently revert a local
+//    add/delete made inside the still-open availabilities modal.
+// ==============================================================================================
+describe("Summary — getAvailabilityIntervals memoization", () => {
+    function makeInstance(overrides = {}) {
+        return new Summary.WrappedComponent({ ...baseProps(), ...overrides });
+    }
+
+    test("returns the same array reference across calls when time_intervals/season are unchanged", () => {
+        const instance = makeInstance();
+        const time_intervals = [{ id: 1, kind: "p", start: "2025-09-02" }];
+        const season = { start: "2025-09-01", end: "2026-06-30" };
+
+        const first = instance.getAvailabilityIntervals(time_intervals, season);
+        const second = instance.getAvailabilityIntervals(
+            time_intervals,
+            season
+        );
+
+        expect(second).toBe(first);
+    });
+
+    test("recomputes when time_intervals gets a new reference (a real update, not an unrelated render)", () => {
+        const instance = makeInstance();
+        const season = { start: "2025-09-01", end: "2026-06-30" };
+
+        const first = instance.getAvailabilityIntervals([], season);
+        const second = instance.getAvailabilityIntervals([], season);
+
+        expect(second).not.toBe(first);
+    });
+
+    test("recomputes when season changes, even with the same time_intervals reference", () => {
+        const instance = makeInstance();
+        const time_intervals = [];
+
+        const first = instance.getAvailabilityIntervals(time_intervals, {
+            start: "2025-09-01",
+            end: "2026-06-30",
+        });
+        const second = instance.getAvailabilityIntervals(time_intervals, {
+            start: "2026-09-01",
+            end: "2027-06-30",
+        });
+
+        expect(second).not.toBe(first);
+    });
+});

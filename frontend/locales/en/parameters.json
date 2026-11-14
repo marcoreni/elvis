@@ -334,6 +334,11 @@
             "coursesHeading": "Course list",
             "coursesLabel": "The teacher can manage their course list"
         },
+        "formules": {
+            "checkboxLabel": "Enable the display of packages",
+            "saveSuccessText": "The settings have been saved",
+            "saveErrorText": "An error occurred while saving the settings"
+        },
         "school": {
             "siretRnaError": "The input matches neither an RNA nor your country's SIRET ({{country}})",
             "schoolInfoHeading": "School information",
