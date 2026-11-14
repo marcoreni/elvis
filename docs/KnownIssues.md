@@ -263,29 +263,6 @@ invariant in mind before adding a new `LegacyColumn` accessor that reads compone
 avoid it, or give that column its own `Cell` reading `original` directly instead of relying on the
 cached accessor result.
 
-## `EditFormule.jsx`'s `NewFormulePricingDataService` can still collide temp ids
-
-Fixing `ActivityRefBasics.jsx`/`EditFormule.jsx` rebuilding `dataService`/`columns` on every render
-(see commit history) incidentally also fixed a pre-existing bug in `ActivityRefBasics.jsx`'s
-`NewActivityRefDataService`: its `tempIdCounter` (used for new-pricing temp ids on a brand-new,
-unsaved activity) used to reset to 1 on every render because a fresh service instance was built
-each time — so two new pricings on the same new activity both got temp id 1, and editing/deleting
-the second one actually hit the first. Memoizing `getDataService()` makes the instance persist
-across renders when its deps (`activityRef.id`, `packs`, `activityRefPricings`,
-`pricingCategories`) are unchanged, which they are for the lifetime of a new, unsaved activity —
-so `tempIdCounter` is now monotonic there.
-
-`EditFormule.jsx`'s equivalent `NewFormulePricingDataService` did **not** get the same fix: its
-`pricingDataService` `useMemo` deps include `selectedPricings`, which necessarily gets a new
-reference on every real pricing add (it's the state driving the pricings table's own re-render,
-unlike `ActivityRefBasics.jsx`'s `activityRefPricings`, which is only ever set once from the
-initial fetch and never updated via `setState` again) — so a fresh `NewFormulePricingDataService`
-instance, with a reset `tempIdCounter`, is still built on every add. The same duplicate-temp-id
-risk therefore still exists for a brand-new (unsaved) formule with 2+ new pricings. Real fix, if
-ever worth it: decouple the pricings array `NewFormulePricingDataService` mutates from the state
-that drives the table's re-render (e.g. a ref updated out-of-band instead of closing over
-`selectedPricings`) — not attempted here to keep that memoization fix surgical.
-
 ## `react-toastify` 11 bump: minor visual drift, consciously accepted (not a bug)
 
 `chore/bump-react-toastify` (4.5.2 -> 11.1.0) restores the pre-bump *colors*
@@ -579,19 +556,6 @@ and `ActivitiesApplicationsController#create`'s missing guard were both fixed to
 `next if doc[1][:agreement].nil?` — so nothing should be able to create a fresh nil row anymore
 either. This frontend guard stays in place regardless, as defense against any future producer.
 
-## `Planning.jsx`'s `handleUpdateActivityInstance` has the same intervalStore/selectedIntervals divergence `handleRemoveStudent`/`handleRemoveOptionalStudent` had
-
-`handleUpdateActivityInstance` (`frontend/components/planning/Planning.jsx:570-590`) builds
-`newState` via `this.getIntervals(...)` (so `newState.intervalStore` is derived) *before* its
-`TimeIntervalHelpers.fetchInterval(...)` call resolves, then in the `.then()` only reassigns
-`newState.selectedIntervals` — never rebuilding `newState.intervalStore` from the fresh array —
-before `this.setState({...newState})`. Same class of bug as the one fixed in
-`handleRemoveStudent`/`handleRemoveOptionalStudent` (see git history): `intervalStore[id]` ends up
-stale (the pre-fetch value) while `selectedIntervals` holds the freshly-fetched one. Not fixed here
-— out of scope for that batch's "minimal change in a 1800-line file" constraint. Fix: rebuild
-`intervalStore` from the post-fetch `selectedIntervals` inside the `.then()` (e.g. re-run
-`this.getIntervals(...)` on the updated array) instead of patching `selectedIntervals` alone.
-
 ## `Planning.jsx`'s `handleRemoveStudent`/`handleRemoveOptionalStudent` have no live call site today
 
 Found while investigating whether their `intervalStore`/`selectedIntervals` sync fix (see git
@@ -614,14 +578,6 @@ or the rest of the repo -- not even commented-out JSX. The earlier framing of th
 switch worth a product call was wrong: nothing can enter edit mode today, so there's no UX gap to
 resolve. Logged for awareness in case a future change wires up a real entry point; not deleted per
 this repo's don't-delete-on-looks-dead convention.
-
-## `verifyTimeOverlap()` has no error handling for a non-200 response
-
-`ActivityDetailsModal.jsx:562-589`'s `verifyTimeOverlap()` is a `.then().then()` fetch chain with
-no `.catch`. Any non-200 from `POST /planning/overlap` (or a JSON parse failure) leaves an
-unhandled rejection and `isValidated` stuck at its stale value, with no user-visible feedback.
-The `teacher_id: 0` 404 case this used to trigger is fixed, but the gap itself -- the endpoint
-has no rescue and the caller has no catch -- is still open for any other failure mode.
 
 ## `Season.next` crashes with `NoMethodError` when no season is flagged `is_current`
 

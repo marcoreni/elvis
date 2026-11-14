@@ -582,10 +582,14 @@ class Planning extends React.Component {
                         );
 
                         TimeIntervalHelpers.fetchInterval(csrfToken, instance.time_interval_id).then(i => {
-                            newState.selectedIntervals = [...newState.selectedIntervals.filter(inter => inter.id !== i.id), i]
+                            // Same fix as handleRemoveStudent/handleRemoveOptionalStudent above:
+                            // rebuild intervalStore from the post-fetch array instead of only
+                            // patching selectedIntervals -- `newState` above was built before this
+                            // fetch resolved, so its intervalStore is stale otherwise.
+                            const newIntervals = [...newState.selectedIntervals.filter(inter => inter.id !== i.id), i]
 
                             this.setState({
-                                ...newState
+                                ...this.getIntervals(newIntervals)
                             });
                         });
                     }

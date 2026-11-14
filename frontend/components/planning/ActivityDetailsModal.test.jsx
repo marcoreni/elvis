@@ -376,6 +376,7 @@ describe("ActivityDetailsModal — verifyTimeOverlap", () => {
     // this.verifyTimeOverlap();` fires on mount, same as the real Planning.jsx flow.
     test("POSTs the real interval id as time_interval_id, not undefined", async () => {
         global.fetch = vi.fn().mockResolvedValue({
+            ok: true,
             json: () => Promise.resolve({ teacher: null, room: null }),
         });
 
@@ -392,6 +393,7 @@ describe("ActivityDetailsModal — verifyTimeOverlap", () => {
         const conflictingRoom = { id: 42 };
         const conflictingTeacher = { id: 43 };
         global.fetch = vi.fn().mockResolvedValue({
+            ok: true,
             json: () =>
                 Promise.resolve({
                     teacher: conflictingTeacher,
@@ -428,6 +430,7 @@ describe("ActivityDetailsModal — verifyTimeOverlap", () => {
     // replaces, before applying the `_.get(..., "user.first_name", "?")` guard.
     test("does not crash rendering the teacherBusy alert when `planning` is a plain array (show_for_room.html.erb shape), not a planning-with-user object", async () => {
         global.fetch = vi.fn().mockResolvedValue({
+            ok: true,
             json: () =>
                 Promise.resolve({
                     teacher: {
@@ -469,6 +472,37 @@ describe("ActivityDetailsModal — verifyTimeOverlap", () => {
 
         const alert = await screen.findByText(/est déjà occupé/);
         expect(alert).toHaveTextContent('"? ?"');
+    });
+
+    // KnownIssues "verifyTimeOverlap() has no error handling for a non-200 response" fix: the
+    // `.then().then()` chain had no `.catch`, so a non-200 (or a response whose body isn't valid
+    // JSON) left an unhandled rejection and `isValidated` stuck at its stale value. Now a failed
+    // response is turned into a thrown error (checked via `response.ok` -- a non-200 can still
+    // return parseable JSON, e.g. a `{ error: ... }` body, which would otherwise silently read as
+    // "no conflict") and caught: `isValidated` is forced false (the safer default) and an error is
+    // shown via swal, the same mechanism this component already uses for other failures (see
+    // handleSaveActivityInstances' onSave).
+    test("a non-200 /planning/overlap response forces isValidated false and surfaces an error, instead of an unhandled rejection", async () => {
+        global.fetch = vi.fn().mockResolvedValue({
+            ok: false,
+            status: 500,
+            json: () => Promise.reject(new Error("Unexpected token <")),
+        });
+        const consoleErrorSpy = vi
+            .spyOn(console, "error")
+            .mockImplementation(() => {});
+
+        const ref = React.createRef();
+        render(<ActivityDetailsModal {...baseProps} ref={ref} />);
+
+        await screen.findByText(
+            "Impossible de vérifier les chevauchements de créneaux. Veuillez réessayer."
+        );
+
+        expect(ref.current.state.isValidated).toBe(false);
+        expect(consoleErrorSpy).toHaveBeenCalled();
+
+        consoleErrorSpy.mockRestore();
     });
 });
 
