@@ -17,7 +17,9 @@ module TimeIntervals
       @to = to
       @kind = "p"
       @planning = Planning.includes(:time_intervals).find_by(id: planning_id)
-      season = Season.find(season_id)
+      season = Season.find_by(id: season_id)
+      raise IntervalError, "err_season_not_found" if season.nil?
+
       day_start = season.start
       day_end = day_start + 7.day
       @potential_conflicts = @planning
@@ -28,14 +30,23 @@ module TimeIntervals
 
     # if save_in_database is false, the comment will not be created
     private def create_objects!(save_in_database: true)
+      raise IntervalError, "err_planning_not_found" if @planning.nil?
+
       # If specified interval is invalid, raise error
       # From time >= to time
       # OR From date != to date (inteval not on the same day)
       raise IntervalError, "err_interval_bounds" if @from.to_datetime >= @to.to_datetime || @from.to_date != @to.to_date
 
+      # Comment#user is a required belongs_to. A school-level availability planning (as opposed
+      # to a teacher's) has no associated user (Planning#user is optional), so a comment can't be
+      # attributed to anyone here -- fail with a structured error instead of letting
+      # create_comment!/build_comment raise ActiveRecord::RecordInvalid uncaught.
+      raise IntervalError, "err_comment_requires_planning_user" if @comment.present? && @planning.user.nil?
+
       step_param = Parameter.find_by_label("INTERVAL_STEPS")
-      steps = step_param.parse
-      step = step_param.nil? || !steps.key?(@kind) ? 0 : steps[@kind] # Steps are expressed in minutes
+      # Steps are expressed in minutes. An absent parameter (or one without a "p" entry) just
+      # means "don't segment" -- it's not an error condition.
+      step = step_param.nil? ? 0 : (step_param.parse[@kind] || 0)
 
       has_conflicts = false
       new_intervals = []

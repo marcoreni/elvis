@@ -259,6 +259,8 @@ class PlanningController < ApplicationController
     @intervals = intervals.as_json(include: TimeInterval.planning_include_tree)
 
     render json: { intervals: @intervals, holidays: holidays }
+  rescue ActiveRecord::RecordNotFound
+    render json: { errors: ["err_planning_not_found"] }, status: :not_found
   end
 
   def get_room_intervals
@@ -609,7 +611,7 @@ class PlanningController < ApplicationController
           .new(
             params[:from],
             params[:to],
-            params[:season_id] || Season.current_apps_season.id,
+            params[:season_id] || Season.current_apps_season&.id,
             params[:id],
             params[:comment]
           )
@@ -628,7 +630,7 @@ class PlanningController < ApplicationController
                 .new(
                   params[:from],
                   params[:to],
-                  params[:season_id] || Season.current_apps_season.id,
+                  params[:season_id] || Season.current_apps_season&.id,
                   params[:id],
                   params[:comment]
                 )

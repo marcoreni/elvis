@@ -110,6 +110,70 @@ class SeasonsController < ApplicationController
     end
   end
 
+  # action pour modifier une période de vacances existante (label et/ou plage de dates)
+  #
+  # Une "période de vacances" telle qu'affichée côté front n'est pas un enregistrement unique :
+  # c'est un groupe de lignes Holiday (une par date), identifié par (label, start, end). On
+  # retrouve donc le groupe existant via ce triplet, on supprime ses lignes, puis on recrée une
+  # ligne Holiday par date de la nouvelle plage -- le tout dans une transaction pour ne jamais
+  # laisser un suppression partielle / création partielle en cas d'échec.
+  def update_holidays
+    respond_to do |format|
+      format.json do
+        @season = Season.find params[:id]
+
+        errors = []
+        current_label = params[:label]
+        new_label = params[:new_label]
+        new_start_param = params[:new_start]
+        new_end_param = params[:new_end]
+
+        if [params[:label], params[:start], params[:end], new_label, new_start_param, new_end_param].any?(&:blank?)
+          errors << I18n.t("views.seasons.update_holidays.errors.missing_params")
+        end
+
+        start = parse_holiday_date(params[:start]) if errors.empty?
+        dend = parse_holiday_date(params[:end]) if errors.empty?
+        new_start = parse_holiday_date(new_start_param) if errors.empty?
+        new_end = parse_holiday_date(new_end_param) if errors.empty?
+
+        if errors.empty? && [start, dend, new_start, new_end].any?(&:nil?)
+          errors << I18n.t("views.seasons.update_holidays.errors.invalid_date")
+        end
+
+        errors << I18n.t("views.seasons.update_holidays.errors.start_after_end") if errors.empty? && new_start > new_end
+
+        if errors.empty?
+          # scopée à la saison courante (@season.holidays), pas Holiday.where(...) globalement --
+          # sinon deux saisons partageant un même (label, start, end) se piétineraient l'une l'autre
+          holidays = @season.holidays.where(label: current_label, date: start..dend)
+
+          if holidays.none?
+            errors << I18n.t("views.seasons.update_holidays.errors.not_found")
+          else
+            begin
+              ActiveRecord::Base.transaction do
+                holidays.destroy_all
+                (new_start..new_end).each do |date|
+                  @season.holidays.create!(date: date, label: new_label, kind: "school")
+                end
+              end
+            rescue StandardError => e
+              Rails.logger.error "Unable to update holidays for season #{@season.id}: #{e.message}"
+              errors << I18n.t("views.seasons.update_holidays.errors.save_failed")
+            end
+          end
+        end
+
+        if errors.empty?
+          render json: { label: new_label, start: new_start_param, end: new_end_param }
+        else
+          render json: { errors: errors }, status: :unprocessable_entity
+        end
+      end
+    end
+  end
+
   def delete_holidays
     respond_to do |format|
       format.json do
@@ -260,6 +324,12 @@ class SeasonsController < ApplicationController
   end
 
   private
+
+  def parse_holiday_date(value)
+    Date.parse(value.to_s)
+  rescue ArgumentError, TypeError
+    nil
+  end
 
   def season_params
     if params[:season][:next_season_id] == "0"

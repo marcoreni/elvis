@@ -1195,6 +1195,13 @@ fr:
         choose_image: Choisir Image
         location_title: Localisation
         title: Ajouter une salle
+    scripts:
+      replicate_week_activities:
+        description: Cette page permet de répliquer tous les cours d'une semaine-modèle
+          vers une période spécifique. Cette période peut être constituée d'une seule
+          journée ou d'une plage de dates. Par défaut, les vacances et jours fériés
+          sont exclus de la réplication mais vous pouvez choisir de les inclure.
+        heading: Répliquer les cours d'une semaine sur une plage de dates
     seasons:
       edit:
         autosave_notice: Toutes les modifications sur le tableau seront directement
@@ -1211,6 +1218,14 @@ fr:
         heading: Gestion des saisons
       new:
         heading: Nouvelle saison
+      update_holidays:
+        errors:
+          invalid_date: Date invalide.
+          missing_params: Tous les champs sont obligatoires.
+          not_found: Aucune période de vacances correspondante n'a été trouvée.
+          save_failed: Impossible d'enregistrer les modifications.
+          start_after_end: La date de fin doit être postérieure ou égale à la date
+            de début.
     sessions:
       pick_user:
         submit: Se connecter

@@ -182,21 +182,59 @@ restructuring ad hoc across already-merged domains.
   migration to keep that PR's blast radius to the calendar-engine swap only; fix is to pass a plain
   id through instead of the wrapper, whenever a real trigger for it is added.
 
-## Found while smoke-testing the tui-calendar -> FullCalendar migration (2026-09-14)
+## Active locale intermittently reverts to `fr` mid-session (2026-09-14)
 
-None of these are caused by or related to that migration (confirmed: none of the affected files are
-in its diff) — logged here as found, not investigated further.
+Last of five items found while smoke-testing the tui-calendar -> FullCalendar migration; the other
+four were fixed on 2026-11-15 (sidebar active-section matching, the `planning_parameters` tab-0
+fetch/500s, the leftover "Lieu"/"Fermer" strings, and the missing holiday-edit affordance). Not
+caused by that migration.
 
-- `parameters/planning_parameters#tab-0`: "Error while fetching the availabilities" on load; creating
-  an availability 500s (`PATCH /plannings/availabilities/:id`).
-- `/evaluation_level_ref/new`: sidebar highlights "Registrations" instead of the Evaluations section.
-- Still-French UI strings outside the i18n rollout: "Lieu"/"Fermer" labels somewhere in the app, and
-  `/scripts/replicate_week_activities` is entirely un-extracted.
-- Active locale intermittently reverts to `fr` mid-session even with `en` selected, then recovers on
-  a later navigation — seen between "Registration - New Registration" and "Registration - settings",
-  not yet reproduced systematically enough to isolate.
-- `/seasons/:id/edit`: no edit button/affordance for existing holidays (only, presumably, add/delete)
-  — not investigated further, flagged during the same testing pass.
+Active locale intermittently reverts to `fr` mid-session even with `en` selected, then recovers on a
+later navigation — seen between "Registration - New Registration" and "Registration - settings".
+Re-investigated 2026-11-15 and still **not reproduced**; root cause remains unknown. What is ruled
+out, so a future attempt doesn't re-tread it:
+
+- Frontend: no production component calls `i18n.changeLanguage()` (only tests do).
+- `pdf.html.erb` is the one layout with no `<html lang>` — which would make `i18n/index.js`'s
+  `initialLocale` fall back to `"fr"` — but no `react_component` is ever rendered through it.
+- react-rails SSR prerendering has zero `prerender: true` call sites, so a long-lived SSR i18n
+  context cannot leak a locale across requests (this fits "reverts then recovers" well, hence worth
+  recording as excluded).
+- `i18next-browser-languagedetector`'s localStorage cache can never outrank the `htmlTag` detector,
+  which is first in `detection.order` and is always populated by all three real layouts.
+- Backend: `ApplicationController#persisted_user_locale`'s `rescue StandardError` is reachable only
+  via a signed-but-undeserializable cookie or a transient DB failure (`MessageVerifier#verified`
+  swallows ordinary cookie corruption and returns `nil` — which is why `remember_me_locale_spec.rb`'s
+  "garbage remember-me cookie" example never actually exercises that rescue). Even when it is hit,
+  `switch_locale` has already converged `cookies[:locale]` to the user's own saved preference on an
+  earlier request, so the fallback resolves to the *same* locale rather than flipping to `fr`.
+
+Reproducing this will likely need a real session capture — per-navigation request log plus the
+`locale` cookie and rendered `<html lang>` — rather than more static reading.
+
+## `seasons#delete_holidays` deletes across seasons and reports nothing useful
+
+Found 2026-11-15 while adding `PATCH /season/:id/holidays` (`seasons#update_holidays`) for the
+holiday-edit affordance. Both preserved as-is rather than fixed, to keep that change reviewable.
+
+- `delete_holidays` never references `@season`: it matches `Holiday.where(label: params[:label])`
+  with a bare date range, globally across every season. Any request whose label + date range also
+  matches another season's holidays deletes those too. The new `update_holidays` is deliberately
+  scoped to `@season.holidays` so it does not inherit this.
+- `delete_holidays` renders `holidays.empty?` *after* `holidays.destroy_all`. `Relation#destroy_all`
+  is `records.each(&:destroy).tap { reset }`, and that `reset` clears the relation's loaded cache, so
+  the following `.empty?` re-queries the DB and returns `true` both when rows were deleted and when
+  nothing matched. The response is therefore constant rather than inverted, and cannot tell a caller
+  whether anything actually happened.
+
+## `activityModal.placeLabel` and `activityModal.locationLabel` collide in English
+
+`frontend/locales/*/planning.json` now has two keys for a location label in the same modal:
+`placeLabel` (fr "Lieu") and the older `locationLabel` (fr "Emplacement"). Both render "Location" in
+English. `placeLabel` was added 2026-11-15 when extracting the hardcoded "Lieu" literals, precisely
+to avoid changing visible French text during an extraction — reusing `locationLabel` would have
+silently relabelled the field. Whether these should be one key (and which French wording wins) is a
+product-copy decision, not a mechanical one, so it is flagged here rather than resolved.
 
 ## `TimeIntervalHelpers.omitInactiveStudents` forces an `as unknown as` cast in Calendar.tsx
 

@@ -23,6 +23,7 @@ class Holidays extends React.Component {
         this.changeData = this.changeData.bind(this);
         this.addModal = this.addModal.bind(this);
         this.fetchModal = this.fetchModal.bind(this);
+        this.editModal = this.editModal.bind(this);
     }
 
     getColumns() {
@@ -70,10 +71,17 @@ class Holidays extends React.Component {
                 id: "action",
                 Header: t("planning:holidays.columns.action"),
                 sortable: false,
-                width: 75,
+                width: 100,
                 Cell: (props) => {
                     return (
                         <div className="btn-wrapper text-center">
+                            <button
+                                type={"button"}
+                                className="btn btn-xs btn-primary m-r-sm m-b-sm"
+                                onClick={() => this.editModal(props)}
+                            >
+                                <i className="fas fa-edit" />
+                            </button>
                             <button
                                 type={"button"}
                                 className="btn btn-xs btn-primary m-r-sm m-b-sm"
@@ -204,6 +212,108 @@ class Holidays extends React.Component {
                     pages: ceil(datas.length / pageSize),
                     pagination: { pageIndex: 0, pageSize },
                 });
+            }
+        });
+
+        return false;
+    }
+
+    editModal(props) {
+        const { t } = this.props;
+        const original = props.original;
+
+        swal.fire({
+            title: t("planning:holidays.editModal.title"),
+            confirmButtonText: t("common:actions.confirm"),
+            cancelButtonText: t("common:actions.cancel"),
+            showCancelButton: true,
+            showLoaderOnConfirm: true,
+            input: "text",
+            inputValue: original.label,
+            html:
+                '<div class="form-group text-center text-danger font-bold h5" id="er"></div>' +
+                '<div class="form-group text-left">' +
+                `<label>${t("planning:holidays.addModal.startLabel")}</label>` +
+                `<input class="form-control" type="date" id="ds" value="${original.start}" />` +
+                "</div>" +
+                '<div class="form-group text-left">' +
+                `<label>${t("planning:holidays.addModal.endLabel")}</label>` +
+                `<input class="form-control" type="date" id="de" value="${original.end}" />` +
+                "</div>" +
+                '<div class="text-left">' +
+                `<label>${t("planning:holidays.addModal.labelLabel")}</label>` +
+                "</div>",
+            preConfirm: (data) => {
+                const er = $("#er");
+                er.text("");
+
+                const dateStart = $("#ds").val();
+                const dateEnd = $("#de").val();
+                const start = Date.parse(dateStart);
+                const end = Date.parse(dateEnd);
+
+                if (
+                    dateStart == "" ||
+                    dateEnd == "" ||
+                    data === undefined ||
+                    data === ""
+                ) {
+                    er.text(t("planning:holidays.addModal.errEmptyField"));
+
+                    return false;
+                }
+
+                if (start > end) {
+                    er.text(t("planning:holidays.addModal.errStartAfterEnd"));
+
+                    return false;
+                }
+
+                return fetch(`/season/${this.props.sid}/holidays`, {
+                    method: "PATCH",
+                    credentials: "same-origin",
+                    headers: {
+                        "X-CSRF-Token": csrfToken,
+                        "Content-Type": "application/json",
+                        Accept: "application/json",
+                    },
+                    body: JSON.stringify({
+                        label: original.label,
+                        start: original.start,
+                        end: original.end,
+                        new_label: data,
+                        new_start: dateStart,
+                        new_end: dateEnd,
+                    }),
+                })
+                    .then((response) =>
+                        response
+                            .json()
+                            .then((body) => ({ ok: response.ok, body }))
+                    )
+                    .then(({ ok, body }) => {
+                        if (!ok) {
+                            er.text((body.errors || []).join(" "));
+
+                            return false;
+                        }
+
+                        return body;
+                    });
+            },
+        }).then((result) => {
+            if (result.value) {
+                const replaceEdited = (s) =>
+                    s["label"] === original.label &&
+                    s["start"] === original.start &&
+                    s["end"] === original.end
+                        ? result.value
+                        : s;
+
+                const sauv = this.state.sauv.map(replaceEdited);
+                const datas = this.state.datas.map(replaceEdited);
+
+                this.setState({ sauv, datas });
             }
         });
 

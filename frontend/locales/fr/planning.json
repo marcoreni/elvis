@@ -180,7 +180,8 @@
         "activityLabel": "Activité",
         "chooseActivity": "Choisir une activité",
         "locationLabel": "Emplacement",
-        "chooseLocation": "Choisir un Lieu",
+        "placeLabel": "Lieu",
+        "chooseLocation": "Choisir un lieu",
         "roomLabel": "Salle",
         "chooseRoom": "Choisir une salle",
         "noSuitableRooms": "Aucune salle adaptée disponible pour ce cours, autres salles:",
@@ -320,6 +321,9 @@
             "errEmptyField": "Un des champs est vide.",
             "errStartAfterEnd": "La date de début ne peut pas être après la date de fin.",
             "errTooLong": "Une durée supérieure à 3 mois n'est pas raisonnable pour des vacances…"
+        },
+        "editModal": {
+            "title": "Modifier les vacances ou le jour férié"
         },
         "fetchModal": {
             "title": "Importer les vacances et jours fériés ?"

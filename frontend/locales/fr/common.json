@@ -13,6 +13,10 @@
         "close": "Fermer"
     },
     "loading": "Chargement...",
+    "questionnaireModal": {
+        "loading": "Chargement de la fiche...",
+        "defaultTitle": "Questionnaire :"
+    },
     "tabs": {
         "incomplete": "Cet onglet n'est pas complètement rempli"
     },

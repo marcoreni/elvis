@@ -180,6 +180,7 @@
         "activityLabel": "Activity",
         "chooseActivity": "Choose an activity",
         "locationLabel": "Location",
+        "placeLabel": "Location",
         "chooseLocation": "Choose a location",
         "roomLabel": "Room",
         "chooseRoom": "Choose a room",
@@ -320,6 +321,9 @@
             "errEmptyField": "One of the fields is empty.",
             "errStartAfterEnd": "The start date cannot be after the end date.",
             "errTooLong": "A duration longer than 3 months is not reasonable for a holiday…"
+        },
+        "editModal": {
+            "title": "Edit the holiday or public holiday"
         },
         "fetchModal": {
             "title": "Import holidays and public holidays?"

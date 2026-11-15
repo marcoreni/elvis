@@ -16,14 +16,14 @@
     is_current = false
 
     url_parts.each do |part|
-      is_current = true if request.url.end_with?(part)
+      is_current = true if menu_path_active?(part)
     end
 
     sup_data.each do |data|
       data[:url_parts].each do |part|
-        is_current = true if request.url.end_with?(part)
+        is_current = true if menu_path_active?(part)
       end
-    end 
+    end
   %>
   <li class='<%= is_current ? "active" : "" %>'>
     <a class="m-l-sm m-r-sm img-rounded" <%=  %>>
@@ -41,7 +41,7 @@
       <% links.each do |link| %>
         <li class="m-l-sm m-r-sm img-rounded">
           <%
-            html_options = {style: (request.url.end_with?(link[:path]) ? 'color: white!important;' : ''),
+            html_options = {style: (menu_path_active?(link[:path]) ? 'color: white!important;' : ''),
                             class: "img-rounded"}
             html_options = html_options.merge link[:a_options]
           %>
