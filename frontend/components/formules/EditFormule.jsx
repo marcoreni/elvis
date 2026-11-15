@@ -374,33 +374,24 @@ export default function EditFormule({ formule }) {
         }
     }
 
-    // useCallback (not a plain function) so these stay stable across unrelated re-renders
-    // (e.g. typing in the name field) whenever `selectedPricings` -- the only thing they close
-    // over -- hasn't changed; pricingDataService below depends on their identity.
-    const handleSavePricingForNewFormule = useCallback(
-        (pricing) => {
-            setSelectedPricings(_.uniqBy([...selectedPricings, pricing], "id"));
-        },
-        [selectedPricings]
-    );
+    // Functional setState updaters (reading the latest `prev` instead of closing over
+    // `selectedPricings`) so these callbacks are stable for the component's whole lifetime
+    // ([] deps) rather than getting a new identity on every pricing add/update/delete.
+    // pricingDataService below depends on their identity, and needs it stable -- see that
+    // useMemo's comment.
+    const handleSavePricingForNewFormule = useCallback((pricing) => {
+        setSelectedPricings((prev) => _.uniqBy([...prev, pricing], "id"));
+    }, []);
 
-    const handleUpdatePricingForNewFormule = useCallback(
-        (pricing) => {
-            setSelectedPricings(
-                selectedPricings.map((p) => (p.id === pricing.id ? pricing : p))
-            );
-        },
-        [selectedPricings]
-    );
+    const handleUpdatePricingForNewFormule = useCallback((pricing) => {
+        setSelectedPricings((prev) =>
+            prev.map((p) => (p.id === pricing.id ? pricing : p))
+        );
+    }, []);
 
-    const handleDeletePricingForNewFormule = useCallback(
-        (pricing) => {
-            setSelectedPricings(
-                selectedPricings.filter((p) => p.id !== pricing.id)
-            );
-        },
-        [selectedPricings]
-    );
+    const handleDeletePricingForNewFormule = useCallback((pricing) => {
+        setSelectedPricings((prev) => prev.filter((p) => p.id !== pricing.id));
+    }, []);
 
     // Memoized: previously rebuilt on every render (every keystroke in name/description, every
     // selected-activity change, etc.) despite only depending on `t` and `allSeasons`.
@@ -440,8 +431,18 @@ export default function EditFormule({ formule }) {
         [t, allSeasons]
     );
 
-    // Memoized on what it actually depends on, instead of rebuilding (and for the "new formule"
-    // branch, re-wrapping the same pricings array in a fresh DataService instance) every render.
+    // Memoized on deps that genuinely don't change for the lifetime of a given (new, unsaved)
+    // formule -- mirrors the fix applied to ActivityRefBasics.jsx's equivalent
+    // NewActivityRefDataService/getDataService(). Deliberately seeded from `formule.formule_pricings`
+    // (the initial prop, set once) rather than `selectedPricings` (the state that re-renders the
+    // pricings table on every add/update/delete, and so gets a new reference each time): depending
+    // on `selectedPricings` here would rebuild a fresh NewFormulePricingDataService -- and reset its
+    // tempIdCounter -- on every real pricing add, letting two new pricings on the same unsaved
+    // formule collide on temp id 1 (see docs/KnownIssues.md). The service instance is now stable
+    // instead and maintains its own internal pricings array (mutated in place by createData/
+    // updateData/deleteData); handle*ForNewFormule above read `selectedPricings` via the functional
+    // setState form rather than closing over it, so they stay in sync with the service without
+    // needing to be rebuilt.
     const pricingDataService = useMemo(
         () =>
             formule.id
@@ -450,12 +451,12 @@ export default function EditFormule({ formule }) {
                       handleSavePricingForNewFormule,
                       handleUpdatePricingForNewFormule,
                       handleDeletePricingForNewFormule,
-                      selectedPricings,
+                      formule.formule_pricings || [],
                       allPricingCategories
                   ),
         [
             formule.id,
-            selectedPricings,
+            formule.formule_pricings,
             allPricingCategories,
             handleSavePricingForNewFormule,
             handleUpdatePricingForNewFormule,

@@ -160,6 +160,7 @@
         "pleaseWait": "Veuillez patienter...",
         "errorTitle": "Erreur",
         "editError": "Une erreur est survenue lors de la modification",
+        "overlapCheckError": "Impossible de vérifier les chevauchements de créneaux. Veuillez réessayer.",
         "updatingRecurrencesTitle": "Mise à jour des récurrences",
         "deleteCourse": "Supprimer ce cours",
         "deleteSlot": "Supprimer le créneau",

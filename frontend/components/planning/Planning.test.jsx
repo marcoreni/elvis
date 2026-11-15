@@ -302,3 +302,107 @@ describe("Planning — remove-student handlers don't throw ReferenceError (regre
         expect(ref.current.state.intervalStore[43]).toEqual(fetchedInterval);
     });
 });
+
+// Regression: handleUpdateActivityInstance (the non-hasIntervalOwnerChanged branch) built
+// `newState` via `this.getIntervals(...)` BEFORE its `TimeIntervalHelpers.fetchInterval(...)` call
+// resolved, then in the `.then()` only reassigned `newState.selectedIntervals` -- never rebuilding
+// `newState.intervalStore` from the fresh array -- before `setState`. Same bug class as
+// handleRemoveStudent/handleRemoveOptionalStudent above, fixed the same way: rebuild via
+// `this.getIntervals(...)` on the post-fetch array instead of patching `selectedIntervals` alone.
+describe("Planning — handleUpdateActivityInstance keeps intervalStore in sync (regression)", () => {
+    const RawPlanningComponent = Planning.WrappedComponent;
+
+    function renderRaw(extraProps) {
+        const ref = React.createRef();
+        render(
+            <RawPlanningComponent
+                {...props}
+                {...extraProps}
+                t={i18n.getFixedT("fr", "planning")}
+                ref={ref}
+            />
+        );
+        return ref;
+    }
+
+    test("rebuilds intervalStore from the post-fetch interval, not just selectedIntervals", async () => {
+        const interval = {
+            id: 42,
+            start: "2024-01-01T10:00:00.000Z",
+            end: "2024-01-01T11:00:00.000Z",
+            activity_instance: {
+                id: 99,
+                room_id: 1, // same as props.room.id below -- no owner change
+                time_interval_id: 42,
+                teachers_activity_instances: [],
+            },
+        };
+
+        const patchResponse = {}; // no error_message, no result
+        const fetchedInterval = {
+            id: 42,
+            start: "2024-01-01T12:00:00.000Z",
+            end: "2024-01-01T13:00:00.000Z",
+            kind: "c",
+            is_validated: true,
+            comment: null,
+            activity_instance: null,
+        };
+
+        global.fetch = vi.fn((url) => {
+            const u = String(url);
+            if (u === "/activity_instance/99") {
+                return Promise.resolve({
+                    json: () => Promise.resolve(patchResponse),
+                });
+            }
+            if (u === "/time_interval/42") {
+                return Promise.resolve({
+                    json: () => Promise.resolve(fetchedInterval),
+                });
+            }
+            return Promise.reject(new Error(`unexpected fetch: ${u}`));
+        });
+
+        const ref = renderRaw({
+            intervals: [interval],
+            room: { id: 1, label: "Salle A", activity_refs: [] },
+            rooms: [{ id: 1, label: "Salle A" }],
+        });
+
+        act(() => {
+            ref.current.setState({ intervalDetail: 42 });
+        });
+
+        act(() => {
+            ref.current.handleUpdateActivityInstance({ location_id: 5 });
+        });
+
+        await waitFor(() =>
+            expect(global.fetch).toHaveBeenCalledWith(
+                "/activity_instance/99",
+                expect.objectContaining({ method: "PATCH" })
+            )
+        );
+        await waitFor(() =>
+            expect(global.fetch).toHaveBeenCalledWith(
+                "/time_interval/42",
+                expect.anything()
+            )
+        );
+
+        await waitFor(() => {
+            const updated = ref.current.state.selectedIntervals.find(
+                (i) => i.id === 42
+            );
+            expect(updated).toEqual(fetchedInterval);
+        });
+
+        // Regression: intervalStore must reflect the same just-fetched interval as
+        // selectedIntervals, not the pre-fetch value `newState` was built from.
+        expect(ref.current.state.intervalStore[42]).toEqual(
+            ref.current.state.selectedIntervals.find((i) => i.id === 42)
+        );
+        expect(ref.current.state.intervalStore[42]).toEqual(fetchedInterval);
+    });
+});

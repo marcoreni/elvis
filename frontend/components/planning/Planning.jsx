@@ -568,24 +568,30 @@ class Planning extends React.Component {
                                     t => t.id === changes.cover_teacher_id
                                 );
 
-                        let newState = this.getIntervals(
-                            this.state.selectedIntervals.map(i => {
-
-                                if (i.id === this.state.intervalDetail) {
-                                    return {
-                                        ...i,
-                                        activity_instance: instance,
-                                    };
-                                }
-                                return i;
-                            })
-                        );
+                        // Just the array, not `this.getIntervals(...)`: the fetchInterval `.then()`
+                        // below only ever reads `.selectedIntervals` off this, and rebuilds the
+                        // real intervalStore itself from the post-fetch array -- no need to also
+                        // build (and discard) an interim intervalStore here.
+                        const updatedIntervals = this.state.selectedIntervals.map(i => {
+                            if (i.id === this.state.intervalDetail) {
+                                return {
+                                    ...i,
+                                    activity_instance: instance,
+                                };
+                            }
+                            return i;
+                        });
 
                         TimeIntervalHelpers.fetchInterval(csrfToken, instance.time_interval_id).then(i => {
-                            newState.selectedIntervals = [...newState.selectedIntervals.filter(inter => inter.id !== i.id), i]
+                            // Same fix as handleRemoveStudent/handleRemoveOptionalStudent above:
+                            // rebuild intervalStore from the post-fetch array instead of only
+                            // patching selectedIntervals -- `updatedIntervals` above was computed
+                            // before this fetch resolved, so an intervalStore built from it would
+                            // be stale otherwise.
+                            const newIntervals = [...updatedIntervals.filter(inter => inter.id !== i.id), i]
 
                             this.setState({
-                                ...newState
+                                ...this.getIntervals(newIntervals)
                             });
                         });
                     }

@@ -160,6 +160,7 @@
         "pleaseWait": "Please wait...",
         "errorTitle": "Error",
         "editError": "An error occurred while saving the changes",
+        "overlapCheckError": "Unable to check for schedule overlaps. Please try again.",
         "updatingRecurrencesTitle": "Updating recurrences",
         "deleteCourse": "Delete this course",
         "deleteSlot": "Delete the slot",
