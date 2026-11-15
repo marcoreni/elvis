@@ -598,6 +598,11 @@ class ActivityController < ApplicationController
 
     next_season = Season.next
 
+    if next_season.nil?
+      render json: []
+      return
+    end
+
     render json: activities.flatten
                            .select { |a| a.activity_ref.kind == "Enfance" }
                            .select { |a| a.time_interval.start.between?(next_season.start, next_season.end) }

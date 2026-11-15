@@ -623,25 +623,22 @@ unhandled rejection and `isValidated` stuck at its stale value, with no user-vis
 The `teacher_id: 0` 404 case this used to trigger is fixed, but the gap itself -- the endpoint
 has no rescue and the caller has no catch -- is still open for any other failure mode.
 
-## `Season.next` crashes with `NoMethodError` when no season is flagged `is_current`
+## `Season.next` / `Season.current` can still crash a few rarely-reached, low-priority spots
 
-`Season.next` (`app/models/season.rb:120-124`) is `includes(:holidays).where(id: current.next_season_id).first`
--- `current` has no nil guard, so with zero `Season` rows flagged `is_current`, `Season.current` is
-`nil` and `.next_season_id` raises. `ApplicationController#verify_season`'s bootstrap
-(`append_before_action :verify_season, only: [:index]`) doesn't cover this: it only redirects to
-season setup when there are zero `Season` rows total, not when rows exist but none is current, and
-`PlanningController` has no `index` action for the hook to run on anyway.
+`Season.next` (`app/models/season.rb`) itself is now nil-safe (`current&.next_season_id`), and
+every real crash site among its ~20 call sites has been guarded (a redirect-with-alert or a safe
+default, per call site -- see git history). One genuinely dead site was left unguarded:
+`StudentEvaluationAnswers::ClearAnswers#execute`'s `Season.next.id` -- confirmed zero call sites
+anywhere in the app, not fixed per this repo's don't-delete/don't-silently-fix-unreachable-code
+convention, but worth fixing if this service is ever wired up to a real caller.
 
-Pre-existing, not introduced by the `show_all_rooms` season-prop fix (PR fixing
-`/plannings/all_rooms`'s missing `season:` prop) -- that fix mirrored `show_for_room`'s
-`Season.next.as_json(...)` line exactly, which already had this same crash, so it now also
-reaches `show_all_rooms`. At least 19 other call sites share the same unguarded pattern (`grep -rn
-"Season\.next" app/ lib/`), including `PlanningController#show`/`#show_generic`/`#show_for_room`/
-`#show_availabilities_for_date`, `ActivitiesApplicationsController`, `ActivityController`,
-`UsersController`, `EvaluationAppointmentsController`. Also note: even once the backend is
-guarded, `frontend/components/planning/Planning.jsx:83`'s `this.props.season.holidays.length` in
-the constructor still assumes a non-null `season` prop -- a full fix needs both a nil-safe
-`Season.next` (or call-site guards) and a frontend guard for the "no current season" case. Fix,
-narrowly: `next_id = current&.next_season_id` and have callers handle a possible `nil` result;
-broadly: decide whether "no current season" should even be reachable in a properly bootstrapped
-instance, or whether every caller needs defensive handling.
+Two separate, lower-priority gaps found while auditing this, left as-is (not introduced by this
+fix, and not actually about `Season.next`):
+- `StudentEvaluations::GetEvaluationWeeks#execute` already nil-guards `Season.next`, but its
+  fallback branch (`current_season.end.year`) would itself crash if `Season.current` is ALSO
+  `nil` -- a `Season.current`-is-nil bug, not a `Season.next` one, and a much rarer compound case
+  (no current season at all, not just mid-rollover). Only reachable via
+  `SeasonsController#<action rendering GetEvaluationWeeks>`.
+- `frontend/components/planning/Planning.jsx`'s constructor still assumes a non-null `season`
+  prop (`this.props.season.holidays.length`) -- a frontend-side guard for "no current season" is
+  still open if any caller ever passes a nil season through.

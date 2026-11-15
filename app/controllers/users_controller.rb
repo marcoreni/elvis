@@ -1022,6 +1022,10 @@ class UsersController < ApplicationController
   def previsional_groups
     @current_user = current_user
 
+    if Season.next.nil?
+      redirect_to root_path, alert: t("controllers.users.previsional_groups.no_next_season") and return
+    end
+
     groups_question = Question.student_evaluation_questions.find_by_name("groups_he_could_be_in_next_season")
     groups_select_values = groups_question.select_values.split(";").map { |v| v.split(":") }
 

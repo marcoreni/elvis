@@ -146,6 +146,8 @@ class PlanningController < ApplicationController
 
     season = Season.next
 
+    redirect_to root_path, alert: t("controllers.planning.show_generic.no_next_season") and return if season.nil?
+
     season_bounds = (season.start..season.end)
 
     time_intervals = planning
@@ -189,7 +191,7 @@ class PlanningController < ApplicationController
       }
     }
 
-    day = Season.next.start
+    day = season.start
     @day = day.beginning_of_week
 
     @season = season.as_json({ include: [:holidays] })
@@ -508,6 +510,10 @@ class PlanningController < ApplicationController
     next_season = Season.next
     current_season = Season.current
 
+    if availabilities_date.nil? && next_season.nil?
+      redirect_to root_path, alert: t("controllers.planning.show_availabilities_for_date.no_next_season") and return
+    end
+
     day = availabilities_date.nil? ? next_season.start : availabilities_date.to_date
     day = day.beginning_of_week
     day_end = day.end_of_week
@@ -639,7 +645,14 @@ class PlanningController < ApplicationController
   end
 
   def copy_availabilities
-    TimeIntervals::CopyAvailabilities.new(params[:id], Season.current, Season.next,
+    next_season = Season.next
+
+    if next_season.nil?
+      redirect_to :availabilities_planning,
+                  alert: t("controllers.planning.copy_availabilities.no_next_season") and return
+    end
+
+    TimeIntervals::CopyAvailabilities.new(params[:id], Season.current, next_season,
                                           %w[p c o]).execute
     redirect_to :availabilities_planning
   end
