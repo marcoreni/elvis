@@ -608,6 +608,11 @@ class ActivitiesApplicationsController < ApplicationController
 
     season = Season.next
 
+    if season.nil? && !performed?
+      redirect_to root_path,
+                  alert: t("controllers.activities_applications.new_for_existing_user.no_next_season") and return
+    end
+
     pre_application_activity = params[:pre_application_activity_id].to_i.positive? ? PreApplicationActivity.find(params[:pre_application_activity_id]) : nil
 
     @learned_activities = pre_selected_user
@@ -1250,6 +1255,12 @@ class ActivitiesApplicationsController < ApplicationController
     authorize! :edit, activity_application
 
     next_season = Season.next
+
+    if next_season.nil?
+      render json: { success: false, message: t("controllers.activities_applications.renew.no_next_season") },
+             status: 422 and return
+    end
+
     default_status = ActivityApplicationStatus.find(ActivityApplicationStatus::TREATMENT_PENDING_ID)
 
     new_activity_application = activity_application.deep_clone include: [:desired_activities]

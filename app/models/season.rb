@@ -118,7 +118,7 @@ class Season < ApplicationRecord
   end
 
   def self.next
-    next_id = current.next_season_id
+    next_id = current&.next_season_id
 
     includes(:holidays).where(id: next_id).first
   end

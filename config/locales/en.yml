@@ -436,6 +436,10 @@ en:
         tuesday: Tuesday
         wednesday: Wednesday
     activities_applications:
+      new_for_existing_user:
+        no_next_season: 'Unable to access this form: no next season is configured'
+      renew:
+        no_next_season: 'Unable to renew the registration: no next season is configured'
       send_all_confirmation_mail:
         already_processed: The selected users have already received the email or are
           not in an assigned/proposed course status
@@ -476,7 +480,13 @@ en:
       update:
         success: Payment schedule option updated
     planning:
+      copy_availabilities:
+        no_next_season: 'Unable to copy availabilities: no next season is configured'
       no_default_planning: No default schedule set by the school
+      show_availabilities_for_date:
+        no_next_season: 'Unable to display availabilities: no next season is configured'
+      show_generic:
+        no_next_season: 'Unable to display this schedule: no next season is configured'
     practice:
       band_types:
         destroy:
@@ -502,6 +512,8 @@ en:
         main_account_not_found: Main account not found
       detach_user:
         not_found: User not found
+      previsional_groups:
+        no_next_season: 'Unable to display forecast groups: no next season is configured'
       reset_password:
         email_sent: Email sent
   csv_exports:

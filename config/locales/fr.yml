@@ -444,6 +444,12 @@ fr:
         tuesday: Mardi
         wednesday: Mercredi
     activities_applications:
+      new_for_existing_user:
+        no_next_season: 'Impossible d''accéder à ce formulaire : aucune saison suivante
+          n''est configurée'
+      renew:
+        no_next_season: 'Impossible de renouveler l''inscription : aucune saison suivante
+          n''est configurée'
       send_all_confirmation_mail:
         already_processed: Les utilisateurs sélectionnés ont déjà reçu le mail ou
           ne sont pas en cours attribué / cours proposé
@@ -485,7 +491,16 @@ fr:
       update:
         success: Option d'échéancier de paiement mise à jour
     planning:
+      copy_availabilities:
+        no_next_season: 'Impossible de copier les disponibilités : aucune saison
+          suivante n''est configurée'
       no_default_planning: Aucun planning par défaut n'a été défini par l'école
+      show_availabilities_for_date:
+        no_next_season: 'Impossible d''afficher les disponibilités : aucune saison
+          suivante n''est configurée'
+      show_generic:
+        no_next_season: 'Impossible d''afficher ce planning : aucune saison suivante
+          n''est configurée'
     practice:
       band_types:
         destroy:
@@ -511,6 +526,9 @@ fr:
         main_account_not_found: Compte de rattachement introuvable
       detach_user:
         not_found: Utilisateur introuvable
+      previsional_groups:
+        no_next_season: 'Impossible d''afficher les groupes prévisionnels : aucune
+          saison suivante n''est configurée'
       reset_password:
         email_sent: Email envoyé
   csv_exports:

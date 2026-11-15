@@ -50,6 +50,32 @@ RSpec.describe Season do
     end
   end
 
+  describe ".next" do
+    it "returns nil instead of raising when there are zero seasons" do
+      expect(described_class.next).to be_nil
+    end
+
+    it "returns nil instead of raising when seasons exist but none is flagged is_current" do
+      build_season(is_current: false)
+
+      expect(described_class.next).to be_nil
+    end
+
+    it "returns nil when the current season has no next_season_id set" do
+      build_season(is_current: true)
+
+      expect(described_class.next).to be_nil
+    end
+
+    it "returns the season the current one points to via next_season_id" do
+      current_season = build_season(is_current: true)
+      following_season = build_season(is_current: false, start: Date.current + 1.year)
+      current_season.update!(next_season_id: following_season.id)
+
+      expect(described_class.next).to eq(following_season)
+    end
+  end
+
   describe ".current_apps_season" do
     it "does not keep serving a cached nil after a season is created" do
       expect(described_class.current_apps_season).to be_nil
