@@ -476,13 +476,25 @@ describe("ActivityDetailsModal — verifyTimeOverlap", () => {
 
     // KnownIssues "verifyTimeOverlap() has no error handling for a non-200 response" fix: the
     // `.then().then()` chain had no `.catch`, so a non-200 (or a response whose body isn't valid
-    // JSON) left an unhandled rejection and `isValidated` stuck at its stale value. Now a failed
-    // response is turned into a thrown error (checked via `response.ok` -- a non-200 can still
-    // return parseable JSON, e.g. a `{ error: ... }` body, which would otherwise silently read as
-    // "no conflict") and caught: `isValidated` is forced false (the safer default) and an error is
-    // shown via swal, the same mechanism this component already uses for other failures (see
-    // handleSaveActivityInstances' onSave).
-    test("a non-200 /planning/overlap response forces isValidated false and surfaces an error, instead of an unhandled rejection", async () => {
+    // JSON) left an unhandled rejection with no user-visible feedback. A failed response is now
+    // turned into a thrown error (checked via `response.ok` -- a non-200 can still return
+    // parseable JSON, e.g. a `{ error: ... }` body, which would otherwise silently read as "no
+    // conflict") and caught: an error is shown via swal (the same mechanism this component already
+    // uses for other failures, see handleSaveActivityInstances' onSave).
+    //
+    // CODE REVIEW: the first version of this fix set `isValidated: false` on failure and this test
+    // asserted exactly that -- but `this.state.isValidated` has zero readers anywhere in this file
+    // (confirmed via grep); the real gate on the "create course" button is `conflicting_interval`
+    // (`disabled={this.state.conflicting_interval || ...}`, below), which the `.catch` never
+    // touched. So a failed check showed an error dialog but left the create button enabled,
+    // letting a room/teacher overlap that was never actually checked get created unchecked
+    // (`TimeIntervalController#create_activity_instances` does no server-side overlap validation
+    // of its own -- this client-side check is the only guard). Fixed for real with a dedicated
+    // `overlapCheckFailed` flag that's folded into the same `disabled` condition, instead of the
+    // inert `isValidated`. This test now renders with `isAdmin` (so the creation UI -- including
+    // the real "create course" button -- actually mounts) and asserts the button is genuinely
+    // disabled, not just that some unread state field flipped.
+    test("a non-200 /planning/overlap response disables the create-course button and surfaces an error, instead of an unhandled rejection", async () => {
         global.fetch = vi.fn().mockResolvedValue({
             ok: false,
             status: 500,
@@ -493,14 +505,98 @@ describe("ActivityDetailsModal — verifyTimeOverlap", () => {
             .mockImplementation(() => {});
 
         const ref = React.createRef();
-        render(<ActivityDetailsModal {...baseProps} ref={ref} />);
-
-        await screen.findByText(
-            "Impossible de vérifier les chevauchements de créneaux. Veuillez réessayer."
+        render(
+            <ActivityDetailsModal
+                {...baseProps}
+                ref={ref}
+                isAdmin
+                userActivities={[]}
+                locations={[]}
+                // The "create course" UI (and its disabled-gated button) only renders for a
+                // not-yet-validated slot -- an already-validated interval renders the tabbed
+                // edit view instead (see render(), the `is_validated && state.activity` branch).
+                interval={{ ...baseProps.interval, is_validated: false }}
+            />
         );
 
-        expect(ref.current.state.isValidated).toBe(false);
+        await waitFor(() =>
+            expect(ref.current.state.overlapCheckFailed).toBe(true)
+        );
+
+        // The swal error dialog and the inline alert (render(), guarded by the same
+        // overlapCheckFailed flag) both show this copy -- assert at least one landed rather than
+        // getByText, which throws on the resulting multiple matches.
+        expect(
+            (
+                await screen.findAllByText(
+                    "Impossible de vérifier les chevauchements de créneaux. Veuillez réessayer."
+                )
+            ).length
+        ).toBeGreaterThan(0);
+
+        // Dismiss the dialog (matches the failure scenario this fix closes: the user sees the
+        // error and dismisses it) -- swal marks the rest of the page aria-hidden while open, so
+        // the real create button isn't queryable by role until it's closed.
+        fireEvent.click(screen.getByRole("button", { name: "OK" }));
+
+        const createButton = screen.getByRole("button", {
+            name: /Créer ce cours/,
+        });
+        expect(createButton).toBeDisabled();
+
         expect(consoleErrorSpy).toHaveBeenCalled();
+
+        consoleErrorSpy.mockRestore();
+    });
+
+    test("a later successful check clears overlapCheckFailed and re-enables the button", async () => {
+        global.fetch = vi
+            .fn()
+            .mockResolvedValueOnce({
+                ok: false,
+                status: 500,
+                json: () => Promise.reject(new Error("Unexpected token <")),
+            })
+            .mockResolvedValue({
+                ok: true,
+                json: () => Promise.resolve({ teacher: null, room: null }),
+            });
+        const consoleErrorSpy = vi
+            .spyOn(console, "error")
+            .mockImplementation(() => {});
+
+        const ref = React.createRef();
+        render(
+            <ActivityDetailsModal
+                {...baseProps}
+                ref={ref}
+                isAdmin
+                userActivities={[]}
+                locations={[]}
+                interval={{ ...baseProps.interval, is_validated: false }}
+            />
+        );
+
+        await waitFor(() =>
+            expect(ref.current.state.overlapCheckFailed).toBe(true)
+        );
+        // Dismiss the error dialog -- swal marks the rest of the page aria-hidden while open.
+        fireEvent.click(screen.getByRole("button", { name: "OK" }));
+        expect(
+            screen.getByRole("button", { name: /Créer ce cours/ })
+        ).toBeDisabled();
+
+        // Re-fires verifyTimeOverlap via handleSelectTime, this time against the success mock.
+        fireEvent.change(screen.getAllByDisplayValue("10:00")[0], {
+            target: { value: "09:00" },
+        });
+
+        await waitFor(() =>
+            expect(ref.current.state.overlapCheckFailed).toBe(false)
+        );
+        expect(
+            screen.getByRole("button", { name: /Créer ce cours/ })
+        ).not.toBeDisabled();
 
         consoleErrorSpy.mockRestore();
     });

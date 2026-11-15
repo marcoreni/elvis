@@ -88,24 +88,40 @@ describe("EditFormule NewFormulePricingDataService temp id collision regression"
         await waitFor(() => {
             expect(mockLastDataService.pricing_categories.length).toBe(1);
         });
-        const dataService = mockLastDataService;
+        const serviceBeforeAdds = mockLastDataService;
 
+        // Deliberately re-read `mockLastDataService` after each add instead of reusing one
+        // captured reference: the real BaseDataTable always calls `props.dataService.createData`
+        // on whatever instance it currently holds, and createData's own setSelectedPricings call
+        // triggers a re-render. On the pre-fix code, that re-render rebuilds pricingDataService
+        // (selectedPricings was one of its useMemo deps), handing BaseDataTable a brand-new
+        // NewFormulePricingDataService with tempIdCounter reset to 1 -- so the second add must go
+        // through that freshly re-rendered reference for the id collision to actually surface.
+        // Reusing the pre-add reference for both calls (as an earlier version of this test did)
+        // bypasses the rebuild entirely and passes regardless of the fix.
         let first;
+        await act(async () => {
+            first = (await mockLastDataService.createData(newPricingPayload()))
+                .data;
+        });
+        const serviceAfterFirstAdd = mockLastDataService;
+
         let second;
         await act(async () => {
-            first = (await dataService.createData(newPricingPayload())).data;
+            second = (
+                await serviceAfterFirstAdd.createData(newPricingPayload())
+            ).data;
         });
-        await act(async () => {
-            second = (await dataService.createData(newPricingPayload())).data;
-        });
+        const serviceAfterSecondAdd = mockLastDataService;
 
         expect([first.id, second.id]).toEqual([1, 2]);
         // Same instance reused across both adds -- that's what keeps tempIdCounter monotonic.
-        expect(mockLastDataService).toBe(dataService);
+        expect(serviceAfterFirstAdd).toBe(serviceBeforeAdds);
+        expect(serviceAfterSecondAdd).toBe(serviceAfterFirstAdd);
 
         // Editing/deleting the second one actually affects the second one, not the first.
         await act(async () => {
-            await dataService.updateData({
+            await serviceAfterSecondAdd.updateData({
                 id: second.id,
                 price: 99,
                 fromSeason: { value: 1 },
@@ -113,14 +129,14 @@ describe("EditFormule NewFormulePricingDataService temp id collision regression"
                 pricing_category: pricingCategory,
             });
         });
-        const afterUpdate = (await dataService.listData()).data;
+        const afterUpdate = (await serviceAfterSecondAdd.listData()).data;
         expect(afterUpdate.find((p) => p.id === first.id).price).toBe(50);
         expect(afterUpdate.find((p) => p.id === second.id).price).toBe(99);
 
         await act(async () => {
-            await dataService.deleteData({ id: second.id });
+            await serviceAfterSecondAdd.deleteData({ id: second.id });
         });
-        const afterDelete = (await dataService.listData()).data;
+        const afterDelete = (await serviceAfterSecondAdd.listData()).data;
         expect(afterDelete.map((p) => p.id)).toEqual([first.id]);
     });
 

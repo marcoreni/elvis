@@ -405,10 +405,9 @@ describe("ActivityRefBasics", () => {
         // new pricings added to a brand-new (unsaved) activity both got temp id 1, and editing/
         // deleting the second one actually hit the first. Since getDataService() now returns the
         // *same* instance across renders (deps unchanged), tempIdCounter is monotonic instead.
-        // NOT fixed for EditFormule.jsx's equivalent NewFormulePricingDataService: there,
-        // `selectedPricings` (one of pricingDataService's useMemo deps) necessarily changes on
-        // every real add, so a fresh instance -- and a reset tempIdCounter -- is still built each
-        // time. See docs/KnownIssues.md.
+        // The equivalent bug in EditFormule.jsx's NewFormulePricingDataService was fixed the same
+        // way (see EditFormule.newPricingTempId.test.jsx) -- its pricingDataService useMemo no
+        // longer depends on `selectedPricings` either.
         test("getDataService() (new-activity branch) keeps tempIdCounter monotonic across saves (regression: used to collide at id 1)", () => {
             const pricingCategories = [{ id: 10, name: "Standard" }];
             const instance = makeInstance({ activityRef: { id: null } });

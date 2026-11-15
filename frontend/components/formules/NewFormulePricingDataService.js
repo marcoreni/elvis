@@ -18,8 +18,16 @@ export default class NewFormulePricingDataService extends DataService {
             handleDeletePricingForNewFormule;
 
         this.pricing_categories = pricing_categories || [];
-        this.forumulePricings = forumulePricings || [];
-        this.tempIdCounter = 1;
+        // A copy, not the caller's array directly: createData/deleteData mutate
+        // this.forumulePricings in place (push/splice). EditFormule.jsx currently only ever seeds
+        // this with `formule.formule_pricings` for a brand-new, pricing-less formule (`[]`), but if
+        // this is ever reused for a formule that already has seeded pricings, mutating that array
+        // in place would also mutate the prop it was handed.
+        this.forumulePricings = [...(forumulePricings || [])];
+        // Seeded above the max existing id (not hardcoded 1) so a new temp id can't collide with a
+        // real seeded one, for the same not-yet-reachable-today reason.
+        this.tempIdCounter =
+            Math.max(0, ...this.forumulePricings.map((p) => p.id || 0)) + 1;
 
         this.createData = this.createData.bind(this);
     }

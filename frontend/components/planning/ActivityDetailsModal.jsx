@@ -148,6 +148,13 @@ class ActivityDetailsModal extends React.Component {
 
             conflicting_interval: null,
             conflicting_interval_teacher: null,
+            // Set true when verifyTimeOverlap()'s request itself fails (non-200/parse error) --
+            // distinct from conflicting_interval/_teacher, which represent a real conflict found by
+            // a successful check. Read by the "create course" button's disabled condition below:
+            // we genuinely don't know whether there's a conflict, so block creation rather than
+            // let it through unchecked (this.props.room/teacher overlap is never re-validated
+            // server-side -- see TimeIntervalController#create_activity_instances).
+            overlapCheckFailed: false,
 
             rooms_constrained: rooms_constrained,
 
@@ -592,16 +599,24 @@ class ActivityDetailsModal extends React.Component {
                         conflicting_intervals.room == null,
                     conflicting_interval: conflicting_intervals.room,
                     conflicting_interval_teacher: conflicting_intervals.teacher,
+                    // A later successful check clears a previous failure.
+                    overlapCheckFailed: false,
                 });
             })
             .catch((error) => {
                 // A non-200 response or a JSON parse failure used to leave this as an unhandled
-                // rejection with isValidated stuck at its stale value. Force isValidated false (the
-                // safer default -- we genuinely don't know whether there's a conflict) and surface
-                // the failure the same way this component reports other errors (swal, see
-                // handleSaveActivityInstances' onSave above).
+                // rejection with isValidated stuck at its stale value, and -- the actual bug --
+                // nothing blocked the "create course" button: that button's disabled condition
+                // reads conflicting_interval/_teacher, not isValidated, and neither is touched by a
+                // failed check, so the button stayed enabled and a room/teacher overlap that failed
+                // to be checked could be created unchecked (create_activity_instances does no
+                // server-side overlap validation of its own). overlapCheckFailed is read by that
+                // disabled condition below, so a failed check genuinely blocks creation until a
+                // retry (changing time/room/teacher) succeeds. Also surface the failure the same
+                // way this component reports other errors (swal, see handleSaveActivityInstances'
+                // onSave above).
                 console.error("verifyTimeOverlap failed", error);
-                this.setState({ isValidated: false });
+                this.setState({ overlapCheckFailed: true });
                 swal.fire({
                     title: t("activityModal.errorTitle"),
                     text: t("activityModal.overlapCheckError"),
@@ -1280,6 +1295,11 @@ class ActivityDetailsModal extends React.Component {
                                 </p>
                             </div>
                         ) : null}
+                        {this.state.overlapCheckFailed ? (
+                            <div className="alert alert-danger">
+                                <p>{t("activityModal.overlapCheckError")}</p>
+                            </div>
+                        ) : null}
                         {timeIntervalInvalid ? (
                             <div className="alert alert-danger">
                                 <p>{t("activityModal.slotInvalid")}</p>
@@ -1365,6 +1385,7 @@ class ActivityDetailsModal extends React.Component {
                             onClick={() => this.handleSaveActivityInstances()}
                             disabled={
                                 this.state.conflicting_interval ||
+                                this.state.overlapCheckFailed ||
                                 moment(this.state.startTime, "HH:mm") >
                                     moment(this.state.endTime, "HH:mm")
                             }
