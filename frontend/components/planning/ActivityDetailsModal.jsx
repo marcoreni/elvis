@@ -1189,7 +1189,7 @@ class ActivityDetailsModal extends React.Component {
                             type="button"
                         >
                             <i className="fas fa-times m-r-sm" />
-                            Fermer
+                            {t("common:actions.close")}
                         </button>
                     </div>
                     {deleteActivity}
@@ -1366,7 +1366,7 @@ class ActivityDetailsModal extends React.Component {
                         type="button"
                     >
                         <i className="fas fa-times m-r-sm" />
-                        Fermer
+                        {t("common:actions.close")}
                     </button>
                     <button
                         className="btn btn-warning"
@@ -1727,7 +1727,9 @@ export const LocationSelection = ({
     if (locations.length === 1) {
         return (
             <div>
-                <label className="control-label">Lieu</label>
+                <label className="control-label">
+                    {t("activityModal.placeLabel")}
+                </label>
                 <p className="form-control-static">{locations[0].label}</p>
             </div>
         );
@@ -1736,7 +1738,7 @@ export const LocationSelection = ({
     return (
         <form>
             <label className="control-label" htmlFor="o">
-                Lieu
+                {t("activityModal.placeLabel")}
             </label>
             <select
                 className="form-control m-b"

@@ -1,10 +1,8 @@
 <div class="row wrapper border-bottom white-bg page-heading">
-    <h1>Répliquer les cours d'une semaine sur une plage de dates </h1>
-</div>  
+    <h1><%= t("views.scripts.replicate_week_activities.heading") %></h1>
+</div>
 
-<p class="m-t-md m-b-md">Cette page permet de répliquer tous les cours d'une semaine-modèle vers une période spécifique.
-  Cette période peut être constituée d'une seule journée ou d'une plage de dates. Par défaut, les vacances et jours fériés sont
-  exclus de la réplication mais vous pouvez choisir de les inclure.</p>
+<p class="m-t-md m-b-md"><%= t("views.scripts.replicate_week_activities.description") %></p>
 
 <%= react_component(
       "scripts/replicate_activities/ReplicateWeekAct",

@@ -58,11 +58,12 @@ class Season < ApplicationRecord
   # @return [Season] la saison en cours ou bien la saison suivante
   def self.current_apps_season
     Rails.cache.fetch("current_apps_season", expires_in: 12.hours) do
-      return nil unless Season.any?
-
       s = Season.current
 
-      s = Season.next if DateTime.now > s&.closing_date_for_applications
+      # `Season.any?` alone isn't enough to guard the comparison below: Seasons can exist with
+      # none of them flagged `is_current`, in which case `Season.current` is nil too (not just
+      # when the table is empty) -- `DateTime.now > nil` raises ArgumentError either way.
+      s = Season.next if s && DateTime.now > s.closing_date_for_applications
 
       s
     end

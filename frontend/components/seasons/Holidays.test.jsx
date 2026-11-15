@@ -15,6 +15,10 @@ import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import i18n from "../../i18n";
+// editModal's preConfirm reads/writes its popup's inputs via jQuery (`$`), matching addModal's
+// existing real-markup approach -- real jQuery (not jsdom's own query APIs) is needed to exercise
+// it the same way the component's own code does.
+import "../../expose-jquery";
 
 vi.mock("sweetalert2", () => ({
     default: { fire: vi.fn(() => Promise.resolve({})) },
@@ -59,16 +63,163 @@ describe("Holidays", () => {
         await i18n.changeLanguage("fr");
         render(<Holidays datas={DATAS} sid={1} />);
 
+        // Action column order is [edit, delete] -- see the "editModal" tests below for the
+        // first button.
         const deleteButton = screen
             .getByText("Toussaint")
             .closest("tr")
-            .querySelector("button");
+            .querySelectorAll("button")[1];
         fireEvent.click(deleteButton);
 
         expect(swal.fire).toHaveBeenCalledTimes(1);
         expect(swal.fire.mock.calls[0][0].title).toBe(
             "Confirmez-vous la suppression de « Toussaint » ?"
         );
+    });
+});
+
+// Coverage for the "edit holiday" affordance (item 5): an edit button in the action column,
+// reusing addModal's own swal-with-raw-HTML-inputs machinery (prefilled this time) and the new
+// `PATCH /season/:id/holidays` endpoint. swal.fire itself stays mocked (see the top-level mock
+// above) -- these tests inspect the config object passed to it and invoke `preConfirm` directly,
+// since the mock never renders the popup's actual DOM.
+describe("Holidays — editModal", () => {
+    beforeEach(() => {
+        // preConfirm reads/writes these via jQuery ids, same as addModal's real popup markup
+        // would once rendered -- the mocked swal.fire never renders that markup, so it's stood up
+        // by hand here.
+        document.body.innerHTML =
+            '<input id="ds" /><input id="de" /><div id="er"></div>';
+    });
+
+    afterEach(() => {
+        document.body.innerHTML = "";
+        delete global.fetch;
+    });
+
+    function clickEditButton() {
+        const editButton = screen
+            .getByText("Toussaint")
+            .closest("tr")
+            .querySelectorAll("button")[0];
+        fireEvent.click(editButton);
+    }
+
+    test("opens prefilled with the row's current label/start/end", async () => {
+        await i18n.changeLanguage("fr");
+        render(<Holidays datas={DATAS} sid={1} />);
+
+        clickEditButton();
+
+        expect(swal.fire).toHaveBeenCalledTimes(1);
+        const config = swal.fire.mock.calls[0][0];
+        expect(config.title).toBe("Modifier les vacances ou le jour férié");
+        expect(config.inputValue).toBe("Toussaint");
+        expect(config.html).toContain('value="2026-10-19"');
+        expect(config.html).toContain('value="2026-11-02"');
+    });
+
+    test("preConfirm PATCHes the identifying triple plus the new_* values and resolves with the response body", async () => {
+        await i18n.changeLanguage("fr");
+        global.fetch = vi.fn().mockResolvedValue({
+            ok: true,
+            json: () =>
+                Promise.resolve({
+                    label: "Toussaint (modifié)",
+                    start: "2026-10-20",
+                    end: "2026-11-03",
+                }),
+        });
+        render(<Holidays datas={DATAS} sid={1} />);
+
+        clickEditButton();
+        const { preConfirm } = swal.fire.mock.calls[0][0];
+
+        $("#ds").val("2026-10-20");
+        $("#de").val("2026-11-03");
+        const result = await preConfirm("Toussaint (modifié)");
+
+        expect(global.fetch).toHaveBeenCalledWith(
+            "/season/1/holidays",
+            expect.objectContaining({
+                method: "PATCH",
+                body: JSON.stringify({
+                    label: "Toussaint",
+                    start: "2026-10-19",
+                    end: "2026-11-02",
+                    new_label: "Toussaint (modifié)",
+                    new_start: "2026-10-20",
+                    new_end: "2026-11-03",
+                }),
+            })
+        );
+        expect(result).toEqual({
+            label: "Toussaint (modifié)",
+            start: "2026-10-20",
+            end: "2026-11-03",
+        });
+    });
+
+    test("preConfirm shows the server's localized 422 errors and keeps the popup open", async () => {
+        await i18n.changeLanguage("fr");
+        global.fetch = vi.fn().mockResolvedValue({
+            ok: false,
+            json: () =>
+                Promise.resolve({
+                    errors: [
+                        "La date de début ne peut pas être après la date de fin.",
+                    ],
+                }),
+        });
+        render(<Holidays datas={DATAS} sid={1} />);
+
+        clickEditButton();
+        const { preConfirm } = swal.fire.mock.calls[0][0];
+
+        $("#ds").val("2026-11-03");
+        $("#de").val("2026-10-20");
+        const result = await preConfirm("Toussaint");
+
+        expect(result).toBe(false);
+        expect($("#er").text()).toBe(
+            "La date de début ne peut pas être après la date de fin."
+        );
+    });
+
+    test("preConfirm rejects a blank new label client-side without calling fetch", async () => {
+        await i18n.changeLanguage("fr");
+        global.fetch = vi.fn();
+        render(<Holidays datas={DATAS} sid={1} />);
+
+        clickEditButton();
+        const { preConfirm } = swal.fire.mock.calls[0][0];
+
+        $("#ds").val("2026-10-20");
+        $("#de").val("2026-11-03");
+        const result = await preConfirm("");
+
+        expect(result).toBe(false);
+        expect(global.fetch).not.toHaveBeenCalled();
+        expect($("#er").text()).toBe("Un des champs est vide.");
+    });
+
+    test("a confirmed edit replaces the row's label/start/end in local state", async () => {
+        await i18n.changeLanguage("fr");
+        swal.fire.mockResolvedValueOnce({
+            value: {
+                label: "Toussaint (modifié)",
+                start: "2026-10-20",
+                end: "2026-11-03",
+            },
+        });
+        render(<Holidays datas={DATAS} sid={1} />);
+
+        clickEditButton();
+
+        expect(
+            await screen.findByText("Toussaint (modifié)")
+        ).toBeInTheDocument();
+        expect(screen.queryByText("Toussaint")).not.toBeInTheDocument();
     });
 });
 

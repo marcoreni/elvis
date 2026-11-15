@@ -154,6 +154,7 @@ Rails.application.routes.draw do
   get "season/evaluation/weeks", to: "seasons#get_evaluation_weeks"
   get "/seasons/:id/available_evaluation_intervals/:activity_ref_id", to: "seasons#available_evaluation_intervals"
   post "/season/:id/holidays", to: "seasons#create_holidays"
+  patch "/season/:id/holidays", to: "seasons#update_holidays"
   delete "/season/:id/holidays", to: "seasons#delete_holidays"
   post "/season/:id/fetch_holidays", to: "seasons#fetch_holidays"
   post "/season/:id/make_active", to: "seasons#make_active", as: "make_active_season"

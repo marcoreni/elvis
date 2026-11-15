@@ -11,13 +11,26 @@
 
   Pour information, seul 1 niveaux de récursivité est pris en compte. cela fait un menu à trois niveaux, ce qui est le max (esthétique)
 %>
+<%#
+  menu_path_active?(part): is `part` (a full path, e.g. "/evaluation_level_ref") the request's
+  current page, or a path-boundary-respecting ancestor of it (e.g. "/seasons" for
+  "/seasons/5/edit")? Used instead of a bare `request.url.end_with?(part)` suffix check, which
+  matches on an accidental shared trailing segment (e.g. every url ending in "new") rather than a
+  real path relationship -- see docs/KnownIssues.md's "/evaluation_level_ref/new" entry.
+%>
+<%
+  def menu_path_active?(part)
+    request.path == part || request.path.start_with?("#{part}/")
+  end
+%>
+
 <% def render_menu(items) %>
-  
-  <% 
+
+  <%
     format_dropdown_menu = -> (menu_title, menu_logo, menu_leaves){
       {
         url_parts:
-          menu_leaves.map {|me| me.url(self).split('/').filter{|s| !s.empty?}[-1]}.uniq,
+          menu_leaves.flat_map {|me| [me.url(self)] + me.related_paths}.uniq,
           title: menu_title,
           logo: menu_logo,
           links: menu_leaves.map {|me| {title: me.caption, path: me.url(self), a_options: me.a_options } }
@@ -43,7 +56,7 @@
       <%end%>
 
     <% elsif item.parent.nil? && item.children.empty? %>
-      <li class='<%= request.url.end_with?(item.url(self)) ? "active" : "" %>'>
+      <li class='<%= menu_path_active?(item.url(self)) ? "active" : "" %>'>
         <%
           html_options = { class: "m-l-sm m-r-sm img-rounded"}.merge item.a_options
         %>

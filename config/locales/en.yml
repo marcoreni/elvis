@@ -1172,6 +1172,13 @@ en:
         choose_image: Choose image
         location_title: Location
         title: Add a room
+    scripts:
+      replicate_week_activities:
+        description: This page lets you replicate every course from a template week
+          onto a specific period. That period can be a single day or a date range.
+          Holidays and school breaks are excluded from the replication by default,
+          but you can choose to include them.
+        heading: Replicate a week's courses over a date range
     seasons:
       edit:
         autosave_notice: Any change made to the table is saved immediately, even without
@@ -1188,6 +1195,13 @@ en:
         heading: Season management
       new:
         heading: New season
+      update_holidays:
+        errors:
+          invalid_date: Invalid date.
+          missing_params: All fields are required.
+          not_found: No matching holiday period was found.
+          save_failed: Unable to save the changes.
+          start_after_end: The end date must be on or after the start date.
     sessions:
       pick_user:
         submit: Sign in

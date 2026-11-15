@@ -222,7 +222,8 @@ module Elvis
       # reader), which would otherwise be dead code shadowed by these attr_reader-generated
       # methods (Lint/DuplicateMethods).
       attr_reader :name, :param, :route_params, :condition, :parent,
-                  :child_menus, :last, :permission, :action, :controller, :a_options
+                  :child_menus, :last, :permission, :action, :controller, :a_options,
+                  :related_paths
 
       include Rails.application.routes.url_helpers
 
@@ -254,6 +255,10 @@ module Elvis
         @caption = options[:caption]
         @user_role = options[:user_role]
         @a_options = options[:a_options] || {}
+        # Extra paths (full, e.g. "/evaluation_level_ref") that should count as "belonging" to this
+        # item for sidebar active-section matching, for pages reachable from it that aren't
+        # registered as their own menu item (see _render_menu.erb's menu_path_active?).
+        @related_paths = options[:related_paths] || []
         @html_options = options[:html] || {}
         # Adds a unique class to each menu item based on its name
         @html_options[:class] = [@html_options[:class], @name.to_s.dasherize].compact.join(" ")

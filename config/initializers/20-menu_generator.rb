@@ -225,7 +225,10 @@ module MenuGenerator
                       :evaluation_parameters,
                       "parameters/evaluation_parameters",
                       "index",
-                      { caption: :"menu.params" }
+                      # evaluation_level_ref_controller's new/edit pages are reached from here (see
+                      # EvaluationLevels.jsx) but aren't their own menu item, so the sidebar
+                      # wouldn't otherwise recognize them as part of this section.
+                      { caption: :"menu.params", related_paths: ["/evaluation_level_ref"] }
                     ))
 
     parameters = Elvis::MenuManager::MenuItem.new(

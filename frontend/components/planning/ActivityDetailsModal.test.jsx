@@ -47,13 +47,15 @@ describe.each(["fr", "en"])(
         const REPRESENTATIVE = {
             fr: {
                 time: ["Début", "Fin"],
-                location: "Choisir un Lieu",
+                placeLabel: "Lieu",
+                location: "Choisir un lieu",
                 room: "Choisir une salle",
                 activity: "Choisir une activité",
                 groupName: "Nom du groupe",
             },
             en: {
                 time: ["Start", "End"],
+                placeLabel: "Location",
                 location: "Choose a location",
                 room: "Choose a room",
                 activity: "Choose an activity",
@@ -76,6 +78,12 @@ describe.each(["fr", "en"])(
                 expect(screen.getByText(label)).toBeInTheDocument();
             u1();
 
+            // Regression: the labels above the select (both the multi-location <select> form and
+            // the single-location static <p> variant) used to be a hardcoded "Lieu", shown
+            // regardless of locale -- see docs/KnownIssues.md. Fixed via a new
+            // `activityModal.placeLabel` key (French kept exactly as "Lieu" -- this is a distinct
+            // field from the existing `locationLabel` key used elsewhere in this file, which
+            // renders "Emplacement" in French).
             const { unmount: u2 } = render(
                 <LocationSelection
                     locations={[
@@ -87,7 +95,18 @@ describe.each(["fr", "en"])(
                 />
             );
             expect(screen.getByText(rep.location)).toBeInTheDocument();
+            expect(screen.getByText(rep.placeLabel)).toBeInTheDocument();
             u2();
+
+            const { unmount: u2b } = render(
+                <LocationSelection
+                    locations={[{ id: 1, label: "Conservatoire" }]}
+                    locationId={1}
+                    handleSelectLocation={() => {}}
+                />
+            );
+            expect(screen.getByText(rep.placeLabel)).toBeInTheDocument();
+            u2b();
 
             const { unmount: u3 } = render(
                 <RoomSelection
@@ -470,6 +489,96 @@ describe("ActivityDetailsModal — verifyTimeOverlap", () => {
         const alert = await screen.findByText(/est déjà occupé/);
         expect(alert).toHaveTextContent('"? ?"');
     });
+});
+
+describe("ActivityDetailsModal — close button i18n", () => {
+    // Regression: both of this file's default-export close buttons (the validated-interval view
+    // and the unvalidated/create-activity view) rendered a hardcoded "Fermer" regardless of
+    // locale -- see docs/KnownIssues.md. Fixed to reuse `common:actions.close`, the same key
+    // other modals in this app already use for a close button.
+    const activity = {
+        id: 999,
+        group_name: "Original Group",
+        activity_ref: { label: "Guitare", occupation_limit: 10 },
+        users: [],
+        options: [],
+        teachers_activities: [],
+        teacher: null,
+        evaluation_level_ref_id: null,
+    };
+
+    const baseProps = {
+        t: i18n.getFixedT(null, "planning"),
+        generic: true,
+        isAdmin: false,
+        isTeacher: false,
+        room_refs: [
+            {
+                id: 10,
+                location_id: 100,
+                label: "Salle A",
+                location: { id: 100 },
+            },
+        ],
+        rooms: [{ id: 10, location_id: 100, label: "Salle A" }],
+        teachers: [],
+        seasons: [],
+        closeModal: () => {},
+        handleUpdateActivityInInstances: () => {},
+        interval: {
+            id: 1,
+            is_validated: true,
+            start: "2026-09-01T10:00:00",
+            end: "2026-09-01T11:00:00",
+            comment: null,
+            activity_instance: {
+                id: 55,
+                room: { id: 10 },
+                student_attendances: [],
+                inactive_students: [],
+                potential_covering_teachers: [],
+                teachers_activity_instances: [],
+                activity,
+            },
+        },
+    };
+
+    afterEach(async () => {
+        await i18n.changeLanguage("fr");
+    });
+
+    test.each(["fr", "en"])(
+        "validated-interval view close button (%s)",
+        async (lng) => {
+            await i18n.changeLanguage(lng);
+            render(<ActivityDetailsModal {...baseProps} />);
+
+            expect(
+                screen.getByRole("button", {
+                    name: lng === "fr" ? "Fermer" : "Close",
+                })
+            ).toBeInTheDocument();
+        }
+    );
+
+    test.each(["fr", "en"])(
+        "unvalidated/create-activity view close button (%s)",
+        async (lng) => {
+            await i18n.changeLanguage(lng);
+            render(
+                <ActivityDetailsModal
+                    {...baseProps}
+                    interval={{ ...baseProps.interval, is_validated: false }}
+                />
+            );
+
+            expect(
+                screen.getByRole("button", {
+                    name: lng === "fr" ? "Fermer" : "Close",
+                })
+            ).toBeInTheDocument();
+        }
+    );
 });
 
 // GroupNameInput and ActivitySelection had fr/en "renders the label" string-echo pairs only —
