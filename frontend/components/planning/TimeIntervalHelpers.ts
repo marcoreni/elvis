@@ -276,10 +276,8 @@ export const formatIntervalsForSchedule = (
         // If specific multi resource view
         if (isMultiView) {
             const resourceId = resourceGetters[resourceType](int);
-            // Unconditional, matching the old .jsx exactly: a `null` resourceId (e.g. a
-            // room-view interval with no activity_instance) indexes to `undefined` here, which
-            // lets FullCalendar's own default color win instead of forcing the palette's
-            // default -- combined with the white text forced below, that's the intended look.
+            // Unconditional: a null resourceId yields `undefined` here, which falls through to
+            // FullCalendar's own default color -- not a palette default.
             bgColor = colors[resourceId as number];
             color = "white";
             borderColor = color;
@@ -328,9 +326,7 @@ export const formatIntervalsForSchedule = (
         let title;
 
         if (activity) {
-            // `?.label` -- the old `.jsx` did `activity.activity_ref.label` unguarded and threw
-            // when activity_ref was missing; this now yields `undefined` (a blank calendar
-            // title) instead of crashing. Intentionally more lenient, not a silent regression.
+            // Optional chaining: a missing activity_ref yields undefined (blank title), not a throw.
             title = activity.activity_ref?.label;
         } else if (int.kind === "e") {
             title = int.is_validated
@@ -339,10 +335,7 @@ export const formatIntervalsForSchedule = (
         } else {
             title = i18n.t("planning:scheduleTitles.availability");
         }
-        // `?? ""` -- the old `.jsx` used lodash `_.get(activity, "location.label", "")`, whose
-        // default only applies on `undefined`, so a literal `null` label reached
-        // capitalFirstLetters(null) unguarded; here it becomes "" instead. More correct, kept
-        // deliberately, not a silent regression.
+        // `?? ""` also covers a null label (not just undefined), so capitalFirstLetters never sees null.
         const locationIndicator = `<b>${capitalFirstLetters(activity?.location?.label ?? "")}</b> - `;
 
         return {
@@ -360,10 +353,7 @@ export const formatIntervalsForSchedule = (
             dragBgColor: bgColor,
             attendees: activity ? activity.users : [],
             kind: int.kind,
-            // `|| {}`, not `|| undefined`: schedule.teacher is read unguarded (e.g.
-            // MultiViewModal.jsx's TeacherItem calls fullname(schedule.teacher) whenever there's
-            // no cover teacher) by untyped .jsx call sites tsc can't check, so this must stay an
-            // object even with no main teacher assigned, or it crashes the render tree.
+            // `|| {}`, not `|| undefined`: callers (e.g. MultiViewModal.jsx) read schedule.teacher unguarded.
             teacher:
                 (int.activity_instance && int.activity_instance.teacher) ||
                 (activity && activity.teacher) ||
@@ -451,15 +441,9 @@ export const levelDisplay = (
         .filter((level) => level.season_id == seasonId)
         .value();
 
-    // `typeof id === "number" &&` guards the case extractActivityRefId returns `undefined`
-    // (activityRef missing/unresolved): a bare `level.activity_ref_id == id` would then loose-
-    // match any level whose activity_ref_id is itself null/undefined (a real, nullable DB
-    // state), wrongly surfacing that level's value instead of falling through to "not
-    // indicated". Dropped the old code's string-id loose match (`activityRef.id ||
-    // activityRef` falling back to a raw string, matched via `==` against a numeric
-    // activity_ref_id) along with it: every real call site always passes a number or an
-    // `{ id: number }`-shaped ref (entities.ts types ids as `number`), so that leniency was
-    // never reachable, not a deliberate defense worth keeping.
+    // `typeof id === "number" &&` avoids loose-matching a level whose own activity_ref_id is
+    // itself null/undefined. Also drops the old loose string-id match; unreachable in practice,
+    // since every real caller passes a number or an `{ id: number }` ref.
     const exactLevels = allLevels.filter(
         (level) => typeof id === "number" && level.activity_ref_id === id
     );
@@ -666,10 +650,7 @@ export const computeInterval = (
 export const computeValidatedInterval = (
     intervals: DurationComputable[]
 ): moment.Duration => {
-    // The old .jsx called `this.computeInterval(...)` here -- both exports are plain module-
-    // level arrow functions with no `this`, so that reference was always `undefined` and this
-    // function could never have been called successfully. Calling computeInterval directly
-    // makes it actually work, not merely "correct a reference".
+    // Calls computeInterval directly -- module-level arrow functions have no `this`.
     return computeInterval(intervals, (i) => i.is_validated);
 };
 

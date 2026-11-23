@@ -30,9 +30,7 @@ export interface EvaluationLevelRef extends Entity {
 export interface Level {
     id?: number;
     user_id?: number;
-    // Nullable in db/schema.rb -- modeled as such (not just `?: number`) because
-    // TimeIntervalHelpers.ts's levelDisplay() has a real bug fix riding on telling "no id" apart
-    // from a legitimate `null`.
+    // Nullable in db/schema.rb -- widened to `| null` to match the real column.
     activity_ref_id?: number | null;
     activity_ref?: ActivityRef;
     season_id?: number;

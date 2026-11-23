@@ -559,3 +559,31 @@ describe("levelDisplay NULL activity_ref_id regression", () => {
         expect(levelDisplay(users, { id: 7 }, 1)).toBe("Débutant");
     });
 });
+
+// ------------------------------------------------------------------------------------------------
+// formatIntervalsForSchedule -- regression for the bgColor null-resourceId fix (finding #3)
+// ------------------------------------------------------------------------------------------------
+
+describe("formatIntervalsForSchedule bgColor multi-resource null guard regression", () => {
+    test("room view with no activity_instance yields undefined bgColor/dragBgColor", () => {
+        const raw = [
+            {
+                id: "no-room",
+                kind: "x",
+                start: "2026-09-01T10:00:00",
+                end: "2026-09-01T11:00:00",
+                // No activity_instance -> getRoomId returns null -> colors[null] is undefined.
+            },
+        ];
+        const colors = {
+            1: "hsl(0deg, 68%, 60%)",
+            2: "hsl(180deg, 68%, 60%)",
+        };
+        const byId = keyById(
+            formatIntervalsForSchedule(raw, null, { id: 1 }, "room", 2, colors)
+        );
+
+        expect(byId["no-room"].bgColor).toBeUndefined();
+        expect(byId["no-room"].dragBgColor).toBeUndefined();
+    });
+});

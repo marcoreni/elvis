@@ -44,7 +44,7 @@ present. Keep that attribute in any future serializer `as_json only:` list, or a
 `activityApplications:summaryActivity.notSpecified` mirrors the raw French string a `===` check
 elsewhere (`LevelCell`) compares against — it's correct to duplicate that raw string as a
 translation value, but don't "clean up" the comparison literal itself to use the translated string.
-Same rationale behind `planning/TimeIntervalHelpers.jsx`'s `levelDisplay()`: it returns the raw
+Same rationale behind `planning/TimeIntervalHelpers.ts`'s `levelDisplay()`: it returns the raw
 French sentinels (`LEVEL_NOT_INDICATED`, `LEVEL_TO_SPECIFY`) for `===` call sites, while a separate
 `levelDisplayLabel(value)` localizes only at render. Split any similar case into "compare" (use the
 raw constant) vs. "display" (wrap in a localizing function) rather than translating the constant
