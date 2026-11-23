@@ -30,7 +30,8 @@ export interface EvaluationLevelRef extends Entity {
 export interface Level {
     id?: number;
     user_id?: number;
-    activity_ref_id?: number;
+    // Nullable in db/schema.rb -- widened to `| null` to match the real column.
+    activity_ref_id?: number | null;
     activity_ref?: ActivityRef;
     season_id?: number;
     evaluation_level_ref?: EvaluationLevelRef;

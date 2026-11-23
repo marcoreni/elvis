@@ -1365,7 +1365,6 @@ const UserRow = ({
 
     const {
         time_interval,
-        activity_ref_id,
         activity_ref: activityRef,
         activity_ref: { is_work_group: isWorkGroup },
     } = activity;
@@ -1440,11 +1439,10 @@ const UserRow = ({
         const computedLevel = TimeIntervalHelpers.levelDisplayForActivity(
             {
                 users,
-                activity_ref_id,
                 time_interval,
                 activity_ref: activityRef,
             },
-            seasons
+            seasons || []
         );
 
         // levelDisplayForActivity returns the TimeIntervalHelpers.LEVEL_* sentinels for the

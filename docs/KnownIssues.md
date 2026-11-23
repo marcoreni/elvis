@@ -198,19 +198,6 @@ in its diff) — logged here as found, not investigated further.
 - `/seasons/:id/edit`: no edit button/affordance for existing holidays (only, presumably, add/delete)
   — not investigated further, flagged during the same testing pass.
 
-## `TimeIntervalHelpers.omitInactiveStudents` forces an `as unknown as` cast in Calendar.tsx
-
-`omitInactiveStudents` (`frontend/components/planning/TimeIntervalHelpers.jsx:45`) is
-`_.differenceBy(users, inactiveStudents, 'id')` in a plain untyped `.jsx` file. Calling it from
-`Calendar.tsx` (`:239`), TS infers a bogus `string[]`-shaped return from lodash's overload
-resolution rather than `User[]` — a direct `as User[]` fails with TS2352 ("neither type
-sufficiently overlaps"), so the call site needs `as unknown as User[]`. Per the [JSX-to-TSX
-playbook](Jsx-To-Tsx-Migration-Playbook.md), `as unknown as T` should be avoided in favor of real
-types; this one is logged rather than silently cast because it's blocked on `TimeIntervalHelpers.jsx`
-itself having no types to cast *from* — real fix is migrating that file to `.ts`/`.tsx` (it has one
-other caller, `ActivityDetailsModal.jsx`, unaffected either way since that caller is also untyped
-JS) or giving `omitInactiveStudents` an explicit typed signature.
-
 ## Orphaned code left in place after the TanStack migration (batch 4b, item 13)
 
 Not deleted per this repo's standing policy on unused-looking code — logged instead:
@@ -645,3 +632,18 @@ the constructor still assumes a non-null `season` prop -- a full fix needs both 
 narrowly: `next_id = current&.next_season_id` and have callers handle a possible `nil` result;
 broadly: decide whether "no current season" should even be reachable in a properly bootstrapped
 instance, or whether every caller needs defensive handling.
+
+## `TimeInterval::PLANNING_INCLUDE`'s `methods: :inactive_students` leaks full `User` records, including `authentication_token`
+
+`PLANNING_SAFE_USER_FIELDS`'s own comment (`app/models/time_interval.rb:94`, "Every nested `User`
+node is scoped to `PLANNING_SAFE_USER_FIELDS`") is inaccurate: `methods: :inactive_students`
+(`:132`) sits outside the `include:` tree that comment and constant actually scope. `only:` only
+constrains associations serialized via `include:`; a `methods:` entry just calls
+`ActivityInstance#inactive_students` (`app/models/activity_instance.rb:72`, a plain `User`
+`ActiveRecord::Relation`, no field scoping) and serializes whatever it returns with its own
+default `as_json` -- every column, `authentication_token` included. Reachable wherever
+`TimeInterval`'s planning serialization includes `activity_instance` (the room/multi-planning
+views). Security-sensitive, needs its own review -- not fixed here (found during the
+`TimeIntervalHelpers` TS migration, PR #169, out of scope for that diff). Fix: scope
+`inactive_students`'s output the same way (`.select(*PLANNING_SAFE_USER_FIELDS)` or an explicit
+serializer) before it reaches `methods:`.

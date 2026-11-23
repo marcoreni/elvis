@@ -88,7 +88,7 @@ interface Schedule {
     isValidated?: boolean;
     teacher?: Partial<User>;
     activity?: Activity;
-    // formatIntervalsForSchedule (TimeIntervalHelpers.jsx) sets this snake_case field directly on
+    // formatIntervalsForSchedule (TimeIntervalHelpers.ts) sets this snake_case field directly on
     // the schedule -- a sibling of `raw`, not nested inside it -- copying it from the raw
     // interval's own `activity_instance`. `activityInstance` (camelCase, below) only exists after
     // the `events` useMemo further down replicates the tui-calendar fork's rename; this field is
@@ -233,15 +233,10 @@ export function getTimeTemplate(
         );
 
         if (schedule.activity && schedule.activityInstance) {
-            // omitInactiveStudents lives in TimeIntervalHelpers.jsx (untyped JS) and calls
-            // lodash's differenceBy, whose overload resolution gives a bogus string[]-shaped
-            // return here -- a direct `as User[]` errors (TS2352, no overlap), so this needs the
-            // unknown hop. Logged as a KnownIssues entry rather than left silent -- see
-            // docs/KnownIssues.md ("TimeIntervalHelpers.omitInactiveStudents untyped").
             const students = TimeIntervalHelpers.omitInactiveStudents(
                 schedule.activity.users,
-                schedule.activityInstance.inactive_students
-            ) as unknown as User[];
+                schedule.activityInstance.inactive_students ?? []
+            );
 
             studentTeacherDisplayLine +=
                 (students.length === 1
