@@ -107,6 +107,11 @@ of silently living in the codebase forever:
 const students = TimeIntervalHelpers.omitInactiveStudents(...) as unknown as User[];
 ```
 
+(This specific example was resolved by migrating `TimeIntervalHelpers.jsx` to `.ts` in PR #169 —
+`omitInactiveStudents` now has a real signature, the cast and its `KnownIssues.md` entry are gone,
+and the `Calendar.tsx` call site is a plain typed call. The pattern above still applies to any
+other untyped-boundary cast.)
+
 A plain `as SomeType` (no `unknown` hop) that the compiler accepts outright is different and fine —
 it means the two types already overlap enough that TS trusts the narrowing. `reconstructSchedule` in
 `Calendar.tsx` does this for its `Schedule` cast (the compiler accepts it because the constructed

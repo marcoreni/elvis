@@ -88,7 +88,7 @@ interface Schedule {
     isValidated?: boolean;
     teacher?: Partial<User>;
     activity?: Activity;
-    // formatIntervalsForSchedule (TimeIntervalHelpers.jsx) sets this snake_case field directly on
+    // formatIntervalsForSchedule (TimeIntervalHelpers.ts) sets this snake_case field directly on
     // the schedule -- a sibling of `raw`, not nested inside it -- copying it from the raw
     // interval's own `activity_instance`. `activityInstance` (camelCase, below) only exists after
     // the `events` useMemo further down replicates the tui-calendar fork's rename; this field is

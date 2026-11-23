@@ -16,16 +16,22 @@
 //                                      availability else branch; an interval carrying an activity
 //                                      keeps `activity.activity_ref.label` and bypasses i18n
 
-import { afterEach, beforeEach, describe, expect, test } from "vitest";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import type { ScheduleInterval } from "./TimeIntervalHelpers";
 import {
     LEVEL_NOT_INDICATED,
     LEVEL_TO_SPECIFY,
     averageAgeDisplay,
+    computeInterval,
+    computeValidatedInterval,
+    fetchInterval,
+    fetchIntervals,
     formatIntervalsForSchedule,
     levelDisplay,
     levelDisplayLabel,
 } from "./TimeIntervalHelpers";
+import type { User } from "../utils/entities";
+import { fullname } from "../../tools/format";
 import i18n from "../../i18n";
 
 afterEach(async () => {
@@ -384,5 +390,172 @@ describe("planning.json i18n layer", () => {
         expect(t("scheduleTitles.evaluation")).not.toBe(
             t("scheduleTitles.availabilityEvaluation")
         );
+    });
+});
+
+// ------------------------------------------------------------------------------------------------
+// fetchIntervals / fetchInterval -- GET, not a no-op `type: "GET"` typo
+// ------------------------------------------------------------------------------------------------
+
+describe("fetchIntervals / fetchInterval", () => {
+    afterEach(() => {
+        vi.unstubAllGlobals();
+    });
+
+    test("fetchIntervals sends a real GET request (method, not the old no-op `type` key)", async () => {
+        const fetchSpy = vi
+            .fn()
+            .mockResolvedValue({ json: () => Promise.resolve({}) });
+        vi.stubGlobal("fetch", fetchSpy);
+
+        await fetchIntervals(
+            "csrf-token",
+            5,
+            "activities",
+            "2026-01-01",
+            "week"
+        );
+
+        expect(fetchSpy).toHaveBeenCalledTimes(1);
+        const [url, init] = fetchSpy.mock.calls[0];
+        expect(url).toBe("/activities/5/intervals/week/2026-01-01");
+        expect(init).toMatchObject({
+            method: "GET",
+            headers: { "X-Csrf-Token": "csrf-token" },
+        });
+    });
+
+    test("fetchInterval sends a real GET request", async () => {
+        const fetchSpy = vi
+            .fn()
+            .mockResolvedValue({ json: () => Promise.resolve({}) });
+        vi.stubGlobal("fetch", fetchSpy);
+
+        await fetchInterval("csrf-token", 42);
+
+        expect(fetchSpy).toHaveBeenCalledTimes(1);
+        const [url, init] = fetchSpy.mock.calls[0];
+        expect(url).toBe("/time_interval/42");
+        expect(init).toMatchObject({
+            method: "GET",
+            headers: { "X-Csrf-Token": "csrf-token" },
+        });
+    });
+});
+
+// ------------------------------------------------------------------------------------------------
+// computeValidatedInterval -- regression for the old `this.computeInterval` dead reference
+// ------------------------------------------------------------------------------------------------
+
+describe("computeValidatedInterval", () => {
+    test("does not throw, and sums only the validated intervals' durations", () => {
+        const intervals = [
+            {
+                start: "2026-01-01T10:00:00",
+                end: "2026-01-01T11:00:00",
+                is_validated: true,
+            },
+            {
+                start: "2026-01-01T12:00:00",
+                end: "2026-01-01T14:00:00",
+                is_validated: false,
+            },
+        ];
+
+        let result;
+        expect(() => {
+            result = computeValidatedInterval(intervals);
+        }).not.toThrow();
+        expect(result!.asHours()).toBe(1);
+        // Sanity check against the shared computeInterval it delegates to directly (the old
+        // `.jsx` called `this.computeInterval(...)`, which was always `undefined` -- a plain
+        // module-level export has no `this` -- so this function could never have run at all).
+        expect(result!.asMilliseconds()).toBe(
+            computeInterval(intervals, (i) => i.is_validated).asMilliseconds()
+        );
+    });
+});
+
+// ------------------------------------------------------------------------------------------------
+// formatIntervalsForSchedule -- regression for the `teacher: ... || undefined` crash (finding #1)
+// ------------------------------------------------------------------------------------------------
+
+describe("formatIntervalsForSchedule teacher fallback", () => {
+    test("falls back to {} (not undefined) when no main teacher is assigned", () => {
+        const raw = [
+            {
+                id: "no-teacher",
+                kind: "x",
+                start: "2026-09-01T10:00:00",
+                end: "2026-09-01T11:00:00",
+                // No `teacher` on the activity, and no activity_instance at all --
+                // a real, reachable "no main teacher assigned" state.
+                activity: { activity_ref: { label: "Guitare" } },
+            },
+        ];
+        const byId = keyById(
+            formatIntervalsForSchedule(raw, null, { id: 1 }, "teacher", 1, {})
+        );
+
+        expect(byId["no-teacher"].teacher).toEqual({});
+
+        // MultiViewModal.jsx's TeacherItem calls fullname(schedule.teacher) unguarded whenever
+        // there's no cover teacher -- this must not throw (it used to, via
+        // `schedule.teacher.last_name`, when `teacher` was `undefined`).
+        expect(() =>
+            fullname(byId["no-teacher"].teacher as User)
+        ).not.toThrow();
+    });
+});
+
+// ------------------------------------------------------------------------------------------------
+// levelDisplay -- regression for the NULL activity_ref_id loose-match bug (finding #2)
+// ------------------------------------------------------------------------------------------------
+
+describe("levelDisplay NULL activity_ref_id regression", () => {
+    const usersWithNullRefLevel = [
+        {
+            id: 1,
+            levels: [
+                {
+                    season_id: 1,
+                    activity_ref_id: null,
+                    evaluation_level_ref_id: 100,
+                    evaluation_level_ref: { id: 100, label: "Débutant" },
+                },
+            ],
+        },
+    ];
+
+    test("a level with a NULL activity_ref_id does not match a missing activityRef", () => {
+        expect(levelDisplay(usersWithNullRefLevel, undefined, 1)).toBe(
+            LEVEL_NOT_INDICATED
+        );
+        expect(levelDisplay(usersWithNullRefLevel, null, 1)).toBe(
+            LEVEL_NOT_INDICATED
+        );
+    });
+
+    test("a level with a NULL activity_ref_id still does not match a real numeric activityRef", () => {
+        expect(levelDisplay(usersWithNullRefLevel, { id: 7 }, 1)).toBe(
+            LEVEL_NOT_INDICATED
+        );
+    });
+
+    test("a real numeric activityRef still matches its corresponding level normally", () => {
+        const users = [
+            {
+                id: 1,
+                levels: [
+                    {
+                        season_id: 1,
+                        activity_ref_id: 7,
+                        evaluation_level_ref_id: 100,
+                        evaluation_level_ref: { id: 100, label: "Débutant" },
+                    },
+                ],
+            },
+        ];
+        expect(levelDisplay(users, { id: 7 }, 1)).toBe("Débutant");
     });
 });
